@@ -131,3 +131,26 @@ The root object has three top-level arrays:
 ```
 
 Conditions use the `"c"` key; actions use the `"a"` key. Parameters are always a string array `"p"`.
+
+---
+
+## Contributing
+
+This project is open source and contributions are welcome.
+
+**Good first contributions:**
+- Adding missing condition or action types to `src/schema/conditions.ts` / `src/schema/actions.ts`
+- Reporting or fixing bugs
+- UX improvements
+
+**To contribute:**
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b my-feature`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin my-feature`
+5. Open a pull request
+
+Please keep PRs focused — one feature or fix per PR makes review faster.
+
+If you have found a new condition/action type in a scenario file not yet covered by the registry, opening an issue or PR with the type name and a `p[]` example is extremely helpful.
