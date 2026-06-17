@@ -36,7 +36,7 @@ export default function QuestEditor({ index, quest }: Props) {
         <Input
           value={quest.name ?? ''}
           onChange={(e) => update({ name: e.target.value || undefined })}
-          placeholder="e.g. song_of_murmurwood_name"
+          placeholder="e.g. my_quest_name"
         />
         <p className="text-xs text-muted-foreground">Shown in the in-game quest log.</p>
       </div>

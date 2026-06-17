@@ -81,7 +81,7 @@ Quest
   "hidden": false,
   "comment": "optional developer note",
   "activeOnStart": true,
-  "name": "song_of_murmurwood_name",
+  "name": "my_quest_name",
   "sharing": "Clone",
   "subQuests": [...]
 }
@@ -102,7 +102,7 @@ Quest
 {
   "sid": "1",
   "activeOnStart": true,
-  "name": "song_of_murmurwood_sub_1",
+  "name": "my_quest_sub_1",
   "comment": "optional developer note",
   "triggers": [...]
 }
@@ -158,7 +158,7 @@ Special case — `StartTurn` can carry a named `counter` property:
 
 ## Condition Registry
 
-All conditions observed in `song_of_murmurwood.json`:
+All conditions observed in `example_01.json`:
 
 | Type | Parameters | Description |
 |------|-----------|-------------|
@@ -175,7 +175,7 @@ All conditions observed in `song_of_murmurwood.json`:
 
 ## Action Registry
 
-All actions observed in `song_of_murmurwood.json`:
+All actions observed in `example_01.json`:
 
 ### Game Flow
 | Type | Parameters | Description |
@@ -277,7 +277,7 @@ map-editor-json-tool/
 ├── plans/
 │   └── PLAN.md                    # This file
 ├── examples/
-│   └── song_of_murmurwood.json   # Reference scenario JSON
+│   └── example_01.json            # Reference scenario JSON
 ├── public/
 │   └── favicon.ico
 ├── src/
@@ -900,5 +900,5 @@ npx shadcn@latest add alert
 - The `examples/` directory is the canonical source of truth for the JSON format. Before writing any type definitions or registry entries, re-read the example files to verify.
 - Do not add packages beyond what is listed in this plan without noting the deviation.
 - The working directory for the project is `/Users/mikkelgrosland/repos/map-editor-json-tool/`.
-- After implementation, test by importing `examples/song_of_murmurwood.json`, verifying the tree renders correctly, making a small edit, and re-exporting — then diffing the output against the original.
+- After implementation, test by importing `examples/example_01.json`, verifying the tree renders correctly, making a small edit, and re-exporting — then diffing the output against the original.
 - The tool is intentionally narrow in scope. Do not add features not listed here without discussion.

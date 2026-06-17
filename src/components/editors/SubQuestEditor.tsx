@@ -41,7 +41,7 @@ export default function SubQuestEditor({ questIndex, subQuestIndex, subQuest }: 
         <Input
           value={subQuest.name ?? ''}
           onChange={(e) => update({ name: e.target.value || undefined })}
-          placeholder="e.g. song_of_murmurwood_sub_1"
+          placeholder="e.g. my_quest_sub_1"
         />
       </div>
 

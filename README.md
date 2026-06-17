@@ -58,18 +58,18 @@ npm run build     # production build into dist/
 
 ## Example files
 
-The `examples/` directory contains real scenario JSON files that can be imported directly into the tool:
+The `examples/` directory contains scenario JSON files that can be imported directly into the tool:
 
-| File | Description |
-|---|---|
-| `song_of_murmurwood.json` | Reference scenario (original) |
-| `all_cats_go_to_heaven.json` | |
-| `ascension_to_the_throne.json` | |
-| `Fun_and_Graves.json` | |
-| `Glittering_Strait.json` | |
-| `Gorges_of_Discord.json` | |
-| `infinite_frost.json` | |
-| `Thirst_for_Power.json` | |
+| File |
+|---|
+| `example_01.json` |
+| `example_02.json` |
+| `example_03.json` |
+| `example_04.json` |
+| `example_05.json` |
+| `example_06.json` |
+| `example_07.json` |
+| `example_08.json` |
 
 ---
 
