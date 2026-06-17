@@ -75,6 +75,7 @@ interface ScenarioStore {
   // ── Document CRUD ────────────────────────────────────────────────────────
   setScenario: (scenario: ScenarioFile) => void
   resetScenario: () => void
+  markClean: () => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -165,6 +166,8 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
 
   resetScenario: () =>
     set({ scenario: EMPTY_SCENARIO, isDirty: false, selectedType: null, selectedPath: [] }),
+
+  markClean: () => set({ isDirty: false }),
 
   // ── Counters ───────────────────────────────────────────────────────────────
 

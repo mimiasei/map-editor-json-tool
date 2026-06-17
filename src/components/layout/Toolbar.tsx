@@ -32,7 +32,7 @@ import {
 import { useState } from 'react'
 
 export default function Toolbar() {
-  const { scenario, isDirty, panels, setScenario, resetScenario, togglePanel } =
+  const { scenario, isDirty, panels, setScenario, resetScenario, markClean, togglePanel } =
     useScenarioStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [validateOpen, setValidateOpen] = useState(false)
@@ -76,6 +76,7 @@ export default function Toolbar() {
   const handleExport = () => {
     const json = exportScenario(scenario)
     downloadJson(json, 'scenario.json')
+    markClean()
   }
 
   const validation = validateScenario(scenario)
