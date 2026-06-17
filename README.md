@@ -71,6 +71,8 @@ The `examples/` directory contains scenario JSON files that can be imported dire
 | `example_07.json` |
 | `example_08.json` |
 
+> Example files are provided for reference/testing purposes only and remain property of Unfrozen.
+
 ---
 
 ## Project structure
