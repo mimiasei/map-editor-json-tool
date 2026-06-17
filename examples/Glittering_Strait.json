@@ -1,0 +1,507 @@
+{	
+	"counters":
+	[
+		{
+			"sid": "Counter_P1",
+			"value": 0,
+			"comment": "Workaround counter for setting the player to be player 1"
+		},
+		{
+			"sid": "Counter_P1_Q1_1",
+			"value": 0,
+			"comment": "Counter for checking if Player found fallen angel wings"
+		},
+		{
+			"sid": "Counter_P1_Q1_2",
+			"value": 0,
+			"comment": "Counter for checking if player cleared dragon utopia"
+		},
+		{
+			"sid": "Counter_P2",
+			"value": 0,
+			"comment": "Workaround counter for setting the player to be player 2"
+		},
+		{
+			"sid": "Counter_P2_Q1_1",
+			"value": 0,
+			"comment": "Counter for checking if Player met Faerie Dragons"
+		},
+		{
+			"sid": "Counter_P2_Q1_2",
+			"value": 0,
+			"comment": "Counter for checking if Player defeated Faerie Dragons"
+		},
+		{
+			"sid": "gold_mines_owned",
+			"value": 0,
+
+			"comment": "counting mines under player's control"
+		}
+	],
+
+	"quests":
+	[
+		{
+			"sid": "intro",
+			"main": true,
+			"hidden": true,
+			"activeOnStart": true,
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CreateVFX", "p": [ "fx_quest_mark_silver_02", "5423", "false", "true", "em_wings" ] },
+								{ "a": "SetQuestMarker", "p": [ "FairyDragonDwelling", "effects/global_map/quest_mark_silver_02" ] },
+
+								{ "a": "Dialog", "p": [ "vyr_Scenario2_Intro" ] },								
+
+								{ "a": "SetQuestMarker", "p": [ "mine1", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine2", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine3", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine4", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine5", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine6", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine7", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine8", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine9", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine10", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine11", "effects/global_map/quest_mark_gold_02" ] },
+								{ "a": "SetQuestMarker", "p": [ "mine12", "effects/global_map/quest_mark_gold_02" ] }
+							]
+						}
+
+					]
+				}
+			]
+		},
+			{
+				"sid": "setupMainQuest",
+				"hidden": true,
+
+				"activeOnStart": true,
+
+				"sharing": "Clone",
+
+				"subQuests":
+				[	
+					{
+						"sid": "1",
+						"activeOnStart": true,
+
+						"triggers":
+						[
+							{
+								"conditions":
+								[
+									{ "c": "Counter", "p":[ "Counter_P1", "=", "1" ] }
+								],
+
+								"actions":
+								[	
+									{ "a": "SetActiveQuestMarker", "p":[ "FairyDragonDwelling", "false" ]},
+									{ "a": "NextQuest", "p":[ "P1_Quest1" ]},
+									{ "a": "SubQuestActivate", "p":[ "P1_Quest1", "P1_Quest1_1" ]},
+									{ "a": "SubQuestActivate", "p":[ "MainQuest", "MainQuest_1" ]},
+									{ "a": "SubQuestActivate", "p":[ "MainQuest", "MainQuest_2a" ]}
+								]
+							},
+							{
+								"conditions":
+								[
+									{ "c": "Counter", "p":[ "Counter_P2", "=", "1"] }
+								],
+
+								"actions":
+								[	
+									{ "a": "SetActiveMarker", "p":[ "zone_wings", "false" ]},
+									{ "a": "DeleteEntity", "p":[ "em_wings" ]},							
+									{ "a": "NextQuest", "p":[ "P2_Quest1" ]},
+									{ "a": "SubQuestActivate", "p":[ "P2_Quest1", "P2_Quest1_1" ]},
+									{ "a": "SubQuestActivate", "p":[ "MainQuest", "MainQuest_1" ]},
+									{ "a": "SubQuestActivate", "p":[ "MainQuest", "MainQuest_2b" ]}
+								]
+							}
+						]
+					}
+				]
+			},
+		{
+			"sid": "MainQuest",
+			"main": true,
+			"hidden": false,
+
+			"activeOnStart": true,
+
+			"sharing": "Clone",
+
+			"comment": "main quest = capture 10 out of 12 gold mines with occassional rewards increasing the pacing // identical for both players",
+			
+			"name": "gs_quest_name_q1",
+			"desc": "gs_quest_desc_q1",
+
+			"subQuests":
+			[	
+				{
+					"sid": "MainQuest_1",
+					"name": "gs_sub_name_q1_1",
+					"activeOnStart": false,
+					"triggers":
+					[
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectCaptureEntity", "p":[ "mine1" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine1", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectCaptureEntity", "p":[ "mine2" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine2", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectCaptureEntity", "p":[ "mine3" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine3", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectCaptureEntity", "p":[ "mine4" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine4", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectCaptureEntity", "p":[ "mine5" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine5", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectCaptureEntity", "p":[ "mine6" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine6", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectCaptureEntity", "p":[ "mine7" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine7", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectCaptureEntity", "p":[ "mine8" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine8", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectCaptureEntity", "p":[ "mine9" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine9", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectCaptureEntity", "p":[ "mine10" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine10", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectCaptureEntity", "p":[ "mine11" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine11", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectCaptureEntity", "p":[ "mine12" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine12", "false" ] }, { "a": "CounterPlus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectLose", "p":[ "mine1" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine1", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectLose", "p":[ "mine2" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine2", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectLose", "p":[ "mine3" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine3", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectLose", "p":[ "mine4" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine4", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectLose", "p":[ "mine5" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine5", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectLose", "p":[ "mine6" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine6", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectLose", "p":[ "mine7" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine7", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectLose", "p":[ "mine8" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine8", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectLose", "p":[ "mine9" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine9", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectLose", "p":[ "mine10" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine10", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [ { "c": "ObjectLose", "p":[ "mine11" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine11", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+						{
+							"repeat": true,
+							"conditions": [	{ "c": "ObjectLose", "p":[ "mine12" ] } ],
+							"actions": [ { "a": "SetActiveQuestMarker", "p": [ "mine12", "true" ] }, { "a": "CounterMinus", "p": [ "gold_mines_owned", "1" ] } ]
+						},
+
+						{
+							"conditions":
+							[	
+								{ "c": "Counter", "p":[ "gold_mines_owned", "=", "3" ]}
+							],
+
+							"actions":
+							[	
+								{ "a": "Dialog", "p": [ "vyr_Scenario2_Message1" ] }
+							]
+						},
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p":[ "gold_mines_owned", "=", "7" ]}
+							],
+
+							"actions":
+							[	
+								{ "a": "Dialog", "p": [ "vyr_Scenario2_Message2" ] }
+							]
+						},
+						{
+							"conditions":
+							[	
+								{ "c": "Counter", "p":[ "gold_mines_owned", "=", "10" ]}
+							],
+
+							"actions":
+							[	
+								{ "a": "Dialog", "p": [ "vyr_Scenario2_End" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "MainQuest_2a",
+					"activeOnStart": false,
+					"name": "gs_sub_name_q1_2a",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "dungeon_hero_5" ] }
+							],
+
+							"actions":
+							[	
+								{ "a": "GameLose" }
+							]
+						}
+					]
+				},
+				{
+					"sid": "MainQuest_2b",
+					"activeOnStart": false,
+					"name": "gs_sub_name_q1_2b",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "nature_hero_5" ] }
+							],
+
+							"actions":
+							[	
+								{ "a": "GameLose" }
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"sid": "P1_Quest1",
+			"main": false,
+
+			"comment": "Side Objective of the 1st player",
+			
+			"activeOnStart": false,
+			"sharing": "Clone",
+
+			"name": "gs_quest_name_q2a",
+			"desc": "gs_quest_desc_q2a",
+
+			"subQuests":
+			[	
+				{
+					"sid": "P1_Quest1_1",
+					"activeOnStart": false,
+					"name": "gs_sub_name_q2a_1",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "ItemOwnSide", "p":[ "fallen_angel_wings_artifact", ">", "0"] }
+							],
+
+							"actions":
+							[	
+								{ "a": "DeleteEntity", "p":[ "em_wings" ]},			
+								{ "a": "CurrentSubQuestDone"},
+								{ "a": "Dialog", "p": [ "vyr_Scenario2_P1_dial1" ] },
+								{ "a": "GiveExpHero","p": [ "2500" ] },
+								{ "a": "NextSubQuest", "p":[ "P1_Quest1_2" ]}
+							]
+						}
+					]
+				},
+				{
+					"sid": "P1_Quest1_2",
+					"activeOnStart": false,
+					"name": "gs_sub_name_q2a_2",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p":[ "Counter_P1_Q1_2", "=", "1"] }
+							],
+
+							"actions":
+							[
+								{ "a": "SetActiveQuestMarker", "p":[ "dragon_utopia", "false" ]},
+								{ "a": "CurrentSubQuestDone"}
+							]
+						},
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p":[ "Counter_P1_Q1_2", "=", "2"] }
+							],
+
+							"actions":
+							[
+								{ "a": "NextQuest"}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "P2_Quest1",
+			"main": false,
+
+			"comment": "Side Objective of the 2nd player",
+			
+			"activeOnStart": false,
+			"sharing": "Clone",
+
+			"name": "gs_quest_name_q2b",
+			"desc": "gs_quest_desc_q2b",
+
+			"subQuests":
+			[	
+				{
+					"sid": "P2_Quest1_1",
+					"activeOnStart": false,
+					"name": "gs_sub_name_q2b_1",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "ObjectInteractionAfter", "p":[ "portal_faerie_dragons_in" ] }
+							],
+
+							"actions":
+							[	
+								{ "a": "CurrentSubQuestDone"},
+								{ "a": "GiveExpHero","p": [ "2500" ] },
+								{ "a": "NextSubQuest", "p":[ "P2_Quest1_2" ]}
+							]
+						}
+					]
+				},
+				{
+					"sid": "P2_Quest1_2",
+					"activeOnStart": false,
+					"name": "gs_sub_name_q2b_2",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p":[ "Counter_P2_Q1_2", "=", "1"] }
+							],
+
+							"actions":
+							[
+								{ "a": "SetActiveQuestMarker", "p":[ "FairyDragonDwelling", "false" ]},
+								{ "a": "CurrentSubQuestDone"}
+							]
+						},
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p":[ "Counter_P2_Q1_2", "=", "2"] }
+							],
+
+							"actions":
+							[
+								{ "a": "NextQuest"}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

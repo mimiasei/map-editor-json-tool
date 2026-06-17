@@ -1,0 +1,635 @@
+﻿{
+	"counters":
+	[
+		{ "sid": "main_quest_win_action",	"value": 0 },
+		{ "sid": "main_quest_win",			"value": 0 },
+
+		{ "sid": "killCount", "value": 0 },
+		{ "sid": "respIndex", "value": 0 },
+
+		{ "sid": "stage_complete", "value": 0 },
+		{ "sid": "stage_0_complete", "value": 0 },
+		{ "sid": "stage_1_complete", "value": 0 },
+		{ "sid": "stage_2_complete", "value": 0 },
+		{ "sid": "stage_3_complete", "value": 0 }
+	],
+
+	"quests":
+	[	
+		{
+			"sid": "intro",
+
+			"hidden": true,
+
+			"comment": "intro",
+
+			"activeOnStart": true,
+			"sharing": "Clone",
+
+			"name": "1",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CounterSet", "p": [ "respIndex", "0" ] },
+								{ "a": "ChangeCampaignOneStep", "p": [ "true" ] },
+								{ "a": "Print", "p": [ "ChangeCampaignOneStep" ] },
+								{ "a": "GiveUnitHero", "p": [ "kitten_horn", "7", "nature_hero_6" ] },
+								{ "a": "RemoveUnitHero", "p": [ "elf_tracker", "all", "nature_hero_6" ] },
+								{ "a": "RemoveUnitHero", "p": [ "twinkle", "all", "nature_hero_6" ] },
+								{ "a": "RemoveUnitHero", "p": [ "ent", "all", "nature_hero_6" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "nature_hero_6", "11" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "nature_hero_6", "11" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "nature_hero_6", "11" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "nature_hero_6", "11" ] },
+								{ "a": "ChangeManaHero", "p": [ "nature_hero_6", "130" ] },
+
+								{ "a": "AddBuffHeroDays", "p": [ "acgth_heroStatBuff", "nature_hero_6", "-1" ] },
+
+								{ "a": "AddSpellHero", "p": [ "day_3_magic_haste", "nature_hero_6" ] },
+								{ "a": "AddSpellHero", "p": [ "night_2_magic_web", "nature_hero_6" ] },
+								{ "a": "AddSpellHero", "p": [ "space_1_magic_early_start", "nature_hero_6" ] },
+								{ "a": "AddSpellHero", "p": [ "primal_1_magic_thunderbolt", "nature_hero_6" ] },
+
+								{ "a": "AddSpellHero", "p": [ "night_13_magic_berserker", "nature_hero_6" ] },
+
+								{ "a": "RemoveRes", "p": [ "wood", "50" ] },
+								{ "a": "RemoveRes", "p": [ "ore", "50" ] },
+								{ "a": "RemoveRes", "p": [ "crystals", "50" ] },
+								{ "a": "RemoveRes", "p": [ "gemstones", "50" ] },
+								{ "a": "RemoveRes", "p": [ "mercury", "50" ] },
+								{ "a": "RemoveRes", "p": [ "dust", "500" ] },
+
+								{ "a": "Dialog", "p": [ "acgth_main_quest_line_start" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "2",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "Or",
+
+							"conditions":
+							[
+								{ "c": "NodeRevealed", "p": [ "1458" ] },
+								{ "c": "NodeRevealed", "p": [ "1457" ] },
+								{ "c": "NodeRevealed", "p": [ "1456" ] },
+								{ "c": "NodeRevealed", "p": [ "1408" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "Dialog", "p": [ "acgth_main_quest_line_1" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3",
+					"activeOnStart": true,
+
+					"comment": "Economy/Neutral/Ai",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Economy", "2" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveRes", "p": [ "crystals", "35" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "4",
+					"activeOnStart": true,
+
+					"comment": "Economy/Neutral/Ai",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Economy", "3" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveRes", "p": [ "crystals", "14" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "5",
+					"activeOnStart": true,
+
+					"comment": "Economy/Neutral/Ai",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Economy", "4" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveRes", "p": [ "crystals", "0" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "main_quest_line_starter",
+			"main": true,
+			"hidden": true,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": true,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "stage_complete", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "NextQuest", "p": [ "main_quest_line" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "main_quest_line",
+			"main": true,
+			"hidden": false,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": false,
+			"name": "song_of_murmurwood_name",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": false,
+					"name": "all_cats_go_to_heaven_sub_1",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "stage_3_complete", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone", "p": [  ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "2",
+					"activeOnStart": true,
+					"name": "all_cats_go_to_heaven_sub_2",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "main_quest_win_action", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone", "p": [  ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "win_lose_conditions",
+			"hidden": true,
+
+			"comment": "resp conditions adter death",
+
+			"activeOnStart": true,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[	
+						{
+							"conditionsLogic": "And",
+							"repeat": true,
+							
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "nature_hero_6" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CounterPlus", "p": [ "killCount", "1" ] },
+								{ "a": "CounterPlus", "p": [ "respIndex", "0" ] }
+							]
+						},
+
+						{
+							"conditionsLogic": "And",
+							"repeat": false,
+							
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "killCount", "=", "9" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "MoveCamera", "p": [ "234" ] },
+								{ "a": "ResurrectHero", "p": [ "nature_hero_6", "234", "0" ] },
+								{ "a": "GiveUnitHero", "p": [ "kitten_horn", "3", "nature_hero_6" ] },
+								{ "a": "RemoveUnitHero", "p": [ "elf_tracker", "all", "nature_hero_6" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "0" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "2" ] },
+
+								{ "a": "Dialog", "p": [ "acgth_main_quest_line_end_alt" ] }
+							]
+						},
+
+						{
+							"conditionsLogic": "And",
+							"repeat": true,
+							
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "nature_hero_6" ] },
+								{ "c": "Counter", "p": [ "respIndex", "=", "0" ] },
+								{ "c": "Counter", "p": [ "killCount", "<", "9" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "MoveCamera", "p": [ "1790" ] },
+								{ "a": "ResurrectHero", "p": [ "nature_hero_6", "1790", "0" ] },
+								{ "a": "GiveUnitHero", "p": [ "kitten_horn", "3", "nature_hero_6" ] },
+								{ "a": "RemoveUnitHero", "p": [ "elf_tracker", "all", "nature_hero_6" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "0" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "2" ] }
+							]
+						},
+						
+						{
+							"conditionsLogic": "And",
+							"repeat": true,
+							
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "nature_hero_6" ] },
+								{ "c": "Counter", "p": [ "respIndex", "=", "1" ] },
+								{ "c": "Counter", "p": [ "killCount", "<", "9" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "MoveCamera", "p": [ "1275" ] },
+								{ "a": "ResurrectHero", "p": [ "nature_hero_6", "1275", "0" ] },
+								{ "a": "GiveUnitHero", "p": [ "kitten_horn", "3", "nature_hero_6" ] },
+								{ "a": "RemoveUnitHero", "p": [ "elf_tracker", "all", "nature_hero_6" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "0" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "2" ] }
+							]
+						},
+
+						{
+							"conditionsLogic": "And",
+							"repeat": true,
+							
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "nature_hero_6" ] },
+								{ "c": "Counter", "p": [ "respIndex", "=", "2" ] },
+								{ "c": "Counter", "p": [ "killCount", "<", "9" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "MoveCamera", "p": [ "455" ] },
+								{ "a": "ResurrectHero", "p": [ "nature_hero_6", "455", "0" ] },
+								{ "a": "GiveUnitHero", "p": [ "kitten_horn", "3", "nature_hero_6" ] },
+								{ "a": "RemoveUnitHero", "p": [ "elf_tracker", "all", "nature_hero_6" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "0" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "2" ] }
+							]
+						},
+
+						{
+							"conditionsLogic": "And",
+							"repeat": false,
+							
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "nature_hero_6" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "Dialog", "p": [ "acgth_main_quest_line_first_death" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "2",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "main_quest_win", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GameVictory" }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "stage_1_complete_quest",
+			"hidden": true, 
+			
+			"comment": "stage_1_complete", 
+			
+			"activeOnStart": true, 
+			"name": "stage_1_complete", 
+			"sharing": "Clone",
+			
+			"subQuests": 
+			[ 
+				{ 
+					"sid": "stage_1_complete_activator", 
+					"activeOnStart": true, 
+
+					"triggers": 
+					[ 
+						{ 
+							"conditions": 
+							[ 
+								{ "c": "Counter", "p": [ "stage_1_complete", "=", "1" ] }
+							], 
+							
+							"actions": 
+							[ 
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "0" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "1" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "2" ] },
+
+								{ "a": "CounterSet", "p": [ "respIndex", "1" ] },
+								
+								{ "a": "DeleteEntity", "p": [ "block_1_1" ] },
+								{ "a": "DeleteEntity", "p": [ "block_1_2" ] },
+								{ "a": "DeleteEntity", "p": [ "block_1_3" ] },
+								{ "a": "DeleteEntity", "p": [ "block_1_4" ] },
+								{ "a": "DeleteEntity", "p": [ "block_1_5" ] },
+								{ "a": "DeleteEntity", "p": [ "block_1_6" ] },
+								{ "a": "DeleteEntity", "p": [ "block_1_7" ] },
+								{ "a": "DeleteEntity", "p": [ "block_1_8" ] },
+
+								{ "a": "DeleteEntity", "p": [ "T_B_1_1" ] },
+								{ "a": "DeleteEntity", "p": [ "T_B_1_2" ] }
+							] 
+						} 
+					] 
+				} 
+			]
+		},
+
+		{
+			"sid": "stage_2_complete_quest",
+			"hidden": true, 
+			
+			"comment": "stage_2_complete", 
+			
+			"activeOnStart": true, 
+			"name": "stage_2_complete", 
+			"sharing": "Clone",
+			
+			"subQuests": 
+			[ 
+				{ 
+					"sid": "stage_2_complete_activator", 
+					"activeOnStart": true, 
+
+					"triggers": 
+					[ 
+						{ 
+							"conditions": 
+							[ 
+								{ "c": "Counter", "p": [ "stage_2_complete", "=", "1" ] }
+							], 
+							
+							"actions": 
+							[ 
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "0" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "1" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "1" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "2" ] },
+
+								{ "a": "CounterSet", "p": [ "respIndex", "2" ] },
+
+								{ "a": "DeleteEntity", "p": [ "block_2_1" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_2" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_3" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_4" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_5" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_6" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_7" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_8" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_9" ] },
+								{ "a": "DeleteEntity", "p": [ "block_2_10" ] },
+
+								{ "a": "DeleteEntity", "p": [ "T_B_2_1" ] },
+								{ "a": "DeleteEntity", "p": [ "T_B_2_2" ] },
+								{ "a": "DeleteEntity", "p": [ "T_B_2_3" ] }
+							] 
+						} 
+					] 
+				} 
+			]
+		},
+
+		{
+			"sid": "stage_3_complete_quest",
+			"hidden": true, 
+			
+			"comment": "stage_3_complete", 
+			
+			"activeOnStart": true, 
+			"name": "stage_1_complete", 
+			"sharing": "Clone",
+			
+			"subQuests": 
+			[ 
+				{ 
+					"sid": "stage_3_complete_activator", 
+					"activeOnStart": true, 
+
+					"triggers": 
+					[ 
+						{ 
+							"conditions": 
+							[ 
+								{ "c": "Counter", "p": [ "stage_3_complete", "=", "1" ] }
+							], 
+							
+							"actions": 
+							[ 
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "0" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "0" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "1" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "1" ] },
+
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "2", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "3", "2" ] },
+								{ "a": "TriggerClearCustom", "p": [ "win_lose_conditions", "1", "4", "2" ] },
+
+								{ "a": "CounterSet", "p": [ "respIndex", "2" ] },
+
+								{ "a": "DeleteEntity", "p": [ "block_3_1" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_2" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_3" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_4" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_5" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_6" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_7" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_8" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_9" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_10" ] },
+								{ "a": "DeleteEntity", "p": [ "block_3_11" ] },
+
+								{ "a": "DeleteEntity", "p": [ "T_B_3_1" ] },
+								{ "a": "DeleteEntity", "p": [ "T_B_3_2" ] },
+								{ "a": "DeleteEntity", "p": [ "T_B_3_3" ] }
+							] 
+						} 
+					] 
+				} 
+			]
+		}
+	]
+}
