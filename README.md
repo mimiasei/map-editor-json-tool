@@ -2,7 +2,7 @@
 
 A browser-based visual editor for the scenario scripting JSON files used in **Heroes of Might and Magic: Olden Era** (by Unfrozen).
 
-Live at: **https://mikkelgrosland.github.io/map-editor-json-tool/**
+Live at: **https://mimiasei.github.io/map-editor-json-tool/**
 
 ---
 
