@@ -155,6 +155,21 @@ interface ScenarioStore {
   togglePanel: (panel: keyof PanelsState) => void
 }
 
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+
+/** Return a SID that doesn't collide with existingSids.
+ *  Strips any trailing _copy / _copy2 / _copy3 … suffix first so cloning
+ *  a clone never accumulates _copy_copy. */
+function uniqueSid(sid: string, existingSids: string[]): string {
+  const base = sid.replace(/_copy\d*$/, '')
+  const taken = new Set(existingSids)
+  let candidate = base + '_copy'
+  if (!taken.has(candidate)) return candidate
+  let n = 2
+  while (taken.has(base + '_copy' + n)) n++
+  return base + '_copy' + n
+}
+
 // ─── Store implementation ───────────────────────────────────────────────────────
 
 export const useScenarioStore = create<ScenarioStore>((set) => ({
@@ -203,10 +218,14 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
   duplicateCounter: (index) =>
     set((s) => {
       const clone = JSON.parse(JSON.stringify(s.scenario.counters[index]))
-      clone.sid = clone.sid + '_copy'
+      clone.sid = uniqueSid(clone.sid, s.scenario.counters.map((c) => c.sid))
       const counters = [...s.scenario.counters]
       counters.splice(index + 1, 0, clone)
-      return { scenario: { ...s.scenario, counters }, isDirty: true }
+      const newSelectedPath =
+        s.selectedType === 'counter' && s.selectedPath[0] > index
+          ? [s.selectedPath[0] + 1]
+          : s.selectedPath
+      return { scenario: { ...s.scenario, counters }, isDirty: true, selectedPath: newSelectedPath }
     }),
 
   // ── Interruptions ──────────────────────────────────────────────────────────
@@ -243,10 +262,14 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
   duplicateInterruption: (index) =>
     set((s) => {
       const clone = JSON.parse(JSON.stringify(s.scenario.interruptions[index]))
-      clone.sid = clone.sid + '_copy'
+      clone.sid = uniqueSid(clone.sid, s.scenario.interruptions.map((i) => i.sid))
       const interruptions = [...s.scenario.interruptions]
       interruptions.splice(index + 1, 0, clone)
-      return { scenario: { ...s.scenario, interruptions }, isDirty: true }
+      const newSelectedPath =
+        s.selectedType === 'interruption' && s.selectedPath[0] > index
+          ? [s.selectedPath[0] + 1]
+          : s.selectedPath
+      return { scenario: { ...s.scenario, interruptions }, isDirty: true, selectedPath: newSelectedPath }
     }),
 
   addInterruptionAction: (interruptionIndex) =>
@@ -317,10 +340,16 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
   duplicateQuest: (questIndex) =>
     set((s) => {
       const clone = JSON.parse(JSON.stringify(s.scenario.quests[questIndex]))
-      clone.sid = clone.sid + '_copy'
+      clone.sid = uniqueSid(clone.sid, s.scenario.quests.map((q) => q.sid))
       const quests = [...s.scenario.quests]
       quests.splice(questIndex + 1, 0, clone)
-      return { scenario: { ...s.scenario, quests }, isDirty: true }
+      const newSelectedPath =
+        s.selectedType !== null &&
+        ['quest', 'subquest', 'trigger'].includes(s.selectedType) &&
+        s.selectedPath[0] > questIndex
+          ? [s.selectedPath[0] + 1, ...s.selectedPath.slice(1)]
+          : s.selectedPath
+      return { scenario: { ...s.scenario, quests }, isDirty: true, selectedPath: newSelectedPath }
     }),
 
   // ── SubQuests ──────────────────────────────────────────────────────────────
@@ -376,12 +405,19 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
       const quests = [...s.scenario.quests]
       const quest = { ...quests[questIndex] }
       const clone = JSON.parse(JSON.stringify(quest.subQuests[subQuestIndex]))
-      clone.sid = clone.sid + '_copy'
+      clone.sid = uniqueSid(clone.sid, quest.subQuests.map((sq) => sq.sid))
       const subQuests = [...quest.subQuests]
       subQuests.splice(subQuestIndex + 1, 0, clone)
       quest.subQuests = subQuests
       quests[questIndex] = quest
-      return { scenario: { ...s.scenario, quests }, isDirty: true }
+      const newSelectedPath =
+        s.selectedType !== null &&
+        ['subquest', 'trigger'].includes(s.selectedType) &&
+        s.selectedPath[0] === questIndex &&
+        s.selectedPath[1] > subQuestIndex
+          ? [s.selectedPath[0], s.selectedPath[1] + 1, ...s.selectedPath.slice(2)]
+          : s.selectedPath
+      return { scenario: { ...s.scenario, quests }, isDirty: true, selectedPath: newSelectedPath }
     }),
 
   // ── Triggers ───────────────────────────────────────────────────────────────
@@ -457,7 +493,14 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
       subQuests[subQuestIndex] = subQuest
       quest.subQuests = subQuests
       quests[questIndex] = quest
-      return { scenario: { ...s.scenario, quests }, isDirty: true }
+      const newSelectedPath =
+        s.selectedType === 'trigger' &&
+        s.selectedPath[0] === questIndex &&
+        s.selectedPath[1] === subQuestIndex &&
+        s.selectedPath[2] > triggerIndex
+          ? [s.selectedPath[0], s.selectedPath[1], s.selectedPath[2] + 1]
+          : s.selectedPath
+      return { scenario: { ...s.scenario, quests }, isDirty: true, selectedPath: newSelectedPath }
     }),
 
   // ── Conditions ─────────────────────────────────────────────────────────────
