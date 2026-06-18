@@ -16,6 +16,47 @@ import {
   Layers,
 } from 'lucide-react'
 
+// ─── Shared action buttons (in-flow, revealed on group hover) ───────────────────
+function RowActions({
+  onDuplicate,
+  onDelete,
+}: {
+  onDuplicate?: () => void
+  onDelete?: () => void
+}) {
+  if (!onDuplicate && !onDelete) return null
+  return (
+    <span className="shrink-0 flex items-center opacity-0 group-hover:opacity-100">
+      {onDuplicate && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 text-muted-foreground hover:text-primary"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDuplicate()
+          }}
+        >
+          <Copy className="h-3 w-3" />
+        </Button>
+      )}
+      {onDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 text-muted-foreground hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      )}
+    </span>
+  )
+}
+
 // ─── Tree node button ───────────────────────────────────────────────────────────
 function TreeItem({
   label,
@@ -36,50 +77,19 @@ function TreeItem({
   icon?: React.ReactNode
   muted?: boolean
 }) {
-  const hasActions = onDuplicate || onDelete
   return (
     <div
       className={cn(
-        'group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none overflow-hidden',
+        'group flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
         selected ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
         muted && 'text-muted-foreground',
-        hasActions && 'pr-6',
-        onDuplicate && onDelete && 'pr-11',
       )}
       style={{ paddingLeft: `${8 + depth * 14}px` }}
       onClick={onClick}
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
       <span className="min-w-0 flex-1 truncate">{label || '(unnamed)'}</span>
-      {onDuplicate && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            'absolute h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary',
-            onDelete ? 'right-6' : 'right-0.5',
-          )}
-          onClick={(e) => {
-            e.stopPropagation()
-            onDuplicate()
-          }}
-        >
-          <Copy className="h-3 w-3" />
-        </Button>
-      )}
-      {onDelete && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
-          }}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      )}
+      <RowActions onDuplicate={onDuplicate} onDelete={onDelete} />
     </div>
   )
 }
@@ -174,7 +184,7 @@ export default function ScenarioTree() {
 
   return (
     <ScrollArea className="flex-1 py-2">
-      <div className="min-w-0 overflow-x-hidden px-1 pb-4">
+      <div className="px-1 pb-4">
         {/* ── Counters ── */}
         <SectionHeader
           label="Counters"
@@ -241,7 +251,7 @@ export default function ScenarioTree() {
                   {/* Quest row */}
                   <div
                     className={cn(
-                      'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-11 text-sm cursor-pointer select-none overflow-hidden',
+                      'group flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
                       isSelected('quest', qi) ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
                     )}
                     style={{ paddingLeft: '22px' }}
@@ -261,32 +271,14 @@ export default function ScenarioTree() {
                       )}
                     </button>
                     <BookOpen className="h-3 w-3 shrink-0 text-muted-foreground" />
-                     <span className="ml-1 min-w-0 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
+                    <span className="ml-1 min-w-0 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
                     {quest.main && (
-                      <span className="text-xs text-primary/70 mr-1">main</span>
+                      <span className="shrink-0 text-xs text-primary/70 mr-1">main</span>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-6 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        duplicateQuest(qi)
-                      }}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeQuest(qi)
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <RowActions
+                      onDuplicate={() => duplicateQuest(qi)}
+                      onDelete={() => removeQuest(qi)}
+                    />
                   </div>
 
                   {/* SubQuests */}
@@ -299,7 +291,7 @@ export default function ScenarioTree() {
                           {/* SubQuest row */}
                           <div
                             className={cn(
-                              'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-11 text-sm cursor-pointer select-none overflow-hidden',
+                              'group flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
                               isSelected('subquest', qi, sqi)
                                 ? 'bg-primary/20 text-primary'
                                 : 'hover:bg-accent',
@@ -324,28 +316,10 @@ export default function ScenarioTree() {
                             <span className="ml-1 min-w-0 flex-1 truncate">
                               sq: {subQuest.sid || '(unnamed)'}
                             </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-6 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                duplicateSubQuest(qi, sqi)
-                              }}
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeSubQuest(qi, sqi)
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            <RowActions
+                              onDuplicate={() => duplicateSubQuest(qi, sqi)}
+                              onDelete={() => removeSubQuest(qi, sqi)}
+                            />
                           </div>
 
                           {/* Triggers */}
