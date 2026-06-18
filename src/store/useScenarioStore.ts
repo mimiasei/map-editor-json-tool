@@ -71,6 +71,7 @@ interface ScenarioStore {
 
   // UI state
   panels: PanelsState
+  sidebarWidth: number // pixel width of the sidebar panel; updated via ResizeObserver in AppShell
 
   // ── Document CRUD ────────────────────────────────────────────────────────
   setScenario: (scenario: ScenarioFile) => void
@@ -153,6 +154,7 @@ interface ScenarioStore {
 
   // ── Panel toggles ─────────────────────────────────────────────────────────
   togglePanel: (panel: keyof PanelsState) => void
+  setSidebarWidth: (width: number) => void
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -178,6 +180,7 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
   selectedType: null,
   selectedPath: [],
   panels: { sidebar: true, editor: true, preview: true },
+  sidebarWidth: 280,
 
   // ── Document CRUD ──────────────────────────────────────────────────────────
 
@@ -625,4 +628,6 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
     set((s) => ({
       panels: { ...s.panels, [panel]: !s.panels[panel] },
     })),
+
+  setSidebarWidth: (width) => set({ sidebarWidth: width }),
 }))

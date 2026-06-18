@@ -17,12 +17,10 @@ import {
 } from 'lucide-react'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
-// TODO (issue #7): replace SIDEBAR_WIDTH with a dynamic value from the store
-// once resizable columns are implemented. The ratio below keeps label width
-// proportional: 175px at the current 280px max column width.
-const SIDEBAR_WIDTH = 280
-const LABEL_MAX_WIDTH = Math.round(SIDEBAR_WIDTH * (175 / 280)) // 175px
-const labelStyle = { maxWidth: `${LABEL_MAX_WIDTH}px` } as const
+// Ratio locks in 175px at the default 280px sidebar width.
+// sidebarWidth comes from the store and is updated live by a ResizeObserver
+// in AppShell, so this scales automatically when the user resizes the panel.
+const LABEL_WIDTH_RATIO = 175 / 280
 
 // ─── Shared action buttons (absolute right-0, revealed on group hover) ─────────
 function RowActions({
@@ -68,6 +66,7 @@ function RowActions({
 // ─── Tree node button ───────────────────────────────────────────────────────────
 function TreeItem({
   label,
+  labelStyle,
   depth = 0,
   selected = false,
   onClick,
@@ -77,6 +76,7 @@ function TreeItem({
   muted = false,
 }: {
   label: string
+  labelStyle: React.CSSProperties
   depth?: number
   selected?: boolean
   onClick?: () => void
@@ -153,6 +153,7 @@ export default function ScenarioTree() {
     selectedType,
     selectedPath,
     setSelection,
+    sidebarWidth,
     addCounter,
     removeCounter,
     duplicateCounter,
@@ -190,6 +191,8 @@ export default function ScenarioTree() {
   const isSelected = (type: string, ...path: number[]) =>
     selectedType === type && path.every((v, i) => selectedPath[i] === v)
 
+  const labelStyle = { maxWidth: `${Math.round(sidebarWidth * LABEL_WIDTH_RATIO)}px` }
+
   return (
     <ScrollArea className="flex-1 py-2">
       <div className="px-1 pb-4">
@@ -207,6 +210,7 @@ export default function ScenarioTree() {
             <TreeItem
               key={i}
               label={counter.sid}
+              labelStyle={labelStyle}
               depth={1}
               selected={isSelected('counter', i)}
               onClick={() => setSelection('counter', [i])}
@@ -231,6 +235,7 @@ export default function ScenarioTree() {
               <TreeItem
                 key={i}
                 label={intr.sid}
+                labelStyle={labelStyle}
                 depth={1}
                 selected={isSelected('interruption', i)}
                 onClick={() => setSelection('interruption', [i])}
@@ -337,6 +342,7 @@ export default function ScenarioTree() {
                                 <TreeItem
                                   key={ti}
                                   label={`Trigger ${ti + 1}`}
+                                  labelStyle={labelStyle}
                                   depth={4}
                                   selected={isSelected('trigger', qi, sqi, ti)}
                                   onClick={() => setSelection('trigger', [qi, sqi, ti])}
