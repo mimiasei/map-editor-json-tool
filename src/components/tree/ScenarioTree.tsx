@@ -36,20 +36,21 @@ function TreeItem({
   return (
     <div
       className={cn(
-        'group flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+        'group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none overflow-hidden',
         selected ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
         muted && 'text-muted-foreground',
+        onDelete && 'pr-6',
       )}
       style={{ paddingLeft: `${8 + depth * 14}px` }}
       onClick={onClick}
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
-      <span className="min-w-0 flex-1 truncate">{label || '(unnamed)'}</span>
+      <span className="flex-1 truncate">{label || '(unnamed)'}</span>
       {onDelete && (
         <Button
           variant="ghost"
           size="icon"
-          className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+          className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
           onClick={(e) => {
             e.stopPropagation()
             onDelete()
@@ -212,7 +213,7 @@ export default function ScenarioTree() {
                   {/* Quest row */}
                   <div
                     className={cn(
-                      'group flex min-w-0 items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+                      'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-6 text-sm cursor-pointer select-none overflow-hidden',
                       isSelected('quest', qi) ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
                     )}
                     style={{ paddingLeft: '22px' }}
@@ -232,14 +233,14 @@ export default function ScenarioTree() {
                       )}
                     </button>
                     <BookOpen className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    <span className="ml-1 min-w-0 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
+                    <span className="ml-1 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
                     {quest.main && (
                       <span className="text-xs text-primary/70 mr-1">main</span>
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                      className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation()
                         removeQuest(qi)
@@ -259,7 +260,7 @@ export default function ScenarioTree() {
                           {/* SubQuest row */}
                           <div
                             className={cn(
-                              'group flex min-w-0 items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+                              'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-6 text-sm cursor-pointer select-none overflow-hidden',
                               isSelected('subquest', qi, sqi)
                                 ? 'bg-primary/20 text-primary'
                                 : 'hover:bg-accent',
@@ -281,13 +282,13 @@ export default function ScenarioTree() {
                               )}
                             </button>
                             <List className="h-3 w-3 shrink-0 text-muted-foreground" />
-                            <span className="ml-1 min-w-0 flex-1 truncate">
+                            <span className="ml-1 flex-1 truncate">
                               sq: {subQuest.sid || '(unnamed)'}
                             </span>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                              className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 removeSubQuest(qi, sqi)
