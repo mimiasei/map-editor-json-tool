@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useStore } from 'zustand'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { importScenario } from '@/lib/import'
 import { exportScenario, downloadJson } from '@/lib/export'
@@ -28,6 +29,8 @@ import {
   Braces,
   AlertTriangle,
   CheckCircle,
+  Undo2,
+  Redo2,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -39,6 +42,19 @@ export default function Toolbar() {
   const [importErrors, setImportErrors] = useState<string[]>([])
   const [importWarnings, setImportWarnings] = useState<string[]>([])
   const [importFeedbackOpen, setImportFeedbackOpen] = useState(false)
+
+  const canUndo = useStore(useScenarioStore.temporal, (s) => s.pastStates.length > 0)
+  const canRedo = useStore(useScenarioStore.temporal, (s) => s.futureStates.length > 0)
+
+  const handleUndo = () => {
+    useScenarioStore.temporal.getState().undo()
+    useScenarioStore.setState({ isDirty: true })
+  }
+
+  const handleRedo = () => {
+    useScenarioStore.temporal.getState().redo()
+    useScenarioStore.setState({ isDirty: true })
+  }
 
   const handleNew = () => {
     if (isDirty && !confirm('You have unsaved changes. Start a new scenario anyway?')) return
@@ -123,12 +139,7 @@ export default function Toolbar() {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setValidateOpen(true)}
-                className="gap-1.5"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setValidateOpen(true)} className="gap-1.5">
                 <ShieldCheck className="h-4 w-4" />
                 Validate
                 {validation.errors.length > 0 && (
@@ -144,6 +155,36 @@ export default function Toolbar() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Validate scenario</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleUndo}
+                disabled={!canUndo}
+              >
+                <Undo2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleRedo}
+                disabled={!canRedo}
+              >
+                <Redo2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Redo (Ctrl+Shift+Z)</TooltipContent>
           </Tooltip>
         </div>
 

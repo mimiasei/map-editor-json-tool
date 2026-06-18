@@ -16,6 +16,9 @@ dist/
 *.swp
 *.swo
 
+# Local agent instructions
+AGENTS.md
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
