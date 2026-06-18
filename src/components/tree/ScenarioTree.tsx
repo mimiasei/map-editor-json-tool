@@ -17,11 +17,6 @@ import {
 } from 'lucide-react'
 
 // ─── Tree node button ───────────────────────────────────────────────────────────
-function truncSid(s: string): string {
-  if (!s) return '(unnamed)'
-  return s.length > 25 ? s.slice(0, 23) + '..' : s
-}
-
 function TreeItem({
   label,
   depth = 0,
@@ -55,7 +50,7 @@ function TreeItem({
       onClick={onClick}
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
-      <span className="flex-1 truncate">{truncSid(label)}</span>
+      <span className="min-w-0 flex-1 truncate">{label || '(unnamed)'}</span>
       {onDuplicate && (
         <Button
           variant="ghost"
@@ -179,7 +174,7 @@ export default function ScenarioTree() {
 
   return (
     <ScrollArea className="flex-1 py-2">
-      <div className="min-w-0 px-1 pb-4">
+      <div className="min-w-0 overflow-x-hidden px-1 pb-4">
         {/* ── Counters ── */}
         <SectionHeader
           label="Counters"
@@ -266,7 +261,7 @@ export default function ScenarioTree() {
                       )}
                     </button>
                     <BookOpen className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    <span className="ml-1 flex-1 truncate">{truncSid(quest.sid)}</span>
+                     <span className="ml-1 min-w-0 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
                     {quest.main && (
                       <span className="text-xs text-primary/70 mr-1">main</span>
                     )}
@@ -326,8 +321,8 @@ export default function ScenarioTree() {
                               )}
                             </button>
                             <List className="h-3 w-3 shrink-0 text-muted-foreground" />
-                            <span className="ml-1 flex-1 truncate">
-                              sq: {truncSid(subQuest.sid)}
+                            <span className="ml-1 min-w-0 flex-1 truncate">
+                              sq: {subQuest.sid || '(unnamed)'}
                             </span>
                             <Button
                               variant="ghost"
