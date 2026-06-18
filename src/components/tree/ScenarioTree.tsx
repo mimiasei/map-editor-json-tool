@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Plus,
   Trash2,
+  Copy,
   Hash,
   Zap,
   BookOpen,
@@ -26,6 +27,7 @@ function TreeItem({
   depth = 0,
   selected = false,
   onClick,
+  onDuplicate,
   onDelete,
   icon,
   muted = false,
@@ -34,23 +36,42 @@ function TreeItem({
   depth?: number
   selected?: boolean
   onClick?: () => void
+  onDuplicate?: () => void
   onDelete?: () => void
   icon?: React.ReactNode
   muted?: boolean
 }) {
+  const hasActions = onDuplicate || onDelete
   return (
     <div
       className={cn(
         'group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none overflow-hidden',
         selected ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
         muted && 'text-muted-foreground',
-        onDelete && 'pr-6',
+        hasActions && 'pr-6',
+        onDuplicate && onDelete && 'pr-11',
       )}
       style={{ paddingLeft: `${8 + depth * 14}px` }}
       onClick={onClick}
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
       <span className="flex-1 truncate">{truncSid(label)}</span>
+      {onDuplicate && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'absolute h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary',
+            onDelete ? 'right-6' : 'right-0.5',
+          )}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDuplicate()
+          }}
+        >
+          <Copy className="h-3 w-3" />
+        </Button>
+      )}
       {onDelete && (
         <Button
           variant="ghost"
@@ -121,14 +142,19 @@ export default function ScenarioTree() {
     setSelection,
     addCounter,
     removeCounter,
+    duplicateCounter,
     addInterruption,
     removeInterruption,
+    duplicateInterruption,
     addQuest,
     removeQuest,
+    duplicateQuest,
     addSubQuest,
     removeSubQuest,
+    duplicateSubQuest,
     addTrigger,
     removeTrigger,
+    duplicateTrigger,
   } = useScenarioStore()
 
   const [openSections, setOpenSections] = useState({
@@ -171,6 +197,7 @@ export default function ScenarioTree() {
               depth={1}
               selected={isSelected('counter', i)}
               onClick={() => setSelection('counter', [i])}
+              onDuplicate={() => duplicateCounter(i)}
               onDelete={() => removeCounter(i)}
               icon={<Hash className="h-3 w-3" />}
             />
@@ -194,6 +221,7 @@ export default function ScenarioTree() {
                 depth={1}
                 selected={isSelected('interruption', i)}
                 onClick={() => setSelection('interruption', [i])}
+                onDuplicate={() => duplicateInterruption(i)}
                 onDelete={() => removeInterruption(i)}
                 icon={<Zap className="h-3 w-3" />}
               />
@@ -218,7 +246,7 @@ export default function ScenarioTree() {
                   {/* Quest row */}
                   <div
                     className={cn(
-                      'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-6 text-sm cursor-pointer select-none overflow-hidden',
+                      'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-11 text-sm cursor-pointer select-none overflow-hidden',
                       isSelected('quest', qi) ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
                     )}
                     style={{ paddingLeft: '22px' }}
@@ -245,6 +273,17 @@ export default function ScenarioTree() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="absolute right-6 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        duplicateQuest(qi)
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation()
@@ -265,7 +304,7 @@ export default function ScenarioTree() {
                           {/* SubQuest row */}
                           <div
                             className={cn(
-                              'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-6 text-sm cursor-pointer select-none overflow-hidden',
+                              'group relative flex items-center gap-0.5 rounded px-1 py-0.5 pr-11 text-sm cursor-pointer select-none overflow-hidden',
                               isSelected('subquest', qi, sqi)
                                 ? 'bg-primary/20 text-primary'
                                 : 'hover:bg-accent',
@@ -293,6 +332,17 @@ export default function ScenarioTree() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="absolute right-6 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                duplicateSubQuest(qi, sqi)
+                              }}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="absolute right-0.5 h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -313,6 +363,7 @@ export default function ScenarioTree() {
                                   depth={4}
                                   selected={isSelected('trigger', qi, sqi, ti)}
                                   onClick={() => setSelection('trigger', [qi, sqi, ti])}
+                                  onDuplicate={() => duplicateTrigger(qi, sqi, ti)}
                                   onDelete={() => removeTrigger(qi, sqi, ti)}
                                   icon={<Layers className="h-3 w-3" />}
                                 />

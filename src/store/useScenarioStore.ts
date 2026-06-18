@@ -81,6 +81,7 @@ interface ScenarioStore {
   addCounter: () => void
   updateCounter: (index: number, counter: Counter) => void
   removeCounter: (index: number) => void
+  duplicateCounter: (index: number) => void
 
   // ── Interruption operations ──────────────────────────────────────────────
   addInterruption: () => void
@@ -89,16 +90,19 @@ interface ScenarioStore {
   addInterruptionAction: (interruptionIndex: number) => void
   updateInterruptionAction: (interruptionIndex: number, actionIndex: number, action: Action) => void
   removeInterruptionAction: (interruptionIndex: number, actionIndex: number) => void
+  duplicateInterruption: (index: number) => void
 
   // ── Quest operations ─────────────────────────────────────────────────────
   addQuest: () => void
   updateQuest: (questIndex: number, quest: Partial<Quest>) => void
   removeQuest: (questIndex: number) => void
+  duplicateQuest: (questIndex: number) => void
 
   // ── SubQuest operations ──────────────────────────────────────────────────
   addSubQuest: (questIndex: number) => void
   updateSubQuest: (questIndex: number, subQuestIndex: number, subQuest: Partial<SubQuest>) => void
   removeSubQuest: (questIndex: number, subQuestIndex: number) => void
+  duplicateSubQuest: (questIndex: number, subQuestIndex: number) => void
 
   // ── Trigger operations ───────────────────────────────────────────────────
   addTrigger: (questIndex: number, subQuestIndex: number) => void
@@ -109,6 +113,7 @@ interface ScenarioStore {
     trigger: Partial<Trigger>,
   ) => void
   removeTrigger: (questIndex: number, subQuestIndex: number, triggerIndex: number) => void
+  duplicateTrigger: (questIndex: number, subQuestIndex: number, triggerIndex: number) => void
 
   // ── Condition operations ─────────────────────────────────────────────────
   addCondition: (questIndex: number, subQuestIndex: number, triggerIndex: number) => void
@@ -195,6 +200,15 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
       selectedPath: s.selectedType === 'counter' && s.selectedPath[0] === index ? [] : s.selectedPath,
     })),
 
+  duplicateCounter: (index) =>
+    set((s) => {
+      const clone = JSON.parse(JSON.stringify(s.scenario.counters[index]))
+      clone.sid = clone.sid + '_copy'
+      const counters = [...s.scenario.counters]
+      counters.splice(index + 1, 0, clone)
+      return { scenario: { ...s.scenario, counters }, isDirty: true }
+    }),
+
   // ── Interruptions ──────────────────────────────────────────────────────────
 
   addInterruption: () =>
@@ -225,6 +239,15 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
       selectedPath:
         s.selectedType === 'interruption' && s.selectedPath[0] === index ? [] : s.selectedPath,
     })),
+
+  duplicateInterruption: (index) =>
+    set((s) => {
+      const clone = JSON.parse(JSON.stringify(s.scenario.interruptions[index]))
+      clone.sid = clone.sid + '_copy'
+      const interruptions = [...s.scenario.interruptions]
+      interruptions.splice(index + 1, 0, clone)
+      return { scenario: { ...s.scenario, interruptions }, isDirty: true }
+    }),
 
   addInterruptionAction: (interruptionIndex) =>
     set((s) => {
@@ -291,6 +314,15 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
           : s.selectedPath,
     })),
 
+  duplicateQuest: (questIndex) =>
+    set((s) => {
+      const clone = JSON.parse(JSON.stringify(s.scenario.quests[questIndex]))
+      clone.sid = clone.sid + '_copy'
+      const quests = [...s.scenario.quests]
+      quests.splice(questIndex + 1, 0, clone)
+      return { scenario: { ...s.scenario, quests }, isDirty: true }
+    }),
+
   // ── SubQuests ──────────────────────────────────────────────────────────────
 
   addSubQuest: (questIndex) =>
@@ -337,6 +369,19 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
             ? []
             : s.selectedPath,
       }
+    }),
+
+  duplicateSubQuest: (questIndex, subQuestIndex) =>
+    set((s) => {
+      const quests = [...s.scenario.quests]
+      const quest = { ...quests[questIndex] }
+      const clone = JSON.parse(JSON.stringify(quest.subQuests[subQuestIndex]))
+      clone.sid = clone.sid + '_copy'
+      const subQuests = [...quest.subQuests]
+      subQuests.splice(subQuestIndex + 1, 0, clone)
+      quest.subQuests = subQuests
+      quests[questIndex] = quest
+      return { scenario: { ...s.scenario, quests }, isDirty: true }
     }),
 
   // ── Triggers ───────────────────────────────────────────────────────────────
@@ -397,6 +442,22 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
             ? []
             : s.selectedPath,
       }
+    }),
+
+  duplicateTrigger: (questIndex, subQuestIndex, triggerIndex) =>
+    set((s) => {
+      const quests = [...s.scenario.quests]
+      const quest = { ...quests[questIndex] }
+      const subQuests = [...quest.subQuests]
+      const subQuest = { ...subQuests[subQuestIndex] }
+      const clone = JSON.parse(JSON.stringify(subQuest.triggers[triggerIndex]))
+      const triggers = [...subQuest.triggers]
+      triggers.splice(triggerIndex + 1, 0, clone)
+      subQuest.triggers = triggers
+      subQuests[subQuestIndex] = subQuest
+      quest.subQuests = subQuests
+      quests[questIndex] = quest
+      return { scenario: { ...s.scenario, quests }, isDirty: true }
     }),
 
   // ── Conditions ─────────────────────────────────────────────────────────────
