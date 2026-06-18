@@ -16,7 +16,7 @@ import {
   Layers,
 } from 'lucide-react'
 
-// ─── Shared action buttons (in-flow, revealed on group hover) ───────────────────
+// ─── Shared action buttons (absolute right-0, revealed on group hover) ─────────
 function RowActions({
   onDuplicate,
   onDelete,
@@ -26,7 +26,7 @@ function RowActions({
 }) {
   if (!onDuplicate && !onDelete) return null
   return (
-    <span className="shrink-0 flex items-center opacity-0 group-hover:opacity-100">
+    <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
       {onDuplicate && (
         <Button
           variant="ghost"
@@ -80,7 +80,7 @@ function TreeItem({
   return (
     <div
       className={cn(
-        'group flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+        'group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
         selected ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
         muted && 'text-muted-foreground',
       )}
@@ -88,7 +88,7 @@ function TreeItem({
       onClick={onClick}
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
-      <span className="min-w-0 flex-1 truncate">{label || '(unnamed)'}</span>
+      <span className="truncate max-w-[190px]">{label || '(unnamed)'}</span>
       <RowActions onDuplicate={onDuplicate} onDelete={onDelete} />
     </div>
   )
@@ -251,7 +251,7 @@ export default function ScenarioTree() {
                   {/* Quest row */}
                   <div
                     className={cn(
-                      'group flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+                      'group relative flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
                       isSelected('quest', qi) ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
                     )}
                     style={{ paddingLeft: '22px' }}
@@ -271,7 +271,7 @@ export default function ScenarioTree() {
                       )}
                     </button>
                     <BookOpen className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    <span className="ml-1 min-w-0 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
+                    <span className="ml-1 truncate max-w-[190px]">{quest.sid || '(unnamed)'}</span>
                     {quest.main && (
                       <span className="shrink-0 text-xs text-primary/70 mr-1">main</span>
                     )}
@@ -291,7 +291,7 @@ export default function ScenarioTree() {
                           {/* SubQuest row */}
                           <div
                             className={cn(
-                              'group flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+                              'group relative flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
                               isSelected('subquest', qi, sqi)
                                 ? 'bg-primary/20 text-primary'
                                 : 'hover:bg-accent',
@@ -313,7 +313,7 @@ export default function ScenarioTree() {
                               )}
                             </button>
                             <List className="h-3 w-3 shrink-0 text-muted-foreground" />
-                            <span className="ml-1 min-w-0 flex-1 truncate">
+                            <span className="ml-1 truncate max-w-[190px]">
                               sq: {subQuest.sid || '(unnamed)'}
                             </span>
                             <RowActions
