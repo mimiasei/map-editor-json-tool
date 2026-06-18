@@ -36,7 +36,7 @@ function TreeItem({
   return (
     <div
       className={cn(
-        'group flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+        'group flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
         selected ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
         muted && 'text-muted-foreground',
       )}
@@ -44,7 +44,7 @@ function TreeItem({
       onClick={onClick}
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
-      <span className="flex-1 truncate">{label || '(unnamed)'}</span>
+      <span className="min-w-0 flex-1 truncate">{label || '(unnamed)'}</span>
       {onDelete && (
         <Button
           variant="ghost"
@@ -212,7 +212,7 @@ export default function ScenarioTree() {
                   {/* Quest row */}
                   <div
                     className={cn(
-                      'group flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+                      'group flex min-w-0 items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
                       isSelected('quest', qi) ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
                     )}
                     style={{ paddingLeft: '22px' }}
@@ -232,7 +232,7 @@ export default function ScenarioTree() {
                       )}
                     </button>
                     <BookOpen className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    <span className="ml-1 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
+                    <span className="ml-1 min-w-0 flex-1 truncate">{quest.sid || '(unnamed)'}</span>
                     {quest.main && (
                       <span className="text-xs text-primary/70 mr-1">main</span>
                     )}
@@ -259,7 +259,7 @@ export default function ScenarioTree() {
                           {/* SubQuest row */}
                           <div
                             className={cn(
-                              'group flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+                              'group flex min-w-0 items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
                               isSelected('subquest', qi, sqi)
                                 ? 'bg-primary/20 text-primary'
                                 : 'hover:bg-accent',
@@ -281,7 +281,7 @@ export default function ScenarioTree() {
                               )}
                             </button>
                             <List className="h-3 w-3 shrink-0 text-muted-foreground" />
-                            <span className="ml-1 flex-1 truncate">
+                            <span className="ml-1 min-w-0 flex-1 truncate">
                               sq: {subQuest.sid || '(unnamed)'}
                             </span>
                             <Button
