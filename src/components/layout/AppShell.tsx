@@ -1,3 +1,6 @@
+import { useEffect, useRef } from 'react'
+import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
+import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
@@ -5,44 +8,91 @@ import EditorPanel from '@/components/editors/EditorPanel'
 import JsonPreview from '@/components/common/JsonPreview'
 
 export default function AppShell() {
-  const { panels } = useScenarioStore()
+  const { panels, setSidebarWidth } = useScenarioStore()
 
-  const visibleCount = [panels.sidebar, panels.editor, panels.preview].filter(Boolean).length
+  // ── Imperative panel handles for toolbar-driven collapse / expand ───────────
+  const sidebarPanelRef = useRef<PanelImperativeHandle | null>(null)
+  const editorPanelRef  = useRef<PanelImperativeHandle | null>(null)
+  const previewPanelRef = useRef<PanelImperativeHandle | null>(null)
+
+  // ── localStorage persistence ─────────────────────────────────────────────────
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: 'main-layout',
+    storage: localStorage,
+  })
+
+  // Sync Zustand panel-visibility state → imperative collapse / expand
+  useEffect(() => {
+    if (panels.sidebar) sidebarPanelRef.current?.expand()
+    else sidebarPanelRef.current?.collapse()
+  }, [panels.sidebar])
+
+  useEffect(() => {
+    if (panels.editor) editorPanelRef.current?.expand()
+    else editorPanelRef.current?.collapse()
+  }, [panels.editor])
+
+  useEffect(() => {
+    if (panels.preview) previewPanelRef.current?.expand()
+    else previewPanelRef.current?.collapse()
+  }, [panels.preview])
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       <Toolbar />
-      <div
-        className="flex flex-1 overflow-hidden"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: [
-            panels.sidebar ? 'minmax(200px, 280px)' : '',
-            panels.editor ? '1fr' : '',
-            panels.preview ? 'minmax(280px, 400px)' : '',
-          ]
-            .filter(Boolean)
-            .join(' '),
-          // Ensure at least something is visible
-          ...(visibleCount === 0 ? { gridTemplateColumns: '1fr' } : {}),
-        }}
+      <Group
+        orientation="horizontal"
+        defaultLayout={defaultLayout}
+        onLayoutChanged={onLayoutChanged}
+        className="flex-1 overflow-hidden"
       >
-        {panels.sidebar && (
-          <aside className="flex flex-col overflow-hidden border-r border-border">
+        {/* ── Sidebar ── */}
+        <Panel
+          panelRef={sidebarPanelRef}
+          id="sidebar"
+          defaultSize="20%"
+          minSize="12%"
+          maxSize="30%"
+          collapsible
+          onResize={(size) => {
+            if (size.inPixels > 0) setSidebarWidth(Math.round(size.inPixels))
+          }}
+        >
+          <aside className="flex h-full flex-col overflow-hidden border-r border-border">
             <ScenarioTree />
           </aside>
-        )}
-        {panels.editor && (
-          <main className="flex flex-col overflow-hidden border-r border-border">
+        </Panel>
+
+        <Separator className="w-1 cursor-col-resize bg-border transition-colors hover:bg-primary/40 focus-visible:outline-none" />
+
+        {/* ── Editor ── */}
+        <Panel
+          panelRef={editorPanelRef}
+          id="editor"
+          defaultSize="50%"
+          minSize="20%"
+          collapsible
+        >
+          <main className="flex h-full flex-col overflow-hidden border-r border-border">
             <EditorPanel />
           </main>
-        )}
-        {panels.preview && (
-          <aside className="flex flex-col overflow-hidden">
+        </Panel>
+
+        <Separator className="w-1 cursor-col-resize bg-border transition-colors hover:bg-primary/40 focus-visible:outline-none" />
+
+        {/* ── Preview ── */}
+        <Panel
+          panelRef={previewPanelRef}
+          id="preview"
+          defaultSize="30%"
+          minSize="15%"
+          collapsible
+        >
+          <aside className="flex h-full flex-col overflow-hidden">
             <JsonPreview />
           </aside>
-        )}
-      </div>
+        </Panel>
+      </Group>
     </div>
   )
 }
