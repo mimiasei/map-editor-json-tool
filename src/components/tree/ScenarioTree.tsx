@@ -16,6 +16,14 @@ import {
   Layers,
 } from 'lucide-react'
 
+// ─── Label width ────────────────────────────────────────────────────────────────
+// TODO (issue #7): replace SIDEBAR_WIDTH with a dynamic value from the store
+// once resizable columns are implemented. The ratio below keeps label width
+// proportional: 175px at the current 280px max column width.
+const SIDEBAR_WIDTH = 280
+const LABEL_MAX_WIDTH = Math.round(SIDEBAR_WIDTH * (175 / 280)) // 175px
+const labelStyle = { maxWidth: `${LABEL_MAX_WIDTH}px` } as const
+
 // ─── Shared action buttons (absolute right-0, revealed on group hover) ─────────
 function RowActions({
   onDuplicate,
@@ -88,7 +96,7 @@ function TreeItem({
       onClick={onClick}
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
-      <span className="truncate max-w-[190px]">{label || '(unnamed)'}</span>
+      <span className="truncate" style={labelStyle}>{label || '(unnamed)'}</span>
       <RowActions onDuplicate={onDuplicate} onDelete={onDelete} />
     </div>
   )
@@ -271,7 +279,7 @@ export default function ScenarioTree() {
                       )}
                     </button>
                     <BookOpen className="h-3 w-3 shrink-0 text-muted-foreground" />
-                    <span className="ml-1 truncate max-w-[190px]">{quest.sid || '(unnamed)'}</span>
+                    <span className="ml-1 truncate" style={labelStyle}>{quest.sid || '(unnamed)'}</span>
                     {quest.main && (
                       <span className="shrink-0 text-xs text-primary/70 mr-1">main</span>
                     )}
@@ -313,7 +321,7 @@ export default function ScenarioTree() {
                               )}
                             </button>
                             <List className="h-3 w-3 shrink-0 text-muted-foreground" />
-                            <span className="ml-1 truncate max-w-[190px]">
+                            <span className="ml-1 truncate" style={labelStyle}>
                               sq: {subQuest.sid || '(unnamed)'}
                             </span>
                             <RowActions
