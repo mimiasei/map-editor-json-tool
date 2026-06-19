@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { temporal } from 'zundo'
 import type {
   ScenarioFile,
   Counter,
@@ -174,7 +175,9 @@ function uniqueSid(sid: string, existingSids: string[]): string {
 
 // ─── Store implementation ───────────────────────────────────────────────────────
 
-export const useScenarioStore = create<ScenarioStore>((set) => ({
+export const useScenarioStore = create<ScenarioStore>()(
+  temporal(
+    (set) => ({
   scenario: EMPTY_SCENARIO,
   isDirty: false,
   selectedType: null,
@@ -184,11 +187,15 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
 
   // ── Document CRUD ──────────────────────────────────────────────────────────
 
-  setScenario: (scenario) =>
-    set({ scenario, isDirty: false, selectedType: null, selectedPath: [] }),
+  setScenario: (scenario) => {
+    set({ scenario, isDirty: false, selectedType: null, selectedPath: [] })
+    useScenarioStore.temporal.getState().clear()
+  },
 
-  resetScenario: () =>
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, selectedType: null, selectedPath: [] }),
+  resetScenario: () => {
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, selectedType: null, selectedPath: [] })
+    useScenarioStore.temporal.getState().clear()
+  },
 
   markClean: () => set({ isDirty: false }),
 
@@ -630,4 +637,10 @@ export const useScenarioStore = create<ScenarioStore>((set) => ({
     })),
 
   setSidebarWidth: (width) => set({ sidebarWidth: width }),
-}))
+    }),
+    {
+      partialize: (state) => ({ scenario: state.scenario }),
+      limit: 100,
+    },
+  ),
+)

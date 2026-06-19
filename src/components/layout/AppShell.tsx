@@ -37,6 +37,26 @@ export default function AppShell() {
     else previewPanelRef.current?.collapse()
   }, [panels.preview])
 
+  // ── Undo / Redo keyboard shortcuts ───────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey
+      if (!mod) return
+      if (e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        useScenarioStore.temporal.getState().undo()
+        useScenarioStore.setState({ isDirty: true })
+      }
+      if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+        e.preventDefault()
+        useScenarioStore.temporal.getState().redo()
+        useScenarioStore.setState({ isDirty: true })
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       <Toolbar />
