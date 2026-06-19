@@ -60,8 +60,6 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
 
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
-      {/* PopoverAnchor positions the dropdown without making the input a
-          click-toggle trigger — open/close is driven by focus/blur only. */}
       <div className="relative">
         <PopoverAnchor asChild>
           <Input
@@ -71,6 +69,7 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
               setOpen(true)
             }}
             onFocus={() => setOpen(true)}
+            onBlur={() => setTimeout(() => setOpen(false), 150)}
             placeholder={placeholder}
             className="pr-7"
           />
@@ -80,10 +79,12 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
 
       <PopoverContent
         className="p-0"
-        // Match width of the input field exactly
         style={{ width: 'var(--radix-popover-anchor-width)' }}
         // Don't steal focus from the input when the popover opens
         onOpenAutoFocus={(e) => e.preventDefault()}
+        // Prevent Radix from closing the popover when interacting with the
+        // input (the anchor). Actual closing is handled by the input's onBlur.
+        onInteractOutside={(e) => e.preventDefault()}
       >
         <Command shouldFilter={false}>
           <CommandList>
