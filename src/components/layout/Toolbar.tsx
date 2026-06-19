@@ -32,14 +32,16 @@ import {
   Undo2,
   Redo2,
   Search,
+  CalendarClock,
 } from 'lucide-react'
 import { useState } from 'react'
 
 interface ToolbarProps {
   onSearchOpen?: () => void
+  onTimelineOpen?: () => void
 }
 
-export default function Toolbar({ onSearchOpen }: ToolbarProps) {
+export default function Toolbar({ onSearchOpen, onTimelineOpen }: ToolbarProps) {
   const { scenario, isDirty, panels, setScenario, resetScenario, markClean, togglePanel } =
     useScenarioStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -200,6 +202,20 @@ export default function Toolbar({ onSearchOpen }: ToolbarProps) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Search (Ctrl+K)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onTimelineOpen}
+              >
+                <CalendarClock className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Event Timeline</TooltipContent>
           </Tooltip>
         </div>
 

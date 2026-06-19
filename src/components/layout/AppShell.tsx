@@ -7,10 +7,12 @@ import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
 import JsonPreview from '@/components/common/JsonPreview'
 import CommandPalette from '@/components/common/CommandPalette'
+import TimelineDialog from '@/components/common/TimelineDialog'
 
 export default function AppShell() {
   const { panels, setSidebarWidth } = useScenarioStore()
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [timelineOpen, setTimelineOpen] = useState(false)
 
   // ── Imperative panel handles for toolbar-driven collapse / expand ───────────
   const sidebarPanelRef = useRef<PanelImperativeHandle | null>(null)
@@ -65,8 +67,9 @@ export default function AppShell() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Toolbar onSearchOpen={() => setPaletteOpen(true)} />
+      <Toolbar onSearchOpen={() => setPaletteOpen(true)} onTimelineOpen={() => setTimelineOpen(true)} />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <TimelineDialog open={timelineOpen} onOpenChange={setTimelineOpen} />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}
