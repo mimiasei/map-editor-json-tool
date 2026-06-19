@@ -145,12 +145,12 @@ This project is open source and contributions are welcome.
 
 **To contribute:**
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b my-feature`
-3. Commit your changes: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin my-feature`
-5. Open a pull request
+1. **Open an issue first.** Before writing any code, create a GitHub issue describing the feature or bug. This keeps work visible, avoids duplicate effort, and lets maintainers give feedback before you invest time in an implementation.
+2. Fork the repository and create a feature branch off `main`: `git checkout -b feature/my-feature`
+3. Commit your changes with a clear message
+4. Push the branch: `git push origin feature/my-feature`
+5. Open a pull request that references the issue (e.g. `Closes #42` in the PR description)
 
-Please keep PRs focused — one feature or fix per PR makes review faster.
+Please keep PRs focused — one feature or fix per PR makes review faster. PRs without a corresponding issue may be closed or asked to create one first.
 
 If you have found a new condition/action type in a scenario file not yet covered by the registry, opening an issue or PR with the type name and a `p[]` example is extremely helpful.
