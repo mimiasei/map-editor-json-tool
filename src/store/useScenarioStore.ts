@@ -640,6 +640,7 @@ export const useScenarioStore = create<ScenarioStore>()(
     }),
     {
       partialize: (state) => ({ scenario: state.scenario }),
+      equality: (a, b) => a.scenario === b.scenario,
       limit: 100,
     },
   ),
