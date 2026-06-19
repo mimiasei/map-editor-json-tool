@@ -45,3 +45,34 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* ─── Custom scrollbars ──────────────────────────────────────────────────────
+   Track: black  |  Thumb: --muted-foreground (same gray as timeline text)
+   Covers WebKit/Blink (Chrome, Edge, Safari) and Firefox.
+   ─────────────────────────────────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground)) #000;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #000;
+}
+
+*::-webkit-scrollbar-corner {
+  background: #000;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground) / 0.7);
+}
