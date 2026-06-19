@@ -61,8 +61,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Quest Management',
     description: 'Activates a specific subquest on a quest.',
     params: [
-      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true },
-      { label: 'Subquest ID', hint: 'e.g. 2', required: true },
+      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true, ref: 'quest' },
+      { label: 'Subquest ID', hint: 'e.g. 2', required: true, ref: 'subquest' },
     ],
   },
   SubQuestDeactivate: {
@@ -71,8 +71,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Quest Management',
     description: 'Deactivates a specific subquest on a quest.',
     params: [
-      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true },
-      { label: 'Subquest ID', hint: 'e.g. 2', required: true },
+      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true, ref: 'quest' },
+      { label: 'Subquest ID', hint: 'e.g. 2', required: true, ref: 'subquest' },
     ],
   },
   NextQuest: {
@@ -81,7 +81,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Quest Management',
     description: 'Advances to the next quest (activates it).',
     params: [
-      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true },
+      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true, ref: 'quest' },
     ],
   },
   EndQuest: {
@@ -90,7 +90,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Quest Management',
     description: 'Ends/closes the specified quest.',
     params: [
-      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true },
+      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true, ref: 'quest' },
     ],
   },
 
@@ -101,7 +101,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Counter',
     description: 'Increments a counter by the given amount.',
     params: [
-      { label: 'Counter ID', hint: 'e.g. main_quest_stage', required: true },
+      { label: 'Counter ID', hint: 'e.g. main_quest_stage', required: true, ref: 'counter' },
       { label: 'Amount', hint: 'e.g. 1', required: true, type: 'number' },
     ],
   },
@@ -111,7 +111,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Counter',
     description: 'Sets a counter to a random integer between min and max (inclusive).',
     params: [
-      { label: 'Counter ID', hint: 'e.g. random_event', required: true },
+      { label: 'Counter ID', hint: 'e.g. random_event', required: true, ref: 'counter' },
       { label: 'Min', hint: 'e.g. 1', required: true, type: 'number' },
       { label: 'Max', hint: 'e.g. 3', required: true, type: 'number' },
     ],
@@ -318,7 +318,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Trigger',
     description: 'Clears/resets a specific trigger in a quest. Indices are 0-based.',
     params: [
-      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true },
+      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true, ref: 'quest' },
       { label: 'Subquest index', hint: '0-based, e.g. 0', required: true, type: 'number' },
       { label: 'Trigger index', hint: '0-based, e.g. 0', required: true, type: 'number' },
       { label: 'Flag', hint: '0 or 1', required: true, type: 'enum', options: ['0', '1'] },
@@ -332,7 +332,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Counter',
     description: 'Sets a counter to a specific value.',
     params: [
-      { label: 'Counter ID', hint: 'e.g. main_quest_stage', required: true },
+      { label: 'Counter ID', hint: 'e.g. main_quest_stage', required: true, ref: 'counter' },
       { label: 'Value', hint: 'e.g. 1', required: true, type: 'number' },
     ],
   },
@@ -342,7 +342,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Counter',
     description: 'Decrements a counter by the given amount.',
     params: [
-      { label: 'Counter ID', hint: 'e.g. gold_mines_owned', required: true },
+      { label: 'Counter ID', hint: 'e.g. gold_mines_owned', required: true, ref: 'counter' },
       { label: 'Amount', hint: 'e.g. 1', required: true, type: 'number' },
     ],
   },
@@ -354,7 +354,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Quest Management',
     description: 'Activates the next subquest by SID or numeric index.',
     params: [
-      { label: 'Subquest SID or index', hint: 'e.g. daughter_quest_line_2 or 2', required: true },
+      { label: 'Subquest SID or index', hint: 'e.g. daughter_quest_line_2 or 2', required: true, ref: 'subquest' },
     ],
   },
   SubQuestDone: {
@@ -363,8 +363,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Quest Management',
     description: 'Marks a specific subquest as done from outside its own quest.',
     params: [
-      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true },
-      { label: 'Subquest SID', hint: 'e.g. MainQuest1a_2', required: true },
+      { label: 'Quest ID', hint: 'e.g. main_quest_line', required: true, ref: 'quest' },
+      { label: 'Subquest SID', hint: 'e.g. MainQuest1a_2', required: true, ref: 'subquest' },
     ],
   },
   NextAfterGroup: {
@@ -373,8 +373,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Quest Management',
     description: 'Activates the next subquest after all subquests in a group are done.',
     params: [
-      { label: 'Group SID', hint: 'e.g. SideQuest1_group1', required: true },
-      { label: 'Next subquest SID', hint: 'e.g. SideQuest1_3', required: true },
+      { label: 'Group SID', hint: 'e.g. SideQuest1_group1', required: true, ref: 'subquest' },
+      { label: 'Next subquest SID', hint: 'e.g. SideQuest1_3', required: true, ref: 'subquest' },
     ],
   },
 
@@ -476,7 +476,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Game Flow',
     description: 'Enables (activates) the specified interruption by SID.',
     params: [
-      { label: 'Interruption SID', hint: 'e.g. interaction_with_human_hero_16', required: true },
+      { label: 'Interruption SID', hint: 'e.g. interaction_with_human_hero_16', required: true, ref: 'interruption' },
     ],
   },
   DisableInterruption: {
@@ -485,7 +485,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Game Flow',
     description: 'Disables (deactivates) the specified interruption by SID.',
     params: [
-      { label: 'Interruption SID', hint: 'e.g. interaction_with_human_hero_16', required: true },
+      { label: 'Interruption SID', hint: 'e.g. interaction_with_human_hero_16', required: true, ref: 'interruption' },
     ],
   },
   RandomDialog: {

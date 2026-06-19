@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
+import SidCombobox from '@/components/common/SidCombobox'
 
 interface Props {
   condition: Condition
@@ -108,6 +109,13 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                     ))}
                   </SelectContent>
                 </Select>
+              ) : param.ref ? (
+                <SidCombobox
+                  value={(condition.p ?? [])[i] ?? ''}
+                  onChange={(v) => updateParam(i, v)}
+                  refType={param.ref}
+                  placeholder={param.hint}
+                />
               ) : (
                 <Input
                   type={param.type === 'number' ? 'number' : 'text'}

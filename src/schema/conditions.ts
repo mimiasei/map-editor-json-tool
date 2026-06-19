@@ -8,6 +8,7 @@ export interface ParamDef {
   required: boolean
   type?: 'string' | 'number' | 'enum'
   options?: string[] // For enum type
+  ref?: 'counter' | 'quest' | 'subquest' | 'interruption' // SID cross-reference: show autocomplete from this pool
 }
 
 export interface ConditionDef {
@@ -52,7 +53,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Counter Check',
     description: 'Checks a counter against a value.',
     params: [
-      { label: 'Counter ID', hint: 'e.g. main_quest_stage', required: true },
+      { label: 'Counter ID', hint: 'e.g. main_quest_stage', required: true, ref: 'counter' },
       { label: 'Operator', hint: '=', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<=', '!='] },
       { label: 'Value', hint: 'e.g. 1', required: true, type: 'number' },
     ],
