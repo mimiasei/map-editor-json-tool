@@ -33,15 +33,17 @@ import {
   Redo2,
   Search,
   CalendarClock,
+  Workflow,
 } from 'lucide-react'
 import { useState } from 'react'
 
 interface ToolbarProps {
   onSearchOpen?: () => void
   onTimelineOpen?: () => void
+  onDiagramOpen?: () => void
 }
 
-export default function Toolbar({ onSearchOpen, onTimelineOpen }: ToolbarProps) {
+export default function Toolbar({ onSearchOpen, onTimelineOpen, onDiagramOpen }: ToolbarProps) {
   const { scenario, isDirty, panels, setScenario, resetScenario, markClean, togglePanel } =
     useScenarioStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -216,6 +218,20 @@ export default function Toolbar({ onSearchOpen, onTimelineOpen }: ToolbarProps) 
               </Button>
             </TooltipTrigger>
             <TooltipContent>Event Timeline</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onDiagramOpen}
+              >
+                <Workflow className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Quest Flow Diagram</TooltipContent>
           </Tooltip>
         </div>
 
