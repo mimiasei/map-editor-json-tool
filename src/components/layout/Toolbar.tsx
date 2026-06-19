@@ -142,16 +142,12 @@ export default function Toolbar() {
               <Button variant="ghost" size="sm" onClick={() => setValidateOpen(true)} className="gap-1.5">
                 <ShieldCheck className="h-4 w-4" />
                 Validate
-                {validation.errors.length > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-4 px-1 text-xs">
-                    {validation.errors.length}
-                  </Badge>
-                )}
-                {validation.errors.length === 0 && validation.warnings.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs">
-                    {validation.warnings.length}
-                  </Badge>
-                )}
+                <Badge
+                  variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
+                  className={`ml-1 h-4 px-1 text-xs${validation.errors.length === 0 && validation.warnings.length === 0 ? ' invisible' : ''}`}
+                >
+                  {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
+                </Badge>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Validate scenario</TooltipContent>
