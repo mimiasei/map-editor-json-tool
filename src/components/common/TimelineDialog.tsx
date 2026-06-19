@@ -14,7 +14,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Clock, Hash, Zap, Shuffle, Repeat2 } from 'lucide-react'
 
 // ─── Category icons ───────────────────────────────────────────────────────────
@@ -179,7 +178,7 @@ export default function TimelineDialog({ open, onOpenChange }: TimelineDialogPro
         </div>
 
         {/* ── Body ── */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="px-6 py-4">
             {allEntries.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
@@ -198,7 +197,7 @@ export default function TimelineDialog({ open, onOpenChange }: TimelineDialogPro
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   )
