@@ -8,11 +8,13 @@ import EditorPanel from '@/components/editors/EditorPanel'
 import JsonPreview from '@/components/common/JsonPreview'
 import CommandPalette from '@/components/common/CommandPalette'
 import TimelineDialog from '@/components/common/TimelineDialog'
+import QuestFlowDialog from '@/components/common/QuestFlowDialog'
 
 export default function AppShell() {
   const { panels, setSidebarWidth } = useScenarioStore()
-  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen]   = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
+  const [diagramOpen, setDiagramOpen]   = useState(false)
 
   // ── Imperative panel handles for toolbar-driven collapse / expand ───────────
   const sidebarPanelRef = useRef<PanelImperativeHandle | null>(null)
@@ -67,9 +69,10 @@ export default function AppShell() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Toolbar onSearchOpen={() => setPaletteOpen(true)} onTimelineOpen={() => setTimelineOpen(true)} />
+      <Toolbar onSearchOpen={() => setPaletteOpen(true)} onTimelineOpen={() => setTimelineOpen(true)} onDiagramOpen={() => setDiagramOpen(true)} />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <TimelineDialog open={timelineOpen} onOpenChange={setTimelineOpen} />
+      <QuestFlowDialog open={diagramOpen} onOpenChange={setDiagramOpen} />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}
