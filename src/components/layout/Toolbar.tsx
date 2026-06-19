@@ -31,10 +31,15 @@ import {
   CheckCircle,
   Undo2,
   Redo2,
+  Search,
 } from 'lucide-react'
 import { useState } from 'react'
 
-export default function Toolbar() {
+interface ToolbarProps {
+  onSearchOpen?: () => void
+}
+
+export default function Toolbar({ onSearchOpen }: ToolbarProps) {
   const { scenario, isDirty, panels, setScenario, resetScenario, markClean, togglePanel } =
     useScenarioStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -181,6 +186,20 @@ export default function Toolbar() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Redo (Ctrl+Shift+Z)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onSearchOpen}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Search (Ctrl+K)</TooltipContent>
           </Tooltip>
         </div>
 

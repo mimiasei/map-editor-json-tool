@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -6,9 +6,11 @@ import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
 import JsonPreview from '@/components/common/JsonPreview'
+import CommandPalette from '@/components/common/CommandPalette'
 
 export default function AppShell() {
   const { panels, setSidebarWidth } = useScenarioStore()
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   // ── Imperative panel handles for toolbar-driven collapse / expand ───────────
   const sidebarPanelRef = useRef<PanelImperativeHandle | null>(null)
@@ -37,7 +39,7 @@ export default function AppShell() {
     else previewPanelRef.current?.collapse()
   }, [panels.preview])
 
-  // ── Undo / Redo keyboard shortcuts ───────────────────────────────────────────
+  // ── Undo / Redo / Command Palette keyboard shortcuts ────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey
@@ -52,6 +54,10 @@ export default function AppShell() {
         useScenarioStore.temporal.getState().redo()
         useScenarioStore.setState({ isDirty: true })
       }
+      if (e.key === 'k') {
+        e.preventDefault()
+        setPaletteOpen((v) => !v)
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -59,7 +65,8 @@ export default function AppShell() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Toolbar />
+      <Toolbar onSearchOpen={() => setPaletteOpen(true)} />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}
