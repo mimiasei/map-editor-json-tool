@@ -65,6 +65,8 @@ interface ScenarioStore {
   // Document state
   scenario: ScenarioFile
   isDirty: boolean
+  currentFilePath: string | null   // absolute path (Tauri) or '' (browser)
+  currentFileName: string | null   // display name, e.g. "my_map.json"
 
   // Selection state
   selectedType: SelectionType
@@ -78,6 +80,7 @@ interface ScenarioStore {
   setScenario: (scenario: ScenarioFile) => void
   resetScenario: () => void
   markClean: () => void
+  setCurrentFile: (path: string | null, name: string | null) => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -180,6 +183,8 @@ export const useScenarioStore = create<ScenarioStore>()(
     (set) => ({
   scenario: EMPTY_SCENARIO,
   isDirty: false,
+  currentFilePath: null,
+  currentFileName: null,
   selectedType: null,
   selectedPath: [],
   panels: { sidebar: true, editor: true, preview: true },
@@ -193,11 +198,13 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
   },
 
   markClean: () => set({ isDirty: false }),
+
+  setCurrentFile: (path, name) => set({ currentFilePath: path, currentFileName: name }),
 
   // ── Counters ───────────────────────────────────────────────────────────────
 
