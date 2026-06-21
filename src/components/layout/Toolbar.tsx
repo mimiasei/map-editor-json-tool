@@ -1,9 +1,10 @@
-import { useRef } from 'react'
+import { useEffect } from 'react'
 import { useStore } from 'zustand'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { importScenario } from '@/lib/import'
-import { exportScenario, downloadJson } from '@/lib/export'
+import { exportScenario } from '@/lib/export'
 import { validateScenario } from '@/lib/validate'
+import { openFile, saveFile, isTauri } from '@/lib/native-fs'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -41,16 +42,37 @@ interface ToolbarProps {
   onSearchOpen?: () => void
   onTimelineOpen?: () => void
   onDiagramOpen?: () => void
+  /** Called when the New action is triggered (button or native menu) */
+  onNew?: () => void
+  /** Called when the Open/Import action is triggered */
+  onOpen?: () => void
+  /** Called when the Save action is triggered (Ctrl+S / native menu) */
+  onSave?: () => void
+  /** Called when Save As is triggered */
+  onSaveAs?: () => void
 }
 
-export default function Toolbar({ onSearchOpen, onTimelineOpen, onDiagramOpen }: ToolbarProps) {
-  const { scenario, isDirty, panels, setScenario, resetScenario, markClean, togglePanel } =
-    useScenarioStore()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [validateOpen, setValidateOpen] = useState(false)
-  const [importErrors, setImportErrors] = useState<string[]>([])
-  const [importWarnings, setImportWarnings] = useState<string[]>([])
-  const [importFeedbackOpen, setImportFeedbackOpen] = useState(false)
+export default function Toolbar({
+  onSearchOpen,
+  onTimelineOpen,
+  onDiagramOpen,
+  onNew,
+}: ToolbarProps) {
+  const {
+    scenario,
+    isDirty,
+    panels,
+    currentFileName,
+    setScenario,
+    markClean,
+    setCurrentFile,
+    togglePanel,
+  } = useScenarioStore()
+
+  const [validateOpen,        setValidateOpen]        = useState(false)
+  const [importErrors,        setImportErrors]        = useState<string[]>([])
+  const [importWarnings,      setImportWarnings]      = useState<string[]>([])
+  const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
 
   const canUndo = useStore(useScenarioStore.temporal, (s) => s.pastStates.length > 0)
   const canRedo = useStore(useScenarioStore.temporal, (s) => s.futureStates.length > 0)
@@ -65,44 +87,50 @@ export default function Toolbar({ onSearchOpen, onTimelineOpen, onDiagramOpen }:
     useScenarioStore.setState({ isDirty: true })
   }
 
-  const handleNew = () => {
-    if (isDirty && !confirm('You have unsaved changes. Start a new scenario anyway?')) return
-    resetScenario()
-  }
+  // ── Import (Open) ────────────────────────────────────────────────────────────
+  const handleImport = async () => {
+    const result = await openFile()
+    if (!result) return
 
-  const handleImport = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string
-      const { scenario: imported, errors, warnings } = importScenario(text)
-
-      if (imported) {
-        setScenario(imported)
-      }
-
-      if (errors.length > 0 || warnings.length > 0) {
-        setImportErrors(errors)
-        setImportWarnings(warnings)
-        setImportFeedbackOpen(true)
-      }
+    const { scenario: imported, errors, warnings } = importScenario(result.content)
+    if (imported) {
+      setScenario(imported)
+      setCurrentFile(result.path || null, result.name)
     }
-    reader.readAsText(file)
-    // Reset so same file can be re-imported
-    e.target.value = ''
+    if (errors.length > 0 || warnings.length > 0) {
+      setImportErrors(errors)
+      setImportWarnings(warnings)
+      setImportFeedbackOpen(true)
+    }
   }
 
-  const handleExport = () => {
-    const json = exportScenario(scenario)
-    downloadJson(json, 'scenario.json')
-    markClean()
+  // ── Export / Save As ─────────────────────────────────────────────────────────
+  const handleExport = async () => {
+    const json     = exportScenario(scenario)
+    const savedPath = await saveFile(json, currentFileName ?? 'scenario.json')
+    // In browser saveFile always downloads and returns null — still mark clean
+    if (savedPath) {
+      setCurrentFile(savedPath, savedPath.replace(/\\/g, '/').split('/').pop() ?? savedPath)
+      markClean()
+    } else if (!isTauri()) {
+      markClean()
+    }
+    // If Tauri + user cancelled (savedPath null), leave dirty state as-is
   }
+
+  // ── Listen for actions dispatched by AppShell (native menu / keyboard) ───────
+  useEffect(() => {
+    const handleOpen    = () => { handleImport() }
+    const handleSaveAs  = () => { handleExport() }
+
+    window.addEventListener('oe:open',    handleOpen)
+    window.addEventListener('oe:save-as', handleSaveAs)
+    return () => {
+      window.removeEventListener('oe:open',    handleOpen)
+      window.removeEventListener('oe:save-as', handleSaveAs)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenario, currentFileName])
 
   const validation = validateScenario(scenario)
 
@@ -118,32 +146,32 @@ export default function Toolbar({ onSearchOpen, onTimelineOpen, onDiagramOpen }:
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleNew} className="gap-1.5">
+              <Button variant="ghost" size="sm" onClick={onNew} className="gap-1.5">
                 <FilePlus className="h-4 w-4" />
                 New
               </Button>
             </TooltipTrigger>
-            <TooltipContent>New scenario</TooltipContent>
+            <TooltipContent>New scenario (Ctrl+N)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" onClick={handleImport} className="gap-1.5">
                 <Upload className="h-4 w-4" />
-                Import
+                {isTauri() ? 'Open' : 'Import'}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Import JSON file</TooltipContent>
+            <TooltipContent>{isTauri() ? 'Open file (Ctrl+O)' : 'Import JSON file'}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" onClick={handleExport} className="gap-1.5">
                 <Download className="h-4 w-4" />
-                Export
+                {isTauri() ? 'Save As' : 'Export'}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Export scenario JSON</TooltipContent>
+            <TooltipContent>{isTauri() ? 'Save As… (Ctrl+Shift+S)' : 'Export scenario JSON'}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -235,9 +263,12 @@ export default function Toolbar({ onSearchOpen, onTimelineOpen, onDiagramOpen }:
           </Tooltip>
         </div>
 
-        {/* Dirty indicator */}
-        {isDirty && (
-          <span className="text-xs text-muted-foreground ml-1">● unsaved</span>
+        {/* Current file name + dirty indicator */}
+        {(currentFileName || isDirty) && (
+          <span className="text-xs text-muted-foreground ml-1 truncate max-w-48">
+            {isDirty && <span className="mr-1 text-primary">●</span>}
+            {currentFileName ?? 'unsaved'}
+          </span>
         )}
 
         {/* Spacer */}
@@ -287,15 +318,6 @@ export default function Toolbar({ onSearchOpen, onTimelineOpen, onDiagramOpen }:
             <TooltipContent>Toggle JSON preview</TooltipContent>
           </Tooltip>
         </div>
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          className="hidden"
-          onChange={handleFileChange}
-        />
       </header>
 
       {/* Validate dialog */}
