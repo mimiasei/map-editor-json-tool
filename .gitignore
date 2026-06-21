@@ -29,3 +29,6 @@ yarn-error.log*
 
 # Tauri — Rust build artifacts (large, fully reproducible)
 src-tauri/target/
+
+# Large game asset archives (local reference only, not for version control)
+*.zip
