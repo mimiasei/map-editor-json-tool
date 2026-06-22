@@ -37,6 +37,26 @@ It is a companion to the map editor, not a replacement for it.
 
 ---
 
+## How to ship a custom map
+
+1. **Build your map** in the game's built-in map editor. It saves a binary map file somewhere on disk.
+
+2. **Write the script** in this tool. Use **Save As** to save the `.json` file **in the same folder as the binary map file**. The game loads whichever `.json` shares a folder with the map.
+
+3. **Author dialogs** — for every `Dialog` action in the script, open the Dialog Editor and build the slides. Fill in English text via the **Localization** button.
+
+4. **Export ZIP** — click **Export ZIP** in the toolbar. Place the resulting `.zip` next to `Core.zip`:
+   ```
+   HeroesOldenEra_Data/StreamingAssets/
+   ├── Core.zip          ← game-owned, do not touch
+   └── your_map.zip      ← your dialogs + localization
+   ```
+   The engine merges your ZIP on top of `Core.zip` at runtime. It is overwritten on game updates, so keep your source files.
+
+5. **Iterate** — open the same `.json` back into the editor at any time. All dialog and localization data is stored inside it and round-trips correctly.
+
+---
+
 ## Features
 
 - Full CRUD for the entire scenario object graph: counters → interruptions → quests → sub-quests → triggers → conditions / actions
