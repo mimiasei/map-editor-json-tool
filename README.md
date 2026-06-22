@@ -2,7 +2,16 @@
 
 A browser-based visual editor for the scenario scripting JSON files used in **Heroes of Might and Magic: Olden Era** (by Unfrozen).
 
-Live at: **https://mimiasei.github.io/map-editor-json-tool/**
+**Web app:** https://mimiasei.github.io/map-editor-json-tool/
+
+**Desktop downloads (v0.1.0):**
+
+| Platform | Download |
+|---|---|
+| macOS — Apple Silicon | [Map.Editor_0.1.0_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_aarch64.dmg) |
+| macOS — Intel | [Map.Editor_0.1.0_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_x64.dmg) |
+| Windows | [Map.Editor_0.1.0_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_x64-setup.exe) |
+| Linux | [Map.Editor_0.1.0_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_amd64.AppImage) |
 
 ---
 
@@ -24,12 +33,19 @@ It is a companion to the map editor, not a replacement for it.
 
 - Full CRUD for the entire scenario object graph: counters → interruptions → quests → sub-quests → triggers → conditions / actions
 - ~21 known condition types and ~55 known action types with labelled parameter fields and dropdowns
-- Custom / unknown type fallback for any type not yet in the registry — forward-compatible with game updates
+- Custom / unknown type fallback — forward-compatible with future game updates
 - Permissive import — never rejects a file for unknown fields or types
-- Live JSON preview panel with syntax highlighting and one-click copy
-- Validation with errors (duplicate / empty SIDs) and warnings (dangling references, empty triggers)
-- Dirty-state indicator and confirm-on-new guard
-- No backend — runs entirely in the browser
+- Live JSON preview with syntax highlighting and one-click copy
+- Validation: errors (duplicate/empty SIDs) and warnings (dangling references, empty triggers)
+- Duplicate any node in the tree
+- Resizable sidebar / editor columns
+- Undo / redo (100-step history)
+- SID autocomplete across the whole scenario
+- Command palette (Ctrl+K) for quick navigation
+- Event timeline dialog — chronological view of all triggers
+- Quest flow diagram — per-quest DAG visualisation of sub-quest dependencies
+- Native desktop app (macOS, Windows, Linux) via Tauri v2 — native file open/save dialogs, menu bar, keyboard shortcuts
+- No backend — runs entirely in the browser (or as a standalone desktop app)
 
 ---
 
