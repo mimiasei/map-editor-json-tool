@@ -29,7 +29,9 @@ This tool gives that file a visual interface:
 
 - **Import** an existing scenario JSON and browse its structure in a tree
 - **Edit** counters, interruptions, quests, sub-quests, triggers, conditions, and actions through structured forms
-- **Export** back to a correctly formatted JSON (tab-indented, matching the game's style) ready to drop into the map
+- **Author dialog flows** — build branching NPC conversations with player choices, speaker titles, and map actions per slide
+- **Localise** — manage all English text tokens for dialogs and quest names in one panel
+- **Export** back to a correctly formatted scenario JSON, or as a **distributable map ZIP** ready to drop next to `Core.zip`
 
 It is a companion to the map editor, not a replacement for it.
 
@@ -41,8 +43,12 @@ It is a companion to the map editor, not a replacement for it.
 - ~21 known condition types and ~55 known action types with labelled parameter fields and dropdowns
 - Custom / unknown type fallback — forward-compatible with future game updates
 - Permissive import — never rejects a file for unknown fields or types
+- **Dialog flow editor** — per-dialog-key slide editor with text SIDs, speaker titles, next/end/player-choice flow modes, per-slide map actions, and auto-naming
+- **Localization panel** — edit English text tokens for all dialog slides and quest names; highlights missing tokens; import from an existing `customMaps.json`
+- **Export map ZIP** — one click produces a distributable ZIP (`DB/dialogs/…` + `Lang/english/texts/customMaps.json`) ready to place next to `Core.zip` in `StreamingAssets/`
+- **Project save format** — Save / Save As preserves all editor metadata (`_mapName`, `_dialogs`, `_localization`) so everything round-trips; the game ignores these keys
 - Live JSON preview with syntax highlighting and one-click copy
-- Validation: errors (duplicate/empty SIDs) and warnings (dangling references, empty triggers)
+- Validation: errors (duplicate/empty SIDs) and warnings (dangling references, empty triggers, missing dialog flows, missing localisation tokens)
 - Duplicate any node in the tree
 - Resizable sidebar / editor columns
 - Undo / redo (100-step history)
@@ -101,23 +107,27 @@ The `examples/` directory contains scenario JSON files that can be imported dire
 
 ```
 src/
-├── types/scenario.ts          — TypeScript interfaces for the JSON format
+├── types/
+│   ├── scenario.ts            — TypeScript interfaces for the scenario JSON format
+│   └── dialog.ts              — Types for dialog flows (DialogFlow, DialogSlide, DialogAnswer)
 ├── schema/
 │   ├── conditions.ts          — Registry of known condition types + parameters
 │   ├── actions.ts             — Registry of known action types + parameters
 │   └── zod.ts                 — Zod validation schemas
-├── store/useScenarioStore.ts  — Zustand store (all CRUD + selection state)
+├── store/useScenarioStore.ts  — Zustand store (CRUD, selection, dialog/loc state)
 ├── lib/
-│   ├── import.ts              — JSON import with best-effort fallback
-│   ├── export.ts              — Tab-indented JSON export + download trigger
-│   └── validate.ts            — Error and warning checks
+│   ├── import.ts              — JSON import with best-effort fallback; extracts _* editor keys
+│   ├── export.ts              — Tab-indented JSON export; exportProjectJson for save round-trip
+│   ├── zip-export.ts          — Assembles distributable map ZIP via jszip
+│   └── validate.ts            — Error and warning checks (scenario + dialogs + localisation)
 └── components/
-    ├── layout/                — AppShell, Toolbar
-    ├── tree/                  — Sidebar scenario tree
+    ├── layout/                — AppShell, Toolbar, MapMetaForm
+    ├── tree/                  — Sidebar scenario tree (Counters, Interruptions, Quests, Dialogs)
     ├── editors/               — Counter, Interruption, Quest, SubQuest, Trigger editors
     ├── conditions/            — ConditionForm, ConditionList
     ├── actions/               — ActionForm, ActionList
-    └── common/                — JsonPreview
+    ├── dialogs/               — DialogEditor modal, LocalizationDialog modal
+    └── common/                — JsonPreview, CommandPalette, TimelineDialog, QuestFlowDialog
 ```
 
 ---
@@ -153,6 +163,8 @@ The root object has three top-level arrays:
 ```
 
 Conditions use the `"c"` key; actions use the `"a"` key. Parameters are always a string array `"p"`.
+
+When saved via this editor, the file also includes editor-only metadata keys (`_mapName`, `_dialogs`, `_localization`). These round-trip correctly on re-import and are silently ignored by the game engine.
 
 ---
 
