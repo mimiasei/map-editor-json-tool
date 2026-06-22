@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { useStore } from 'zustand'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { importScenario } from '@/lib/import'
-import { exportScenario } from '@/lib/export'
+import { exportProjectJson } from '@/lib/export'
+import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
 import { openFile, saveFile, isTauri } from '@/lib/native-fs'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,8 @@ import {
   Search,
   CalendarClock,
   Workflow,
+  Languages,
+  Package,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -63,10 +66,17 @@ export default function Toolbar({
     isDirty,
     panels,
     currentFileName,
+    mapName,
+    dialogs,
+    localization,
     setScenario,
     markClean,
     setCurrentFile,
     togglePanel,
+    setLocalizationDialogOpen,
+    setMapName,
+    setDialogFlow,
+    setLocalizationBatch,
   } = useScenarioStore()
 
   const [validateOpen,        setValidateOpen]        = useState(false)
@@ -92,10 +102,17 @@ export default function Toolbar({
     const result = await openFile()
     if (!result) return
 
-    const { scenario: imported, errors, warnings } = importScenario(result.content)
+    const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc } = importScenario(result.content)
     if (imported) {
       setScenario(imported)
       setCurrentFile(result.path || null, result.name)
+      setMapName(mn)
+      // Hydrate dialogs
+      for (const [id, flow] of Object.entries(dl)) {
+        setDialogFlow(id, flow)
+      }
+      // Hydrate localization
+      if (Object.keys(loc).length > 0) setLocalizationBatch(loc)
     }
     if (errors.length > 0 || warnings.length > 0) {
       setImportErrors(errors)
@@ -106,7 +123,7 @@ export default function Toolbar({
 
   // ── Export / Save As ─────────────────────────────────────────────────────────
   const handleExport = async () => {
-    const json     = exportScenario(scenario)
+    const json     = exportProjectJson(scenario, mapName, dialogs, localization)
     const savedPath = await saveFile(json, currentFileName ?? 'scenario.json')
     // In browser saveFile always downloads and returns null — still mark clean
     if (savedPath) {
@@ -116,6 +133,19 @@ export default function Toolbar({
       markClean()
     }
     // If Tauri + user cancelled (savedPath null), leave dirty state as-is
+  }
+
+  // ── Export map ZIP ────────────────────────────────────────────────────────────
+  const [zipError, setZipError] = useState<string | null>(null)
+  const [zipErrorOpen, setZipErrorOpen] = useState(false)
+
+  const handleExportZip = async () => {
+    try {
+      await exportMapZip(mapName, dialogs, localization)
+    } catch (e) {
+      setZipError(e instanceof Error ? e.message : String(e))
+      setZipErrorOpen(true)
+    }
   }
 
   // ── Listen for actions dispatched by AppShell (native menu / keyboard) ───────
@@ -132,7 +162,7 @@ export default function Toolbar({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenario, currentFileName])
 
-  const validation = validateScenario(scenario)
+  const validation = validateScenario(scenario, { mapName, dialogs, localization })
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -261,6 +291,36 @@ export default function Toolbar({
             </TooltipTrigger>
             <TooltipContent>Quest Flow Diagram</TooltipContent>
           </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setLocalizationDialogOpen(true)}
+              >
+                <Languages className="h-4 w-4" />
+                Localization
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit localization tokens</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleExportZip}
+              >
+                <Package className="h-4 w-4" />
+                Export ZIP
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export distributable map ZIP</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Current file name + dirty indicator */}
@@ -375,6 +435,19 @@ export default function Toolbar({
               </Alert>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export ZIP error dialog */}
+      <Dialog open={zipErrorOpen} onOpenChange={setZipErrorOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Export ZIP Failed</DialogTitle>
+          </DialogHeader>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="ml-2">{zipError}</AlertDescription>
+          </Alert>
         </DialogContent>
       </Dialog>
     </TooltipProvider>

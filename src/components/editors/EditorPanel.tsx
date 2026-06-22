@@ -4,6 +4,7 @@ import InterruptionEditor from './InterruptionEditor'
 import QuestEditor from './QuestEditor'
 import SubQuestEditor from './SubQuestEditor'
 import TriggerEditor from './TriggerEditor'
+import MapMetaForm from '@/components/layout/MapMetaForm'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function EditorPanel() {
@@ -11,9 +12,9 @@ export default function EditorPanel() {
 
   if (!selectedType) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground p-6 text-center">
-        Select an item from the sidebar to edit it.
-      </div>
+      <ScrollArea className="flex-1">
+        <MapMetaForm />
+      </ScrollArea>
     )
   }
 
