@@ -188,8 +188,14 @@ export default function AppShell() {
       const { getCurrentWindow } = await import('@tauri-apps/api/window')
       const win = getCurrentWindow()
       unlistenClose = await win.onCloseRequested(async (closeEvent) => {
-        if (!isDirtyRef.current) return
+        // Always prevent default first — returning early from an async handler
+        // without calling preventDefault() does not reliably block the close
+        // on Windows.
         closeEvent.preventDefault()
+        if (!isDirtyRef.current) {
+          win.destroy()
+          return
+        }
         const ok = await confirmDialog(
           'You have unsaved changes. Quit without saving?',
           'Unsaved Changes',

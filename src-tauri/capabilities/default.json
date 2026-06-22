@@ -11,6 +11,7 @@
     "dialog:allow-confirm",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
+    "fs:allow-write-file",
     "process:allow-exit"
   ]
 }
