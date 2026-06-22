@@ -1,8 +1,13 @@
 import type { ScenarioFile } from '@/types/scenario'
+import type { DialogFlow } from '@/types/dialog'
 import { ScenarioFileSchema } from '@/schema/zod'
 
 export interface ImportResult {
   scenario: ScenarioFile | null
+  /** Editor-only extras extracted from _* keys (may all be defaults if absent) */
+  mapName: string
+  dialogs: Record<string, DialogFlow>
+  localization: Record<string, string>
   errors: string[]
   warnings: string[]
 }
@@ -10,13 +15,32 @@ export interface ImportResult {
 export function importScenario(jsonText: string): ImportResult {
   const errors: string[] = []
   const warnings: string[] = []
+  const extras = { mapName: '', dialogs: {} as Record<string, DialogFlow>, localization: {} as Record<string, string> }
 
   let raw: unknown
   try {
     raw = JSON.parse(jsonText)
   } catch (e) {
     errors.push(`Invalid JSON: ${e instanceof Error ? e.message : String(e)}`)
-    return { scenario: null, errors, warnings }
+    return { scenario: null, ...extras, errors, warnings }
+  }
+
+  // ── Extract and strip editor-only _* keys ─────────────────────────────────
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const r = raw as Record<string, unknown>
+
+    if (typeof r['_mapName'] === 'string') {
+      extras.mapName = r['_mapName']
+      delete r['_mapName']
+    }
+    if (r['_dialogs'] && typeof r['_dialogs'] === 'object') {
+      extras.dialogs = r['_dialogs'] as Record<string, DialogFlow>
+      delete r['_dialogs']
+    }
+    if (r['_localization'] && typeof r['_localization'] === 'object') {
+      extras.localization = r['_localization'] as Record<string, string>
+      delete r['_localization']
+    }
   }
 
   const result = ScenarioFileSchema.safeParse(raw)
@@ -37,12 +61,12 @@ export function importScenario(jsonText: string): ImportResult {
           : [],
         quests: Array.isArray(r['quests']) ? (r['quests'] as ScenarioFile['quests']) : [],
       }
-      return { scenario, errors, warnings }
+      return { scenario, ...extras, errors, warnings }
     } catch {
       errors.push('Could not load scenario even with best-effort parsing.')
-      return { scenario: null, errors, warnings }
+      return { scenario: null, ...extras, errors, warnings }
     }
   }
 
-  return { scenario: result.data as ScenarioFile, errors, warnings }
+  return { scenario: result.data as ScenarioFile, ...extras, errors, warnings }
 }

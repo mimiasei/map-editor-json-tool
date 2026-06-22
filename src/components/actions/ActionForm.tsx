@@ -1,5 +1,6 @@
 import type { Action } from '@/types/scenario'
 import { ACTION_REGISTRY, ACTION_LIST, ACTION_CATEGORIES } from '@/schema/actions'
+import { useScenarioStore } from '@/store/useScenarioStore'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -12,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import { Trash2, ExternalLink } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 
 interface Props {
@@ -24,6 +25,11 @@ interface Props {
 export default function ActionForm({ action, onChange, onRemove }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const isCustom = !def
+  const { openDialogEditor } = useScenarioStore()
+
+  /** True when this action references a dialog key we can open in the editor */
+  const isDialogAction = action.a === 'Dialog' || action.a === 'RandomDialog'
+  const dialogKey = isDialogAction ? (action.p ?? [])[0] : undefined
 
   const updateType = (type: string) => {
     if (type === '__custom__') {
@@ -133,6 +139,16 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
                   onChange={(e) => updateParam(i, e.target.value)}
                   placeholder={param.hint}
                 />
+              )}
+              {/* "Edit dialog →" button shown next to the key param of Dialog/RandomDialog */}
+              {isDialogAction && i === 0 && dialogKey && (
+                <button
+                  className="text-xs text-primary hover:underline flex items-center gap-0.5"
+                  onClick={() => openDialogEditor(dialogKey)}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Edit dialog
+                </button>
               )}
             </div>
           ))}

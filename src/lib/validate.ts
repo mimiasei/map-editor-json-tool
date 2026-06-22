@@ -1,4 +1,5 @@
 import type { ScenarioFile } from '@/types/scenario'
+import type { DialogFlow } from '@/types/dialog'
 
 export interface ValidationMessage {
   path: string
@@ -10,7 +11,14 @@ export interface ValidationResult {
   warnings: ValidationMessage[]
 }
 
-export function validateScenario(scenario: ScenarioFile): ValidationResult {
+export function validateScenario(
+  scenario: ScenarioFile,
+  extras?: {
+    mapName?: string
+    dialogs?: Record<string, DialogFlow>
+    localization?: Record<string, string>
+  },
+): ValidationResult {
   const errors: ValidationMessage[] = []
   const warnings: ValidationMessage[] = []
 
@@ -92,6 +100,94 @@ export function validateScenario(scenario: ScenarioFile): ValidationResult {
     const path = `Interruption[${i}] "${interruption.sid}"`
     for (const action of interruption.actions) {
       checkActionRefs(action, path, counterSids, topQuestSids, questSids, warnings)
+    }
+  }
+
+  // ── Dialog / localization checks ──────────────────────────────────────────
+  if (extras) {
+    const { mapName = '', dialogs = {}, localization = {} } = extras
+
+    // mapName required if dialogs exist
+    if (Object.keys(dialogs).length > 0 && !mapName.trim()) {
+      warnings.push({
+        path: 'Map Settings',
+        message: 'Map name is empty. It is required to export a ZIP with dialog files.',
+      })
+    }
+
+    // Check Dialog/RandomDialog action keys have corresponding flow
+    for (const [qi, quest] of scenario.quests.entries()) {
+      for (const [sqi, subQuest] of quest.subQuests.entries()) {
+        for (const [ti, trigger] of subQuest.triggers.entries()) {
+          const path = `Quest[${qi}] > SubQuest[${sqi}] > Trigger[${ti}]`
+          for (const action of trigger.actions) {
+            if ((action.a === 'Dialog' || action.a === 'RandomDialog') && action.p?.[0]) {
+              const key = action.p[0]
+              if (!dialogs[key]) {
+                warnings.push({
+                  path,
+                  message: `Action "${action.a}" references dialog key "${key}" which has no dialog flow defined.`,
+                })
+              }
+            }
+          }
+        }
+      }
+    }
+    for (const [i, interruption] of scenario.interruptions.entries()) {
+      const path = `Interruption[${i}] "${interruption.sid}"`
+      for (const action of interruption.actions) {
+        if ((action.a === 'Dialog' || action.a === 'RandomDialog') && action.p?.[0]) {
+          const key = action.p[0]
+          if (!dialogs[key]) {
+            warnings.push({
+              path,
+              message: `Action "${action.a}" references dialog key "${key}" which has no dialog flow defined.`,
+            })
+          }
+        }
+      }
+    }
+
+    // Check dialog slide text SIDs have localization tokens
+    for (const [flowId, flow] of Object.entries(dialogs)) {
+      for (const [si, slide] of flow.slides.entries()) {
+        const path = `Dialog "${flowId}" > Slide[${si}] "${slide.id}"`
+        if (slide.text && !localization[slide.text]) {
+          warnings.push({
+            path,
+            message: `Text SID "${slide.text}" has no localization token.`,
+          })
+        }
+        if (slide.answers) {
+          for (const [ai, answer] of slide.answers.entries()) {
+            if (answer.text && !localization[answer.text]) {
+              warnings.push({
+                path: `${path} > Answer[${ai}]`,
+                message: `Answer text SID "${answer.text}" has no localization token.`,
+              })
+            }
+          }
+        }
+      }
+    }
+
+    // Check quest/subquest name SIDs have localization tokens
+    for (const [qi, quest] of scenario.quests.entries()) {
+      if (quest.name && !localization[quest.name]) {
+        warnings.push({
+          path: `Quest[${qi}] "${quest.sid}"`,
+          message: `Quest name SID "${quest.name}" has no localization token.`,
+        })
+      }
+      for (const [sqi, subQuest] of quest.subQuests.entries()) {
+        if (subQuest.name && !localization[subQuest.name]) {
+          warnings.push({
+            path: `Quest[${qi}] > SubQuest[${sqi}] "${subQuest.sid}"`,
+            message: `SubQuest name SID "${subQuest.name}" has no localization token.`,
+          })
+        }
+      }
     }
   }
 

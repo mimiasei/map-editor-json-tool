@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
-import { exportScenario } from '@/lib/export'
+import { exportProjectJson } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
@@ -11,6 +11,8 @@ import JsonPreview from '@/components/common/JsonPreview'
 import CommandPalette from '@/components/common/CommandPalette'
 import TimelineDialog from '@/components/common/TimelineDialog'
 import QuestFlowDialog from '@/components/common/QuestFlowDialog'
+import DialogEditor from '@/components/dialogs/DialogEditor'
+import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
 import { useState } from 'react'
 
 export default function AppShell() {
@@ -20,6 +22,9 @@ export default function AppShell() {
     panels,
     currentFilePath,
     currentFileName,
+    mapName,
+    dialogs,
+    localization,
     setSidebarWidth,
     resetScenario,
     markClean,
@@ -35,10 +40,16 @@ export default function AppShell() {
   const scenarioRef        = useRef(scenario)
   const currentFilePathRef = useRef(currentFilePath)
   const currentFileNameRef = useRef(currentFileName)
+  const mapNameRef         = useRef(mapName)
+  const dialogsRef         = useRef(dialogs)
+  const localizationRef    = useRef(localization)
   useEffect(() => { isDirtyRef.current         = isDirty },         [isDirty])
   useEffect(() => { scenarioRef.current         = scenario },         [scenario])
   useEffect(() => { currentFilePathRef.current  = currentFilePath },  [currentFilePath])
   useEffect(() => { currentFileNameRef.current  = currentFileName },  [currentFileName])
+  useEffect(() => { mapNameRef.current          = mapName },          [mapName])
+  useEffect(() => { dialogsRef.current          = dialogs },          [dialogs])
+  useEffect(() => { localizationRef.current     = localization },     [localization])
 
   // ── Imperative panel handles ─────────────────────────────────────────────────
   const sidebarPanelRef = useRef<PanelImperativeHandle | null>(null)
@@ -67,7 +78,12 @@ export default function AppShell() {
 
   // ── Save helper (used by Ctrl+S and native menu) ─────────────────────────────
   const handleSave = useCallback(async () => {
-    const json = exportScenario(scenarioRef.current)
+    const json = exportProjectJson(
+      scenarioRef.current,
+      mapNameRef.current,
+      dialogsRef.current,
+      localizationRef.current,
+    )
     if (currentFilePathRef.current) {
       // Overwrite the existing file silently
       await saveToPath(currentFilePathRef.current, json)
@@ -215,6 +231,8 @@ export default function AppShell() {
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <TimelineDialog open={timelineOpen} onOpenChange={setTimelineOpen} />
       <QuestFlowDialog open={diagramOpen} onOpenChange={setDiagramOpen} />
+      <DialogEditor />
+      <LocalizationDialog />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}

@@ -14,6 +14,7 @@ import {
   BookOpen,
   List,
   Layers,
+  MessageSquare,
 } from 'lucide-react'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
@@ -154,6 +155,7 @@ export default function ScenarioTree() {
     selectedPath,
     setSelection,
     sidebarWidth,
+    dialogs,
     addCounter,
     removeCounter,
     duplicateCounter,
@@ -169,12 +171,15 @@ export default function ScenarioTree() {
     addTrigger,
     removeTrigger,
     duplicateTrigger,
+    openDialogEditor,
+    removeDialogFlow,
   } = useScenarioStore()
 
   const [openSections, setOpenSections] = useState({
     counters: true,
     interruptions: true,
     quests: true,
+    dialogs: true,
   })
   const [openQuests, setOpenQuests] = useState<Record<number, boolean>>({})
   const [openSubQuests, setOpenSubQuests] = useState<Record<string, boolean>>({})
@@ -379,6 +384,63 @@ export default function ScenarioTree() {
                 </div>
               )
             })}
+        </div>
+        {/* ── Dialogs ── */}
+        <div className="mt-1">
+          <div className="flex items-center gap-1 px-1 py-0.5">
+            <button
+              className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground hover:text-primary"
+              onClick={() => setOpenSections((s) => ({ ...s, dialogs: !s.dialogs }))}
+            >
+              {openSections.dialogs ? (
+                <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+              )}
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>Dialogs</span>
+              <span className="ml-1 text-xs font-normal text-muted-foreground">
+                ({Object.keys(dialogs).length})
+              </span>
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 text-muted-foreground hover:text-primary"
+              onClick={() => openDialogEditor(`dialog_${Date.now()}`)}
+              title="Add Dialog"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+          {openSections.dialogs &&
+            Object.entries(dialogs).map(([id, flow]) => (
+              <div
+                key={id}
+                className="group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none hover:bg-accent"
+                style={{ paddingLeft: '22px' }}
+                onClick={() => openDialogEditor(id)}
+              >
+                <MessageSquare className="h-3 w-3 shrink-0 text-muted-foreground" />
+                <span className="ml-1 truncate font-mono text-xs" style={labelStyle}>{id}</span>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {flow.slides.length}s
+                </span>
+                <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeDialogFlow(id)
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </span>
+              </div>
+            ))}
         </div>
       </div>
     </ScrollArea>

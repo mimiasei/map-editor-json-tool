@@ -11,6 +11,7 @@ import type {
   Action,
   SelectionType,
 } from '@/types/scenario'
+import type { DialogFlow } from '@/types/dialog'
 
 // ─── Empty defaults ─────────────────────────────────────────────────────────────
 
@@ -68,6 +69,11 @@ interface ScenarioStore {
   currentFilePath: string | null   // absolute path (Tauri) or '' (browser)
   currentFileName: string | null   // display name, e.g. "my_map.json"
 
+  // Map meta / dialog / localization (editor-only, stored as _* in project JSON)
+  mapName: string
+  dialogs: Record<string, DialogFlow>       // keyed by dialog ID
+  localization: Record<string, string>      // SID → English text
+
   // Selection state
   selectedType: SelectionType
   selectedPath: number[] // e.g. [questIdx, subQuestIdx, triggerIdx]
@@ -81,6 +87,14 @@ interface ScenarioStore {
   resetScenario: () => void
   markClean: () => void
   setCurrentFile: (path: string | null, name: string | null) => void
+
+  // ── Map meta / dialog / localization ────────────────────────────────────
+  setMapName: (name: string) => void
+  setDialogFlow: (id: string, flow: DialogFlow) => void
+  removeDialogFlow: (id: string) => void
+  setLocalizationToken: (sid: string, text: string) => void
+  removeLocalizationToken: (sid: string) => void
+  setLocalizationBatch: (tokens: Record<string, string>) => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -156,6 +170,13 @@ interface ScenarioStore {
   setSelection: (type: SelectionType, path: number[]) => void
   clearSelection: () => void
 
+  // ── UI modal state ───────────────────────────────────────────────────────────
+  dialogEditorOpenId: string | null
+  localizationDialogOpen: boolean
+  openDialogEditor: (id: string) => void
+  closeDialogEditor: () => void
+  setLocalizationDialogOpen: (open: boolean) => void
+
   // ── Panel toggles ─────────────────────────────────────────────────────────
   togglePanel: (panel: keyof PanelsState) => void
   setSidebarWidth: (width: number) => void
@@ -185,6 +206,11 @@ export const useScenarioStore = create<ScenarioStore>()(
   isDirty: false,
   currentFilePath: null,
   currentFileName: null,
+  mapName: '',
+  dialogs: {},
+  localization: {},
+  dialogEditorOpenId: null,
+  localizationDialogOpen: false,
   selectedType: null,
   selectedPath: [],
   panels: { sidebar: true, editor: true, preview: true },
@@ -198,13 +224,40 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapName: '', dialogs: {}, localization: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
   },
 
   markClean: () => set({ isDirty: false }),
 
   setCurrentFile: (path, name) => set({ currentFilePath: path, currentFileName: name }),
+
+  // ── Map meta / dialog / localization ────────────────────────────────────────
+
+  setMapName: (name) => set({ mapName: name, isDirty: true }),
+
+  setDialogFlow: (id, flow) =>
+    set((s) => ({ dialogs: { ...s.dialogs, [id]: flow }, isDirty: true })),
+
+  removeDialogFlow: (id) =>
+    set((s) => {
+      const dialogs = { ...s.dialogs }
+      delete dialogs[id]
+      return { dialogs, isDirty: true }
+    }),
+
+  setLocalizationToken: (sid, text) =>
+    set((s) => ({ localization: { ...s.localization, [sid]: text }, isDirty: true })),
+
+  removeLocalizationToken: (sid) =>
+    set((s) => {
+      const localization = { ...s.localization }
+      delete localization[sid]
+      return { localization, isDirty: true }
+    }),
+
+  setLocalizationBatch: (tokens) =>
+    set((s) => ({ localization: { ...s.localization, ...tokens }, isDirty: true })),
 
   // ── Counters ───────────────────────────────────────────────────────────────
 
@@ -635,6 +688,10 @@ export const useScenarioStore = create<ScenarioStore>()(
   setSelection: (type, path) => set({ selectedType: type, selectedPath: path }),
 
   clearSelection: () => set({ selectedType: null, selectedPath: [] }),
+
+  openDialogEditor: (id) => set({ dialogEditorOpenId: id }),
+  closeDialogEditor: () => set({ dialogEditorOpenId: null }),
+  setLocalizationDialogOpen: (open) => set({ localizationDialogOpen: open }),
 
   // ── Panel toggles ──────────────────────────────────────────────────────────
 
