@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import {
   ChevronRight,
@@ -15,6 +16,7 @@ import {
   List,
   Layers,
   MessageSquare,
+  Settings2,
 } from 'lucide-react'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
@@ -156,6 +158,8 @@ export default function ScenarioTree() {
     setSelection,
     sidebarWidth,
     dialogs,
+    mapName,
+    setMapName,
     addCounter,
     removeCounter,
     duplicateCounter,
@@ -176,6 +180,7 @@ export default function ScenarioTree() {
   } = useScenarioStore()
 
   const [openSections, setOpenSections] = useState({
+    mapSettings: true,
     counters: true,
     interruptions: true,
     quests: true,
@@ -201,6 +206,37 @@ export default function ScenarioTree() {
   return (
     <ScrollArea className="flex-1 py-2">
       <div className="px-1 pb-4">
+        {/* ── Map Settings ── */}
+        <div className="flex items-center gap-1 px-1 py-0.5">
+          <button
+            className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground hover:text-primary"
+            onClick={() => setOpenSections((s) => ({ ...s, mapSettings: !s.mapSettings }))}
+          >
+            {openSections.mapSettings ? (
+              <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            )}
+            <Settings2 className="h-3.5 w-3.5 shrink-0" />
+            <span>Map Settings</span>
+          </button>
+        </div>
+        {openSections.mapSettings && (
+          <div className="px-2 pb-2 pt-1 space-y-1">
+            <Input
+              value={mapName}
+              onChange={(e) => setMapName(e.target.value)}
+              placeholder="Map name…"
+              className="h-7 text-xs"
+            />
+            {mapName && (
+              <p className="text-xs text-muted-foreground font-mono truncate px-0.5">
+                {mapName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}_
+              </p>
+            )}
+          </div>
+        )}
+
         {/* ── Counters ── */}
         <SectionHeader
           label="Counters"
