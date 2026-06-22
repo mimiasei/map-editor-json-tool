@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Map Editor",
+  "productName": "Scenario Script Editor",
   "version": "0.1.0",
   "identifier": "com.oe.map-editor",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Map Editor",
+        "title": "Scenario Script Editor",
         "width": 1400,
         "height": 900,
         "minWidth": 900,

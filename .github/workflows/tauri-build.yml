@@ -68,7 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: Map Editor ${{ github.ref_name }}
+          releaseName: Scenario Script Editor ${{ github.ref_name }}
           releaseBody: |
             Desktop release for macOS (Apple Silicon + Intel), Windows, and Linux.
 

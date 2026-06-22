@@ -1,6 +1,6 @@
 # HoMM Olden Era — Scenario Script Editor
 
-A browser-based visual editor for the scenario scripting JSON files used in **Heroes of Might and Magic: Olden Era** (by Unfrozen).
+A visual editor for the scenario scripting JSON files used in **Heroes of Might and Magic: Olden Era** (by Unfrozen). Runs in the browser or as a native desktop app on macOS, Windows, and Linux.
 
 **Web app:** https://mimiasei.github.io/map-editor-json-tool/
 
@@ -8,10 +8,10 @@ A browser-based visual editor for the scenario scripting JSON files used in **He
 
 | Platform | Download |
 |---|---|
-| macOS — Apple Silicon | [Map.Editor_0.1.0_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_aarch64.dmg) |
-| macOS — Intel | [Map.Editor_0.1.0_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_x64.dmg) |
-| Windows | [Map.Editor_0.1.0_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_x64-setup.exe) |
-| Linux | [Map.Editor_0.1.0_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Map.Editor_0.1.0_amd64.AppImage) |
+| macOS — Apple Silicon | [Scenario.Script.Editor_0.1.0_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Scenario.Script.Editor_0.1.0_aarch64.dmg) |
+| macOS — Intel | [Scenario.Script.Editor_0.1.0_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Scenario.Script.Editor_0.1.0_x64.dmg) |
+| Windows | [Scenario.Script.Editor_0.1.0_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Scenario.Script.Editor_0.1.0_x64-setup.exe) |
+| Linux | [Scenario.Script.Editor_0.1.0_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.0/Scenario.Script.Editor_0.1.0_amd64.AppImage) |
 
 ---
 
