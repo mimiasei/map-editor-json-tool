@@ -13,6 +13,8 @@ A visual editor for the scenario scripting JSON files used in **Heroes of Might 
 | Windows | [Scenario.Script.Editor_0.1.0_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.1/Scenario.Script.Editor_0.1.0_x64-setup.exe) |
 | Linux | [Scenario.Script.Editor_0.1.0_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.1.1/Scenario.Script.Editor_0.1.0_amd64.AppImage) |
 
+> **macOS note:** the app is ad-hoc signed but not notarized by Apple. On first launch macOS may say it "can't be verified" — go to **System Settings → Privacy & Security → Open Anyway** to allow it.
+
 ---
 
 ## What it does
