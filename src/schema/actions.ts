@@ -124,9 +124,9 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: "Adds units to a hero's army.",
     params: [
-      { label: 'Unit ID', hint: 'e.g. hive_queen', required: true },
+      { label: 'Unit ID', hint: 'e.g. hive_queen', required: true, entity: 'creature' },
       { label: 'Count', hint: 'e.g. 5', required: true, type: 'number' },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   GiveUnitHeroPerWeek: {
@@ -135,9 +135,9 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: "Adds units to a hero's army each week (repeating).",
     params: [
-      { label: 'Unit ID', hint: 'e.g. jaw', required: true },
+      { label: 'Unit ID', hint: 'e.g. jaw', required: true, entity: 'creature' },
       { label: 'Count', hint: 'e.g. 3', required: true, type: 'number' },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   RemoveUnitHero: {
@@ -146,9 +146,9 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: "Removes units from a hero's army. Use 'all' to remove all of that type.",
     params: [
-      { label: 'Unit ID', hint: 'e.g. hive_queen', required: true },
+      { label: 'Unit ID', hint: 'e.g. hive_queen', required: true, entity: 'creature' },
       { label: 'Count', hint: '"all" or a number', required: true },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   GiveStatsHero: {
@@ -164,7 +164,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
         type: 'enum',
         options: ['offence', 'defence', 'spellPower', 'intelligence', 'movementBonus', 'moral'],
       },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Amount', hint: 'e.g. 2', required: true, type: 'number' },
     ],
   },
@@ -175,7 +175,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Gives experience points to a hero. Hero ID is optional (defaults to player hero).',
     params: [
       { label: 'Amount', hint: 'e.g. 1000', required: true, type: 'number' },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6 (optional)', required: false },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6 (optional)', required: false, entity: 'hero' },
     ],
   },
   GiveItemHero: {
@@ -184,8 +184,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Gives an artifact/item to a hero.',
     params: [
-      { label: 'Item ID', hint: 'e.g. catechism_of_night_magic_artifact', required: true },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Item ID', hint: 'e.g. catechism_of_night_magic_artifact', required: true, entity: 'artifact' },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   AddSkillHero: {
@@ -195,7 +195,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Adds a skill level to a hero. Call multiple times to add multiple levels.',
     params: [
       { label: 'Skill ID', hint: 'e.g. skill_faction_demons', required: true },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   AddSpellHero: {
@@ -205,7 +205,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Teaches a spell to a hero.',
     params: [
       { label: 'Spell ID', hint: 'e.g. day_1_magic_healing_water', required: true },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   AddBuffHeroDays: {
@@ -215,7 +215,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Applies a buff to a hero for N days. Use -1 for permanent.',
     params: [
       { label: 'Buff ID', hint: 'e.g. campaign_infinite_moves_buff', required: true },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Days', hint: '-1 for permanent', required: false, type: 'number' },
     ],
   },
@@ -225,7 +225,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: "Resets a hero's movement points to maximum.",
     params: [
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   SpawnHero: {
@@ -234,7 +234,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Spawns a hero at the given map node for the given player.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Node ID', hint: 'e.g. 47', required: true },
       { label: 'Player', hint: 'e.g. 1', required: true, type: 'number' },
     ],
@@ -245,7 +245,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Removes a hero from the map permanently.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   DisableAiHero: {
@@ -254,7 +254,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Disables AI control for a hero.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   TeleportHero: {
@@ -263,7 +263,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Teleports a hero to a map node.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Node ID', hint: 'e.g. 47', required: true },
     ],
   },
@@ -273,7 +273,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Moves a hero to a map node.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Node ID', hint: 'e.g. 47', required: true },
     ],
   },
@@ -385,7 +385,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: "Sets a hero's mana to the given value.",
     params: [
-      { label: 'Hero ID', hint: 'e.g. nature_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. nature_hero_6', required: true, entity: 'hero' },
       { label: 'Mana amount', hint: 'e.g. 130', required: true, type: 'number' },
     ],
   },
@@ -395,7 +395,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Resurrects a defeated hero at a map node.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. nature_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. nature_hero_6', required: true, entity: 'hero' },
       { label: 'Node ID', hint: 'e.g. 234', required: true },
       { label: 'Flag', hint: '0', required: false },
     ],
@@ -407,7 +407,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: "Removes a buff from a hero. Leave Hero ID empty to remove from all heroes.",
     params: [
       { label: 'Buff ID', hint: 'e.g. cm_fun_necromancy_power_disabled', required: true },
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6 (or leave blank)', required: false },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6 (or leave blank)', required: false, entity: 'hero' },
     ],
   },
   HeroToHero: {
@@ -416,8 +416,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Moves one hero toward another hero on the map.',
     params: [
-      { label: 'Moving hero ID', hint: 'e.g. cm_fun_hero_human_1', required: true },
-      { label: 'Target hero ID', hint: 'e.g. cm_fun_hero_1', required: true },
+      { label: 'Moving hero ID', hint: 'e.g. cm_fun_hero_human_1', required: true, entity: 'hero' },
+      { label: 'Target hero ID', hint: 'e.g. cm_fun_hero_1', required: true, entity: 'hero' },
     ],
   },
   SetHeroMovePoints: {
@@ -426,7 +426,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: "Sets a hero's movement points to the given value.",
     params: [
-      { label: 'Hero ID', hint: 'e.g. cm_fun_hero_human_1', required: true },
+      { label: 'Hero ID', hint: 'e.g. cm_fun_hero_human_1', required: true, entity: 'hero' },
       { label: 'Move points', hint: 'e.g. 9999', required: true, type: 'number' },
     ],
   },

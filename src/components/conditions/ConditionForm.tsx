@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
+import EntityCombobox from '@/components/common/EntityCombobox'
 
 interface Props {
   condition: Condition
@@ -114,6 +115,13 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                   value={(condition.p ?? [])[i] ?? ''}
                   onChange={(v) => updateParam(i, v)}
                   refType={param.ref}
+                  placeholder={param.hint}
+                />
+              ) : param.entity ? (
+                <EntityCombobox
+                  value={(condition.p ?? [])[i] ?? ''}
+                  onChange={(v) => updateParam(i, v)}
+                  category={param.entity}
                   placeholder={param.hint}
                 />
               ) : (

@@ -9,6 +9,7 @@ export interface ParamDef {
   type?: 'string' | 'number' | 'enum'
   options?: string[] // For enum type
   ref?: 'counter' | 'quest' | 'subquest' | 'interruption' // SID cross-reference: show autocomplete from this pool
+  entity?: 'hero' | 'creature' | 'artifact' | 'mapObject' // Entity registry: show searchable combobox from static list
 }
 
 export interface ConditionDef {
@@ -63,7 +64,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Hero Killed',
     description: 'Fires when the specified hero is killed.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true },
+      { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
   SquadKill: {
@@ -112,7 +113,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Unit Owned (Side)',
     description: "Checks how many of a unit type the player's side owns across all armies.",
     params: [
-      { label: 'Unit type', hint: 'e.g. lich_upg_alt', required: true },
+      { label: 'Unit type', hint: 'e.g. lich_upg_alt', required: true, entity: 'creature' },
       { label: 'Operator', hint: '=', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<=', '!='] },
       { label: 'Value', hint: 'e.g. 0', required: true, type: 'number' },
     ],
@@ -122,8 +123,8 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Unit Owned (Hero)',
     description: 'Checks how many of a unit type a specific hero owns.',
     params: [
-      { label: 'Hero ID', hint: 'e.g. cm_fun_hero_1', required: true },
-      { label: 'Unit type', hint: 'e.g. dragon_hunter', required: true },
+      { label: 'Hero ID', hint: 'e.g. cm_fun_hero_1', required: true, entity: 'hero' },
+      { label: 'Unit type', hint: 'e.g. dragon_hunter', required: true, entity: 'creature' },
       { label: 'Operator', hint: '=', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<=', '!='] },
       { label: 'Value', hint: 'e.g. 0', required: true, type: 'number' },
     ],
@@ -133,7 +134,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Unit Killed',
     description: 'Fires when a unit type is killed. Set counter to require N kills.',
     params: [
-      { label: 'Unit type', hint: 'e.g. elf_tracker', required: true },
+      { label: 'Unit type', hint: 'e.g. elf_tracker', required: true, entity: 'creature' },
     ],
     extraFields: {
       counter: { label: 'Kill count threshold', hint: 'e.g. 1', required: false, type: 'number' },
@@ -144,7 +145,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Unit Lost',
     description: 'Fires when a unit type is lost (killed on your side). Set counter to require N losses.',
     params: [
-      { label: 'Unit type', hint: 'e.g. dragon_hunter', required: true },
+      { label: 'Unit type', hint: 'e.g. dragon_hunter', required: true, entity: 'creature' },
     ],
     extraFields: {
       counter: { label: 'Loss count threshold', hint: 'e.g. 1', required: false, type: 'number' },
@@ -155,7 +156,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Unit Hired',
     description: 'Fires when a unit type is recruited/hired. Set counter to require N hires.',
     params: [
-      { label: 'Unit type', hint: 'e.g. dragon_hunter', required: true },
+      { label: 'Unit type', hint: 'e.g. dragon_hunter', required: true, entity: 'creature' },
     ],
     extraFields: {
       counter: { label: 'Hire count threshold', hint: 'e.g. 1', required: false, type: 'number' },
@@ -200,7 +201,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Item Owned (Side)',
     description: "Checks whether the player's side owns a specific artifact/item.",
     params: [
-      { label: 'Item ID', hint: 'e.g. fallen_angel_wings_artifact', required: true },
+      { label: 'Item ID', hint: 'e.g. fallen_angel_wings_artifact', required: true, entity: 'artifact' },
       { label: 'Operator', hint: '>', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<=', '!='] },
       { label: 'Value', hint: 'e.g. 0', required: true, type: 'number' },
     ],

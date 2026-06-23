@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Trash2, ExternalLink } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
+import EntityCombobox from '@/components/common/EntityCombobox'
 
 interface Props {
   action: Action
@@ -130,6 +131,13 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
                   value={(action.p ?? [])[i] ?? ''}
                   onChange={(v) => updateParam(i, v)}
                   refType={param.ref}
+                  placeholder={param.hint}
+                />
+              ) : param.entity ? (
+                <EntityCombobox
+                  value={(action.p ?? [])[i] ?? ''}
+                  onChange={(v) => updateParam(i, v)}
+                  category={param.entity}
                   placeholder={param.hint}
                 />
               ) : (
