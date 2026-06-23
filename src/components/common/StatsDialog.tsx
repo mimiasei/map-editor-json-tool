@@ -205,13 +205,20 @@ function QuestTable({
             {COLUMNS.map((col) => (
               <th
                 key={col.key}
+                role="button"
+                tabIndex={0}
                 className="pb-2 px-2 text-right font-medium cursor-pointer select-none hover:text-foreground transition-colors"
                 title={col.title}
                 onClick={() => handleSort(col.key)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    handleSort(col.key)
+                  }
+                }}
               >
                 {col.label}{arrow(col.key)}
               </th>
-            ))}
           </tr>
         </thead>
         <tbody>
