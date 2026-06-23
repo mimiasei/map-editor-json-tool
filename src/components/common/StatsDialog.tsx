@@ -219,6 +219,7 @@ function QuestTable({
               >
                 {col.label}{arrow(col.key)}
               </th>
+            ))}
           </tr>
         </thead>
         <tbody>
