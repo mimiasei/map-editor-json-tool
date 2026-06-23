@@ -236,22 +236,6 @@ export default function AppShell() {
 
     setUndocked((prev) => new Set([...prev, panelId]))
 
-    // Broadcast initial state immediately so the panel doesn't wait 100ms
-    ;(async () => {
-      const s = useScenarioStore.getState()
-      const state: PanelState = {
-        scenario:     s.scenario,
-        mapName:      s.mapName,
-        dialogs:      s.dialogs,
-        localization: s.localization,
-        selectedType: s.selectedType,
-        selectedPath: s.selectedPath,
-      }
-      const ch = createPanelSyncChannel('main-immediate')
-      ch.broadcastState(state)
-      ch.destroy()
-    })()
-
     const win = new WebviewWindow(`panel-${panelId}`, {
       url:       `/?panel=${panelId}`,
       title:     meta?.title ?? panelId,
@@ -261,6 +245,20 @@ export default function AppShell() {
       minHeight: 300,
       resizable: true,
     })
+
+    // Broadcast initial state shortly after opening so the panel window has time to mount its listener.
+    const s = useScenarioStore.getState()
+    const state: PanelState = {
+      scenario:     s.scenario,
+      mapName:      s.mapName,
+      dialogs:      s.dialogs,
+      localization: s.localization,
+      selectedType: s.selectedType,
+      selectedPath: s.selectedPath,
+    }
+    const ch = createPanelSyncChannel('main-immediate')
+    setTimeout(() => ch.broadcastState(state), 0)
+    setTimeout(() => { ch.broadcastState(state); ch.destroy() }, 200)
 
     // When the panel window is closed (by user or re-dock button), re-dock it
     const unlistenClose = await win.onCloseRequested(() => {
