@@ -80,7 +80,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Lost',
     description: 'Fires when the specified map object (e.g. a town) is lost/captured by the enemy.',
     params: [
-      { label: 'Object ID', hint: 'e.g. city', required: true },
+      { label: 'Object ID', hint: 'e.g. city', required: true, entity: 'mapObject' },
     ],
   },
   DifficultyCustomMap: {
@@ -167,7 +167,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Interaction (Before)',
     description: 'Fires before the player interacts with a map object or zone.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. amplifier', required: true },
+      { label: 'Entity ID', hint: 'e.g. amplifier', required: true, entity: 'mapObject' },
     ],
   },
   ObjectInteractionAfter: {
@@ -175,7 +175,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Interaction (After)',
     description: 'Fires after the player interacts with a map object or zone.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true },
+      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true, entity: 'mapObject' },
     ],
   },
   ResCounter: {
@@ -193,7 +193,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Captured',
     description: 'Fires when the player captures a specific map entity (mine, city, etc.).',
     params: [
-      { label: 'Entity ID', hint: 'e.g. mine1', required: true },
+      { label: 'Entity ID', hint: 'e.g. mine1', required: true, entity: 'mapObject' },
     ],
   },
   ItemOwnSide: {

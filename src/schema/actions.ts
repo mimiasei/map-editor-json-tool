@@ -529,7 +529,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Entity',
     description: 'Spawns an interactable object at a node and assigns it an entity SID.',
     params: [
-      { label: 'Object type', hint: 'e.g. campaign_lost_library_empty', required: true },
+      { label: 'Object type', hint: 'e.g. campaign_lost_library_empty', required: true, entity: 'mapObject' },
       { label: 'Node ID', hint: 'e.g. 1755', required: true },
       { label: 'Flag', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Entity SID', hint: 'e.g. diary', required: false },
@@ -541,7 +541,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Entity',
     description: 'Enables or disables a portal entity.',
     params: [
-      { label: 'Portal entity ID', hint: 'e.g. portal_in', required: true },
+      { label: 'Portal entity ID', hint: 'e.g. portal_in', required: true, entity: 'mapObject' },
       { label: 'Active', hint: 'true or false', required: true, type: 'enum', options: ['true', 'false'] },
     ],
   },
@@ -551,7 +551,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Entity',
     description: 'Disables all actions on a map entity (makes it non-interactable).',
     params: [
-      { label: 'Entity ID', hint: 'e.g. cirque', required: true },
+      { label: 'Entity ID', hint: 'e.g. cirque', required: true, entity: 'mapObject' },
     ],
   },
 
@@ -562,7 +562,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Markers / VFX',
     description: 'Attaches a quest marker VFX to a map entity.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. cavalryman', required: true },
+      { label: 'Entity ID', hint: 'e.g. cavalryman', required: true, entity: 'mapObject' },
       { label: 'Marker path', hint: 'e.g. effects/global_map/quest_mark_silver_01', required: true },
     ],
   },
@@ -572,7 +572,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Markers / VFX',
     description: 'Shows or hides a quest marker already attached to an entity.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true },
+      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true, entity: 'mapObject' },
       { label: 'Active', hint: 'true or false', required: true, type: 'enum', options: ['true', 'false'] },
     ],
   },
@@ -605,7 +605,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Markers / VFX',
     description: 'Shows or hides a zone/interaction marker.',
     params: [
-      { label: 'Zone/marker entity ID', hint: 'e.g. zone_found_river_source', required: true },
+      { label: 'Zone/marker entity ID', hint: 'e.g. zone_found_river_source', required: true, entity: 'mapObject' },
       { label: 'Active', hint: 'true or false', required: true, type: 'enum', options: ['true', 'false'] },
     ],
   },
