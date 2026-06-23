@@ -11,6 +11,7 @@ import JsonPreview from '@/components/common/JsonPreview'
 import CommandPalette from '@/components/common/CommandPalette'
 import TimelineDialog from '@/components/common/TimelineDialog'
 import QuestFlowDialog from '@/components/common/QuestFlowDialog'
+import StatsDialog from '@/components/common/StatsDialog'
 import DialogEditor from '@/components/dialogs/DialogEditor'
 import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
 import { useState } from 'react'
@@ -34,6 +35,7 @@ export default function AppShell() {
   const [paletteOpen,  setPaletteOpen]  = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
   const [diagramOpen,  setDiagramOpen]  = useState(false)
+  const [statsOpen,    setStatsOpen]    = useState(false)
 
   // Keep refs for values used in event handlers (avoids stale closures)
   const isDirtyRef         = useRef(isDirty)
@@ -229,6 +231,7 @@ export default function AppShell() {
         onSearchOpen={() => setPaletteOpen(true)}
         onTimelineOpen={() => setTimelineOpen(true)}
         onDiagramOpen={() => setDiagramOpen(true)}
+        onStatsOpen={() => setStatsOpen(true)}
         onNew={handleNew}
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
@@ -237,6 +240,7 @@ export default function AppShell() {
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <TimelineDialog open={timelineOpen} onOpenChange={setTimelineOpen} />
       <QuestFlowDialog open={diagramOpen} onOpenChange={setDiagramOpen} />
+      <StatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
       <DialogEditor />
       <LocalizationDialog />
       <Group
