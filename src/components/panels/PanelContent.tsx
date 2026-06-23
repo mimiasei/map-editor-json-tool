@@ -28,7 +28,7 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
         <TimelineContent
           scenario={scenario}
           onSelect={(type, path) => sendAction({ name: 'setSelection', args: [type, path] })}
-          // alwaysOpen — no close behaviour in undocked windows
+          closeOnNav={false}
         />
       )
 
