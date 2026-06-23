@@ -26,7 +26,7 @@ export default function UndockButton({ panelId: _panelId, onUndock, disabled }: 
     <Tooltip>
       <TooltipTrigger asChild>
         <button
-          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent disabled:pointer-events-none disabled:opacity-30"
+          className="pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 focus:opacity-100 focus:pointer-events-auto transition-opacity h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent disabled:pointer-events-none disabled:opacity-30"
           onClick={onUndock}
           disabled={disabled}
           aria-label="Pop out into separate window"
