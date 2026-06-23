@@ -384,7 +384,7 @@ export const MAP_OBJECTS: EntityEntry[] = [
   // Miscellaneous
   e('abandoned_corpse'), e('abandoned_mansion'), e('abandoned_outpost'), e('abnormal_structure'),
   e('alchemy_lab'), e('armory_automaton'), e('camp_fire'), e('crystal_trail'),
-  e('cursed_old_house'), e('enchanted_scroll_box'), e('flattering_mirror'),
+  e('cursed_old_house'), e('flattering_mirror'),
   e('fountain'), e('fountain_2'), e('gardener'), e('gingerbread_house'),
   e('heros_crypt'), e('huntsmans_camp'), e('iridescent_abbey'), e('jousting_range'),
   e('knowledge_garden_campaign'), e('legions_memorial'), e('maze'), e('mercenary_guild'),
