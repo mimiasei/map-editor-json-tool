@@ -227,8 +227,16 @@ function QuestTable({
             return (
               <tr
                 key={row.questIndex}
+                role="button"
+                tabIndex={0}
                 className="border-b border-border/50 hover:bg-accent/50 cursor-pointer transition-colors"
                 onClick={() => onNavigate(row.questIndex)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onNavigate(row.questIndex)
+                  }
+                }}
                 title="Click to navigate to quest"
               >
                 <td className="py-1.5 pr-3 font-mono max-w-[200px] truncate">
