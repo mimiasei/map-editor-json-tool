@@ -29,6 +29,8 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Maximize2, X, Zap } from 'lucide-react'
+import type { ScenarioFile, SelectionType } from '@/types/scenario'
+import UndockButton from '@/components/panels/UndockButton'
 
 // ─── nodeTypes must be defined outside the component (React Flow requirement) ─
 
@@ -92,15 +94,20 @@ function InfoPanel({ data, onNavigate, onClose }: InfoPanelProps) {
   )
 }
 
-// ─── Dialog ───────────────────────────────────────────────────────────────────
+// ─── Content (used by both docked and undocked) ───────────────────────────────
 
-interface QuestFlowDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+interface QuestFlowContentProps {
+  scenario: ScenarioFile
+  onNavigate: (type: SelectionType, path: number[]) => void
+  /**
+   * When true clicking a node fires onNavigate without any "close" side-effect.
+   * When false (default / docked) the close-on-nav toggle is shown.
+   */
+  alwaysOpen?: boolean
+  onCloseRequested?: () => void
 }
 
-export default function QuestFlowDialog({ open, onOpenChange }: QuestFlowDialogProps) {
-  const { scenario, setSelection } = useScenarioStore()
+export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequested }: QuestFlowContentProps) {
   const [showLabels, setShowLabels]     = useState(true)
   const [closeOnNav, setCloseOnNav]     = useState(true)
   const [selectedId, setSelectedId]     = useState<string | null>(null)
@@ -108,7 +115,6 @@ export default function QuestFlowDialog({ open, onOpenChange }: QuestFlowDialogP
 
   const { nodes, edges } = useMemo(() => buildQuestFlow(scenario), [scenario])
 
-  // Strip/restore edge labels based on toggle
   const displayEdges = useMemo(
     () => showLabels ? edges : edges.map((e) => ({ ...e, label: undefined })),
     [edges, showLabels],
@@ -126,10 +132,10 @@ export default function QuestFlowDialog({ open, onOpenChange }: QuestFlowDialogP
   const handlePaneClick = useCallback(() => setSelectedId(null), [])
 
   const handleNavigate = useCallback((qi: number, sqi: number) => {
-    setSelection('subquest', [qi, sqi])
+    onNavigate('subquest', [qi, sqi])
     setSelectedId(null)
-    if (closeOnNav) onOpenChange(false)
-  }, [setSelection, closeOnNav, onOpenChange])
+    if (!alwaysOpen && closeOnNav) onCloseRequested?.()
+  }, [onNavigate, alwaysOpen, closeOnNav, onCloseRequested])
 
   const handleFitView = useCallback(() => {
     rfInstance?.fitView({ padding: 0.1 })
@@ -138,26 +144,25 @@ export default function QuestFlowDialog({ open, onOpenChange }: QuestFlowDialogP
   const isEmpty = nodes.filter((n) => n.type === 'subquest').length === 0
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-w-[92vw] w-[92vw] max-h-[92vh] h-[92vh] p-0 overflow-hidden gap-0">
-        <DialogTitle className="sr-only">Quest Flow Diagram</DialogTitle>
+    <>
+      {/* ── Header ── */}
+      <div className="flex items-center gap-4 px-5 py-3 border-b shrink-0">
+        <p className="text-sm font-semibold leading-none">Quest Flow</p>
 
-        {/* ── Header ─────────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-4 px-5 py-3 border-b shrink-0">
-          <p className="text-sm font-semibold leading-none">Quest Flow</p>
+        <div className="flex items-center gap-1.5">
+          <Switch
+            id="show-labels"
+            checked={showLabels}
+            onCheckedChange={setShowLabels}
+            className="scale-90"
+          />
+          <Label htmlFor="show-labels" className="text-xs text-muted-foreground cursor-pointer">
+            Labels
+          </Label>
+        </div>
 
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="show-labels"
-              checked={showLabels}
-              onCheckedChange={setShowLabels}
-              className="scale-90"
-            />
-            <Label htmlFor="show-labels" className="text-xs text-muted-foreground cursor-pointer">
-              Labels
-            </Label>
-          </div>
-
+        {/* Only show the toggle when docked */}
+        {!alwaysOpen && (
           <div className="flex items-center gap-1.5">
             <Switch
               id="qf-close-on-nav"
@@ -169,56 +174,92 @@ export default function QuestFlowDialog({ open, onOpenChange }: QuestFlowDialogP
               Close on navigate
             </Label>
           </div>
+        )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5 text-xs ml-auto mr-7"
-            onClick={handleFitView}
-            disabled={isEmpty}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 text-xs ml-auto mr-7"
+          onClick={handleFitView}
+          disabled={isEmpty}
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+          Fit view
+        </Button>
+      </div>
+
+      {/* ── Canvas ── */}
+      <div className="flex-1 min-h-0">
+        {isEmpty ? (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            No subquests yet. Add quests with subquests to see the flow diagram.
+          </div>
+        ) : (
+          <ReactFlow
+            nodes={nodes}
+            edges={displayEdges}
+            nodeTypes={NODE_TYPES}
+            fitView
+            fitViewOptions={{ padding: 0.1 }}
+            onInit={setRfInstance}
+            onNodeClick={handleNodeClick}
+            onPaneClick={handlePaneClick}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable
+            deleteKeyCode={null}
+            proOptions={{ hideAttribution: true }}
           >
-            <Maximize2 className="h-3.5 w-3.5" />
-            Fit view
-          </Button>
-        </div>
+            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 
-        {/* ── Canvas ─────────────────────────────────────────────────────────── */}
-        <div className="flex-1 min-h-0">
-          {isEmpty ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              No subquests yet. Add quests with subquests to see the flow diagram.
-            </div>
-          ) : (
-            <ReactFlow
-              nodes={nodes}
-              edges={displayEdges}
-              nodeTypes={NODE_TYPES}
-              fitView
-              fitViewOptions={{ padding: 0.1 }}
-              onInit={setRfInstance}
-              onNodeClick={handleNodeClick}
-              onPaneClick={handlePaneClick}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              elementsSelectable
-              deleteKeyCode={null}
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+            {/* Info panel — top-right of canvas */}
+            {selectedNode && selectedNode.type === 'subquest' && (
+              <Panel position="top-right">
+                <InfoPanel
+                  data={selectedNode.data as SubQuestNodeData}
+                  onNavigate={handleNavigate}
+                  onClose={() => setSelectedId(null)}
+                />
+              </Panel>
+            )}
+          </ReactFlow>
+        )}
+      </div>
+    </>
+  )
+}
 
-              {/* Info panel — top-right of canvas */}
-              {selectedNode && selectedNode.type === 'subquest' && (
-                <Panel position="top-right">
-                  <InfoPanel
-                    data={selectedNode.data as SubQuestNodeData}
-                    onNavigate={handleNavigate}
-                    onClose={() => setSelectedId(null)}
-                  />
-                </Panel>
-              )}
-            </ReactFlow>
-          )}
-        </div>
+// ─── Dialog (docked) ──────────────────────────────────────────────────────────
+
+interface QuestFlowDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** Called when the user clicks the undock button. Tauri-only. */
+  onUndock?: () => void
+  /** True while the panel is already open in a separate window. */
+  undocked?: boolean
+}
+
+export default function QuestFlowDialog({ open, onOpenChange, onUndock, undocked }: QuestFlowDialogProps) {
+  const { scenario, setSelection } = useScenarioStore()
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex flex-col max-w-[92vw] w-[92vw] max-h-[92vh] h-[92vh] p-0 overflow-hidden gap-0">
+        <DialogTitle className="sr-only">Quest Flow Diagram</DialogTitle>
+
+        {/* UndockButton overlaid in the dialog title area */}
+        {onUndock && (
+          <div className="group absolute top-3 right-10 z-10">
+            <UndockButton panelId="flow" onUndock={onUndock} disabled={undocked} />
+          </div>
+        )}
+
+        <QuestFlowContent
+          scenario={scenario}
+          onNavigate={(type, path) => setSelection(type, path)}
+          onCloseRequested={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   )

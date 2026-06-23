@@ -1,9 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { exportProjectJson } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
+import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
+import type { PanelState } from '@/lib/panel-sync'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -14,7 +16,20 @@ import QuestFlowDialog from '@/components/common/QuestFlowDialog'
 import StatsDialog from '@/components/common/StatsDialog'
 import DialogEditor from '@/components/dialogs/DialogEditor'
 import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
-import { useState } from 'react'
+import { SquareArrowOutUpRight } from 'lucide-react'
+
+// ─── Placeholder shown where a panel would be when it's undocked ──────────────
+
+function UndockedPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="flex h-full items-center justify-center text-sm text-muted-foreground gap-2">
+      <SquareArrowOutUpRight className="h-4 w-4 opacity-40" />
+      {label} is open in a separate window
+    </div>
+  )
+}
+
+// ─── AppShell ─────────────────────────────────────────────────────────────────
 
 export default function AppShell() {
   const {
@@ -30,12 +45,16 @@ export default function AppShell() {
     resetScenario,
     markClean,
     setCurrentFile,
+    setSelection,
   } = useScenarioStore()
 
   const [paletteOpen,  setPaletteOpen]  = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
   const [diagramOpen,  setDiagramOpen]  = useState(false)
   const [statsOpen,    setStatsOpen]    = useState(false)
+
+  // Track which panels are currently undocked
+  const [undocked, setUndocked] = useState<Set<string>>(new Set())
 
   // Keep refs for values used in event handlers (avoids stale closures)
   const isDirtyRef         = useRef(isDirty)
@@ -45,6 +64,7 @@ export default function AppShell() {
   const mapNameRef         = useRef(mapName)
   const dialogsRef         = useRef(dialogs)
   const localizationRef    = useRef(localization)
+  const undockedRef        = useRef(undocked)
   useEffect(() => { isDirtyRef.current         = isDirty },         [isDirty])
   useEffect(() => { scenarioRef.current         = scenario },         [scenario])
   useEffect(() => { currentFilePathRef.current  = currentFilePath },  [currentFilePath])
@@ -52,6 +72,7 @@ export default function AppShell() {
   useEffect(() => { mapNameRef.current          = mapName },          [mapName])
   useEffect(() => { dialogsRef.current          = dialogs },          [dialogs])
   useEffect(() => { localizationRef.current     = localization },     [localization])
+  useEffect(() => { undockedRef.current         = undocked },         [undocked])
 
   // ── Imperative panel handles ─────────────────────────────────────────────────
   const sidebarPanelRef = useRef<PanelImperativeHandle | null>(null)
@@ -87,17 +108,15 @@ export default function AppShell() {
       localizationRef.current,
     )
     if (currentFilePathRef.current) {
-      // Overwrite the existing file silently
       await saveToPath(currentFilePathRef.current, json)
       markClean()
     } else {
-      // No open path yet — fall back to Save As
       const savedPath = await saveFile(json, currentFileNameRef.current ?? 'scenario.json')
       if (savedPath) {
         setCurrentFile(savedPath, savedPath.replace(/\\/g, '/').split('/').pop() ?? savedPath)
         markClean()
       } else if (!isTauri()) {
-        markClean() // browser download always succeeds
+        markClean()
       }
     }
   }, [markClean, setCurrentFile])
@@ -120,7 +139,6 @@ export default function AppShell() {
       const mod = e.ctrlKey || e.metaKey
       if (!mod) return
 
-      // Suppress shortcuts when focus is in an input / textarea / contenteditable
       const tag = (e.target as HTMLElement)?.tagName
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return
 
@@ -159,6 +177,100 @@ export default function AppShell() {
     return () => window.removeEventListener('keydown', handler)
   }, [handleSave, handleNew])
 
+  // ── BroadcastChannel sync (Tauri only) ───────────────────────────────────────
+  useEffect(() => {
+    if (!isTauri()) return
+
+    const channel = createPanelSyncChannel('main')
+
+    // Debounced broadcast
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    const broadcast = () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => {
+        const s = useScenarioStore.getState()
+        const state: PanelState = {
+          scenario:     s.scenario,
+          mapName:      s.mapName,
+          dialogs:      s.dialogs,
+          localization: s.localization,
+          selectedType: s.selectedType,
+          selectedPath: s.selectedPath,
+        }
+        channel.broadcastState(state)
+      }, 100)
+    }
+
+    // Subscribe to store changes and broadcast
+    const unsubscribe = useScenarioStore.subscribe(broadcast)
+
+    // Also forward actions from undocked windows back to the store
+    const unlistenAction = channel.onAction((action) => {
+      if (action.name === 'setSelection') {
+        const [type, path] = action.args
+        useScenarioStore.getState().setSelection(type, path)
+      }
+    })
+
+    return () => {
+      unsubscribe()
+      unlistenAction()
+      if (debounceTimer) clearTimeout(debounceTimer)
+      channel.destroy()
+    }
+  }, [])
+
+  // ── Undock handler (Tauri only) ───────────────────────────────────────────────
+  const handleUndock = useCallback(async (panelId: string) => {
+    if (!isTauri()) return
+
+    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+    const meta = PANEL_META[panelId]
+
+    // If already open, focus it
+    const existing = await WebviewWindow.getByLabel(`panel-${panelId}`)
+    if (existing) {
+      existing.setFocus()
+      return
+    }
+
+    setUndocked((prev) => new Set([...prev, panelId]))
+
+    const win = new WebviewWindow(`panel-${panelId}`, {
+      url:       `/?panel=${panelId}`,
+      title:     meta?.title ?? panelId,
+      width:     meta?.width  ?? 800,
+      height:    meta?.height ?? 600,
+      minWidth:  400,
+      minHeight: 300,
+      resizable: true,
+    })
+
+    // Broadcast initial state shortly after opening so the panel window has time to mount its listener.
+    const s = useScenarioStore.getState()
+    const state: PanelState = {
+      scenario:     s.scenario,
+      mapName:      s.mapName,
+      dialogs:      s.dialogs,
+      localization: s.localization,
+      selectedType: s.selectedType,
+      selectedPath: s.selectedPath,
+    }
+    const ch = createPanelSyncChannel('main-immediate')
+    setTimeout(() => ch.broadcastState(state), 0)
+    setTimeout(() => { ch.broadcastState(state); ch.destroy() }, 200)
+
+    // When the panel window is closed (by user or re-dock button), re-dock it
+    const unlistenClose = await win.onCloseRequested(() => {
+      setUndocked((prev) => {
+        const next = new Set(prev)
+        next.delete(panelId)
+        return next
+      })
+      unlistenClose()
+    })
+  }, [])
+
   // ── Tauri-only effects ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!isTauri()) return
@@ -167,7 +279,6 @@ export default function AppShell() {
     let unlistenClose: (() => void) | undefined
 
     ;(async () => {
-      // 1. Relay native menu events → DOM events handled by Toolbar / AppShell
       const { listen } = await import('@tauri-apps/api/event')
       unlistenMenu = await listen<string>('menu-action', (event) => {
         switch (event.payload) {
@@ -186,14 +297,18 @@ export default function AppShell() {
         }
       })
 
-      // 2. Close guard — prompt when there are unsaved changes
       const { getCurrentWindow } = await import('@tauri-apps/api/window')
       const win = getCurrentWindow()
       unlistenClose = await win.onCloseRequested(async (closeEvent) => {
-        // Always prevent default first — returning early from an async handler
-        // without calling preventDefault() does not reliably block the close
-        // on Windows.
         closeEvent.preventDefault()
+
+        // Close all undocked panels first
+        const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+        for (const panelId of undockedRef.current) {
+          const panelWin = await WebviewWindow.getByLabel(`panel-${panelId}`)
+          panelWin?.destroy()
+        }
+
         if (!isDirtyRef.current) {
           win.destroy()
           return
@@ -210,7 +325,6 @@ export default function AppShell() {
       unlistenMenu?.()
       unlistenClose?.()
     }
-  // handleNew and handleSave are stable callbacks (useCallback)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -225,6 +339,11 @@ export default function AppShell() {
     })()
   }, [isDirty, currentFileName])
 
+  // ── Derived helpers ───────────────────────────────────────────────────────────
+  const isUndocked = (id: string) => undocked.has(id)
+  // setSelection is used only to keep TypeScript happy about the import
+  void setSelection
+
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       <Toolbar
@@ -238,9 +357,24 @@ export default function AppShell() {
         onOpen={() => window.dispatchEvent(new Event('oe:open'))}
       />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-      <TimelineDialog open={timelineOpen} onOpenChange={setTimelineOpen} />
-      <QuestFlowDialog open={diagramOpen} onOpenChange={setDiagramOpen} />
-      <StatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
+      <TimelineDialog
+        open={timelineOpen}
+        onOpenChange={setTimelineOpen}
+        onUndock={() => { setTimelineOpen(false); handleUndock('timeline') }}
+        undocked={isUndocked('timeline')}
+      />
+      <QuestFlowDialog
+        open={diagramOpen}
+        onOpenChange={setDiagramOpen}
+        onUndock={() => { setDiagramOpen(false); handleUndock('flow') }}
+        undocked={isUndocked('flow')}
+      />
+      <StatsDialog
+        open={statsOpen}
+        onOpenChange={setStatsOpen}
+        onUndock={() => { setStatsOpen(false); handleUndock('stats') }}
+        undocked={isUndocked('stats')}
+      />
       <DialogEditor />
       <LocalizationDialog />
       <Group
@@ -292,7 +426,14 @@ export default function AppShell() {
           collapsible
         >
           <aside className="flex h-full flex-col overflow-hidden">
-            <JsonPreview />
+            {isUndocked('preview') ? (
+              <UndockedPlaceholder label="JSON Preview" />
+            ) : (
+              <JsonPreview
+                onUndock={() => handleUndock('preview')}
+                undocked={isUndocked('preview')}
+              />
+            )}
           </aside>
         </Panel>
       </Group>
