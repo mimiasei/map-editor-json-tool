@@ -38,6 +38,7 @@ import {
   Workflow,
   Languages,
   Package,
+  BarChart2,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -45,6 +46,7 @@ interface ToolbarProps {
   onSearchOpen?: () => void
   onTimelineOpen?: () => void
   onDiagramOpen?: () => void
+  onStatsOpen?: () => void
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -59,6 +61,7 @@ export default function Toolbar({
   onSearchOpen,
   onTimelineOpen,
   onDiagramOpen,
+  onStatsOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -290,6 +293,20 @@ export default function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Quest Flow Diagram</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onStatsOpen}
+              >
+                <BarChart2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Scenario Statistics</TooltipContent>
           </Tooltip>
 
           <Tooltip>
