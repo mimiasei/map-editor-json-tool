@@ -73,9 +73,9 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
         <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
-              {filtered.length === 0
+              {filtered.length === 0 && registry.length > 0
                 ? `No matching ${ENTITY_LABELS[category]}`
-                : `No ${ENTITY_LABELS[category]} found`}
+                : `No ${ENTITY_LABELS[category]} defined`}
             </CommandEmpty>
             <CommandGroup>
               {filtered.map((entry) => (

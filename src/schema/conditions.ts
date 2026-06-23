@@ -2,6 +2,8 @@
 // Defines all known condition types, their labels, descriptions, and parameters.
 // The tool supports custom/unknown types — users can type any string as the type.
 
+import type { EntityCategory } from './entities'
+
 export interface ParamDef {
   label: string
   hint?: string
@@ -9,7 +11,7 @@ export interface ParamDef {
   type?: 'string' | 'number' | 'enum'
   options?: string[] // For enum type
   ref?: 'counter' | 'quest' | 'subquest' | 'interruption' // SID cross-reference: show autocomplete from this pool
-  entity?: 'hero' | 'creature' | 'artifact' | 'mapObject' // Entity registry: show searchable combobox from static list
+  entity?: EntityCategory // Entity registry: show searchable combobox from static list
 }
 
 export interface ConditionDef {
