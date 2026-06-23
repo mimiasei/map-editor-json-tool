@@ -15,13 +15,15 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Clock, Hash, Zap, Shuffle, Repeat2 } from 'lucide-react'
+import type { ScenarioFile, SelectionType } from '@/types/scenario'
+import UndockButton from '@/components/panels/UndockButton'
 
 // ─── Category icons ───────────────────────────────────────────────────────────
 
 const CATEGORY_ICONS: Record<TimelineCategory, React.ElementType> = {
-  'turn-based':      Clock,
-  'counter-gated':   Hash,
-  'reactive':        Zap,
+  'turn-based':       Clock,
+  'counter-gated':    Hash,
+  'reactive':         Zap,
   'random-repeating': Shuffle,
 }
 
@@ -111,16 +113,24 @@ function Section({ category, entries, onSelect }: SectionProps) {
   )
 }
 
-// ─── Dialog ───────────────────────────────────────────────────────────────────
+// ─── Content (used by both docked and undocked) ───────────────────────────────
 
-interface TimelineDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+interface TimelineContentProps {
+  scenario: ScenarioFile
+  /** Called when the user clicks an entry row. */
+  onSelect: (type: SelectionType, path: number[]) => void
+  /**
+   * Whether clicking an entry should also close the containing dialog.
+   * Controlled by the "Close on navigate" toggle — the undocked window
+   * ignores this (it never closes on navigate).
+   */
+  closeOnNav?: boolean
+  onCloseRequested?: () => void
 }
 
-export default function TimelineDialog({ open, onOpenChange }: TimelineDialogProps) {
-  const { scenario, setSelection } = useScenarioStore()
-  const [closeOnNav, setCloseOnNav] = useState(false)
+export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequested }: TimelineContentProps) {
+  const [localCloseOnNav, setLocalCloseOnNav] = useState(false)
+  const effectiveClose = closeOnNav !== undefined ? closeOnNav : localCloseOnNav
 
   const allEntries = useMemo(() => buildTimeline(scenario), [scenario])
 
@@ -134,7 +144,6 @@ export default function TimelineDialog({ open, onOpenChange }: TimelineDialogPro
     for (const entry of allEntries) {
       result[entry.category].push(entry)
     }
-    // Sort within each category
     for (const cat of Object.keys(result) as TimelineCategory[]) {
       result[cat].sort((a, b) => {
         const ak = a.sortKey
@@ -147,57 +156,92 @@ export default function TimelineDialog({ open, onOpenChange }: TimelineDialogPro
   }, [allEntries])
 
   const handleSelect = (entry: TimelineEntry) => {
-    setSelection('trigger', entry.path)
-    if (closeOnNav) onOpenChange(false)
+    onSelect('trigger', entry.path)
+    if (effectiveClose) onCloseRequested?.()
   }
+
+  return (
+    <>
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b shrink-0">
+        <div>
+          <p className="text-base font-semibold leading-none">Event Timeline</p>
+          <p className="text-xs text-muted-foreground mt-1.5">
+            {allEntries.length} trigger{allEntries.length !== 1 ? 's' : ''} across{' '}
+            {scenario.quests.length} quest{scenario.quests.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        {/* Only show the toggle when we're docked (closeOnNav prop is undefined = self-managed) */}
+        {closeOnNav === undefined && (
+          <div className="flex items-center gap-2 mr-6">
+            <Switch
+              id="close-on-nav"
+              checked={localCloseOnNav}
+              onCheckedChange={setLocalCloseOnNav}
+            />
+            <Label htmlFor="close-on-nav" className="text-xs text-muted-foreground cursor-pointer">
+              Close on navigate
+            </Label>
+          </div>
+        )}
+      </div>
+
+      {/* ── Body ── */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="px-6 py-4">
+          {allEntries.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
+              No triggers yet. Add quests with triggers to see them here.
+            </p>
+          ) : (
+            <div className="space-y-6">
+              {CATEGORY_META.map((cat) => (
+                <Section
+                  key={cat.id}
+                  category={cat.id}
+                  entries={grouped[cat.id]}
+                  onSelect={handleSelect}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ─── Dialog (docked) ──────────────────────────────────────────────────────────
+
+interface TimelineDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** Called when the user clicks the undock button. Tauri-only. */
+  onUndock?: () => void
+  /** True while the panel is already open in a separate window. */
+  undocked?: boolean
+}
+
+export default function TimelineDialog({ open, onOpenChange, onUndock, undocked }: TimelineDialogProps) {
+  const { scenario, setSelection } = useScenarioStore()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex flex-col max-w-4xl max-h-[85vh] p-0 overflow-hidden gap-0">
         <DialogTitle className="sr-only">Event Timeline</DialogTitle>
 
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b shrink-0">
-          <div>
-            <p className="text-base font-semibold leading-none">Event Timeline</p>
-            <p className="text-xs text-muted-foreground mt-1.5">
-              {allEntries.length} trigger{allEntries.length !== 1 ? 's' : ''} across{' '}
-              {scenario.quests.length} quest{scenario.quests.length !== 1 ? 's' : ''}
-            </p>
+        {/* UndockButton overlaid in the dialog title area */}
+        {onUndock && (
+          <div className="group absolute top-3 right-10 z-10">
+            <UndockButton panelId="timeline" onUndock={onUndock} disabled={undocked} />
           </div>
-          <div className="flex items-center gap-2 mr-6">
-            <Switch
-              id="close-on-nav"
-              checked={closeOnNav}
-              onCheckedChange={setCloseOnNav}
-            />
-            <Label htmlFor="close-on-nav" className="text-xs text-muted-foreground cursor-pointer">
-              Close on navigate
-            </Label>
-          </div>
-        </div>
+        )}
 
-        {/* ── Body ── */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="px-6 py-4">
-            {allEntries.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">
-                No triggers yet. Add quests with triggers to see them here.
-              </p>
-            ) : (
-              <div className="space-y-6">
-                {CATEGORY_META.map((cat) => (
-                  <Section
-                    key={cat.id}
-                    category={cat.id}
-                    entries={grouped[cat.id]}
-                    onSelect={handleSelect}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <TimelineContent
+          scenario={scenario}
+          onSelect={(type, path) => setSelection(type, path)}
+          onCloseRequested={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   )

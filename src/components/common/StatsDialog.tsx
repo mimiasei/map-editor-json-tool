@@ -8,6 +8,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import type { ScenarioFile, SelectionType } from '@/types/scenario'
+import UndockButton from '@/components/panels/UndockButton'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,17 +31,15 @@ type Tab = 'overview' | 'actions' | 'conditions' | 'perquest'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function computeStats(scenario: ReturnType<typeof useScenarioStore.getState>['scenario']) {
+function computeStats(scenario: ScenarioFile) {
   let totalSubquests = 0
   let totalTriggers = 0
   let totalActions = 0
   let totalConditions = 0
 
-  // Action / condition frequency maps
   const actionFreq: Record<string, number> = {}
   const conditionFreq: Record<string, number> = {}
 
-  // Interruption actions
   for (const intr of scenario.interruptions) {
     for (const a of intr.actions) {
       actionFreq[a.a] = (actionFreq[a.a] ?? 0) + 1
@@ -47,7 +47,6 @@ function computeStats(scenario: ReturnType<typeof useScenarioStore.getState>['sc
     }
   }
 
-  // Per-quest stats
   const questRows: QuestRow[] = scenario.quests.map((quest, qi) => {
     let qActions = 0
     let qConditions = 0
@@ -86,7 +85,6 @@ function computeStats(scenario: ReturnType<typeof useScenarioStore.getState>['sc
     }
   })
 
-  // Unique SIDs
   const sids = new Set<string>([
     ...scenario.counters.map((c) => c.sid),
     ...scenario.interruptions.map((i) => i.sid),
@@ -94,14 +92,10 @@ function computeStats(scenario: ReturnType<typeof useScenarioStore.getState>['sc
     ...scenario.quests.flatMap((q) => q.subQuests.map((sq) => sq.sid)),
   ])
 
-  // Total complexity
   const totalComplexity = questRows.reduce((s, r) => s + r.complexity, 0)
 
-  // Sorted frequency tables
-  const topActions = Object.entries(actionFreq)
-    .sort((a, b) => b[1] - a[1])
-  const topConditions = Object.entries(conditionFreq)
-    .sort((a, b) => b[1] - a[1])
+  const topActions = Object.entries(actionFreq).sort((a, b) => b[1] - a[1])
+  const topConditions = Object.entries(conditionFreq).sort((a, b) => b[1] - a[1])
 
   return {
     counts: {
@@ -160,11 +154,11 @@ function FreqBar({
 // ─── Per-quest table ──────────────────────────────────────────────────────────
 
 const COLUMNS: { key: SortKey; label: string; title?: string }[] = [
-  { key: 'subquests',  label: 'SQs',      title: 'Subquests' },
-  { key: 'triggers',   label: 'Trigs',    title: 'Triggers' },
-  { key: 'actions',    label: 'Acts',     title: 'Actions' },
-  { key: 'conditions', label: 'Conds',    title: 'Conditions' },
-  { key: 'complexity', label: 'Score',    title: 'Complexity score (SQs×0.5 + Triggers + Actions + Conditions×0.5)' },
+  { key: 'subquests',  label: 'SQs',   title: 'Subquests' },
+  { key: 'triggers',   label: 'Trigs', title: 'Triggers' },
+  { key: 'actions',    label: 'Acts',  title: 'Actions' },
+  { key: 'conditions', label: 'Conds', title: 'Conditions' },
+  { key: 'complexity', label: 'Score', title: 'Complexity score (SQs×0.5 + Triggers + Actions + Conditions×0.5)' },
 ]
 
 function QuestTable({
@@ -268,152 +262,185 @@ function QuestTable({
   )
 }
 
-// ─── Main dialog ──────────────────────────────────────────────────────────────
+// ─── Content (used by both docked and undocked) ───────────────────────────────
 
-interface Props {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+interface StatsContentProps {
+  scenario: ScenarioFile
+  /** Called when the user clicks a quest row in the "Per Quest" tab. */
+  onNavigate: (type: SelectionType, path: number[]) => void
+  /** When true, clicking a quest row does NOT close the panel. Defaults to false. */
+  alwaysOpen?: boolean
+  onCloseRequested?: () => void
 }
 
-export default function StatsDialog({ open, onOpenChange }: Props) {
-  const scenario    = useScenarioStore((s) => s.scenario)
-  const setSelection = useScenarioStore((s) => s.setSelection)
-
+export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequested }: StatsContentProps) {
   const [tab, setTab] = useState<Tab>('overview')
-
   const stats = useMemo(() => computeStats(scenario), [scenario])
 
   const handleNavigate = (questIndex: number) => {
-    setSelection('quest', [questIndex])
-    onOpenChange(false)
+    onNavigate('quest', [questIndex])
+    if (!alwaysOpen) onCloseRequested?.()
   }
 
   const maxAction    = stats.topActions[0]?.[1]    ?? 1
   const maxCondition = stats.topConditions[0]?.[1] ?? 1
 
   return (
+    <>
+      {/* Tab bar */}
+      <div className="flex gap-1 border-b border-border pb-2 shrink-0 px-6 pt-4">
+        {(['overview', 'actions', 'conditions', 'perquest'] as Tab[]).map((t) => (
+          <Button
+            key={t}
+            variant={tab === t ? 'secondary' : 'ghost'}
+            size="sm"
+            className="capitalize"
+            onClick={() => setTab(t)}
+          >
+            {t === 'perquest' ? 'Per Quest' : t.charAt(0).toUpperCase() + t.slice(1)}
+          </Button>
+        ))}
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 overflow-y-auto min-h-0 px-6">
+
+        {/* ── Overview ── */}
+        {tab === 'overview' && (
+          <div className="space-y-6 py-2">
+            <div className="grid grid-cols-4 gap-3">
+              <StatCard label="Quests"        value={stats.counts.quests} />
+              <StatCard label="Subquests"     value={stats.counts.subquests} />
+              <StatCard label="Triggers"      value={stats.counts.triggers} />
+              <StatCard label="Actions"       value={stats.counts.actions} />
+              <StatCard label="Conditions"    value={stats.counts.conditions} />
+              <StatCard label="Counters"      value={stats.counts.counters} />
+              <StatCard label="Interruptions" value={stats.counts.interruptions} />
+              <StatCard label="Unique SIDs"   value={stats.counts.uniqueSids} />
+            </div>
+
+            <div className="rounded-md border border-border bg-muted/30 px-5 py-4 space-y-1">
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-bold tabular-nums">
+                  {stats.totalComplexity.toFixed(1)}
+                </span>
+                <span className="text-sm text-muted-foreground">total complexity score</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Weighted sum across all quests: subquests × 0.5 + triggers × 1 + actions × 1 + conditions × 0.5.
+                Higher values indicate more elaborate scripting. Click <em>Per Quest</em> to identify hotspots.
+              </p>
+            </div>
+
+            {stats.counts.triggers > 0 && (
+              <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground">
+                <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
+                  <div className="text-lg font-semibold text-foreground tabular-nums">
+                    {(stats.counts.actions / stats.counts.triggers).toFixed(1)}
+                  </div>
+                  avg actions / trigger
+                </div>
+                <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
+                  <div className="text-lg font-semibold text-foreground tabular-nums">
+                    {(stats.counts.conditions / stats.counts.triggers).toFixed(1)}
+                  </div>
+                  avg conditions / trigger
+                </div>
+                <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
+                  <div className="text-lg font-semibold text-foreground tabular-nums">
+                    {stats.counts.quests > 0
+                      ? (stats.counts.subquests / stats.counts.quests).toFixed(1)
+                      : '—'}
+                  </div>
+                  avg subquests / quest
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Actions ── */}
+        {tab === 'actions' && (
+          <div className="py-2 space-y-1.5">
+            {stats.topActions.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">No actions yet.</p>
+            )}
+            {stats.topActions.map(([type, count]) => (
+              <FreqBar
+                key={type}
+                label={type}
+                sublabel={ACTION_REGISTRY[type]?.label ?? type}
+                count={count}
+                max={maxAction}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ── Conditions ── */}
+        {tab === 'conditions' && (
+          <div className="py-2 space-y-1.5">
+            {stats.topConditions.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">No conditions yet.</p>
+            )}
+            {stats.topConditions.map(([type, count]) => (
+              <FreqBar
+                key={type}
+                label={type}
+                sublabel={CONDITION_REGISTRY[type]?.label ?? type}
+                count={count}
+                max={maxCondition}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ── Per Quest ── */}
+        {tab === 'perquest' && (
+          <div className="py-2">
+            <p className="text-xs text-muted-foreground mb-3">
+              Click a column header to sort. Click a row to navigate to that quest.
+            </p>
+            <QuestTable rows={stats.questRows} onNavigate={handleNavigate} />
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+// ─── Dialog (docked) ──────────────────────────────────────────────────────────
+
+interface Props {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** Called when the user clicks the undock button. Tauri-only. */
+  onUndock?: () => void
+  /** True while the panel is already open in a separate window. */
+  undocked?: boolean
+}
+
+export default function StatsDialog({ open, onOpenChange, onUndock, undocked }: Props) {
+  const scenario    = useScenarioStore((s) => s.scenario)
+  const setSelection = useScenarioStore((s) => s.setSelection)
+
+  return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl flex flex-col max-h-[85vh]">
         <DialogTitle>Scenario Statistics</DialogTitle>
 
-        {/* Tab bar */}
-        <div className="flex gap-1 border-b border-border pb-2 shrink-0">
-          {(['overview', 'actions', 'conditions', 'perquest'] as Tab[]).map((t) => (
-            <Button
-              key={t}
-              variant={tab === t ? 'secondary' : 'ghost'}
-              size="sm"
-              className="capitalize"
-              onClick={() => setTab(t)}
-            >
-              {t === 'perquest' ? 'Per Quest' : t.charAt(0).toUpperCase() + t.slice(1)}
-            </Button>
-          ))}
-        </div>
+        {/* UndockButton overlaid in the dialog title area */}
+        {onUndock && (
+          <div className="group absolute top-3 right-10 z-10">
+            <UndockButton panelId="stats" onUndock={onUndock} disabled={undocked} />
+          </div>
+        )}
 
-        {/* Content area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-
-          {/* ── Overview ── */}
-          {tab === 'overview' && (
-            <div className="space-y-6 py-2">
-              <div className="grid grid-cols-4 gap-3">
-                <StatCard label="Quests"        value={stats.counts.quests} />
-                <StatCard label="Subquests"     value={stats.counts.subquests} />
-                <StatCard label="Triggers"      value={stats.counts.triggers} />
-                <StatCard label="Actions"       value={stats.counts.actions} />
-                <StatCard label="Conditions"    value={stats.counts.conditions} />
-                <StatCard label="Counters"      value={stats.counts.counters} />
-                <StatCard label="Interruptions" value={stats.counts.interruptions} />
-                <StatCard label="Unique SIDs"   value={stats.counts.uniqueSids} />
-              </div>
-
-              <div className="rounded-md border border-border bg-muted/30 px-5 py-4 space-y-1">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-bold tabular-nums">
-                    {stats.totalComplexity.toFixed(1)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">total complexity score</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Weighted sum across all quests: subquests × 0.5 + triggers × 1 + actions × 1 + conditions × 0.5.
-                  Higher values indicate more elaborate scripting. Click <em>Per Quest</em> to identify hotspots.
-                </p>
-              </div>
-
-              {stats.counts.triggers > 0 && (
-                <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground">
-                  <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
-                    <div className="text-lg font-semibold text-foreground tabular-nums">
-                      {(stats.counts.actions / stats.counts.triggers).toFixed(1)}
-                    </div>
-                    avg actions / trigger
-                  </div>
-                  <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
-                    <div className="text-lg font-semibold text-foreground tabular-nums">
-                      {(stats.counts.conditions / stats.counts.triggers).toFixed(1)}
-                    </div>
-                    avg conditions / trigger
-                  </div>
-                  <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
-                    <div className="text-lg font-semibold text-foreground tabular-nums">
-                      {stats.counts.quests > 0
-                        ? (stats.counts.subquests / stats.counts.quests).toFixed(1)
-                        : '—'}
-                    </div>
-                    avg subquests / quest
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Actions ── */}
-          {tab === 'actions' && (
-            <div className="py-2 space-y-1.5">
-              {stats.topActions.length === 0 && (
-                <p className="text-sm text-muted-foreground py-4 text-center">No actions yet.</p>
-              )}
-              {stats.topActions.map(([type, count]) => (
-                <FreqBar
-                  key={type}
-                  label={type}
-                  sublabel={ACTION_REGISTRY[type]?.label ?? type}
-                  count={count}
-                  max={maxAction}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* ── Conditions ── */}
-          {tab === 'conditions' && (
-            <div className="py-2 space-y-1.5">
-              {stats.topConditions.length === 0 && (
-                <p className="text-sm text-muted-foreground py-4 text-center">No conditions yet.</p>
-              )}
-              {stats.topConditions.map(([type, count]) => (
-                <FreqBar
-                  key={type}
-                  label={type}
-                  sublabel={CONDITION_REGISTRY[type]?.label ?? type}
-                  count={count}
-                  max={maxCondition}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* ── Per Quest ── */}
-          {tab === 'perquest' && (
-            <div className="py-2">
-              <p className="text-xs text-muted-foreground mb-3">
-                Click a column header to sort. Click a row to navigate to that quest.
-              </p>
-              <QuestTable rows={stats.questRows} onNavigate={handleNavigate} />
-            </div>
-          )}
-        </div>
+        <StatsContent
+          scenario={scenario}
+          onNavigate={(type, path) => setSelection(type, path)}
+          onCloseRequested={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   )
