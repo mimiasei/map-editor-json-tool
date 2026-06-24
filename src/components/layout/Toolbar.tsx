@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
@@ -168,7 +167,7 @@ export default function Toolbar({
   const validation = validateScenario(scenario, { mapName, dialogs, localization })
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <>
       <header className="flex h-12 items-center gap-2 border-b border-border bg-card px-3">
         {/* Left: app title */}
         <span className="mr-3 text-sm font-semibold text-primary tracking-wide">
@@ -467,6 +466,6 @@ export default function Toolbar({
           </Alert>
         </DialogContent>
       </Dialog>
-    </TooltipProvider>
+    </>
   )
 }
