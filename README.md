@@ -4,14 +4,14 @@ A visual editor for the scenario scripting JSON files used in **Heroes of Might 
 
 **Web app:** https://mimiasei.github.io/map-editor-json-tool/
 
-**Desktop downloads (v0.2.0):**
+**Desktop downloads (v0.2.1):**
 
 | Platform | Download |
 |---|---|
-| macOS — Apple Silicon | [Scenario.Script.Editor_0.2.0_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.0/Scenario.Script.Editor_0.2.0_aarch64.dmg) |
-| macOS — Intel | [Scenario.Script.Editor_0.2.0_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.0/Scenario.Script.Editor_0.2.0_x64.dmg) |
-| Windows | [Scenario.Script.Editor_0.2.0_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.0/Scenario.Script.Editor_0.2.0_x64-setup.exe) |
-| Linux | [Scenario.Script.Editor_0.2.0_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.0/Scenario.Script.Editor_0.2.0_amd64.AppImage) |
+| macOS — Apple Silicon | [Scenario.Script.Editor_0.2.1_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.1/Scenario.Script.Editor_0.2.1_aarch64.dmg) |
+| macOS — Intel | [Scenario.Script.Editor_0.2.1_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.1/Scenario.Script.Editor_0.2.1_x64.dmg) |
+| Windows | [Scenario.Script.Editor_0.2.1_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.1/Scenario.Script.Editor_0.2.1_x64-setup.exe) |
+| Linux | [Scenario.Script.Editor_0.2.1_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.2.1/Scenario.Script.Editor_0.2.1_amd64.AppImage) |
 
 > **macOS note:** the app is not notarized by Apple. Gatekeeper will block it — especially on Apple Silicon. The reliable workaround is to run this once in Terminal after copying the app to `/Applications`:
 > ```
