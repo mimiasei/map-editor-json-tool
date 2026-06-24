@@ -5,6 +5,11 @@
   "windows": ["main", "panel-*"],
   "permissions": [
     "core:default",
+    "core:webview:allow-create-webview-window",
+    "core:window:allow-close",
+    "core:window:allow-destroy",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-title",
     "dialog:allow-open",
     "dialog:allow-save",
     "dialog:allow-ask",

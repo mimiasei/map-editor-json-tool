@@ -246,19 +246,30 @@ export default function AppShell() {
       resizable: true,
     })
 
-    // Broadcast initial state shortly after opening so the panel window has time to mount its listener.
-    const s = useScenarioStore.getState()
-    const state: PanelState = {
-      scenario:     s.scenario,
-      mapName:      s.mapName,
-      dialogs:      s.dialogs,
-      localization: s.localization,
-      selectedType: s.selectedType,
-      selectedPath: s.selectedPath,
-    }
-    const ch = createPanelSyncChannel('main-immediate')
-    setTimeout(() => ch.broadcastState(state), 0)
-    setTimeout(() => { ch.broadcastState(state); ch.destroy() }, 200)
+    // If window creation fails, undo the undocked state
+    win.once('tauri://error', () => {
+      setUndocked((prev) => {
+        const next = new Set(prev)
+        next.delete(panelId)
+        return next
+      })
+    })
+
+    // Broadcast initial state once the panel window has loaded so it can receive it
+    win.once('tauri://created', () => {
+      const s = useScenarioStore.getState()
+      const state: PanelState = {
+        scenario:     s.scenario,
+        mapName:      s.mapName,
+        dialogs:      s.dialogs,
+        localization: s.localization,
+        selectedType: s.selectedType,
+        selectedPath: s.selectedPath,
+      }
+      const ch = createPanelSyncChannel('main-immediate')
+      // Delay slightly to allow the panel's BroadcastChannel listener to mount
+      setTimeout(() => { ch.broadcastState(state); ch.destroy() }, 300)
+    })
 
     // When the panel window is closed (by user or re-dock button), re-dock it
     const unlistenClose = await win.onCloseRequested(() => {
@@ -302,22 +313,28 @@ export default function AppShell() {
       unlistenClose = await win.onCloseRequested(async (closeEvent) => {
         closeEvent.preventDefault()
 
-        // Close all undocked panels first
-        const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
-        for (const panelId of undockedRef.current) {
-          const panelWin = await WebviewWindow.getByLabel(`panel-${panelId}`)
-          panelWin?.destroy()
-        }
+        try {
+          // Close all undocked panels first
+          const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+          for (const panelId of undockedRef.current) {
+            const panelWin = await WebviewWindow.getByLabel(`panel-${panelId}`)
+            await panelWin?.destroy()
+          }
 
-        if (!isDirtyRef.current) {
-          win.destroy()
-          return
+          if (!isDirtyRef.current) {
+            await win.destroy()
+            return
+          }
+          const ok = await confirmDialog(
+            'You have unsaved changes. Quit without saving?',
+            'Unsaved Changes',
+          )
+          if (ok) await win.destroy()
+        } catch {
+          // Fallback: force-exit if destroy fails for any reason
+          const { exit } = await import('@tauri-apps/plugin-process')
+          exit(0)
         }
-        const ok = await confirmDialog(
-          'You have unsaved changes. Quit without saving?',
-          'Unsaved Changes',
-        )
-        if (ok) win.destroy()
       })
     })()
 
