@@ -3,6 +3,8 @@
 // Pages) and inside the Tauri desktop wrapper. Import only from this module —
 // never import @tauri-apps/plugin-* directly in UI components.
 
+import { logInfo } from '@/lib/logger'
+
 /** True when running inside the Tauri desktop wrapper. */
 export function isTauri(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
@@ -29,6 +31,7 @@ export async function openFile(): Promise<{
     if (!selected || typeof selected !== 'string') return null
     const content = await readTextFile(selected)
     const name = selected.replace(/\\/g, '/').split('/').pop() ?? selected
+    logInfo(`Opened: ${name}`)
     return { name, path: selected, content }
   }
 
@@ -60,6 +63,7 @@ export async function openFile(): Promise<{
 export async function saveToPath(path: string, content: string): Promise<void> {
   const { writeTextFile } = await import('@tauri-apps/plugin-fs')
   await writeTextFile(path, content)
+  logInfo(`Saved: ${path}`)
 }
 
 // ─── Save As ──────────────────────────────────────────────────────────────────
@@ -81,6 +85,7 @@ export async function saveFile(
     })
     if (!path) return null
     await writeTextFile(path, content)
+    logInfo(`Saved as: ${path}`)
     return path
   }
 
