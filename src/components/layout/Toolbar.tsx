@@ -6,6 +6,7 @@ import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
 import { openFile, saveFile, isTauri } from '@/lib/native-fs'
+import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -115,8 +116,10 @@ export default function Toolbar({
       }
       // Hydrate localization
       if (Object.keys(loc).length > 0) setLocalizationBatch(loc)
+      logInfo(`Imported: ${result.name}`)
     }
     if (errors.length > 0 || warnings.length > 0) {
+      logWarn(`Import of ${result.name}: ${errors.length} error(s), ${warnings.length} warning(s)`)
       setImportErrors(errors)
       setImportWarnings(warnings)
       setImportFeedbackOpen(true)
@@ -145,7 +148,9 @@ export default function Toolbar({
     try {
       await exportMapZip(mapName, dialogs, localization)
     } catch (e) {
-      setZipError(e instanceof Error ? e.message : String(e))
+      const msg = e instanceof Error ? e.message : String(e)
+      logError(`Export ZIP failed: ${msg}`)
+      setZipError(msg)
       setZipErrorOpen(true)
     }
   }
