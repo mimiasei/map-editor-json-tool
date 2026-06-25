@@ -13,7 +13,10 @@
  * Warnings and errors are always emitted regardless of this flag.
  */
 
-import { isTauri } from '@/lib/native-fs'
+// Avoid circular dependency with native-fs (native-fs imports logger)
+function isTauri(): boolean {
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+}
 
 // ── Flag ──────────────────────────────────────────────────────────────────────
 
