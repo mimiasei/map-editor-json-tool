@@ -5,66 +5,47 @@ import type { GuideArticle as GuideArticleType } from '@/hooks/useGuideData'
 import GuideArticle from './GuideArticle'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { X, Search, BookOpen, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Search, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export default function GuidesPanel() {
-  const { panelOpen, activeArticleId, closePanel, navigateTo } = useGuideStore()
+/**
+ * The inner content of the Guides panel.
+ * Used both inside GuidesDialog (docked) and PanelShell (undocked Tauri window).
+ * Reads all state from useGuideStore — no props needed.
+ */
+export function GuidesContent() {
+  const { activeArticleId, navigateTo } = useGuideStore()
   const guideIndex = useGuideIndex()
 
   const [search, setSearch] = useState('')
   const [article, setArticle] = useState<GuideArticleType | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
 
-  // Load article when activeArticleId changes
   useEffect(() => {
-    if (!activeArticleId) {
-      setArticle(null)
-      setLoadError(null)
-      return
-    }
-
+    if (!activeArticleId) { setArticle(null); setLoadError(null); return }
     let cancelled = false
     setLoadError(null)
-
     loadGuideArticle(activeArticleId)
       .then((a) => { if (!cancelled) setArticle(a) })
       .catch((e) => { if (!cancelled) setLoadError(String(e)) })
-
     return () => { cancelled = true }
   }, [activeArticleId])
 
-  if (!panelOpen) return null
-
-  // Filter articles by search
   const query = search.trim().toLowerCase()
-  const filteredArticleIds = new Set(
+  const filteredIds = new Set(
     query
-      ? guideIndex.articles
-          .filter((a) => a.id.includes(query))
-          .map((a) => a.id)
+      ? guideIndex.articles.filter((a) => a.id.includes(query) || a.category.includes(query)).map((a) => a.id)
       : guideIndex.articles.map((a) => a.id)
   )
 
   const articlesByCategory = (categoryId: string) =>
-    guideIndex.articles
-      .filter((a) => a.category === categoryId)
-      .sort((a, b) => a.order - b.order)
+    guideIndex.articles.filter((a) => a.category === categoryId).sort((a, b) => a.order - b.order)
+
+  const articleTitle = (id: string) =>
+    id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 
   return (
-    <div className="flex flex-col h-full border-l border-border bg-card">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <BookOpen className="h-4 w-4" />
-          Guides
-        </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={closePanel}>
-          <X className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-
+    <div className="flex flex-col h-full min-h-0">
       {/* Search */}
       <div className="px-3 py-2 border-b border-border shrink-0">
         <div className="relative">
@@ -75,7 +56,6 @@ export default function GuidesPanel() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
-              // If searching, clear active article to show index
               if (e.target.value) useGuideStore.setState({ activeArticleId: null })
             }}
           />
@@ -87,23 +67,18 @@ export default function GuidesPanel() {
         <ScrollArea className="w-44 shrink-0 border-r border-border">
           <nav className="p-2 space-y-3">
             {guideIndex.categories.map((cat) => {
-              const articles = articlesByCategory(cat.id)
-              const visibleArticles = articles.filter((a) => filteredArticleIds.has(a.id))
-              if (visibleArticles.length === 0) return null
-
+              const visible = articlesByCategory(cat.id).filter((a) => filteredIds.has(a.id))
+              if (visible.length === 0) return null
               return (
                 <div key={cat.id}>
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-2 mb-1">
                     {cat.label}
                   </p>
-                  {visibleArticles.map((a) => (
+                  {visible.map((a) => (
                     <button
                       key={a.id}
                       type="button"
-                      onClick={() => {
-                        navigateTo(a.id)
-                        setSearch('')
-                      }}
+                      onClick={() => { navigateTo(a.id); setSearch('') }}
                       className={cn(
                         'w-full text-left px-2 py-1 rounded text-xs flex items-center justify-between gap-1',
                         activeArticleId === a.id
@@ -111,7 +86,7 @@ export default function GuidesPanel() {
                           : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                       )}
                     >
-                      <span className="truncate">{a.id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</span>
+                      <span className="truncate">{articleTitle(a.id)}</span>
                       {activeArticleId === a.id && <ChevronRight className="h-3 w-3 shrink-0" />}
                     </button>
                   ))}
@@ -121,43 +96,30 @@ export default function GuidesPanel() {
           </nav>
         </ScrollArea>
 
-        {/* Content */}
+        {/* Article body */}
         <ScrollArea className="flex-1">
           <div className="p-4">
             {!activeArticleId && (
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Select a guide from the sidebar to get started.
-                </p>
+                <p className="text-sm text-muted-foreground">Select a guide from the sidebar.</p>
                 <div className="space-y-1">
                   {guideIndex.articles.slice(0, 3).map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => navigateTo(a.id)}
-                      className="block w-full text-left text-xs text-primary hover:underline py-0.5"
-                    >
-                      {a.id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                    <button key={a.id} type="button" onClick={() => navigateTo(a.id)}
+                      className="block w-full text-left text-xs text-primary hover:underline py-0.5">
+                      {articleTitle(a.id)}
                     </button>
                   ))}
                 </div>
               </div>
             )}
-
-            {activeArticleId && loadError && (
-              <p className="text-xs text-destructive">Failed to load article: {loadError}</p>
-            )}
-
-            {activeArticleId && !loadError && !article && (
-              <p className="text-xs text-muted-foreground">Loading…</p>
-            )}
-
-            {article && (
-              <GuideArticle title={article.title} sections={article.sections} />
-            )}
+            {activeArticleId && loadError && <p className="text-xs text-destructive">Failed to load: {loadError}</p>}
+            {activeArticleId && !loadError && !article && <p className="text-xs text-muted-foreground">Loading…</p>}
+            {article && <GuideArticle title={article.title} sections={article.sections} />}
           </div>
         </ScrollArea>
       </div>
     </div>
   )
 }
+
+export default GuidesContent

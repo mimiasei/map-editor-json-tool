@@ -3,6 +3,7 @@ import { JsonPreviewContent } from '@/components/common/JsonPreview'
 import { TimelineContent } from '@/components/common/TimelineDialog'
 import { QuestFlowContent } from '@/components/common/QuestFlowDialog'
 import { StatsContent } from '@/components/common/StatsDialog'
+import { GuidesContent } from '@/components/guides/GuidesPanel'
 
 interface Props {
   panelId: string
@@ -49,6 +50,9 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
           alwaysOpen
         />
       )
+
+    case 'guides':
+      return <GuidesContent />
 
     default:
       return (
