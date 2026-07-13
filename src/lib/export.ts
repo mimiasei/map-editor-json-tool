@@ -6,7 +6,12 @@ import type { DialogFlow } from '@/types/dialog'
  * Strips editor-only _* keys — safe to pass directly to the game.
  */
 export function exportScenario(scenario: ScenarioFile): string {
-  return JSON.stringify(scenario, null, '\t')
+  // Strip any _* keys that may have leaked into the scenario object
+  const clean: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(scenario)) {
+    if (!k.startsWith('_')) clean[k] = v
+  }
+  return JSON.stringify(clean, null, '\t')
 }
 
 /**

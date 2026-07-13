@@ -8,6 +8,10 @@ export interface ImportResult {
   mapName: string
   dialogs: Record<string, DialogFlow>
   localization: Record<string, string>
+  /** Template metadata extracted from _templateMeta (null if not a template) */
+  templateMeta: { id: string; name: string; description: string } | null
+  /** Template annotations extracted from _annotations */
+  annotations: Record<string, string>
   errors: string[]
   warnings: string[]
 }
@@ -15,7 +19,13 @@ export interface ImportResult {
 export function importScenario(jsonText: string): ImportResult {
   const errors: string[] = []
   const warnings: string[] = []
-  const extras = { mapName: '', dialogs: {} as Record<string, DialogFlow>, localization: {} as Record<string, string> }
+  const extras = {
+    mapName: '',
+    dialogs: {} as Record<string, DialogFlow>,
+    localization: {} as Record<string, string>,
+    templateMeta: null as { id: string; name: string; description: string } | null,
+    annotations: {} as Record<string, string>,
+  }
 
   let raw: unknown
   try {
@@ -40,6 +50,14 @@ export function importScenario(jsonText: string): ImportResult {
     if (r['_localization'] && typeof r['_localization'] === 'object') {
       extras.localization = r['_localization'] as Record<string, string>
       delete r['_localization']
+    }
+    if (r['_templateMeta'] && typeof r['_templateMeta'] === 'object') {
+      extras.templateMeta = r['_templateMeta'] as { id: string; name: string; description: string }
+      delete r['_templateMeta']
+    }
+    if (r['_annotations'] && typeof r['_annotations'] === 'object') {
+      extras.annotations = r['_annotations'] as Record<string, string>
+      delete r['_annotations']
     }
   }
 

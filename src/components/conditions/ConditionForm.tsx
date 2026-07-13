@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
+import HelpTooltip from '@/components/ui/HelpTooltip'
 
 interface Props {
   condition: Condition
@@ -50,7 +51,10 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
       {/* Type selector */}
       <div className="flex items-start gap-2">
         <div className="flex-1 space-y-1">
-          <Label className="text-xs">Condition type</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-xs">Condition type</Label>
+            {!isCustom && <HelpTooltip category="conditions" id={condition.c} />}
+          </div>
           <div className="flex gap-2">
             <Select value={selectValue} onValueChange={updateType}>
               <SelectTrigger className="w-52">
@@ -93,7 +97,10 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
           {def.params.map((param, i) => (
             <div key={i} className="space-y-1">
-              <Label className="text-xs">{param.label}</Label>
+              <div className="flex items-center gap-1">
+                <Label className="text-xs">{param.label}</Label>
+                <HelpTooltip category="conditions" id={condition.c} paramIndex={i} />
+              </div>
               {param.type === 'enum' && param.options ? (
                 <Select
                   value={(condition.p ?? [])[i] ?? ''}

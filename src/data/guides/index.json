@@ -1,0 +1,18 @@
+{
+  "categories": [
+    { "id": "getting-started", "label": "Getting Started" },
+    { "id": "concepts",        "label": "Core Concepts"   },
+    { "id": "recipes",         "label": "Recipes & Patterns" },
+    { "id": "troubleshooting", "label": "Gotchas & Workarounds" }
+  ],
+  "articles": [
+    { "id": "how-quests-work",         "category": "getting-started", "order": 1 },
+    { "id": "first-quest",             "category": "getting-started", "order": 2 },
+    { "id": "triggers-and-conditions", "category": "concepts",        "order": 1 },
+    { "id": "counters-and-tracking",   "category": "concepts",        "order": 2 },
+    { "id": "dialog-integration",      "category": "recipes",         "order": 1 },
+    { "id": "timed-event",             "category": "recipes",         "order": 2 },
+    { "id": "testing-your-map",        "category": "troubleshooting", "order": 1 },
+    { "id": "gotchas-and-workarounds", "category": "troubleshooting", "order": 2 }
+  ]
+}

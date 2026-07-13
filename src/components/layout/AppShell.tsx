@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useGuideStore } from '@/store/useGuideStore'
 import { exportProjectJson } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { logInfo, logError } from '@/lib/logger'
@@ -17,6 +18,8 @@ import QuestFlowDialog from '@/components/common/QuestFlowDialog'
 import StatsDialog from '@/components/common/StatsDialog'
 import DialogEditor from '@/components/dialogs/DialogEditor'
 import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
+import GuidesPanel from '@/components/guides/GuidesPanel'
+import TemplatePickerDialog from '@/components/guides/TemplatePickerDialog'
 import { SquareArrowOutUpRight } from 'lucide-react'
 
 // ─── Placeholder shown where a panel would be when it's undocked ──────────────
@@ -49,10 +52,13 @@ export default function AppShell() {
     setSelection,
   } = useScenarioStore()
 
-  const [paletteOpen,  setPaletteOpen]  = useState(false)
-  const [timelineOpen, setTimelineOpen] = useState(false)
-  const [diagramOpen,  setDiagramOpen]  = useState(false)
-  const [statsOpen,    setStatsOpen]    = useState(false)
+  const [paletteOpen,   setPaletteOpen]   = useState(false)
+  const [timelineOpen,  setTimelineOpen]  = useState(false)
+  const [diagramOpen,   setDiagramOpen]   = useState(false)
+  const [statsOpen,     setStatsOpen]     = useState(false)
+  const [templateOpen,  setTemplateOpen]  = useState(false)
+
+  const { panelOpen: guidesPanelOpen } = useGuideStore()
 
   // Track which panels are currently undocked
   const [undocked, setUndocked] = useState<Set<string>>(new Set())
@@ -368,12 +374,13 @@ export default function AppShell() {
   void setSelection
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <div className="relative flex h-screen flex-col overflow-hidden">
       <Toolbar
         onSearchOpen={() => setPaletteOpen(true)}
         onTimelineOpen={() => setTimelineOpen(true)}
         onDiagramOpen={() => setDiagramOpen(true)}
         onStatsOpen={() => setStatsOpen(true)}
+        onTemplateOpen={() => setTemplateOpen(true)}
         onNew={handleNew}
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
@@ -400,6 +407,7 @@ export default function AppShell() {
       />
       <DialogEditor />
       <LocalizationDialog />
+      <TemplatePickerDialog open={templateOpen} onOpenChange={setTemplateOpen} />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}
@@ -460,6 +468,13 @@ export default function AppShell() {
           </aside>
         </Panel>
       </Group>
+
+      {/* ── Guides panel (right-side overlay) ── */}
+      {guidesPanelOpen && (
+        <div className="absolute inset-y-12 right-0 w-[420px] z-30 shadow-xl overflow-hidden">
+          <GuidesPanel />
+        </div>
+      )}
     </div>
   )
 }

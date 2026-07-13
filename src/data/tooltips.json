@@ -1,0 +1,586 @@
+{
+  "actions": {
+    "GameVictory": {
+      "summary": "Triggers the victory screen for the player.",
+      "tip": "Use this at the end of your final quest to complete the map. Make sure all critical objectives are done before calling it."
+    },
+    "GameLose": {
+      "summary": "Triggers the defeat screen for the player.",
+      "tip": "Commonly used inside ObjectLose or HeroKill triggers to enforce fail conditions."
+    },
+    "Dialog": {
+      "summary": "Shows a story dialog by key.",
+      "params": {
+        "0": "Dialog key — must match a dialog ID in your map ZIP's DB/dialogs/ folder."
+      },
+      "tip": "The dialog JSON and its localization tokens must be included in your map's companion ZIP. Use Export ZIP to bundle them."
+    },
+    "RandomDialog": {
+      "summary": "Plays a randomly chosen dialog from the given list of keys.",
+      "params": {
+        "0": "Dialog key 1 (required).",
+        "1": "Dialog key 2 (optional).",
+        "2": "Dialog key 3 (optional).",
+        "3": "Dialog key 4 (optional).",
+        "4": "Dialog key 5 (optional)."
+      },
+      "tip": "Good for giving NPCs variety. All listed dialogs must exist in your map ZIP."
+    },
+    "Print": {
+      "summary": "Prints a debug or achievement message.",
+      "params": {
+        "0": "Message string or localization SID."
+      },
+      "tip": "Mainly used for debugging during development. The message appears in the game log."
+    },
+    "CurrentSubQuestDone": {
+      "summary": "Marks the currently active subquest as complete.",
+      "tip": "Use this instead of SubQuestDone when you're inside the subquest's own trigger — it's simpler and avoids hardcoding quest IDs."
+    },
+    "SubQuestActivate": {
+      "summary": "Activates a specific subquest on a quest.",
+      "params": {
+        "0": "Quest SID — the quest that owns the subquest.",
+        "1": "Subquest SID or index — the subquest to activate."
+      },
+      "tip": "Use to unlock a side quest from a different quest's trigger. For linear progression, prefer NextSubQuest."
+    },
+    "SubQuestDeactivate": {
+      "summary": "Deactivates a specific subquest on a quest.",
+      "params": {
+        "0": "Quest SID.",
+        "1": "Subquest SID or index."
+      }
+    },
+    "NextQuest": {
+      "summary": "Advances to the next quest in a series.",
+      "params": {
+        "0": "Quest SID — the quest to advance."
+      }
+    },
+    "EndQuest": {
+      "summary": "Ends (closes) a quest.",
+      "params": {
+        "0": "Quest SID."
+      },
+      "tip": "The quest disappears from the quest log. Use after all subquests are done."
+    },
+    "NextSubQuest": {
+      "summary": "Activates the next subquest by SID or numeric index.",
+      "params": {
+        "0": "Subquest SID or 0-based index."
+      }
+    },
+    "SubQuestDone": {
+      "summary": "Marks a specific subquest as done from outside its own quest.",
+      "params": {
+        "0": "Quest SID.",
+        "1": "Subquest SID."
+      },
+      "tip": "Use when you need one quest to complete a subquest in another quest."
+    },
+    "NextAfterGroup": {
+      "summary": "Activates the next subquest once all subquests in a group are done.",
+      "params": {
+        "0": "Group SID.",
+        "1": "Next subquest SID to activate."
+      },
+      "tip": "Useful for optional side objectives — wait for all of them before continuing the main line."
+    },
+    "CounterSet": {
+      "summary": "Sets a counter to a specific value.",
+      "params": {
+        "0": "Counter SID.",
+        "1": "New value (integer)."
+      },
+      "tip": "Counters must be declared in the Counters tab before use."
+    },
+    "CounterPlus": {
+      "summary": "Increments a counter by the given amount.",
+      "params": {
+        "0": "Counter SID.",
+        "1": "Amount to add (usually 1)."
+      }
+    },
+    "CounterMinus": {
+      "summary": "Decrements a counter by the given amount.",
+      "params": {
+        "0": "Counter SID.",
+        "1": "Amount to subtract."
+      }
+    },
+    "CounterSetRandom": {
+      "summary": "Sets a counter to a random integer between min and max (inclusive).",
+      "params": {
+        "0": "Counter SID.",
+        "1": "Minimum value.",
+        "2": "Maximum value."
+      }
+    },
+    "GiveUnitHero": {
+      "summary": "Adds units to a hero's army.",
+      "params": {
+        "0": "Unit SID — creature type to give.",
+        "1": "Count — number of units.",
+        "2": "Hero SID — receiving hero."
+      },
+      "tip": "Units are added on top of what the hero already has. If the hero has no free slots, units go into the first available slot."
+    },
+    "GiveUnitHeroPerWeek": {
+      "summary": "Adds units to a hero's army each week.",
+      "params": {
+        "0": "Unit SID.",
+        "1": "Count per week.",
+        "2": "Hero SID."
+      },
+      "tip": "This repeats automatically. Put it in a StartWeek trigger with no conditions, or guard it with a Counter if you want it to stop."
+    },
+    "RemoveUnitHero": {
+      "summary": "Removes units from a hero's army.",
+      "params": {
+        "0": "Unit SID.",
+        "1": "Count to remove, or 'all' to remove all units of that type.",
+        "2": "Hero SID."
+      }
+    },
+    "GiveStatsHero": {
+      "summary": "Adds stat points to a hero.",
+      "params": {
+        "0": "Stat name: offence, defence, spellPower, intelligence, movementBonus, or moral.",
+        "1": "Hero SID.",
+        "2": "Amount to add."
+      }
+    },
+    "GiveExpHero": {
+      "summary": "Gives experience points to a hero.",
+      "params": {
+        "0": "Amount of experience.",
+        "1": "Hero SID (optional — omit to give to the current player hero)."
+      }
+    },
+    "GiveItemHero": {
+      "summary": "Gives an artifact to a hero.",
+      "params": {
+        "0": "Artifact SID.",
+        "1": "Hero SID."
+      },
+      "tip": "The hero must exist on the map. If the hero's backpack is full, the item may be lost."
+    },
+    "AddSkillHero": {
+      "summary": "Adds one level of a skill to a hero.",
+      "params": {
+        "0": "Skill SID.",
+        "1": "Hero SID."
+      },
+      "tip": "Call this action multiple times to add multiple levels of the same skill."
+    },
+    "AddSpellHero": {
+      "summary": "Teaches a spell to a hero.",
+      "params": {
+        "0": "Spell SID.",
+        "1": "Hero SID."
+      }
+    },
+    "AddBuffHeroDays": {
+      "summary": "Applies a buff to a hero for N days.",
+      "params": {
+        "0": "Buff SID.",
+        "1": "Hero SID.",
+        "2": "Duration in days. Use -1 for a permanent buff."
+      }
+    },
+    "RemoveBuffHero": {
+      "summary": "Removes a buff from a hero.",
+      "params": {
+        "0": "Buff SID.",
+        "1": "Hero SID (optional — leave blank to remove from all heroes)."
+      }
+    },
+    "HeroResetMovePointsMax": {
+      "summary": "Resets a hero's movement points to their maximum.",
+      "params": {
+        "0": "Hero SID."
+      },
+      "tip": "Useful after HeroStop or at the start of a cutscene sequence."
+    },
+    "SpawnHero": {
+      "summary": "Spawns a hero on the map at a given node for a specific player.",
+      "params": {
+        "0": "Hero SID.",
+        "1": "Node ID — map node to spawn at.",
+        "2": "Player index (1-based: 1 = first player)."
+      }
+    },
+    "DeleteHero": {
+      "summary": "Removes a hero from the map permanently.",
+      "params": {
+        "0": "Hero SID."
+      },
+      "tip": "This does not trigger HeroKill conditions."
+    },
+    "DisableAiHero": {
+      "summary": "Disables AI control for a hero.",
+      "params": {
+        "0": "Hero SID."
+      }
+    },
+    "TeleportHero": {
+      "summary": "Teleports a hero instantly to a map node.",
+      "params": {
+        "0": "Hero SID.",
+        "1": "Destination node ID."
+      }
+    },
+    "HeroToNode": {
+      "summary": "Moves a hero toward a map node (pathfinding, not instant).",
+      "params": {
+        "0": "Hero SID.",
+        "1": "Destination node ID."
+      }
+    },
+    "HeroToHero": {
+      "summary": "Moves one hero toward another using pathfinding.",
+      "params": {
+        "0": "Moving hero SID.",
+        "1": "Target hero SID."
+      }
+    },
+    "HeroStop": {
+      "summary": "Stops the hero's current movement path.",
+      "tip": "Call this before starting a cutscene or important scripted sequence to prevent the hero from wandering off."
+    },
+    "ChangeManaHero": {
+      "summary": "Sets a hero's mana to the given value.",
+      "params": {
+        "0": "Hero SID.",
+        "1": "Mana amount."
+      }
+    },
+    "SetHeroMovePoints": {
+      "summary": "Sets a hero's movement points to a specific value.",
+      "params": {
+        "0": "Hero SID.",
+        "1": "Movement points value."
+      }
+    },
+    "ResurrectHero": {
+      "summary": "Resurrects a defeated hero at a map node.",
+      "params": {
+        "0": "Hero SID.",
+        "1": "Node ID to resurrect at.",
+        "2": "Flag (usually 0)."
+      }
+    },
+    "GiveRes": {
+      "summary": "Gives the player a specified amount of a resource.",
+      "params": {
+        "0": "Resource type: gold, wood, ore, crystals, mercury, gemstones, or dust.",
+        "1": "Amount."
+      }
+    },
+    "RemoveRes": {
+      "summary": "Removes a resource from the player's stockpile.",
+      "params": {
+        "0": "Resource type.",
+        "1": "Amount to remove."
+      },
+      "tip": "Does not check if the player has enough — removing more than available sets the resource to 0."
+    },
+    "MoveCamera": {
+      "summary": "Moves the camera to focus on a map node.",
+      "params": {
+        "0": "Node ID to focus on."
+      }
+    },
+    "RevealFogOfWar": {
+      "summary": "Reveals fog of war around a node.",
+      "params": {
+        "0": "Center node ID.",
+        "1": "Reveal radius in map tiles."
+      }
+    },
+    "DeleteEntity": {
+      "summary": "Removes a map entity (blocking object, decoration, zone) permanently.",
+      "params": {
+        "0": "Entity SID."
+      }
+    },
+    "SpawnObject": {
+      "summary": "Spawns an interactable object at a node.",
+      "params": {
+        "0": "Object type SID.",
+        "1": "Node ID to spawn at.",
+        "2": "Flag (usually false).",
+        "3": "Entity SID to assign (optional, used to reference the object later)."
+      }
+    },
+    "SpawnMapObject": {
+      "summary": "Spawns a map decoration or non-interactable object at a node.",
+      "params": {
+        "0": "Object type SID.",
+        "1": "Node ID to spawn at.",
+        "2": "Flag (usually 0)."
+      }
+    },
+    "SetActivePortal": {
+      "summary": "Enables or disables a portal.",
+      "params": {
+        "0": "Portal entity SID.",
+        "1": "true to enable, false to disable."
+      }
+    },
+    "EntityActionsOff": {
+      "summary": "Disables all interactions on a map entity (makes it non-clickable).",
+      "params": {
+        "0": "Entity SID."
+      }
+    },
+    "SetQuestMarker": {
+      "summary": "Attaches a quest marker VFX to a map entity.",
+      "params": {
+        "0": "Entity SID.",
+        "1": "VFX path (e.g. effects/global_map/quest_mark_silver_01)."
+      }
+    },
+    "SetActiveQuestMarker": {
+      "summary": "Shows or hides a quest marker already attached to an entity.",
+      "params": {
+        "0": "Entity SID.",
+        "1": "true to show, false to hide."
+      }
+    },
+    "CreateVFX": {
+      "summary": "Creates a VFX effect at a node.",
+      "params": {
+        "0": "VFX type SID.",
+        "1": "Node ID.",
+        "2": "Flag 1 (usually false).",
+        "3": "Flag 2 (usually true).",
+        "4": "Entity SID to assign (optional, allows toggling via SetActiveVFX)."
+      }
+    },
+    "SetActiveVFX": {
+      "summary": "Shows or hides a VFX entity.",
+      "params": {
+        "0": "VFX entity SID.",
+        "1": "true to show, false to hide."
+      }
+    },
+    "SetActiveMarker": {
+      "summary": "Shows or hides a zone or interaction marker.",
+      "params": {
+        "0": "Zone/marker entity SID.",
+        "1": "true to show, false to hide."
+      }
+    },
+    "IncreaseStrengthSquad": {
+      "summary": "Upgrades a neutral squad's strength.",
+      "params": {
+        "0": "Squad entity SID.",
+        "1": "Upgrade string in 'tier,level' format (e.g. '0,2' = upgrade by 2 levels)."
+      }
+    },
+    "DeleteSquad": {
+      "summary": "Removes a neutral squad from the map.",
+      "params": {
+        "0": "Squad entity SID.",
+        "1": "Flag (usually 1)."
+      }
+    },
+    "TriggerClearCustom": {
+      "summary": "Clears/resets a specific trigger so it can fire again.",
+      "params": {
+        "0": "Quest SID.",
+        "1": "Subquest index (0-based).",
+        "2": "Trigger index (0-based).",
+        "3": "Flag: 0 or 1."
+      },
+      "tip": "Useful for repeating triggers that normally fire only once."
+    },
+    "EnableInterruption": {
+      "summary": "Enables an interruption by SID.",
+      "params": {
+        "0": "Interruption SID."
+      }
+    },
+    "DisableInterruption": {
+      "summary": "Disables an interruption by SID.",
+      "params": {
+        "0": "Interruption SID."
+      }
+    },
+    "ChangeCampaignOneStep": {
+      "summary": "Advances the campaign by one step.",
+      "params": {
+        "0": "true or false."
+      }
+    },
+    "AiBanArea": {
+      "summary": "Prohibits AI heroes from entering the area around a node.",
+      "params": {
+        "0": "Center node ID."
+      }
+    },
+    "AiUnbanArea": {
+      "summary": "Lifts an AI movement ban from the area around a node.",
+      "params": {
+        "0": "Center node ID."
+      }
+    }
+  },
+  "conditions": {
+    "StartTurn": {
+      "summary": "Fires at the start of a specific turn for a specific player.",
+      "params": {
+        "0": "Turn number (optional — omit to fire every turn).",
+        "1": "Player index (optional — omit for any player)."
+      },
+      "tip": "With no parameters, this fires at the start of every turn for every player. Use the Counter extra field to require N turns have passed."
+    },
+    "StartWeek": {
+      "summary": "Fires at the start of any week.",
+      "tip": "Weeks are every 7 turns. Use this for periodic events like weekly reinforcements."
+    },
+    "AnyStartTurn": {
+      "summary": "Fires at the start of any player's turn.",
+      "tip": "More permissive than StartTurn. Typically used with Counter conditions to time events."
+    },
+    "Counter": {
+      "summary": "Checks a counter's value against a threshold.",
+      "params": {
+        "0": "Counter SID — the counter to check.",
+        "1": "Comparison operator: =, >, <, >=, <=, !=",
+        "2": "Value to compare against."
+      },
+      "tip": "Counters must be declared in the Counters tab. This condition is usually combined with others using AND logic."
+    },
+    "HeroKill": {
+      "summary": "Fires when the specified hero is killed in combat.",
+      "params": {
+        "0": "Hero SID."
+      },
+      "tip": "Fires when the hero is defeated, not necessarily removed from the map. Pair with GameLose for defeat conditions."
+    },
+    "SquadKill": {
+      "summary": "Fires when a specific neutral squad is defeated.",
+      "params": {
+        "0": "Squad entity SID — the neutral stack on the map."
+      },
+      "tip": "The squad SID is set in the map editor when you place the neutral stack, not the unit type SID."
+    },
+    "ObjectLose": {
+      "summary": "Fires when the player loses a specific map object (e.g. a town).",
+      "params": {
+        "0": "Map object entity SID."
+      }
+    },
+    "ObjectInteractionBefore": {
+      "summary": "Fires before the player interacts with a map object.",
+      "params": {
+        "0": "Map object entity SID."
+      },
+      "tip": "Use 'Before' when you want to intercept the interaction and show a dialog before the default event fires."
+    },
+    "ObjectInteractionAfter": {
+      "summary": "Fires after the player interacts with a map object.",
+      "params": {
+        "0": "Map object entity SID."
+      }
+    },
+    "ObjectCaptureEntity": {
+      "summary": "Fires when the player captures a map entity (mine, city, etc.).",
+      "params": {
+        "0": "Entity SID."
+      }
+    },
+    "NodeRevealed": {
+      "summary": "Fires when a specific map node is revealed (fog of war lifted).",
+      "params": {
+        "0": "Node ID."
+      }
+    },
+    "SquadInteraction": {
+      "summary": "Fires when the player interacts with (approaches) a neutral squad.",
+      "params": {
+        "0": "Squad entity SID."
+      },
+      "tip": "Triggers before combat starts. Useful for dialog-before-battle sequences."
+    },
+    "UnitOwnSide": {
+      "summary": "Checks how many units of a type the player's side owns across all armies.",
+      "params": {
+        "0": "Unit type SID.",
+        "1": "Comparison operator.",
+        "2": "Threshold value."
+      }
+    },
+    "UnitOwnHero": {
+      "summary": "Checks how many units of a type a specific hero owns.",
+      "params": {
+        "0": "Hero SID.",
+        "1": "Unit type SID.",
+        "2": "Comparison operator.",
+        "3": "Threshold value."
+      }
+    },
+    "UnitKill": {
+      "summary": "Fires when a unit type is killed.",
+      "params": {
+        "0": "Unit type SID."
+      },
+      "tip": "Use the Counter extra field to require N kills before this condition fires (e.g. kill 10 goblins)."
+    },
+    "UnitLose": {
+      "summary": "Fires when a unit type is lost (killed on your side).",
+      "params": {
+        "0": "Unit type SID."
+      },
+      "tip": "Use the Counter extra field to set a loss threshold."
+    },
+    "UnitHire": {
+      "summary": "Fires when a unit type is recruited/hired.",
+      "params": {
+        "0": "Unit type SID."
+      },
+      "tip": "Use the Counter extra field to require N hires."
+    },
+    "ResCounter": {
+      "summary": "Checks the player's resource stockpile against a value.",
+      "params": {
+        "0": "Resource type: gold, wood, ore, crystals, mercury, gemstones, dust.",
+        "1": "Comparison operator.",
+        "2": "Threshold value."
+      }
+    },
+    "ItemOwnSide": {
+      "summary": "Checks whether the player's side owns a specific artifact.",
+      "params": {
+        "0": "Artifact SID.",
+        "1": "Comparison operator.",
+        "2": "Count (usually 0 for 'doesn't have', 1 for 'has at least one')."
+      }
+    },
+    "DifficultyCustomMap": {
+      "summary": "Checks the custom map difficulty setting.",
+      "params": {
+        "0": "Type: Neutral (neutral strength), Economy (starting resources), or Ai (AI strength).",
+        "1": "Level: 1 (easy), 2 (medium), or 3 (hard)."
+      },
+      "tip": "Use this to scale enemy strength or rewards per difficulty tier."
+    },
+    "PlayerDefeated": {
+      "summary": "Fires when a specific player is defeated.",
+      "params": {
+        "0": "Player index: 0, 1, 2, or 3."
+      }
+    }
+  },
+  "fields": {
+    "quest.name": "Localization SID shown as the quest name in the in-game quest log. Must have a matching token in customMaps.json.",
+    "quest.description": "Localization SID shown as the quest description. Must have a matching token in customMaps.json.",
+    "trigger.isRepeating": "If true, this trigger fires every time its conditions are met, not just the first time. Use carefully — unguarded repeating triggers can fire many times per turn.",
+    "counter.sid": "Unique identifier for this counter. Used in CounterSet, CounterPlus, CounterMinus, and Counter conditions.",
+    "counter.value": "Initial value of the counter when the map loads. Usually 0.",
+    "interruption.sid": "Unique identifier for this interruption. Used by EnableInterruption and DisableInterruption actions."
+  }
+}
