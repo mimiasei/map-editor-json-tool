@@ -1,0 +1,50 @@
+{
+  "_templateMeta": {
+    "id": "simple-kill-quest",
+    "name": "Simple Kill Quest",
+    "description": "Completes when the player defeats a specific neutral squad. Rewards gold on completion."
+  },
+  "_annotations": {
+    "counters[0]": "Tracks whether the target has been defeated (0 = alive, 1 = dead). Replace 'quest_target_killed' with a descriptive SID for your quest.",
+    "quests[0]": "The main quest. Replace 'kill_quest' with your quest SID. Set the name/description localization tokens in the Localization dialog.",
+    "quests[0].subQuests[0]": "The single stage: defeat the target. Replace 'kill_quest_1' with your subquest SID.",
+    "quests[0].subQuests[0].triggers[0]": "Fires when the squad is defeated. Replace 'E_Squad_Target' with the entity SID you assigned to the neutral stack in the map editor.",
+    "quests[0].subQuests[0].triggers[0].actions[0]": "Marks the kill counter as done. You can use this in other triggers to check if the quest is complete.",
+    "quests[0].subQuests[0].triggers[0].actions[1]": "Rewards the player with 500 gold. Adjust the amount as needed.",
+    "quests[0].subQuests[0].triggers[0].actions[2]": "Completes the current subquest, which ends the quest.",
+    "quests[0].subQuests[0].triggers[0].actions[3]": "Shows a completion dialog. Replace 'kill_quest_complete' with your dialog's ID, or remove this action."
+  },
+  "counters": [
+    { "sid": "quest_target_killed", "value": 0 }
+  ],
+  "quests": [
+    {
+      "sid": "kill_quest",
+      "name": "kill_quest_name",
+      "description": "kill_quest_desc",
+      "isActive": true,
+      "subQuests": [
+        {
+          "sid": "kill_quest_1",
+          "isActive": true,
+          "triggers": [
+            {
+              "conditionsLogic": "And",
+              "isRepeating": false,
+              "conditions": [
+                { "c": "SquadKill", "p": ["E_Squad_Target"] }
+              ],
+              "actions": [
+                { "a": "CounterSet", "p": ["quest_target_killed", "1"] },
+                { "a": "GiveRes", "p": ["gold", "500"] },
+                { "a": "CurrentSubQuestDone", "p": [] },
+                { "a": "Dialog", "p": ["kill_quest_complete"] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "interruptions": []
+}

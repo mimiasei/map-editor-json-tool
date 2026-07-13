@@ -1,0 +1,71 @@
+{
+  "_templateMeta": {
+    "id": "counter-based-quest",
+    "name": "Counter-Based Quest",
+    "description": "A multi-stage quest that tracks progress using a counter. Shows how to sequence subquests."
+  },
+  "_annotations": {
+    "counters[0]": "Tracks the current quest stage (0 = not started, 1 = stage 1 done, 2 = complete). Adjust the SID and use it in all Counter conditions below.",
+    "quests[0]": "The main quest container. Replace the SID and set localization tokens for name/description.",
+    "quests[0].subQuests[0]": "Stage 1: defeat the first target. This subquest is active from the start.",
+    "quests[0].subQuests[0].triggers[0]": "Fires when the stage-1 squad is defeated. Advances the counter to 1 and activates stage 2.",
+    "quests[0].subQuests[0].triggers[0].actions[1]": "CounterSet marks stage 1 done. The Counter condition on the stage-2 trigger uses this value.",
+    "quests[0].subQuests[0].triggers[0].actions[2]": "Completes this subquest in the quest log.",
+    "quests[0].subQuests[1]": "Stage 2: the follow-up objective. Replace 'E_Squad_Target2' with the stage-2 squad's entity SID.",
+    "quests[0].subQuests[1].triggers[0]": "Fires when the stage-2 squad is defeated AND the stage counter is at 1 (i.e. stage 1 is done). The AND logic ensures correct ordering.",
+    "quests[0].subQuests[1].triggers[0].actions[2]": "Sets counter to 2 — marks the full quest as done. Other quests can check this value."
+  },
+  "counters": [
+    { "sid": "main_quest_stage", "value": 0 }
+  ],
+  "quests": [
+    {
+      "sid": "main_quest",
+      "name": "main_quest_name",
+      "description": "main_quest_desc",
+      "isActive": true,
+      "subQuests": [
+        {
+          "sid": "main_quest_1",
+          "isActive": true,
+          "triggers": [
+            {
+              "conditionsLogic": "And",
+              "isRepeating": false,
+              "conditions": [
+                { "c": "SquadKill", "p": ["E_Squad_Target1"] }
+              ],
+              "actions": [
+                { "a": "Dialog", "p": ["main_quest_stage1_done"] },
+                { "a": "CounterSet", "p": ["main_quest_stage", "1"] },
+                { "a": "CurrentSubQuestDone", "p": [] },
+                { "a": "SubQuestActivate", "p": ["main_quest", "main_quest_2"] }
+              ]
+            }
+          ]
+        },
+        {
+          "sid": "main_quest_2",
+          "isActive": false,
+          "triggers": [
+            {
+              "conditionsLogic": "And",
+              "isRepeating": false,
+              "conditions": [
+                { "c": "SquadKill", "p": ["E_Squad_Target2"] },
+                { "c": "Counter", "p": ["main_quest_stage", "=", "1"] }
+              ],
+              "actions": [
+                { "a": "Dialog", "p": ["main_quest_complete"] },
+                { "a": "GiveRes", "p": ["gold", "1000"] },
+                { "a": "CounterSet", "p": ["main_quest_stage", "2"] },
+                { "a": "CurrentSubQuestDone", "p": [] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "interruptions": []
+}

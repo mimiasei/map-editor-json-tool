@@ -1,0 +1,32 @@
+{
+  "categories": [
+    { "id": "basic",    "label": "Basic"    },
+    { "id": "advanced", "label": "Advanced" }
+  ],
+  "templates": [
+    {
+      "id": "simple-kill-quest",
+      "name": "Simple Kill Quest",
+      "description": "Completes when the player defeats a specific neutral squad. Rewards gold on completion.",
+      "category": "basic"
+    },
+    {
+      "id": "counter-based-quest",
+      "name": "Counter-Based Quest",
+      "description": "A multi-stage quest that tracks progress using a counter. Shows how to sequence subquests.",
+      "category": "basic"
+    },
+    {
+      "id": "timed-event",
+      "name": "Timed Event",
+      "description": "Fires a dialog and consequence after a set number of turns. Uses StartTurn condition.",
+      "category": "basic"
+    },
+    {
+      "id": "dialog-driven-quest",
+      "name": "Dialog-Driven Quest",
+      "description": "An NPC interaction quest: the player clicks an object, sees a dialog, and receives a task.",
+      "category": "advanced"
+    }
+  ]
+}

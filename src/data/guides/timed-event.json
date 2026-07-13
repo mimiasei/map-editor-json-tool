@@ -1,0 +1,28 @@
+{
+  "id": "timed-event",
+  "title": "Timed Events",
+  "category": "recipes",
+  "sections": [
+    {
+      "heading": "Overview",
+      "body": "Timed events fire after a certain number of turns have passed. They are useful for:\n\n- Deadline quests ('defeat the enemy within 20 turns or lose')\n- Periodic reinforcements ('every week, the player receives 3 archers')\n- Escalating threats ('if the quest isn't done by turn 15, spawn a stronger enemy')"
+    },
+    {
+      "heading": "Turn-based deadline",
+      "body": "To trigger something at a specific turn:\n\n1. Add a trigger with a `StartTurn` condition\n2. Set the **Turn number** to the desired turn (e.g. `15`)\n3. Set the **Player** to `1` (first player)\n4. Add your actions (e.g. `Dialog`, `GameLose`, `SpawnHero`)"
+    },
+    {
+      "heading": "Turn counter pattern",
+      "body": "For more flexible timing — e.g. 'after the quest starts, wait 10 turns':\n\n1. When the quest starts, use `CounterSet turn_timer 0`\n2. Add a repeating trigger with `StartTurn` (no params) and `CounterPlus turn_timer 1`\n3. Gate your deadline trigger with `Counter: turn_timer >= 10`\n\nThis measures turns elapsed since the quest began, not absolute turn number."
+    },
+    {
+      "heading": "Weekly repeating events",
+      "body": "To fire something every week:\n\n1. Add a trigger with a `StartWeek` condition\n2. Set `isRepeating: true`\n3. Add your actions (e.g. `GiveRes gold 200`)\n\nThis fires automatically every 7 turns for the duration of the map.",
+      "warning": "Weekly repeating triggers with no counter guard fire indefinitely. If you want them to stop after N weeks, add a Counter and increment it each week, then guard with `Counter: weeks_elapsed < N`."
+    },
+    {
+      "heading": "Interruptions for ambient timers",
+      "body": "Interruptions are well-suited for background timed events that don't belong to a specific quest:\n\n1. Create an interruption with a `StartTurn` trigger\n2. Enable it via `EnableInterruption` from a quest trigger when the timer should start\n3. The interruption fires independently of quest state\n4. Disable it with `DisableInterruption` when done"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "_templateMeta": {
+    "id": "dialog-driven-quest",
+    "name": "Dialog-Driven Quest",
+    "description": "An NPC interaction quest: the player clicks an object, sees a dialog, and receives a task."
+  },
+  "_annotations": {
+    "counters[0]": "Tracks whether the player has spoken to the NPC (0 = not yet, 1 = talked).",
+    "counters[1]": "Tracks whether the quest task is complete (0 = incomplete, 1 = done).",
+    "quests[0]": "The main quest. Set localization tokens for name and description.",
+    "quests[0].subQuests[0]": "Stage 1: the player must interact with the NPC object to receive the quest briefing.",
+    "quests[0].subQuests[0].triggers[0]": "Fires when the player interacts with the NPC object. Replace 'npc_quest_giver' with your NPC's entity SID.",
+    "quests[0].subQuests[0].triggers[0].actions[0]": "Show the quest briefing dialog. Replace 'dialog_quest_start' with your dialog ID.",
+    "quests[0].subQuests[0].triggers[0].actions[2]": "Activate stage 2 after the player has spoken to the NPC.",
+    "quests[0].subQuests[1]": "Stage 2: the actual task (here: defeat a squad). Customize with your quest objective.",
+    "quests[0].subQuests[1].triggers[0]": "Fires when the task is complete. Replace 'E_Squad_QuestTarget' with your objective entity SID.",
+    "quests[0].subQuests[1].triggers[0].actions[1]": "Show the quest completion dialog. Replace 'dialog_quest_done' with your dialog ID."
+  },
+  "counters": [
+    { "sid": "npc_talked", "value": 0 },
+    { "sid": "quest_task_done", "value": 0 }
+  ],
+  "quests": [
+    {
+      "sid": "npc_quest",
+      "name": "npc_quest_name",
+      "description": "npc_quest_desc",
+      "isActive": true,
+      "subQuests": [
+        {
+          "sid": "npc_quest_intro",
+          "isActive": true,
+          "triggers": [
+            {
+              "conditionsLogic": "And",
+              "isRepeating": false,
+              "conditions": [
+                { "c": "ObjectInteractionBefore", "p": ["npc_quest_giver"] }
+              ],
+              "actions": [
+                { "a": "Dialog", "p": ["dialog_quest_start"] },
+                { "a": "CounterSet", "p": ["npc_talked", "1"] },
+                { "a": "SubQuestActivate", "p": ["npc_quest", "npc_quest_task"] },
+                { "a": "CurrentSubQuestDone", "p": [] }
+              ]
+            }
+          ]
+        },
+        {
+          "sid": "npc_quest_task",
+          "isActive": false,
+          "triggers": [
+            {
+              "conditionsLogic": "And",
+              "isRepeating": false,
+              "conditions": [
+                { "c": "SquadKill", "p": ["E_Squad_QuestTarget"] }
+              ],
+              "actions": [
+                { "a": "CounterSet", "p": ["quest_task_done", "1"] },
+                { "a": "Dialog", "p": ["dialog_quest_done"] },
+                { "a": "GiveRes", "p": ["gold", "750"] },
+                { "a": "CurrentSubQuestDone", "p": [] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "interruptions": []
+}

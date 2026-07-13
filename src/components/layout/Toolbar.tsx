@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from 'zustand'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useGuideStore } from '@/store/useGuideStore'
 import { importScenario } from '@/lib/import'
 import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
@@ -38,6 +39,7 @@ import {
   Languages,
   Package,
   BarChart2,
+  BookOpen,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -46,6 +48,7 @@ interface ToolbarProps {
   onTimelineOpen?: () => void
   onDiagramOpen?: () => void
   onStatsOpen?: () => void
+  onTemplateOpen?: () => void
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -61,6 +64,7 @@ export default function Toolbar({
   onTimelineOpen,
   onDiagramOpen,
   onStatsOpen,
+  onTemplateOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -86,6 +90,8 @@ export default function Toolbar({
   const [importWarnings,      setImportWarnings]      = useState<string[]>([])
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
 
+  const { togglePanel: toggleGuidesPanel, panelOpen: guidesPanelOpen } = useGuideStore()
+
   const canUndo = useStore(useScenarioStore.temporal, (s) => s.pastStates.length > 0)
   const canRedo = useStore(useScenarioStore.temporal, (s) => s.futureStates.length > 0)
 
@@ -104,7 +110,7 @@ export default function Toolbar({
     const result = await openFile()
     if (!result) return
 
-    const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc } = importScenario(result.content)
+    const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc, annotations } = importScenario(result.content)
     if (imported) {
       setScenario(imported)
       setCurrentFile(result.path || null, result.name)
@@ -115,6 +121,10 @@ export default function Toolbar({
       }
       // Hydrate localization
       if (Object.keys(loc).length > 0) setLocalizationBatch(loc)
+      // Hydrate template annotations
+      if (Object.keys(annotations).length > 0) {
+        useGuideStore.setState({ templateAnnotations: annotations })
+      }
     }
     if (errors.length > 0 || warnings.length > 0) {
       setImportErrors(errors)
@@ -184,6 +194,16 @@ export default function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>New scenario (Ctrl+N)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={onTemplateOpen} className="gap-1.5 text-muted-foreground">
+                <FilePlus className="h-4 w-4" />
+                Template
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>New from template</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -336,6 +356,21 @@ export default function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Export distributable map ZIP</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={guidesPanelOpen ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-1.5"
+                onClick={toggleGuidesPanel}
+              >
+                <BookOpen className="h-4 w-4" />
+                Guides
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle guides panel</TooltipContent>
           </Tooltip>
         </div>
 

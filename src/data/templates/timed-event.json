@@ -1,0 +1,57 @@
+{
+  "_templateMeta": {
+    "id": "timed-event",
+    "name": "Timed Event",
+    "description": "Fires a dialog and consequence after a set number of turns. Uses StartTurn condition."
+  },
+  "_annotations": {
+    "counters[0]": "Counts turns elapsed since the map started. Incremented each turn by the repeating trigger.",
+    "quests[0]": "This quest runs silently in the background — it has no name/description visible to the player. Used as a container for the timer logic.",
+    "quests[0].subQuests[0]": "The timer subquest. Runs for the duration of the event window.",
+    "quests[0].subQuests[0].triggers[0]": "Repeating trigger: fires every turn (StartTurn with no params = any turn, any player). Increments the turn counter.",
+    "quests[0].subQuests[0].triggers[1]": "Deadline trigger: fires when the turn counter reaches 10. Replace 10 with your desired number of turns.",
+    "quests[0].subQuests[0].triggers[1].actions[0]": "Show a dialog when the deadline is reached. Replace 'timed_event_deadline' with your dialog ID.",
+    "quests[0].subQuests[0].triggers[1].actions[1]": "Replace or remove this. Example: GameLose for a defeat condition, or any other consequence."
+  },
+  "counters": [
+    { "sid": "timed_event_turns", "value": 0 }
+  ],
+  "quests": [
+    {
+      "sid": "timed_event_quest",
+      "name": "",
+      "description": "",
+      "isActive": true,
+      "subQuests": [
+        {
+          "sid": "timed_event_1",
+          "isActive": true,
+          "triggers": [
+            {
+              "conditionsLogic": "And",
+              "isRepeating": true,
+              "conditions": [
+                { "c": "StartTurn", "p": [] }
+              ],
+              "actions": [
+                { "a": "CounterPlus", "p": ["timed_event_turns", "1"] }
+              ]
+            },
+            {
+              "conditionsLogic": "And",
+              "isRepeating": false,
+              "conditions": [
+                { "c": "Counter", "p": ["timed_event_turns", ">=", "10"] }
+              ],
+              "actions": [
+                { "a": "Dialog", "p": ["timed_event_deadline"] },
+                { "a": "CurrentSubQuestDone", "p": [] }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "interruptions": []
+}
