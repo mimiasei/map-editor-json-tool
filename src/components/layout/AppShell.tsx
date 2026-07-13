@@ -5,6 +5,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useGuideStore } from '@/store/useGuideStore'
 import { exportProjectJson } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
+import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
 import Toolbar from './Toolbar'
@@ -241,6 +242,7 @@ export default function AppShell() {
     }
 
     setUndocked((prev) => new Set([...prev, panelId]))
+    logInfo(`Undocking panel: ${panelId}`)
 
     const win = new WebviewWindow(`panel-${panelId}`, {
       url:       `/?panel=${panelId}`,
@@ -254,6 +256,7 @@ export default function AppShell() {
 
     // If window creation fails, undo the undocked state
     win.once('tauri://error', () => {
+      logError(`Panel window creation failed: ${panelId}`)
       setUndocked((prev) => {
         const next = new Set(prev)
         next.delete(panelId)
@@ -322,7 +325,9 @@ export default function AppShell() {
         try {
           // Close all undocked panels first
           const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
-          for (const panelId of undockedRef.current) {
+          const panelIds = [...undockedRef.current]
+          if (panelIds.length > 0) logInfo(`Close requested — cleaning up ${panelIds.length} panel(s)`)
+          for (const panelId of panelIds) {
             const panelWin = await WebviewWindow.getByLabel(`panel-${panelId}`)
             await panelWin?.destroy()
           }
@@ -338,6 +343,7 @@ export default function AppShell() {
           if (ok) await win.destroy()
         } catch {
           // Fallback: force-exit if destroy fails for any reason
+          logError('win.destroy() failed — falling back to process.exit')
           const { exit } = await import('@tauri-apps/plugin-process')
           exit(0)
         }
