@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPanelSyncChannel, PANEL_META, type PanelState, type PanelAction } from '@/lib/panel-sync'
 import PanelContent from './PanelContent'
+import { logInfo } from '@/lib/logger'
 
 interface Props {
   panelId: string
@@ -44,6 +45,7 @@ export default function PanelShell({ panelId }: Props) {
   const sendAction = (action: PanelAction) => channel.sendAction(action)
 
   const handleRedock = async () => {
+    logInfo(`Re-docking panel: ${panelId}`)
     // Close this Tauri window — AppShell listens for the close event and
     // removes the panel from the `undocked` set, causing it to re-appear.
     const { getCurrentWindow } = await import('@tauri-apps/api/window')
