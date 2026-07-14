@@ -50,6 +50,7 @@ interface ToolbarProps {
   onDiagramOpen?: () => void
   onStatsOpen?: () => void
   onTemplateOpen?: () => void
+  onGuidesOpen?: () => void
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -66,6 +67,7 @@ export default function Toolbar({
   onDiagramOpen,
   onStatsOpen,
   onTemplateOpen,
+  onGuidesOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -91,8 +93,7 @@ export default function Toolbar({
   const [importWarnings,      setImportWarnings]      = useState<string[]>([])
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
 
-  const { togglePanel: toggleGuidesPanel, panelOpen: guidesPanelOpen } = useGuideStore()
-
+  // useGuideStore still needed for templateAnnotations hydration on import
   const canUndo = useStore(useScenarioStore.temporal, (s) => s.pastStates.length > 0)
   const canRedo = useStore(useScenarioStore.temporal, (s) => s.futureStates.length > 0)
 
@@ -366,16 +367,16 @@ export default function Toolbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={guidesPanelOpen ? 'secondary' : 'ghost'}
+                variant="ghost"
                 size="sm"
                 className="gap-1.5"
-                onClick={toggleGuidesPanel}
+                onClick={onGuidesOpen}
               >
                 <BookOpen className="h-4 w-4" />
                 Guides
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Toggle guides panel</TooltipContent>
+            <TooltipContent>Open guides panel</TooltipContent>
           </Tooltip>
         </div>
 

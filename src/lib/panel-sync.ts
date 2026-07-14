@@ -14,6 +14,7 @@ export const PANEL_META: Record<string, { title: string; width: number; height: 
   timeline: { title: 'Event Timeline',      width: 900,  height: 600 },
   flow:     { title: 'Quest Flow Diagram',  width: 1000, height: 700 },
   stats:    { title: 'Scenario Statistics', width: 800,  height: 600 },
+  guides:   { title: 'Guides',              width: 700,  height: 600 },
 }
 
 // ─── Message types ────────────────────────────────────────────────────────────
