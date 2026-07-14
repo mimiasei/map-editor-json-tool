@@ -43,11 +43,8 @@ This fires automatically every 7 turns for the duration of the map.
 
 > **Warning:** Weekly repeating triggers with no counter guard fire indefinitely. If you want them to stop after N weeks, add a Counter and increment it each week, then guard with `Counter: weeks_elapsed < N`.
 
-## Interruptions for ambient timers
+## Interruptions for combat timing
 
-Interruptions are well-suited for background timed events that don't belong to a specific quest:
+Interruptions are not time-based — they are combat lifecycle hooks (`BeforeIamVsHero`, `AfterIamWinVsHero`, etc.). They are useful when you need something to happen at a specific hero battle rather than at a specific turn.
 
-1. Create an interruption with a `StartTurn` trigger
-2. Enable it via `EnableInterruption` from a quest trigger when the timer should start
-3. The interruption fires independently of quest state
-4. Disable it with `DisableInterruption` when done
+For turn-based ambient timers, use quest triggers with `StartTurn` or `StartWeek` conditions as described above. See [Interruptions](guide:interruptions) for what interruptions are actually used for.

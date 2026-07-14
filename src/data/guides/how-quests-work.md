@@ -52,6 +52,8 @@ Use them to track quest stages, kill counts, resource thresholds, and more. See 
 
 ## Interruptions
 
-Interruptions are similar to quests but operate independently of the quest system. They are used for time-sensitive or ambient events — e.g. 'after 10 turns, if the player hasn't visited the shrine, fire a reminder dialog'.
+Interruptions are combat lifecycle hooks — they fire when specific hero battle events occur, such as before the player fights an enemy hero or after winning a hero-vs-hero battle. They have no conditions to configure; the event type itself determines when they fire.
 
-Interruptions are enabled and disabled via `EnableInterruption` and `DisableInterruption` actions.
+Use them for pre-battle dialogs, post-battle rewards, and boss fight sequences. They can be toggled on and off at runtime via `EnableInterruption` and `DisableInterruption` actions.
+
+See [Interruptions](guide:interruptions) for a full breakdown.
