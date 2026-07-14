@@ -16,9 +16,24 @@ When all conditions in a trigger are met simultaneously, its actions fire.
 
 A quest is the top-level container. It appears in the in-game quest log. Its `name` and `description` fields are localization SIDs — they must have matching tokens in your map's `customMaps.json`.
 
-A quest is active when the game starts unless you set `isActive: false`.
+A quest is active when the game starts unless you set `activeOnStart: false`.
 
 > **Note:** Quest names and descriptions are displayed to the player. They must be localized — raw text will not appear in the quest log.
+
+## Quest flags: main, hidden, sharing
+
+Three optional flags on a quest change how the game treats it.
+
+**`main: true`** marks a quest as the primary objective of the map. In the in-game quest log this is displayed as the main/primary quest rather than a side objective. Looking at the official scenario files, this is set on quests like `main_quest_line` and `city_attack_quest_line_starter` — the quests the player is expected to focus on. Side quests, AI behavior quests, and background tracking quests leave it unset (defaulting to `false`).
+
+**`hidden: true`** hides the quest from the player's quest log entirely. Use this for quests that exist purely for internal logic — AI movement scripting, background timers, lose conditions — that should never be visible to the player.
+
+**`sharing`** controls how the quest is distributed in multiplayer. Two values are seen in the official scenario files:
+
+- `"Clone"` — each player receives their own independent copy of the quest. Progress is tracked separately per player. This is the default for all normal quests — player vs. side quests, objectives, etc.
+- `"Ai"` — the quest is only evaluated for AI-controlled players. Used on hidden quests that script AI hero behavior (e.g. patrol routes, movement patterns). Human players never interact with these quests.
+
+> **Note:** `sharing` is required by the game engine — always set it. The editor defaults new quests to `"Clone"`, which is correct for all player-facing quests.
 
 ## Subquests
 
