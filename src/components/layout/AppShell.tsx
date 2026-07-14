@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import { exportProjectJson } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { logInfo, logError } from '@/lib/logger'
@@ -19,6 +20,7 @@ import DialogEditor from '@/components/dialogs/DialogEditor'
 import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
 import GuidesDialog from '@/components/guides/GuidesDialog'
 import TemplatePickerDialog from '@/components/guides/TemplatePickerDialog'
+import DialogBrowser from '@/components/catalog/DialogBrowser'
 import { SquareArrowOutUpRight } from 'lucide-react'
 
 // ─── Placeholder shown where a panel would be when it's undocked ──────────────
@@ -57,6 +59,13 @@ export default function AppShell() {
   const [statsOpen,     setStatsOpen]     = useState(false)
   const [templateOpen,  setTemplateOpen]  = useState(false)
   const [guidesOpen,    setGuidesOpen]    = useState(false)
+  const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
+
+  // ── Background catalog load on startup ───────────────────────────────────────
+  useEffect(() => {
+    useCatalogStore.getState().load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Track which panels are currently undocked
   const [undocked, setUndocked] = useState<Set<string>>(new Set())
@@ -380,6 +389,7 @@ export default function AppShell() {
         onStatsOpen={() => setStatsOpen(true)}
         onTemplateOpen={() => setTemplateOpen(true)}
         onGuidesOpen={() => setGuidesOpen(true)}
+        onDialogBrowserOpen={() => setDialogBrowserOpen(true)}
         onNew={handleNew}
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
@@ -413,6 +423,7 @@ export default function AppShell() {
         onUndock={() => { setGuidesOpen(false); handleUndock('guides') }}
         undocked={isUndocked('guides')}
       />
+      <DialogBrowser open={dialogBrowserOpen} onOpenChange={setDialogBrowserOpen} />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}

@@ -67,6 +67,12 @@ It is a companion to the map editor, not a replacement for it.
 - **Localization panel** — edit English text tokens for all dialog slides and quest names; highlights missing tokens; import from an existing `customMaps.json`
 - **Export map ZIP** — one click produces a distributable ZIP (`DB/dialogs/…` + `Lang/english/texts/customMaps.json`) ready to place next to `Core.zip` in `StreamingAssets/`
 - **Project save format** — Save / Save As preserves all editor metadata (`_mapName`, `_dialogs`, `_localization`) so everything round-trips; the game ignores these keys
+- **Game Data Catalog** — load `Core.zip` from your game install (auto-detected on Windows via Steam paths, or pick the file manually on any platform) to populate all entity dropdowns with live game data and real English names. Covers heroes, creatures, artifacts, spells, skills, buffs, and map objects. Falls back to built-in lists when not loaded
+- **Game Dialog Browser** — search all ~769 game dialog flows by ID, speaker, or text; expand any dialog to read its slides; copy the ID into a Dialog action with one click
+- **Map object filter** — funnel button on map object dropdowns narrows results by category (interactables, resources, environments, spawns) and interactability; filter persists between sessions
+- Searchable dropdowns for all entity parameters (heroes, creatures, artifacts, spells, skills, buffs, map objects) — shows human-readable names alongside SIDs
+- **In-editor guides** — built-in knowledge base covering how quests work, trigger patterns, counter tracking, dialog integration, timed events, and common pitfalls; accessible from the toolbar
+- **New from template** — start from one of four annotated scenario templates (simple kill quest, counter-based quest, timed event, dialog-driven quest) with inline hints that can be dismissed as you go
 - Live JSON preview with syntax highlighting and one-click copy
 - Validation: errors (duplicate/empty SIDs) and warnings (dangling references, empty triggers, missing dialog flows, missing localisation tokens)
 - Duplicate any node in the tree
@@ -74,8 +80,10 @@ It is a companion to the map editor, not a replacement for it.
 - Undo / redo (100-step history)
 - SID autocomplete across the whole scenario
 - Command palette (Ctrl+K) for quick navigation
-- Event timeline dialog — chronological view of all triggers
-- Quest flow diagram — per-quest DAG visualisation of sub-quest dependencies
+- **Event timeline** — chronological view of all triggers grouped by category (turn-based, counter-gated, reactive, random/repeating)
+- **Quest flow diagram** — per-quest DAG visualisation of sub-quest dependencies
+- **Scenario statistics** — at-a-glance counts and breakdown of quests, triggers, conditions, and actions
+- Undockable panels (Tauri desktop) — Event Timeline, Quest Flow Diagram, Scenario Statistics, and Guides can be popped out into separate windows
 - Native desktop app (macOS, Windows, Linux) via Tauri v2 — native file open/save dialogs, menu bar, keyboard shortcuts
 - No backend — runs entirely in the browser (or as a standalone desktop app)
 
@@ -133,21 +141,32 @@ src/
 ├── schema/
 │   ├── conditions.ts          — Registry of known condition types + parameters
 │   ├── actions.ts             — Registry of known action types + parameters
+│   ├── entities.ts            — Entity registries (heroes, creatures, artifacts, map objects, spells, skills, buffs)
 │   └── zod.ts                 — Zod validation schemas
-├── store/useScenarioStore.ts  — Zustand store (CRUD, selection, dialog/loc state)
+├── store/
+│   ├── useScenarioStore.ts    — Zustand store (CRUD, selection, dialog/loc state)
+│   ├── useCatalogStore.ts     — Game Data Catalog store (built from Core.zip on load)
+│   └── useGuideStore.ts       — Guides panel state (active article, dismissed annotations)
 ├── lib/
+│   ├── catalog/
+│   │   ├── types.ts           — GameCatalog and per-entity TypeScript interfaces
+│   │   ├── zip-loader.ts      — Core.zip discovery (Steam paths, resource dir, file picker)
+│   │   ├── builder.ts         — Catalog extraction from JSZip (heroes, spells, dialogs, …)
+│   │   └── thumbnails.tsx     — thumbnailPath() + CatalogIcon stubs (populated by issue #62)
 │   ├── import.ts              — JSON import with best-effort fallback; extracts _* editor keys
 │   ├── export.ts              — Tab-indented JSON export; exportProjectJson for save round-trip
 │   ├── zip-export.ts          — Assembles distributable map ZIP via jszip
 │   └── validate.ts            — Error and warning checks (scenario + dialogs + localisation)
 └── components/
-    ├── layout/                — AppShell, Toolbar, MapMetaForm
+    ├── layout/                — AppShell, Toolbar
     ├── tree/                  — Sidebar scenario tree (Counters, Interruptions, Quests, Dialogs)
     ├── editors/               — Counter, Interruption, Quest, SubQuest, Trigger editors
     ├── conditions/            — ConditionForm, ConditionList
     ├── actions/               — ActionForm, ActionList
     ├── dialogs/               — DialogEditor modal, LocalizationDialog modal
-    └── common/                — JsonPreview, CommandPalette, TimelineDialog, QuestFlowDialog
+    ├── catalog/               — DialogBrowser, MapObjectFilter
+    ├── guides/                — GuidesDialog, GuideArticle, TemplatePickerDialog, AnnotationBanner
+    └── common/                — JsonPreview, CommandPalette, TimelineDialog, QuestFlowDialog, StatsDialog
 ```
 
 ---

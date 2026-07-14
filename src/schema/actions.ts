@@ -194,7 +194,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Adds a skill level to a hero. Call multiple times to add multiple levels.',
     params: [
-      { label: 'Skill ID', hint: 'e.g. skill_faction_demons', required: true },
+      { label: 'Skill ID', hint: 'e.g. skill_faction_demons', required: true, entity: 'skill' as const },
       { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
@@ -204,7 +204,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Teaches a spell to a hero.',
     params: [
-      { label: 'Spell ID', hint: 'e.g. day_1_magic_healing_water', required: true },
+      { label: 'Spell ID', hint: 'e.g. day_1_magic_healing_water', required: true, entity: 'spell' as const },
       { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
     ],
   },
@@ -214,7 +214,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: 'Applies a buff to a hero for N days. Use -1 for permanent.',
     params: [
-      { label: 'Buff ID', hint: 'e.g. campaign_infinite_moves_buff', required: true },
+      { label: 'Buff ID', hint: 'e.g. campaign_infinite_moves_buff', required: true, entity: 'buff' as const },
       { label: 'Hero ID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Days', hint: '-1 for permanent', required: false, type: 'number' },
     ],
@@ -406,7 +406,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Hero',
     description: "Removes a buff from a hero. Leave Hero ID empty to remove from all heroes.",
     params: [
-      { label: 'Buff ID', hint: 'e.g. cm_fun_necromancy_power_disabled', required: true },
+      { label: 'Buff ID', hint: 'e.g. cm_fun_necromancy_power_disabled', required: true, entity: 'buff' as const },
       { label: 'Hero ID', hint: 'e.g. demon_hero_6 (or leave blank)', required: false, entity: 'hero' },
     ],
   },
