@@ -7,6 +7,7 @@ import { findCoreZip, loadZipFromFile, loadZipFromPath } from '@/lib/catalog/zip
 import { buildCatalog } from '@/lib/catalog/builder'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { logInfo, logError } from '@/lib/logger'
+import { isTauri } from '@/lib/native-fs'
 
 // ─── Manual-override path (Tauri) ─────────────────────────────────────────────
 // Persisted to localStorage so the user doesn't need to re-select on each launch.
@@ -78,7 +79,11 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
       // 2. Auto-discover
       const result = await findCoreZip()
       if (!result) {
-        set({ loading: false, error: 'Core.zip not found. Load it manually via Game Data → Load Core.zip.' })
+        if (isTauri()) {
+          set({ loading: false, error: 'Core.zip not found. Load it manually via Game Data → Load Core.zip.' })
+        } else {
+          set({ loading: false })
+        }
         return
       }
       const catalog = await buildCatalog(result.zip, result.sourceHint)

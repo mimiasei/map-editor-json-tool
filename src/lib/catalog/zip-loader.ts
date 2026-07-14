@@ -77,9 +77,9 @@ export async function findCoreZip(): Promise<{ zip: JSZip; sourceHint: string } 
     }
 
     // 2. Fallback: Core.zip next to binary (developer copy, never committed)
-    const { resourceDir } = await import('@tauri-apps/api/path')
+    const { resourceDir, join } = await import('@tauri-apps/api/path')
     const resDir = await resourceDir()
-    const fallbackPath = `${resDir}Core.zip`
+    const fallbackPath = await join(resDir, 'Core.zip')
     try {
       if (await exists(fallbackPath)) {
         const bytes = await readFile(fallbackPath)

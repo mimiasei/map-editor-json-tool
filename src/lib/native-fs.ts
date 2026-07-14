@@ -116,3 +116,19 @@ export async function confirmDialog(message: string, title?: string): Promise<bo
   }
   return window.confirm(title ? `${title}\n\n${message}` : message)
 }
+
+// ─── Pick Core.zip ────────────────────────────────────────────────────────────
+
+/**
+ * Open a native file picker for Core.zip (Tauri only).
+ * Returns the selected file path, or null if the user cancelled or on web.
+ */
+export async function pickCoreZip(): Promise<string | null> {
+  if (!isTauri()) return null
+  const { open } = await import('@tauri-apps/plugin-dialog')
+  const path = await open({
+    title: 'Select Core.zip',
+    filters: [{ name: 'ZIP', extensions: ['zip'] }],
+  })
+  return typeof path === 'string' ? path : null
+}

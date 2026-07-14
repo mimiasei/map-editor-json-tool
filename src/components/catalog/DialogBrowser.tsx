@@ -30,10 +30,12 @@ function DialogRow({ item, onCopyId }: DialogRowProps) {
   return (
     <div className="border border-border rounded-md overflow-hidden">
       {/* Header row */}
-      <button
-        type="button"
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent/50 transition-colors"
+      <div
+        role="button"
+        tabIndex={0}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent/50 transition-colors cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded((v) => !v) } }}
       >
         <ChevronIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="font-mono text-xs truncate flex-1">{item.id}</span>
@@ -48,7 +50,7 @@ function DialogRow({ item, onCopyId }: DialogRowProps) {
         >
           <Copy className="h-3 w-3" />
         </button>
-      </button>
+      </div>
 
       {/* Preview text (first slide) */}
       {!expanded && item.firstText && (

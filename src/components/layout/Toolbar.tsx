@@ -7,7 +7,7 @@ import { importScenario } from '@/lib/import'
 import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
-import { openFile, saveFile, isTauri } from '@/lib/native-fs'
+import { openFile, saveFile, isTauri, pickCoreZip } from '@/lib/native-fs'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
 import {
@@ -51,7 +51,7 @@ import {
   Loader2,
   MessageSquare,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 interface ToolbarProps {
   onSearchOpen?: () => void
@@ -109,7 +109,7 @@ export default function Toolbar({
   // ── Catalog ──────────────────────────────────────────────────────────────────
   const { catalog, loading: catalogLoading, error: catalogError, load: loadCatalog, loadFromFile: loadCatalogFromFile, loadFromPath: loadCatalogFromPath, clear: clearCatalog } = useCatalogStore()
   const [catalogPopoverOpen, setCatalogPopoverOpen] = useState(false)
-  const catalogFileInputRef = useState<HTMLInputElement | null>(null)
+  const catalogFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleCatalogFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -121,19 +121,16 @@ export default function Toolbar({
   const handleCatalogPickFile = async () => {
     if (isTauri()) {
       try {
-        const { open: openDialog } = await import('@tauri-apps/plugin-dialog')
-        const path = await openDialog({
-          title: 'Select Core.zip',
-          filters: [{ name: 'ZIP', extensions: ['zip'] }],
-        })
-        if (typeof path === 'string') await loadCatalogFromPath(path)
+        const path = await pickCoreZip()
+        if (path) {
+          await loadCatalogFromPath(path)
+          return
+        }
       } catch {
         // fallback to file input
-        catalogFileInputRef[0]?.click()
       }
-    } else {
-      catalogFileInputRef[0]?.click()
     }
+    catalogFileInputRef.current?.click()
   }
   const canUndo = useStore(useScenarioStore.temporal, (s) => s.pastStates.length > 0)
   const canRedo = useStore(useScenarioStore.temporal, (s) => s.futureStates.length > 0)
@@ -513,7 +510,7 @@ export default function Toolbar({
             type="file"
             accept=".zip"
             className="hidden"
-            ref={(el) => { catalogFileInputRef[0] = el }}
+            ref={catalogFileInputRef}
             onChange={handleCatalogFileSelect}
           />
         </div>

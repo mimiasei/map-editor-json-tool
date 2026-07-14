@@ -13,7 +13,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { ChevronsUpDown, SlidersHorizontal } from 'lucide-react'
-import MapObjectFilter, { type MapObjectFilterState, DEFAULT_FILTER } from '@/components/catalog/MapObjectFilter'
+import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ function applyMapObjectFilter(
 export default function EntityCombobox({ value, onChange, category, placeholder }: Props) {
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
-  const [filter, setFilter] = useState<MapObjectFilterState>(DEFAULT_FILTER)
+  const [filter, setFilter] = useState<MapObjectFilterState>(() => loadSavedFilter())
 
   const allEntries = useCatalogEntries(category)
   const catalog = useCatalogStore((s) => s.catalog)

@@ -101,8 +101,6 @@ export default function MapObjectFilter({
     }))
   }
 
-  void filteredCount // suppress unused warning — shown in the JSX below
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xs">
