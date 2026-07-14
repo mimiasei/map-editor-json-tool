@@ -9,6 +9,8 @@
 export interface EntityEntry {
   id: string
   label: string
+  /** Icon SID — used by CatalogIcon for thumbnail support (issue #62) */
+  icon?: string
 }
 
 /** Convert a snake_case ID to Title Case for display. */
@@ -399,13 +401,17 @@ export const MAP_OBJECTS: EntityEntry[] = [
 
 // ─── Lookup helpers ───────────────────────────────────────────────────────────
 
-export type EntityCategory = 'hero' | 'creature' | 'artifact' | 'mapObject'
+export type EntityCategory = 'hero' | 'creature' | 'artifact' | 'mapObject' | 'spell' | 'skill' | 'buff'
 
 export const ENTITY_REGISTRIES: Record<EntityCategory, EntityEntry[]> = {
   hero: HEROES,
   creature: CREATURES,
   artifact: ARTIFACTS,
   mapObject: MAP_OBJECTS,
+  // spell, skill, buff have no hardcoded fallbacks — catalog-only
+  spell: [],
+  skill: [],
+  buff: [],
 }
 
 export const ENTITY_LABELS: Record<EntityCategory, string> = {
@@ -413,4 +419,7 @@ export const ENTITY_LABELS: Record<EntityCategory, string> = {
   creature: 'creatures',
   artifact: 'artifacts',
   mapObject: 'map objects',
+  spell: 'spells',
+  skill: 'skills',
+  buff: 'buffs',
 }

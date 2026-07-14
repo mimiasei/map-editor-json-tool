@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useStore } from 'zustand'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useGuideStore } from '@/store/useGuideStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import { importScenario } from '@/lib/import'
 import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
@@ -23,6 +24,11 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
   FilePlus,
   Upload,
   Download,
@@ -41,6 +47,9 @@ import {
   Package,
   BarChart2,
   BookOpen,
+  Database,
+  Loader2,
+  MessageSquare,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -51,6 +60,7 @@ interface ToolbarProps {
   onStatsOpen?: () => void
   onTemplateOpen?: () => void
   onGuidesOpen?: () => void
+  onDialogBrowserOpen?: () => void
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -68,6 +78,7 @@ export default function Toolbar({
   onStatsOpen,
   onTemplateOpen,
   onGuidesOpen,
+  onDialogBrowserOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -94,6 +105,36 @@ export default function Toolbar({
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
 
   // useGuideStore still needed for templateAnnotations hydration on import
+
+  // ── Catalog ──────────────────────────────────────────────────────────────────
+  const { catalog, loading: catalogLoading, error: catalogError, load: loadCatalog, loadFromFile: loadCatalogFromFile, loadFromPath: loadCatalogFromPath, clear: clearCatalog } = useCatalogStore()
+  const [catalogPopoverOpen, setCatalogPopoverOpen] = useState(false)
+  const catalogFileInputRef = useState<HTMLInputElement | null>(null)
+
+  const handleCatalogFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await loadCatalogFromFile(file)
+    e.target.value = ''
+  }
+
+  const handleCatalogPickFile = async () => {
+    if (isTauri()) {
+      try {
+        const { open: openDialog } = await import('@tauri-apps/plugin-dialog')
+        const path = await openDialog({
+          title: 'Select Core.zip',
+          filters: [{ name: 'ZIP', extensions: ['zip'] }],
+        })
+        if (typeof path === 'string') await loadCatalogFromPath(path)
+      } catch {
+        // fallback to file input
+        catalogFileInputRef[0]?.click()
+      }
+    } else {
+      catalogFileInputRef[0]?.click()
+    }
+  }
   const canUndo = useStore(useScenarioStore.temporal, (s) => s.pastStates.length > 0)
   const canRedo = useStore(useScenarioStore.temporal, (s) => s.futureStates.length > 0)
 
@@ -378,6 +419,103 @@ export default function Toolbar({
             </TooltipTrigger>
             <TooltipContent>Open guides panel</TooltipContent>
           </Tooltip>
+
+          {/* ── Game Data button ── */}
+          <Popover open={catalogPopoverOpen} onOpenChange={setCatalogPopoverOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5"
+                  >
+                    {catalogLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : catalogError ? (
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    ) : catalog ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Database className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    Game Data
+                  </Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                {catalogLoading ? 'Loading game data…' : catalogError ? 'Game data error' : catalog ? 'Game data loaded' : 'Game data not loaded'}
+              </TooltipContent>
+            </Tooltip>
+
+            <PopoverContent className="w-72 p-3 space-y-3" align="end">
+              <p className="text-sm font-semibold">Game Data Catalog</p>
+
+              {/* Status */}
+              {catalogLoading && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Building catalog from Core.zip…
+                </div>
+              )}
+              {catalogError && !catalogLoading && (
+                <Alert variant="destructive" className="py-2">
+                  <AlertDescription className="text-xs">{catalogError}</AlertDescription>
+                </Alert>
+              )}
+              {catalog && !catalogLoading && (
+                <div className="text-xs space-y-1 text-muted-foreground">
+                  <p className="text-foreground font-medium">Loaded ✓</p>
+                  <p>Source: {catalog.sourceHint}</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                    <span>{catalog.heroes.length} heroes</span>
+                    <span>{catalog.creatures.length} creatures</span>
+                    <span>{catalog.artifacts.length} artifacts</span>
+                    <span>{catalog.spells.length} spells</span>
+                    <span>{catalog.skills.length} skills</span>
+                    <span>{catalog.buffs.length} buffs</span>
+                    <span>{catalog.mapObjects.length} map objects</span>
+                    <span>{catalog.dialogs.length} dialogs</span>
+                  </div>
+                </div>
+              )}
+              {!catalog && !catalogLoading && !catalogError && (
+                <p className="text-xs text-muted-foreground">
+                  Game data not loaded. Dropdowns show SIDs only.
+                </p>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => { loadCatalog(); setCatalogPopoverOpen(false) }} disabled={catalogLoading}>
+                  {catalog ? 'Rebuild' : 'Auto-detect'}
+                </Button>
+                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleCatalogPickFile} disabled={catalogLoading}>
+                  Load Core.zip…
+                </Button>
+                {catalog && (
+                  <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => clearCatalog()} disabled={catalogLoading}>
+                    Clear
+                  </Button>
+                )}
+                {onDialogBrowserOpen && catalog && (
+                  <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => { onDialogBrowserOpen(); setCatalogPopoverOpen(false) }}>
+                    <MessageSquare className="h-3 w-3" />
+                    Browse Dialogs
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Hidden file input for web Core.zip selection */}
+          <input
+            type="file"
+            accept=".zip"
+            className="hidden"
+            ref={(el) => { catalogFileInputRef[0] = el }}
+            onChange={handleCatalogFileSelect}
+          />
         </div>
 
         {/* Current file name + dirty indicator */}
