@@ -19,6 +19,9 @@ dist/
 # Local agent instructions
 AGENTS.md
 
+# Session context (AI assistant hand-off notes)
+SESSION.md
+
 # Plans that should not be committed
 plans/translator.md
 

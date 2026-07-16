@@ -1,25 +1,43 @@
-// ─── Thumbnail stubs (prepared for issue #62) ─────────────────────────────────
-// These stubs prepare the thumbnail integration point.
-// When issue #62 extracts PNGs to app data, thumbnails will appear automatically
-// in all catalog dropdowns and detail views — with no further UI changes needed.
+// ─── Thumbnail utilities ──────────────────────────────────────────────────────
+// thumbnailPath() resolves an icon SID to a local asset:// URL when the PNG
+// has been extracted by the sidecar (issue #62). Components call this
+// synchronously; the manifest is pre-loaded at app startup.
 
+import { convertFileSrc } from '@tauri-apps/api/core'
 import { isTauri } from '@/lib/native-fs'
+import { isIconKnown } from '@/hooks/useThumbnailManifest'
+
+// Cached once per session — populated by warmThumbnailDir() at startup.
+let _appLocalDataDir: string | null = null
+
+/**
+ * Pre-warm the appLocalDataDir cache so thumbnailPath() can work synchronously
+ * during render. Call once at app startup (before catalog loads).
+ */
+export async function warmThumbnailDir(): Promise<void> {
+  if (!isTauri()) return
+  if (_appLocalDataDir !== null) return
+  const { appLocalDataDir } = await import('@tauri-apps/api/path')
+  // Normalise to forward slashes and guarantee a trailing separator
+  _appLocalDataDir = (await appLocalDataDir()).replace(/\\/g, '/').replace(/\/?$/, '/')
+}
 
 /**
  * Resolves an icon SID to a local asset URL if thumbnails have been extracted.
  * Returns null if thumbnails are not yet available (always in the web build,
- * and in Tauri before issue #62 runs the extractor).
+ * and in Tauri before the extractor has run or the manifest hasn't been loaded).
  *
- * Callers should render a text fallback when this returns null.
+ * This function is synchronous and safe to call during render.
+ * Relies on warmThumbnailDir() and loadThumbnailManifest() being called first.
  */
 export function thumbnailPath(iconId: string | undefined): string | null {
   if (!iconId) return null
   if (!isTauri()) return null
-  // TODO(#62): check AppLocalData/thumbnails/{iconId}.png and return asset:// URL
-  // Implementation will look like:
-  //   const path = await resolveResource(`thumbnails/${iconId}.png`)
-  //   return `asset://localhost/${encodeURIComponent(path)}`
-  return null
+  if (!_appLocalDataDir) return null
+  const lower = iconId.toLowerCase()
+  if (!isIconKnown(lower)) return null
+  const filePath = `${_appLocalDataDir}thumbnails/${lower}.png`
+  return convertFileSrc(filePath)
 }
 
 // ─── CatalogIcon ─────────────────────────────────────────────────────────────

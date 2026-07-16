@@ -8,6 +8,8 @@ import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
+import { warmThumbnailDir } from '@/lib/catalog/thumbnails'
+import { loadThumbnailManifest, getThumbnailCount } from '@/hooks/useThumbnailManifest'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -21,7 +23,11 @@ import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
 import GuidesDialog from '@/components/guides/GuidesDialog'
 import TemplatePickerDialog from '@/components/guides/TemplatePickerDialog'
 import DialogBrowser from '@/components/catalog/DialogBrowser'
-import { SquareArrowOutUpRight } from 'lucide-react'
+import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
+import { SquareArrowOutUpRight, X, ImageIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+const THUMBNAIL_PROMPTED_KEY = 'oe-thumbnails-prompted'
 
 // ─── Placeholder shown where a panel would be when it's undocked ──────────────
 
@@ -60,10 +66,22 @@ export default function AppShell() {
   const [templateOpen,  setTemplateOpen]  = useState(false)
   const [guidesOpen,    setGuidesOpen]    = useState(false)
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
+  const [thumbnailBanner, setThumbnailBanner] = useState(false)
+  const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
 
-  // ── Background catalog load on startup ───────────────────────────────────────
+  // ── Background catalog load + thumbnail manifest on startup ──────────────────
   useEffect(() => {
     useCatalogStore.getState().load()
+
+    if (isTauri()) {
+      // Pre-warm dir cache and load manifest; show first-run banner if needed
+      Promise.all([warmThumbnailDir(), loadThumbnailManifest()]).then(() => {
+        const alreadyPrompted = localStorage.getItem(THUMBNAIL_PROMPTED_KEY)
+        if (!alreadyPrompted && getThumbnailCount() === 0) {
+          setThumbnailBanner(true)
+        }
+      })
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -394,6 +412,42 @@ export default function AppShell() {
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
         onOpen={() => window.dispatchEvent(new Event('oe:open'))}
+      />
+
+      {/* First-run thumbnail banner (Tauri only, one-time) */}
+      {thumbnailBanner && (
+        <div className="flex items-center gap-2 bg-muted border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
+          <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+          <span className="flex-1">Extract game thumbnails to see icons in dropdowns.</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-6 text-xs px-2"
+            onClick={() => {
+              setThumbnailBanner(false)
+              localStorage.setItem(THUMBNAIL_PROMPTED_KEY, '1')
+              setThumbnailDialogOpen(true)
+            }}
+          >
+            Extract now
+          </Button>
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setThumbnailBanner(false)
+              localStorage.setItem(THUMBNAIL_PROMPTED_KEY, '1')
+            }}
+            aria-label="Dismiss"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      <ThumbnailExtractDialog
+        open={thumbnailDialogOpen}
+        onOpenChange={setThumbnailDialogOpen}
       />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <TimelineDialog
