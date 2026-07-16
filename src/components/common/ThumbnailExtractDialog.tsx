@@ -114,7 +114,10 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
       const { invoke } = await import('@tauri-apps/api/core')
       const { appLocalDataDir } = await import('@tauri-apps/api/path')
 
-      const outputDir = `${(await appLocalDataDir()).replace(/\\/g, '/')}thumbnails`
+      const rawDir = await appLocalDataDir()
+      // Normalise to forward slashes and guarantee a trailing separator so the
+      // sidecar receives a valid output path on all platforms.
+      const outputDir = `${rawDir.replace(/\\/g, '/').replace(/\/?$/, '/')}thumbnails`
 
       // Collect all icon SIDs from the catalog
       const icons: string[] = []

@@ -18,7 +18,8 @@ export async function warmThumbnailDir(): Promise<void> {
   if (!isTauri()) return
   if (_appLocalDataDir !== null) return
   const { appLocalDataDir } = await import('@tauri-apps/api/path')
-  _appLocalDataDir = (await appLocalDataDir()).replace(/\\/g, '/')
+  // Normalise to forward slashes and guarantee a trailing separator
+  _appLocalDataDir = (await appLocalDataDir()).replace(/\\/g, '/').replace(/\/?$/, '/')
 }
 
 /**

@@ -176,9 +176,10 @@ def extract(
             existing_manifest = json.loads(manifest_path.read_text())
         except Exception:
             pass
+    # Precompute the lowercased missing set once to avoid O(n²) inside the comprehension.
+    missing_set = {m.lower() for m in missing}
     all_known = sorted(
-        set(existing_manifest)
-        | {k for k in wanted if k not in [m.lower() for m in missing]}
+        set(existing_manifest) | {k for k in wanted if k not in missing_set}
     )
     manifest_path.write_text(json.dumps(all_known))
 

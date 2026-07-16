@@ -432,6 +432,7 @@ export default function AppShell() {
             Extract now
           </Button>
           <button
+            type="button"
             className="text-muted-foreground hover:text-foreground"
             onClick={() => {
               setThumbnailBanner(false)
