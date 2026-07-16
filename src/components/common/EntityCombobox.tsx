@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/command'
 import { ChevronsUpDown, SlidersHorizontal } from 'lucide-react'
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
+import { CatalogIcon } from '@/lib/catalog/thumbnails'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -182,7 +183,12 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
                     }}
                     className="flex justify-between gap-2 text-sm"
                   >
-                    <span>{entry.label}</span>
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      {entry.icon && (
+                        <CatalogIcon size={16} iconId={entry.icon} name={entry.label} />
+                      )}
+                      <span className="truncate">{entry.label}</span>
+                    </span>
                     <span className="text-xs text-muted-foreground font-mono truncate max-w-[45%]">
                       {entry.id}
                     </span>

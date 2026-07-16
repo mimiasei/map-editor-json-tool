@@ -18,6 +18,11 @@
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
     "fs:allow-write-file",
-    "process:allow-exit"
+    "fs:allow-read-dir",
+    "fs:allow-app-local-data-read",
+    "fs:allow-app-local-data-write",
+    "process:allow-exit",
+    "shell:allow-execute",
+    "shell:deny-open"
   ]
 }

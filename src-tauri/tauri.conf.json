@@ -29,6 +29,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "externalBin": ["sidecar/extract_thumbnails"],
     "macOS": {
       "signingIdentity": "-"
     },

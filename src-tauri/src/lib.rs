@@ -3,6 +3,123 @@ use tauri::{
     Emitter,
 };
 
+// ─── Thumbnail extraction ────────────────────────────────────────────────────
+
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct ThumbnailProgress {
+    pub done: u32,
+    pub total: u32,
+    pub current: String,
+}
+
+#[derive(serde::Serialize)]
+pub struct ThumbnailResult {
+    pub saved: u32,
+    pub missing: Vec<String>,
+}
+
+/// Spawn the extract_thumbnails sidecar and stream progress events to the
+/// frontend. The sidecar writes one JSON line per event to stdout:
+///   {"type":"progress","done":N,"total":M,"current":"icon_name"}
+///   {"type":"done","saved":N,"missing":["..."]}
+///   {"type":"error","message":"..."}
+#[tauri::command]
+async fn extract_thumbnails(
+    app: tauri::AppHandle,
+    game_dir: String,
+    output_dir: String,
+    icons: Vec<String>,
+    map_object_icons: Vec<String>,
+) -> Result<ThumbnailResult, String> {
+    use tauri_plugin_shell::ShellExt;
+
+    let icons_arg = icons.join(",");
+    let map_obj_arg = map_object_icons.join(",");
+
+    let (mut rx, _child) = app
+        .shell()
+        .sidecar("extract_thumbnails")
+        .map_err(|e| format!("failed to find sidecar: {e}"))?
+        .args([
+            "--game-dir",
+            &game_dir,
+            "--output-dir",
+            &output_dir,
+            "--icons",
+            &icons_arg,
+            "--map-object-icons",
+            &map_obj_arg,
+        ])
+        .spawn()
+        .map_err(|e| format!("failed to spawn sidecar: {e}"))?;
+
+    let mut last_result: Option<ThumbnailResult> = None;
+
+    while let Some(event) = rx.recv().await {
+        use tauri_plugin_shell::process::CommandEvent;
+        match event {
+            CommandEvent::Stdout(line) => {
+                let text = String::from_utf8_lossy(&line);
+                let Ok(val) = serde_json::from_str::<serde_json::Value>(text.trim()) else {
+                    continue;
+                };
+                match val.get("type").and_then(|t| t.as_str()) {
+                    Some("progress") => {
+                        let progress = ThumbnailProgress {
+                            done: val["done"].as_u64().unwrap_or(0) as u32,
+                            total: val["total"].as_u64().unwrap_or(0) as u32,
+                            current: val["current"]
+                                .as_str()
+                                .unwrap_or("")
+                                .to_string(),
+                        };
+                        app.emit("thumbnail-progress", &progress).ok();
+                    }
+                    Some("done") => {
+                        last_result = Some(ThumbnailResult {
+                            saved: val["saved"].as_u64().unwrap_or(0) as u32,
+                            missing: val["missing"]
+                                .as_array()
+                                .map(|arr| {
+                                    arr.iter()
+                                        .filter_map(|v| v.as_str().map(str::to_string))
+                                        .collect()
+                                })
+                                .unwrap_or_default(),
+                        });
+                    }
+                    Some("error") => {
+                        let msg = val["message"].as_str().unwrap_or("unknown error").to_string();
+                        return Err(msg);
+                    }
+                    _ => {}
+                }
+            }
+            CommandEvent::Stderr(line) => {
+                // Log stderr but don't fail — PyInstaller emits warnings there
+                let text = String::from_utf8_lossy(&line);
+                log::warn!("sidecar stderr: {}", text.trim());
+            }
+            CommandEvent::Error(e) => {
+                return Err(format!("sidecar error: {e}"));
+            }
+            CommandEvent::Terminated(status) => {
+                if let Some(code) = status.code {
+                    if code != 0 {
+                        return Err(format!("sidecar exited with code {code}"));
+                    }
+                }
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    last_result.ok_or_else(|| "sidecar exited without reporting a result".to_string())
+}
+
+// ─── App entry point ─────────────────────────────────────────────────────────
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -14,6 +131,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_shell::init())
+        .invoke_handler(tauri::generate_handler![extract_thumbnails])
         .setup(|app| {
 
             // ── Native menu bar ──────────────────────────────────────────────

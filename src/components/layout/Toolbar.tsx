@@ -63,6 +63,8 @@ import {
 } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { useTheme } from '@/hooks/useTheme'
+import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
+import { ImageIcon } from 'lucide-react'
 
 interface ToolbarProps {
   onSearchOpen?: () => void
@@ -114,6 +116,7 @@ export default function Toolbar({
   const [importErrors,        setImportErrors]        = useState<string[]>([])
   const [importWarnings,      setImportWarnings]      = useState<string[]>([])
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
+  const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
 
   const { theme, toggleTheme } = useTheme()
 
@@ -432,6 +435,16 @@ export default function Toolbar({
                 )}
                 Game Data
               </DropdownMenuItem>
+
+              {isTauri() && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setThumbnailDialogOpen(true)}>
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    Extract Thumbnails…
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -660,6 +673,14 @@ export default function Toolbar({
           </Alert>
         </DialogContent>
       </Dialog>
+
+      {/* Thumbnail extract dialog (Tauri only) */}
+      {isTauri() && (
+        <ThumbnailExtractDialog
+          open={thumbnailDialogOpen}
+          onOpenChange={setThumbnailDialogOpen}
+        />
+      )}
     </>
   )
 }
