@@ -19,8 +19,8 @@
     "fs:allow-write-text-file",
     "fs:allow-write-file",
     "fs:allow-read-dir",
-    "fs:allow-app-local-data-read",
-    "fs:allow-app-local-data-write",
+    "fs:allow-applocaldata-read-recursive",
+    "fs:allow-applocaldata-write-recursive",
     "process:allow-exit",
     "shell:allow-execute",
     "shell:deny-open"
