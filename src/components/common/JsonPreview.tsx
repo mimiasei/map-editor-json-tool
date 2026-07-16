@@ -17,13 +17,13 @@ function highlight(json: string): string {
     .replace(
       /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
       (match) => {
-        let cls = 'text-cyan-400' // number
+        let cls = 'json-num' // number
         if (/^"/.test(match)) {
-          cls = /:$/.test(match) ? 'text-sky-300' : 'text-green-300' // key : string
+          cls = /:$/.test(match) ? 'json-key' : 'json-str' // key : string
         } else if (/true|false/.test(match)) {
-          cls = 'text-orange-400'
+          cls = 'json-bool'
         } else if (/null/.test(match)) {
-          cls = 'text-red-400'
+          cls = 'json-null'
         }
         return `<span class="${cls}">${match}</span>`
       },
@@ -58,7 +58,7 @@ export function JsonPreviewContent({ scenario }: JsonPreviewContentProps) {
           className="h-6 gap-1 text-xs"
           onClick={handleCopy}
         >
-          {copied ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
+          {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
           {copied ? 'Copied' : 'Copy'}
         </Button>
       </div>

@@ -77,16 +77,16 @@ export default function GuideArticle({ title, sections }: Props) {
           </p>
 
           {section.note && (
-            <div className="flex gap-2 rounded-md bg-blue-950/40 border border-blue-700/30 p-3">
-              <Info className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
-              <p className="text-blue-200 text-xs">{renderBody(section.note, navigateTo)}</p>
+            <div className="flex gap-2 rounded-md bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-700/30 p-3">
+              <Info className="h-4 w-4 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+              <p className="text-blue-700 dark:text-blue-200 text-xs">{renderBody(section.note, navigateTo)}</p>
             </div>
           )}
 
           {section.warning && (
-            <div className="flex gap-2 rounded-md bg-amber-950/40 border border-amber-700/30 p-3">
-              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-amber-200 text-xs">{renderBody(section.warning, navigateTo)}</p>
+            <div className="flex gap-2 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/30 p-3">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-amber-800 dark:text-amber-200 text-xs">{renderBody(section.warning, navigateTo)}</p>
             </div>
           )}
         </section>

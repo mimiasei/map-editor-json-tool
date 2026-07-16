@@ -107,9 +107,9 @@ export default function HelpTooltip({ category, id, paramIndex, className }: Hel
 
         {/* Tip callout */}
         {entry.tip && (
-          <div className="flex gap-1.5 rounded bg-amber-950/40 border border-amber-700/30 p-2">
-            <AlertTriangle className="h-3 w-3 text-amber-400 mt-0.5 shrink-0" />
-            <span className="text-amber-200">{entry.tip}</span>
+          <div className="flex gap-1.5 rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/30 p-2">
+            <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+            <span className="text-amber-800 dark:text-amber-200">{entry.tip}</span>
           </div>
         )}
       </PopoverContent>

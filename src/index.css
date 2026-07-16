@@ -3,7 +3,44 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Light theme (default) ──────────────────────────────────────────────── */
   :root {
+    --background: 220 20% 97%;
+    --foreground: 222 20% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 20% 12%;
+
+    --primary: 35 90% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 90%;
+    --secondary-foreground: 222 20% 20%;
+
+    --muted: 220 14% 92%;
+    --muted-foreground: 215 16% 42%;
+
+    --accent: 220 14% 88%;
+    --accent-foreground: 222 20% 12%;
+
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 82%;
+    --input: 220 14% 92%;
+    --ring: 35 90% 48%;
+
+    --radius: 0.5rem;
+
+    --scrollbar-track: 220 14% 90%;
+    --scrollbar-thumb: 215 16% 65%;
+  }
+
+  /* ── Dark theme ─────────────────────────────────────────────────────────── */
+  .dark {
     --background: 222 20% 10%;
     --foreground: 213 31% 91%;
 
@@ -33,6 +70,9 @@
     --ring: 35 90% 55%;
 
     --radius: 0.5rem;
+
+    --scrollbar-track: 222 20% 8%;
+    --scrollbar-thumb: 215 20% 35%;
   }
 }
 
@@ -47,12 +87,12 @@
 }
 
 /* ─── Custom scrollbars ──────────────────────────────────────────────────────
-   Track: black  |  Thumb: --muted-foreground (same gray as timeline text)
+   Track and thumb reference CSS variables so both themes look correct.
    Covers WebKit/Blink (Chrome, Edge, Safari) and Firefox.
    ─────────────────────────────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--muted-foreground)) #000;
+  scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track));
 }
 
 *::-webkit-scrollbar {
@@ -61,18 +101,34 @@
 }
 
 *::-webkit-scrollbar-track {
-  background: #000;
+  background: hsl(var(--scrollbar-track));
 }
 
 *::-webkit-scrollbar-corner {
-  background: #000;
+  background: hsl(var(--scrollbar-track));
 }
 
 *::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
+  background: hsl(var(--scrollbar-thumb));
   border-radius: 4px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--foreground) / 0.7);
+  background: hsl(var(--foreground) / 0.4);
 }
+
+/* ─── JSON preview syntax highlighting ──────────────────────────────────────
+   Light: darker saturated tones for contrast on white.
+   Dark:  pastel tones on dark background.
+   ─────────────────────────────────────────────────────────────────────────── */
+.json-key  { color: #0369a1; }   /* sky-700   */
+.json-str  { color: #15803d; }   /* green-700 */
+.json-num  { color: #0e7490; }   /* cyan-700  */
+.json-bool { color: #c2410c; }   /* orange-700 */
+.json-null { color: #b91c1c; }   /* red-700   */
+
+.dark .json-key  { color: #7dd3fc; }  /* sky-300    */
+.dark .json-str  { color: #86efac; }  /* green-300  */
+.dark .json-num  { color: #67e8f9; }  /* cyan-300   */
+.dark .json-bool { color: #fb923c; }  /* orange-400 */
+.dark .json-null { color: #f87171; }  /* red-400    */

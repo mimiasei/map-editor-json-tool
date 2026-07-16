@@ -50,8 +50,11 @@ import {
   Database,
   Loader2,
   MessageSquare,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { useState, useRef } from 'react'
+import { useTheme } from '@/hooks/useTheme'
 
 interface ToolbarProps {
   onSearchOpen?: () => void
@@ -103,6 +106,8 @@ export default function Toolbar({
   const [importErrors,        setImportErrors]        = useState<string[]>([])
   const [importWarnings,      setImportWarnings]      = useState<string[]>([])
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
+
+  const { theme, toggleTheme } = useTheme()
 
   // useGuideStore still needed for templateAnnotations hydration on import
 
@@ -569,6 +574,28 @@ export default function Toolbar({
             </TooltipTrigger>
             <TooltipContent>Toggle JSON preview</TooltipContent>
           </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                aria-pressed={theme === 'dark'}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </header>
 
@@ -580,7 +607,7 @@ export default function Toolbar({
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {validation.errors.length === 0 && validation.warnings.length === 0 && (
-              <div className="flex items-center gap-2 text-sm text-green-400">
+              <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
                 No issues found.
               </div>
@@ -596,8 +623,8 @@ export default function Toolbar({
               </Alert>
             ))}
             {validation.warnings.map((w, i) => (
-              <Alert key={i} className="border-yellow-600/50 bg-yellow-950/30">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <Alert key={i} className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
                 <AlertDescription className="ml-2">
                   <span className="font-medium text-xs opacity-70">{w.path}</span>
                   <br />
@@ -622,7 +649,7 @@ export default function Toolbar({
               </Alert>
             ))}
             {importWarnings.map((w, i) => (
-              <Alert key={i} className="border-yellow-600/50 bg-yellow-950/30">
+              <Alert key={i} className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30">
                 <AlertDescription>{w}</AlertDescription>
               </Alert>
             ))}
