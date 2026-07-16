@@ -29,6 +29,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   FilePlus,
   Upload,
   Download,
@@ -52,6 +59,7 @@ import {
   MessageSquare,
   Sun,
   Moon,
+  ChevronDown,
 } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -377,80 +385,61 @@ export default function Toolbar({
             <TooltipContent>Scenario Statistics</TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => setLocalizationDialogOpen(true)}
-              >
-                <Languages className="h-4 w-4" />
-                Localization
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Edit localization tokens</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5"
-                onClick={handleExportZip}
-              >
-                <Package className="h-4 w-4" />
-                Export ZIP
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Export distributable map ZIP</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5"
-                onClick={onGuidesOpen}
-              >
-                <BookOpen className="h-4 w-4" />
-                Guides
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Open guides panel</TooltipContent>
-          </Tooltip>
-
-          {/* ── Game Data button ── */}
-          <Popover open={catalogPopoverOpen} onOpenChange={setCatalogPopoverOpen}>
+          <DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5"
-                  >
-                    {catalogLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : catalogError ? (
-                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    ) : catalog ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Database className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    Game Data
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5">
+                    More
+                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                   </Button>
-                </PopoverTrigger>
+                </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>
-                {catalogLoading ? 'Loading game data…' : catalogError ? 'Game data error' : catalog ? 'Game data loaded' : 'Game data not loaded'}
-              </TooltipContent>
+              <TooltipContent>Localization, Export ZIP, Guides, Game Data</TooltipContent>
             </Tooltip>
 
-            <PopoverContent className="w-72 p-3 space-y-3" align="end">
+            <DropdownMenuContent align="start" className="w-52">
+              <DropdownMenuItem onClick={() => setLocalizationDialogOpen(true)}>
+                <Languages className="h-4 w-4 mr-2" />
+                Localization
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={handleExportZip}>
+                <Package className="h-4 w-4 mr-2" />
+                Export ZIP
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={onGuidesOpen}>
+                <BookOpen className="h-4 w-4 mr-2" />
+                Guides
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={() => { setCatalogPopoverOpen(true) }}>
+                {catalogLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : catalogError ? (
+                  <AlertTriangle className="h-4 w-4 mr-2 text-yellow-500" />
+                ) : catalog ? (
+                  <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                ) : (
+                  <Database className="h-4 w-4 mr-2 text-muted-foreground" />
+                )}
+                Game Data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* ── Game Data popover (opened from dropdown) ── */}
+          <Popover open={catalogPopoverOpen} onOpenChange={setCatalogPopoverOpen}>
+            <PopoverTrigger asChild>
+              <span className="sr-only" />
+            </PopoverTrigger>
+
+            <PopoverContent className="w-72 p-3 space-y-3" align="start">
               <p className="text-sm font-semibold">Game Data Catalog</p>
 
               {/* Status */}
