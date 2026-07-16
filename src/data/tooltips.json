@@ -302,7 +302,7 @@
     "DeleteEntity": {
       "summary": "Removes a map entity (blocking object, decoration, zone) permanently.",
       "params": {
-        "0": "Entity SID."
+        "0": "Entity SID of the object to remove. Set via the Entity field in the Map Editor's properties panel for the placed object."
       }
     },
     "SpawnObject": {
@@ -311,7 +311,7 @@
         "0": "Object type SID.",
         "1": "Node ID to spawn at.",
         "2": "Flag (usually false).",
-        "3": "Entity SID to assign (optional, used to reference the object later)."
+        "3": "Entity SID to assign to the spawned object (optional). Set this to reference the object later via other actions. Must be unique on the map."
       }
     },
     "SpawnMapObject": {
@@ -325,27 +325,27 @@
     "SetActivePortal": {
       "summary": "Enables or disables a portal.",
       "params": {
-        "0": "Portal entity SID.",
+        "0": "Entity SID of the portal. Set via the Entity field in the Map Editor's properties panel for the placed portal.",
         "1": "true to enable, false to disable."
       }
     },
     "EntityActionsOff": {
       "summary": "Disables all interactions on a map entity (makes it non-clickable).",
       "params": {
-        "0": "Entity SID."
+        "0": "Entity SID of the object to disable. Set via the Entity field in the Map Editor's properties panel."
       }
     },
     "SetQuestMarker": {
       "summary": "Attaches a quest marker VFX to a map entity.",
       "params": {
-        "0": "Entity SID.",
+        "0": "Entity SID of the map object to attach the marker to. Set via the Entity field in the Map Editor's properties panel.",
         "1": "VFX path (e.g. effects/global_map/quest_mark_silver_01)."
       }
     },
     "SetActiveQuestMarker": {
       "summary": "Shows or hides a quest marker already attached to an entity.",
       "params": {
-        "0": "Entity SID.",
+        "0": "Entity SID of the map object the marker is attached to.",
         "1": "true to show, false to hide."
       }
     },
@@ -356,34 +356,34 @@
         "1": "Node ID.",
         "2": "Flag 1 (usually false).",
         "3": "Flag 2 (usually true).",
-        "4": "Entity SID to assign (optional, allows toggling via SetActiveVFX)."
+        "4": "Entity SID to assign to this VFX instance (optional). Allows toggling it later via SetActiveVFX. Must be unique on the map."
       }
     },
     "SetActiveVFX": {
       "summary": "Shows or hides a VFX entity.",
       "params": {
-        "0": "VFX entity SID.",
+        "0": "Entity SID of the VFX to show or hide.",
         "1": "true to show, false to hide."
       }
     },
     "SetActiveMarker": {
       "summary": "Shows or hides a zone or interaction marker.",
       "params": {
-        "0": "Zone/marker entity SID.",
+        "0": "Entity SID of the zone or marker to show or hide. Set via the Entity field in the Map Editor's properties panel.",
         "1": "true to show, false to hide."
       }
     },
     "IncreaseStrengthSquad": {
       "summary": "Upgrades a neutral squad's strength.",
       "params": {
-        "0": "Squad entity SID.",
+        "0": "Entity SID of the neutral squad to upgrade. Set via the Entity field in the Map Editor's properties panel for the placed stack.",
         "1": "Upgrade string in 'tier,level' format (e.g. '0,2' = upgrade by 2 levels)."
       }
     },
     "DeleteSquad": {
       "summary": "Removes a neutral squad from the map.",
       "params": {
-        "0": "Squad entity SID.",
+        "0": "Entity SID of the neutral squad to remove. Set via the Entity field in the Map Editor's properties panel for the placed stack.",
         "1": "Flag (usually 1)."
       }
     },
@@ -464,33 +464,33 @@
     "SquadKill": {
       "summary": "Fires when a specific neutral squad is defeated.",
       "params": {
-        "0": "Squad entity SID — the neutral stack on the map."
+        "0": "Entity SID of the neutral stack — set via the Entity field in the Map Editor's properties panel for the placed stack. This is not the unit type SID."
       },
-      "tip": "The squad SID is set in the map editor when you place the neutral stack, not the unit type SID."
+      "tip": "The entity SID is set in the Map Editor when you place the neutral stack, not the unit type name (e.g. use 'E_Squad_Dragon', not 'Dragon')."
     },
     "ObjectLose": {
       "summary": "Fires when the player loses a specific map object (e.g. a town).",
       "params": {
-        "0": "Map object entity SID."
+        "0": "Entity SID of the map object. Set via the Entity field in the Map Editor's properties panel for the placed object."
       }
     },
     "ObjectInteractionBefore": {
       "summary": "Fires before the player interacts with a map object.",
       "params": {
-        "0": "Map object entity SID."
+        "0": "Entity SID of the map object. Set via the Entity field in the Map Editor's properties panel for the placed object."
       },
       "tip": "Use 'Before' when you want to intercept the interaction and show a dialog before the default event fires."
     },
     "ObjectInteractionAfter": {
       "summary": "Fires after the player interacts with a map object.",
       "params": {
-        "0": "Map object entity SID."
+        "0": "Entity SID of the map object. Set via the Entity field in the Map Editor's properties panel for the placed object."
       }
     },
     "ObjectCaptureEntity": {
       "summary": "Fires when the player captures a map entity (mine, city, etc.).",
       "params": {
-        "0": "Entity SID."
+        "0": "Entity SID of the capturable object. Set via the Entity field in the Map Editor's properties panel for the placed object."
       }
     },
     "NodeRevealed": {
@@ -502,7 +502,7 @@
     "SquadInteraction": {
       "summary": "Fires when the player interacts with (approaches) a neutral squad.",
       "params": {
-        "0": "Squad entity SID."
+        "0": "Entity SID of the neutral stack. Set via the Entity field in the Map Editor's properties panel for the placed stack."
       },
       "tip": "Triggers before combat starts. Useful for dialog-before-battle sequences."
     },
@@ -576,11 +576,26 @@
     }
   },
   "fields": {
+    "quest.sid": "Unique identifier for this quest. Referenced by quest-related actions and conditions.",
     "quest.name": "Localization SID shown as the quest name in the in-game quest log. Must have a matching token in customMaps.json.",
-    "quest.description": "Localization SID shown as the quest description. Must have a matching token in customMaps.json.",
+    "quest.description": "Localization SID shown as the quest description in the quest log. Must have a matching token in customMaps.json.",
+    "quest.sharing": "Controls how the quest is owned. 'Clone' creates a separate copy per player (default). 'Ai' restricts the quest to AI players only. Required by the engine.",
+    "quest.comment": "Developer note attached to this quest. Ignored by the game engine — for map author reference only.",
+    "quest.activeOnStart": "If true, this quest is active when the map loads. If false, it must be activated via an ActivateQuest action.",
+    "quest.main": "Marks this quest as a primary objective. Displayed prominently in the player's quest log.",
+    "quest.hidden": "If true, this quest is never shown in the player's quest log, even when active. Useful for internal bookkeeping quests.",
+    "subquest.sid": "Unique identifier for this subquest stage. Referenced by SubQuestActivate and SubQuestDeactivate actions.",
+    "subquest.name": "Localization SID shown as the subquest name in the quest log. Must have a matching token in customMaps.json.",
+    "subquest.comment": "Developer note attached to this subquest. Ignored by the game engine — for map author reference only.",
+    "subquest.activeOnStart": "If true, this subquest stage is active when the quest starts. If false, activate it manually via SubQuestActivate.",
+    "trigger.conditionsLogic": "'And' requires all conditions to be true before the trigger fires. 'Or' fires as soon as any single condition is true.",
+    "trigger.repeat": "If true, this trigger fires every time its conditions are met, not just the first time. Use carefully — unguarded repeating triggers can fire many times per turn.",
     "trigger.isRepeating": "If true, this trigger fires every time its conditions are met, not just the first time. Use carefully — unguarded repeating triggers can fire many times per turn.",
     "counter.sid": "Unique identifier for this counter. Used in CounterSet, CounterPlus, CounterMinus, and Counter conditions.",
     "counter.value": "Initial value of the counter when the map loads. Usually 0.",
-    "interruption.sid": "Unique identifier for this interruption. Used by EnableInterruption and DisableInterruption actions."
+    "interruption.sid": "Unique identifier for this interruption. Used by EnableInterruption and DisableInterruption actions.",
+    "interruption.interruption": "The combat event this hook listens for. Options: BeforeIamVsHero, AfterIamWinVsHero, BeforeHeroVsHero, AfterHeroWinVsHero.",
+    "interruption.activeOnStart": "If true, this interruption hook is active when the map loads. If false, it must be enabled via an EnableInterruption action.",
+    "interruption.p": "Parameters for this interruption. For all four known interruption types, p[0] is the entity SID of a specific hero placed on the map (set via the Entity field in the Map Editor). Leave empty to match any hero."
   }
 }

@@ -49,6 +49,21 @@ A trigger fires **once** by default. Set `isRepeating: true` to make it fire eve
 
 > **Warning:** Repeating triggers with no conditions (or always-true conditions) fire every game tick. Always guard repeating triggers with at least one counter or state check.
 
+## Entity SIDs — linking triggers to map objects
+
+Many conditions and actions need to reference a **specific object placed on the map** — a neutral stack, a town, a hero, a resource pickup, a portal, etc. This is done via an **entity SID**.
+
+In the Map Editor, every interactive object has an **Entity** field in its properties panel. Setting this field gives that specific placed instance a unique identifier, separate from its type. For example, a Dragon stack placed near the starting town might be given the entity SID `E_Squad_Dragon`. A portal might be `portal_south`.
+
+That entity SID is what you enter into the relevant parameter in this editor. For example:
+
+- `SquadKill` condition — enter the entity SID of the placed neutral stack
+- `ObjectInteractionBefore` / `ObjectInteractionAfter` — enter the entity SID of the map object the player walks onto
+- `DeleteEntity` action — enter the entity SID of the object to remove
+- `SetQuestMarker` action — enter the entity SID of the object to mark
+
+> **Note:** Entity SIDs are not the same as type SIDs. `E_Squad_Dragon` is the *placed instance* of a stack; `Dragon` is the unit type. Always use the entity SID (from the Map Editor's Entity field) when a condition or action asks for an object reference.
+
 ## Conditions
 
 Conditions are combined with AND or OR logic (set per trigger). If no conditions are present, the trigger fires immediately when the subquest is active.
