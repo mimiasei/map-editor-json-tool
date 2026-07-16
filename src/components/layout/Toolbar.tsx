@@ -582,6 +582,8 @@ export default function Toolbar({
                 size="icon"
                 className="h-8 w-8"
                 onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                aria-pressed={theme === 'dark'}
               >
                 {theme === 'dark' ? (
                   <Sun className="h-4 w-4" />

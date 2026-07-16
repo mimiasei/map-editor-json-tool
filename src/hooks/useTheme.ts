@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 
 export type Theme = 'light' | 'dark'
 
@@ -16,6 +16,7 @@ function getStoredTheme(): Theme {
 }
 
 function applyTheme(theme: Theme) {
+  if (typeof document === 'undefined') return
   const root = document.documentElement
   if (theme === 'dark') {
     root.classList.add('dark')
@@ -25,18 +26,16 @@ function applyTheme(theme: Theme) {
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const t = getStoredTheme()
-    applyTheme(t)
-    return t
-  })
+  const [theme, setThemeState] = useState<Theme>(getStoredTheme)
 
-  useEffect(() => {
+  // useLayoutEffect applies the class before paint, preventing a flash of the
+  // wrong theme. It also persists the preference to localStorage.
+  useLayoutEffect(() => {
     applyTheme(theme)
     try {
       localStorage.setItem(STORAGE_KEY, theme)
     } catch {
-      // ignore
+      // ignore — localStorage unavailable
     }
   }, [theme])
 
