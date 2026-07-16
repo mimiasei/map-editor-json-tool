@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Scenario Script Editor",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "identifier": "com.oe.map-editor",
   "build": {
     "frontendDist": "../dist",
@@ -29,7 +29,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "externalBin": ["sidecar/extract_thumbnails"],
+    "externalBin": [
+      "sidecar/extract_thumbnails"
+    ],
     "macOS": {
       "signingIdentity": "-"
     },
