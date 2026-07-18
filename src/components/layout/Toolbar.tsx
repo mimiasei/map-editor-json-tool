@@ -234,7 +234,7 @@ export default function Toolbar({
 
   return (
     <>
-      <header className="flex h-12 items-center gap-2 border-b border-border bg-card px-3">
+      <header className="flex h-10 items-center gap-2 border-b border-border bg-card px-2">
         {/* Left: app title */}
         <span className="mr-3 text-sm font-semibold text-primary tracking-wide">
           OE Scenario Editor
