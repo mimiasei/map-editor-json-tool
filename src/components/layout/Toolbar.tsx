@@ -23,11 +23,7 @@ import {
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,7 +120,7 @@ export default function Toolbar({
 
   // ── Catalog ──────────────────────────────────────────────────────────────────
   const { catalog, loading: catalogLoading, error: catalogError, load: loadCatalog, loadFromFile: loadCatalogFromFile, loadFromPath: loadCatalogFromPath, clear: clearCatalog } = useCatalogStore()
-  const [catalogPopoverOpen, setCatalogPopoverOpen] = useState(false)
+  const [catalogDialogOpen, setCatalogDialogOpen] = useState(false)
   const catalogFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleCatalogFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -423,7 +419,7 @@ export default function Toolbar({
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={() => { setCatalogPopoverOpen(true) }}>
+              <DropdownMenuItem onClick={() => { setCatalogDialogOpen(true) }}>
                 {catalogLoading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : catalogError ? (
@@ -448,71 +444,7 @@ export default function Toolbar({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* ── Game Data popover (opened from dropdown) ── */}
-          <Popover open={catalogPopoverOpen} onOpenChange={setCatalogPopoverOpen}>
-            <PopoverTrigger asChild>
-              <span className="sr-only" />
-            </PopoverTrigger>
-
-            <PopoverContent className="w-72 p-3 space-y-3" align="start">
-              <p className="text-sm font-semibold">Game Data Catalog</p>
-
-              {/* Status */}
-              {catalogLoading && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Building catalog from Core.zip…
-                </div>
-              )}
-              {catalogError && !catalogLoading && (
-                <Alert variant="destructive" className="py-2">
-                  <AlertDescription className="text-xs">{catalogError}</AlertDescription>
-                </Alert>
-              )}
-              {catalog && !catalogLoading && (
-                <div className="text-xs space-y-1 text-muted-foreground">
-                  <p className="text-foreground font-medium">Loaded ✓</p>
-                  <p>Source: {catalog.sourceHint}</p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
-                    <span>{catalog.heroes.length} heroes</span>
-                    <span>{catalog.creatures.length} creatures</span>
-                    <span>{catalog.artifacts.length} artifacts</span>
-                    <span>{catalog.spells.length} spells</span>
-                    <span>{catalog.skills.length} skills</span>
-                    <span>{catalog.buffs.length} buffs</span>
-                    <span>{catalog.mapObjects.length} map objects</span>
-                    <span>{catalog.dialogs.length} dialogs</span>
-                  </div>
-                </div>
-              )}
-              {!catalog && !catalogLoading && !catalogError && (
-                <p className="text-xs text-muted-foreground">
-                  Game data not loaded. Dropdowns show SIDs only.
-                </p>
-              )}
-
-              {/* Actions */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => { loadCatalog(); setCatalogPopoverOpen(false) }} disabled={catalogLoading}>
-                  {catalog ? 'Rebuild' : 'Auto-detect'}
-                </Button>
-                <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleCatalogPickFile} disabled={catalogLoading}>
-                  Load Core.zip…
-                </Button>
-                {catalog && (
-                  <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => clearCatalog()} disabled={catalogLoading}>
-                    Clear
-                  </Button>
-                )}
-                {onDialogBrowserOpen && catalog && (
-                  <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => { onDialogBrowserOpen(); setCatalogPopoverOpen(false) }}>
-                    <MessageSquare className="h-3 w-3" />
-                    Browse Dialogs
-                  </Button>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+          {/* ── Game Data dialog (opened from More dropdown) ── */}
 
           {/* Hidden file input for web Core.zip selection */}
           <input
@@ -671,6 +603,71 @@ export default function Toolbar({
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="ml-2">{zipError}</AlertDescription>
           </Alert>
+        </DialogContent>
+      </Dialog>
+
+      {/* Game Data dialog */}
+      <Dialog open={catalogDialogOpen} onOpenChange={setCatalogDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Game Data Catalog</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {/* Status */}
+            {catalogLoading && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Building catalog from Core.zip…
+              </div>
+            )}
+            {catalogError && !catalogLoading && (
+              <Alert variant="destructive" className="py-2">
+                <AlertDescription className="text-xs">{catalogError}</AlertDescription>
+              </Alert>
+            )}
+            {catalog && !catalogLoading && (
+              <div className="text-xs space-y-1 text-muted-foreground">
+                <p className="text-foreground font-medium">Loaded ✓</p>
+                <p>Source: {catalog.sourceHint}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                  <span>{catalog.heroes.length} heroes</span>
+                  <span>{catalog.creatures.length} creatures</span>
+                  <span>{catalog.artifacts.length} artifacts</span>
+                  <span>{catalog.spells.length} spells</span>
+                  <span>{catalog.skills.length} skills</span>
+                  <span>{catalog.buffs.length} buffs</span>
+                  <span>{catalog.mapObjects.length} map objects</span>
+                  <span>{catalog.dialogs.length} dialogs</span>
+                </div>
+              </div>
+            )}
+            {!catalog && !catalogLoading && !catalogError && (
+              <p className="text-xs text-muted-foreground">
+                Game data not loaded. Dropdowns show SIDs only.
+              </p>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => { loadCatalog(); setCatalogDialogOpen(false) }} disabled={catalogLoading}>
+                {catalog ? 'Rebuild' : 'Auto-detect'}
+              </Button>
+              <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={handleCatalogPickFile} disabled={catalogLoading}>
+                Load Core.zip…
+              </Button>
+              {catalog && (
+                <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => clearCatalog()} disabled={catalogLoading}>
+                  Clear
+                </Button>
+              )}
+              {onDialogBrowserOpen && catalog && (
+                <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => { onDialogBrowserOpen(); setCatalogDialogOpen(false) }}>
+                  <MessageSquare className="h-3 w-3" />
+                  Browse Dialogs
+                </Button>
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
