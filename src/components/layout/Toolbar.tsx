@@ -608,7 +608,7 @@ export default function Toolbar({
 
       {/* Game Data dialog */}
       <Dialog open={catalogDialogOpen} onOpenChange={setCatalogDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" onCloseAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Game Data Catalog</DialogTitle>
           </DialogHeader>

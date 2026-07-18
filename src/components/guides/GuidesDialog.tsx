@@ -24,6 +24,7 @@ export default function GuidesDialog({ open, onOpenChange, onUndock, undocked }:
         defaultHeight={600}
         minWidth={500}
         minHeight={400}
+        onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DialogTitle className="sr-only">Guides</DialogTitle>
 

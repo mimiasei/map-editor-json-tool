@@ -167,7 +167,7 @@ export default function LocalizationDialog() {
 
   return (
     <Dialog open={localizationDialogOpen} onOpenChange={setLocalizationDialogOpen}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0" onCloseAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader className="px-6 pt-6 pb-3 border-b border-border">
           <div className="flex items-center justify-between gap-3">
             <DialogTitle>Localization — English</DialogTitle>
