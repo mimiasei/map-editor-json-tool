@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 20% 12%;
 
-    --primary: 35 90% 48%;
+    --primary: 160 50% 32%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 90%;
@@ -23,17 +23,17 @@
     --muted: 220 14% 92%;
     --muted-foreground: 215 16% 42%;
 
-    --accent: 220 14% 88%;
-    --accent-foreground: 222 20% 12%;
+    --accent: 160 20% 92%;
+    --accent-foreground: 160 40% 20%;
 
     --destructive: 0 63% 50%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 14% 82%;
     --input: 220 14% 92%;
-    --ring: 35 90% 48%;
+    --ring: 160 50% 32%;
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;
 
     --scrollbar-track: 220 14% 90%;
     --scrollbar-thumb: 215 16% 65%;
@@ -50,8 +50,8 @@
     --popover: 222 20% 13%;
     --popover-foreground: 213 31% 91%;
 
-    --primary: 35 90% 55%;
-    --primary-foreground: 222 20% 10%;
+    --primary: 160 45% 40%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 222 20% 18%;
     --secondary-foreground: 213 31% 91%;
@@ -59,17 +59,17 @@
     --muted: 222 20% 18%;
     --muted-foreground: 215 20% 55%;
 
-    --accent: 222 20% 20%;
-    --accent-foreground: 213 31% 91%;
+    --accent: 160 25% 16%;
+    --accent-foreground: 160 30% 85%;
 
     --destructive: 0 63% 50%;
     --destructive-foreground: 213 31% 91%;
 
     --border: 222 20% 22%;
     --input: 222 20% 18%;
-    --ring: 35 90% 55%;
+    --ring: 160 45% 40%;
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;
 
     --scrollbar-track: 222 20% 8%;
     --scrollbar-thumb: 215 20% 35%;
@@ -80,9 +80,15 @@
   * {
     @apply border-border;
   }
+  html {
+    font-size: 13px;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.97);
   }
 }
 

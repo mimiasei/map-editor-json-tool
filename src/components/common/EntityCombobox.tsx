@@ -135,7 +135,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
               onFocus={() => setOpen(true)}
               onBlur={() => setTimeout(() => setOpen(false), 150)}
               placeholder={placeholder}
-              className={category === 'mapObject' ? 'pr-14' : 'pr-7'}
+              className={`h-7 text-xs ${category === 'mapObject' ? 'pr-14' : 'pr-7'}`}
             />
           </PopoverAnchor>
 
@@ -181,7 +181,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
                       onChange(entry.id)
                       setOpen(false)
                     }}
-                    className="flex justify-between gap-2 text-sm"
+                    className="flex justify-between gap-2 text-xs py-1"
                   >
                     <span className="flex items-center gap-1.5 min-w-0">
                       {entry.icon && (
