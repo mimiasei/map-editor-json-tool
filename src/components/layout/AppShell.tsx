@@ -399,7 +399,7 @@ export default function AppShell() {
   void setSelection
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[rgb(204_234_149)]">
       <Toolbar
         onSearchOpen={() => setPaletteOpen(true)}
         onTimelineOpen={() => setTimelineOpen(true)}
@@ -482,7 +482,7 @@ export default function AppShell() {
         orientation="horizontal"
         defaultLayout={defaultLayout}
         onLayoutChanged={onLayoutChanged}
-        className="flex-1 overflow-hidden"
+        className="flex-1 overflow-hidden p-3"
       >
         {/* ── Sidebar ── */}
         <Panel
@@ -496,12 +496,12 @@ export default function AppShell() {
             if (size.inPixels > 0) setSidebarWidth(Math.round(size.inPixels))
           }}
         >
-          <aside className="flex h-full flex-col overflow-hidden border-r border-border">
+          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#e4ffca]">
             <ScenarioTree />
           </aside>
         </Panel>
 
-        <Separator className="w-1 cursor-col-resize bg-border transition-colors hover:bg-primary/40 focus-visible:outline-none" />
+        <Separator className="w-3 cursor-col-resize rounded-lg bg-transparent hover:bg-black/20 transition-colors duration-150 border-0 focus-visible:outline-none" />
 
         {/* ── Editor ── */}
         <Panel
@@ -511,12 +511,12 @@ export default function AppShell() {
           minSize="20%"
           collapsible
         >
-          <main className="flex h-full flex-col overflow-hidden border-r border-border">
+          <main className="flex h-full flex-col overflow-hidden rounded-lg bg-[#f6f6b7]">
             <EditorPanel />
           </main>
         </Panel>
 
-        <Separator className="w-1 cursor-col-resize bg-border transition-colors hover:bg-primary/40 focus-visible:outline-none" />
+        <Separator className="w-3 cursor-col-resize rounded-lg bg-transparent hover:bg-black/20 transition-colors duration-150 border-0 focus-visible:outline-none" />
 
         {/* ── Preview ── */}
         <Panel
@@ -526,7 +526,7 @@ export default function AppShell() {
           minSize="15%"
           collapsible
         >
-          <aside className="flex h-full flex-col overflow-hidden">
+          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#ffe8ca]">
             {isUndocked('preview') ? (
               <UndockedPlaceholder label="JSON Preview" />
             ) : (
