@@ -22,7 +22,7 @@ Use descriptive SIDs — you'll reference them by name throughout your trigger l
 
 ## Manipulating counters
 
-Three actions change counter values:
+Four actions change counter values:
 
 - `CounterSet` — sets to a specific value
 - `CounterPlus` — increments by amount

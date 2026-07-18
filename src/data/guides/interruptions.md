@@ -18,7 +18,7 @@ An interruption has:
 ## Interruption types
 
 | Type | Fires when |
-|------|-----------|
+|----------------------|---------------------------------------------------------------|
 | `BeforeIamVsHero` | Before battle — player's hero is about to fight an enemy hero |
 | `AfterIamWinVsHero` | After the player's hero wins against an enemy hero |
 | `BeforeHeroVsHero` | Before any hero-vs-hero battle (regardless of who the player is) |
