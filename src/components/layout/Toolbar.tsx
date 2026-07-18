@@ -398,7 +398,7 @@ export default function Toolbar({
             </Tooltip>
 
             <DropdownMenuContent align="start" className="w-52">
-              <DropdownMenuItem onClick={() => setLocalizationDialogOpen(true)}>
+              <DropdownMenuItem onClick={() => setTimeout(() => setLocalizationDialogOpen(true), 0)}>
                 <Languages className="h-4 w-4 mr-2" />
                 Localization
               </DropdownMenuItem>
@@ -412,14 +412,14 @@ export default function Toolbar({
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={onGuidesOpen}>
+              <DropdownMenuItem onClick={() => setTimeout(() => onGuidesOpen?.(), 0)}>
                 <BookOpen className="h-4 w-4 mr-2" />
                 Guides
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={() => { setCatalogDialogOpen(true) }}>
+              <DropdownMenuItem onClick={() => setTimeout(() => setCatalogDialogOpen(true), 0)}>
                 {catalogLoading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : catalogError ? (
@@ -435,7 +435,7 @@ export default function Toolbar({
               {isTauri() && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setThumbnailDialogOpen(true)}>
+                  <DropdownMenuItem onClick={() => setTimeout(() => setThumbnailDialogOpen(true), 0)}>
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Extract Thumbnails…
                   </DropdownMenuItem>
