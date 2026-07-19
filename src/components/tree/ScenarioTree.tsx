@@ -395,7 +395,7 @@ export default function ScenarioTree() {
                                 />
                               ))}
                               <div
-                                className="flex items-center gap-1 py-0.5 text-xs text-muted-foreground hover:text-primary cursor-pointer"
+                                className="flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground cursor-pointer transition-all duration-150 hover:text-primary hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
                                 style={{ paddingLeft: '64px' }}
                                 onClick={() => addTrigger(qi, sqi)}
                               >
@@ -411,7 +411,7 @@ export default function ScenarioTree() {
                   {/* Add SubQuest */}
                   {questOpen && (
                     <div
-                      className="flex items-center gap-1 py-0.5 text-xs text-muted-foreground hover:text-primary cursor-pointer"
+                      className="flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground cursor-pointer transition-all duration-150 hover:text-primary hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
                       style={{ paddingLeft: '50px' }}
                       onClick={() => addSubQuest(qi)}
                     >
