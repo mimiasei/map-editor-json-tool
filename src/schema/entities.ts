@@ -2,9 +2,14 @@
 // Static lists of heroes, creatures, artifacts, and interactive map objects
 // sourced from Core.zip (HeroesOldenEra_Data/StreamingAssets/Core.zip).
 //
-// IDs are written to JSON as-is. Labels are derived by converting snake_case
-// to Title Case for display in the UI. Free-text entry is always available as
-// a fallback for unknown / future IDs.
+// IDs are written to JSON as-is. Labels are enriched with real names and
+// faction/category from the bundled JSON data files (heroes.json, units.json,
+// map-objects.json). Free-text entry is always available as a fallback for
+// unknown / future IDs.
+
+import heroesData from '@/data/heroes.json'
+import unitsData from '@/data/units.json'
+import mapObjectsData from '@/data/map-objects.json'
 
 export interface EntityEntry {
   id: string
@@ -21,7 +26,45 @@ export function toTitleCase(id: string): string {
     .join(' ')
 }
 
+// ─── Lookup maps from bundled data ───────────────────────────────────────────
+
+type HeroEntry = { sid: string; name: string; faction: string }
+type UnitEntry = { sid: string; name: string; faction: string }
+type MapObjectEntry = { sid: string; name: string | null; category: string | null }
+
+const HERO_LOOKUP = new Map<string, HeroEntry>(
+  (heroesData as HeroEntry[]).map((h) => [h.sid, h]),
+)
+
+const UNIT_LOOKUP = new Map<string, UnitEntry>(
+  (unitsData as UnitEntry[]).map((u) => [u.sid, u]),
+)
+
+const MAP_OBJECT_LOOKUP = new Map<string, MapObjectEntry>(
+  (mapObjectsData as MapObjectEntry[]).map((o) => [o.sid, o]),
+)
+
+// ─── Entry builder helpers ────────────────────────────────────────────────────
+
 function e(id: string): EntityEntry {
+  return { id, label: toTitleCase(id) }
+}
+
+function hero(id: string): EntityEntry {
+  const data = HERO_LOOKUP.get(id)
+  if (data) return { id, label: `${data.name} (${data.faction})` }
+  return { id, label: toTitleCase(id) }
+}
+
+function unit(id: string): EntityEntry {
+  const data = UNIT_LOOKUP.get(id)
+  if (data) return { id, label: `${data.name} (${data.faction})` }
+  return { id, label: toTitleCase(id) }
+}
+
+function mapObj(id: string): EntityEntry {
+  const data = MAP_OBJECT_LOOKUP.get(id)
+  if (data?.name) return { id, label: data.category ? `${data.name} (${data.category})` : data.name }
   return { id, label: toTitleCase(id) }
 }
 
@@ -31,42 +74,42 @@ function e(id: string): EntityEntry {
 // tutorial heroes are included (prefixed campaign_ / tutorial_).
 
 export const HEROES: EntityEntry[] = [
-  // Demons
-  e('demon_hero_1'), e('demon_hero_2'), e('demon_hero_3'), e('demon_hero_4'),
-  e('demon_hero_5'), e('demon_hero_6'), e('demon_hero_7'), e('demon_hero_8'),
-  e('demon_hero_9'), e('demon_hero_10'), e('demon_hero_11'), e('demon_hero_12'),
-  e('demon_hero_13'), e('demon_hero_14'), e('demon_hero_15'), e('demon_hero_16'),
-  e('demon_hero_17'), e('demon_hero_18'),
+  // Demons (Hive)
+  hero('demon_hero_1'), hero('demon_hero_2'), hero('demon_hero_3'), hero('demon_hero_4'),
+  hero('demon_hero_5'), hero('demon_hero_6'), hero('demon_hero_7'), hero('demon_hero_8'),
+  hero('demon_hero_9'), hero('demon_hero_10'), hero('demon_hero_11'), hero('demon_hero_12'),
+  hero('demon_hero_13'), hero('demon_hero_14'), hero('demon_hero_15'), hero('demon_hero_16'),
+  hero('demon_hero_17'), hero('demon_hero_18'),
   // Humans (Temple)
-  e('human_hero_1'), e('human_hero_2'), e('human_hero_3'), e('human_hero_4'),
-  e('human_hero_5'), e('human_hero_6'), e('human_hero_7'), e('human_hero_8'),
-  e('human_hero_9'), e('human_hero_10'), e('human_hero_11'), e('human_hero_12'),
-  e('human_hero_13'), e('human_hero_14'), e('human_hero_15'), e('human_hero_16'),
-  e('human_hero_17'), e('human_hero_18'),
+  hero('human_hero_1'), hero('human_hero_2'), hero('human_hero_3'), hero('human_hero_4'),
+  hero('human_hero_5'), hero('human_hero_6'), hero('human_hero_7'), hero('human_hero_8'),
+  hero('human_hero_9'), hero('human_hero_10'), hero('human_hero_11'), hero('human_hero_12'),
+  hero('human_hero_13'), hero('human_hero_14'), hero('human_hero_15'), hero('human_hero_16'),
+  hero('human_hero_17'), hero('human_hero_18'),
   // Dungeon
-  e('dungeon_hero_1'), e('dungeon_hero_2'), e('dungeon_hero_3'), e('dungeon_hero_4'),
-  e('dungeon_hero_5'), e('dungeon_hero_6'), e('dungeon_hero_7'), e('dungeon_hero_8'),
-  e('dungeon_hero_9'), e('dungeon_hero_10'), e('dungeon_hero_11'), e('dungeon_hero_12'),
-  e('dungeon_hero_13'), e('dungeon_hero_14'), e('dungeon_hero_15'), e('dungeon_hero_16'),
-  e('dungeon_hero_17'), e('dungeon_hero_18'),
-  // Nature (Sylvan)
-  e('nature_hero_1'), e('nature_hero_2'), e('nature_hero_3'), e('nature_hero_4'),
-  e('nature_hero_5'), e('nature_hero_6'), e('nature_hero_7'), e('nature_hero_8'),
-  e('nature_hero_9'), e('nature_hero_10'), e('nature_hero_11'), e('nature_hero_12'),
-  e('nature_hero_13'), e('nature_hero_14'), e('nature_hero_15'), e('nature_hero_16'),
-  e('nature_hero_17'), e('nature_hero_18'),
-  // Necros (Undead)
-  e('necro_hero_1'), e('necro_hero_2'), e('necro_hero_3'), e('necro_hero_4'),
-  e('necro_hero_5'), e('necro_hero_6'), e('necro_hero_7'), e('necro_hero_8'),
-  e('necro_hero_9'), e('necro_hero_10'), e('necro_hero_11'), e('necro_hero_12'),
-  e('necro_hero_13'), e('necro_hero_14'), e('necro_hero_15'), e('necro_hero_16'),
-  e('necro_hero_17'), e('necro_hero_18'),
-  // Unfrozen
-  e('unfrozen_hero_1'), e('unfrozen_hero_2'), e('unfrozen_hero_3'), e('unfrozen_hero_4'),
-  e('unfrozen_hero_5'), e('unfrozen_hero_6'), e('unfrozen_hero_7'), e('unfrozen_hero_8'),
-  e('unfrozen_hero_9'), e('unfrozen_hero_10'), e('unfrozen_hero_11'), e('unfrozen_hero_12'),
-  e('unfrozen_hero_13'), e('unfrozen_hero_14'), e('unfrozen_hero_15'), e('unfrozen_hero_16'),
-  e('unfrozen_hero_17'), e('unfrozen_hero_18'),
+  hero('dungeon_hero_1'), hero('dungeon_hero_2'), hero('dungeon_hero_3'), hero('dungeon_hero_4'),
+  hero('dungeon_hero_5'), hero('dungeon_hero_6'), hero('dungeon_hero_7'), hero('dungeon_hero_8'),
+  hero('dungeon_hero_9'), hero('dungeon_hero_10'), hero('dungeon_hero_11'), hero('dungeon_hero_12'),
+  hero('dungeon_hero_13'), hero('dungeon_hero_14'), hero('dungeon_hero_15'), hero('dungeon_hero_16'),
+  hero('dungeon_hero_17'), hero('dungeon_hero_18'),
+  // Nature (Grove)
+  hero('nature_hero_1'), hero('nature_hero_2'), hero('nature_hero_3'), hero('nature_hero_4'),
+  hero('nature_hero_5'), hero('nature_hero_6'), hero('nature_hero_7'), hero('nature_hero_8'),
+  hero('nature_hero_9'), hero('nature_hero_10'), hero('nature_hero_11'), hero('nature_hero_12'),
+  hero('nature_hero_13'), hero('nature_hero_14'), hero('nature_hero_15'), hero('nature_hero_16'),
+  hero('nature_hero_17'), hero('nature_hero_18'),
+  // Necros (Necropolis)
+  hero('necro_hero_1'), hero('necro_hero_2'), hero('necro_hero_3'), hero('necro_hero_4'),
+  hero('necro_hero_5'), hero('necro_hero_6'), hero('necro_hero_7'), hero('necro_hero_8'),
+  hero('necro_hero_9'), hero('necro_hero_10'), hero('necro_hero_11'), hero('necro_hero_12'),
+  hero('necro_hero_13'), hero('necro_hero_14'), hero('necro_hero_15'), hero('necro_hero_16'),
+  hero('necro_hero_17'), hero('necro_hero_18'),
+  // Unfrozen (Schism)
+  hero('unfrozen_hero_1'), hero('unfrozen_hero_2'), hero('unfrozen_hero_3'), hero('unfrozen_hero_4'),
+  hero('unfrozen_hero_5'), hero('unfrozen_hero_6'), hero('unfrozen_hero_7'), hero('unfrozen_hero_8'),
+  hero('unfrozen_hero_9'), hero('unfrozen_hero_10'), hero('unfrozen_hero_11'), hero('unfrozen_hero_12'),
+  hero('unfrozen_hero_13'), hero('unfrozen_hero_14'), hero('unfrozen_hero_15'), hero('unfrozen_hero_16'),
+  hero('unfrozen_hero_17'), hero('unfrozen_hero_18'),
   // Campaign heroes
   e('campaign_hero_1'), e('campaign_hero_2'), e('campaign_hero_3'),
   e('campaign_hero_4'), e('campaign_hero_5'),
@@ -99,76 +142,76 @@ export const HEROES: EntityEntry[] = [
 // Base, upgraded (_upg), and alternate upgrade (_upg_alt) variants included.
 
 export const CREATURES: EntityEntry[] = [
-  // Demons
-  e('godslayer'), e('godslayer_upg'), e('godslayer_upg_alt'),
-  e('hive_queen'), e('hive_queen_upg'), e('hive_queen_upg_alt'),
-  e('jaw'), e('jaw_upg'), e('jaw_upg_alt'),
-  e('lava_larva'),
-  e('locust'), e('locust_upg'), e('locust_upg_alt'),
-  e('olgoi'), e('olgoi_upg'), e('olgoi_upg_alt'),
-  e('trick_demon'), e('trick_demon_upg'), e('trick_demon_upg_alt'),
-  e('wasp'), e('wasp_upg'), e('wasp_upg_alt'),
+  // Demons (Hive)
+  unit('godslayer'), unit('godslayer_upg'), unit('godslayer_upg_alt'),
+  unit('hive_queen'), unit('hive_queen_upg'), unit('hive_queen_upg_alt'),
+  unit('jaw'), unit('jaw_upg'), unit('jaw_upg_alt'),
+  unit('lava_larva'),
+  unit('locust'), unit('locust_upg'), unit('locust_upg_alt'),
+  unit('olgoi'), unit('olgoi_upg'), unit('olgoi_upg_alt'),
+  unit('trick_demon'), unit('trick_demon_upg'), unit('trick_demon_upg_alt'),
+  unit('wasp'), unit('wasp_upg'), unit('wasp_upg_alt'),
   // Dungeon
-  e('assassin'), e('assassin_upg'), e('assassin_upg_alt'),
-  e('black_dragon'), e('black_dragon_upg'), e('black_dragon_upg_alt'),
-  e('blade_dancer'), e('blade_dancer_upg'), e('blade_dancer_upg_alt'),
-  e('hydra'), e('hydra_upg'), e('hydra_upg_alt'),
-  e('medusa'), e('medusa_upg'), e('medusa_upg_alt'),
-  e('minos'), e('minos_upg'), e('minos_upg_alt'),
-  e('trogl'), e('trogl_upg'), e('trogl_upg_alt'),
+  unit('assassin'), unit('assassin_upg'), unit('assassin_upg_alt'),
+  unit('black_dragon'), unit('black_dragon_upg'), unit('black_dragon_upg_alt'),
+  unit('blade_dancer'), unit('blade_dancer_upg'), unit('blade_dancer_upg_alt'),
+  unit('hydra'), unit('hydra_upg'), unit('hydra_upg_alt'),
+  unit('medusa'), unit('medusa_upg'), unit('medusa_upg_alt'),
+  unit('minos'), unit('minos_upg'), unit('minos_upg_alt'),
+  unit('trogl'), unit('trogl_upg'), unit('trogl_upg_alt'),
   // Humans (Temple)
-  e('angel'), e('angel_upg'), e('angel_upg_alt'),
-  e('crossbowman'), e('crossbowman_upg'), e('crossbowman_upg_alt'),
-  e('esquire'), e('esquire_upg'), e('esquire_upg_alt'),
-  e('griffin'), e('griffin_upg'), e('griffin_upg_alt'),
-  e('inquisitor'), e('inquisitor_upg'), e('inquisitor_upg_alt'),
-  e('lightweaver'), e('lightweaver_upg'), e('lightweaver_upg_alt'),
-  e('sunlight_cavalry'), e('sunlight_cavalry_upg'), e('sunlight_cavalry_upg_alt'),
-  // Nature (Sylvan)
-  e('aqualotl'), e('aqualotl_upg'), e('aqualotl_upg_alt'),
-  e('druid'), e('druid_upg'), e('druid_upg_alt'),
-  e('elf_tracker'), e('elf_tracker_upg'), e('elf_tracker_upg_alt'),
-  e('ent'), e('ent_upg'), e('ent_upg_alt'),
-  e('phoenix'), e('phoenix_upg'), e('phoenix_upg_alt'),
-  e('qilin'), e('qilin_upg'), e('qilin_upg_alt'),
-  e('twinkle'), e('twinkle_upg'), e('twinkle_upg_alt'),
-  // Undead (Necros)
-  e('avatar_of_war'), e('avatar_of_war_upg'), e('avatar_of_war_upg_alt'),
-  e('flicker'), e('flicker_upg'), e('flicker_upg_alt'),
-  e('graverobber'), e('graverobber_upg'), e('graverobber_upg_alt'),
-  e('lich'), e('lich_upg'), e('lich_upg_alt'),
-  e('pet'), e('pet_upg'), e('pet_upg_alt'),
-  e('skeleton'), e('skeleton_upg'), e('skeleton_upg_alt'),
-  e('vampire'), e('vampire_upg'), e('vampire_upg_alt'),
-  // Unfrozen
-  e('arbitrator'), e('arbitrator_upg'), e('arbitrator_upg_alt'),
-  e('eldritch_flyer'), e('eldritch_flyer_upg'), e('eldritch_flyer_upg_alt'),
-  e('frostworm_rider'), e('frostworm_rider_upg'), e('frostworm_rider_upg_alt'),
-  e('lesser_eldritch'), e('lesser_eldritch_upg'), e('lesser_eldritch_upg_alt'),
-  e('succubus'), e('succubus_upg'), e('succubus_upg_alt'),
-  e('unfrozen_cultist'), e('unfrozen_cultist_upg'), e('unfrozen_cultist_upg_alt'),
-  e('unspeakable'), e('unspeakable_upg'), e('unspeakable_upg_alt'),
+  unit('angel'), unit('angel_upg'), unit('angel_upg_alt'),
+  unit('crossbowman'), unit('crossbowman_upg'), unit('crossbowman_upg_alt'),
+  unit('esquire'), unit('esquire_upg'), unit('esquire_upg_alt'),
+  unit('griffin'), unit('griffin_upg'), unit('griffin_upg_alt'),
+  unit('inquisitor'), unit('inquisitor_upg'), unit('inquisitor_upg_alt'),
+  unit('lightweaver'), unit('lightweaver_upg'), unit('lightweaver_upg_alt'),
+  unit('sunlight_cavalry'), unit('sunlight_cavalry_upg'), unit('sunlight_cavalry_upg_alt'),
+  // Nature (Grove)
+  unit('aqualotl'), unit('aqualotl_upg'), unit('aqualotl_upg_alt'),
+  unit('druid'), unit('druid_upg'), unit('druid_upg_alt'),
+  unit('elf_tracker'), unit('elf_tracker_upg'), unit('elf_tracker_upg_alt'),
+  unit('ent'), unit('ent_upg'), unit('ent_upg_alt'),
+  unit('phoenix'), unit('phoenix_upg'), unit('phoenix_upg_alt'),
+  unit('qilin'), unit('qilin_upg'), unit('qilin_upg_alt'),
+  unit('twinkle'), unit('twinkle_upg'), unit('twinkle_upg_alt'),
+  // Undead (Necropolis)
+  unit('avatar_of_war'), unit('avatar_of_war_upg'), unit('avatar_of_war_upg_alt'),
+  unit('flicker'), unit('flicker_upg'), unit('flicker_upg_alt'),
+  unit('graverobber'), unit('graverobber_upg'), unit('graverobber_upg_alt'),
+  unit('lich'), unit('lich_upg'), unit('lich_upg_alt'),
+  unit('pet'), unit('pet_upg'), unit('pet_upg_alt'),
+  unit('skeleton'), unit('skeleton_upg'), unit('skeleton_upg_alt'),
+  unit('vampire'), unit('vampire_upg'), unit('vampire_upg_alt'),
+  // Unfrozen (Schism)
+  unit('arbitrator'), unit('arbitrator_upg'), unit('arbitrator_upg_alt'),
+  unit('eldritch_flyer'), unit('eldritch_flyer_upg'), unit('eldritch_flyer_upg_alt'),
+  unit('frostworm_rider'), unit('frostworm_rider_upg'), unit('frostworm_rider_upg_alt'),
+  unit('lesser_eldritch'), unit('lesser_eldritch_upg'), unit('lesser_eldritch_upg_alt'),
+  unit('succubus'), unit('succubus_upg'), unit('succubus_upg_alt'),
+  unit('unfrozen_cultist'), unit('unfrozen_cultist_upg'), unit('unfrozen_cultist_upg_alt'),
+  unit('unspeakable'), unit('unspeakable_upg'), unit('unspeakable_upg_alt'),
   // Neutral / Special
-  e('dragon'), e('dragon_upg'), e('dragon_upg_alt'),
-  e('animated_armor'),
-  e('avatar'), e('avatar_nature'), e('avatar_unfrozen'),
-  e('coatl'),
-  e('dragon_hunter'),
-  e('fairy_dragon'),
-  e('giant_frog'),
-  e('gnat'),
-  e('gorilla'),
-  e('halfling'),
-  e('kitten_horn'),
-  e('lich_dragon'),
-  e('mech_guard'),
-  e('peasant'), e('peasant_normal'),
-  e('pixie'),
-  e('primal_remnant'),
-  e('sentinel'),
-  e('star_child'),
-  e('undead_peasant'),
-  e('unicorn'),
+  unit('dragon'), unit('dragon_upg'), unit('dragon_upg_alt'),
+  unit('animated_armor'),
+  unit('avatar'), unit('avatar_nature'), unit('avatar_unfrozen'),
+  unit('coatl'),
+  unit('dragon_hunter'),
+  unit('fairy_dragon'),
+  unit('giant_frog'),
+  unit('gnat'),
+  unit('gorilla'),
+  unit('halfling'),
+  unit('kitten_horn'),
+  unit('lich_dragon'),
+  unit('mech_guard'),
+  unit('peasant'), unit('peasant_normal'),
+  unit('pixie'),
+  unit('primal_remnant'),
+  unit('sentinel'),
+  unit('star_child'),
+  unit('undead_peasant'),
+  unit('unicorn'),
 ]
 
 // ─── Artifacts ────────────────────────────────────────────────────────────────
@@ -341,62 +384,62 @@ export const ARTIFACTS: EntityEntry[] = [
 
 export const MAP_OBJECTS: EntityEntry[] = [
   // Cities / towns
-  e('demon_city'), e('dungeon_city'), e('human_city'), e('nature_city'),
-  e('necros_city'), e('undead_city'), e('unfrozen_city'),
+  mapObj('demon_city'), mapObj('dungeon_city'), mapObj('human_city'), mapObj('nature_city'),
+  mapObj('necros_city'), mapObj('undead_city'), mapObj('unfrozen_city'),
   // Resource mines
-  e('mines'), e('magic_mines'), e('res_mines'),
+  mapObj('mines'), mapObj('magic_mines'), mapObj('res_mines'),
   // Dwellings / hire
-  e('hires'), e('random_hires'), e('unit_res_trade_labs'), e('unit_upgrades'),
+  mapObj('hires'), mapObj('random_hires'), mapObj('unit_res_trade_labs'), mapObj('unit_upgrades'),
   // Markets / trade
-  e('markets'), e('market_items'), e('item_markets'), e('res_trade_labs'), e('resources'), e('resources_camps'),
+  mapObj('markets'), mapObj('market_items'), mapObj('item_markets'), mapObj('res_trade_labs'), mapObj('resources'), mapObj('resources_camps'),
   // Stat boosters
-  e('arena'), e('barracks'), e('forge'), e('fort'), e('stables'),
-  e('knowledge_garden'), e('learning_stone'), e('tree_of_knowledge'), e('tree_of_abundance'),
-  e('college_of_wonder'), e('orb_observatory'), e('magic_amplifier_1'), e('magic_amplifier_2'),
-  e('magic_amplifier_3'), e('magic_amplifier_4'), e('magic_wheel'),
-  e('stinging_sword'), e('circus'), e('gladiator_arena'),
+  mapObj('arena'), mapObj('barracks'), mapObj('forge'), mapObj('fort'), mapObj('stables'),
+  mapObj('knowledge_garden'), mapObj('learning_stone'), mapObj('tree_of_knowledge'), mapObj('tree_of_abundance'),
+  mapObj('college_of_wonder'), mapObj('orb_observatory'), mapObj('magic_amplifier_1'), mapObj('magic_amplifier_2'),
+  mapObj('magic_amplifier_3'), mapObj('magic_amplifier_4'), mapObj('magic_wheel'),
+  mapObj('stinging_sword'), mapObj('circus'), mapObj('gladiator_arena'),
   // Magic / shrine
-  e('altar_of_magic_1'), e('altar_of_magic_2'), e('altar_of_magic_3'), e('altar_of_magic_4'),
-  e('fickle_shrine'), e('sacrificial_shrine'), e('mana_well'), e('beer_fountain'),
-  e('fairy_ring'), e('mysterious_stone'), e('shroom_of_growth'), e('circle_of_life'),
-  e('mystical_tower'), e('black_tower'), e('boreal_call'),
+  mapObj('altar_of_magic_1'), mapObj('altar_of_magic_2'), mapObj('altar_of_magic_3'), mapObj('altar_of_magic_4'),
+  mapObj('fickle_shrine'), mapObj('sacrificial_shrine'), mapObj('mana_well'), mapObj('beer_fountain'),
+  mapObj('fairy_ring'), mapObj('mysterious_stone'), mapObj('shroom_of_growth'), mapObj('circle_of_life'),
+  mapObj('mystical_tower'), mapObj('black_tower'), mapObj('boreal_call'),
   // Chests / loot
-  e('chests'), e('goblin_cache'), e('pandora_box'), e('scroll_box'), e('enchanted_scroll_box'),
-  e('mythic_scroll_box'), e('rewards'),
+  mapObj('chests'), mapObj('goblin_cache'), mapObj('pandora_box'), mapObj('scroll_box'), mapObj('enchanted_scroll_box'),
+  mapObj('mythic_scroll_box'), mapObj('rewards'),
   // Info / exploration
-  e('crow_nest'), e('watchtower'), e('wind_rose'), e('sea_map'),
-  e('insaras_eye'), e('alvars_eye'), e('celestial_sphere'), e('tear_of_truth'),
+  mapObj('crow_nest'), mapObj('watchtower'), mapObj('wind_rose'), mapObj('sea_map'),
+  mapObj('insaras_eye'), mapObj('alvars_eye'), mapObj('celestial_sphere'), mapObj('tear_of_truth'),
   // Adventure
-  e('dragon_utopia'), e('eternal_dragon'), e('infernal_cirque'), e('lost_library'),
-  e('prison'), e('town_gate'), e('outposts'), e('portals'), e('mirages'), e('mirage'),
-  e('garrisons'), e('chimerologist'), e('pocket_dimension'), e('remote_foothold'),
+  mapObj('dragon_utopia'), mapObj('eternal_dragon'), mapObj('infernal_cirque'), mapObj('lost_library'),
+  mapObj('prison'), mapObj('town_gate'), mapObj('outposts'), mapObj('portals'), mapObj('mirages'), mapObj('mirage'),
+  mapObj('garrisons'), mapObj('chimerologist'), mapObj('pocket_dimension'), mapObj('remote_foothold'),
   // Special / campaign objects
-  e('campaign_lost_library_empty'),
-  e('campaign_M4_construction_site'), e('campaign_M4_diary'),
-  e('campaign_M4_stargazer_tower'), e('campaign_M4_burning_man'),
-  e('campaign_M9_necromancy_amplifier'), e('campaign_M9_phoenix_egg'), e('campaign_M9_phoenix_nest'),
-  e('campaign_M9_scientist_house'), e('campaign_M9_sylvan_altar'),
-  e('campaign_flattering_mirror'), e('campaign_gingerbread_house'), e('campaign_shady_den'),
-  e('campaign_magic_altar_of_magic_1'), e('campaign_magic_altar_of_magic_2'),
-  e('campaign_magic_altar_of_magic_3'), e('campaign_magic_altar_of_magic_4'),
-  e('campaign_stat_1_armory_automaton'), e('campaign_stat_1_knowledge_garden'),
-  e('campaign_stat_1_magic_wheel'), e('campaign_stat_1_stinging_sword'),
-  e('campaign_stat_2_fort'), e('campaign_stat_2_orb_observatory'),
-  e('campaign_stat_college_of_wonder'), e('campaign_stat_maze'), e('campaign_stat_trial_scales'),
+  mapObj('campaign_lost_library_empty'),
+  mapObj('campaign_M4_construction_site'), mapObj('campaign_M4_diary'),
+  mapObj('campaign_M4_stargazer_tower'), mapObj('campaign_M4_burning_man'),
+  mapObj('campaign_M9_necromancy_amplifier'), mapObj('campaign_M9_phoenix_egg'), mapObj('campaign_M9_phoenix_nest'),
+  mapObj('campaign_M9_scientist_house'), mapObj('campaign_M9_sylvan_altar'),
+  mapObj('campaign_flattering_mirror'), mapObj('campaign_gingerbread_house'), mapObj('campaign_shady_den'),
+  mapObj('campaign_magic_altar_of_magic_1'), mapObj('campaign_magic_altar_of_magic_2'),
+  mapObj('campaign_magic_altar_of_magic_3'), mapObj('campaign_magic_altar_of_magic_4'),
+  mapObj('campaign_stat_1_armory_automaton'), mapObj('campaign_stat_1_knowledge_garden'),
+  mapObj('campaign_stat_1_magic_wheel'), mapObj('campaign_stat_1_stinging_sword'),
+  mapObj('campaign_stat_2_fort'), mapObj('campaign_stat_2_orb_observatory'),
+  mapObj('campaign_stat_college_of_wonder'), mapObj('campaign_stat_maze'), mapObj('campaign_stat_trial_scales'),
   // Miscellaneous
-  e('abandoned_corpse'), e('abandoned_mansion'), e('abandoned_outpost'), e('abnormal_structure'),
-  e('alchemy_lab'), e('armory_automaton'), e('camp_fire'), e('crystal_trail'),
-  e('cursed_old_house'), e('flattering_mirror'),
-  e('fountain'), e('fountain_2'), e('gardener'), e('gingerbread_house'),
-  e('heros_crypt'), e('huntsmans_camp'), e('iridescent_abbey'), e('jousting_range'),
-  e('knowledge_garden_campaign'), e('legions_memorial'), e('maze'), e('mercenary_guild'),
-  e('mereas_shrine'), e('monty_hall'), e('overgrown_grave'), e('peasant_cart'),
-  e('petrified_memorial'), e('pile_of_books'), e('point_of_balance'),
-  e('prismatic_lair'), e('quixs_path'), e('raiders_camp'), e('research_laboratory'),
-  e('ritual_pyre'), e('shady_den'), e('taverns'), e('testing_grounds'), e('the_gorge'),
-  e('troglodyte_throne'), e('twilight_bloom'), e('uncanny_rite'), e('underground_lair'),
-  e('unforgotten_grave'), e('university'), e('unstable_ruins'), e('vanguard'),
-  e('village'), e('windmill'), e('wise_owl'),
+  mapObj('abandoned_corpse'), mapObj('abandoned_mansion'), mapObj('abandoned_outpost'), mapObj('abnormal_structure'),
+  mapObj('alchemy_lab'), mapObj('armory_automaton'), mapObj('camp_fire'), mapObj('crystal_trail'),
+  mapObj('cursed_old_house'), mapObj('flattering_mirror'),
+  mapObj('fountain'), mapObj('fountain_2'), mapObj('gardener'), mapObj('gingerbread_house'),
+  mapObj('heros_crypt'), mapObj('huntsmans_camp'), mapObj('iridescent_abbey'), mapObj('jousting_range'),
+  mapObj('knowledge_garden_campaign'), mapObj('legions_memorial'), mapObj('maze'), mapObj('mercenary_guild'),
+  mapObj('mereas_shrine'), mapObj('monty_hall'), mapObj('overgrown_grave'), mapObj('peasant_cart'),
+  mapObj('petrified_memorial'), mapObj('pile_of_books'), mapObj('point_of_balance'),
+  mapObj('prismatic_lair'), mapObj('quixs_path'), mapObj('raiders_camp'), mapObj('research_laboratory'),
+  mapObj('ritual_pyre'), mapObj('shady_den'), mapObj('taverns'), mapObj('testing_grounds'), mapObj('the_gorge'),
+  mapObj('troglodyte_throne'), mapObj('twilight_bloom'), mapObj('uncanny_rite'), mapObj('underground_lair'),
+  mapObj('unforgotten_grave'), mapObj('university'), mapObj('unstable_ruins'), mapObj('vanguard'),
+  mapObj('village'), mapObj('windmill'), mapObj('wise_owl'),
 ]
 
 // ─── Lookup helpers ───────────────────────────────────────────────────────────
