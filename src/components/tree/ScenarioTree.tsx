@@ -121,7 +121,7 @@ function SectionHeader({
     <div
       role="button"
       tabIndex={0}
-      className="sticky top-0 z-10 flex items-center justify-between min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="sticky top-0 z-10 flex items-center justify-between min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] dark:bg-card cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={onToggle}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
     >
@@ -209,7 +209,7 @@ export default function ScenarioTree() {
         <div
           role="button"
           tabIndex={0}
-          className="sticky top-0 z-10 flex items-center min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="sticky top-0 z-10 flex items-center min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] dark:bg-card cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onClick={() => toggleSection('mapSettings')}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection('mapSettings') } }}
         >

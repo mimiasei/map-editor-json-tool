@@ -399,7 +399,7 @@ export default function AppShell() {
   void setSelection
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden bg-[rgb(204_234_149)]">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[rgb(204_234_149)] dark:bg-background">
       <Toolbar
         onSearchOpen={() => setPaletteOpen(true)}
         onTimelineOpen={() => setTimelineOpen(true)}
@@ -496,7 +496,7 @@ export default function AppShell() {
             if (size.inPixels > 0) setSidebarWidth(Math.round(size.inPixels))
           }}
         >
-          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#e4ffca]">
+          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#e4ffca] dark:bg-card">
             <ScenarioTree />
           </aside>
         </Panel>
@@ -511,7 +511,7 @@ export default function AppShell() {
           minSize="20%"
           collapsible
         >
-          <main className="flex h-full flex-col overflow-hidden rounded-lg bg-[#f6f6b7]">
+          <main className="flex h-full flex-col overflow-hidden rounded-lg bg-[#f6f6b7] dark:bg-background">
             <EditorPanel />
           </main>
         </Panel>
@@ -526,7 +526,7 @@ export default function AppShell() {
           minSize="15%"
           collapsible
         >
-          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#ffe8ca]">
+          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#ffe8ca] dark:bg-card">
             {isUndocked('preview') ? (
               <UndockedPlaceholder label="JSON Preview" />
             ) : (
