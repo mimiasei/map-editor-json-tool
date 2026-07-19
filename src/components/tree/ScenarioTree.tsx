@@ -16,13 +16,9 @@ import {
   List,
   Layers,
   MessageSquare,
-  Settings2,
 } from 'lucide-react'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
-// Ratio locks in 175px at the default 280px sidebar width.
-// sidebarWidth comes from the store and is updated live by a ResizeObserver
-// in AppShell, so this scales automatically when the user resizes the panel.
 const LABEL_WIDTH_RATIO = 175 / 280
 
 // ─── Shared action buttons (absolute right-0, revealed on group hover) ─────────
@@ -91,8 +87,10 @@ function TreeItem({
   return (
     <div
       className={cn(
-        'group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
-        selected ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
+        'group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none transition-shadow duration-150',
+        selected
+          ? 'bg-primary/20 text-primary'
+          : 'hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]',
         muted && 'text-muted-foreground',
       )}
       style={{ paddingLeft: `${8 + depth * 14}px` }}
@@ -105,42 +103,42 @@ function TreeItem({
   )
 }
 
-// ─── Section header ─────────────────────────────────────────────────────────────
+// ─── Section header (Gendizer-style: sticky, uppercase, 36px min-height) ───────
 function SectionHeader({
   label,
   count,
   open,
   onToggle,
   onAdd,
-  icon,
 }: {
   label: string
   count: number
   open: boolean
   onToggle: () => void
   onAdd: () => void
-  icon?: React.ReactNode
 }) {
   return (
-    <div className="flex items-center gap-1 px-1 py-0.5">
-      <button
-        className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground hover:text-primary"
-        onClick={onToggle}
-      >
-        {open ? (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-        ) : (
-          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-        )}
-        {icon}
-        <span>{label}</span>
-        <span className="ml-1 text-xs font-normal text-muted-foreground">({count})</span>
-      </button>
+    <div
+      role="button"
+      tabIndex={0}
+      className="sticky top-0 z-10 flex items-center justify-between min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
+    >
+      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground">
+        {open
+          ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+        {label}
+        <span className="ml-0.5 font-normal normal-case tracking-normal text-muted-foreground">
+          ({count})
+        </span>
+      </span>
       <Button
         variant="ghost"
         size="icon"
-        className="h-5 w-5 text-muted-foreground hover:text-primary"
-        onClick={onAdd}
+        className="h-5 w-5 shrink-0 text-muted-foreground hover:text-primary"
+        onClick={(e) => { e.stopPropagation(); onAdd() }}
         title={`Add ${label}`}
       >
         <Plus className="h-3 w-3" />
@@ -204,25 +202,26 @@ export default function ScenarioTree() {
   const labelStyle = { maxWidth: `${Math.round(sidebarWidth * LABEL_WIDTH_RATIO)}px` }
 
   return (
-    <ScrollArea className="flex-1 py-2">
-      <div className="px-1 pb-4">
+    <ScrollArea className="flex-1">
+      <div className="pb-4">
+
         {/* ── Map Settings ── */}
-        <div className="flex items-center gap-1 px-1 py-0.5">
-          <button
-            className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground hover:text-primary"
-            onClick={() => setOpenSections((s) => ({ ...s, mapSettings: !s.mapSettings }))}
-          >
-            {openSections.mapSettings ? (
-              <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-            )}
-            <Settings2 className="h-3.5 w-3.5 shrink-0" />
-            <span>Map Settings</span>
-          </button>
+        <div
+          role="button"
+          tabIndex={0}
+          className="sticky top-0 z-10 flex items-center min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={() => toggleSection('mapSettings')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection('mapSettings') } }}
+        >
+          <span className="flex flex-1 items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground">
+            {openSections.mapSettings
+              ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+            Map Settings
+          </span>
         </div>
         {openSections.mapSettings && (
-          <div className="px-2 pb-2 pt-1 space-y-1">
+          <div className="px-3 py-2 space-y-1">
             <Input
               value={mapName}
               onChange={(e) => setMapName(e.target.value)}
@@ -244,35 +243,36 @@ export default function ScenarioTree() {
           open={openSections.counters}
           onToggle={() => toggleSection('counters')}
           onAdd={addCounter}
-          icon={<Hash className="h-3.5 w-3.5" />}
         />
-        {openSections.counters &&
-          scenario.counters.map((counter, i) => (
-            <TreeItem
-              key={i}
-              label={counter.sid}
-              labelStyle={labelStyle}
-              depth={1}
-              selected={isSelected('counter', i)}
-              onClick={() => setSelection('counter', [i])}
-              onDuplicate={() => duplicateCounter(i)}
-              onDelete={() => removeCounter(i)}
-              icon={<Hash className="h-3 w-3" />}
-            />
-          ))}
+        {openSections.counters && (
+          <div className="px-1 py-1">
+            {scenario.counters.map((counter, i) => (
+              <TreeItem
+                key={i}
+                label={counter.sid}
+                labelStyle={labelStyle}
+                depth={1}
+                selected={isSelected('counter', i)}
+                onClick={() => setSelection('counter', [i])}
+                onDuplicate={() => duplicateCounter(i)}
+                onDelete={() => removeCounter(i)}
+                icon={<Hash className="h-3 w-3" />}
+              />
+            ))}
+          </div>
+        )}
 
         {/* ── Interruptions ── */}
-        <div className="mt-1">
-          <SectionHeader
-            label="Interruptions"
-            count={scenario.interruptions.length}
-            open={openSections.interruptions}
-            onToggle={() => toggleSection('interruptions')}
-            onAdd={addInterruption}
-            icon={<Zap className="h-3.5 w-3.5" />}
-          />
-          {openSections.interruptions &&
-            scenario.interruptions.map((intr, i) => (
+        <SectionHeader
+          label="Interruptions"
+          count={scenario.interruptions.length}
+          open={openSections.interruptions}
+          onToggle={() => toggleSection('interruptions')}
+          onAdd={addInterruption}
+        />
+        {openSections.interruptions && (
+          <div className="px-1 py-1">
+            {scenario.interruptions.map((intr, i) => (
               <TreeItem
                 key={i}
                 label={intr.sid}
@@ -285,28 +285,30 @@ export default function ScenarioTree() {
                 icon={<Zap className="h-3 w-3" />}
               />
             ))}
-        </div>
+          </div>
+        )}
 
         {/* ── Quests ── */}
-        <div className="mt-1">
-          <SectionHeader
-            label="Quests"
-            count={scenario.quests.length}
-            open={openSections.quests}
-            onToggle={() => toggleSection('quests')}
-            onAdd={addQuest}
-            icon={<BookOpen className="h-3.5 w-3.5" />}
-          />
-          {openSections.quests &&
-            scenario.quests.map((quest, qi) => {
+        <SectionHeader
+          label="Quests"
+          count={scenario.quests.length}
+          open={openSections.quests}
+          onToggle={() => toggleSection('quests')}
+          onAdd={addQuest}
+        />
+        {openSections.quests && (
+          <div className="px-1 py-1">
+            {scenario.quests.map((quest, qi) => {
               const questOpen = openQuests[qi] ?? false
               return (
                 <div key={qi}>
                   {/* Quest row */}
                   <div
                     className={cn(
-                      'group relative flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
-                      isSelected('quest', qi) ? 'bg-primary/20 text-primary' : 'hover:bg-accent',
+                      'group relative flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none transition-shadow duration-150',
+                      isSelected('quest', qi)
+                        ? 'bg-primary/20 text-primary'
+                        : 'hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]',
                     )}
                     style={{ paddingLeft: '22px' }}
                     onClick={() => setSelection('quest', [qi])}
@@ -345,10 +347,10 @@ export default function ScenarioTree() {
                           {/* SubQuest row */}
                           <div
                             className={cn(
-                              'group relative flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none',
+                              'group relative flex items-center gap-0.5 rounded px-1 py-0.5 text-sm cursor-pointer select-none transition-shadow duration-150',
                               isSelected('subquest', qi, sqi)
                                 ? 'bg-primary/20 text-primary'
-                                : 'hover:bg-accent',
+                                : 'hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]',
                             )}
                             style={{ paddingLeft: '36px' }}
                             onClick={() => setSelection('subquest', [qi, sqi])}
@@ -420,40 +422,23 @@ export default function ScenarioTree() {
                 </div>
               )
             })}
-        </div>
-        {/* ── Dialogs ── */}
-        <div className="mt-1">
-          <div className="flex items-center gap-1 px-1 py-0.5">
-            <button
-              className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground hover:text-primary"
-              onClick={() => setOpenSections((s) => ({ ...s, dialogs: !s.dialogs }))}
-            >
-              {openSections.dialogs ? (
-                <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-              ) : (
-                <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-              )}
-              <MessageSquare className="h-3.5 w-3.5" />
-              <span>Dialogs</span>
-              <span className="ml-1 text-xs font-normal text-muted-foreground">
-                ({Object.keys(dialogs).length})
-              </span>
-            </button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 text-muted-foreground hover:text-primary"
-              onClick={() => openDialogEditor(`dialog_${Date.now()}`)}
-              title="Add Dialog"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
           </div>
-          {openSections.dialogs &&
-            Object.entries(dialogs).map(([id, flow]) => (
+        )}
+
+        {/* ── Dialogs ── */}
+        <SectionHeader
+          label="Dialogs"
+          count={Object.keys(dialogs).length}
+          open={openSections.dialogs}
+          onToggle={() => toggleSection('dialogs')}
+          onAdd={() => openDialogEditor(`dialog_${Date.now()}`)}
+        />
+        {openSections.dialogs && (
+          <div className="px-1 py-1">
+            {Object.entries(dialogs).map(([id, flow]) => (
               <div
                 key={id}
-                className="group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none hover:bg-accent"
+                className="group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none transition-shadow duration-150 hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
                 style={{ paddingLeft: '22px' }}
                 onClick={() => openDialogEditor(id)}
               >
@@ -477,7 +462,9 @@ export default function ScenarioTree() {
                 </span>
               </div>
             ))}
-        </div>
+          </div>
+        )}
+
       </div>
     </ScrollArea>
   )
