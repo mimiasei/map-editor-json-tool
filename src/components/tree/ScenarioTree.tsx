@@ -294,7 +294,11 @@ export default function ScenarioTree() {
           count={scenario.quests.length}
           open={openSections.quests}
           onToggle={() => toggleSection('quests')}
-          onAdd={addQuest}
+          onAdd={() => {
+            const newIdx = scenario.quests.length
+            addQuest()
+            setOpenQuests((s) => ({ ...s, [newIdx]: true }))
+          }}
         />
         {openSections.quests && (
           <div className="px-1 py-1">
@@ -413,7 +417,11 @@ export default function ScenarioTree() {
                     <div
                       className="flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground cursor-pointer transition-all duration-150 hover:text-primary hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
                       style={{ paddingLeft: '50px' }}
-                      onClick={() => addSubQuest(qi)}
+                      onClick={() => {
+                        const newSqi = quest.subQuests.length
+                        addSubQuest(qi)
+                        setOpenSubQuests((s) => ({ ...s, [`${qi}-${newSqi}`]: true }))
+                      }}
                     >
                       <Plus className="h-3 w-3" />
                       Add SubQuest
