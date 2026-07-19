@@ -103,7 +103,7 @@ function TreeItem({
   )
 }
 
-// ─── Section header (Gendizer-style: sticky, uppercase, 48px min-height) ───────
+// ─── Section header (Gendizer-style: sticky, uppercase, 36px min-height) ───────
 function SectionHeader({
   label,
   count,
@@ -119,8 +119,11 @@ function SectionHeader({
 }) {
   return (
     <div
-      className="sticky top-0 z-10 flex items-center justify-between min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5"
+      role="button"
+      tabIndex={0}
+      className="sticky top-0 z-10 flex items-center justify-between min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
     >
       <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground">
         {open
@@ -204,8 +207,11 @@ export default function ScenarioTree() {
 
         {/* ── Map Settings ── */}
         <div
-          className="sticky top-0 z-10 flex items-center min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5"
+          role="button"
+          tabIndex={0}
+          className="sticky top-0 z-10 flex items-center min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onClick={() => toggleSection('mapSettings')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection('mapSettings') } }}
         >
           <span className="flex flex-1 items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground">
             {openSections.mapSettings
@@ -420,29 +426,13 @@ export default function ScenarioTree() {
         )}
 
         {/* ── Dialogs ── */}
-        <div
-          className="sticky top-0 z-10 flex items-center justify-between min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] cursor-pointer select-none transition-colors duration-150 hover:bg-black/5"
-          onClick={() => toggleSection('dialogs')}
-        >
-          <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground">
-            {openSections.dialogs
-              ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
-            Dialogs
-            <span className="ml-0.5 font-normal normal-case tracking-normal text-muted-foreground">
-              ({Object.keys(dialogs).length})
-            </span>
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 shrink-0 text-muted-foreground hover:text-primary"
-            onClick={(e) => { e.stopPropagation(); openDialogEditor(`dialog_${Date.now()}`) }}
-            title="Add Dialog"
-          >
-            <Plus className="h-3 w-3" />
-          </Button>
-        </div>
+        <SectionHeader
+          label="Dialogs"
+          count={Object.keys(dialogs).length}
+          open={openSections.dialogs}
+          onToggle={() => toggleSection('dialogs')}
+          onAdd={() => openDialogEditor(`dialog_${Date.now()}`)}
+        />
         {openSections.dialogs && (
           <div className="px-1 py-1">
             {Object.entries(dialogs).map(([id, flow]) => (
