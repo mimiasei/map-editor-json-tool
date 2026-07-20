@@ -23,6 +23,7 @@ import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
 import GuidesDialog from '@/components/guides/GuidesDialog'
 import TemplatePickerDialog from '@/components/guides/TemplatePickerDialog'
 import DialogBrowser from '@/components/catalog/DialogBrowser'
+import GameDatabaseDialog from '@/components/catalog/GameDatabaseDialog'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import { SquareArrowOutUpRight, X, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -66,6 +67,7 @@ export default function AppShell() {
   const [templateOpen,  setTemplateOpen]  = useState(false)
   const [guidesOpen,    setGuidesOpen]    = useState(false)
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
+  const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
   const [thumbnailBanner, setThumbnailBanner] = useState(false)
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
 
@@ -408,6 +410,7 @@ export default function AppShell() {
         onTemplateOpen={() => setTemplateOpen(true)}
         onGuidesOpen={() => setGuidesOpen(true)}
         onDialogBrowserOpen={() => setDialogBrowserOpen(true)}
+        onGameDatabaseOpen={() => setGameDatabaseOpen(true)}
         onNew={handleNew}
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
@@ -478,6 +481,12 @@ export default function AppShell() {
         undocked={isUndocked('guides')}
       />
       <DialogBrowser open={dialogBrowserOpen} onOpenChange={setDialogBrowserOpen} />
+      <GameDatabaseDialog
+        open={gameDatabaseOpen}
+        onOpenChange={setGameDatabaseOpen}
+        onUndock={() => { setGameDatabaseOpen(false); handleUndock('gamedb') }}
+        undocked={isUndocked('gamedb')}
+      />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}
