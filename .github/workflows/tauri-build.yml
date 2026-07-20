@@ -149,7 +149,7 @@ jobs:
           sed -i -E "s/Desktop downloads \(v[0-9]+\.[0-9]+\.[0-9]+\)/Desktop downloads (${TAG})/" README.md
 
           # Update version in all filenames (covers both link text and URLs)
-          sed -i -E "s|Scenario\.Script\.Editor_[0-9]+\.[0-9]+\.[0-9]+_|Scenario.Script.Editor_${VERSION}_|g" README.md
+          sed -i -E "s|HommOE\.Scenario\.Editor_[0-9]+\.[0-9]+\.[0-9]+_|HommOE.Scenario.Editor_${VERSION}_|g" README.md
 
           # Update release tag in download URLs
           sed -i -E "s|releases/download/v[0-9]+\.[0-9]+\.[0-9]+/|releases/download/${TAG}/|g" README.md
