@@ -23,7 +23,7 @@ interface Props {
 
 export default function MapEntityCombobox({ value, onChange, placeholder }: Props) {
   const [open, setOpen] = useState(false)
-  const entities = useMapContextStore((s) => s.context?.entities ?? [])
+  const entities = useMapContextStore((s) => s.context?.entities) ?? []
 
   const sids = useMemo(() => entities.map((e) => e.sid), [entities])
 

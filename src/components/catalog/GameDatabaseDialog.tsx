@@ -168,7 +168,7 @@ function DetailPane({
 
 export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
-  const mapEntities = useMapContextStore((s) => s.context?.entities ?? [])
+  const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
   const scenario = useScenarioStore((s) => s.scenario)
 
   const [activeTab, setActiveTab] = useState<TabId>('heroes')
