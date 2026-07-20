@@ -100,8 +100,9 @@ export async function parseMapFile(buffer: ArrayBuffer): Promise<RawMapBlocks> {
   const writer = ds.writable.getWriter()
   const reader = ds.readable.getReader()
 
-  writer.write(compressed)
-  writer.close()
+  // Await write + close to avoid a race where reads start before data is flushed
+  await writer.write(compressed)
+  await writer.close()
 
   const chunks: Uint8Array[] = []
   while (true) {
@@ -121,15 +122,25 @@ export async function parseMapFile(buffer: ArrayBuffer): Promise<RawMapBlocks> {
   // ── Skip header ─────────────────────────────────────────────────────────────
   let pos = 0
 
+  function requireBytes(n: number, label: string) {
+    if (pos + n > data.length)
+      throw new Error(`.map header truncated at "${label}" (offset ${pos}, need ${n} bytes, have ${data.length - pos})`)
+  }
+
   // 1-byte hashLen + hash bytes
+  requireBytes(1, 'hashLen')
   const hashLen = data[pos++]
+  requireBytes(hashLen, 'hash')
   pos += hashLen
 
   // 1-byte verLen + version bytes
+  requireBytes(1, 'verLen')
   const verLen = data[pos++]
+  requireBytes(verLen, 'version')
   pos += verLen
 
   // 2 bytes 0x0D 0x00
+  requireBytes(2, 'separator')
   pos += 2
 
   // ── Read 4 varint-framed JSON blocks ─────────────────────────────────────────
@@ -139,6 +150,8 @@ export async function parseMapFile(buffer: ArrayBuffer): Promise<RawMapBlocks> {
   for (let i = 0; i < 4; i++) {
     const { value: byteLen, next } = readVarint(data, pos)
     pos = next
+    if (pos + byteLen > data.length)
+      throw new Error(`.map block ${i + 1} truncated: claims ${byteLen} bytes but only ${data.length - pos} remain`)
     const jsonBytes = data.subarray(pos, pos + byteLen)
     pos += byteLen
     let jsonText = decoder.decode(jsonBytes)

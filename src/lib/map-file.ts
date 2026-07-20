@@ -13,16 +13,30 @@ import { logInfo, logWarn } from '@/lib/logger'
 export interface OpenMapResult {
   /** Display name, e.g. "my_map.map" */
   name: string
-  /** Absolute path to the .map file (empty string in browser) */
-  mapPath: string
-  /** Absolute path to the sidecar .json (may be same dir, empty in browser) */
-  sidecarPath: string
+  /** Absolute path to the .map file (null in browser) */
+  mapPath: string | null
+  /** Absolute path to the sidecar .json (null when not discoverable, e.g. browser) */
+  sidecarPath: string | null
   /** Whether the sidecar JSON was found and used */
   sidecarLoaded: boolean
   /** Whether Block 4 fallback was used (no sidecar) */
   block4Used: boolean
   /** Non-fatal warnings (sidecar parse issues, etc.) */
   warnings: string[]
+}
+
+/**
+ * Derive the sidecar JSON path from the native .map path, preserving the
+ * original path separator style so Tauri FS APIs receive a valid OS path.
+ */
+function sidecarPathFor(mapPath: string, mapName: string): string {
+  const stem = mapName.replace(/\.map$/i, '')
+  // Find the directory prefix from the raw (possibly backslash) path
+  // by stripping the filename from the end.
+  const nameEscaped = mapName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const dirMatch = mapPath.match(new RegExp(`^(.*[/\\\\])${nameEscaped}$`))
+  const dir = dirMatch ? dirMatch[1] : ''
+  return dir ? `${dir}${stem}.json` : `${stem}.json`
 }
 
 /**
@@ -34,6 +48,9 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   const file = await openMapFile()
   if (!file) return null
 
+  // Convert empty path (browser) to null — empty string is not a valid path
+  const mapPath = file.path || null
+
   const warnings: string[] = []
 
   // ── Parse binary ────────────────────────────────────────────────────────────
@@ -44,12 +61,9 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   const context = extractMapContext(raw)
   useMapContextStore.getState().setContext(context)
 
-  // ── Sidecar path = same dir, same stem, .json extension ─────────────────────
-  const normalizedPath = file.path.replace(/\\/g, '/')
-  const lastSlash = normalizedPath.lastIndexOf('/')
-  const dir = lastSlash >= 0 ? normalizedPath.slice(0, lastSlash + 1) : ''
-  const stem = file.name.replace(/\.map$/i, '')
-  const sidecarPath = dir ? `${dir}${stem}.json` : ''
+  // ── Sidecar path — derived from native OS path, not forward-slash-normalized ─
+  // Using the raw path preserves backslashes on Windows so Tauri FS calls work.
+  const sidecarPath = mapPath ? sidecarPathFor(mapPath, file.name) : null
 
   let sidecarLoaded = false
   let block4Used = false
@@ -61,14 +75,12 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   if (sidecarPath && (await checkFileExists(sidecarPath))) {
     const text = await readTextFileAt(sidecarPath)
     if (text) {
-      // Strip BOM (some sidecar files have it)
-      const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
-      const { scenario: imported, errors, warnings: iw, mapName: mn } = importScenario(clean)
+      const { scenario: imported, errors, warnings: iw, mapName: mn } = importScenario(text)
       if (imported) {
         scenario = imported
         importedMapName = mn
         sidecarLoaded = true
-        logInfo(`Loaded sidecar: ${stem}.json`)
+        logInfo(`Loaded sidecar: ${sidecarPath}`)
       } else {
         warnings.push(...errors.map((e) => `Sidecar parse error: ${e}`))
         // fall through to Block 4
@@ -78,7 +90,6 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   }
 
   if (!sidecarLoaded) {
-    // Block 4 fallback
     block4Used = true
     logWarn(`No sidecar found for ${file.name}, using Block 4 scripting data`)
   }
@@ -87,18 +98,23 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   if (importedMapName) mapName = importedMapName
 
   // ── Load scenario store ──────────────────────────────────────────────────────
+  // currentFileName = the .map filename so the toolbar shows the correct name.
+  // currentFilePath = sidecarPath so Ctrl+S knows where to write.
   const store = useScenarioStore.getState()
   store.setScenario(scenario)
-  store.setCurrentFile(sidecarPath || null, sidecarPath ? `${stem}.json` : file.name)
-  store.setMapFile(file.path, sidecarPath)
+  store.setCurrentFile(sidecarPath ?? null, file.name)
+  store.setMapFile(mapPath ?? '', sidecarPath ?? '')
   store.setMapName(mapName)
 
   return {
     name: file.name,
-    mapPath: file.path,
+    mapPath,
     sidecarPath,
     sidecarLoaded,
     block4Used,
     warnings,
   }
 }
+
+/** Exposed for tests / consumers that need the sidecar path without opening a dialog. */
+export { sidecarPathFor }

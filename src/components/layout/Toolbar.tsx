@@ -160,10 +160,9 @@ export default function Toolbar({
     useScenarioStore.setState({ isDirty: true })
   }
 
-  // ── Import (Open) ────────────────────────────────────────────────────────────
+  // ── Import (Open JSON) ────────────────────────────────────────────────────────
   const handleImport = async () => {
-    // In Tauri, show a dialog that accepts both .json and .map; in browser use
-    // a hidden input that also accepts .map so the user can pick either type.
+    // Opens a .json file only. For .map files use handleOpenMap.
     const result = await openFile()
     if (!result) return
 
@@ -210,18 +209,29 @@ export default function Toolbar({
     }
   }
 
-  // ── Export / Save As ─────────────────────────────────────────────────────────
-  const handleExport = async () => {
-    const json      = exportProjectJson(scenario, mapName, dialogs, localization)
-    const saveName  = currentFileName ?? 'scenario.json'
-
-    // If a sidecar path is known (opened from .map), save directly to it (Ctrl+S style)
+  // ── Save (Ctrl+S) — writes to known path; for anchored .map projects this is
+  //   the sidecar JSON. Falls back to Save As when no path is known.
+  const handleSave = async () => {
+    const json = exportProjectJson(scenario, mapName, dialogs, localization)
     if (isTauri() && sidecarPath) {
       await saveToPath(sidecarPath, json)
       markClean()
       return
     }
+    if (isTauri() && currentFilePath) {
+      await saveToPath(currentFilePath, json)
+      markClean()
+      return
+    }
+    // No known path — fall through to Save As
+    await handleExport()
+  }
 
+  // ── Save As ───────────────────────────────────────────────────────────────────
+  // Always shows a file-save dialog, even when a .map/sidecar path is known.
+  const handleExport = async () => {
+    const json     = exportProjectJson(scenario, mapName, dialogs, localization)
+    const saveName = currentFileName ?? 'scenario.json'
     const savedPath = await saveFile(json, saveName)
     // In browser saveFile always downloads and returns null — still mark clean
     if (savedPath) {
@@ -250,17 +260,20 @@ export default function Toolbar({
 
   // ── Listen for actions dispatched by AppShell (native menu / keyboard) ───────
   useEffect(() => {
-    const handleOpen    = () => { handleImport() }
+    const handleOpen_    = () => { handleImport() }
     const handleOpenMap_ = () => { handleOpenMap() }
-    const handleSaveAs  = () => { handleExport() }
+    const handleSave_    = () => { handleSave() }
+    const handleSaveAs_  = () => { handleExport() }
 
-    window.addEventListener('oe:open',      handleOpen)
+    window.addEventListener('oe:open',      handleOpen_)
     window.addEventListener('oe:open-map',  handleOpenMap_)
-    window.addEventListener('oe:save-as',   handleSaveAs)
+    window.addEventListener('oe:save',      handleSave_)
+    window.addEventListener('oe:save-as',   handleSaveAs_)
     return () => {
-      window.removeEventListener('oe:open',      handleOpen)
+      window.removeEventListener('oe:open',      handleOpen_)
       window.removeEventListener('oe:open-map',  handleOpenMap_)
-      window.removeEventListener('oe:save-as',   handleSaveAs)
+      window.removeEventListener('oe:save',      handleSave_)
+      window.removeEventListener('oe:save-as',   handleSaveAs_)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenario, currentFilePath, sidecarPath, currentFileName])
@@ -322,7 +335,7 @@ export default function Toolbar({
           {isTauri() && currentFilePath && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleExport} className="gap-1.5" disabled={!isDirty}>
+                <Button variant="ghost" size="sm" onClick={handleSave} className="gap-1.5" disabled={!isDirty}>
                   <Download className="h-4 w-4" />
                   Save
                 </Button>
