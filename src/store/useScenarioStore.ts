@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { temporal } from 'zundo'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import type {
   ScenarioFile,
   Counter,
@@ -233,6 +234,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   resetScenario: () => {
     set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
+    useMapContextStore.getState().clearContext()
   },
 
   markClean: () => set({ isDirty: false }),
