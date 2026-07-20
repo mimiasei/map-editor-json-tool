@@ -71,6 +71,7 @@ interface ToolbarProps {
   onTemplateOpen?: () => void
   onGuidesOpen?: () => void
   onDialogBrowserOpen?: () => void
+  onGameDatabaseOpen?: () => void
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -89,6 +90,7 @@ export default function Toolbar({
   onTemplateOpen,
   onGuidesOpen,
   onDialogBrowserOpen,
+  onGameDatabaseOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -485,6 +487,13 @@ export default function Toolbar({
               <DropdownMenuItem onClick={() => setTimeout(() => onGuidesOpen?.(), 0)}>
                 <BookOpen className="h-4 w-4 mr-2" />
                 Guides
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={() => setTimeout(() => onGameDatabaseOpen?.(), 0)}>
+                <Database className="h-4 w-4 mr-2" />
+                Game Database
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
