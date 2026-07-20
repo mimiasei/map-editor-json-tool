@@ -481,12 +481,7 @@ export default function AppShell() {
         undocked={isUndocked('guides')}
       />
       <DialogBrowser open={dialogBrowserOpen} onOpenChange={setDialogBrowserOpen} />
-      <GameDatabaseDialog
-        open={gameDatabaseOpen}
-        onOpenChange={setGameDatabaseOpen}
-        onUndock={() => { setGameDatabaseOpen(false); handleUndock('gamedb') }}
-        undocked={isUndocked('gamedb')}
-      />
+      <GameDatabaseDialog open={gameDatabaseOpen} onOpenChange={setGameDatabaseOpen} />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}

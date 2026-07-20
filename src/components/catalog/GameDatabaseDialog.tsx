@@ -9,7 +9,6 @@ import {
   DraggableDialogContent,
   DraggableDialogDragHandle,
 } from '@/components/common/DraggableDialogContent'
-import UndockButton from '@/components/panels/UndockButton'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -45,8 +44,6 @@ interface CatalogItem {
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onUndock?: () => void
-  undocked?: boolean
 }
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
@@ -170,9 +167,8 @@ function DetailPane({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function GameDatabaseDialog({ open, onOpenChange, onUndock, undocked }: Props) {
+export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
-  const objectSids = useMapContextStore((s) => s.context?.objectSids ?? [])
   const mapEntities = useMapContextStore((s) => s.context?.entities ?? [])
   const scenario = useScenarioStore((s) => s.scenario)
 
@@ -183,26 +179,36 @@ export default function GameDatabaseDialog({ open, onOpenChange, onUndock, undoc
 
   // ── Build SID frequency maps ────────────────────────────────────────────────
 
-  // Map placement counts: count each SID in objectSids[]
+  // Map placement counts: count catalog type SIDs from named map entities
+  // (mapEntities[].type is the catalog item ID, e.g. "dragon_utopia")
   const mapCounts = useMemo(() => {
     const counts: Record<string, number> = {}
-    for (const sid of objectSids) {
-      counts[sid] = (counts[sid] ?? 0) + 1
+    for (const e of mapEntities) {
+      if (e.type) counts[e.type] = (counts[e.type] ?? 0) + 1
     }
     return counts
-  }, [objectSids])
+  }, [mapEntities])
 
-  // Script reference counts: scan all trigger action p[] arrays
+  // Script reference counts: traverse quests[*].subQuests[*].triggers[*].actions
+  // and interruptions[*].actions, collecting all string params
   const scriptCounts = useMemo(() => {
     const counts: Record<string, number> = {}
-    for (const trigger of scenario.triggers ?? []) {
-      for (const action of trigger.actions ?? []) {
+    const countActions = (actions: { p?: string[] }[]) => {
+      for (const action of actions) {
         for (const p of action.p ?? []) {
-          if (typeof p === 'string' && p) {
-            counts[p] = (counts[p] ?? 0) + 1
-          }
+          if (p) counts[p] = (counts[p] ?? 0) + 1
         }
       }
+    }
+    for (const quest of scenario.quests) {
+      for (const sq of quest.subQuests) {
+        for (const trigger of sq.triggers) {
+          countActions(trigger.actions)
+        }
+      }
+    }
+    for (const interruption of scenario.interruptions) {
+      countActions(interruption.actions)
     }
     return counts
   }, [scenario])
@@ -299,12 +305,6 @@ export default function GameDatabaseDialog({ open, onOpenChange, onUndock, undoc
               ))}
             </TabsList>
           </Tabs>
-
-          {onUndock && (
-            <div className="ml-auto mr-6 shrink-0" onPointerDown={(e) => e.stopPropagation()}>
-              <UndockButton panelId="gamedb" onUndock={onUndock} disabled={undocked} />
-            </div>
-          )}
         </DraggableDialogDragHandle>
 
         {/* ── Body ── */}
