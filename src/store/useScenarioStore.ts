@@ -68,6 +68,10 @@ interface ScenarioStore {
   isDirty: boolean
   currentFilePath: string | null   // absolute path (Tauri) or '' (browser)
   currentFileName: string | null   // display name, e.g. "my_map.json"
+  /** Absolute path to the source .map binary (null if opened from bare JSON) */
+  mapFilePath: string | null
+  /** Absolute path to the sidecar .json to write on save (same as currentFilePath when .map was opened) */
+  sidecarPath: string | null
 
   // Map meta / dialog / localization (editor-only, stored as _* in project JSON)
   mapName: string
@@ -87,6 +91,7 @@ interface ScenarioStore {
   resetScenario: () => void
   markClean: () => void
   setCurrentFile: (path: string | null, name: string | null) => void
+  setMapFile: (mapPath: string, sidecarPath: string) => void
 
   // ── Map meta / dialog / localization ────────────────────────────────────
   setMapName: (name: string) => void
@@ -206,6 +211,8 @@ export const useScenarioStore = create<ScenarioStore>()(
   isDirty: false,
   currentFilePath: null,
   currentFileName: null,
+  mapFilePath: null,
+  sidecarPath: null,
   mapName: '',
   dialogs: {},
   localization: {},
@@ -224,13 +231,15 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapName: '', dialogs: {}, localization: {}, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
   },
 
   markClean: () => set({ isDirty: false }),
 
   setCurrentFile: (path, name) => set({ currentFilePath: path, currentFileName: name }),
+
+  setMapFile: (mapPath, sidecarPath) => set({ mapFilePath: mapPath, sidecarPath }),
 
   // ── Map meta / dialog / localization ────────────────────────────────────────
 
