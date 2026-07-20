@@ -320,17 +320,15 @@ export default function Toolbar({
             <TooltipContent>{isTauri() ? 'Open JSON file (Ctrl+O)' : 'Import JSON file'}</TooltipContent>
           </Tooltip>
 
-          {isTauri() && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleOpenMap} className="gap-1.5">
-                  <Upload className="h-4 w-4" />
-                  Open Map
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Open .map file</TooltipContent>
-            </Tooltip>
-          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={handleOpenMap} className="gap-1.5">
+                <Upload className="h-4 w-4" />
+                {isTauri() ? 'Open Map' : 'Import Map'}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isTauri() ? 'Open .map file' : 'Import .map file'}</TooltipContent>
+          </Tooltip>
 
           {isTauri() && currentFilePath && (
             <Tooltip>
