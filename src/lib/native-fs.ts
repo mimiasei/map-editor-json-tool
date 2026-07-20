@@ -117,6 +117,99 @@ export async function confirmDialog(message: string, title?: string): Promise<bo
   return window.confirm(title ? `${title}\n\n${message}` : message)
 }
 
+// ─── Open .map file (binary) ──────────────────────────────────────────────────
+
+/**
+ * Open a .map file. Shows a native dialog in Tauri, or an invisible <input>
+ * in the browser. Returns null if the user cancels.
+ */
+export async function openMapFile(): Promise<{
+  name: string
+  path: string
+  buffer: ArrayBuffer
+} | null> {
+  if (isTauri()) {
+    const { open } = await import('@tauri-apps/plugin-dialog')
+    const { readFile } = await import('@tauri-apps/plugin-fs')
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: 'Map', extensions: ['map'] }],
+    })
+    if (!selected || typeof selected !== 'string') return null
+    const bytes = await readFile(selected)
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+    const name = selected.replace(/\\/g, '/').split('/').pop() ?? selected
+    logInfo(`Opened map: ${name}`)
+    return { name, path: selected, buffer }
+  }
+
+  // Browser: hidden <input type="file">
+  return new Promise((resolve) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.map'
+    input.addEventListener('cancel', () => resolve(null), { once: true })
+    input.onchange = () => {
+      const file = input.files?.[0]
+      if (!file) { resolve(null); return }
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        resolve({ name: file.name, path: '', buffer: e.target?.result as ArrayBuffer })
+      }
+      reader.readAsArrayBuffer(file)
+    }
+    input.click()
+  })
+}
+
+// ─── Read a binary file by path (Tauri only) ──────────────────────────────────
+
+/**
+ * Read a file as an ArrayBuffer from an absolute path.
+ * Returns null in browser or if the file doesn't exist.
+ */
+export async function readBinaryFile(path: string): Promise<ArrayBuffer | null> {
+  if (!isTauri()) return null
+  try {
+    const { readFile } = await import('@tauri-apps/plugin-fs')
+    const bytes = await readFile(path)
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+  } catch {
+    return null
+  }
+}
+
+// ─── Check if a file exists (Tauri only) ──────────────────────────────────────
+
+/**
+ * Returns true if the given path exists (Tauri only, always false in browser).
+ */
+export async function checkFileExists(path: string): Promise<boolean> {
+  if (!isTauri()) return false
+  try {
+    const { exists } = await import('@tauri-apps/plugin-fs')
+    return exists(path)
+  } catch {
+    return false
+  }
+}
+
+// ─── Read a text file at an absolute path (Tauri only) ───────────────────────
+
+/**
+ * Read a UTF-8 text file from an absolute path.
+ * Returns null in browser or if the read fails.
+ */
+export async function readTextFileAt(path: string): Promise<string | null> {
+  if (!isTauri()) return null
+  try {
+    const { readTextFile } = await import('@tauri-apps/plugin-fs')
+    return await readTextFile(path)
+  } catch {
+    return null
+  }
+}
+
 // ─── Pick Core.zip ────────────────────────────────────────────────────────────
 
 /**

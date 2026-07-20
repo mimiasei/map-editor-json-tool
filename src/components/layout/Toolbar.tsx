@@ -7,7 +7,8 @@ import { importScenario } from '@/lib/import'
 import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
-import { openFile, saveFile, isTauri, pickCoreZip } from '@/lib/native-fs'
+import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
+import { openAndLoadMapFile } from '@/lib/map-file'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
 import {
@@ -95,6 +96,8 @@ export default function Toolbar({
     isDirty,
     panels,
     currentFileName,
+    currentFilePath,
+    sidecarPath,
     mapName,
     dialogs,
     localization,
@@ -159,6 +162,8 @@ export default function Toolbar({
 
   // ── Import (Open) ────────────────────────────────────────────────────────────
   const handleImport = async () => {
+    // In Tauri, show a dialog that accepts both .json and .map; in browser use
+    // a hidden input that also accepts .map so the user can pick either type.
     const result = await openFile()
     if (!result) return
 
@@ -187,10 +192,37 @@ export default function Toolbar({
     }
   }
 
+  // ── Open .map file ────────────────────────────────────────────────────────────
+  const handleOpenMap = async () => {
+    try {
+      const result = await openAndLoadMapFile()
+      if (!result) return
+      logInfo(`Opened .map: ${result.name}`)
+      if (result.warnings.length > 0) {
+        setImportWarnings(result.warnings)
+        setImportFeedbackOpen(true)
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      logError(`Failed to open .map: ${msg}`)
+      setImportErrors([msg])
+      setImportFeedbackOpen(true)
+    }
+  }
+
   // ── Export / Save As ─────────────────────────────────────────────────────────
   const handleExport = async () => {
-    const json     = exportProjectJson(scenario, mapName, dialogs, localization)
-    const savedPath = await saveFile(json, currentFileName ?? 'scenario.json')
+    const json      = exportProjectJson(scenario, mapName, dialogs, localization)
+    const saveName  = currentFileName ?? 'scenario.json'
+
+    // If a sidecar path is known (opened from .map), save directly to it (Ctrl+S style)
+    if (isTauri() && sidecarPath) {
+      await saveToPath(sidecarPath, json)
+      markClean()
+      return
+    }
+
+    const savedPath = await saveFile(json, saveName)
     // In browser saveFile always downloads and returns null — still mark clean
     if (savedPath) {
       setCurrentFile(savedPath, savedPath.replace(/\\/g, '/').split('/').pop() ?? savedPath)
@@ -219,16 +251,19 @@ export default function Toolbar({
   // ── Listen for actions dispatched by AppShell (native menu / keyboard) ───────
   useEffect(() => {
     const handleOpen    = () => { handleImport() }
+    const handleOpenMap_ = () => { handleOpenMap() }
     const handleSaveAs  = () => { handleExport() }
 
-    window.addEventListener('oe:open',    handleOpen)
-    window.addEventListener('oe:save-as', handleSaveAs)
+    window.addEventListener('oe:open',      handleOpen)
+    window.addEventListener('oe:open-map',  handleOpenMap_)
+    window.addEventListener('oe:save-as',   handleSaveAs)
     return () => {
-      window.removeEventListener('oe:open',    handleOpen)
-      window.removeEventListener('oe:save-as', handleSaveAs)
+      window.removeEventListener('oe:open',      handleOpen)
+      window.removeEventListener('oe:open-map',  handleOpenMap_)
+      window.removeEventListener('oe:save-as',   handleSaveAs)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenario, currentFileName])
+  }, [scenario, currentFilePath, sidecarPath, currentFileName])
 
   const validation = validateScenario(scenario, { mapName, dialogs, localization })
 
@@ -269,8 +304,32 @@ export default function Toolbar({
                 {isTauri() ? 'Open' : 'Import'}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{isTauri() ? 'Open file (Ctrl+O)' : 'Import JSON file'}</TooltipContent>
+            <TooltipContent>{isTauri() ? 'Open JSON file (Ctrl+O)' : 'Import JSON file'}</TooltipContent>
           </Tooltip>
+
+          {isTauri() && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleOpenMap} className="gap-1.5">
+                  <Upload className="h-4 w-4" />
+                  Open Map
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Open .map file</TooltipContent>
+            </Tooltip>
+          )}
+
+          {isTauri() && currentFilePath && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleExport} className="gap-1.5" disabled={!isDirty}>
+                  <Download className="h-4 w-4" />
+                  Save
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Save (Ctrl+S)</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>

@@ -16,7 +16,9 @@ export interface ImportResult {
   warnings: string[]
 }
 
-export function importScenario(jsonText: string): ImportResult {
+export function importScenario(rawJsonText: string): ImportResult {
+  // Strip UTF-8 BOM if present (some sidecar files are saved with BOM)
+  const jsonText = rawJsonText.charCodeAt(0) === 0xfeff ? rawJsonText.slice(1) : rawJsonText
   const errors: string[] = []
   const warnings: string[] = []
   const extras = {
