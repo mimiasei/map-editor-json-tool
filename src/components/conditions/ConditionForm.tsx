@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
+import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
 
 interface Props {
@@ -122,6 +123,12 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                   value={(condition.p ?? [])[i] ?? ''}
                   onChange={(v) => updateParam(i, v)}
                   refType={param.ref}
+                  placeholder={param.hint}
+                />
+              ) : param.mapEntity ? (
+                <MapEntityCombobox
+                  value={(condition.p ?? [])[i] ?? ''}
+                  onChange={(v) => updateParam(i, v)}
                   placeholder={param.hint}
                 />
               ) : param.entity ? (

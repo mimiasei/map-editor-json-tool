@@ -509,7 +509,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Entity',
     description: 'Removes a map entity (blocking object, zone, decoration, etc.) permanently.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. block_1_1', required: true },
+      { label: 'Entity ID', hint: 'e.g. block_1_1', required: true, mapEntity: true },
     ],
   },
   SpawnMapObject: {
@@ -532,7 +532,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Object type', hint: 'e.g. campaign_lost_library_empty', required: true, entity: 'mapObject' },
       { label: 'Node ID', hint: 'e.g. 1755', required: true },
       { label: 'Flag', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
-      { label: 'Entity SID', hint: 'e.g. diary', required: false },
+      { label: 'Entity SID', hint: 'e.g. diary', required: false, mapEntity: true },
     ],
   },
   SetActivePortal: {
@@ -541,7 +541,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Entity',
     description: 'Enables or disables a portal entity.',
     params: [
-      { label: 'Portal entity ID', hint: 'e.g. portal_in', required: true, entity: 'mapObject' },
+      { label: 'Portal entity ID', hint: 'e.g. portal_in', required: true, mapEntity: true },
       { label: 'Active', hint: 'true or false', required: true, type: 'enum', options: ['true', 'false'] },
     ],
   },
@@ -551,7 +551,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Entity',
     description: 'Disables all actions on a map entity (makes it non-interactable).',
     params: [
-      { label: 'Entity ID', hint: 'e.g. cirque', required: true, entity: 'mapObject' },
+      { label: 'Entity ID', hint: 'e.g. cirque', required: true, mapEntity: true },
     ],
   },
 
@@ -562,7 +562,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Markers / VFX',
     description: 'Attaches a quest marker VFX to a map entity.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. cavalryman', required: true, entity: 'mapObject' },
+      { label: 'Entity ID', hint: 'e.g. cavalryman', required: true, mapEntity: true },
       { label: 'Marker path', hint: 'e.g. effects/global_map/quest_mark_silver_01', required: true },
     ],
   },
@@ -572,7 +572,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Markers / VFX',
     description: 'Shows or hides a quest marker already attached to an entity.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true, entity: 'mapObject' },
+      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true, mapEntity: true },
       { label: 'Active', hint: 'true or false', required: true, type: 'enum', options: ['true', 'false'] },
     ],
   },
@@ -586,7 +586,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Node ID', hint: 'e.g. 2398', required: true },
       { label: 'Flag 1', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Flag 2', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      { label: 'Entity SID', hint: 'e.g. qm_construction_site', required: false },
+      { label: 'Entity SID', hint: 'e.g. qm_construction_site', required: false, mapEntity: true },
     ],
   },
   SetActiveVFX: {
@@ -595,7 +595,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Markers / VFX',
     description: 'Shows or hides a VFX entity.',
     params: [
-      { label: 'VFX entity SID', hint: 'e.g. pm_west_road', required: true },
+      { label: 'VFX entity SID', hint: 'e.g. pm_west_road', required: true, mapEntity: true },
       { label: 'Active', hint: 'true or false', required: true, type: 'enum', options: ['true', 'false'] },
     ],
   },
@@ -605,7 +605,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Markers / VFX',
     description: 'Shows or hides a zone/interaction marker.',
     params: [
-      { label: 'Zone/marker entity ID', hint: 'e.g. zone_found_river_source', required: true, entity: 'mapObject' },
+      { label: 'Zone/marker entity ID', hint: 'e.g. zone_found_river_source', required: true, mapEntity: true },
       { label: 'Active', hint: 'true or false', required: true, type: 'enum', options: ['true', 'false'] },
     ],
   },
@@ -617,7 +617,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Squad',
     description: 'Removes a neutral squad/stack from the map.',
     params: [
-      { label: 'Squad entity ID', hint: 'e.g. blocking_squad1', required: true },
+      { label: 'Squad entity ID', hint: 'e.g. blocking_squad1', required: true, mapEntity: true },
       { label: 'Flag', hint: '1', required: false },
     ],
   },

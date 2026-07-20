@@ -12,6 +12,7 @@ export interface ParamDef {
   options?: string[] // For enum type
   ref?: 'counter' | 'quest' | 'subquest' | 'interruption' // SID cross-reference: show autocomplete from this pool
   entity?: EntityCategory // Entity registry: show searchable combobox from static list
+  mapEntity?: true // Map entity SID: show autocomplete from user-placed entities in the loaded .map file
 }
 
 export interface ConditionDef {
@@ -74,7 +75,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Squad Defeated',
     description: 'Fires when the specified squad/neutral stack is defeated.',
     params: [
-      { label: 'Squad ID', hint: 'e.g. E_Squad', required: true },
+      { label: 'Squad ID', hint: 'e.g. E_Squad', required: true, mapEntity: true },
     ],
   },
   ObjectLose: {
@@ -82,7 +83,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Lost',
     description: 'Fires when the specified map object (e.g. a town) is lost/captured by the enemy.',
     params: [
-      { label: 'Object ID', hint: 'e.g. city', required: true, entity: 'mapObject' },
+      { label: 'Object ID', hint: 'e.g. city', required: true, mapEntity: true },
     ],
   },
   DifficultyCustomMap: {
@@ -107,7 +108,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Squad Interaction',
     description: 'Fires when the player interacts with a neutral squad/stack.',
     params: [
-      { label: 'Squad entity ID', hint: 'e.g. pixie1', required: true },
+      { label: 'Squad entity ID', hint: 'e.g. pixie1', required: true, mapEntity: true },
     ],
   },
   UnitOwnSide: {
@@ -169,7 +170,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Interaction (Before)',
     description: 'Fires before the player interacts with a map object or zone.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. amplifier', required: true, entity: 'mapObject' },
+      { label: 'Entity ID', hint: 'e.g. amplifier', required: true, mapEntity: true },
     ],
   },
   ObjectInteractionAfter: {
@@ -177,7 +178,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Interaction (After)',
     description: 'Fires after the player interacts with a map object or zone.',
     params: [
-      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true, entity: 'mapObject' },
+      { label: 'Entity ID', hint: 'e.g. dragon_utopia', required: true, mapEntity: true },
     ],
   },
   ResCounter: {
@@ -195,7 +196,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Object Captured',
     description: 'Fires when the player captures a specific map entity (mine, city, etc.).',
     params: [
-      { label: 'Entity ID', hint: 'e.g. mine1', required: true, entity: 'mapObject' },
+      { label: 'Entity ID', hint: 'e.g. mine1', required: true, mapEntity: true },
     ],
   },
   ItemOwnSide: {
