@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Copy, Check, Filter } from 'lucide-react'
 import type {
   CatalogHero,
@@ -296,15 +295,21 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
           <span className="text-sm font-semibold">Game Database</span>
 
           {/* Tab bar */}
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1">
-            <TabsList className="h-7 gap-0.5">
-              {TABS.map((t) => (
-                <TabsTrigger key={t.id} value={t.id} className="h-6 px-2 text-xs">
-                  {t.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-1 gap-0.5 overflow-x-auto">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => handleTabChange(t.id)}
+                className={`h-6 px-2 text-xs rounded shrink-0 transition-colors ${
+                  activeTab === t.id
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </DraggableDialogDragHandle>
 
         {/* ── Body ── */}
