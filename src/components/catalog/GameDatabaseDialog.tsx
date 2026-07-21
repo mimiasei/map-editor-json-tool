@@ -13,6 +13,11 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import {
+  STATIC_HEROES,
+  STATIC_CREATURES,
+  STATIC_MAP_OBJECTS,
+} from '@/lib/catalog/static-catalog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -167,9 +172,27 @@ function DetailPane({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
-  const catalog = useCatalogStore((s) => s.catalog)
+  const rawCatalog = useCatalogStore((s) => s.catalog)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
   const scenario = useScenarioStore((s) => s.scenario)
+
+  // When Core.zip is loaded but a specific entity array is empty (e.g. the zip
+  // path didn't match), fall back to the bundled JSON data for that tab so the
+  // Game Database is never fully blank.  When Core.zip is not loaded at all we
+  // still build a partial catalog from the bundled JSON files — heroes,
+  // creatures, and map objects are always available.
+  const catalog = useMemo(() => {
+    const base = rawCatalog
+    const heroes    = base && base.heroes.length    > 0 ? base.heroes    : STATIC_HEROES
+    const creatures = base && base.creatures.length > 0 ? base.creatures : STATIC_CREATURES
+    const mapObjects = base && base.mapObjects.length > 0 ? base.mapObjects : STATIC_MAP_OBJECTS
+    return {
+      ...(base ?? { artifacts: [], spells: [], skills: [], buffs: [], factions: [], dialogs: [] }),
+      heroes,
+      creatures,
+      mapObjects,
+    }
+  }, [rawCatalog])
 
   const [activeTab, setActiveTab] = useState<TabId>('heroes')
   const [search, setSearch] = useState('')
@@ -217,8 +240,6 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   // ── Build items for the active tab ──────────────────────────────────────────
 
   const items: CatalogItem[] = useMemo(() => {
-    if (!catalog) return []
-
     switch (activeTab) {
       case 'heroes':
         return catalog.heroes.map((h: CatalogHero) => ({
@@ -313,14 +334,8 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
         </DraggableDialogDragHandle>
 
         {/* ── Body ── */}
-        {!catalog ? (
-          <div className="flex flex-col items-center justify-center flex-1 gap-2 text-sm text-muted-foreground p-8">
-            <p>Game data not loaded.</p>
-            <p className="text-xs">Load Core.zip via the toolbar → More → Game Data.</p>
-          </div>
-        ) : (
-          <div className="flex flex-1 min-h-0 overflow-hidden">
-            {/* ── List pane ── */}
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* ── List pane ── */}
             <div className="flex flex-col w-64 shrink-0 border-r border-border">
               {/* Search + filter */}
               <div className="flex items-center gap-1.5 px-2 py-2 border-b border-border">
@@ -373,11 +388,16 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
                 })}
               </ScrollArea>
 
-              {/* Footer: item count */}
+              {/* Footer: item count + Core.zip hint when using built-in data */}
               <div className="px-2.5 py-1.5 border-t border-border text-[10px] text-muted-foreground">
                 {filtered.length} of {items.length} items
                 {onlyUsed && ' (filtered)'}
               </div>
+              {!rawCatalog && (
+                <div className="px-2.5 py-1.5 border-t border-border text-[10px] text-muted-foreground italic">
+                  Showing built-in data. Load Core.zip for the full catalog.
+                </div>
+              )}
             </div>
 
             {/* ── Detail pane ── */}
@@ -396,7 +416,6 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
               )}
             </div>
           </div>
-        )}
       </DraggableDialogContent>
     </Dialog>
   )

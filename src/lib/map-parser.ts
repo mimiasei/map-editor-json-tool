@@ -148,16 +148,31 @@ export async function parseMapFile(buffer: ArrayBuffer): Promise<RawMapBlocks> {
   const blocks: unknown[] = []
 
   for (let i = 0; i < 4; i++) {
+    // Some maps (e.g. scenario-less maps) ship with fewer than 4 blocks.
+    // Treat any missing or zero-length block as an empty object so the rest
+    // of the pipeline can apply safe ?? [] fallbacks instead of crashing.
+    if (pos >= data.length) {
+      blocks.push({})
+      continue
+    }
     const { value: byteLen, next } = readVarint(data, pos)
     pos = next
-    if (pos + byteLen > data.length)
-      throw new Error(`.map block ${i + 1} truncated: claims ${byteLen} bytes but only ${data.length - pos} remain`)
+    if (byteLen === 0 || pos + byteLen > data.length) {
+      // Block is absent or truncated — skip whatever bytes remain and push empty.
+      pos += Math.min(byteLen, Math.max(0, data.length - pos))
+      blocks.push({})
+      continue
+    }
     const jsonBytes = data.subarray(pos, pos + byteLen)
     pos += byteLen
     let jsonText = decoder.decode(jsonBytes)
     // Strip UTF-8 BOM if present
     if (jsonText.charCodeAt(0) === 0xfeff) jsonText = jsonText.slice(1)
-    blocks.push(JSON.parse(jsonText))
+    try {
+      blocks.push(JSON.parse(jsonText))
+    } catch {
+      blocks.push({})
+    }
   }
 
   return {
