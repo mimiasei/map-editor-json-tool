@@ -94,6 +94,10 @@ export const DraggableDialogContent = React.forwardRef<
     const onDragPointerDown = React.useCallback(
       (e: React.PointerEvent<HTMLElement>) => {
         if (e.button !== 0) return
+        // Don't initiate drag when the click lands on an interactive element
+        // (buttons, inputs, links, etc.) inside the drag handle — those need
+        // their own click/focus events to work normally.
+        if ((e.target as HTMLElement).closest('button, input, a, select, textarea, [role="button"], [data-nodrag]')) return
         e.preventDefault()
         e.currentTarget.setPointerCapture(e.pointerId)
         setPos((cur) => {
