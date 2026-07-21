@@ -17,6 +17,7 @@ import {
   STATIC_HEROES,
   STATIC_CREATURES,
   STATIC_MAP_OBJECTS,
+  STATIC_ARTIFACTS,
 } from '@/lib/catalog/static-catalog'
 import { DEBUG } from '@/lib/debug'
 import { Input } from '@/components/ui/input'
@@ -269,8 +270,14 @@ function DetailPane({
       )}
 
       {/* Extra fields (generic — excludes creature-specific fields handled above) */}
+      {item.description != null && (
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</p>
+          <p className="text-xs bg-muted rounded px-2 py-1.5 leading-relaxed">{String(item.description)}</p>
+        </div>
+      )}
       {Object.entries(item)
-        .filter(([k]) => !['id', 'name', 'icon', 'subtitle', ...CREATURE_HANDLED_FIELDS].includes(k))
+        .filter(([k]) => !['id', 'name', 'icon', 'subtitle', 'description', ...CREATURE_HANDLED_FIELDS].includes(k))
         .map(([k, v]) => {
           if (v === undefined || v === null || v === '') return null
           return (
@@ -332,10 +339,25 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
     const mapObjects = (base && base.mapObjects.length > 0 ? base.mapObjects : STATIC_MAP_OBJECTS)
       .map(o => ({ ...o, name: mapObjectNames.get(o.id) ?? o.name }))
 
+    // For artifacts: use Core.zip data if available, overlaying static descriptions/slots
+    // when missing. If Core.zip not loaded, use the full static artifact catalog.
+    const artifactDescriptions = new Map(STATIC_ARTIFACTS.map(a => [a.id, { description: a.description, slot: a.slot, rarity: a.rarity }]))
+    const artifacts = (base && base.artifacts.length > 0 ? base.artifacts : STATIC_ARTIFACTS)
+      .map(a => {
+        const extra = artifactDescriptions.get(a.id)
+        return {
+          ...a,
+          description: (a as typeof a & { description?: string }).description ?? extra?.description,
+          slot: a.slot ?? extra?.slot,
+          rarity: a.rarity ?? extra?.rarity,
+        }
+      })
+
     return {
-      ...(base ?? { artifacts: [], spells: [], skills: [], buffs: [], factions: [], dialogs: [] }),
+      ...(base ?? { spells: [], skills: [], buffs: [], factions: [], dialogs: [] }),
       heroes,
       creatures,
+      artifacts,
       mapObjects,
     }
   }, [rawCatalog])

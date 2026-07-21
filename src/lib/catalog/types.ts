@@ -49,6 +49,7 @@ export interface CatalogArtifact {
   icon: string
   slot?: string
   rarity?: string
+  description?: string
 }
 
 export interface CatalogSpell {

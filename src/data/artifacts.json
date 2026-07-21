@@ -1,0 +1,2084 @@
+[
+  {
+    "sid": "rule_of_shadow_nostrias_gaze_artifact",
+    "name": "Amelchia’s Law",
+    "slot": "Head",
+    "description": "–1 Initiative to enemy creatures.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "ancient_idol_artifact",
+    "name": "Ancient Idol",
+    "slot": "Artifacts",
+    "description": "The hero ignores the restriction on using the same Magic School twice.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "catechism_of_spacetime_magic_artifact",
+    "name": "Arcane Tome",
+    "slot": "Artifacts",
+    "description": "Allows the hero to cast all Arcane spells.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "knights_honor_armet_artifact",
+    "name": "Armet",
+    "slot": "Head",
+    "description": "+2 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "angelic_alliance_armor_of_wonder_artifact",
+    "name": "Armor of Wonder",
+    "slot": "Armor",
+    "description": "+2 Attack, Defense, Spell Power, and Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact",
+    "name": "Automated Antimagic Shield",
+    "slot": "Back",
+    "description": "–10% Magic Damage taken. Friendly creatures are immune to the effects of “Berserk.”",
+    "rarity": "◆"
+  },
+  {
+    "sid": "wanderers_way_backpack_artifact",
+    "name": "Backpack",
+    "slot": "Back",
+    "description": "The hero has +10 Movement points.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "banner_of_four_winds_artifact",
+    "name": "Banner of Six Winds",
+    "slot": "Back",
+    "description": "+1 Speed to friendly creatures.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "beelzebubs_blessing_demon_crest_artifact",
+    "name": "Beelzebub’s Boon",
+    "slot": "Head",
+    "description": "+12 Knowledge, but –4 Spell Power.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "shadow_of_death_bone_boots_artifact",
+    "name": "Bone Boots",
+    "slot": "Boots",
+    "description": "+4 Spell Power, then +2% total Spell Power.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "wanderers_way_boots_of_travel_artifact",
+    "name": "Boots of Travel",
+    "slot": "Boots",
+    "description": "+10 Movement points.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "boreolos_hand_artifact",
+    "name": "Boreoloth’s Hand",
+    "slot": "Artifacts",
+    "description": "+1 Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "boreolos_head_artifact",
+    "name": "Boreoloth’s Head",
+    "slot": "Artifacts",
+    "description": "+1 Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "boreolos_heart_artifact",
+    "name": "Boreoloth’s Heart",
+    "slot": "Artifacts",
+    "description": "+1 Spell Power.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "boreolos_foot_artifact",
+    "name": "Boreoloth’s Tail",
+    "slot": "Artifacts",
+    "description": "+1 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "duelists_pride_brass_knuckles_artifact",
+    "name": "Brass Knuckles",
+    "slot": "Ring",
+    "description": "Friendly creatures take –30% counterattack Damage.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "duelists_pride_buckler_artifact",
+    "name": "Buckler",
+    "slot": "Off Hand",
+    "description": "Friendly creatures can counterattack even if the attacking enemy has “Swift Strike.”",
+    "rarity": "◆"
+  },
+  {
+    "sid": "caduceus_artifact",
+    "name": "Caduceus",
+    "slot": "Off Hand",
+    "description": "Heroic Strike restores  mana.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "angelic_alliance_celestial_sash_of_bliss_artifact",
+    "name": "Celestial Sash of Bliss",
+    "slot": "Belt",
+    "description": "+2 Attack, Defense, Spell Power, and Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "chain_link_artifact",
+    "name": "Chain Link",
+    "slot": "Ring",
+    "description": "Forbids the wearer and the enemy hero to cast tier‑3 and 3 spells in combat.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "chain_mail_artifact",
+    "name": "Chain Mail",
+    "slot": "Armor",
+    "description": "+3 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "beelzebubs_blessing_chitinous_shield_artifact",
+    "name": "Chitinous Shield",
+    "slot": "Off Hand",
+    "description": "+12 Defense, but –4 Attack.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "shamaniac_soul_clutching_ring_artifact",
+    "name": "Clenching Ring",
+    "slot": "Ring",
+    "description": "All effects applied by the hero last +1 round(s).",
+    "rarity": "◆"
+  },
+  {
+    "sid": "ethereal_knowledge_glass_dagger_artifact",
+    "name": "Crescent Dagger",
+    "slot": "Off Hand",
+    "description": "Spells and creature abilities ignore 40% of enemy magic resistance.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact",
+    "name": "Crimson Resonance Controller",
+    "slot": "Ring",
+    "description": "–20% to enemy hero Spell Power. Friendly creatures are immune to effects that prevent them from attacking.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "power_of_the_dragon_father_dragon_crest_artifact",
+    "name": "Crown of Dragontooth",
+    "slot": "Head",
+    "description": "+4 Spell Power and Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "crown_of_the_supreme_magi_artifact",
+    "name": "Crown of the Supreme Magi",
+    "slot": "Head",
+    "description": "+4 Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "shadow_of_death_dark_hatchet_artifact",
+    "name": "Dark Hatchet",
+    "slot": "Main Hand",
+    "description": "+4 Attack, then +2% total Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "catechism_of_daylight_magic_artifact",
+    "name": "Daylight Tome",
+    "slot": "Artifacts",
+    "description": "Allows the hero to cast all Daylight spells.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "cards_deck_artifact",
+    "name": "Deck of Spells",
+    "slot": "Artifacts",
+    "description": "Makes all tier‑1 spells available to the hero.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "beelzebubs_blessing_demon_claw_artifact",
+    "name": "Demon Claw",
+    "slot": "Main Hand",
+    "description": "+12 Attack, but –4 Defense.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "demonic_heart_artifact",
+    "name": "Demonic Heart",
+    "slot": "Artifacts",
+    "description": "Replaces all the hero’s spells with their Masterful versions (if they exist).",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "ambassadors_word_ambassadors_sash_artifact",
+    "name": "Diplomat’s Robe",
+    "slot": "Back",
+    "description": "+10% to Persuasion Power in Diplomacy.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "ambassadors_word_diplomatic_gifts_artifact",
+    "name": "Diplomatic Gifts",
+    "slot": "Artifacts",
+    "description": "+10% to Persuasion Power in Diplomacy.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "power_of_the_dragon_father_dragon_scale_armor_artifact",
+    "name": "Dragon Scale Armor",
+    "slot": "Armor",
+    "description": "+4 Attack and Defense.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "power_of_the_dragon_father_dragon_scale_shield_artifact",
+    "name": "Dragon Scale Shield",
+    "slot": "Off Hand",
+    "description": "+3 Attack and Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "power_of_the_dragon_father_dragon_wing_artifact",
+    "name": "Dragon Wing Tabard",
+    "slot": "Back",
+    "description": "+2 Spell Power and Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "power_of_the_dragon_father_dragonbone_greaves_artifact",
+    "name": "Dragonbone Greaves",
+    "slot": "Boots",
+    "description": "+1 Spell Power and Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "knights_honor_drums_of_war_artifact",
+    "name": "Drum of War",
+    "slot": "Artifacts",
+    "description": "Friendly creatures deal +1 Damage.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "eagle_armor_artifact",
+    "name": "Eagle Armor",
+    "slot": "Armor",
+    "description": "+2 Morale and Luck.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact",
+    "name": "Emerald Resonance Controller",
+    "slot": "Ring",
+    "description": "–10% to enemy hero Spell Power. Friendly creatures are immune to the effects that kill additional units.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_10_magic_primordial_purity",
+    "name": "Enchanted Scroll: Anti‑Magic",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Anti‑Magic” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_16_magic_arinas_chosen",
+    "name": "Enchanted Scroll: Arina’s Chosen",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Arina’s Chosen” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_9_magic_arinas_hymn",
+    "name": "Enchanted Scroll: Arina’s Touch",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Arina’s Touch” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_11_magic_armageddon",
+    "name": "Enchanted Scroll: Armageddon",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Armageddon” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_18_magic_assemble",
+    "name": "Enchanted Scroll: Assemble!",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Assemble” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_13_magic_berserker",
+    "name": "Enchanted Scroll: Berserk",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Berserk” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_13_magic_black_hole",
+    "name": "Enchanted Scroll: Black Hole",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Black Hole” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_2_magic_sharp_edge",
+    "name": "Enchanted Scroll: Blessing",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Blessing” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_6_magic_blink",
+    "name": "Enchanted Scroll: Blink",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Blink” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_8_magic_carapace",
+    "name": "Enchanted Scroll: Carapace",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Carapace” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_8_magic_cave_in",
+    "name": "Enchanted Scroll: Cave In",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Cave In” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_12_magic_chain_lightning",
+    "name": "Enchanted Scroll: Chain Lightning",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Chain Lightning” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_13_magic_avalanche",
+    "name": "Enchanted Scroll: Circle of Winter",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Circle of Winter” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_18_magic_farsight",
+    "name": "Enchanted Scroll: Clear Fog",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Clear Fog” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_15_magic_deaths_call",
+    "name": "Enchanted Scroll: Coup de Grâce",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Coup de Grace” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_5_magic_crystal_crown",
+    "name": "Enchanted Scroll: Crystal Crown",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Crystal Crown” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_4_magic_despair",
+    "name": "Enchanted Scroll: Despair",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Despair” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_14_magic_doreaths_tide",
+    "name": "Enchanted Scroll: Doreath’s Tide",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Doreath’s Tide” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_1_magic_early_start",
+    "name": "Enchanted Scroll: Early Start",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Early Start” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_9_magic_earths_rage",
+    "name": "Enchanted Scroll: Earth’s Rage",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Earth’s Rage” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_3_magic_energyze",
+    "name": "Enchanted Scroll: Energize",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Energize” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_2_magic_energy_explosion",
+    "name": "Enchanted Scroll: Energy Explosion",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Energy Explosion” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_3_magic_enlarge_shadow",
+    "name": "Enchanted Scroll: Enlarge Shadow",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Enlarge Shadow” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_7_magic_fatal_decay",
+    "name": "Enchanted Scroll: Fatal Decay",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Fatal Decay” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_4_magic_favorable_wind",
+    "name": "Enchanted Scroll: Favorable Wind",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Favorable Wind” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_4_magic_fire_globe",
+    "name": "Enchanted Scroll: Fireball",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Fireball” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_7_magic_wall_of_flame",
+    "name": "Enchanted Scroll: Firewall",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Firewall” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_17_magic_clear_view",
+    "name": "Enchanted Scroll: From a Bird’s Eye",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “From a Bird’s Eye” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_17_magic_groundsight",
+    "name": "Enchanted Scroll: Groundsight",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Groundsight” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_11_magic_decimate",
+    "name": "Enchanted Scroll: Guillotine",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Guillotine” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_3_magic_haste",
+    "name": "Enchanted Scroll: Haste",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Haste” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_1_magic_healing_water",
+    "name": "Enchanted Scroll: Healing Water",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Healing Water” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_13_magic_holy_arms",
+    "name": "Enchanted Scroll: Heavenly Blades",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Heavenly Blades” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_14_magic_hksmillas_rampage",
+    "name": "Enchanted Scroll: Hksmilla’s Rampage",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Hksmilla’s Rampage” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_6_magic_ice_bolt",
+    "name": "Enchanted Scroll: Ice Bolt",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Ice Bolt” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_9_magic_impending_fate",
+    "name": "Enchanted Scroll: Impending Fate",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Impending Fate” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_7_magic_inner_light",
+    "name": "Enchanted Scroll: Inner Light",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Inner Light” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_15_magic_judgement",
+    "name": "Enchanted Scroll: Judgement",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Judgement” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_1_magic_thunderbolt",
+    "name": "Enchanted Scroll: Lightning Bolt",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Lightning Bolt” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_10_magic_mirror_copy",
+    "name": "Enchanted Scroll: Mirror Copy",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Mirror Copy” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_14_magic_nairas_kiss",
+    "name": "Enchanted Scroll: Naira’s Kiss",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Naira’s Kiss” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_18_magic_nairas_veil",
+    "name": "Enchanted Scroll: Naira’s Veil",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Naira’s Veil” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_4_magic_optical_illusion",
+    "name": "Enchanted Scroll: Optical Illusion",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Optical Illusion” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_18_magic_primordial_chaos",
+    "name": "Enchanted Scroll: Primordial Chaos",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Primordial Chaos” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_12_magic_radiant_armor",
+    "name": "Enchanted Scroll: Radiant Armor",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Radiant Armor” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_17_magic_read_minds",
+    "name": "Enchanted Scroll: Read Minds",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Read Minds” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_16_magic_reality_distortion",
+    "name": "Enchanted Scroll: Reality Distortion",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Reality Distortion” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_17_magic_reinforcements",
+    "name": "Enchanted Scroll: Reinforcements",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Reinforcements” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_12_magic_rewind",
+    "name": "Enchanted Scroll: Rewind Life",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Rewind Life” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_11_magic_masterful_parry",
+    "name": "Enchanted Scroll: Riposte",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Riposte” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_7_magic_shackles",
+    "name": "Enchanted Scroll: Shackles",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Shackles” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_5_magic_shade_cloak",
+    "name": "Enchanted Scroll: Shade Cloak",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Shade Cloak” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_16_magic_shadow_army",
+    "name": "Enchanted Scroll: Shadow Army",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Shadow Army” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_5_magic_shorten_shadow",
+    "name": "Enchanted Scroll: Shorten Shadow",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Shorten Shadow” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_10_magic_silence",
+    "name": "Enchanted Scroll: Silence",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Silence” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_8_magic_sleep",
+    "name": "Enchanted Scroll: Sleep",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Sleep” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_10_magic_second_song",
+    "name": "Enchanted Scroll: Song of Power",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Song of Power” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_15_magic_trap_snare",
+    "name": "Enchanted Scroll: Spatial Snare",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Spatial Snare” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_16_magic_stone_fangs",
+    "name": "Enchanted Scroll: Stone Fangs",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Stone Fangs” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_15_magic_summon_primal_remnant",
+    "name": "Enchanted Scroll: Summon Primal Remnant",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Summon Primal Remnant” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_12_magic_summon_starchild",
+    "name": "Enchanted Scroll: Summon Starchild",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Summon Starchild” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_8_magic_taunt",
+    "name": "Enchanted Scroll: Taunt",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Taunt” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_space_5_magic_trap_jaws",
+    "name": "Enchanted Scroll: Temporal Spheres",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the max. level “Temporal Spheres” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_2_magic_thick_hide",
+    "name": "Enchanted Scroll: Thick Hide",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Thick Hide” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_9_magic_twilight",
+    "name": "Enchanted Scroll: Twilight",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Twilight” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_6_magic_deaths_grip",
+    "name": "Enchanted Scroll: Umbral Grip",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Umbral Grip” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_1_magic_unnatural_calm",
+    "name": "Enchanted Scroll: Unnatural Calm",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Unnatural Calm” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_14_magic_vengeance",
+    "name": "Enchanted Scroll: Vengeance",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Vengeance” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_11_magic_vulnerability",
+    "name": "Enchanted Scroll: Vulnerability",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Vulnerability” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_day_6_magic_cleansing_ray",
+    "name": "Enchanted Scroll: Weakening Ray",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the max. level “Weakening Ray” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_primal_3_magic_wean",
+    "name": "Enchanted Scroll: Wean",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the max. level “Wean” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "enchanted_magic_scroll_artifact_night_2_magic_web",
+    "name": "Enchanted Scroll: Web",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the max. level “Web” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "endless_bag_artifact",
+    "name": "Endless Bag",
+    "slot": "Belt",
+    "description": "Produces +1 Gem, Crystal, or Mercury daily. (The resource depends on the bearer’s faction.)",
+    "rarity": "◆"
+  },
+  {
+    "sid": "excalibur_artifact",
+    "name": "Excalibur",
+    "slot": "Main Hand",
+    "description": "Heroic Strike kills + unit(s). Works on creatures up to tier .",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "fallen_angel_wings_artifact",
+    "name": "Fallen Angel Wings",
+    "slot": "Back",
+    "description": "Grants constant flight.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "inner_song_fancy_mask_artifact",
+    "name": "Fancy Mask",
+    "slot": "Head",
+    "description": "Generates 2 Focus Point(s) at the start of the battle.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "fine_wand_artifact",
+    "name": "Fine Wand",
+    "slot": "Off Hand",
+    "description": "+1 level to all spells.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "paupers_glory_dumb_club_artifact",
+    "name": "Fish‑to‑the‑Face",
+    "slot": "Main Hand",
+    "description": "+1 Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "flag_of_truce_artifact",
+    "name": "Flag of Truce",
+    "slot": "Artifacts",
+    "description": "The wearer keeps their army whenever they flee from battle."
+  },
+  {
+    "sid": "elixir_of_life_flask_of_oblivion_artifact",
+    "name": "Flask of Oblivion",
+    "slot": "Belt",
+    "description": "All negative effects on friendly creatures last for –1 round(s).",
+    "rarity": "◆"
+  },
+  {
+    "sid": "garotte_artifact",
+    "name": "Garotte",
+    "slot": "Main Hand",
+    "description": "–1 Speed to all enemies.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "golden_goose_egg_artifact",
+    "name": "Golden Goose Egg",
+    "slot": "Artifacts",
+    "description": "Grants a random wondrous reward after a random number of upgrades."
+  },
+  {
+    "sid": "milos_curse_golden_moth_artifact",
+    "name": "Golden Moth",
+    "slot": "Artifacts",
+    "description": "+250 Gold daily.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "milos_curse_golden_pig_artifact",
+    "name": "Golden Pig",
+    "slot": "Artifacts",
+    "description": "+500 Gold daily.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "head_torch_artifact",
+    "name": "Head Torch",
+    "slot": "Head",
+    "description": "+1 sight radius.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "beelzebubs_blessing_heartbeat_artifact",
+    "name": "Heartbeat",
+    "slot": "Armor",
+    "description": "+12 Spell Power, but –4 Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "angelic_alliance_helm_of_heavenly_enlightenment_artifact",
+    "name": "Helm of Heavenly Enlightenment",
+    "slot": "Head",
+    "description": "+2 Attack, Defense, Spell Power, and Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "holy_sigil_of_eridore_artifact",
+    "name": "Holy Sigil of Eridore",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Logistics, Battle Magic, Wisdom.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "holy_sigil_of_insara_artifact",
+    "name": "Holy Sigil of Insara",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Leadership, Insight, Diplomacy, Tactics.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "holy_sigil_of_mearea_artifact",
+    "name": "Holy Sigil of Mearea",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Luck, Economy, Daylight Magic.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "holy_sigil_of_quix_artifact",
+    "name": "Holy Sigil of Quix",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Arcane Magic, Scouting, Battlecraft, Thaumaturgy.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "holy_sigil_of_roph_artifact",
+    "name": "Holy Sigil of Roph",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Righteousness, Necromancy, Murmuring, Triumvirate’s Strength, Abyssal Communion, Summon Swar",
+    "rarity": "◆"
+  },
+  {
+    "sid": "holy_sigil_of_the_second_man_artifact",
+    "name": "Holy Sigil of The Second Man",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Offense, Summon Avatar, Siegecraft, Combat.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "holy_sigil_of_the_seven_magi_artifact",
+    "name": "Holy Sigil of The Seven Magi",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Sorcery, Nightshade Magic, Resistance.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "holy_sigil_of_uurdt_artifact",
+    "name": "Holy Sigil of Uurdt",
+    "slot": "Unic Slot",
+    "description": "While worn, grants all unlearned Subskills of the following Skills: Defense, Primal Magic, Recruitment.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "shamaniac_soul_iridescent_cloak_artifact",
+    "name": "Iridescent Cloak",
+    "slot": "Armor",
+    "description": "+6 Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "keepers_fortitude_keepers_oberegus_artifact",
+    "name": "Keeper’s Amulet",
+    "slot": "Artifacts",
+    "description": "+2 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "keepers_fortitude_keepers_ring_artifact",
+    "name": "Keeper’s Ring",
+    "slot": "Ring",
+    "description": "+2 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "knights_honor_lance_artifact",
+    "name": "Lance",
+    "slot": "Main Hand",
+    "description": "+3 Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "paupers_glory_last_coin_artifact",
+    "name": "Last Coin",
+    "slot": "Artifacts",
+    "description": "+1 Luck.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "legions_step_artifact",
+    "name": "Legion’s Leg",
+    "slot": "Boots",
+    "description": "+50% to all creature growth in all your cities.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "elixir_of_life_lifeblood_fairy_artifact",
+    "name": "Lifeblood Fae",
+    "slot": "Artifacts",
+    "description": "Friendly creatures have +2 HP.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "living_arrows_light_and_shade_cloak_artifact",
+    "name": "Light‑and‑Shade Cloak",
+    "slot": "Back",
+    "description": "Friendly creatures can still use Ranged attacks while adjacent to enemy creatures.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "angelic_alliance_lions_shield_of_courage_artifact",
+    "name": "Lion’s Shield of Courage",
+    "slot": "Off Hand",
+    "description": "+2 Attack, Defense, Spell Power, and Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "rule_of_shadow_liquid_silence_artifact",
+    "name": "Liquid Silence",
+    "slot": "Artifacts",
+    "description": "+1 round(s) to the cooldown of all enemy creature abilities.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "lords_ring_artifact",
+    "name": "Lord’s Ring",
+    "slot": "Ring",
+    "description": "Friendly creatures have +1 Initiative.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_key_ring_artifact",
+    "name": "Magic Key Ring",
+    "slot": "Belt",
+    "description": "Negates all effects that restrict creature rearrangement, surrendering, fleeing, and using the Spellbook and hero abilities in battle.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "tranquility_magic_mirror_artifact",
+    "name": "Magic Mirror",
+    "slot": "Artifacts",
+    "description": "Restores 4 mana to the hero each morning.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "ethereal_knowledge_mirror_shoes_artifact",
+    "name": "Magic Slippers",
+    "slot": "Boots",
+    "description": "Spells cost 2 less mana.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "tranquility_brightmind_tiara_artifact",
+    "name": "Mirror Tiara",
+    "slot": "Head",
+    "description": "Restores 8 mana to the hero each morning.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "knights_honor_misericorde_artifact",
+    "name": "Misericorde",
+    "slot": "Off Hand",
+    "description": "+2 Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "monster_head_artifact",
+    "name": "Monster Head",
+    "slot": "Back",
+    "description": "All creatures always have neutral Morale in battle.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "inner_song_music_sheet_artifact",
+    "name": "Music Sheet",
+    "slot": "Artifacts",
+    "description": "Friendly creatures’ abilities deal +40% Damage.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "catechism_of_night_magic_artifact",
+    "name": "Nightshade Tome",
+    "slot": "Artifacts",
+    "description": "Allows the hero to cast all Nightshade spells.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "ogres_club_of_havoc_artifact",
+    "name": "Ogre’s Club of Havoc",
+    "slot": "Main Hand",
+    "description": "+4 Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "omencaller_artifact",
+    "name": "Omencaller",
+    "slot": "Back",
+    "description": "–1 to enemy Luck.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "resonant_sphere_orb_of_daylight_artifact",
+    "name": "Orb of Dawn",
+    "slot": "Artifacts",
+    "description": "All of the hero’s Daylight spells have +1 level(s). Enemy hero has –1 Daylight spell level.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "orb_of_destruction_artifact",
+    "name": "Orb of Destruction",
+    "slot": "Artifacts",
+    "description": "Heroic Strike deals + base Damage.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "resonant_sphere_orb_of_eternity_artifact",
+    "name": "Orb of Eternity",
+    "slot": "Artifacts",
+    "description": "All of the hero’s Arcane spells have +1 level(s). Enemy hero has –1 Arcane spell level.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "orb_of_inhibition_artifact",
+    "name": "Orb of Inhibition",
+    "slot": "Artifacts",
+    "description": "On the first round of the battle, heroes cannot use their Spellbook or active abilities.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "resonant_sphere_orb_of_twilight_artifact",
+    "name": "Orb of Twilight",
+    "slot": "Artifacts",
+    "description": "All of the hero’s Nightshade spells have +1 level(s). Enemy hero has –1 Nightshade spell level.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "hourglass_of_protection_artifact",
+    "name": "Pelagic Hourglass",
+    "slot": "Off Hand",
+    "description": "The cooldowns of all spells are reduced by 1 round(s).",
+    "rarity": "◆"
+  },
+  {
+    "sid": "knights_honor_plate_armor_artifact",
+    "name": "Plate Armor",
+    "slot": "Armor",
+    "description": "+3 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "pole_star_artifact",
+    "name": "Pole Star",
+    "slot": "Artifacts",
+    "description": "Global Map spells of the hero cost 999 mana.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "catechism_of_primal_magic_artifact",
+    "name": "Primal Tome",
+    "slot": "Artifacts",
+    "description": "Allows the hero to cast all Primal spells.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "resonant_sphere_primal_orb_artifact",
+    "name": "Primordial Orb",
+    "slot": "Artifacts",
+    "description": "All of the hero’s Primal spells have +1 level(s). Enemy hero has –1 Primal spell level.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "gifts_of_dwarven_lords_protective_belt_artifact",
+    "name": "Protective Belt",
+    "slot": "Belt",
+    "description": "–10% Magic Damage taken. Friendly creatures are immune to the effects of “Sleep.”",
+    "rarity": "◆"
+  },
+  {
+    "sid": "power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact",
+    "name": "Quiet Eye of a Dragon",
+    "slot": "Ring",
+    "description": "+1 Attack and Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "living_arrows_quivering_quiver_artifact",
+    "name": "Quivering Quiver",
+    "slot": "Artifacts",
+    "description": "Friendly creatures deal +10% Ranged Damage.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "paupers_glory_rags_artifact",
+    "name": "Rags",
+    "slot": "Armor",
+    "description": "+1 Spell Power.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "duelists_pride_rapier_artifact",
+    "name": "Rapier",
+    "slot": "Main Hand",
+    "description": "Friendly creatures deal +10% Melee Damage",
+    "rarity": "◆"
+  },
+  {
+    "sid": "power_of_the_dragon_father_red_dragon_flame_tongue_artifact",
+    "name": "Red Dragon Flame Tongue",
+    "slot": "Main Hand",
+    "description": "+2 Attack and Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "shadow_of_death_cursed_armor_artifact",
+    "name": "Ribcage Armor",
+    "slot": "Armor",
+    "description": "+4 Defense, then +2% total Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "elixir_of_life_ring_of_life_artifact",
+    "name": "Ring of Life",
+    "slot": "Ring",
+    "description": "All positive effects on friendly creatures last for +1 round(s).",
+    "rarity": "◆"
+  },
+  {
+    "sid": "ring_of_neutrality_artifact",
+    "name": "Ring of Neutrality",
+    "slot": "Ring",
+    "description": "All creatures always have neutral Luck in battle.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "clothes_of_enlightenment_artifact",
+    "name": "Robe of Enlightenment",
+    "slot": "Armor",
+    "description": "Makes all tier‑3 spells available to the hero.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "paupers_glory_rope_belt_artifact",
+    "name": "Rope Belt",
+    "slot": "Belt",
+    "description": "+1 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "runestone_shards_artifact",
+    "name": "Runestone Shards",
+    "slot": "Artifacts",
+    "description": "Makes all tier‑2 spells available to the hero.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "angelic_alliance_sandals_of_the_saint_artifact",
+    "name": "Sandals of the Saint",
+    "slot": "Boots",
+    "description": "+2 Attack, Defense, Spell Power, and Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "scholars_wisdom_scholars_oberegus_artifact",
+    "name": "Scholar’s Amulet",
+    "slot": "Artifacts",
+    "description": "+2 Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "scholars_wisdom_scholars_tiara_artifact",
+    "name": "Scholar’s Tiara",
+    "slot": "Head",
+    "description": "+2 Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_10_magic_primordial_purity",
+    "name": "Scroll: Anti‑Magic",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Anti‑Magic” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_16_magic_arinas_chosen",
+    "name": "Scroll: Arina’s Chosen",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Arina’s Chosen” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_9_magic_arinas_hymn",
+    "name": "Scroll: Arina’s Touch",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Arina’s Touch” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_11_magic_armageddon",
+    "name": "Scroll: Armageddon",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Armageddon” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_18_magic_assemble",
+    "name": "Scroll: Assemble!",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Assemble” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_13_magic_berserker",
+    "name": "Scroll: Berserk",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Berserk” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_13_magic_black_hole",
+    "name": "Scroll: Black Hole",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Black Hole” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_2_magic_sharp_edge",
+    "name": "Scroll: Blessing",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Blessing” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_6_magic_blink",
+    "name": "Scroll: Blink",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Blink” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_8_magic_carapace",
+    "name": "Scroll: Carapace",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Carapace” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_8_magic_cave_in",
+    "name": "Scroll: Cave In",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Cave In” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_12_magic_chain_lightning",
+    "name": "Scroll: Chain Lightning",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Chain Lightning” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_13_magic_avalanche",
+    "name": "Scroll: Circle of Winter",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Circle of Winter” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_18_magic_farsight",
+    "name": "Scroll: Clear Fog",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Clear Fog” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_15_magic_deaths_call",
+    "name": "Scroll: Coup de Grâce",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Coup de Grace” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_5_magic_crystal_crown",
+    "name": "Scroll: Crystal Crown",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Crystal Crown” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_4_magic_despair",
+    "name": "Scroll: Despair",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Despair” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "mythic_magic_scroll_artifact_neutral_magic_dimension_door",
+    "name": "Scroll: Dimension Door",
+    "slot": "Scrolls (Other)",
+    "description": "Adds the “Dimension Door” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_14_magic_doreaths_tide",
+    "name": "Scroll: Doreath’s Tide",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Doreath’s Tide” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_1_magic_early_start",
+    "name": "Scroll: Early Start",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Early Start” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_9_magic_earths_rage",
+    "name": "Scroll: Earth’s Rage",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Earth’s Rage” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_3_magic_energyze",
+    "name": "Scroll: Energize",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Energize” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_2_magic_energy_explosion",
+    "name": "Scroll: Energy Explosion",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Energy Explosion” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_3_magic_enlarge_shadow",
+    "name": "Scroll: Enlarge Shadow",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Enlarge Shadow” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_7_magic_fatal_decay",
+    "name": "Scroll: Fatal Decay",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Fatal Decay” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_4_magic_favorable_wind",
+    "name": "Scroll: Favorable Wind",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Favorable Wind” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_4_magic_fire_globe",
+    "name": "Scroll: Fireball",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Fireball” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_7_magic_wall_of_flame",
+    "name": "Scroll: Firewall",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Firewall” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_17_magic_clear_view",
+    "name": "Scroll: From a Bird’s Eye",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “From a Bird’s Eye” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "mythic_magic_scroll_artifact_neutral_magic_light_gate",
+    "name": "Scroll: Gate of Light",
+    "slot": "Scrolls (Other)",
+    "description": "Adds the “Gate of Light” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_17_magic_groundsight",
+    "name": "Scroll: Groundsight",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Groundsight” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_11_magic_decimate",
+    "name": "Scroll: Guillotine",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Guillotine” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_3_magic_haste",
+    "name": "Scroll: Haste",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Haste” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_1_magic_healing_water",
+    "name": "Scroll: Healing Water",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Healing Water” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_13_magic_holy_arms",
+    "name": "Scroll: Heavenly Blades",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Heavenly Blades” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_14_magic_hksmillas_rampage",
+    "name": "Scroll: Hksmilla’s Rampage",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Hksmilla’s Rampage” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_6_magic_ice_bolt",
+    "name": "Scroll: Ice Bolt",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Ice Bolt” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_9_magic_impending_fate",
+    "name": "Scroll: Impending Fate",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Impending Fate” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_7_magic_inner_light",
+    "name": "Scroll: Inner Light",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Inner Light” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_15_magic_judgement",
+    "name": "Scroll: Judgement",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Judgement” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_1_magic_thunderbolt",
+    "name": "Scroll: Lightning Bolt",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Lightning Bolt” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_10_magic_mirror_copy",
+    "name": "Scroll: Mirror Copy",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Mirror Copy” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_14_magic_nairas_kiss",
+    "name": "Scroll: Naira’s Kiss",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Naira’s Kiss” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_18_magic_nairas_veil",
+    "name": "Scroll: Naira’s Veil",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Naira’s Veil” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_4_magic_optical_illusion",
+    "name": "Scroll: Optical Illusion",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Optical Illusion” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "mythic_magic_scroll_artifact_neutral_magic_pocket_dimension",
+    "name": "Scroll: Pocket Dimension",
+    "slot": "Scrolls (Other)",
+    "description": "Adds the “Pocket Dimension” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_18_magic_primordial_chaos",
+    "name": "Scroll: Primordial Chaos",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Primordial Chaos” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_12_magic_radiant_armor",
+    "name": "Scroll: Radiant Armor",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Radiant Armor” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_17_magic_read_minds",
+    "name": "Scroll: Read Minds",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Read Minds” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_16_magic_reality_distortion",
+    "name": "Scroll: Reality Distortion",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Reality Distortion” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_17_magic_reinforcements",
+    "name": "Scroll: Reinforcements",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Reinforcements” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_12_magic_rewind",
+    "name": "Scroll: Rewind Life",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Rewind Life” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_11_magic_masterful_parry",
+    "name": "Scroll: Riposte",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Riposte” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "mythic_magic_scroll_artifact_neutral_magic_second_sight",
+    "name": "Scroll: Second Wind",
+    "slot": "Scrolls (Other)",
+    "description": "Adds the “Second Wind” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_7_magic_shackles",
+    "name": "Scroll: Shackles",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Shackles” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_5_magic_shade_cloak",
+    "name": "Scroll: Shade Cloak",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Shade Cloak” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_16_magic_shadow_army",
+    "name": "Scroll: Shadow Army",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Shadow Army” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "mythic_magic_scroll_artifact_neutral_magic_shadow_form",
+    "name": "Scroll: Shadowflight",
+    "slot": "Scrolls (Other)",
+    "description": "Adds the “Shadowflight” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_5_magic_shorten_shadow",
+    "name": "Scroll: Shorten Shadow",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Shorten Shadow” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_10_magic_silence",
+    "name": "Scroll: Silence",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Silence” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_8_magic_sleep",
+    "name": "Scroll: Sleep",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Sleep” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_10_magic_second_song",
+    "name": "Scroll: Song of Power",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Song of Power” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_15_magic_trap_snare",
+    "name": "Scroll: Spatial Snare",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Spatial Snare” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_16_magic_stone_fangs",
+    "name": "Scroll: Stone Fangs",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Stone Fangs” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_15_magic_summon_primal_remnant",
+    "name": "Scroll: Summon Primal Remnant",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Summon Primal Remnant” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_12_magic_summon_starchild",
+    "name": "Scroll: Summon Starchild",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Summon Starchild” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_8_magic_taunt",
+    "name": "Scroll: Taunt",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Taunt” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_space_5_magic_trap_jaws",
+    "name": "Scroll: Temporal Spheres",
+    "slot": "Scrolls (Arcane)",
+    "description": "Adds the “Temporal Spheres” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_2_magic_thick_hide",
+    "name": "Scroll: Thick Hide",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Thick Hide” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "mythic_magic_scroll_artifact_neutral_magic_town_portal",
+    "name": "Scroll: Town Portal",
+    "slot": "Scrolls (Other)",
+    "description": "Adds the “Town Portal” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_9_magic_twilight",
+    "name": "Scroll: Twilight",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Twilight” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_6_magic_deaths_grip",
+    "name": "Scroll: Umbral Grip",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Umbral Grip” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_1_magic_unnatural_calm",
+    "name": "Scroll: Unnatural Calm",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Unnatural Calm” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_14_magic_vengeance",
+    "name": "Scroll: Vengeance",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Vengeance” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_11_magic_vulnerability",
+    "name": "Scroll: Vulnerability",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Vulnerability” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_day_6_magic_cleansing_ray",
+    "name": "Scroll: Weakening Ray",
+    "slot": "Scrolls (Daylight)",
+    "description": "Adds the “Weakening Ray” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_primal_3_magic_wean",
+    "name": "Scroll: Wean",
+    "slot": "Scrolls (Primal)",
+    "description": "Adds the “Wean” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "magic_scroll_artifact_night_2_magic_web",
+    "name": "Scroll: Web",
+    "slot": "Scrolls (Nightshade)",
+    "description": "Adds the “Web” spell to the hero’s Spellbook.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "seal_of_silence_artifact",
+    "name": "Seal of Silence",
+    "slot": "Ring",
+    "description": "+1 round(s) to the cooldown of all enemy spells.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "shadow_of_death_second_shade_artifact",
+    "name": "Second Shade",
+    "slot": "Back",
+    "description": "+4 Knowledge, then +2% total Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "ethereal_knowledge_third_eye_artifact",
+    "name": "Seven Eyes",
+    "slot": "Head",
+    "description": "+1 level(s) to all spells while worn.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "seven_league_boots_artifact",
+    "name": "Seven‑League Boots",
+    "slot": "Boots",
+    "description": "+30 Movement points.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "shackles_of_war_artifact",
+    "name": "Shackles of War",
+    "slot": "Artifacts",
+    "description": "Prevents surrender and flee in battle. (This affects both the wearer and their opponent.)"
+  },
+  {
+    "sid": "shamaniac_soul_shaman_staff_artifact",
+    "name": "Shaman Staff",
+    "slot": "Main Hand",
+    "description": "+6 Spell Power.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "tranquility_ring_of_serenity_artifact",
+    "name": "Shard of Serenity",
+    "slot": "Ring",
+    "description": "Restores 6 mana to the hero each morning.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "tarq_of_the_rampaging_ogre_artifact",
+    "name": "Shield of the Rampaging Ogre",
+    "slot": "Off Hand",
+    "description": "+4 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "shoddy_shield_artifact",
+    "name": "Shoddy Shield",
+    "slot": "Off Hand",
+    "description": "+2 Defense.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "living_arrows_shroomwood_bow_artifact",
+    "name": "Shroomwood Bow",
+    "slot": "Main Hand",
+    "description": "Eliminates Ranged Damage penalty for friendly creatures.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "inner_song_singing_pan_pipe_artifact",
+    "name": "Singing Pan‑Pipe",
+    "slot": "Off Hand",
+    "description": "All effects applied by friendly creatures last +1 round(s).",
+    "rarity": "◆"
+  },
+  {
+    "sid": "shamaniac_soul_gemwood_mask_artifact",
+    "name": "Sirin Mask",
+    "slot": "Head",
+    "description": "The cooldowns of all spells are reduced by 1 round(s).",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "sixth_finger_artifact",
+    "name": "Sixth Finger",
+    "slot": "Ring",
+    "description": "–1 to enemy Morale and Luck.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "milos_curse_skull_of_milos_artifact",
+    "name": "Skull of Milos",
+    "slot": "Belt",
+    "description": "+1000 Gold daily.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "power_of_the_dragon_father_slithering_sash_artifact",
+    "name": "Slithering Sash",
+    "slot": "Belt",
+    "description": "+3 Spell Power and Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "soulscaller_ring_artifact",
+    "name": "Soulcaller Ring",
+    "slot": "Ring",
+    "description": "The enemy loses 1 levels on all Magic School spells.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "soulless_sash_artifact",
+    "name": "Soulless Sash",
+    "slot": "Belt",
+    "description": "–1 Morale to enemy creatures.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "spellbinders_hat_artifact",
+    "name": "Spellbinder’s Hat",
+    "slot": "Head",
+    "description": "Makes all tier‑5 spells available to the hero.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "spells_in_a_bottle_artifact",
+    "name": "Spells in Bottles",
+    "slot": "Belt",
+    "description": "Makes all tier‑4 spells available to the hero.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "spyglass_artifact",
+    "name": "Spyglass",
+    "slot": "Artifacts",
+    "description": "+2 sight radius.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "paupers_glory_straw_hat_artifact",
+    "name": "Straw Hat",
+    "slot": "Head",
+    "description": "+1 Knowledge.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "swamp_boots_artifact",
+    "name": "Swamp Boots",
+    "slot": "Boots",
+    "description": "Eliminates all terrain penalties.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "angelic_alliance_sword_of_judgement_artifact",
+    "name": "Sword of Judgement",
+    "slot": "Main Hand",
+    "description": "+2 Attack, Defense, Spell Power, and Knowledge.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "ukhtabar_seal_tabar_seal_artifact",
+    "name": "Tabar Signet‑Ring",
+    "slot": "Ring",
+    "description": "+1 Luck.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "tactical_guide_artifact",
+    "name": "Tactical Guide",
+    "slot": "Artifacts",
+    "description": "The opponent cannot rearrange creatures before the start of battle.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "rule_of_shadow_the_truthmaker_artifact",
+    "name": "Truthmaker",
+    "slot": "Main Hand",
+    "description": "–10% Attack to enemy creatures.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "rule_of_shadow_the_truthseeker_artifact",
+    "name": "Truthseeker",
+    "slot": "Off Hand",
+    "description": "–10% Defense to enemy creatures.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "tunic_of_the_cyclops_king_artifact",
+    "name": "Tunic of the Cyclops King",
+    "slot": "Armor",
+    "description": "+4 Spell Power.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "two_faced_mask_artifact",
+    "name": "Two‑faced Mask",
+    "slot": "Head",
+    "description": "The hero can use the Spellbook 1 additional time(s) per battle round.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "ukhtabar_seal_ukh_seal_artifact",
+    "name": "Ukh Signet",
+    "slot": "Artifacts",
+    "description": "+1 Morale.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "voodoosh_doll_artifact",
+    "name": "Voodoo Doll",
+    "slot": "Artifacts",
+    "description": "When the wearer is defeated, they can still be hired back in the Tavern."
+  },
+  {
+    "sid": "ethereal_knowledge_vortex_dress_artifact",
+    "name": "Vortex Robe",
+    "slot": "Armor",
+    "description": "Whenever the opponent casts a spell, restores % of its cost as mana to the wearer.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "warlord_boots_artifact",
+    "name": "Warlord Boots",
+    "slot": "Boots",
+    "description": "+2 Initiative to friendly creatures.",
+    "rarity": "Legendary"
+  },
+  {
+    "sid": "warriors_strength_warriors_oberegus_artifact",
+    "name": "Warrior’s Amulet",
+    "slot": "Artifacts",
+    "description": "+2 Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "warriors_strength_warriors_belt_artifact",
+    "name": "Warrior’s Belt",
+    "slot": "Belt",
+    "description": "+2 Attack.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "wizards_might_wizards_oberegus_artifact",
+    "name": "Wizard’s Amulet",
+    "slot": "Artifacts",
+    "description": "+2 Spell Power.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "wizards_might_wizards_cloak_artifact",
+    "name": "Wizard’s Cloak",
+    "slot": "Back",
+    "description": "+2 Spell Power.",
+    "rarity": "◆"
+  },
+  {
+    "sid": "paupers_glory_wooden_ring_artifact",
+    "name": "Wooden Ring",
+    "slot": "Ring",
+    "description": "+1 Morale.",
+    "rarity": "◆"
+  }
+]
