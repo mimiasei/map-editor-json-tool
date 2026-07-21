@@ -247,6 +247,7 @@ export default function ScenarioTree() {
   } = useScenarioStore()
 
   const entities = useMapContextStore((s) => s.context?.entities) ?? []
+  const mapLoaded = useMapContextStore((s) => s.context !== null)
 
   // Group entities by type, sorted by type key then by SID within each group
   const entityGroups = useMemo(() => {
@@ -567,53 +568,61 @@ export default function ScenarioTree() {
         )}
 
         {/* ── Entity SIDs (from loaded .map file) ── */}
-        {entities.length > 0 && (
-          <>
-            <ReadOnlySectionHeader
-              label="Entity SIDs"
-              count={entities.length}
-              open={openSections.entitySids}
-              onToggle={() => toggleSection('entitySids')}
-              icon={<MapPin className="h-3 w-3" />}
-            />
-            {openSections.entitySids && (
-              <div className="px-1 py-1">
-                {entityGroups.map(([groupLabel, sids]) => {
-                  const groupOpen = openEntityGroups[groupLabel] ?? true
-                  return (
-                    <div key={groupLabel}>
-                      {/* Category row */}
-                      <div
-                        className="flex items-center gap-1 rounded px-1 py-0.5 cursor-pointer select-none text-xs text-muted-foreground hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)] transition-shadow duration-150"
-                        style={{ paddingLeft: '14px' }}
-                        onClick={() =>
-                          setOpenEntityGroups((s) => ({ ...s, [groupLabel]: !(s[groupLabel] ?? true) }))
-                        }
-                      >
-                        {groupOpen
-                          ? <ChevronDown className="h-3 w-3 shrink-0" />
-                          : <ChevronRight className="h-3 w-3 shrink-0" />}
-                        <span className="ml-1 font-medium">{groupLabel}</span>
-                        <span className="ml-1 text-muted-foreground/60">({sids.length})</span>
-                      </div>
-                      {/* SID rows */}
-                      {groupOpen && sids.map((sid) => (
-                        <div
-                          key={sid}
-                          className="group relative flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground select-none"
-                          style={{ paddingLeft: '36px' }}
-                        >
-                          <span className="truncate font-mono flex-1" style={labelStyle}>{sid}</span>
-                          <CopySidButton sid={sid} />
-                        </div>
-                      ))}
+        <>
+          <ReadOnlySectionHeader
+            label="Entity SIDs"
+            count={entities.length}
+            open={openSections.entitySids}
+            onToggle={() => toggleSection('entitySids')}
+            icon={<MapPin className="h-3 w-3" />}
+          />
+          {openSections.entitySids && (
+            <div className="px-1 py-1">
+              {!mapLoaded && (
+                <p className="text-[10px] text-muted-foreground px-2 py-1 italic">
+                  Load a .map file to see named entities.
+                </p>
+              )}
+              {mapLoaded && entities.length === 0 && (
+                <p className="text-[10px] text-muted-foreground px-2 py-1 italic">
+                  No named entities found in this map.
+                </p>
+              )}
+              {entityGroups.map(([groupLabel, sids]) => {
+                const groupOpen = openEntityGroups[groupLabel] ?? true
+                return (
+                  <div key={groupLabel}>
+                    {/* Category row */}
+                    <div
+                      className="flex items-center gap-1 rounded px-1 py-0.5 cursor-pointer select-none text-xs text-muted-foreground hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)] transition-shadow duration-150"
+                      style={{ paddingLeft: '14px' }}
+                      onClick={() =>
+                        setOpenEntityGroups((s) => ({ ...s, [groupLabel]: !(s[groupLabel] ?? true) }))
+                      }
+                    >
+                      {groupOpen
+                        ? <ChevronDown className="h-3 w-3 shrink-0" />
+                        : <ChevronRight className="h-3 w-3 shrink-0" />}
+                      <span className="ml-1 font-medium">{groupLabel}</span>
+                      <span className="ml-1 text-muted-foreground/60">({sids.length})</span>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        )}
+                    {/* SID rows */}
+                    {groupOpen && sids.map((sid) => (
+                      <div
+                        key={sid}
+                        className="group relative flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground select-none"
+                        style={{ paddingLeft: '36px' }}
+                      >
+                        <span className="truncate font-mono flex-1" style={labelStyle}>{sid}</span>
+                        <CopySidButton sid={sid} />
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
 
       </div>
     </ScrollArea>

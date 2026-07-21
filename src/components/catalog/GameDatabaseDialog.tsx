@@ -182,11 +182,25 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   // Game Database is never fully blank.  When Core.zip is not loaded at all we
   // still build a partial catalog from the bundled JSON files — heroes,
   // creatures, and map objects are always available.
+  //
+  // Additionally, the Core.zip localization lookup for heroes/creatures/map-objects
+  // often fails (raw SID-like keys instead of proper names). We overlay names from
+  // the bundled static JSON whenever a matching SID exists there.
   const catalog = useMemo(() => {
     const base = rawCatalog
-    const heroes    = base && base.heroes.length    > 0 ? base.heroes    : STATIC_HEROES
-    const creatures = base && base.creatures.length > 0 ? base.creatures : STATIC_CREATURES
-    const mapObjects = base && base.mapObjects.length > 0 ? base.mapObjects : STATIC_MAP_OBJECTS
+
+    // Build name-overlay maps from static data (sid → friendly name)
+    const heroNames   = new Map(STATIC_HEROES.map(h => [h.id, h.name]))
+    const creatureNames = new Map(STATIC_CREATURES.map(c => [c.id, c.name]))
+    const mapObjectNames = new Map(STATIC_MAP_OBJECTS.map(o => [o.id, o.name]))
+
+    const heroes = (base && base.heroes.length > 0 ? base.heroes : STATIC_HEROES)
+      .map(h => ({ ...h, name: heroNames.get(h.id) ?? h.name }))
+    const creatures = (base && base.creatures.length > 0 ? base.creatures : STATIC_CREATURES)
+      .map(c => ({ ...c, name: creatureNames.get(c.id) ?? c.name }))
+    const mapObjects = (base && base.mapObjects.length > 0 ? base.mapObjects : STATIC_MAP_OBJECTS)
+      .map(o => ({ ...o, name: mapObjectNames.get(o.id) ?? o.name }))
+
     return {
       ...(base ?? { artifacts: [], spells: [], skills: [], buffs: [], factions: [], dialogs: [] }),
       heroes,

@@ -43,6 +43,8 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
 
   // ── Entities (propEntities — user-defined named objects) ─────────────────────
   const propEntities = b2.objectsProperties?.propEntities ?? []
+  console.log('[map-extract] block2.objectsProperties keys:', Object.keys(b2.objectsProperties ?? {}))
+  console.log('[map-extract] propEntities raw (first 5):', propEntities.slice(0, 5))
   const entities: MapEntity[] = propEntities
     .filter((e) => typeof e.sid === 'string' && e.sid.trim() !== '')
     .map((e) => ({
@@ -50,6 +52,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
       id: e.id ?? -1,
       type: e.type ?? '',
     }))
+  console.log('[map-extract] entities after filter:', entities.length, entities.slice(0, 5))
 
   // ── Hero assignments (propHeroes) ─────────────────────────────────────────────
   const propHeroes = b2.objectsProperties?.propHeroes ?? []
@@ -101,6 +104,14 @@ const ENGINE_COUNTER_FIELDS = new Set(['sharing', 'minValue', 'maxValue'])
  */
 export function extractScenario(raw: RawMapBlocks): ScenarioFile {
   const b4 = raw.block4
+  console.log('[map-extract] block4 raw:', {
+    keys: Object.keys(b4),
+    countersCount: (b4.counters ?? []).length,
+    interruptionsCount: (b4.interruptions ?? []).length,
+    questsCount: (b4.quests ?? []).length,
+    countersFirst: (b4.counters ?? []).slice(0, 2),
+    questsFirst: (b4.quests ?? []).slice(0, 2),
+  })
 
   const counters = (b4.counters ?? []).map((c) => {
     if (c && typeof c === 'object') {
