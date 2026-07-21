@@ -3,7 +3,7 @@
 // tabs. Shows live instance counts (map placements + script references) and
 // allows filtering to only placed/used items.
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
   DraggableDialogContent,
@@ -18,6 +18,7 @@ import {
   STATIC_CREATURES,
   STATIC_MAP_OBJECTS,
 } from '@/lib/catalog/static-catalog'
+import { DEBUG } from '@/lib/debug'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -198,6 +199,27 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   const [search, setSearch] = useState('')
   const [onlyUsed, setOnlyUsed] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (DEBUG.gameDatabase) {
+      console.log('[GameDatabase] catalog state:', {
+        rawCatalogLoaded: !!rawCatalog,
+        heroesCount: catalog.heroes.length,
+        creaturesCount: catalog.creatures.length,
+        mapObjectsCount: catalog.mapObjects.length,
+        artifactsCount: catalog.artifacts.length,
+        spellsCount: catalog.spells.length,
+      })
+    }
+  }, [catalog, rawCatalog])
+
+  useEffect(() => {
+    if (DEBUG.gameDatabase) {
+      console.log('[GameDatabase] activeTab changed:', activeTab, 'items will be:', items.length)
+    }
+  // items depends on activeTab so this fires correctly
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
 
   // ── Build SID frequency maps ────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { DEBUG } from '@/lib/debug'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -259,6 +260,12 @@ export default function ScenarioTree() {
     for (const sids of map.values()) sids.sort()
     // Return sorted by group name
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
+  }, [entities])
+
+  useEffect(() => {
+    if (DEBUG.entitySids) {
+      console.log('[ScenarioTree] entities from store:', entities)
+    }
   }, [entities])
 
   const [openSections, setOpenSections] = useState({

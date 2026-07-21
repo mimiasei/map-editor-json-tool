@@ -1,0 +1,159 @@
+{
+	"counters": [],
+	"interruptions": [],
+	"quests": [
+		{
+			"sid": "get_gold_quest1",
+			"comment": "to test if a quest works from the json file",
+			"activeOnStart": true,
+			"name": "Get Gold Quest",
+			"sharing": "Clone",
+			"subQuests": [
+				{
+					"sid": "1",
+					"activeOnStart": true,
+					"name": "Get More Than 2000 Gold",
+					"triggers": [
+						{
+							"conditionsLogic": "And",
+							"conditions": [
+								{
+									"c": "ResCounter",
+									"p": [
+										"gold",
+										">",
+										"100000"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "GiveRes",
+									"p": [
+										"gold",
+										"123456"
+									]
+								},
+								{
+									"a": "Dialog",
+									"p": [
+										"acgth_main_quest_line_start"
+									]
+								},
+								{
+									"a": "SpawnHero",
+									"p": [
+										"nature_hero_10",
+										"7740",
+										"1"
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"sid": "stone_quest_1",
+			"activeOnStart": false,
+			"sharing": "Clone",
+			"subQuests": [
+				{
+					"sid": "stone_sq_1",
+					"activeOnStart": false,
+					"triggers": [
+						{
+							"conditionsLogic": "And",
+							"conditions": [
+								{
+									"c": "ObjectInteractionBefore",
+									"p": [
+										"mine_ore_1"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Dialog",
+									"p": [
+										"fun_dialogue_text_gorillas_6ab"
+									]
+								},
+								{
+									"a": "SubQuestDone",
+									"p": [
+										"stone_quest_1",
+										"stone_sq_1"
+									]
+								},
+								{
+									"a": "NextSubQuest",
+									"p": [
+										"stone_sq_2"
+									]
+								}
+							]
+						}
+					],
+					"name": "Gather lots of ore"
+				},
+				{
+					"sid": "stone_sq_2",
+					"activeOnStart": false,
+					"triggers": [
+						{
+							"conditionsLogic": "And",
+							"conditions": [
+								{
+									"c": "ResCounter",
+									"p": [
+										"ore",
+										">=",
+										"100"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Dialog",
+									"p": [
+										"fun_dialogue_text_arenas_dragon_utopia_cleared_0"
+									]
+								},
+								{
+									"a": "GiveRes",
+									"p": [
+										"",
+										"2500"
+									]
+								},
+								{
+									"a": "SubQuestDone",
+									"p": [
+										"stone_quest_1",
+										"stone_sq_2"
+									]
+								}
+							]
+						}
+					],
+					"name": "Gather at least 100 ore"
+				}
+			],
+			"name": "Stone Quest",
+			"main": true
+		}
+	],
+	"_mapName": "TheQuest",
+	"_dialogs": {
+		"acgth_main_quest_line_start": {
+			"id": "acgth_main_quest_line_start",
+			"localization": true,
+			"slides": []
+		}
+	},
+	"_localization": {
+		"dialog_1782154230633_text_1": "Here you are, some golden nuggets for you."
+	}
+}

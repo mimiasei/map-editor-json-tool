@@ -1,0 +1,1473 @@
+﻿{
+	"counters":
+	[
+		{ "sid": "main_quest_win_action",	"value": 0 },
+		{ "sid": "main_quest_win",			"value": 0 },
+		{ "sid": "main_quest_poison",		"value": 0 },
+		{ "sid": "main_quest_poison_stat",	"value": 0 },
+		{ "sid": "main_quest_poison_army",	"value": 0 },
+
+		{ "sid": "counter_interaction_with_human_hero_16_on",				"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_16_off",				"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_16_after_steal_on",	"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_16_after_steal_off",	"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_16_after_save_on",	"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_16_after_save_off",	"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_16_final_on",			"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_16_final_off",		"value": 0 },
+
+		{ "sid": "counter_interaction_with_human_hero_7_off",				"value": 0 },
+		{ "sid": "counter_interaction_with_human_hero_7_on",				"value": 0 },
+
+		{ "sid": "daughter_quest_started",	"value": 0 },
+		{ "sid": "daughter_quest_disable",	"value": 0 },
+		{ "sid": "daughter_quest_move",		"value": 0 },
+		{ "sid": "daughter_quest_steal",	"value": 0 },
+		{ "sid": "daughter_quest_kidnaped",	"value": 0 },
+		{ "sid": "daughter_quest_finded",	"value": 0 },
+		{ "sid": "daughter_quest_given",	"value": 0 },
+		{ "sid": "daughter_quest_save",		"value": 0 },
+		{ "sid": "daughter_quest_friend",	"value": 0 }
+	],
+
+	"interruptions":
+	[
+		{
+			"sid": "interaction_with_human_hero_16",
+			"interruption": "BeforeIamVsHero",
+			"activeOnStart": false,
+			"p": [ "human_hero_16" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_daughter_quest_line_interaction_with_human_hero_16" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_16_after_steal",
+			"interruption": "BeforeIamVsHero",
+			"activeOnStart": false,
+			"p": [ "human_hero_16" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_daughter_quest_line_interaction_with_human_hero_16_after_steal" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_16_after_save",
+			"interruption": "BeforeIamVsHero",
+			"activeOnStart": false,
+			"p": [ "human_hero_16" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_daughter_quest_line_interaction_with_human_hero_16_after_save" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_16_final",
+			"interruption": "BeforeIamVsHero",
+			"activeOnStart": false,
+			"p": [ "human_hero_16" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_daughter_quest_line_interaction_with_human_hero_16_final" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_7",
+			"interruption": "BeforeIamVsHero",
+			"activeOnStart": true,
+			"p": [ "human_hero_7" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_main_quest_line_defender" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_7_alt",
+			"interruption": "BeforeIamVsHero",
+			"activeOnStart": false,
+			"p": [ "human_hero_7" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_main_quest_line_defender" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_7_after_win",
+			"interruption": "AfterIamWinVsHero",
+			"activeOnStart": true,
+			"p": [ "human_hero_7" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_main_quest_line_defender_after_win" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_9",
+			"interruption": "BeforeIamVsHero",
+			"activeOnStart": true,
+			"p": [ "human_hero_9" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_main_quest_line_lord" ] }
+			]
+		},
+
+		{
+			"sid": "interaction_with_human_hero_9_after_win",
+			"interruption": "AfterIamWinVsHero",
+			"activeOnStart": true,
+			"p": [ "human_hero_9" ],
+
+			"actions":
+			[
+				{ "a": "Dialog", "p": [ "attt_main_quest_line_lord_after_win" ] }
+			]
+		}
+	],
+
+	"quests":
+	[	
+		{
+			"sid": "intro",
+
+			"hidden": true,
+
+			"comment": "intro",
+
+			"activeOnStart": true,
+			"sharing": "Clone",
+
+			"name": "1",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "DisableAiHero", "p": [ "human_hero_9" ] },
+								{ "a": "DisableAiHero", "p": [ "human_hero_7" ] },
+								{ "a": "DisableAiHero", "p": [ "necro_hero_14" ] },
+								
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_infinite_moves_buff", "human_hero_7", "-1" ] },
+
+								{ "a": "Dialog", "p": [ "attt_main_quest_line_start" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2_start",
+					"activeOnStart": true,
+					"comment": "difficulty settings - guardian",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "RemoveUnitHero", "p": [ "sunlight_cavalry", "all", "human_hero_7" ] },
+
+								{ "a": "GiveUnitHero", "p": [ "esquire",			"120",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman",		"90",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin",			"60",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry",	"30",	"human_hero_7" ] },
+
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_day_1", "human_hero_7", "-1" ] },
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_night_1", "human_hero_7", "-1" ] },
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_space_1", "human_hero_7", "-1" ] },
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_primal_1", "human_hero_7", "-1" ] },
+
+								{ "a": "AddSkillHero", "p": [ "skill_faction_humans", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_faction_humans", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_formation", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_formation", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_assault", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_assault", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_assault", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_protection", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_protection", "human_hero_7" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_protection", "human_hero_7" ] },
+
+								{ "a": "AddSpellHero", "p": [ "day_1_magic_healing_water", "human_hero_7" ] },
+								{ "a": "AddSpellHero", "p": [ "day_2_magic_sharp_edge", "human_hero_7" ] },
+								{ "a": "AddSpellHero", "p": [ "day_3_magic_haste", "human_hero_7" ] },
+								{ "a": "AddSpellHero", "p": [ "day_9_magic_arinas_hymn", "human_hero_7" ] },
+								{ "a": "AddSpellHero", "p": [ "night_2_magic_web", "human_hero_7" ] },
+								{ "a": "AddSpellHero", "p": [ "space_1_magic_early_start", "human_hero_7" ] },
+								{ "a": "AddSpellHero", "p": [ "primal_2_magic_thick_hide", "human_hero_7" ] },
+								{ "a": "AddSpellHero", "p": [ "bonus_magic_pure_bolt", "human_hero_7" ] },
+
+								{ "a": "GiveExpHero", "p": [ "68900", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_7", "6" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_7", "6" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_7", "6" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_7", "6" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2_start_1",
+					"activeOnStart": true,
+					"comment": "difficulty settings - guardian",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_7", "2" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_7", "2" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_7", "2" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_7", "2" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2_start_2",
+					"activeOnStart": true,
+					"comment": "difficulty settings - guardian",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_7", "4" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_7", "4" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_7", "4" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_7", "4" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2_start_3",
+					"activeOnStart": true,
+					"comment": "difficulty settings - guardian",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_7", "6" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_7", "6" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_7", "6" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_7", "6" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2_week_1",
+					"activeOnStart": true,
+					"comment": "difficulty settings - guardian per week",
+
+					"triggers":
+					[
+						{
+							"repeat": true,
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartWeek", "p": [  ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveUnitHero", "p": [ "esquire",			"16",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman",		"12",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin",			"8",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry",	"4",	"human_hero_7" ] },
+
+								{ "a": "GiveExpHero", "p": [ "18900", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_1", "1" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2_week_2",
+					"activeOnStart": true,
+					"comment": "difficulty settings - guardian per week",
+
+					"triggers":
+					[
+						{
+							"repeat": true,
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartWeek", "p": [  ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "2" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveUnitHero", "p": [ "esquire",			"24",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman",		"18",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin",			"12",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry",	"6",	"human_hero_7" ] },
+
+								{ "a": "GiveExpHero", "p": [ "28900", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_1", "1" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2_week_3",
+					"activeOnStart": true,
+					"comment": "difficulty settings - guardian per week",
+
+					"triggers":
+					[
+						{
+							"repeat": true,
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartWeek", "p": [  ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "3" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveUnitHero", "p": [ "esquire",			"32",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman",		"24",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin",			"16",	"human_hero_7" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry",	"8",	"human_hero_7" ] },
+
+								{ "a": "GiveExpHero", "p": [ "38900", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_1", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_1", "1" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3",
+					"activeOnStart": true,
+					"comment": "difficulty settings - lord",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveUnitHero", "p": [ "lightweaver_upg", "60", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry_upg", "30", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "inquisitor_upg", "20", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "angel_upg", "10", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "esquire", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "crossbowman", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "griffin", "all", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "esquire_upg", "180", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman_upg", "140", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin_upg", "70", "human_hero_9" ] },
+
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_day_3", "human_hero_9", "-1" ] },
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_night_3", "human_hero_9", "-1" ] },
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_space_3", "human_hero_9", "-1" ] },
+								{ "a": "AddBuffHeroDays", "p": [ "campaign_heroStatBuff_magic_primal_3", "human_hero_9", "-1" ] },
+
+								{ "a": "AddSkillHero", "p": [ "skill_faction_humans", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_faction_humans", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_battle_artistry", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_battle_artistry", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_assault", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_assault", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_assault", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_protection", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_protection", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_protection", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_resistance", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_resistance", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_resistance", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_trainer", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_trainer", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_trainer", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_leadership", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_leadership", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_leadership", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_luck", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_luck", "human_hero_9" ] },
+								{ "a": "AddSkillHero", "p": [ "skill_luck", "human_hero_9" ] },
+
+								{ "a": "AddSpellHero", "p": [ "bonus_magic_pure_bolt", "human_hero_9" ] },
+
+								{ "a": "GiveExpHero", "p": [ "1000000", "human_hero_9" ] },
+
+								{ "a": "GiveItemHero", "p": [ "catechism_of_night_magic_artifact", "human_hero_9" ] },
+								{ "a": "GiveItemHero", "p": [ "catechism_of_daylight_magic_artifact", "human_hero_9" ] },
+								{ "a": "GiveItemHero", "p": [ "catechism_of_spacetime_magic_artifact", "human_hero_9" ] },
+								{ "a": "GiveItemHero", "p": [ "catechism_of_primal_magic_artifact", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_9", "8" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_9", "8" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_9", "8" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_9", "8" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3_start_1",
+					"activeOnStart": true,
+					"comment": "difficulty settings - lord",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_9", "4" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_9", "4" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_9", "4" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_9", "4" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3_start_2",
+					"activeOnStart": true,
+					"comment": "difficulty settings - lord",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "2" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_9", "8" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_9", "8" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_9", "8" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_9", "8" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3_start_3",
+					"activeOnStart": true,
+					"comment": "difficulty settings - lord",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+
+							"conditions":
+							[
+								{ "c": "StartTurn", "p": [ "1", "1" ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "3" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_9", "12" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_9", "12" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_9", "12" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_9", "12" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3_week_1",
+					"activeOnStart": true,
+					"comment": "difficulty settings - lord per week",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+							"repeat": true,
+
+							"conditions":
+							[
+								{ "c": "StartWeek", "p": [  ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveUnitHero", "p": [ "esquire_upg", "18", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman_upg", "14", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin_upg", "7", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "lightweaver_upg", "6", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry_upg", "3", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_9", "1" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3_week_2",
+					"activeOnStart": true,
+					"comment": "difficulty settings - lord per week",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+							"repeat": true,
+
+							"conditions":
+							[
+								{ "c": "StartWeek", "p": [  ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "2" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveUnitHero", "p": [ "esquire_upg", "27", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman_upg", "21", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin_upg", "11", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "lightweaver_upg", "9", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry_upg", "3", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "inquisitor_upg", "2", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_9", "1" ] }
+							]
+						}
+					]
+				},
+
+				{
+					"sid": "3_week_3",
+					"activeOnStart": true,
+					"comment": "difficulty settings - lord per week",
+
+					"triggers":
+					[
+						{
+							"conditionsLogic": "And",
+							"repeat": true,
+
+							"conditions":
+							[
+								{ "c": "StartWeek", "p": [  ] },
+								{ "c": "DifficultyCustomMap", "p": [ "Neutral", "3" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GiveUnitHero", "p": [ "esquire_upg", "36", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "crossbowman_upg", "28", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "griffin_upg", "14", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "lightweaver_upg", "12", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "sunlight_cavalry_upg", "3", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "inquisitor_upg", "2", "human_hero_9" ] },
+								{ "a": "GiveUnitHero", "p": [ "angel_upg", "1", "human_hero_9" ] },
+
+								{ "a": "GiveStatsHero", "p": [ "offence", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "defence", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "spellPower", "human_hero_9", "1" ] },
+								{ "a": "GiveStatsHero", "p": [ "intelligence", "human_hero_9", "1" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "win_lose_conditions",
+			"hidden": true,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": true,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "HeroKill", "p": [ "human_hero_8" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GameLose" }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "main_quest_win", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "GameVictory" }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_on",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_on", "=", "1" ] } ],
+ 					"actions":  [ { "a": "EnableInterruption", "p": [ "interaction_with_human_hero_16" ] } ] } ]
+				}
+			]
+		},
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_off",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_off", "=", "1" ] } ],
+ 					"actions":  [ { "a": "DisableInterruption", "p": [ "interaction_with_human_hero_16" ] } ] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_after_steal_on",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_after_steal_on", "=", "1" ] } ],
+ 					"actions":  [ { "a": "EnableInterruption", "p": [ "interaction_with_human_hero_16_after_steal" ] } ] } ]
+				}
+			]
+		},
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_after_steal_off",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_after_steal_off", "=", "1" ] } ],
+ 					"actions":  [ { "a": "DisableInterruption", "p": [ "interaction_with_human_hero_16_after_steal" ] } ] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_after_save_on",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_after_save_on", "=", "1" ] } ],
+ 					"actions":  [ { "a": "EnableInterruption", "p": [ "interaction_with_human_hero_16_after_save" ] } ] } ]
+				}
+			]
+		},
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_after_save_off",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_after_save_off", "=", "1" ] } ],
+ 					"actions":  [ { "a": "DisableInterruption", "p": [ "interaction_with_human_hero_16_after_save" ] } ] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_final_on",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_final_on", "=", "1" ] } ],
+ 					"actions":  [ { "a": "EnableInterruption", "p": [ "interaction_with_human_hero_16_final" ] } ] } ]
+				}
+			]
+		},
+		{
+			"sid": "activator_counter_interaction_with_human_hero_16_final_off",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_16_final_off", "=", "1" ] } ],
+ 					"actions":  [ { "a": "DisableInterruption", "p": [ "interaction_with_human_hero_16_final" ] } ] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_counter_interaction_with_human_hero_7_off",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_7_off", "=", "1" ] } ],
+ 					"actions":  [ { "a": "DisableInterruption", "p": [ "interaction_with_human_hero_7" ] } ] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_counter_interaction_with_human_hero_7_on",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "counter_interaction_with_human_hero_7_on", "=", "1" ] } ],
+ 					"actions":  [ { "a": "EnableInterruption", "p": [ "interaction_with_human_hero_7_alt" ] } ] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "main_quest_line",
+			"main": true,
+			"hidden": false,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": true,
+			"name": "ascension_to_the_throne_name",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+					"name": "ascension_to_the_throne_sub_1",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "main_quest_win_action", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone", "p": [  ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "2",
+					"activeOnStart": true,
+					"name": "ascension_to_the_throne_sub_2",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "main_quest_win_action", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone", "p": [  ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_main_quest_poison_stat",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "main_quest_poison_stat", "=", "1" ] } ],
+ 					"actions":  [ { "a": "AddBuffHeroDays", "p": [ "campaign_all_stats_debuff", "human_hero_9", "9999" ] } ] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "activator_main_quest_poison_army",
+			"hidden": true, "comment": "lose conditions", "activeOnStart": true, "name": "1", "sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1", "activeOnStart": true,
+					"triggers": [ { "conditions": [ { "c": "Counter", "p": [ "main_quest_poison_army", "=", "1" ] } ],
+ 					"actions":  
+					[ 
+								{ "a": "RemoveUnitHero", "p": [ "esquire_upg", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "crossbowman_upg", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "griffin_upg", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "lightweaver_upg", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "sunlight_cavalry_upg", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "inquisitor_upg", "all", "human_hero_9" ] },
+
+								{ "a": "RemoveUnitHero", "p": [ "esquire_upg_alt", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "crossbowman_upg_alt", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "griffin_upg_alt", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "lightweaver_upg_alt", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "sunlight_cavalry_upg_alt", "all", "human_hero_9" ] },
+								{ "a": "RemoveUnitHero", "p": [ "inquisitor_upg_alt", "all", "human_hero_9" ] }
+					] } ]
+				}
+			]
+		},
+
+		{
+			"sid": "daughter_quest_line_starter",
+			"main": true,
+			"hidden": true,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": true,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "daughter_quest_started", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "NextQuest", "p": [ "daughter_quest_line" ] },
+								{ "a": "NextQuest", "p": [ "daughter_quest" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "daughter_quest_disable",
+			"hidden": true,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": true,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "daughter_quest_disable", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "EndQuest", "p": [ "daughter_quest" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "daughter_quest_line_disable",
+			"hidden": true,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": true,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "daughter_quest_kidnaped", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "EndQuest", "p": [ "daughter_quest_line" ] },
+								{ "a": "EndQuest", "p": [ "daughter_quest_steal" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "daughter_quest",
+			"main": false,
+			"hidden": false,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": false,
+			"name": "ascension_to_the_throne_quest_name",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "daughter_quest_sub_1",
+					"activeOnStart": true,
+
+					"name": "ascension_to_the_throne_sub_3",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "daughter_quest_kidnaped", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone", "p": [  ] },
+								{ "a": "SubQuestActivate", "p": [ "daughter_quest", "daughter_quest_sub_3" ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "daughter_quest_sub_2",
+					"activeOnStart": false,
+
+					"name": "ascension_to_the_throne_sub_4",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "daughter_quest_finded", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone", "p": [  ] }
+							]
+						}
+					]
+				},
+				{
+					"sid": "daughter_quest_sub_3",
+					"activeOnStart": false,
+
+					"name": "ascension_to_the_throne_sub_5",
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "Counter", "p": [ "daughter_quest_given", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CurrentSubQuestDone", "p": [  ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "daughter_quest_line",
+			"hidden": true,
+
+			"comment": "daughter quest line",
+
+			"activeOnStart": false,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "daughter_quest_line_1",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "StartWeek" },
+								{ "c": "Counter", "p": [ "daughter_quest_started", "=", "1" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "MoveCamera", "p": [ "267" ] },
+								{ "a": "SpawnHero", "p": [ "human_hero_16", "4030", "1" ] },
+								{ "a": "DisableAiHero", "p": [ "human_hero_16" ] },
+								{ "a": "TeleportHero", "p": [ "human_hero_16", "257" ] },
+								{ "a": "RevealFogOfWar", "p": [ "257", "3" ] },
+								{ "a": "Dialog", "p": [ "attt_daughter_quest_line_start_4" ] },
+								{ "a": "CounterPlus", "p": [ "daughter_quest_move", "0" ] },
+								{ "a": "CounterSet", "p": [ "counter_interaction_with_human_hero_16_on", "1" ] },
+								{ "a": "NextSubQuest", "p": [ "daughter_quest_line_2" ] }
+							]
+						}
+					]
+				},
+				
+				{
+					"sid": "daughter_quest_line_2",
+					"activeOnStart": false,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "2" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CounterPlus", "p": [ "daughter_quest_move", "1" ] },
+								{ "a": "HeroToNode", "p": [ "human_hero_16", "452" ] } ,
+								{ "a": "RevealFogOfWar", "p": [ "259", "3" ] },
+								{ "a": "RevealFogOfWar", "p": [ "452", "3" ] },
+								{ "a": "NextSubQuest", "p": [ "daughter_quest_line_3" ] }
+							]
+						}
+					]
+				},
+				
+				{
+					"sid": "daughter_quest_line_3",
+					"activeOnStart": false,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "3" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CounterPlus", "p": [ "daughter_quest_move", "1" ] },
+								{ "a": "HeroToNode", "p": [ "human_hero_16", "522" ] },
+								{ "a": "RevealFogOfWar", "p": [ "519", "3" ] },
+								{ "a": "RevealFogOfWar", "p": [ "522", "3" ] },
+								{ "a": "NextSubQuest", "p": [ "daughter_quest_line_4" ] }
+							]
+						}
+					]
+				},
+				
+				{
+					"sid": "daughter_quest_line_4",
+					"activeOnStart": false,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "4" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CounterPlus", "p": [ "daughter_quest_move", "1" ] },
+								{ "a": "HeroToNode", "p": [ "human_hero_16", "776" ] },
+								{ "a": "RevealFogOfWar", "p": [ "714", "3" ] },
+								{ "a": "RevealFogOfWar", "p": [ "776", "3" ] },
+								{ "a": "NextSubQuest", "p": [ "daughter_quest_line_5" ] }
+							]
+						}
+					]
+				},
+				
+				{
+					"sid": "daughter_quest_line_5",
+					"activeOnStart": false,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "5" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CounterPlus", "p": [ "daughter_quest_move", "1" ] },
+								{ "a": "HeroToNode", "p": [ "human_hero_16", "1096" ] },
+								{ "a": "RevealFogOfWar", "p": [ "968", "3" ] },
+								{ "a": "RevealFogOfWar", "p": [ "1096", "3" ] },
+								{ "a": "NextSubQuest", "p": [ "daughter_quest_line_final" ] },
+								{ "a": "NextQuest", "p": [ "daughter_quest_steal" ] },
+
+								{ "a": "DeleteEntity", "p": [ "T_B_1" ] },
+								{ "a": "DeleteEntity", "p": [ "T_B_2" ] },
+								{ "a": "DeleteEntity", "p": [ "T_B_3" ] }
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "daughter_quest_steal",
+			"hidden": true,
+
+			"comment": "lose conditions",
+
+			"activeOnStart": false,
+			"name": "1",
+			"sharing": "Clone",
+
+			"subQuests":
+			[	
+				{
+					"sid": "daughter_quest_steal",
+					"activeOnStart": true,
+
+					"triggers":
+					[
+						{
+							"conditions":
+							[
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "6" ] }
+							],
+
+							"actions":
+							[
+								{ "a": "CounterSet", "p": [ "counter_interaction_with_human_hero_16_off", "1" ] },
+								{ "a": "CounterSet", "p": [ "counter_interaction_with_human_hero_16_after_steal_on", "1" ] },
+								{ "a": "TeleportHero", "p": [ "human_hero_16", "281" ] },
+								{ "a": "NextQuest", "p": [  ] },
+								{ "a": "SubQuestActivate", "p": [ "daughter_quest", "daughter_quest_sub_2" ] }								
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"sid": "human_hero_7_hero_move", 
+			"hidden": true, 
+			
+			"comment": "human_hero_7 hero movement", 
+			
+			"activeOnStart": true, 
+			"sharing": "Ai",
+
+			"subQuests":
+			[	
+				{ 	
+					"sid": "0", 
+					"activeOnStart": true,
+					"triggers": 
+					[ 
+						{
+							"conditions": 
+							[ 
+								{ "c": "HeroKill", "p": [ "human_hero_7" ] } 
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "NextQuest" }
+							] 
+						} 
+					]
+				},
+				{
+					"sid": "1",
+					"activeOnStart": true,
+
+					"triggers": 
+					[ 
+						{
+							"repeat": true, 
+
+							"conditions": 
+							[ 
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "1" ] }
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "HeroToNode", "p": [ "human_hero_7", "3472" ] } 
+							] 
+						},
+						{
+							"repeat": true, 
+
+							"conditions": 
+							[ 
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "2" ] }
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "HeroToNode", "p": [ "human_hero_7", "3335" ] } 
+							] 
+						},
+						{
+							"repeat": true, 
+
+							"conditions": 
+							[ 
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "3" ] }
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "HeroToNode", "p": [ "human_hero_7", "3082" ] } 
+							] 
+						},
+						{
+							"repeat": true, 
+
+							"conditions": 
+							[ 
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "4" ] }
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "HeroToNode", "p": [ "human_hero_7", "3218" ] } 
+							] 
+						},
+						{
+							"repeat": true, 
+
+							"conditions": 
+							[ 
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "5" ] }
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "HeroToNode", "p": [ "human_hero_7", "3225" ] } 
+							] 
+						},
+						{
+							"repeat": true, 
+
+							"conditions": 
+							[ 
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "6" ] }
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "HeroToNode", "p": [ "human_hero_7", "3548" ] } 
+							] 
+						},
+						{
+							"repeat": true, 
+
+							"conditions": 
+							[ 
+								{ "c": "AnyStartTurn", "p": [ "-1", "-1", "7" ] }
+							], 
+
+							"actions": 
+							[ 
+								{ "a": "HeroToNode", "p": [ "human_hero_7", "3478" ] } 
+							] 
+						} 
+					]
+				}
+			]
+		}
+	]
+}

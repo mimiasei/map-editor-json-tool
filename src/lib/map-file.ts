@@ -9,6 +9,7 @@ import { importScenario } from '@/lib/import'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { logInfo, logWarn } from '@/lib/logger'
+import { DEBUG } from '@/lib/debug'
 
 export interface OpenMapResult {
   /** Display name, e.g. "my_map.map" */
@@ -56,9 +57,27 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   // ── Parse binary ────────────────────────────────────────────────────────────
   const raw = await parseMapFile(file.buffer)
   logInfo(`Parsed .map: ${file.name}`)
+  if (DEBUG.mapLoading) {
+    console.log('[map-file] raw blocks:', {
+      block1Keys: Object.keys(raw.block1),
+      block2Keys: Object.keys(raw.block2),
+      block3Keys: Object.keys(raw.block3),
+      block4Keys: Object.keys(raw.block4),
+      block4: raw.block4,
+    })
+  }
 
   // ── Map context (always from .map binary) ────────────────────────────────────
   const context = extractMapContext(raw)
+  if (DEBUG.mapLoading) {
+    console.log('[map-file] extractMapContext result:', {
+      mapName: context.mapName,
+      entityCount: context.entities.length,
+      entities: context.entities,
+      objectSidsCount: context.objectSids.length,
+      spawnsCount: context.spawns.length,
+    })
+  }
   useMapContextStore.getState().setContext(context)
 
   // ── Sidecar path — derived from native OS path, not forward-slash-normalized ─
@@ -92,6 +111,16 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   if (!sidecarLoaded) {
     block4Used = true
     logWarn(`No sidecar found for ${file.name}, using Block 4 scripting data`)
+  }
+
+  if (DEBUG.mapLoading) {
+    console.log('[map-file] scenario loaded:', {
+      sidecarLoaded,
+      block4Used,
+      countersCount: scenario.counters?.length ?? 0,
+      interruptionsCount: scenario.interruptions?.length ?? 0,
+      questsCount: scenario.quests?.length ?? 0,
+    })
   }
 
   // Use _mapName from sidecar if present, else Block 2 mapName
