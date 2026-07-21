@@ -58,15 +58,18 @@ export const STATIC_CREATURES: CatalogCreature[] = (unitsData as RawUnit[])
   .sort((a, b) => a.name.localeCompare(b.name))
 
 export const STATIC_MAP_OBJECTS: CatalogMapObject[] = (mapObjectsData as RawMapObj[])
-  .map((o) => ({
-    id: o.sid,
-    name: o.name ?? o.sid,
-    // Store the original category string as the tag so it shows up in the
-    // detail pane subtitle even though we normalise category below.
-    tag: o.category ?? undefined,
-    category: mapCategory(o.category),
-    isInteractable: false,
-  }))
+  .map((o) => {
+    const category = mapCategory(o.category)
+    return {
+      id: o.sid,
+      name: o.name ?? o.sid,
+      // Store the original category string as the tag so it shows up in the
+      // detail pane subtitle even though we normalise category below.
+      tag: o.category ?? undefined,
+      category,
+      isInteractable: category === 'interactables',
+    }
+  })
   .sort((a, b) => a.name.localeCompare(b.name))
 
 // ─── Full static catalog ──────────────────────────────────────────────────────
