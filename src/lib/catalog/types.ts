@@ -11,12 +11,36 @@ export interface CatalogHero {
   classType?: string
 }
 
+export interface CreatureStats {
+  hp: number
+  offence: number
+  defence: number
+  damageMin: number
+  damageMax: number
+  initiative: number
+  speed: number
+  luck?: number
+  moral?: number
+  actionPoints?: number
+  numCounters?: number
+  energyPerCast?: number
+  energyPerRound?: number
+  energyPerTakeDamage?: number
+}
+
 export interface CatalogCreature {
   id: string
   name: string       // resolved via {id}_name in unitsAbility.json
   fraction: string
   tier: number
   icon?: string
+  stats?: CreatureStats
+  cost?: { resource: string; amount: number }[]
+  squadValue?: number
+  nativeBiome?: string
+  baseSid?: string
+  upgradeSid?: string
+  aiType?: string
 }
 
 export interface CatalogArtifact {

@@ -8,6 +8,7 @@ import type {
   GameCatalog,
   CatalogHero,
   CatalogCreature,
+  CreatureStats,
   CatalogArtifact,
   CatalogSpell,
   CatalogSkill,
@@ -119,12 +120,49 @@ async function collectCreatures(zip: JSZip, locMap: Map<string, string>): Promis
       seen.add(id)
       // Name pattern: {id}_name in unitsAbility.json
       const name = loc(locMap, `${id}_name`) ?? loc(locMap, id) ?? id
+
+      // ── Stats ──────────────────────────────────────────────────────────────
+      const s: Record<string, unknown> = (entry.stats as Record<string, unknown>) ?? {}
+      const stats: CreatureStats | undefined = (
+        s.hp !== undefined || s.offence !== undefined
+      ) ? {
+        hp:               num(s.hp),
+        offence:          num(s.offence),
+        defence:          num(s.defence),
+        damageMin:        num(s.damageMin),
+        damageMax:        num(s.damageMax),
+        initiative:       num(s.initiative),
+        speed:            num(s.speed),
+        luck:             s.luck   !== undefined ? num(s.luck)   : undefined,
+        moral:            s.moral  !== undefined ? num(s.moral)  : undefined,
+        actionPoints:     s.actionPoints        !== undefined ? num(s.actionPoints)        : undefined,
+        numCounters:      s.numCounters         !== undefined ? num(s.numCounters)         : undefined,
+        energyPerCast:    s.energyPerCast       !== undefined ? num(s.energyPerCast)       : undefined,
+        energyPerRound:   s.energyPerRound      !== undefined ? num(s.energyPerRound)      : undefined,
+        energyPerTakeDamage: s.energyPerTakeDamage !== undefined ? num(s.energyPerTakeDamage) : undefined,
+      } : undefined
+
+      // ── Cost ───────────────────────────────────────────────────────────────
+      const unitCost = entry.unitCost as Record<string, unknown> | undefined
+      const costArr = unitCost?.costResArray
+      const cost: { resource: string; amount: number }[] | undefined =
+        Array.isArray(costArr) && costArr.length > 0
+          ? costArr.map((c: Record<string, unknown>) => ({ resource: str(c.name), amount: num(c.cost) }))
+          : undefined
+
       creatures.push({
         id,
         name,
         fraction: str(entry.fraction || entry.fractionId || ''),
         tier: num(entry.tier || entry.level),
         icon: str(entry.icon || entry.id) || undefined,
+        stats,
+        cost,
+        squadValue:  entry.squadValue  !== undefined ? num(entry.squadValue)  : undefined,
+        nativeBiome: entry.nativeBiome !== undefined ? str(entry.nativeBiome) : undefined,
+        baseSid:     entry.baseSid     !== undefined ? str(entry.baseSid)     : undefined,
+        upgradeSid:  entry.upgradeSid  !== undefined ? str(entry.upgradeSid)  : undefined,
+        aiType:      entry.ai          !== undefined ? str(entry.ai)          : undefined,
       })
     }
   }

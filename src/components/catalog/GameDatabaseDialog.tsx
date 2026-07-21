@@ -33,6 +33,7 @@ import type {
   CatalogBuff,
   CatalogMapObject,
   CatalogFaction,
+  CreatureStats,
 } from '@/lib/catalog/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -87,6 +88,47 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
 
 // ─── Detail pane ─────────────────────────────────────────────────────────────
 
+// ─── Creature stats grid ──────────────────────────────────────────────────────
+
+const STAT_LABELS: { key: keyof CreatureStats; label: string }[] = [
+  { key: 'hp',           label: 'HP' },
+  { key: 'offence',      label: 'Attack' },
+  { key: 'defence',      label: 'Defense' },
+  { key: 'damageMin',    label: 'Dmg Min' },
+  { key: 'damageMax',    label: 'Dmg Max' },
+  { key: 'initiative',   label: 'Initiative' },
+  { key: 'speed',        label: 'Speed' },
+  { key: 'luck',         label: 'Luck' },
+  { key: 'moral',        label: 'Morale' },
+  { key: 'actionPoints', label: 'Actions' },
+  { key: 'numCounters',  label: 'Counters' },
+  { key: 'energyPerCast',         label: 'Nrg/Cast' },
+  { key: 'energyPerRound',        label: 'Nrg/Round' },
+  { key: 'energyPerTakeDamage',   label: 'Nrg/Hit' },
+]
+
+function CreatureStatsSection({ stats }: { stats: CreatureStats }) {
+  const visible = STAT_LABELS.filter(({ key }) => stats[key] !== undefined)
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Stats</p>
+      <div className="grid grid-cols-2 gap-1 text-xs">
+        {visible.map(({ key, label }) => (
+          <div key={key} className="flex justify-between bg-muted rounded px-2 py-0.5">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="font-semibold tabular-nums">{stats[key]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Detail pane ─────────────────────────────────────────────────────────────
+
+// Fields rendered by dedicated sections — excluded from the generic dump.
+const CREATURE_HANDLED_FIELDS = new Set(['stats', 'cost', 'squadValue', 'nativeBiome', 'baseSid', 'upgradeSid', 'aiType'])
+
 function DetailPane({
   item,
   mapCount,
@@ -99,6 +141,8 @@ function DetailPane({
   mapEntities: { sid: string; type: string }[]
 }) {
   const instancesOfType = mapEntities.filter((e) => e.type === item.id)
+  const creatureStats = item.stats as CreatureStats | undefined
+  const creatureCost = item.cost as { resource: string; amount: number }[] | undefined
 
   return (
     <div className="flex flex-col gap-3 p-4 h-full overflow-y-auto text-sm">
@@ -137,9 +181,61 @@ function DetailPane({
         </div>
       </div>
 
-      {/* Extra fields */}
+      {/* Creature stats */}
+      {creatureStats && <CreatureStatsSection stats={creatureStats} />}
+
+      {/* Creature cost + misc */}
+      {(creatureCost || item.squadValue !== undefined || item.nativeBiome != null || item.aiType != null || item.baseSid != null || item.upgradeSid != null) && (
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Info</p>
+          <div className="grid grid-cols-2 gap-1 text-xs">
+            {creatureCost && creatureCost.map((c) => (
+              <div key={c.resource} className="flex justify-between bg-muted rounded px-2 py-0.5">
+                <span className="text-muted-foreground capitalize">{c.resource}</span>
+                <span className="font-semibold tabular-nums">{c.amount}</span>
+              </div>
+            ))}
+            {item.squadValue !== undefined && (
+              <div className="flex justify-between bg-muted rounded px-2 py-0.5">
+                <span className="text-muted-foreground">Squad value</span>
+                <span className="font-semibold tabular-nums">{String(item.squadValue)}</span>
+              </div>
+            )}
+            {item.nativeBiome != null && (
+              <div className="flex justify-between bg-muted rounded px-2 py-0.5">
+                <span className="text-muted-foreground">Native biome</span>
+                <span className="font-semibold">{String(item.nativeBiome)}</span>
+              </div>
+            )}
+            {item.aiType != null && (
+              <div className="flex justify-between bg-muted rounded px-2 py-0.5">
+                <span className="text-muted-foreground">AI type</span>
+                <span className="font-semibold">{String(item.aiType)}</span>
+              </div>
+            )}
+          </div>
+          {(item.baseSid != null || item.upgradeSid != null) && (
+            <div className="flex flex-col gap-0.5 text-xs mt-1">
+              {item.baseSid != null && (
+                <div className="flex gap-2">
+                  <span className="text-muted-foreground w-20 shrink-0">Upgrades from</span>
+                  <span className="font-mono">{String(item.baseSid)}</span>
+                </div>
+              )}
+              {item.upgradeSid != null && (
+                <div className="flex gap-2">
+                  <span className="text-muted-foreground w-20 shrink-0">Upgrades to</span>
+                  <span className="font-mono">{String(item.upgradeSid)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Extra fields (generic — excludes creature-specific fields handled above) */}
       {Object.entries(item)
-        .filter(([k]) => !['id', 'name', 'icon', 'subtitle'].includes(k))
+        .filter(([k]) => !['id', 'name', 'icon', 'subtitle', ...CREATURE_HANDLED_FIELDS].includes(k))
         .map(([k, v]) => {
           if (v === undefined || v === null || v === '') return null
           return (
