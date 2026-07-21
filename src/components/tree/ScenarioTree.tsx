@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,6 +17,8 @@ import {
   List,
   Layers,
   MessageSquare,
+  MapPin,
+  Check,
 } from 'lucide-react'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
@@ -147,6 +150,71 @@ function SectionHeader({
   )
 }
 
+// ─── Read-only section header (no + button) ─────────────────────────────────
+function ReadOnlySectionHeader({
+  label,
+  count,
+  open,
+  onToggle,
+  icon,
+}: {
+  label: string
+  count: number
+  open: boolean
+  onToggle: () => void
+  icon?: React.ReactNode
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className="sticky top-0 z-10 flex items-center min-h-[36px] px-3 border-b border-border/60 bg-[#e4ffca] dark:bg-card cursor-pointer select-none transition-colors duration-150 hover:bg-black/5 dark:hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
+    >
+      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground">
+        {open
+          ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+        {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
+        {label}
+        <span className="ml-0.5 font-normal normal-case tracking-normal text-muted-foreground">
+          ({count})
+        </span>
+      </span>
+    </div>
+  )
+}
+
+// ─── Inline copy button ───────────────────────────────────────────────────────
+function CopySidButton({ sid }: { sid: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
+      title={`Copy "${sid}"`}
+      onClick={(e) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(sid).then(() => {
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1200)
+        })
+      }}
+    >
+      {copied
+        ? <Check className="h-3 w-3 text-green-500" />
+        : <Copy className="h-3 w-3" />}
+    </button>
+  )
+}
+
+// ─── Label for entity type number ────────────────────────────────────────────
+function entityTypeLabel(type: unknown): string {
+  if (type === 0 || type === '0') return 'Objects'
+  if (type === 1 || type === '1') return 'Zones'
+  return String(type)
+}
+
 // ─── Main tree ──────────────────────────────────────────────────────────────────
 export default function ScenarioTree() {
   const {
@@ -177,15 +245,33 @@ export default function ScenarioTree() {
     removeDialogFlow,
   } = useScenarioStore()
 
+  const entities = useMapContextStore((s) => s.context?.entities) ?? []
+
+  // Group entities by type, sorted by type key then by SID within each group
+  const entityGroups = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const e of entities) {
+      const key = entityTypeLabel(e.type)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(e.sid)
+    }
+    // Sort SIDs within each group
+    for (const sids of map.values()) sids.sort()
+    // Return sorted by group name
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
+  }, [entities])
+
   const [openSections, setOpenSections] = useState({
     mapSettings: true,
     counters: true,
     interruptions: true,
     quests: true,
     dialogs: true,
+    entitySids: true,
   })
   const [openQuests, setOpenQuests] = useState<Record<number, boolean>>({})
   const [openSubQuests, setOpenSubQuests] = useState<Record<string, boolean>>({})
+  const [openEntityGroups, setOpenEntityGroups] = useState<Record<string, boolean>>({})
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((s) => ({ ...s, [key]: !s[key] }))
@@ -471,6 +557,55 @@ export default function ScenarioTree() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* ── Entity SIDs (from loaded .map file) ── */}
+        {entities.length > 0 && (
+          <>
+            <ReadOnlySectionHeader
+              label="Entity SIDs"
+              count={entities.length}
+              open={openSections.entitySids}
+              onToggle={() => toggleSection('entitySids')}
+              icon={<MapPin className="h-3 w-3" />}
+            />
+            {openSections.entitySids && (
+              <div className="px-1 py-1">
+                {entityGroups.map(([groupLabel, sids]) => {
+                  const groupOpen = openEntityGroups[groupLabel] ?? true
+                  return (
+                    <div key={groupLabel}>
+                      {/* Category row */}
+                      <div
+                        className="flex items-center gap-1 rounded px-1 py-0.5 cursor-pointer select-none text-xs text-muted-foreground hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)] transition-shadow duration-150"
+                        style={{ paddingLeft: '14px' }}
+                        onClick={() =>
+                          setOpenEntityGroups((s) => ({ ...s, [groupLabel]: !(s[groupLabel] ?? true) }))
+                        }
+                      >
+                        {groupOpen
+                          ? <ChevronDown className="h-3 w-3 shrink-0" />
+                          : <ChevronRight className="h-3 w-3 shrink-0" />}
+                        <span className="ml-1 font-medium">{groupLabel}</span>
+                        <span className="ml-1 text-muted-foreground/60">({sids.length})</span>
+                      </div>
+                      {/* SID rows */}
+                      {groupOpen && sids.map((sid) => (
+                        <div
+                          key={sid}
+                          className="group relative flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground select-none"
+                          style={{ paddingLeft: '36px' }}
+                        >
+                          <span className="truncate font-mono flex-1" style={labelStyle}>{sid}</span>
+                          <CopySidButton sid={sid} />
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
 
       </div>
