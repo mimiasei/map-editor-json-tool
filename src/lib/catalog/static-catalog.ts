@@ -90,6 +90,7 @@ export const STATIC_ARTIFACTS: CatalogArtifact[] = (artifactsData as RawArtifact
   .sort((a, b) => a.name.localeCompare(b.name))
 
 export const STATIC_SPELLS: CatalogSpell[] = (spellsData as RawSpell[])
+  .filter((s) => !!s.name)
   .map((s) => ({
     id: s.sid,
     name: s.name,

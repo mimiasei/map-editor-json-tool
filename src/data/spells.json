@@ -365,11 +365,6 @@
     "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
   },
   {
-    "sid": "day",
-    "school": "Neutral",
-    "description": "Browse all daylight magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
-  },
-  {
     "sid": "neutral_magic_dimension_door",
     "school": "Neutral",
     "name": "Dimension Door",
@@ -490,25 +485,10 @@
     "description": "Allows Undead raising to be toggled on or off. When it is off, the hero restores Necromantic Energy after winning a battle instead of raising friendly Undead."
   },
   {
-    "sid": "neutral",
-    "school": "Neutral",
-    "description": "Browse all neutral magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
-  },
-  {
-    "sid": "night",
-    "school": "Neutral",
-    "description": "Browse all nightshade magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
-  },
-  {
     "sid": "neutral_magic_pocket_dimension",
     "school": "Neutral",
     "name": "Pocket Dimension",
     "description": "Creates an entrance to a Remote Foothold on an adjacent space that lasts until the end of the day, allowing any allied hero to leave creatures and artifacts the"
-  },
-  {
-    "sid": "primal",
-    "school": "Neutral",
-    "description": "Browse all primal magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
   },
   {
     "sid": "neutral_magic_second_sight",
@@ -521,11 +501,6 @@
     "school": "Neutral",
     "name": "Shadowflight",
     "description": "Grants the hero the ability to fly until the end of the day, allowing them to move freely through any obstacles on the global map. Flying above obstacles costs"
-  },
-  {
-    "sid": "space",
-    "school": "Neutral",
-    "description": "Browse all arcane magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
   },
   {
     "sid": "neutral_magic_town_portal",

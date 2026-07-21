@@ -42,11 +42,13 @@ async function fetchListing() {
   const seen = new Set()
 
   // Extract all /db/spells/<slug> hrefs — each is a spell sid
+  // Skip school-level slugs (e.g. /db/spells/day) — real spells contain "_magic_"
   const hrefRegex = /href="\/db\/spells\/([^"/]+)"/g
   let m
   while ((m = hrefRegex.exec(html)) !== null) {
     const sid = m[1]
     if (seen.has(sid)) continue
+    if (!sid.includes('_magic_') && !sid.includes('bonus_magic') && !sid.includes('kara_') && !sid.includes('change_')) continue
     seen.add(sid)
     spells.push({ sid })
   }
