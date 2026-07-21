@@ -22,14 +22,24 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   const b2 = raw.block2
 
   // ── Spawns ──────────────────────────────────────────────────────────────────
-  const spawns: PlayerSpawn[] = (b1.spawns ?? []).map((s, i) => ({
-    index: i,
-    owner: s.owner ?? '',
-    factionSid: s.factionSid ?? '',
-    heroSid: s.heroSid ?? '',
-    colorId: s.colorId ?? i,
-    isLocked: s.isLocked ?? false,
-  }))
+  // b1.spawns is an object { playersCount, spawns: [...], takenHeroes }
+  const spawnsObj = b1.spawns as unknown
+  const rawSpawns: unknown[] = Array.isArray(spawnsObj)
+    ? spawnsObj
+    : Array.isArray((spawnsObj as Record<string, unknown>)?.spawns)
+      ? (spawnsObj as Record<string, unknown>).spawns as unknown[]
+      : []
+  const spawns: PlayerSpawn[] = rawSpawns.map((s, i) => {
+    const sp = s as Record<string, unknown>
+    return {
+      index: i,
+      owner: sp.owner !== undefined ? String(sp.owner) : '',
+      factionSid: sp.factionSid !== undefined ? String(sp.factionSid) : '',
+      heroSid: sp.heroSid !== undefined ? String(sp.heroSid) : '',
+      colorId: typeof sp.colorId === 'number' ? sp.colorId : i,
+      isLocked: Boolean(sp.isLocked),
+    }
+  })
 
   // ── Ban info ─────────────────────────────────────────────────────────────────
   const bd = b1.banInfoData ?? {}
