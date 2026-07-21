@@ -58,6 +58,7 @@ export interface CatalogSpell {
   icon: string
   school?: string
   rank?: number
+  description?: string
 }
 
 export interface CatalogSkill {

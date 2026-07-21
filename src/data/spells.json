@@ -1,0 +1,912 @@
+[
+  {
+    "sid": "space_1_magic_early_start",
+    "school": "Arcane",
+    "rank": 1,
+    "name": "Early Start",
+    "description": "Target friendly creature gains +{0} Initiative.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "space_1_magic_early_start_special",
+    "school": "Arcane",
+    "rank": 1,
+    "name": "Masterful Early Start",
+    "description": "All friendly creatures gain +{0} Initiative.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "space_2_magic_energy_explosion",
+    "school": "Arcane",
+    "rank": 2,
+    "name": "Energy Explosion",
+    "description": "Deals {0} Magic Damage per Focus Charge to all creatures in one‑hex radius."
+  },
+  {
+    "sid": "space_3_magic_energyze",
+    "school": "Arcane",
+    "rank": 3,
+    "name": "Energize",
+    "description": "Immediately generates {0} Focus Charge(s)."
+  },
+  {
+    "sid": "space_4_magic_optical_illusion",
+    "school": "Arcane",
+    "rank": 4,
+    "name": "Optical Illusion",
+    "description": "Target friendly creature takes –{0}% Ranged Damage.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "space_5_magic_trap_jaws",
+    "school": "Arcane",
+    "rank": 5,
+    "name": "Temporal Spheres",
+    "description": "Place up to {1} invisible traps on free hexes. Traps trigger when stepped on by a ground creature, dealing Magic Damage to the creature and adjacent ones before"
+  },
+  {
+    "sid": "space_6_magic_blink",
+    "school": "Arcane",
+    "rank": 6,
+    "name": "Blink",
+    "description": "Teleports a target friendly creature up to {0} hexes from its current hex."
+  },
+  {
+    "sid": "space_6_magic_blink_special",
+    "school": "Arcane",
+    "rank": 6,
+    "name": "Masterful Blink",
+    "description": "Teleports any target creature up to {0} hexes from its current hex."
+  },
+  {
+    "sid": "space_7_magic_shackles",
+    "school": "Arcane",
+    "rank": 7,
+    "name": "Shackles",
+    "description": "Target enemy creature cannot counterattack.\nDuration: {0} round(s)."
+  },
+  {
+    "sid": "space_8_magic_carapace",
+    "school": "Arcane",
+    "rank": 8,
+    "name": "Carapace",
+    "description": "Shields a target friendly creature with a barrier that blocks the next instance of Damage.\nDuration: {0} round(s)."
+  },
+  {
+    "sid": "space_8_magic_carapace_special",
+    "school": "Arcane",
+    "rank": 8,
+    "name": "Masterful Carapace",
+    "description": "Shields a target friendly creature with a barrier that blocks the next instance of Damage. While under “Carapace,” the target is also immune to negative effects"
+  },
+  {
+    "sid": "space_9_magic_impending_fate",
+    "school": "Arcane",
+    "rank": 9,
+    "name": "Impending Fate",
+    "description": "Deals Damage to all enemies. Each stack takes {0} Magic Damage per its creature tier"
+  },
+  {
+    "sid": "space_10_magic_mirror_copy_special",
+    "school": "Arcane",
+    "rank": 10,
+    "name": "Masterful Mirror Copy",
+    "description": "Summons a copy of any target to fight on your side. The copy deals –{0}% and takes +{1}% Damage and can’t use special abilities.\nDuration: {2} round(s)."
+  },
+  {
+    "sid": "space_10_magic_mirror_copy",
+    "school": "Arcane",
+    "rank": 10,
+    "name": "Mirror Copy",
+    "description": "Summons a copy of a target friendly creature. The copy deals –{0}% and takes +{1}% Damage and can’t use special abilities.\nDuration: {2} round(s)."
+  },
+  {
+    "sid": "space_11_magic_decimate",
+    "school": "Arcane",
+    "rank": 11,
+    "name": "Guillotine",
+    "description": "Deals {0}% of target enemy creature’s maximum HP as Magic Damage. Each time this spell is re‑cast on the same target, it deals +{1}% more Damage. This effect is"
+  },
+  {
+    "sid": "space_11_magic_decimate_special",
+    "school": "Arcane",
+    "rank": 11,
+    "name": "Masterful Guillotine",
+    "description": "Deals {0}% of target enemy creature’s maximum HP as Magic Damage. Each time this spell is re‑cast on the same target, it deals +{1}% more Damage. This effect is"
+  },
+  {
+    "sid": "space_12_magic_rewind_special",
+    "school": "Arcane",
+    "rank": 12,
+    "name": "Masterful Rewind Life",
+    "description": "Restore {0} HP to a target friendly creature.\nThis can revive fallen units and create temporary units beyond their original amount."
+  },
+  {
+    "sid": "space_12_magic_rewind",
+    "school": "Arcane",
+    "rank": 12,
+    "name": "Rewind Life",
+    "description": "Restore {0} HP to a target friendly creature.\nThis can revive fallen units."
+  },
+  {
+    "sid": "space_13_magic_black_hole",
+    "school": "Arcane",
+    "rank": 13,
+    "name": "Black Hole",
+    "description": "Deals {0} Magic Damage to all creatures on the target hex and up to 2 hexes away in every direction. Pulls the furthest affected targets towards the center if p"
+  },
+  {
+    "sid": "space_14_magic_doreaths_tide",
+    "school": "Arcane",
+    "rank": 14,
+    "name": "Doreath’s Tide",
+    "description": "All friendly creatures gain {0} Speed and Initiative. All enemies lose {0} Speed and Initiative.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "space_15_magic_trap_snare",
+    "school": "Arcane",
+    "rank": 15,
+    "name": "Spatial Snare",
+    "description": "Place up to {1} invisible trap(s) on free hexes. Traps trigger when a ground creature moves through them, halting the creature’s movement, ending its current tu"
+  },
+  {
+    "sid": "space_16_magic_reality_distortion",
+    "school": "Arcane",
+    "rank": 16,
+    "name": "Reality Distortion",
+    "description": "Selected target takes no Damage from any source. Instead, at the start of each round, it takes all Damage that it would have taken in the previous round as Pure"
+  },
+  {
+    "sid": "space_17_magic_reinforcements",
+    "school": "Arcane",
+    "rank": 17,
+    "name": "Reinforcements",
+    "description": "The casting hero immediately interacts with any external dwelling you control within {0} squares. Usable {1} times per day."
+  },
+  {
+    "sid": "space_18_magic_assemble",
+    "school": "Arcane",
+    "rank": 18,
+    "name": "Assemble!",
+    "description": "The casting hero immediately interacts with any allied hero within {0} squares. Usable {1} times per day."
+  },
+  {
+    "sid": "day_1_magic_healing_water",
+    "school": "Daylight",
+    "rank": 1,
+    "name": "Healing Water",
+    "description": "Target friendly creature restores {0} HP.\nCannot revive fallen units."
+  },
+  {
+    "sid": "day_1_magic_healing_water_special",
+    "school": "Daylight",
+    "rank": 1,
+    "name": "Masterful Healing Water",
+    "description": "Target friendly creature restores {0} HP. Dispels all negative effects.\nCannot revive fallen units."
+  },
+  {
+    "sid": "day_2_magic_sharp_edge",
+    "school": "Daylight",
+    "rank": 2,
+    "name": "Blessing",
+    "description": "Target friendly creature deals +{0}% Damage with basic attacks. \nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_2_magic_sharp_edge_special",
+    "school": "Daylight",
+    "rank": 2,
+    "name": "Masterful Blessing",
+    "description": "Target friendly creature deals +{0}% Damage with basic attacks and always deals maximum Damage.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_3_magic_haste",
+    "school": "Daylight",
+    "rank": 3,
+    "name": "Haste",
+    "description": "Target friendly creature gains +{0} Speed.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_3_magic_haste_special",
+    "school": "Daylight",
+    "rank": 3,
+    "name": "Masterful Haste",
+    "description": "All friendly creatures gain +{0} Speed.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_4_magic_favorable_wind",
+    "school": "Daylight",
+    "rank": 4,
+    "name": "Favorable Wind",
+    "description": "Target friendly creature deals +{0}% Damage with Ranged and Long Reach attacks.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_5_magic_shorten_shadow",
+    "school": "Daylight",
+    "rank": 5,
+    "name": "Shorten Shadow",
+    "description": "Target enemy creature loses {0} Attack and Defense.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_6_magic_cleansing_ray",
+    "school": "Daylight",
+    "rank": 6,
+    "name": "Weakening Ray",
+    "description": "Removes {0} counterattack charge(s) from the target enemy for this round."
+  },
+  {
+    "sid": "day_7_magic_inner_light",
+    "school": "Daylight",
+    "rank": 7,
+    "name": "Inner Light",
+    "description": "Reduces the duration of all negative effects applied to the target friendly creature by {0}."
+  },
+  {
+    "sid": "day_8_magic_taunt",
+    "school": "Daylight",
+    "rank": 8,
+    "name": "Taunt",
+    "description": "All enemies within {0} hexes from the target friendly creature can only target that creature. Each instance of Damage makes the effect last {2} round(s) shorter"
+  },
+  {
+    "sid": "day_9_magic_arinas_hymn",
+    "school": "Daylight",
+    "rank": 9,
+    "name": "Arina’s Touch",
+    "description": "Target friendly creature gains {0} Initiative and {1}% maximum HP.\nDuration: {2} round(s)."
+  },
+  {
+    "sid": "day_9_magic_arinas_hymn_special",
+    "school": "Daylight",
+    "rank": 9,
+    "name": "Masterful Arina’s Touch",
+    "description": "Target friendly creature gains {0} Speed, {0} Initiative, and {1}% maximum HP.\nDuration: {2} round(s)."
+  },
+  {
+    "sid": "day_10_magic_second_song",
+    "school": "Daylight",
+    "rank": 10,
+    "name": "Song of Power",
+    "description": "Resets the cooldowns of the target friendly creature."
+  },
+  {
+    "sid": "day_11_magic_masterful_parry",
+    "school": "Daylight",
+    "rank": 11,
+    "name": "Riposte",
+    "description": "Target friendly creature counterattacks before enemy attack lands.\nDuration: {0} round(s)."
+  },
+  {
+    "sid": "day_12_magic_radiant_armor",
+    "school": "Daylight",
+    "rank": 12,
+    "name": "Radiant Armor",
+    "description": "Target friendly creature takes –{0}% Damage from all sources.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_13_magic_holy_arms",
+    "school": "Daylight",
+    "rank": 13,
+    "name": "Heavenly Blades",
+    "description": "Target friendly creature deals +{0} Pure Damage with each basic attack and restores the same amount of HP. Cannot revive fallen units.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_14_magic_vengeance",
+    "school": "Daylight",
+    "rank": 14,
+    "name": "Vengeance",
+    "description": "Whenever an enemy attacks target friendly creature in Melee, that enemy takes {0} Magic Damage. \nDuration: {1} round(s)."
+  },
+  {
+    "sid": "day_15_magic_judgement",
+    "school": "Daylight",
+    "rank": 15,
+    "name": "Judgement",
+    "description": "Strikes target enemy four times, dealing a total of {0} Magic Damage."
+  },
+  {
+    "sid": "day_16_magic_arinas_chosen",
+    "school": "Daylight",
+    "rank": 16,
+    "name": "Arina’s Chosen",
+    "description": "Target friendly creature cannot have less than {0}% of their current units. Taking Damage reduces the duration of the effect by {2} round(s).\nDuration: {1} roun"
+  },
+  {
+    "sid": "day_16_magic_arinas_chosen_special",
+    "school": "Daylight",
+    "rank": 16,
+    "name": "Masterful Arina’s Chosen",
+    "description": "Target friendly creature cannot have less than {0}% of their current units. Taking Damage reduces the duration of the effect by {2} round(s). The target gains +"
+  },
+  {
+    "sid": "day_17_magic_clear_view",
+    "school": "Daylight",
+    "rank": 17,
+    "name": "From a Bird’s Eye",
+    "description": "Reveals the borders of all areas, including those hidden by the fog of war."
+  },
+  {
+    "sid": "day_18_magic_farsight",
+    "school": "Daylight",
+    "rank": 18,
+    "name": "Clear Fog",
+    "description": "Reveals {0} squares around the selected space on the global map up to {1} square(s) away from the hero. Usable {2} time(s) per day."
+  },
+  {
+    "sid": "bonus_magic_astral_summon_2",
+    "school": "Neutral",
+    "name": "Advanced Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_2",
+    "school": "Neutral",
+    "name": "Advanced Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_2",
+    "school": "Neutral",
+    "name": "Advanced Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_1",
+    "school": "Neutral",
+    "name": "Basic Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_1",
+    "school": "Neutral",
+    "name": "Basic Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_1",
+    "school": "Neutral",
+    "name": "Basic Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "day",
+    "school": "Neutral",
+    "description": "Browse all daylight magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
+  },
+  {
+    "sid": "neutral_magic_dimension_door",
+    "school": "Neutral",
+    "name": "Dimension Door",
+    "description": "Teleports the hero to target location within {0} squares. Usable {1} times per day."
+  },
+  {
+    "sid": "bonus_magic_kill_summon",
+    "school": "Neutral",
+    "name": "Dispel Summon",
+    "description": "Immediately dispels target enemy summoned creature."
+  },
+  {
+    "sid": "bonus_magic_astral_summon_3",
+    "school": "Neutral",
+    "name": "Expert Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_3",
+    "school": "Neutral",
+    "name": "Expert Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_3",
+    "school": "Neutral",
+    "name": "Expert Summon Avatar",
+    "description": "Summons an Avatar that is destroyed upon taking {0} hit(s) from any source. It deals {1} Damage. Its Damage and Attack scale with the hero’s Spell Power (instea"
+  },
+  {
+    "sid": "neutral_magic_light_gate",
+    "school": "Neutral",
+    "name": "Gate of Light",
+    "description": "Creates a portal until the end of the day, allowing any hero to travel through it. Entry is from any free adjacent space, and exit is to any free space within {"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_5",
+    "school": "Neutral",
+    "name": "Grandmaster Summon Avatar",
+    "description": "bonus_magic_astral_summon_new_description_5"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_5",
+    "school": "Neutral",
+    "name": "Grandmaster Summon Avatar",
+    "description": "bonus_magic_astral_summon_new_description_5"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_5",
+    "school": "Neutral",
+    "name": "Grandmaster Summon Avatar",
+    "description": "bonus_magic_astral_summon_new_description_5"
+  },
+  {
+    "sid": "kara_darkness",
+    "school": "Neutral",
+    "name": "Kara Darkness",
+    "description": "Kara Darkness details in Heroes of Might &amp; Magic: Olden Era. View stats, abilities, and related information."
+  },
+  {
+    "sid": "kara_death",
+    "school": "Neutral",
+    "name": "Kara Death",
+    "description": "Kara Death details in Heroes of Might &amp; Magic: Olden Era. View stats, abilities, and related information."
+  },
+  {
+    "sid": "kara_mana",
+    "school": "Neutral",
+    "name": "Kara Mana",
+    "description": "Kara Mana details in Heroes of Might &amp; Magic: Olden Era. View stats, abilities, and related information."
+  },
+  {
+    "sid": "kara_silence",
+    "school": "Neutral",
+    "name": "Kara Silence",
+    "description": "Kara Silence details in Heroes of Might &amp; Magic: Olden Era. View stats, abilities, and related information."
+  },
+  {
+    "sid": "kara_speed",
+    "school": "Neutral",
+    "name": "Kara Speed",
+    "description": "Kara Speed details in Heroes of Might &amp; Magic: Olden Era. View stats, abilities, and related information."
+  },
+  {
+    "sid": "kara_weakness",
+    "school": "Neutral",
+    "name": "Kara Weakness",
+    "description": "Kara Weakness details in Heroes of Might &amp; Magic: Olden Era. View stats, abilities, and related information."
+  },
+  {
+    "sid": "bonus_magic_pure_bolt",
+    "school": "Neutral",
+    "name": "Magic Arrow",
+    "description": "Strikes target enemy three times, dealing a total of {0} Magic Damage."
+  },
+  {
+    "sid": "bonus_magic_astral_summon_4",
+    "school": "Neutral",
+    "name": "Master Summon Avatar",
+    "description": "bonus_magic_astral_summon_new_description_4"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_4",
+    "school": "Neutral",
+    "name": "Master Summon Avatar",
+    "description": "bonus_magic_astral_summon_new_description_4"
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_4",
+    "school": "Neutral",
+    "name": "Master Summon Avatar",
+    "description": "bonus_magic_astral_summon_new_description_4"
+  },
+  {
+    "sid": "change_use_necromancy",
+    "school": "Neutral",
+    "name": "Necromancer Will",
+    "description": "Allows Undead raising to be toggled on or off. When it is off, the hero restores Necromantic Energy after winning a battle instead of raising friendly Undead."
+  },
+  {
+    "sid": "neutral",
+    "school": "Neutral",
+    "description": "Browse all neutral magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
+  },
+  {
+    "sid": "night",
+    "school": "Neutral",
+    "description": "Browse all nightshade magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
+  },
+  {
+    "sid": "neutral_magic_pocket_dimension",
+    "school": "Neutral",
+    "name": "Pocket Dimension",
+    "description": "Creates an entrance to a Remote Foothold on an adjacent space that lasts until the end of the day, allowing any allied hero to leave creatures and artifacts the"
+  },
+  {
+    "sid": "primal",
+    "school": "Neutral",
+    "description": "Browse all primal magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
+  },
+  {
+    "sid": "neutral_magic_second_sight",
+    "school": "Neutral",
+    "name": "Second Wind",
+    "description": "Immediately restores {0} Movement points to the hero. Usable {1} time(s) per day."
+  },
+  {
+    "sid": "neutral_magic_shadow_form",
+    "school": "Neutral",
+    "name": "Shadowflight",
+    "description": "Grants the hero the ability to fly until the end of the day, allowing them to move freely through any obstacles on the global map. Flying above obstacles costs"
+  },
+  {
+    "sid": "space",
+    "school": "Neutral",
+    "description": "Browse all arcane magic in Heroes of Might &amp; Magic: Olden Era. Complete stats, abilities, and detailed information."
+  },
+  {
+    "sid": "neutral_magic_town_portal",
+    "school": "Neutral",
+    "name": "Town Portal",
+    "description": "Teleports the casting hero to a selected city you control. Usable {0} times per day."
+  },
+  {
+    "sid": "neutral_1_magic_back_to_garrison",
+    "school": "Neutral",
+    "rank": 1,
+    "name": "Back to Foothold!",
+    "description": "Teleports the casting hero to a selected Remote Foothold you control. Usable {0} time(s) per day."
+  },
+  {
+    "sid": "neutral_1_magic_back_to_city",
+    "school": "Neutral",
+    "rank": 1,
+    "name": "Back to Town!",
+    "description": "Teleports the casting hero to the nearest city you control within {0} squares. All remaining movement points are lost. Usable {1} time(s) per day."
+  },
+  {
+    "sid": "neutral_1_magic_mana_restore",
+    "school": "Neutral",
+    "rank": 1,
+    "name": "Mana Rite",
+    "description": "Restores the casting hero’s mana based on their remaining movement points: {0}% of mana per {1}% of remaining points. All movement points are lost."
+  },
+  {
+    "sid": "neutral_1_magic_mana_transfer",
+    "school": "Neutral",
+    "rank": 1,
+    "name": "Mana Transfusion",
+    "description": "Removes {2} mana from the casting hero to restore {3} mana to any allied hero within {0} squares. Usable {1} time(s) per day."
+  },
+  {
+    "sid": "neutral_1_magic_units_replace",
+    "school": "Neutral",
+    "rank": 1,
+    "name": "Relocation",
+    "description": "The casting hero immediately interacts with any controlled city, enabling the transfer of creatures to or from that city. Usable {0} time per day."
+  },
+  {
+    "sid": "night_bonus_magic_1_magic",
+    "school": "Nightshade",
+    "name": "Dusk Dampening",
+    "description": "The enemy hero’s next spell costs +{0}% mana and gains a –{0}% Spell Power malus."
+  },
+  {
+    "sid": "night_1_magic_unnatural_calm_special",
+    "school": "Nightshade",
+    "rank": 1,
+    "name": "Masterful Unnatural Calm",
+    "description": "Target enemy deals –{0}% Damage with basic attacks. \nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_1_magic_unnatural_calm",
+    "school": "Nightshade",
+    "rank": 1,
+    "name": "Unnatural Calm",
+    "description": "Target enemy deals –{0}% Damage with basic attacks. \nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_2_magic_web_special",
+    "school": "Nightshade",
+    "rank": 2,
+    "name": "Masterful Web",
+    "description": "All enemy creatures lose {0} Speed.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_2_magic_web",
+    "school": "Nightshade",
+    "rank": 2,
+    "name": "Web",
+    "description": "Target enemy creature loses {0} Speed\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_3_magic_enlarge_shadow",
+    "school": "Nightshade",
+    "rank": 3,
+    "name": "Enlarge Shadow",
+    "description": "Target friendly creature gains {0} Attack and Defense.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_4_magic_despair",
+    "school": "Nightshade",
+    "rank": 4,
+    "name": "Despair",
+    "description": "Curses the target enemy. Cursed creatures take {0} Pure Damage at the start of their turn. This effect is stackable. \nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_4_magic_despair_special",
+    "school": "Nightshade",
+    "rank": 4,
+    "name": "Masterful Despair",
+    "description": "Curses the target enemy. Cursed creatures take {0} Pure Damage at the start of their turn. This effect is stackable. \nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_5_magic_shade_cloak",
+    "school": "Nightshade",
+    "rank": 5,
+    "name": "Shade Cloak",
+    "description": "Target friendly creature cannot be targeted. Effect ends when the unit takes any action or at the end of the round."
+  },
+  {
+    "sid": "night_6_magic_deaths_grip_special",
+    "school": "Nightshade",
+    "rank": 6,
+    "name": "Masterful Umbral Grip",
+    "description": "Deals {0} Pure Damage to the target enemy and all enemies adjacent to it. This Damage cannot be modified in any way."
+  },
+  {
+    "sid": "night_6_magic_deaths_grip",
+    "school": "Nightshade",
+    "rank": 6,
+    "name": "Umbral Grip",
+    "description": "Deals {0} Pure Damage to the target enemy. This Damage cannot be modified in any way."
+  },
+  {
+    "sid": "night_7_magic_fatal_decay",
+    "school": "Nightshade",
+    "rank": 7,
+    "name": "Fatal Decay",
+    "description": "Target enemy creature cannot restore HP. This effect remains after the creature’s death.\nDuration: {0} round(s)."
+  },
+  {
+    "sid": "night_8_magic_sleep",
+    "school": "Nightshade",
+    "rank": 8,
+    "name": "Sleep",
+    "description": "Target enemy creature falls asleep and cannot take any actions. Dispelled upon taking Damage. After awakening, the same creature cannot fall asleep again until"
+  },
+  {
+    "sid": "night_9_magic_twilight",
+    "school": "Nightshade",
+    "rank": 9,
+    "name": "Twilight",
+    "description": "Target enemy creature is prevented from using Ranged attacks.\nDuration: {0} round(s)."
+  },
+  {
+    "sid": "night_10_magic_silence",
+    "school": "Nightshade",
+    "rank": 10,
+    "name": "Silence",
+    "description": "Target enemy creature is prevented from using abilities or generating Focus Points.\nDuration: {0} round(s)."
+  },
+  {
+    "sid": "night_11_magic_vulnerability_special",
+    "school": "Nightshade",
+    "rank": 11,
+    "name": "Masterful Vulnerability",
+    "description": "Target enemy creature takes +{0}% Damage from all sources. This effect is stackable.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_11_magic_vulnerability",
+    "school": "Nightshade",
+    "rank": 11,
+    "name": "Vulnerability",
+    "description": "Target enemy creature takes +{0}% Damage from all sources.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_12_magic_summon_starchild",
+    "school": "Nightshade",
+    "rank": 12,
+    "name": "Summon Starchild",
+    "description": "Summons a stack of {0} Starchildren on an adjacent free hex. They will disappear at the end of the battle."
+  },
+  {
+    "sid": "night_13_magic_berserker",
+    "school": "Nightshade",
+    "rank": 13,
+    "name": "Berserk",
+    "description": "Target creature immediately and uncontrollably attacks the closest target within its attack radius, whether it is a friendly or enemy creature."
+  },
+  {
+    "sid": "night_13_magic_berserker_special",
+    "school": "Nightshade",
+    "rank": 13,
+    "name": "Masterful Berserk",
+    "description": "Each creature on the target hex and adjacent hexes immediately and uncontrollably attacks the closest target within their attack radius, whether they are friend"
+  },
+  {
+    "sid": "night_14_magic_nairas_kiss",
+    "school": "Nightshade",
+    "rank": 14,
+    "name": "Naira’s Kiss",
+    "description": "Marks the target enemy creature. Marked creatures take {1} Magic Damage whenever they perform any action.\nDuration: {0} round(s)."
+  },
+  {
+    "sid": "night_15_magic_deaths_call",
+    "school": "Nightshade",
+    "rank": 15,
+    "name": "Coup de Grâce",
+    "description": "Target enemy creature will die after taking any Damage if its stack size is lower than or equal to {0}% of its original number.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "night_16_magic_shadow_army",
+    "school": "Nightshade",
+    "rank": 16,
+    "name": "Shadow Army",
+    "description": "Increases the number of units in the target friendly stack by {0}%. These units are temporary and cannot exceed {1}% of the current number of permanent units in"
+  },
+  {
+    "sid": "night_17_magic_read_minds",
+    "school": "Nightshade",
+    "rank": 17,
+    "name": "Read Minds",
+    "description": "Reveals the precise number and intentions of all neutral squads within {0} squares of the hero."
+  },
+  {
+    "sid": "night_18_magic_nairas_veil",
+    "school": "Nightshade",
+    "rank": 18,
+    "name": "Naira’s Veil",
+    "description": "Renews the fog of war in a {0}‑square radius around the hero, concealing them from opponents until the fog is re‑cleared. Usable {1} time(s) per day."
+  },
+  {
+    "sid": "primal_bonus_magic_1_magic",
+    "school": "Primal",
+    "name": "Spell Eruption",
+    "description": "The casting hero’s next spell costs –{0}% mana and gains a +{0}% Spell Power bonus."
+  },
+  {
+    "sid": "primal_1_magic_thunderbolt",
+    "school": "Primal",
+    "rank": 1,
+    "name": "Lightning Bolt",
+    "description": "Deals {0} Magic Damage to target enemy creature."
+  },
+  {
+    "sid": "primal_2_magic_thick_hide",
+    "school": "Primal",
+    "rank": 2,
+    "name": "Thick Hide",
+    "description": "Target friendly creature takes –{0}% Damage from Melee attacks.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "primal_3_magic_wean",
+    "school": "Primal",
+    "rank": 3,
+    "name": "Wean",
+    "description": "Reduces the duration of all positive effects applied to the target by {0}."
+  },
+  {
+    "sid": "primal_4_magic_fire_globe",
+    "school": "Primal",
+    "rank": 4,
+    "name": "Fireball",
+    "description": "Deals {0} Magic Damage to all creatures in a 1‑hex radius."
+  },
+  {
+    "sid": "primal_4_magic_fire_globe_special",
+    "school": "Primal",
+    "rank": 4,
+    "name": "Masterful Fireball",
+    "description": "Deals {0} Magic Damage to all creatures in a 2‑hex radius."
+  },
+  {
+    "sid": "primal_5_magic_crystal_crown",
+    "school": "Primal",
+    "rank": 5,
+    "name": "Crystal Crown",
+    "description": "Place up to {1} crystal obstacles. An obstacle is destroyed upon taking {0} hit(s) from attacks.\nDuration: {2} round(s)."
+  },
+  {
+    "sid": "primal_6_magic_ice_bolt",
+    "school": "Primal",
+    "rank": 6,
+    "name": "Ice Bolt",
+    "description": "Deals {0} Magic Damage to target enemy creature and reduces their Initiative by {1}.\nDuration: {2} round(s)."
+  },
+  {
+    "sid": "primal_6_magic_ice_bolt_special",
+    "school": "Primal",
+    "rank": 6,
+    "name": "Masterful Ice Bolt",
+    "description": "Deals {0} Magic Damage to target enemy creature and reduces their Initiative by {1}.\nDuration: {2} round(s)."
+  },
+  {
+    "sid": "primal_7_magic_wall_of_flame",
+    "school": "Primal",
+    "rank": 7,
+    "name": "Firewall",
+    "description": "Burns {2} selected hexes. A ground creature that steps onto a burning hex takes {0} Magic Damage.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "primal_7_magic_wall_of_flame_special",
+    "school": "Primal",
+    "rank": 7,
+    "name": "Masterful Firewall",
+    "description": "Burns {2} selected hexes. A ground creature that steps onto a burning hex takes {0} Magic Damage.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "primal_8_magic_cave_in",
+    "school": "Primal",
+    "rank": 8,
+    "name": "Cave In",
+    "description": "Deals {0} Magic Damage to the target enemy. All adjacent empty hexes are filled with rock obstacles. An obstacle is destroyed upon taking {2} hit(s) from attack"
+  },
+  {
+    "sid": "primal_8_magic_cave_in_special",
+    "school": "Primal",
+    "rank": 8,
+    "name": "Masterful Cave In",
+    "description": "Deals {0} Magic Damage to the target enemy. All adjacent empty hexes are filled with rock obstacles. An obstacle is destroyed upon taking {2} hit(s) from attack"
+  },
+  {
+    "sid": "primal_9_magic_earths_rage",
+    "school": "Primal",
+    "rank": 9,
+    "name": "Earth’s Rage",
+    "description": "Deals {0} Damage to all defensive structures on the battlefield. Also deals {1} Damage to all creatures within castle walls."
+  },
+  {
+    "sid": "primal_10_magic_primordial_purity",
+    "school": "Primal",
+    "rank": 10,
+    "name": "Anti‑Magic",
+    "description": "Any chosen target becomes immune to spells of tier {1} and lower. This effect cannot be dispelled. If the target is a summoned creature or contains temporary un"
+  },
+  {
+    "sid": "primal_11_magic_armageddon",
+    "school": "Primal",
+    "rank": 11,
+    "name": "Armageddon",
+    "description": "Deals {0} Magic Damage to all creatures on the battlefield."
+  },
+  {
+    "sid": "primal_12_magic_chain_lightning",
+    "school": "Primal",
+    "rank": 12,
+    "name": "Chain Lightning",
+    "description": "Deals {0} Magic Damage to the target enemy creature. The lightning then jumps {2} time(s) to a random target within {3} hex(es), dealing –{1}% Damage with each"
+  },
+  {
+    "sid": "primal_12_magic_chain_lightning_special",
+    "school": "Primal",
+    "rank": 12,
+    "name": "Masterful Chain Lightning",
+    "description": "Deals {0} Magic Damage to the target enemy creature. The lightning then jumps {2} time(s) to a random target within {3} hex(es), dealing –{1}% Damage with each"
+  },
+  {
+    "sid": "primal_13_magic_avalanche",
+    "school": "Primal",
+    "rank": 13,
+    "name": "Circle of Winter",
+    "description": "Deals {0} Magic Damage to all creatures adjacent to target hex. All affected stacks are pushed away from the center if possible."
+  },
+  {
+    "sid": "primal_14_magic_hksmillas_rampage",
+    "school": "Primal",
+    "rank": 14,
+    "name": "Hksmilla’s Rampage",
+    "description": "Target friendly creature gains Double Strike and deals &lt;i&gt;and takes&lt;/i&gt; +{0}% Damage.\nDuration: {1} round(s)."
+  },
+  {
+    "sid": "primal_15_magic_summon_primal_remnant",
+    "school": "Primal",
+    "rank": 15,
+    "name": "Summon Primal Remnant",
+    "description": "Summons a stack of {0} Primal Remnants. They will disappear at the end of the battle."
+  },
+  {
+    "sid": "primal_16_magic_stone_fangs",
+    "school": "Primal",
+    "rank": 16,
+    "name": "Stone Fangs",
+    "description": "Deals {0} Magic Damage to up to {1} different target enemies."
+  },
+  {
+    "sid": "primal_17_magic_groundsight",
+    "school": "Primal",
+    "rank": 17,
+    "name": "Groundsight",
+    "description": "Reveals the location of all neutral squads on the global map (including those in the fog of war)."
+  },
+  {
+    "sid": "primal_18_magic_primordial_chaos",
+    "school": "Primal",
+    "rank": 18,
+    "name": "Primordial Chaos",
+    "description": "Affects a neutral squad in a {0}‑square radius. Transforms it into a different squad of the same strength. Usable {1} time(s) per day."
+  }
+]

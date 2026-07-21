@@ -18,6 +18,7 @@ import {
   STATIC_CREATURES,
   STATIC_MAP_OBJECTS,
   STATIC_ARTIFACTS,
+  STATIC_SPELLS,
 } from '@/lib/catalog/static-catalog'
 import { DEBUG } from '@/lib/debug'
 import { Input } from '@/components/ui/input'
@@ -353,11 +354,25 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
         }
       })
 
+    // For spells: same pattern — overlay descriptions from static data onto Core.zip entries.
+    const spellDescriptions = new Map(STATIC_SPELLS.map(s => [s.id, { description: s.description, school: s.school, rank: s.rank }]))
+    const spells = (base && base.spells.length > 0 ? base.spells : STATIC_SPELLS)
+      .map(s => {
+        const extra = spellDescriptions.get(s.id)
+        return {
+          ...s,
+          description: (s as typeof s & { description?: string }).description ?? extra?.description,
+          school: s.school ?? extra?.school,
+          rank: s.rank ?? extra?.rank,
+        }
+      })
+
     return {
-      ...(base ?? { spells: [], skills: [], buffs: [], factions: [], dialogs: [] }),
+      ...(base ?? { skills: [], buffs: [], factions: [], dialogs: [] }),
       heroes,
       creatures,
       artifacts,
+      spells,
       mapObjects,
     }
   }, [rawCatalog])

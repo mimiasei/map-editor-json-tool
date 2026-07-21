@@ -3,19 +3,21 @@
 // Used as a fallback in the Game Database dialog when Core.zip has not been
 // loaded (or when specific entity arrays from Core.zip come back empty).
 //
-// Coverage: heroes, creatures (units), map objects, artifacts.
-// Spells, skills, buffs, factions require Core.zip.
+// Coverage: heroes, creatures (units), map objects, artifacts, spells.
+// Skills, buffs, factions require Core.zip.
 
 import heroesData from '@/data/heroes.json'
 import unitsData from '@/data/units.json'
 import mapObjectsData from '@/data/map-objects.json'
 import artifactsData from '@/data/artifacts.json'
+import spellsData from '@/data/spells.json'
 import type {
   GameCatalog,
   CatalogHero,
   CatalogCreature,
   CatalogMapObject,
   CatalogArtifact,
+  CatalogSpell,
 } from './types'
 import { CATALOG_SCHEMA_VERSION } from './types'
 
@@ -25,6 +27,7 @@ type RawHero = { sid: string; name: string; faction: string }
 type RawUnit = { sid: string; name: string; faction: string }
 type RawMapObj = { sid: string; name: string | null; category: string | null }
 type RawArtifact = { sid: string; name: string; slot?: string; description?: string; rarity?: string }
+type RawSpell = { sid: string; name: string; school?: string; rank?: number; description?: string }
 
 // ─── Category mapper ──────────────────────────────────────────────────────────
 // Maps the human-readable categories from map-objects.json to the four internal
@@ -86,6 +89,17 @@ export const STATIC_ARTIFACTS: CatalogArtifact[] = (artifactsData as RawArtifact
   }))
   .sort((a, b) => a.name.localeCompare(b.name))
 
+export const STATIC_SPELLS: CatalogSpell[] = (spellsData as RawSpell[])
+  .map((s) => ({
+    id: s.sid,
+    name: s.name,
+    icon: s.sid,
+    school: s.school,
+    rank: s.rank,
+    description: s.description,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name))
+
 // ─── Full static catalog ──────────────────────────────────────────────────────
 
 export const STATIC_CATALOG: GameCatalog = {
@@ -95,7 +109,7 @@ export const STATIC_CATALOG: GameCatalog = {
   heroes: STATIC_HEROES,
   creatures: STATIC_CREATURES,
   artifacts: STATIC_ARTIFACTS,
-  spells: [],
+  spells: STATIC_SPELLS,
   skills: [],
   buffs: [],
   mapObjects: STATIC_MAP_OBJECTS,
