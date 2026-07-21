@@ -195,8 +195,11 @@ export default function Toolbar({
 
   // ── Open .map file ────────────────────────────────────────────────────────────
   const handleOpenMap = async () => {
+    console.log('[Toolbar] handleOpenMap called')
     try {
+      console.log('[Toolbar] calling openAndLoadMapFile...')
       const result = await openAndLoadMapFile()
+      console.log('[Toolbar] openAndLoadMapFile returned:', result)
       if (!result) return
       logInfo(`Opened .map: ${result.name}`)
       if (result.warnings.length > 0) {
@@ -205,6 +208,7 @@ export default function Toolbar({
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
+      console.error('[Toolbar] openAndLoadMapFile threw:', e)
       logError(`Failed to open .map: ${msg}`)
       setImportErrors([msg])
       setImportFeedbackOpen(true)

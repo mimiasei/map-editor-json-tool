@@ -148,13 +148,26 @@ export async function openMapFile(): Promise<{
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.map'
-    input.addEventListener('cancel', () => resolve(null), { once: true })
+    input.addEventListener('cancel', () => {
+      console.log('[native-fs] openMapFile: file picker cancelled')
+      resolve(null)
+    }, { once: true })
     input.onchange = () => {
       const file = input.files?.[0]
-      if (!file) { resolve(null); return }
+      if (!file) {
+        console.log('[native-fs] openMapFile: no file selected')
+        resolve(null)
+        return
+      }
+      console.log('[native-fs] openMapFile: reading file', file.name, 'size=', file.size)
       const reader = new FileReader()
       reader.onload = (e) => {
+        console.log('[native-fs] openMapFile: FileReader loaded, byteLength=', (e.target?.result as ArrayBuffer)?.byteLength)
         resolve({ name: file.name, path: '', buffer: e.target?.result as ArrayBuffer })
+      }
+      reader.onerror = (e) => {
+        console.error('[native-fs] openMapFile: FileReader error', e)
+        resolve(null)
       }
       reader.readAsArrayBuffer(file)
     }
