@@ -39,4 +39,7 @@ src-tauri/target/
 # Large game asset archives (local reference only, not for version control)
 *.zip
 
+# Map files (local testing only)
+maps/
+
 plans/
