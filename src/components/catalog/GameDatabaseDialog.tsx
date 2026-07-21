@@ -30,15 +30,40 @@ import type {
   CatalogArtifact,
   CatalogSpell,
   CatalogSkill,
-  CatalogBuff,
   CatalogMapObject,
-  CatalogFaction,
   CreatureStats,
 } from '@/lib/catalog/types'
 
+import unitsData from '@/data/units.json'
+
+// ─── Faction display name normalizer ─────────────────────────────────────────
+
+const FACTION_DISPLAY: Record<string, string> = {
+  human:    'Temple',
+  humans:   'Temple',
+  nature:   'Grove',
+  undead:   'Necropolis',
+  necros:   'Necropolis',
+  demons:   'Hive',
+  demon:    'Hive',
+  dungeon:  'Dungeon',
+  unfrozen: 'Schism',
+  neutral:  'Neutral',
+}
+
+export function normalizeFaction(raw: string): string {
+  return FACTION_DISPLAY[raw.toLowerCase()] ?? raw
+}
+
+// ─── Unit SID → display name map (from bundled units.json) ───────────────────
+
+const UNIT_NAMES: Map<string, string> = new Map(
+  (unitsData as { sid: string; name: string }[]).map((u) => [u.sid, u.name])
+)
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type TabId = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'mapObjects' | 'buffs' | 'factions'
+type TabId = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'mapObjects'
 
 interface CatalogItem {
   id: string
@@ -61,8 +86,6 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'spells',     label: 'Spells' },
   { id: 'skills',     label: 'Skills' },
   { id: 'mapObjects', label: 'Map Objects' },
-  { id: 'buffs',      label: 'Buffs' },
-  { id: 'factions',   label: 'Factions' },
 ]
 
 // ─── Copy button ──────────────────────────────────────────────────────────────
@@ -94,25 +117,27 @@ const STAT_LABELS: { key: keyof CreatureStats; label: string }[] = [
   { key: 'hp',           label: 'HP' },
   { key: 'offence',      label: 'Attack' },
   { key: 'defence',      label: 'Defense' },
-  { key: 'damageMin',    label: 'Dmg Min' },
-  { key: 'damageMax',    label: 'Dmg Max' },
   { key: 'initiative',   label: 'Initiative' },
   { key: 'speed',        label: 'Speed' },
   { key: 'luck',         label: 'Luck' },
   { key: 'moral',        label: 'Morale' },
   { key: 'actionPoints', label: 'Actions' },
   { key: 'numCounters',  label: 'Counters' },
-  { key: 'energyPerCast',         label: 'Nrg/Cast' },
-  { key: 'energyPerRound',        label: 'Nrg/Round' },
-  { key: 'energyPerTakeDamage',   label: 'Nrg/Hit' },
 ]
 
 function CreatureStatsSection({ stats }: { stats: CreatureStats }) {
   const visible = STAT_LABELS.filter(({ key }) => stats[key] !== undefined)
+  const hasDamage = stats.damageMin !== undefined && stats.damageMax !== undefined
   return (
     <div className="space-y-1">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Stats</p>
       <div className="grid grid-cols-2 gap-1 text-xs">
+        {hasDamage && (
+          <div className="flex justify-between bg-muted rounded px-2 py-0.5">
+            <span className="text-muted-foreground">Damage</span>
+            <span className="font-semibold tabular-nums">{stats.damageMin} – {stats.damageMax}</span>
+          </div>
+        )}
         {visible.map(({ key, label }) => (
           <div key={key} className="flex justify-between bg-muted rounded px-2 py-0.5">
             <span className="text-muted-foreground">{label}</span>
@@ -219,13 +244,23 @@ function DetailPane({
               {item.baseSid != null && (
                 <div className="flex gap-2">
                   <span className="text-muted-foreground w-20 shrink-0">Upgrades from</span>
-                  <span className="font-mono">{String(item.baseSid)}</span>
+                  <span className="font-mono">
+                    {UNIT_NAMES.get(String(item.baseSid)) ?? String(item.baseSid)}
+                    {UNIT_NAMES.has(String(item.baseSid)) && (
+                      <span className="text-muted-foreground"> ({String(item.baseSid)})</span>
+                    )}
+                  </span>
                 </div>
               )}
               {item.upgradeSid != null && (
                 <div className="flex gap-2">
                   <span className="text-muted-foreground w-20 shrink-0">Upgrades to</span>
-                  <span className="font-mono">{String(item.upgradeSid)}</span>
+                  <span className="font-mono">
+                    {UNIT_NAMES.get(String(item.upgradeSid)) ?? String(item.upgradeSid)}
+                    {UNIT_NAMES.has(String(item.upgradeSid)) && (
+                      <span className="text-muted-foreground"> ({String(item.upgradeSid)})</span>
+                    )}
+                  </span>
                 </div>
               )}
             </div>
@@ -376,12 +411,12 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
       case 'heroes':
         return catalog.heroes.map((h: CatalogHero) => ({
           ...h,
-          subtitle: [h.fraction, h.classType].filter(Boolean).join(' · '),
+          subtitle: [normalizeFaction(h.fraction), h.classType].filter(Boolean).join(' · '),
         }))
       case 'creatures':
         return catalog.creatures.map((c: CatalogCreature) => ({
           ...c,
-          subtitle: [c.fraction, c.tier ? `Tier ${c.tier}` : undefined].filter(Boolean).join(' · '),
+          subtitle: [normalizeFaction(c.fraction), c.tier ? `Tier ${c.tier}` : undefined].filter(Boolean).join(' · '),
         }))
       case 'artifacts':
         return catalog.artifacts.map((a: CatalogArtifact) => ({
@@ -400,10 +435,6 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
           ...o,
           subtitle: [o.category, o.tag].filter(Boolean).join(' · '),
         }))
-      case 'buffs':
-        return catalog.buffs.map((b: CatalogBuff) => ({ ...b }))
-      case 'factions':
-        return catalog.factions.map((f: CatalogFaction) => ({ ...f }))
       default:
         return []
     }
