@@ -1,6 +1,0 @@
-﻿int cm_gs_gold_mines_captured
-{
-	QuestCounter ( currentCounterValue, "gold_mines_owned" )
-
-	Text ( return, currentCounterValue ) 
-}

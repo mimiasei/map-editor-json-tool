@@ -1,9 +1,0 @@
-{
-"tokensArgs": [
-{"sid":"arena_might_buff_1_description","args":["current_arena_param_4"]},
-{"sid":"arena_might_buff_2_description","args":["current_arena_param_4"]},
-{"sid":"arena_might_buff_3_description","args":["current_arena_param_2"]},
-{"sid":"arena_mage_buff_1_description","args":["current_arena_param_4"]},
-{"sid":"arena_mage_buff_2_description","args":["current_arena_param_4"]},
-{"sid":"arena_mage_buff_3_description","args":["current_arena_param_2"]}
-] }
