@@ -20,6 +20,7 @@ import {
   MessageSquare,
   MapPin,
   Check,
+  Map as MapIcon,
 } from 'lucide-react'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
@@ -114,12 +115,14 @@ function SectionHeader({
   open,
   onToggle,
   onAdd,
+  icon,
 }: {
   label: string
   count: number
   open: boolean
   onToggle: () => void
   onAdd: () => void
+  icon?: React.ReactNode
 }) {
   return (
     <div
@@ -133,6 +136,7 @@ function SectionHeader({
         {open
           ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+        {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
         {label}
         <span className="ml-0.5 font-normal normal-case tracking-normal text-muted-foreground">
           ({count})
@@ -353,6 +357,7 @@ export default function ScenarioTree() {
             {openSections.mapSettings
               ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+            <span className="shrink-0 text-muted-foreground"><MapIcon className="h-3 w-3" /></span>
             Map Settings
           </span>
         </div>
@@ -379,6 +384,7 @@ export default function ScenarioTree() {
           open={openSections.counters}
           onToggle={() => toggleSection('counters')}
           onAdd={addCounter}
+          icon={<Hash className="h-3 w-3" />}
         />
         {openSections.counters && (
           <div className="px-1 py-1">
@@ -405,6 +411,7 @@ export default function ScenarioTree() {
           open={openSections.interruptions}
           onToggle={() => toggleSection('interruptions')}
           onAdd={addInterruption}
+          icon={<Zap className="h-3 w-3" />}
         />
         {openSections.interruptions && (
           <div className="px-1 py-1">
@@ -435,6 +442,7 @@ export default function ScenarioTree() {
             addQuest()
             setOpenQuests((s) => ({ ...s, [newIdx]: true }))
           }}
+          icon={<BookOpen className="h-3 w-3" />}
         />
         {openSections.quests && (
           <div className="px-1 py-1">
@@ -576,6 +584,7 @@ export default function ScenarioTree() {
           open={openSections.dialogs}
           onToggle={() => toggleSection('dialogs')}
           onAdd={() => openDialogEditor(`dialog_${Date.now()}`)}
+          icon={<MessageSquare className="h-3 w-3" />}
         />
         {openSections.dialogs && (
           <div className="px-1 py-1">
