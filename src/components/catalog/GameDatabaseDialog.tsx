@@ -329,9 +329,11 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
     const base = rawCatalog
 
     // Build name-overlay maps from static data (sid → friendly name)
-    const heroNames   = new Map(STATIC_HEROES.map(h => [h.id, h.name]))
-    const creatureNames = new Map(STATIC_CREATURES.map(c => [c.id, c.name]))
+    const heroNames      = new Map(STATIC_HEROES.map(h => [h.id, h.name]))
+    const creatureNames  = new Map(STATIC_CREATURES.map(c => [c.id, c.name]))
     const mapObjectNames = new Map(STATIC_MAP_OBJECTS.map(o => [o.id, o.name]))
+    const artifactNames  = new Map(STATIC_ARTIFACTS.map(a => [a.id, a.name]))
+    const spellNames     = new Map(STATIC_SPELLS.map(s => [s.id, s.name]))
 
     const heroes = (base && base.heroes.length > 0 ? base.heroes : STATIC_HEROES)
       .map(h => ({ ...h, name: heroNames.get(h.id) ?? h.name }))
@@ -340,30 +342,31 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
     const mapObjects = (base && base.mapObjects.length > 0 ? base.mapObjects : STATIC_MAP_OBJECTS)
       .map(o => ({ ...o, name: mapObjectNames.get(o.id) ?? o.name }))
 
-    // For artifacts: use Core.zip data if available, overlaying static descriptions/slots
-    // when missing. If Core.zip not loaded, use the full static artifact catalog.
-    const artifactDescriptions = new Map(STATIC_ARTIFACTS.map(a => [a.id, { description: a.description, slot: a.slot, rarity: a.rarity }]))
+    // For artifacts: overlay name + description + slot + rarity from static data.
+    const artifactStatic = new Map(STATIC_ARTIFACTS.map(a => [a.id, a]))
     const artifacts = (base && base.artifacts.length > 0 ? base.artifacts : STATIC_ARTIFACTS)
       .map(a => {
-        const extra = artifactDescriptions.get(a.id)
+        const extra = artifactStatic.get(a.id)
         return {
           ...a,
+          name:        artifactNames.get(a.id) ?? a.name,
           description: (a as typeof a & { description?: string }).description ?? extra?.description,
-          slot: a.slot ?? extra?.slot,
-          rarity: a.rarity ?? extra?.rarity,
+          slot:        a.slot    ?? extra?.slot,
+          rarity:      a.rarity  ?? extra?.rarity,
         }
       })
 
-    // For spells: same pattern — overlay descriptions from static data onto Core.zip entries.
-    const spellDescriptions = new Map(STATIC_SPELLS.map(s => [s.id, { description: s.description, school: s.school, rank: s.rank }]))
+    // For spells: overlay name + description + school + rank from static data.
+    const spellStatic = new Map(STATIC_SPELLS.map(s => [s.id, s]))
     const spells = (base && base.spells.length > 0 ? base.spells : STATIC_SPELLS)
       .map(s => {
-        const extra = spellDescriptions.get(s.id)
+        const extra = spellStatic.get(s.id)
         return {
           ...s,
+          name:        spellNames.get(s.id) ?? s.name,
           description: (s as typeof s & { description?: string }).description ?? extra?.description,
-          school: s.school ?? extra?.school,
-          rank: s.rank ?? extra?.rank,
+          school:      s.school ?? extra?.school,
+          rank:        s.rank   ?? extra?.rank,
         }
       })
 
