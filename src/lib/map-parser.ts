@@ -94,30 +94,13 @@ function readVarint(buf: Uint8Array, offset: number): { value: number; next: num
  * Throws on any format error.
  */
 export async function parseMapFile(buffer: ArrayBuffer): Promise<RawMapBlocks> {
-  // Decompress gzip
+  // Decompress gzip — use pipeThrough to avoid backpressure deadlock.
+  // (Awaiting writer.write before starting reader.read deadlocks once the
+  //  decompressed output exceeds the stream's internal buffer size.)
   const compressed = new Uint8Array(buffer)
-  const ds = new DecompressionStream('gzip')
-  const writer = ds.writable.getWriter()
-  const reader = ds.readable.getReader()
-
-  // Await write + close to avoid a race where reads start before data is flushed
-  await writer.write(compressed)
-  await writer.close()
-
-  const chunks: Uint8Array[] = []
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    chunks.push(value)
-  }
-
-  const totalLen = chunks.reduce((s, c) => s + c.length, 0)
-  const data = new Uint8Array(totalLen)
-  let off = 0
-  for (const chunk of chunks) {
-    data.set(chunk, off)
-    off += chunk.length
-  }
+  const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))
+  const decompressedBuf = await new Response(stream).arrayBuffer()
+  const data = new Uint8Array(decompressedBuf)
 
   // ── Skip header ─────────────────────────────────────────────────────────────
   let pos = 0
