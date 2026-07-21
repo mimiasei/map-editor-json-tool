@@ -1,0 +1,15 @@
+{
+	"keyValuePairs": 
+	[
+		{"key": 1, "value": "day_3_magic_haste"},
+		{"key": 2, "value": "day_15_magic_judgement"},
+		{"key": 3, "value": "night_6_magic_deaths_grip"},
+		{"key": 4, "value": "night_12_magic_summon_starchild"},
+		{"key": 5, "value": "space_9_magic_impending_fate"},
+		{"key": 6, "value": "space_14_magic_doreaths_tide"},
+		{"key": 7, "value": "primal_4_magic_fire_globe"},
+		{"key": 8, "value": "primal_5_magic_crystal_crown"},
+		{"key": 9, "value": "primal_11_magic_armageddon"},
+		{"key": 0, "value": "primal_14_magic_hksmillas_rampage"}
+	]
+}

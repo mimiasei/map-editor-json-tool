@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M11_dungeon_trogl",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "trogl", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"trogl"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100000,
+				"units":
+				[
+					{ "s" : "trogl", "v": 100000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "dungeon"
+		}
+	]
+}

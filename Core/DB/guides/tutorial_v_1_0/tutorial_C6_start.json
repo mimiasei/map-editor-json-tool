@@ -1,0 +1,46 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_C6_start",
+			
+			"contentHeight": 460,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_C6_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_C_pic_M_6_1", "false" ] },
+						{ "type": "text", "value": [ "tutorial_C6_1" ] },
+						{ "type": "text", "value": [ "tutorial_C6_2" ] },
+						{ "type": "text", "value": [ "tutorial_C6_3" ] },
+						{ "type": "image", "value": [ "tutorial_C_pic_M_6_2", "true" ] },
+						{ "type": "text", "value": [ "tutorial_C6_4" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_C6_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_C_pic_M_6_3", "true" ] },
+						{ "type": "text", "value": [ "tutorial_C6_5" ] },
+						{ "type": "text", "value": [ "tutorial_C6_6" ] },
+						{ "type": "text", "value": [ "tutorial_C6_7" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "Dialog", "p": [ "t_C6_dial_start" ] }
+					]
+				}
+			]
+		}
+	]
+}

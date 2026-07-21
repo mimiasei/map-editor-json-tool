@@ -1,0 +1,95 @@
+{
+	"array": [
+		{
+			"id": "fun_undead_village_graverobber_joined",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Graverobber_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_graverobber",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_undead_village_graverobber_joined_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Graverobber_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_graverobber",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_undead_village_graverobber_joined_1",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"1326"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"1326",
+								"2"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"graverobber_quest",
+								"1"
+							]
+						}
+					],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_undead_village_graverobber_joined_2",
+					"mapActions": [
+						{
+							"a": "MoveCameraToSelectHero"
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,80 @@
+{
+	"array":
+	{
+		"data":
+		[
+			{
+				"key": "human",
+
+				"val":
+				{
+					"commonSound": "sounds/city/ambient/human",
+
+					"additionalSound": "",
+					"minDelay": 10,
+					"maxDelay": 30
+				}
+			},
+			{
+				"key": "undead",
+
+				"val":
+				{
+					"commonSound": "sounds/city/ambient/undead",
+
+					"additionalSound": "sounds/city/ambient/undead_add",
+					"minDelay": 10,
+					"maxDelay": 30
+				}
+			},
+			{
+				"key": "nature",
+
+				"val":
+				{
+					"commonSound": "sounds/city/ambient/nature",
+
+					"additionalSound": "",
+					"minDelay": 10,
+					"maxDelay": 30
+				}
+			},
+			{
+				"key": "demon",
+
+				"val":
+				{
+					"commonSound": "sounds/city/ambient/demon",
+
+					"additionalSound": "",
+					"minDelay": 10,
+					"maxDelay": 30
+				}
+			},
+			{
+				"key": "unfrozen",
+
+				"val":
+				{
+					"commonSound": "sounds/city/ambient/unfrozen",
+
+					"additionalSound": "",
+					"minDelay": 10,
+					"maxDelay": 30
+				}
+			},
+			{
+				"key": "dungeon",
+
+				"val":
+				{
+					"commonSound": "sounds/city/ambient/dungeon",
+
+					"additionalSound": "sounds/city/ambient/dungeon_add",
+					"minDelay": 10,
+					"maxDelay": 30
+				}
+			}
+		]
+	}	
+}

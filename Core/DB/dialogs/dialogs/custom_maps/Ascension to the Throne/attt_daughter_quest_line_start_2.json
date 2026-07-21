@@ -1,0 +1,103 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_daughter_quest_line_start_2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_necromancer_14_shadespinner_oona_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "necro_hero_14",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_text_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_necromancer_14_shadespinner_oona_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_text_3",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_necromancer_14_shadespinner_oona_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "necro_hero_14",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_text_4",
+					"mapActions": [ { "a": "TeleportHero", "p": [ "human_hero_16", "3063" ] }, { "a": "CounterSet", "p": [ "daughter_quest_given", "1" ] } ],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_necromancer_14_shadespinner_oona_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "necro_hero_14",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_text_4_1",
+					"mapActions": [ { "a": "CounterSet", "p": [ "main_quest_poison", "1" ] }, { "a": "TeleportHero", "p": [ "human_hero_16", "4030" ] }, { "a": "SetActiveQuestMarker", "p": [ "daughter_quest_line_start", "false" ] }, { "a": "DeleteEntity", "p": [ "daughter_quest_line_start" ] }, { "a": "StepBack", "p": [ ] }, { "a": "CounterSet", "p": [ "daughter_quest_disable", "1" ] } ],
+					"end": true
+				}
+			]
+		}
+	]
+}

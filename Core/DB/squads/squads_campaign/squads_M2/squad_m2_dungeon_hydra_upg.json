@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m2_hydra_upg",
+			
+			"squad" : 
+			[
+				{ "s" : "hydra_upg_alt", "v": 2000 }		
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "hydra_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"hydra_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 20000,
+				"units":
+				[
+					{ "s" : "hydra_upg_alt", "v": 20000 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "dungeon"
+		}
+	]
+}

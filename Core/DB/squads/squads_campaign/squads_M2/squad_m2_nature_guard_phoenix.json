@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m2_nature_guard_phoenix",
+			
+			"squad" : 
+			[
+				{ "s" : "phoenix", "v": 2000 }		
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "phoenix_upg_alt", "v": 1 },
+					{ "s" : "phoenix_upg", "v": 1 },
+					{ "s" : "phoenix", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"phoenix_upg_alt", "phoenix_upg", "phoenix"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000000,
+				"units":
+				[
+					{ "s" : "phoenix_upg_alt", "v": 1000000 },
+					{ "s" : "phoenix_upg", "v": 1000000 },
+					{ "s" : "phoenix", "v": 1000000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "nature"
+		}
+	]
+}

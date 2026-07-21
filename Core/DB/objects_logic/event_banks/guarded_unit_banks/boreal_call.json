@@ -1,0 +1,168 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "boreal_call",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 25,
+					"value": 4000,
+					"customGuardValue": 5100,
+
+					"guardUnits":
+					[
+						{ "sid": "frostworm_rider", "amount": 11 },
+						{ "sid": "frostworm_rider", "amount": 11 },
+						{ "sid": "frostworm_rider", "amount": 11 },
+						{ "sid": "frostworm_rider", "amount": 11 },
+						{ "sid": "frostworm_rider", "amount": 11 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+
+								"parameters": [ "unspeakable", "1" ]
+							}
+						]
+					}
+				},	
+				{
+					"rollChance": 25,
+					"value": 8000,
+					"customGuardValue": 5100,
+
+					"guardUnits":
+					[
+						{ "sid": "frostworm_rider_upg", "amount": 22 },
+						{ "sid": "frostworm_rider", "amount": 22 },
+						{ "sid": "frostworm_rider", "amount": 22 },
+						{ "sid": "frostworm_rider", "amount": 22 },
+						{ "sid": "frostworm_rider_upg_alt", "amount": 22 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "unspeakable", "2" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 25,
+					"value": 12000,
+					"customGuardValue": 5100,
+
+					"guardUnits":
+					[
+						{ "sid": "frostworm_rider_upg", "amount": 32 },
+						{ "sid": "frostworm_rider", "amount": 32 },
+						{ "sid": "frostworm_rider_upg", "amount": 32 },
+						{ "sid": "frostworm_rider", "amount": 32 },
+						{ "sid": "frostworm_rider_upg_alt", "amount": 32 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "unspeakable", "3" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 15,
+					"value": 16000,
+					"customGuardValue": 5100,
+
+					"guardUnits":
+					[
+						{ "sid": "frostworm_rider_upg_alt", "amount": 40 },
+						{ "sid": "frostworm_rider_upg", "amount": 40 },
+						{ "sid": "frostworm_rider", "amount": 40 },
+						{ "sid": "frostworm_rider_upg", "amount": 40 },
+						{ "sid": "frostworm_rider_upg_alt", "amount": 40 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "unspeakable", "4" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

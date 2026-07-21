@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "M4Q4_dial3_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "woman runs away, elementals attack you",
+				
+					"next": "1"
+				},
+				{
+					"id": "1",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "",
+					
+					"mapActions":
+					[
+						{ "a": "InitiateInteract", "p": [ "aqualotl" ] }
+					],
+				
+					"actions":
+					[
+						{ "a": "End" }
+					]
+				}		
+			]
+		}
+	]
+}

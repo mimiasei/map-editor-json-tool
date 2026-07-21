@@ -1,0 +1,51 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_human_three_units_t6_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 300,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "inquisitor", "v": 20006 },
+					{ "s" : "inquisitor_upg", "v": 20006 },
+					{ "s" : "inquisitor_upg_alt", "v": 20006 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 20006,
+				"units":
+				[
+					"inquisitor", "inquisitor_upg", "inquisitor_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 180006,
+				"units":
+				[
+					{ "s" : "inquisitor", "v": 180006 },
+					{ "s" : "inquisitor_upg", "v": 180006 },
+					{ "s" : "inquisitor_upg_alt", "v": 180006 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "human"
+		}
+	]
+}

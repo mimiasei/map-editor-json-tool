@@ -1,0 +1,56 @@
+﻿{
+	"array":
+	{
+		"data":
+		[
+			{
+				"key": "human",
+
+				"val":
+				{
+					"soundSetName": "sounds/city/music/human"
+				}
+			},
+			{
+				"key": "undead",
+
+				"val":
+				{
+					"soundSetName": "sounds/city/music/undead"
+				}
+			},
+			{
+				"key": "nature",
+
+				"val":
+				{
+					"soundSetName": "sounds/city/music/nature"
+				}
+			},
+			{
+				"key": "demon",
+
+				"val":
+				{
+					"soundSetName": "sounds/city/music/demon"
+				}
+			},
+			{
+				"key": "unfrozen",
+
+				"val":
+				{
+					"soundSetName": "sounds/city/music/unfrozen"
+				}
+			},
+			{
+				"key": "dungeon",
+
+				"val":
+				{
+					"soundSetName": "sounds/city/music/dungeon"
+				}
+			}
+		]
+	}	
+}

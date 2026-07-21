@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M2_twinkle",
+			
+			"squad" : 
+			[
+				{ "s" : "twinkle", "v": 2000 }		
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": false,
+
+			"baseSquad": 
+			{
+				"units":
+				[				
+					{ "s" : "twinkle", "v": 2000 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 3000,
+				"units":
+				[
+					"twinkle"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 300,
+				"units":
+				[
+					{ "s" : "twinkle", "v": 300 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "nature"
+		}
+	]
+}

@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M11_dungeon_minos",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "minos", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"minos"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100000,
+				"units":
+				[
+					{ "s" : "minos", "v": 100000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "dungeon"
+		}
+	]
+}

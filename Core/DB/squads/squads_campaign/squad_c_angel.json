@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_angel",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "sentinel", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"sentinel"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100000,
+				"units":
+				[
+					{ "s" : "sentinel", "v": 100000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "neutral"
+		}
+	]
+}

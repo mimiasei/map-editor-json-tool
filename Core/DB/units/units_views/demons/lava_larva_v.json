@@ -1,0 +1,80 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "lava_larva",
+			"mesh": "Demons/1Prefabs/lava_larva_upg",
+			"mapMesh": "Demons/1Prefabs/lava_larva_upg_map",
+			"fadeTime": 1.55,
+
+			"scale": 95,
+			"modelHeight": 1.08,
+			"moveSpeed": 4.8,
+			
+			"attackTimeBefore": [ 0.95, 0.667, 1.1, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 1.758, 0, 0.358, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1.25,
+			"deathTimeOffset": 1.27,
+			
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"abilities":
+			[
+				{	
+					"name": "lava_larva_ability_2_name",
+					"abilityType": "Ability_type_special",
+					"description": "lava_larva_ability_2_description",
+					"animationIndex": 1,
+					"damageTimeOffset": 0,
+					"useExpandTooltip": "false"
+				},
+				{	
+					"name": "lava_larva_ability_1_name",
+					"abilityType": "Ability_type_special",
+					"description": "lava_larva_ability_1_description",
+					"animationIndex": 2,
+
+					"jumpPrepareTime": 0.35,
+					"jumpFlyTime": 0.25,
+					"jumpEndTime": 0.05,
+					"damageTimeOffset": 0.0,
+					"jumpMaxHeight": 1.15,
+
+					"useExpandTooltip": "false"
+				}
+			],
+			
+			"baseClass":
+                {
+                    "name": "base_class_demon",
+                    "description": "base_class_demon_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "lava_larva_passive_1_name",
+					"description": "lava_larva_passive_1_description"
+				}
+			]	
+		}
+	]
+}

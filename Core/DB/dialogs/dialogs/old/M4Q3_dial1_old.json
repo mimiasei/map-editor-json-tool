@@ -1,0 +1,34 @@
+{
+	"array":
+	[
+		{
+			"id": "M4Q3_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "no way you found me, anyways there is a crazy scary woman here, I ran away from her but now I know a secret place where she hides a book",
+
+					"mapActions":
+					[
+						{ "a": "MoveCamera", "p": [ "3004" ] },
+						{ "a": "DeleteEntity", "p": [ "block_spy1" ] },
+						{ "a": "DeleteEntity", "p": [ "block_spy2" ] }
+					],
+				
+					"end": true
+				}			
+			]
+		}
+	]
+}

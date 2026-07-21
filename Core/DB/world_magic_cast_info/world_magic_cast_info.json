@@ -1,0 +1,369 @@
+{
+	"array":
+	[
+		{
+			"id": "town_gate_cast",
+			"actionMoment": 0.5,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_town_teleport_in",
+					"activationMoment": 0.5,
+					"duration": 1.5,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_town_teleport_out",
+					"activationMoment": 0.5,
+					"duration": 1.5,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "action_teleport_cast",
+			"actionMoment": 0.5,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_town_teleport_in",
+					"activationMoment": 0.5,
+					"duration": 1.0,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_town_teleport_out",
+					"activationMoment": 0.5,
+					"duration": 1.0,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "neutral_magic_dimension_door_cast",
+			"actionMoment": 0.5,
+			"duration": 1.0,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_demension_door_in",
+					"activationMoment": 0.4,
+					"duration": 1.2,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_demension_door_out",
+					"activationMoment": 0.5,
+					"duration": 1.2,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "neutral_magic_second_sight_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_second_wind",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "neutral_magic_shadow_form_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_shadowflight",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "neutral_1_magic_back_to_garrison_cast",
+			"actionMoment": 0.5,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_town_teleport_in",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_town_teleport_out",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "neutral_1_magic_back_to_city_cast",
+			"actionMoment": 0.5,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_town_teleport_in",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_town_teleport_out",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "neutral_magic_town_portal_cast",
+			"actionMoment": 0.5,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_town_teleport_in",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_town_teleport_out",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "day_18_magic_farsight_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_farsight",
+					"activationMoment": 0,
+					"duration": 2.0,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_farsight_light",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "space_18_magic_assemble_cast",
+			"actionMoment": 0.5,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_assemble",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_assemble",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "day_17_magic_clear_view_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_clear_view",
+					"activationMoment": 0.2,
+					"duration": 2.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "primal_17_magic_groundsight_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_groundsight",
+					"activationMoment": 0,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "night_17_magic_read_minds_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_read_minds",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "night_18_magic_nairas_veil_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_nairas_veil",
+					"activationMoment": 0,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "space_17_magic_reinforcements_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_reinforcements",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "neutral_1_magic_mana_transfer_cast",
+			"actionMoment": 1.5,
+			"duration": 3.0,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_mana_rite",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				},
+				{
+					"effectName": "map_mana_rite",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "target"
+				}
+			]
+		},
+		{
+			"id": "neutral_1_magic_mana_restore_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_mana_rite",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "neutral_1_magic_units_replace_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_reinforcements",
+					"activationMoment": 0.5,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		},
+		{
+			"id": "neutral_magic_light_gate_cast",
+			"actionMoment": 1.0,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+			]
+		},
+		{
+			"id": "primal_18_magic_primordial_chaos_cast",
+			"actionMoment": 1.5,
+			"duration": 2.0,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_primordial_chaos",
+					"activationMoment": 0.5,
+					"duration": 2.0,
+					"spawnPositionType": "target"
+				}
+			]
+		
+		},
+		{
+			"id": "neutral_magic_necromancy_cast",
+			"actionMoment": 0.1,
+			"duration": 1.5,
+
+			"spawnEffects":
+			[
+				{
+					"effectName": "map_necromancy",
+					"activationMoment": 0.1,
+					"duration": 3.0,
+					"spawnPositionType": "caster"
+				}
+			]
+		}	
+	]
+}

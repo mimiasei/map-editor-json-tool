@@ -1,0 +1,77 @@
+{
+	"array": [
+		{
+			"id": "fun_amplifier_visited",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_cant_interact",
+					"next": "endingMarl"
+				},
+				{
+					"id": "endingMarl",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_amplifier_visited_0",		
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

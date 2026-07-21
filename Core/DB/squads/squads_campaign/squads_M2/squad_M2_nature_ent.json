@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M2_nature_ent",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "ent_upg", "v": 1 },
+					{ "s" : "ent", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"ent_upg", "ent"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 80000,
+				"units":
+				[
+					{ "s" : "ent_upg", "v": 20000 },
+					{ "s" : "ent", "v": 60000 }
+				]
+			},
+
+			"tier": 3,
+			"fraction": "nature"
+		}
+	]
+}

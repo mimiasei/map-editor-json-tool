@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M5Q7_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "Thant",
+					"text": "there is a monster in the woods",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

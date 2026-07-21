@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M6Q4_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "medusa needs stone",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

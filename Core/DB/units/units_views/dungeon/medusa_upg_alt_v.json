@@ -1,0 +1,112 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "medusa_upg_alt",
+			"mesh": "Dungeon/1Prefabs/medusa_upg_alt",
+			"mapMesh": "Dungeon/1Prefabs/medusa_upg_alt_map",
+			"fadeTime": 2.5,
+
+			"scale": 18,
+			"modelHeight": 0.5,
+			"moveSpeed": 3.53,
+
+			"attackTimeBefore": [ 0.567, 0.567, 1.061, 0.69, 0.8, 0.8 ],
+			"attackTimeAfter": [ 1.1, 0.8, 1.106, 1.61, 0.9, 0.9 ],
+			"rareIdleTime": 2.5,
+
+			"switchSoundToFly": true,
+			"flightSoundLoop": "sounds/battle/units/medusa/walk",
+
+			"takeDamageTime": 0.967,
+			"deathTimeOffset": 2.51,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0,
+					"projectile": "effects/projectiles/Medusa_alt_hit_distance_projectile",
+					"projectileSpeed": 45,
+					"trajectory": "linear"
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0,
+					"projectile": "effects/projectiles/Medusa_alt_hit_distance_projectile",
+					"projectileSpeed": 45,
+					"trajectory": "linear"
+				},
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "medusa_ability_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "medusa_ability_1_description",
+					"infoDescription": "ability_no_energy",
+					"animationIndex": 2,
+					"canShowOnUI": true,
+					"useExpandTooltip": "false",
+
+					"projectile": "effects/projectiles/medusa_alt_bow_rain_projectile",
+					"projectileSpeed": 25,
+					"maxHeight":4.3,
+					"trajectory": "Parabolic"
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "medusa_ability_2_name",
+					"abilityType": "Ability_type_movement",
+					"description": "medusa_ability_2_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 2,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+				{
+					"name": "base_class_magic_creature",
+					"description": "base_class_magic_creature_description"
+				},
+
+			"passives":
+			[
+				{
+					"name": "base_passive_ranged_attack_no_range_name",
+					"description": "base_passive_ranged_attack_no_range_description"
+				},
+				{
+					"name": "base_passive_sharpshooter_name",
+					"description": "base_passive_sharpshooter_description"
+				},
+				{
+					"name": "base_passive_countershot_name",
+					"description": "base_passive_countershot_description"
+				},
+				{
+					"name": "medusa_passive_1_name",
+					"description": "medusa_passive_1_description"
+				}
+			]
+		}
+	]
+}

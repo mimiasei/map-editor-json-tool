@@ -1,0 +1,637 @@
+{
+	"array": 
+	[
+		{
+			"id": "defense_tower",
+			"name": "defense_tower_name",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"prefab": "tower_arc_wall",
+			"tags": [ "obstacle", "defense_structure" ],
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 40,
+				"damageMax": 40,
+				"damageMultiplierPerBuilding": 0.15
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+						"ignoreEnemyDefence": true,
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"useExpandTooltip": "true",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		},
+
+		{
+			"id": "defense_tower_siege_walls_4",
+			"name": "defense_tower_name",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"prefab": "tower_arc_wall",
+			"tags": [ "obstacle", "defense_structure" ],
+			"overwatchRange": 2,
+			"overwatchAbilityIndex": 1,
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 40,
+				"damageMax": 40,
+				"damageMultiplierPerBuilding": 0.15,
+				"maxOverwatchStrikes": 999999
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+						"ignoreEnemyDefence": true,
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				},
+				{
+					"shared": false,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+						"ignoreEnemyDefence": true,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"useExpandTooltip": "true",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				},
+				{
+					"name": "battle_ability_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"useExpandTooltip": "true",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		},
+
+		{
+			"id": "defense_tower_siege_walls_5",
+			"name": "defense_tower_name",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"prefab": "tower_arc_wall",
+			"tags": [ "obstacle", "defense_structure" ],
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 60,
+				"damageMax": 60,
+				"damageMultiplierPerBuilding": 0.15
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+						"ignoreEnemyDefence": true,
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"useExpandTooltip": "true",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		},
+
+
+
+		{
+			"id": "defense_tower_main_siege_walls_7",
+			"name": "defense_main_tower_name",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"prefab": "central_tower",
+			"destroyedObject": "central_tower_ruins",
+			"tags": [ "obstacle", "defense_structure" ],
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 60,
+				"damageMax": 60,
+				"damageMultiplierPerBuilding": 0.15
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+						"ignoreEnemyDefence": true,
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_main_command_tower_name",
+					"description": "battle_ability_main_command_tower_description_alt",
+					"useExpandTooltip": "true",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		},
+
+		{
+			"id": "defense_tower_main_siege_walls_8",
+			"name": "defense_main_tower_name",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"prefab": "central_tower",
+			"destroyedObject": "central_tower_ruins",
+			"tags": [ "obstacle", "defense_structure" ],
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 60,
+				"damageMax": 60,
+				"damageMultiplierPerBuilding": 0.15,
+				"actionPoints": 2
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+						"ignoreEnemyDefence": true,
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_main_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"useExpandTooltip": "true",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		},
+
+		{
+			"id": "defense_tower_main_siege_walls_9",
+			"name": "defense_main_tower_name",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"prefab": "central_tower",
+			"destroyedObject": "central_tower_ruins",
+			"tags": [ "obstacle", "defense_structure" ],
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 180,
+				"damageMax": 180,
+				"damageMultiplierPerBuilding": 0.15
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+						"ignoreEnemyDefence": true,
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_main_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"useExpandTooltip": "true",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		{
+			"id": "tower_30",
+			"name": "defense_tower_name",
+			"prefab": "tower_30",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"secondaryModels": ["obstacles/wall_30"],
+			"tags": [ "obstacle", "defense_structure" ],
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 40,
+				"damageMax": 40,
+				"damageMultiplierPerBuilding": 0.15
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		},
+		{
+			"id": "tower_30_neg",
+			"name": "defense_tower_name",
+			"prefab": "tower_30_neg",
+			"takeDamageEffect": "effects/siege/siege_damage",
+			"destroyedEffect": "effects/siege/siege_explosion",
+			"tags": [ "obstacle", "defense_structure" ],
+			"stats": 
+			{
+				"hp": 300,
+				"hpPerBuilding": 30,
+				"damageMin": 40,
+				"damageMax": 40,
+				"damageMultiplierPerBuilding": 0.15
+			},
+			"abilitiesLogic": 
+			[
+				{
+					"shared": true,
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 0,
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+			
+						"tags": [ "shoot_attack", "absolute_damage", "basic_attack", "siege_tower_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"selection": "object",
+							"castTarget_": "enemy"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			"abilitiesView": 
+			[
+				{
+					"name": "battle_ability_command_tower_name",
+					"description": "battle_ability_command_tower_description",
+					"abilityType": "",
+					"animationIndex": 1,
+					"projectile": "effects/projectiles/siege_hit_bolt_projectile",
+					"projectileSpeed": 50,
+					"trajectory": "linear"
+				}
+			]
+		}
+	]
+}

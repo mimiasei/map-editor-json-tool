@@ -1,0 +1,126 @@
+{
+	"array":
+	[
+		{
+			"id": "M3aQ2_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "she is dead, you can resurrect her or not //на мой взгляд - не интересный геймплейно выбор: 1) все варианты сводятся к одному итогу с разницей только в степени гриндовости (или вообще без разницы) 2) опция 'воскресить самому' прикольная, но оборачивается пустышкой + гробовщик, ворующий документы, это вообще неубедительно (гораздо больше было бы смысла, если бы 'хороший' выбор предлагал совсем другой персонаж, которого надо еще найти)",
+					
+					"answers":
+					[				
+						{
+							"text": "Pay him to resurrect scout",
+
+							"actions": 
+							[
+								{ "a": "Go", "p": ["1a"] }
+							]
+						},
+						{
+							"text": "Pay him double to steal documents",
+
+							"actions": 
+							[
+								{ "a": "Go", "p": ["1b"] }
+							]
+						},
+						{
+							"text": "Resurrect yourself [Use 'Rewind']",
+
+							"actions": 
+							[
+								{ "a": "Go", "p": ["1c"] }
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "bring me 10000 gold and 20 mercury",
+
+					"mapActions":
+					[						
+						{ "a": "CounterSet", "p": [ "graverobber_quest", "1" ] }
+					],
+
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "1b",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "bring me 20000 gold and 40 mercury",
+					
+					"mapActions":
+					[						
+						{ "a": "CounterSet", "p": [ "graverobber_quest", "2" ] }
+					],
+
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "1c",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "doesnt work lmao",
+
+					"answers":
+					[				
+						{
+							"text": "Pay him to resurrect scout",
+
+							"actions": 
+							[
+								{ "a": "Go", "p": ["1a"] }
+							]
+						},
+						{
+							"text": "Pay him double to steal documents",
+
+							"actions": 
+							[
+								{ "a": "Go", "p": ["1b"] }
+							]
+						}
+					]
+				}	
+			]
+			
+		}
+	]
+}

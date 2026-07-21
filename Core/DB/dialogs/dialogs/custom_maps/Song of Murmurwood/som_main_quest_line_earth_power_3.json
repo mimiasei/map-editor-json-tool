@@ -1,0 +1,33 @@
+{
+	"array":
+	[
+		{
+			"id": "som_main_quest_line_earth_power_3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterSet", "p": [ "earth_power_validator", "3" ] }, { "a": "CounterSet", "p": [ "main_quest_stage", "1" ] }, { "a": "CounterPlus", "p": [ "power_index", "1" ] }, { "a": "CounterPlus", "p": [ "power_index_activator", "0" ] } ],
+					"text": "som_main_quest_line_earth_power_1_text_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "SubQuestActivate", "p": [ "main_quest_line", "e_3" ] } ],
+					"text": "som_main_quest_line_earth_power_1_text_4",
+					"end": true
+				}
+			]
+		}
+	]
+}

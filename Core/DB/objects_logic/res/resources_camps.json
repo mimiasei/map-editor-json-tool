@@ -1,0 +1,66 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "camp_fire_1",
+			"goodsValue": 1000,
+			"rollChance": 10,
+
+			"chances": [ 10, 9, 8 ],
+
+			"resArr":
+			[
+				{
+					"resName": "gold",
+					"values": [ 250, 500, 750 ]
+				},
+				{
+					"resName": "wood",
+					"values": [ 2, 3, 4 ]
+				}
+			]
+		},
+		{
+			"id": "camp_fire_2",
+			"goodsValue": 1000,
+			"rollChance": 10,
+
+			"chances": [ 10, 9 ],
+
+			"resArr":
+			[
+				{
+					"resName": "gold",
+					"values": [ 250, 500 ]
+				},
+				{
+					"resName": "wood",
+					"values": [ 1, 2 ]
+				},
+				{
+					"resName": "ore",
+					"values": [ 1, 2 ]
+				}
+			]
+		},
+		{
+			"id": "camp_fire_3",
+			"goodsValue": 1000,
+			"rollChance": 10,
+
+			"chances": [ 10, 9, 8 ],
+
+			"resArr":
+			[
+				{
+					"resName": "gold",
+					"values": [ 250, 500, 750 ]
+				},
+				{
+					"resName": "ore",
+					"values": [ 2, 3, 4 ]
+				}
+			]
+		}
+	]	
+}

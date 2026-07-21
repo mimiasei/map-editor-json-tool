@@ -1,0 +1,41 @@
+﻿int tutorial_C2_1
+{
+	CurrentSideRes ( value, "crystals" )
+
+	Text ( return, value ) 
+}
+
+int tutorial_C2_2
+{
+	CurrentSideRes ( value, "gemstones" )
+
+	Text ( return, value ) 
+}
+
+int tutorial_C2_3
+{
+	CurrentSideRes ( value, "mercury" )
+
+	Text ( return, value ) 
+}
+
+int tutorial_C2_1_goal
+{
+	CurrentSubQuestParam ( value, 0, 0, 2 )
+
+	Text ( return, value ) 
+}
+
+int tutorial_C2_2_goal
+{
+	CurrentSubQuestParam ( value, 0, 0, 2 )
+
+	Text ( return, value ) 
+}
+
+int tutorial_C2_3_goal
+{
+	CurrentSubQuestParam ( value, 0, 0, 2 )
+
+	Text ( return, value ) 
+}

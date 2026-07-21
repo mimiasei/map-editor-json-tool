@@ -1,0 +1,17 @@
+{
+	"array":
+	[
+		{
+			"id": "campaign_FX_block",
+			"tag": "Block",
+			"isInteractable": false,
+			"biome": "Grass",
+			"prefs": [ "fx/fx_map_smoke" ],
+			"sizeX": 1, "sizeZ": 1,
+			"nodes": 
+			[
+				1
+			]
+		}
+	]
+}

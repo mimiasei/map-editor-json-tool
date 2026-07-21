@@ -1,0 +1,187 @@
+{
+	"array": [
+		{
+			"id": "M5Q6_dial3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"undead_kitten_quest",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q6_dial3_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"undead_kitten_quest",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q6_dial3_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"undead_kitten_quest",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q6_dial3_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"undead_kitten_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q6_dial3_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"undead_kitten_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q6_dial3_4",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

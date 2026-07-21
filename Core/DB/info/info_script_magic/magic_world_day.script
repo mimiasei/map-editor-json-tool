@@ -1,0 +1,33 @@
+﻿modInt current_day_18_magic_farsight_1
+{
+	CurrentMagicWorld ( baseRadius, "parameters[0]" )
+	CurrentMagicWorld ( bonusRadius, "parameters[1]" )
+
+	CurrentMagicLevel ( level )
+	Sub ( levelSub, level, 1 )
+	
+	Mul ( bonusRadiusMul, bonusRadius, levelSub )
+	Add ( finalRadius, baseRadius, bonusRadiusMul )
+
+	Text( return, baseRadius )
+}
+
+modInt current_day_18_magic_farsight_2
+{
+	CurrentMagicWorld ( baseRadius, "parameters[2]" )
+	CurrentHero ( viewRadius, "heroStat.viewRadius" )
+
+	Mul ( heroRadius, viewRadius, baseRadius )
+
+	Text( return, heroRadius )
+}
+
+modInt current_day_18_magic_farsight_3
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+modInt current_day_18_magic_farsight_per_level
+{
+	CurrentMagicWorld ( return, "parameters[1]" )
+}

@@ -1,0 +1,27 @@
+{
+	"array":
+	[
+		{
+			"id": "test_conditions_squadKill",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "Вы победили нейтральный отряд (squadKill активирован)",
+					
+					"end": true
+				}				
+			]
+		}
+	]
+}

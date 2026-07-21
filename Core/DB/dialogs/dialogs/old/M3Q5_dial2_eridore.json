@@ -1,0 +1,83 @@
+{
+	"array":
+	[
+		{
+			"id": "M3Q5_dial2_eridore",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "Counter", "p": [ "eridore_quest", "=", "1" ] }
+					],
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "Tried to pickup item without completing quest",
+
+					"next": "endingNotCompleted"
+				},
+					{
+						"id": "endingNotCompleted",
+						"dialogPlayConditions":  
+						[ 
+							{ "c": "Counter", "p": [ "eridore_quest", "=", "1" ] }
+						],
+						"next": "1",
+						
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+						"actions": 
+						[ 
+							{ "a": "End", "p": [ "break" ] }
+						]
+					},
+				{
+					"id": "1",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "Counter", "p": [ "eridore_quest", "=", "2" ] }
+					],
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "Tried to pickup item after completing quest",
+
+					"next": "endingCompleted"
+				},
+					{
+						"id": "endingCompleted",
+						"dialogPlayConditions":  
+						[ 
+							{ "c": "Counter", "p": [ "eridore_quest", "=", "2" ] }
+						],
+						
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+						"mapActions":
+						[
+							{ "a": "CounterSet", "p": [ "eridore_quest", "3" ] }
+						],
+
+						"actions": 
+						[ 
+							{ "a": "End" }
+						]
+					}
+			]
+		}
+	]
+}

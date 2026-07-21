@@ -1,0 +1,66 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "godslayer",
+			"mesh": "Demons/1Prefabs/godslayer",
+			"mapMesh": "Demons/1Prefabs/godslayer_map",
+			"fadeTime": 1.85,
+
+			"scale": 1.7,
+			"modelHeight": 0.6,
+			"moveSpeed": 6.0,
+
+			"attackTimeBefore": [ 0.573, 1.5, 4.267, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.76, 0.9, 0, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 2.27,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+
+					"name": "godslayer_ability_1_name",
+					"abilityType": "Ability_type_attack_mod",
+					"description": "godslayer_ability_1_description",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_demon",
+					"description": "base_class_demon_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "godslayer_passive_1_name",
+					"description": "godslayer_passive_1_description"
+				}
+			]
+		}
+	]
+}

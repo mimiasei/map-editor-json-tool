@@ -1,0 +1,83 @@
+{
+	"array": [
+		{
+			"id": "M9Q6_dial9_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q6_dial9_0",
+					"answers": [
+						{
+							"requests": [],
+							"text": "dialogue_text_M9Q6_dial9_0_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q6_dial9_0_answer_2",
+							"actions": [
+								{
+									"a": "End"
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_flicker_upg_alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_ghost",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial9_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q6_dial9_2",
+					"end": true
+				}
+			]
+		}
+	]
+}

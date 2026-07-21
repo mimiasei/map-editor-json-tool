@@ -1,0 +1,188 @@
+﻿modPercentNumeric unic_unit_substitute_by_hp_percent
+{ 
+	CurrentAbility( percent, "damageDealer.targetMechanics[0].values[1]" )
+
+	Text( return, percent )
+}
+
+modInt unic_unit_substitute_by_hp_unit
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	Text( return, currentStacks )
+}
+
+modInt unic_unit_unfrozen_cultist_ability_1
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentAbility ( buffSid, "damageDealer.buff.sid" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	DbBuff( buffData, buffSid, "actions[0].damageDealer.minStackDmg" )
+
+	Mul ( return, currentStacks, buffData )	
+}
+
+modInt unic_unit_unfrozen_cultist_ability_2_1
+{ 
+	CurrentAbility( counterstrikes, "damageDealer.targetMechanics[0].values[0]" )
+
+	Text( return, counterstrikes )
+}
+
+string unic_unit_frostworm_rider_passive_1
+{ 
+	Text( return, "50" )
+}
+
+modInt unic_unit_frostworm_rider_passive_2
+{ 
+	CurrentUnitConfig ( magicDamage, "defaultAttacks[0].damageDealer.targetMechanics[0].values[0]" )
+
+	Text( return, magicDamage )
+}
+
+modPercentNumeric unic_unit_frostworm_rider_passive_3
+{ 
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+
+	DbBuff( buffData, buffSid, "data.stats.inDmgMods.list[0].v" )
+
+	Text( return, buffData )
+}
+
+modInt unic_unit_frostworm_rider_passive_3_duration
+{ 
+	CurrentUnitConfig ( duration, "defaultAttacks[0].damageDealer.buff.duration" )
+
+	Text( return, duration )
+}
+
+string unic_unit_succubus_passive_2
+{ 
+	Text( return, "1" )
+}
+
+modInt unic_unit_succubus_passive_2_duration
+{ 
+	CurrentUnitConfig ( duration, "defaultAttacks[0].damageDealer.buff.duration" )
+
+	Text( return, duration )
+}
+
+modInt unic_unit_succubus_ability_3
+{ 
+	CurrentAbility( return, "damageDealer.minDamagePerEnergyLevel" )
+}
+
+modInt unic_unit_arbitrator_passive_2
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentUnitConfig ( magicDamagePerStack, "defaultAttacks[0].damageDealer.targetMechanics[0].values[1]" )
+
+	Mul ( magicDamage, currentStacks, magicDamagePerStack )
+
+	Text( return, magicDamage )
+}
+
+string unic_unit_arbitrator_passive_2_buff
+{ 
+	Text( return, "1" )
+}
+
+string unic_unit_arbitrator_passive_3
+{ 
+	Text( return, "20" )
+}
+
+modInt unic_unit_arbitrator_passive_2_duration
+{ 
+	CurrentUnitConfig ( duration, "defaultAttacks[0].damageDealer.buff.duration" )
+
+	Text( return, duration )
+}
+
+int unic_unit_arbitrator_ability_1
+{ 
+	CurrentAbility( shootRange, "damageDealer.orderedCastParams[0].distanceFromFirst" )
+
+	Text( return, shootRange )
+}
+
+int unic_unit_arbitrator_ability_2
+{ 
+	CurrentAbility( shootRange, "damageDealer.orderedCastParams[0].distanceFromFirst" )
+
+	Text( return, shootRange )
+}
+
+int unic_unit_arbitrator_ability_4
+{ 
+	CurrentAbility( shootRange, "damageDealer.orderedCastParams[0].distanceFromFirst" )
+
+	Text( return, shootRange )
+}
+
+modPercentNumeric unic_unit_unfrozen_cultist_ability_2
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+modPercentNumeric unic_unit_unfrozen_cultist_ability_3
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+modPercentNumeric unic_unit_unfrozen_cultist_ability_4
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+modPercentNumeric unic_unit_frostworm_rider_ability_1
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+modPercentNumeric unic_unit_frostworm_rider_passive_3_buff
+{ 
+	CurrentBuff( return, "dataConfig.data.stats.inDmgMods.list[0].v" )
+}
+
+modPercentNumeric unic_unit_frostworm_rider_ability_2
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+modPercentNumeric unic_unit_unspeakable_ability_1
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+modPercentNumeric unic_unit_unspeakable_ability_2
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+modPercentNumeric unic_unit_unspeakable_ability_2_alt
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}

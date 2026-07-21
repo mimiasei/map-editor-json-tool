@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M11_dungeon_black_dragon_upg_alt",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "black_dragon_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"black_dragon_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 500000,
+				"units":
+				[
+					{ "s" : "black_dragon_upg_alt", "v": 500000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "dungeon"
+		}
+	]
+}

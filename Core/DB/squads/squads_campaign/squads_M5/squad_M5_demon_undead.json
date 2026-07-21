@@ -1,0 +1,71 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M5_demon_undead",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "trick_demon", "v": 1 },
+					{ "s" : "skeleton", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"trick_demon", "skeleton"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 20000,
+				"units":
+				[
+					{ "s" : "trick_demon", "v": 20000 },
+					{ "s" : "skeleton", "v": 20000 },
+					{ "s" : "trick_demon_upg", "v": 20000 },
+					{ "s" : "skeleton_upg", "v": 20000 },
+					{ "s" : "trick_demon_upg_alt", "v": 20000 },
+					{ "s" : "skeleton_upg_alt", "v": 20000 },
+					{ "s" : "flicker", "v": 20000 },
+					{ "s" : "locust", "v": 20000 },
+					{ "s" : "flicker_upg", "v": 20000 },
+					{ "s" : "locust_upg", "v": 20000 },
+					{ "s" : "flicker_upg_alt", "v": 20000 },
+					{ "s" : "locust_upg_alt", "v": 20000 },
+					{ "s" : "wasp", "v": 20000 },
+					{ "s" : "pet", "v": 20000 },
+					{ "s" : "wasp_upg", "v": 20000 },
+					{ "s" : "pet_upg", "v": 20000 },
+					{ "s" : "wasp_upg_alt", "v": 20000 },
+					{ "s" : "pet_upg_alt", "v": 20000 },
+					{ "s" : "jaw", "v": 20000 },
+					{ "s" : "graverobber", "v": 20000 },
+					{ "s" : "jaw_upg", "v": 20000 },
+					{ "s" : "graverobber_upg", "v": 20000 },
+					{ "s" : "jaw_upg_alt", "v": 20000 },
+					{ "s" : "graverobber_upg_alt", "v": 20000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "mix"
+		}
+	]
+}

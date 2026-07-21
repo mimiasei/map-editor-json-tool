@@ -1,0 +1,124 @@
+{
+	"array": [
+		{
+			"id": "M9Q6_dial6_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg_alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial6_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q6_dial6_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg_alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial6_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg_alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial6_3",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q6_dial6_3_answer_1",
+							"actions": [
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "InitiateAttack",
+									"p": [
+										"captain"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q6_dial6_3_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3b"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "3b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg_alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial6_3b",
+					"end": true
+				}
+			]
+		}
+	]
+}

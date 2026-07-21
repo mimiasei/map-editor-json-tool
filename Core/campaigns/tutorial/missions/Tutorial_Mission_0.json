@@ -1,0 +1,105 @@
+{
+	"array":
+	[
+		{
+			"id": "Tutorial_Mission_0",
+
+			"requiredHeroesCount": 1,
+			"fixedHeroesSet": 
+			[
+				"tutorial_hero_1_basic"
+			],
+			"bannedMagics":
+			[
+
+			],
+			
+			"disableFactionLaws": true,
+			"disableMagicGuild": true,
+			"idSidesWithoutTimer": [ 0 ],
+
+			"difficultiesParameters":
+			[
+				{
+					"index": 0,
+					"nameSid": "campaign_difficulty_name_1",
+					"descriptionSid": "campaign_difficulty_description_1",
+					"isAvailable": true
+				},
+				{
+					"index": 1,
+					"nameSid": "campaign_difficulty_name_2",
+					"descriptionSid": "campaign_difficulty_description_2",
+					"isAvailable": false
+				},
+				{
+					"index": 2,
+					"nameSid": "campaign_difficulty_name_3",
+					"descriptionSid": "campaign_difficulty_description_3",
+					"isAvailable": false
+				},
+				{
+					"index": 3,
+					"nameSid": "campaign_difficulty_name_4",
+					"descriptionSid": "campaign_difficulty_description_4",
+					"isAvailable": false
+				},
+				{
+					"index": 4,
+					"nameSid": "campaign_difficulty_name_5",
+					"descriptionSid": "campaign_difficulty_description_5",
+					"isAvailable": false
+				}	  
+			],
+
+			"importanceType": "Main",
+
+			"variants": 
+			[
+				{
+					"titleSid": "Tutorial_Mission_1_title",
+					"descriptionSid": "Tutorial_Mission_1_description",
+
+					"mapSid": "t_M_basic",
+
+					"difficulties":
+					[
+						{	
+							"index": 0,
+							
+							"economic": 
+							{
+								"playerStartResources": { "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  },
+								"aiStartResources": 	{ "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  }
+							},
+							
+							"ai":
+							{
+								"script": "tutorial_M",
+								"resourceAddPercent": 1.0,		"tempStacksMultiplier": 1.0,
+								"valuesVsMobsMultiplier": 1, 	"blockAreaByEnemyMultiplier": 1.0
+							},
+
+							"neutralPowerMultiplier": 1.0,
+
+							"heroesArmies": 
+							[
+								{	"spawnId": 1, "units": [ { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 } ] }
+							]
+						}
+						
+					],
+
+					"sides": 
+					[
+						{
+							"type": "Player",
+							"fractionSid": "human",
+							"spawns": [ 1 ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

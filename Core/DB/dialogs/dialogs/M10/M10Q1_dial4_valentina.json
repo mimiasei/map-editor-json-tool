@@ -1,0 +1,298 @@
+{
+	"array": [
+		{
+			"id": "M10Q1_dial4_valentina",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial4_valentina_7",
+					"end": true
+				}
+			]
+		}
+	]
+}

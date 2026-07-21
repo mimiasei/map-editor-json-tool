@@ -1,0 +1,421 @@
+{
+	"array": [
+		{
+			"id": "god_relics_collected",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P1",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_a0",
+					"next": "a1"
+				},
+				{
+					"id": "a1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P1",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_a1",
+					"next": "a2"
+				},
+				{
+					"id": "a2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P1",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_a2",
+					"next": "a3"
+				},
+				{
+					"id": "a3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P1",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "b0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_a3",
+					"answers": [
+						{
+							"text": "god_dialogue_text_god_relics_collected_a3_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"a3a"
+									]
+								}
+							]
+						},
+						{
+							"text": "god_dialogue_text_god_relics_collected_a3_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"a3b"
+									]
+								}
+							]						
+						}
+					]
+				},
+				{
+					"id": "a3a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_a3a",
+					"next": "ending"
+				},
+				{
+					"id": "a3b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_a3b",
+					"next": "a3b1"
+				},
+				{
+					"id": "a3b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_a3b1",
+					"next": "endingVictory"
+				},
+				{
+					"id": "b0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P2",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b0",
+					"next": "b1"
+				},
+				{
+					"id": "b1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P2",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b1",
+					"next": "b2"
+				},
+				{
+					"id": "b2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P2",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b2",
+					"next": "b3"
+				},
+				{
+					"id": "b3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P2",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "b0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b3",
+					"answers": [
+						{
+							"text": "god_dialogue_text_god_relics_collected_b3_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"b3a"
+									]
+								}
+							]
+						},
+						{
+							"text": "god_dialogue_text_god_relics_collected_b3_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"b3b"
+									]
+								}
+							]						
+						}
+					]
+				},
+				{
+					"id": "b3a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b3a",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"chose_violence",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				},
+				{
+					"id": "b3b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b3b",
+					"next": "b3b1"
+				},
+				{
+					"id": "b3b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b3b1",
+					"next": "b3b2"
+				},
+				{
+					"id": "b3b2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_relics_collected_b3b2",
+					"next": "endingVictory"
+				},
+				{
+					"id": "endingVictory",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "GameVictory"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

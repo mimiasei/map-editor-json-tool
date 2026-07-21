@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M3_human_esquire",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "esquire_upg_alt", "v": 1 },
+					{ "s" : "esquire_upg", "v": 1 },
+					{ "s" : "esquire", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"esquire_upg_alt", "esquire_upg", "esquire"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 25000,
+				"units":
+				[
+					{ "s" : "esquire_upg_alt", "v": 25000 },
+					{ "s" : "esquire_upg", "v": 25000 },
+					{ "s" : "esquire", "v": 25000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "human"
+		}
+	]
+}

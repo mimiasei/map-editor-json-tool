@@ -1,0 +1,108 @@
+{
+	"array": 
+	[
+		{
+			"id": "demons_egg_1",
+			"name": "skill_faction_demon_ability_egg_name",
+			"vfx": "magic/Prefabs_vfx/lava_eggs_skill",
+			"aiValue": 1250,
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object", "demons_egg" ],
+
+			"lifetime": 1,
+			"useHeroHpBonus": true,
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			},
+			"onTimeoutMechanic": { "mech": "spawn_lava_larva", "values": [ "unit", "lava_larva", "0.08", "0.04", "0.02", "3", "2", "self_destruction_buff" ] }
+		},
+
+		{
+			"id": "demons_egg_2",
+			"name": "skill_faction_demon_ability_egg_name",
+			"vfx": "magic/Prefabs_vfx/lava_eggs_skill",
+			"aiValue": 1250,
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object", "demons_egg" ],
+
+			"lifetime": 1,
+			"useHeroHpBonus": true,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			},
+			"onTimeoutMechanic": { "mech": "spawn_lava_larva", "values": [ "unit", "lava_larva", "0.12", "0.04", "0.02", "3", "2", "self_destruction_buff" ] }
+		},
+
+		{
+			"id": "demons_egg_3",
+			"name": "skill_faction_demon_ability_egg_name",
+			"vfx": "magic/Prefabs_vfx/lava_eggs_skill",
+			"aiValue": 1250,	
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object", "demons_egg" ],
+
+			"lifetime": 1,
+			"useHeroHpBonus": true,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			},
+			"onTimeoutMechanic": { "mech": "spawn_lava_larva", "values": [ "unit", "lava_larva", "0.16", "0.04", "0.02", "3", "2", "self_destruction_buff" ] }
+		},
+
+		{
+			"id": "demons_egg_4",
+			"name": "skill_faction_demon_ability_egg_name",
+			"vfx": "magic/Prefabs_vfx/lava_eggs_skill",
+			"aiValue": 1250,	
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object", "demons_egg" ],
+
+			"lifetime": 1,
+			"useHeroHpBonus": true,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			},
+			"onTimeoutMechanic": { "mech": "spawn_lava_larva", "values": [ "unit", "lava_larva", "0.20", "0.04", "0.02", "3", "2", "self_destruction_buff" ] }
+		},
+
+		{
+			"id": "demons_egg_5",
+			"name": "skill_faction_demon_ability_egg_name",
+			"vfx": "magic/Prefabs_vfx/lava_eggs_skill",
+			"aiValue": 1250,	
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object", "demons_egg" ],
+
+			"lifetime": 1,
+			"useHeroHpBonus": true,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			},
+			"onTimeoutMechanic": { "mech": "spawn_lava_larva", "values": [ "unit", "lava_larva", "0.24", "0.04", "0.02", "3", "2", "self_destruction_buff" ] }
+		}
+	]  
+}

@@ -1,0 +1,1764 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "nature_city",
+			"sceneName": "cityNature",
+			"fraction": "nature",
+			"goodsValue": 0,
+
+			"viewRadius": 5,
+
+			"mains":
+			[
+				{
+					"sid": "Build_Main",
+					"isConstructedOnStart": true,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Main",
+
+
+					"icons": [ "Nature_Build_Main_level_1", "Nature_Build_Main_level_2", "Nature_Build_Main_level_3" ],
+					"names": [ "Nature_Build_Main_name_level_1", "Nature_Build_Main_name_level_2", "Nature_Build_Main_name_level_3" ],
+					"descriptions": [ "Nature_Build_Main_description_level_1_alt", "Nature_Build_Main_description_level_2_alt", "Nature_Build_Main_description_level_3_alt" ],
+					"narrativeDescriptions": [ "Nature_Build_Main_narrativeDescription", "Nature_Build_Main_narrativeDescription", "Nature_Build_Main_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_main", "build_fon_main", "build_fon_main" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+							],
+							"nodePos": { "xPos": 1, "yPos": 0 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 5000 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Main" , "level": 1 }
+							],
+							"nodePos": { "xPos": 1, "yPos": 1 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2500 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Main" , "level": 2 }
+							],
+							"nodePos": { "xPos": 1, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 5000 },
+								{ "name": "wood",		"cost": 10 },
+								{ "name": "ore",		"cost": 10 }
+							]
+						}
+					],
+
+					"optionalEffectsPerLevel":
+					[
+						{
+							"effects": [ ]
+						},
+						{
+							"effects":
+							[
+								{
+									"sid": "main_building_1",
+									"icon": "main_building_1",
+									"desc": "main_building_1",
+									"bonuses": [ { "type": "sideRes", "parameters": [ "gold", "500" ] } ]
+								},
+								{
+									"sid": "main_building_2",
+									"icon": "main_building_2",
+									"desc": "main_building_2",
+									"bonuses": [ { "type": "citySideExp", "parameters": [ "500", "0.0" ] } ]
+								},
+								{
+									"sid": "main_building_3",
+									"icon": "main_building_3",
+									"desc": "main_building_3",
+									"bonuses": [ { "type": "astrologyExp", "parameters": [ "500" ] } ]
+								}
+							]
+						},
+						{
+							"effects":
+							[
+								{
+									"sid": "main_building_4",
+									"icon": "main_building_4",
+									"desc": "main_building_4",
+									"bonuses": [ { "type": "sideRes", "parameters": [ "gold", "1000" ] } ]
+								},
+								{
+									"sid": "main_building_5",
+									"icon": "main_building_5",
+									"desc": "main_building_5",
+									"bonuses": [ { "type": "citySideExp", "parameters": [ "1000", "0.0" ] } ]
+								},
+								{
+									"sid": "main_building_6",
+									"icon": "main_building_6",
+									"desc": "main_building_6",
+									"bonuses": [ { "type": "astrologyExp", "parameters": [ "1000" ] } ]
+								}
+							]
+						}
+					],
+
+					"bonusesPerLevel":
+					[
+						{
+							"bonuses":
+							[
+								{
+									"type": "sideRes",
+									"parameters":[ "gold", 500 ]
+								},
+								{
+									"type": "citySideExp",
+									"parameters": [ "500", "0.0" ]
+								},
+								{
+									"type": "astrologyExp",
+									"parameters": [ "500", "0.0" ]
+								}
+							]
+						},
+						{
+							"bonuses":
+							[
+								{
+									"type": "sideRes",
+									"parameters":[ "gold", 750 ]
+								},
+								{
+									"type": "citySideExp",
+									"parameters": [ "750", "0.0" ]
+								},
+								{
+									"type": "astrologyExp",
+									"parameters": [ "750", "0.0" ]
+								}
+							]
+						},
+						{
+							"bonuses":
+							[
+								{
+									"type": "sideRes",
+									"parameters": [ "gold", 1000 ]
+								},
+								{
+									"type": "citySideExp",
+									"parameters": [ "1000", "0.0" ]
+								},
+								{
+									"type": "astrologyExp",
+									"parameters": [ "1000", "0.0" ]
+								}
+							]
+						}
+					]
+				}
+			],
+
+			"taverns":
+			[
+				{
+					"sid": "Build_Tavern",
+					"isConstructedOnStart": true,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Tavern",
+					
+					"icons": [ "Nature_Build_Tavern"],
+					"names": [ "Nature_Build_Tavern_name"],
+					"descriptions": [ "Nature_Build_Tavern_description"],
+					"narrativeDescriptions": [ "Nature_Build_Tavern_narrativeDescription"],
+					"backgroundImages": [ "build_fon_other", "build_fon_other", "build_fon_other" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+							],
+							"nodePos": { "xPos": 0, "yPos": 1 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 500 },
+								{ "name": "ore",			"cost": 5 }
+							]
+						}
+					]
+				}
+			],
+
+			"markets":
+			[
+				{
+					"sid": "Build_Market",
+					"isConstructedOnStart": true,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Market",
+
+					"icons": [ "Nature_Build_Market"],
+					"names": [ "Nature_Build_Market_name" ],
+					"descriptions": [ "Nature_Build_Market_description" ],
+					"narrativeDescriptions": [ "Nature_Build_Market_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_economy", "build_fon_economy", "build_fon_economy" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tavern", "level": 1 }
+							],
+							"nodePos": { "xPos": 0, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold",   		"cost": 500 },
+								{ "name": "wood",   		"cost": 5 }
+							]
+						}
+					]
+				}
+			],
+
+			"artifactMarkets": 
+			[
+				{
+					"sid": "Build_Artifact_Market",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Artifact_Market",
+
+					"icons": [ "Nature_Build_Artifact_Market"],
+					"names": [ "Nature_Build_Artifact_Market_name" ],
+					"descriptions": [ "Nature_Build_Artifact_Market_description" ],
+					"narrativeDescriptions": [ "Nature_Build_Artifact_Market_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_economy", "build_fon_economy", "build_fon_economy" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Market", "level": 1 }
+							],
+							"nodePos": { "xPos": 0, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2500 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",			"cost": 5 }
+							]
+						}
+					],
+
+					"extraChargePurchase": 3.0,
+					"extraChargeSell": 3.0,
+					"itemsCountPerRarity": [ 2, 2, 1, 1 ]
+				}
+			],
+			
+			"hires":
+			[
+				{
+					"sid": "Build_Tier_1",
+					"isConstructedOnStart": true,
+					"levelOnStart": 1,
+					"sceneSlot": "Tier_1",
+
+					"icons": [ "Nature_Build_Tier_1_level_1", "Nature_Build_Tier_1_level_2" ],
+					"names": [ "Nature_Build_Tier_1_name_level_1", "Nature_Build_Tier_1_name_level_2" ],
+					"descriptions": [ "Nature_Build_Tier_1_description_level_1", "Nature_Build_Tier_1_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Tier_1_narrativeDescription", "Nature_Build_Tier_1_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_units", "build_fon_units_upgrade" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+							],
+							"nodePos": { "xPos": 5, "yPos": 0 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 1250 },
+								{ "name": "wood",		"cost": 5 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_1", "level": 1 }
+							],
+							"nodePos": { "xPos": 4, "yPos": 1 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 750 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "dust",		"cost": 10 }
+							]
+						}
+					],
+					
+					"unitsHire":
+					{
+						"units": [ { "sids": [ "elf_tracker", "elf_tracker_upg", "elf_tracker_upg_alt" ], "weeklyIncrement": 13 } ]
+					}	
+				},
+				{
+					"sid": "Build_Tier_2",
+					"isConstructedOnStart": true,
+					"levelOnStart": 1,
+					"sceneSlot": "Tier_2",
+
+					"icons": [ "Nature_Build_Tier_2_level_1", "Nature_Build_Tier_2_level_2" ],
+					"names": [ "Nature_Build_Tier_2_name_level_1", "Nature_Build_Tier_2_name_level_2" ],
+					"descriptions": [ "Nature_Build_Tier_2_description_level_1", "Nature_Build_Tier_2_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Tier_2_narrativeDescription", "Nature_Build_Tier_2_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_units", "build_fon_units_upgrade" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_1", "level": 1 }
+							],
+							"nodePos": { "xPos": 5, "yPos": 1 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 1250 },
+								{ "name": "gemstones",	"cost": 2 },
+								{ "name": "crystals",	"cost": 2 },
+								{ "name": "mercury",	"cost": 2 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_2", "level": 1 }
+							],
+							"nodePos": { "xPos": 4, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 1500 },
+								{ "name": "crystals",	"cost": 2 },
+								{ "name": "dust",		"cost": 20 }
+							]
+						}
+					],
+
+					"unitsHire":
+					{
+						"units": [ { "sids": [ "twinkle", "twinkle_upg", "twinkle_upg_alt" ], "weeklyIncrement": 9 } ]
+					}
+				},
+				{
+					"sid": "Build_Tier_3",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Tier_3",
+
+					"icons": [ "Nature_Build_Tier_3_level_1", "Nature_Build_Tier_3_level_2" ],
+					"names": [ "Nature_Build_Tier_3_name_level_1", "Nature_Build_Tier_3_name_level_2" ],
+					"descriptions": [ "Nature_Build_Tier_3_description_level_1", "Nature_Build_Tier_3_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Tier_3_narrativeDescription", "Nature_Build_Tier_3_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_units", "build_fon_units_upgrade" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								
+							],
+							"nodePos": { "xPos": 6, "yPos": 0 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2000 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "crystals",	"cost": 3 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_3", "level": 1 }
+							],
+							"nodePos": { "xPos": 6, "yPos": 1 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 1000 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "crystals",	"cost": 3 },
+								{ "name": "dust",		"cost": 30 }
+							]
+						}
+					],
+
+					"unitsHire":
+					{
+						"units": [ { "sids": [ "ent", "ent_upg", "ent_upg_alt" ], "weeklyIncrement": 6 } ]
+					}
+				},
+				{
+					"sid": "Build_Tier_4",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Tier_4",
+
+					"icons": [ "Nature_Build_Tier_4_level_1", "Nature_Build_Tier_4_level_2" ],
+					"names": [ "Nature_Build_Tier_4_name_level_1", "Nature_Build_Tier_4_name_level_2" ],
+					"descriptions": [ "Nature_Build_Tier_4_description_level_1", "Nature_Build_Tier_4_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Tier_4_narrativeDescription", "Nature_Build_Tier_4_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_units", "build_fon_units_upgrade" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_3", "level": 1 },
+								{ "sid": "Build_Magic_Guild", "level": 1 }
+							],
+							"nodePos": { "xPos": 7, "yPos": 1 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2750 },
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "crystals",	"cost": 5 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_4", "level": 1 }
+							],
+							"nodePos": { "xPos": 7, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 1750 },
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "crystals",	"cost": 5 },
+								{ "name": "dust",		"cost": 40 }
+							]
+						}
+					],
+
+					"unitsHire":
+					{
+						"units": [ { "sids": [ "aqualotl", "aqualotl_upg", "aqualotl_upg_alt" ], "weeklyIncrement": 4 } ]
+					}
+				},
+				{
+					"sid": "Build_Tier_5",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Tier_5",
+
+					"icons": [ "Nature_Build_Tier_5_level_1", "Nature_Build_Tier_5_level_2" ],
+					"names": [ "Nature_Build_Tier_5_name_level_1", "Nature_Build_Tier_5_name_level_2" ],
+					"descriptions": [ "Nature_Build_Tier_5_description_level_1", "Nature_Build_Tier_5_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Tier_5_narrativeDescription", "Nature_Build_Tier_5_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_units", "build_fon_units_upgrade" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_2", "level": 1 }
+							],
+							"nodePos": { "xPos": 5, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2250 },
+								{ "name": "wood",		"cost": 10 },
+								{ "name": "gemstones",	"cost": 4 },
+								{ "name": "crystals",	"cost": 4 },
+								{ "name": "mercury",	"cost": 4 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_5", "level": 1 }
+							],
+							"nodePos": { "xPos": 5, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 3250 },
+								{ "name": "wood",		"cost": 15 },
+								{ "name": "crystals",	"cost": 4 },
+								{ "name": "dust",		"cost": 50 }
+							]
+						}
+					],
+
+					"unitsHire":
+					{
+						"units": [ { "sids": [ "druid", "druid_upg", "druid_upg_alt" ], "weeklyIncrement": 3 } ]
+					}
+				},
+				{
+					"sid": "Build_Tier_6",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Tier_6",
+
+					"icons": [ "Nature_Build_Tier_6_level_1", "Nature_Build_Tier_6_level_2" ],
+					"names": [ "Nature_Build_Tier_6_name_level_1", "Nature_Build_Tier_6_name_level_2" ],
+					"descriptions": [ "Nature_Build_Tier_6_description_level_1", "Nature_Build_Tier_6_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Tier_6_narrativeDescription", "Nature_Build_Tier_6_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_units", "build_fon_units_upgrade" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_2", "level": 1 },
+								{ "sid": "Build_Tier_4", "level": 1 }
+							],
+							"nodePos": { "xPos": 6, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 6000 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "crystals",	"cost": 5 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_6", "level": 1 }
+							],
+							"nodePos": { "xPos": 6, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 3000 },
+								{ "name": "wood",		"cost": 10 },
+								{ "name": "ore",		"cost": 10 },
+								{ "name": "crystals",	"cost": 10 },
+								{ "name": "dust",		"cost": 75 }
+							]
+						}
+					],
+
+					"unitsHire":
+					{
+						"units": [ { "sids": [ "qilin", "qilin_upg", "qilin_upg_alt" ], "weeklyIncrement": 2 } ]
+					}
+				},
+				{
+					"sid": "Build_Tier_7",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Tier_7",
+
+					"icons": [ "Nature_Build_Tier_7_level_1", "Nature_Build_Tier_7_level_2" ],
+					"names": [ "Nature_Build_Tier_7_name_level_1", "Nature_Build_Tier_7_name_level_2" ],
+					"descriptions": [ "Nature_Build_Tier_7_description_level_1", "Nature_Build_Tier_7_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Tier_7_narrativeDescription", "Nature_Build_Tier_7_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_units", "build_fon_units_upgrade" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_6", "level": 1 }
+							],
+							"nodePos": { "xPos": 7, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 12500 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "crystals",	"cost": 20 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Tier_7", "level": 1 }
+							],
+							"nodePos": { "xPos": 7, "yPos": 4 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 20000 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 },
+								{ "name": "crystals",	"cost": 20 },
+								{ "name": "dust",		"cost": 100 }
+							]
+						}
+					],
+
+					"unitsHire":
+					{
+						"units": [ { "sids": [ "phoenix", "phoenix_upg", "phoenix_upg_alt" ], "weeklyIncrement": 1 } ]
+					}
+				}
+			],
+
+			"magicGuilds":
+			[
+				{
+					"sid": "Build_Magic_Guild",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Magic_Guild",
+
+					"icons": [ "Nature_Build_Magic_Guild_level_1", "Nature_Build_Magic_Guild_level_2", "Nature_Build_Magic_Guild_level_3", "Nature_Build_Magic_Guild_level_4", "Nature_Build_Magic_Guild_level_5" ],
+					"names": [ "Nature_Build_Magic_Guild_name_level_1", "Nature_Build_Magic_Guild_name_level_2", "Nature_Build_Magic_Guild_name_level_3", "Nature_Build_Magic_Guild_name_level_4", "Nature_Build_Magic_Guild_name_level_5" ],
+					"descriptions": [ "Nature_Build_Magic_Guild_description_level_1", "Nature_Build_Magic_Guild_description_level_2", "Nature_Build_Magic_Guild_description_level_3", "Nature_Build_Magic_Guild_description_level_4", "Nature_Build_Magic_Guild_description_level_5" ],
+					"narrativeDescriptions": [ "Nature_Build_Magic_Guild_narrativeDescription", "Nature_Build_Magic_Guild_narrativeDescription", "Nature_Build_Magic_Guild_narrativeDescription", "Nature_Build_Magic_Guild_narrativeDescription", "Nature_Build_Magic_Guild_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_magic", "build_fon_magic", "build_fon_magic", "build_fon_magic", "build_fon_magic" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+							],
+							"nodePos": { "xPos": 8, "yPos": 0 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2500 },
+								{ "name": "wood",		"cost": 5 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Magic_Guild", "level": 1 }
+							],
+							"nodePos": { "xPos": 8, "yPos": 1 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 2500 },
+								{ "name": "gemstones",	"cost": 2 },
+								{ "name": "crystals",	"cost": 2 },
+								{ "name": "mercury",	"cost": 2 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Magic_Guild", "level": 2 }
+							],
+							"nodePos": { "xPos": 8, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 2500 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "gemstones",	"cost": 3 },
+								{ "name": "crystals",	"cost": 3 },
+								{ "name": "mercury",	"cost": 3 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Magic_Guild", "level": 3 }
+							],
+							"nodePos": { "xPos": 8, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 2500 },
+								{ "name": "gemstones",	"cost": 5 },
+								{ "name": "crystals",	"cost": 5 },
+								{ "name": "mercury",	"cost": 5 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Magic_Guild", "level": 4 }
+							],
+							"nodePos": { "xPos": 8, "yPos": 4 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 5000 },
+								{ "name": "wood",		"cost": 10 },
+								{ "name": "gemstones",	"cost": 5 },
+								{ "name": "crystals",	"cost": 5 },
+								{ "name": "mercury",	"cost": 5 }
+							]
+						}
+					],
+
+					"rollChances":
+					[
+						{ "sid": "day_17_magic_clear_view",									"chance": 90 },
+						{ "sid": "day_1_magic_healing_water",								"chance": 100 },
+						{ "sid": "day_2_magic_sharp_edge",									"chance": 100 },
+						{ "sid": "day_3_magic_haste",										"chance": 100 },
+							{ "sid": "day_4_magic_favorable_wind",							"chance": 90 },
+							{ "sid": "day_5_magic_shorten_shadow",							"chance": 100 },
+							{ "sid": "day_6_magic_cleansing_ray",							"chance": 90 },
+							{ "sid": "day_7_magic_inner_light",								"chance": 90 },
+								{ "sid": "day_8_magic_taunt",								"chance": 80 },
+								{ "sid": "day_9_magic_arinas_hymn",							"chance": 80 },
+								{ "sid": "day_10_magic_second_song",						"chance": 80 },
+								{ "sid": "day_11_magic_masterful_parry",					"chance": 80 },
+									{ "sid": "day_18_magic_farsight",						"chance": 70 },
+									{ "sid": "day_12_magic_radiant_armor",					"chance": 70 },
+									{ "sid": "day_13_magic_holy_arms",						"chance": 70 },
+									{ "sid": "day_14_magic_vengeance",						"chance": 70 },
+										{ "sid": "day_15_magic_judgement",					"chance": 60 },
+										{ "sid": "day_16_magic_arinas_chosen",				"chance": 60 },
+
+						{ "sid": "night_1_magic_unnatural_calm",							"chance": 100 },
+						{ "sid": "night_2_magic_web",										"chance": 100 },
+						{ "sid": "night_3_magic_enlarge_shadow",							"chance": 100 },
+						{ "sid": "night_4_magic_despair",									"chance": 100 },
+							{ "sid": "night_17_magic_read_minds",							"chance": 90 },
+							{ "sid": "night_5_magic_shade_cloak",							"chance": 90 },
+							{ "sid": "night_6_magic_deaths_grip",							"chance": 90 },
+							{ "sid": "night_7_magic_fatal_decay",							"chance": 90 },
+								{ "sid": "night_18_magic_nairas_veil",						"chance": 80 },
+								{ "sid": "night_8_magic_sleep",								"chance": 80 },
+								{ "sid": "night_9_magic_twilight",							"chance": 80 },
+								{ "sid": "night_10_magic_silence",							"chance": 80 },
+									{ "sid": "night_11_magic_vulnerability",				"chance": 70 },
+									{ "sid": "night_12_magic_summon_starchild",				"chance": 70 },
+									{ "sid": "night_13_magic_berserker",					"chance": 70 },
+										{ "sid": "night_14_magic_nairas_kiss",				"chance": 60 },
+										{ "sid": "night_15_magic_deaths_call",				"chance": 60 },
+										{ "sid": "night_16_magic_shadow_army",				"chance": 60 },
+
+						{ "sid": "space_1_magic_early_start",								"chance": 100 },
+						{ "sid": "space_2_magic_energy_explosion",							"chance": 90 },
+						{ "sid": "space_3_magic_energyze",									"chance": 100 },
+							{ "sid": "space_17_magic_reinforcements",						"chance": 90 },
+							{ "sid": "space_4_magic_optical_illusion",						"chance": 100 },
+							{ "sid": "space_5_magic_trap_jaws",								"chance": 80 },
+							{ "sid": "space_6_magic_blink",									"chance": 90 },
+								{ "sid": "space_18_magic_assemble",							"chance": 80 },
+								{ "sid": "space_7_magic_shackles",							"chance": 80 },
+								{ "sid": "space_8_magic_carapace",							"chance": 90 },
+								{ "sid": "space_9_magic_impending_fate",					"chance": 80 },
+									{ "sid": "space_10_magic_mirror_copy",					"chance": 70 },
+									{ "sid": "space_11_magic_decimate",						"chance": 100 },
+									{ "sid": "space_12_magic_rewind",						"chance": 70 },
+									{ "sid": "space_15_magic_trap_snare",					"chance": 70 },
+										{ "sid": "space_14_magic_doreaths_tide",			"chance": 60 },
+										{ "sid": "space_13_magic_black_hole",				"chance": 60 },
+										{ "sid": "space_16_magic_reality_distortion",		"chance": 60 },
+
+						{ "sid": "primal_1_magic_thunderbolt",								"chance": 200 },
+						{ "sid": "primal_17_magic_groundsight",								"chance": 200 },
+						{ "sid": "primal_2_magic_thick_hide",								"chance": 200 },
+						{ "sid": "primal_3_magic_wean",										"chance": 180 },
+							{ "sid": "primal_4_magic_fire_globe",							"chance": 180 },
+							{ "sid": "primal_5_magic_crystal_crown",						"chance": 180 },
+							{ "sid": "primal_6_magic_ice_bolt",								"chance": 180 },
+								{ "sid": "primal_7_magic_wall_of_flame",					"chance": 160 },
+								{ "sid": "primal_8_magic_cave_in",							"chance": 160 },
+								{ "sid": "primal_9_magic_earths_rage",						"chance": 160 },
+								{ "sid": "primal_16_magic_stone_fangs",						"chance": 160 },
+									{ "sid": "primal_18_magic_primordial_chaos",			"chance": 140 },
+									{ "sid": "primal_10_magic_primordial_purity",			"chance": 140 },
+									{ "sid": "primal_12_magic_chain_lightning",				"chance": 140 },
+									{ "sid": "primal_13_magic_avalanche",					"chance": 140 },
+										{ "sid": "primal_14_magic_hksmillas_rampage",		"chance": 120 },
+										{ "sid": "primal_15_magic_summon_primal_remnant",	"chance": 120 },
+										{ "sid": "primal_11_magic_armageddon",				"chance": 120 }
+					]
+				}
+			],
+
+			"banks":
+			[
+				{
+					"sid": "Build_Bank",
+					"isConstructedOnStart": true,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Bank",
+
+					"icons": [ "Nature_Build_Bank" ],
+					"names": [ "Nature_Build_Bank_name" ],
+					"descriptions": [ "Nature_Build_Bank_description" ],
+					"narrativeDescriptions": [ "Nature_Build_Bank_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_economy" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Main", "level": 2 }
+							],
+							"nodePos": { "xPos": 2, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2500 },
+								{ "name": "wood",		"cost": 5 },
+								{ "name": "ore",		"cost": 5 }
+							]
+						}
+					],
+					
+					"bonuses":
+					[
+						{	
+							"type": "sideRes",
+							"parameters": [ "gold", 1000 ]
+						}
+					]
+				},
+				{
+					"sid": "Build_Treasury",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Treasury",
+
+					"icons": [ "Nature_Build_Treasury" ],
+					"names": [ "Nature_Build_Treasury_name" ],
+					"descriptions": [ "Nature_Build_Treasury_description" ],
+					"narrativeDescriptions": [ "Nature_Build_Treasury_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_economy" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Bank", "level": 1 },
+								{ "sid": "Build_Wall", "level": 1 }
+							],
+							"nodePos": { "xPos": 2, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 5000 },
+								{ "name": "gemstones",	"cost": 5 },
+								{ "name": "crystals",	"cost": 5 },
+								{ "name": "mercury",	"cost": 5 }
+							]
+						}
+					],
+					
+					"bonuses":
+					[
+						{	
+							"type": "sideRes",
+							"parameters": [ "gold", 2000 ]
+						}
+					]
+				},
+				{
+					"sid": "Build_Resource_Depot",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Resource_Depot",
+
+					"icons": [ "Nature_Build_Resource_Depot" ],
+					"names": [ "Nature_Build_Resource_Depot_name" ],
+					"descriptions": [ "Nature_Build_Resource_Depot_description" ],
+					"narrativeDescriptions": [ "Nature_Build_Resource_Depot_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_economy" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Market", "level": 1 },
+								{ "sid": "Build_Bank", "level": 1 }
+							],
+							"nodePos": { "xPos": 1, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold",		"cost": 2000 }
+							]
+						}
+					],
+					
+					"bonuses":
+					[
+						{	
+							"type": "sideRes",
+							"parameters": [ "crystals", 1 ]
+						}
+					]
+				},
+				{
+					"sid": "Build_Resource_Depot_level_2",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Resource_Depot_2",
+
+					"icons": [ "Nature_Build_Resource_Depot_2" ],
+					"names": [ "Nature_Build_Resource_Depot_name_level_2" ],
+					"descriptions": [ "Nature_Build_Resource_Depot_description_level_2" ],
+					"narrativeDescriptions": [ "Nature_Build_Resource_Depot_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_economy" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Resource_Depot", "level": 1 }
+							],
+							"nodePos": { "xPos": 1, "yPos": 4 },
+							"costs":
+							[
+								{ "name": "gemstones",	"cost": 3 },
+								{ "name": "crystals",	"cost": 3 },
+								{ "name": "mercury",	"cost": 3 }
+							]
+						}
+					],
+					
+					"bonuses":
+					[
+						{	
+							"type": "sideRes",
+							"parameters": [ "dust", 5 ]
+						}
+					]
+				}
+			],
+
+			"walls":
+			[
+				{
+					"sid": "Build_Wall",
+					"isConstructedOnStart": true,
+					"levelOnStart": 3,
+					"sceneSlot": "Build_Wall",
+
+					"icons": [ "N_build_Walls_level_1", "N_build_Walls_level_2", "N_build_Walls_level_3" ],
+					"names": [ "Nature_Build_Wall_name_level_1", "Nature_Build_Wall_name_level_2", "Nature_Build_Wall_name_level_3" ],
+					"descriptions": [ "Nature_Build_Wall_description_level_1", "Nature_Build_Wall_description_level_2", "Nature_Build_Wall_description_level_3" ],
+					"narrativeDescriptions": [ "Nature_Build_Wall_narrativeDescription", "Nature_Build_Wall_narrativeDescription", "Nature_Build_Wall_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_walls", "build_fon_walls", "build_fon_walls" ],
+					
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								
+							],
+							"nodePos": { "xPos": 3, "yPos": 2 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 2500 },
+								{ "name": "ore",		"cost": 5 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Wall", "level": 1 }
+							],
+							"nodePos": { "xPos": 3, "yPos": 3 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 2500 },
+								{ "name": "ore",		"cost": 10 }
+							]
+						},
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Wall", "level": 2 }
+							],
+							"nodePos": { "xPos": 3, "yPos": 4 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 5000 },
+								{ "name": "ore",		"cost": 15 }
+							]
+						}
+					],
+
+					"bonusesPerLevel":
+					[
+						{
+							"bonuses":
+							[
+								{
+									"type": "cityUnitsIncrementPer",
+									"parameters": [ "all", "0" ]
+								}
+							]
+						},
+						{
+							"bonuses":
+							[
+								{
+									"type": "cityUnitsIncrementPer",
+									"parameters": [ "all", "0.5" ]
+								}
+							]
+						},
+						{
+							"bonuses":
+							[
+								{
+									"type": "cityUnitsIncrementPer",
+									"parameters": [ "all", "1.0" ]
+								}
+							]
+						}
+					],
+
+					"optionalEffectsPerLevel":
+					[
+						{
+							"effects":
+							[
+								{
+									"sid": "siege_walls_1",
+									"icon": "siege_walls_1",
+									"desc": "siege_walls_1",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_1" ] } ]
+								},
+								{
+									"sid": "siege_walls_2_nature",
+									"icon": "siege_walls_2_nature",
+									"desc": "siege_walls_2_nature",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_2_nature" ] } ]
+								},
+								{
+									"sid": "siege_walls_3",
+									"icon": "siege_walls_3",
+									"desc": "siege_walls_3",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_3" ] } ]
+								}
+							]
+						},
+						{
+							"effects":
+							[
+								{
+									"sid": "siege_walls_4",
+									"icon": "siege_walls_4",
+									"desc": "siege_walls_4",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_4" ] } ]
+								},
+								{
+									"sid": "siege_walls_5",
+									"icon": "siege_walls_5",
+									"desc": "siege_walls_5",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_5" ] } ]
+								},
+								{
+									"sid": "siege_walls_6",
+									"icon": "siege_walls_6",
+									"desc": "siege_walls_6",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_6" ] } ]
+								}
+							]
+						},
+						{
+							"effects":
+							[
+								{
+									"sid": "siege_walls_7_nature",
+									"icon": "siege_walls_7_nature",
+									"desc": "siege_walls_7_nature",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_7_nature" ] } ]
+								},
+								{
+									"sid": "siege_walls_8_nature",
+									"icon": "siege_walls_8_nature",
+									"desc": "siege_walls_8_nature",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_8_nature" ] } ]
+								},
+								{
+									"sid": "siege_walls_9_nature",
+									"icon": "siege_walls_9_nature",
+									"desc": "siege_walls_9_nature",
+									"bonuses": [ { "type": "wallEffect", "parameters": [ "siege_walls_9_nature" ] } ]
+								}
+							]
+						}
+					]
+				}
+			],
+
+			"heroBonusBanks":
+			[
+				{
+					"sid": "Build_Mother_Nature",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Mother_Nature",
+					
+					"icons": [ "Build_Mother_Nature_icon" ],
+					"names": [ "Nature_Build_Unic_2_name" ],
+					"descriptions": [ "Nature_Build_Unic_2_description" ],
+					"narrativeDescriptions": [ "Nature_Build_Unic_2_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_unic" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+										
+							],
+							"nodePos": { "xPos": 2, "yPos": 0 },
+							"costs":
+							[
+								{ "name": "gold", "cost": 5000 }
+							]
+						}
+					],
+
+					"bonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "spellPower", "2" ]
+						}
+					]
+				}
+			],
+
+			"myceliumRoots": 
+			[
+				{
+					"sid": "Build_Mycelium_Roots",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Mycelium_Roots",
+
+					"icons": [ "Nature_Build_Mycelium_Roots" ],
+					"names": [ "Nature_Build_Unic_1_name" ],
+					"descriptions": [ "Nature_Build_Unic_1_description" ],
+					"narrativeDescriptions": [ "Nature_Build_Unic_1_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_unic" ],
+
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+								{ "sid": "Build_Wall", "level": 2 }
+							],
+							"nodePos": { "xPos": 2, "yPos": 4 },
+							"costs":
+							[
+								{ "name": "gold", 		"cost": 5000 },
+								{ "name": "gemstones",	"cost": 5 },
+								{ "name": "crystals",	"cost": 5 },
+								{ "name": "mercury",		"cost": 5 }
+							]
+						}
+					]
+				}
+			],
+
+			"graals":
+			[
+				{
+					"sid": "Build_Spring_of_Life",
+					"isConstructedOnStart": false,
+					"levelOnStart": 1,
+					"sceneSlot": "Build_Spring_of_Life",
+					
+					"icons": [ "Nature_Build_Spring_of_Life" ],
+					"names": [ "Nature_Build_Unic_Graal_name" ],
+					"descriptions": [ "Nature_Build_Unic_Graal_description_alt" ],
+					"narrativeDescriptions": [ "Nature_Build_Unic_Graal_narrativeDescription" ],
+					"backgroundImages": [ "build_fon_graal" ],
+					
+					"parametersPerLevel":
+					[
+						{
+							"prevBuildings":
+							[
+										
+							],
+							"nodePos": { "xPos": 0, "yPos": 0 },
+							"costs":
+							[
+								{ "name": "graal", "cost": 1 }
+							]
+						}
+					],
+
+					"graalType": "NatureGraal",
+
+					"sideBonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "all", "1" ]
+						}
+					],
+					"cityBonuses":
+					[
+						{
+							"type": "cityUnitsIncrementPer",
+							"parameters": [ "all", "1.0" ]
+						}
+					]
+				}
+			],
+			
+			"buildOrders":
+			[
+				{
+					"buildTag": "supereasy",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						
+						{ "sid": "Build_Magic_Guild", "level": 5 }
+					]
+				},
+				{
+					"buildTag": "supereasy",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 1 },	
+						{ "sid": "Build_Magic_Guild", "level": 5 },
+
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 }
+					]
+				},
+				{
+					"buildTag": "halfeasy",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 2 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						
+						{ "sid": "Build_Magic_Guild", "level": 5 },						
+						{ "sid": "Build_Tier_7", "level": 2 }
+					]
+				},
+				{
+					"buildTag": "halfeasy",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						
+						{ "sid": "Build_Tier_4", "level": 2 },	
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Tier_7", "level": 1 },	
+						{ "sid": "Build_Magic_Guild", "level": 5 },
+
+						{ "sid": "Build_Tier_7", "level": 2 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 }
+					]
+				},
+				{
+					"buildTag": "easy",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 2 },
+						{ "sid": "Build_Wall", "level": 2 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						
+						{ "sid": "Build_Magic_Guild", "level": 5 },						
+						{ "sid": "Build_Tier_7", "level": 2 }
+					]
+				},
+				{
+					"buildTag": "easy",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Wall", "level": 2 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						
+						{ "sid": "Build_Tier_4", "level": 2 },	
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Tier_7", "level": 1 },	
+						{ "sid": "Build_Magic_Guild", "level": 5 },
+
+						{ "sid": "Build_Tier_7", "level": 2 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 }
+					]
+				},
+				{
+					"buildTag": "normal",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Main", "level": 2 },
+						
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Wall", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 2 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 2 },
+						{ "sid": "Build_Wall", "level": 3 },
+						
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						{ "sid": "Build_Magic_Guild", "level": 5 },
+
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 }
+					]
+				},
+				{
+					"buildTag": "normal",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Main", "level": 2 },
+						
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Tier_7", "level": 2 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Wall", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 2 },
+
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },	
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Wall", "level": 3 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 5 }
+						
+						
+					]
+				},
+				{
+					"buildTag": "normal",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Wall", "level": 2 },
+
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 2 },
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Wall", "level": 3 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+
+						{ "sid": "Build_Tier_7", "level": 2 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },	
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						{ "sid": "Build_Magic_Guild", "level": 5 }
+						
+					]
+				},
+				{
+					"buildTag": "hard",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Main", "level": 2 },
+						
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Wall", "level": 2 },
+						{ "sid": "Build_Wall", "level": 3 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 2 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 2 },
+						
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						{ "sid": "Build_Magic_Guild", "level": 5 },
+						
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Artifact_Market", "level": 1 }
+					]
+				},
+				{
+					"buildTag": "hard",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Main", "level": 2 },
+						
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Wall", "level": 2 },
+						{ "sid": "Build_Wall", "level": 3 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+
+						{ "sid": "Build_Tier_7", "level": 2 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+
+						{ "sid": "Build_Tier_4", "level": 2 },
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },						
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 5 }
+						
+						
+					]
+				},
+				{
+					"buildTag": "hard",
+					"chance": 100,
+					"order":
+					[
+						{ "sid": "Build_Tavern", "level": 1 },
+						{ "sid": "Build_Main", "level": 1 },
+						{ "sid": "Build_Tier_1", "level": 1 },
+						{ "sid": "Build_Tier_2", "level": 1 },
+
+						{ "sid": "Build_Tier_3", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 1 },
+						{ "sid": "Build_Tier_4", "level": 1 },
+						{ "sid": "Build_Tier_5", "level": 1 },
+						{ "sid": "Build_Wall", "level": 1 },
+						{ "sid": "Build_Wall", "level": 2 },
+						{ "sid": "Build_Tier_6", "level": 1 },
+
+						{ "sid": "Build_Tier_1", "level": 2 },
+						{ "sid": "Build_Tier_2", "level": 2 },
+						{ "sid": "Build_Tier_3", "level": 2 },
+						{ "sid": "Build_Tier_4", "level": 2 },
+						{ "sid": "Build_Main", "level": 2 },
+						{ "sid": "Build_Wall", "level": 3 },
+						{ "sid": "Build_Tier_5", "level": 2 },
+
+						{ "sid": "Build_Tier_7", "level": 1 },
+						{ "sid": "Build_Bank", "level": 1 },
+						{ "sid": "Build_Treasury", "level": 1 },
+						{ "sid": "Build_Main", "level": 3 },
+						{ "sid": "Build_Market", "level": 1 },
+						{ "sid": "Build_Artifact_Market", "level": 1 },
+						{ "sid": "Build_Tier_6", "level": 2 },
+
+						{ "sid": "Build_Tier_7", "level": 2 },
+						{ "sid": "Build_Mycelium_Roots", "level": 1 },	
+						{ "sid": "Build_Magic_Guild", "level": 2 },
+						{ "sid": "Build_Resource_Depot", "level": 1 },
+						{ "sid": "Build_Mother_Nature", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 3 },
+						{ "sid": "Build_Magic_Guild", "level": 4 },
+						
+						{ "sid": "Build_Resource_Depot_level_2", "level": 1 },
+						{ "sid": "Build_Magic_Guild", "level": 5 }						
+					]
+				}
+			]
+		}
+	]
+}

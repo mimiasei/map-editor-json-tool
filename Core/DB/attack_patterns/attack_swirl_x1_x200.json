@@ -1,0 +1,55 @@
+{
+	"array":
+	[
+
+    {
+	"id": "attack_swirl_x1_x200",
+	"sid": "attack_swirl_x1_x200",
+	"rotations": 
+      	[
+			{
+			"dimX": 3,
+			"dimY": 3,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				  2.0, 2.0, 0.0,
+				2.0, 0.0, 2.0,
+				  2.0, 2.0, 0.0
+				]
+			},
+
+			{
+			"dimX": 3,
+			"dimY": 3,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				  2.0, 2.0, 0.0,
+				2.0, 0.0, 2.0,
+				  2.0, 2.0, 0.0
+				]
+			},
+
+			{
+			"dimX": 3,
+			"dimY": 3,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				  2.0, 2.0, 0.0,
+				2.0, 0.0, 2.0,
+				  2.0, 2.0, 0.0
+				]
+			}
+		]
+    }
+    
+  	]
+}

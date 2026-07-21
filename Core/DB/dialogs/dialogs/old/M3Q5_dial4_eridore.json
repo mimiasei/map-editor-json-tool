@@ -1,0 +1,118 @@
+{
+	"array":
+	[
+		{
+			"id": "M3Q5_dial4_eridore",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "Dialogue at the altar of night. You get magic scrolls of night",
+
+					"next": "endingGetScrolls"
+				},
+					{
+						"id": "endingGetScrolls",
+						"dialogPlayConditions":  
+						[ 
+							{ "c": "Counter", "p": [ "eridore_quest_naira", "=", "0" ] }
+						],
+						"next": "1",
+						
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+						"mapActions":
+						[
+							{ "a": "CounterSet", "p": [ "eridore_quest_naira", "1" ] },
+							{ "a": "GiveItemHero", "p": [ "magic_scroll_artifact_primal_8_magic_cave_in" ] },
+							{ "a": "GiveItemHero", "p": [ "magic_scroll_artifact_night_2_magic_web" ] },
+							{ "a": "GiveItemHero", "p": [ "magic_scroll_artifact_night_3_magic_enlarge_shadow" ] },
+							{ "a": "GiveItemHero", "p": [ "magic_scroll_artifact_night_17_magic_read_minds" ] },
+							{ "a": "GiveItemHero", "p": [ "magic_scroll_artifact_day_6_magic_cleansing_ray" ] }
+						],
+
+						"actions": 
+						[ 
+							{ "a": "End", "p": [ "break" ] }
+						]
+					},
+				{
+					"id": "1",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "Counter", "p": [ "eridore_quest_naira", "=", "1" ] }
+					],
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "Dialogue at the altar of night. You still need to cast all night spells",
+
+					"next": "endingNothing"
+				},
+					{
+						"id": "endingNothing",
+						"dialogPlayConditions":  
+						[ 
+							{ "c": "Counter", "p": [ "eridore_quest_naira", "=", "1" ] }
+						],
+						"next": "2",
+						
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+						"actions": 
+						[ 
+							{ "a": "End", "p": [ "break" ] }
+						]
+					},
+				{
+					"id": "2",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "Counter", "p": [ "eridore_quest_naira", "=", "2" ] }
+					],
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "Dialogue at the altar of night. You cast all night spells",
+
+					"next": "endingCompleted"
+				},
+					{
+						"id": "endingCompleted",
+						"dialogPlayConditions":  
+						[ 
+							{ "c": "Counter", "p": [ "eridore_quest_naira", "=", "2" ] }
+						],
+						"next": "3",
+						
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+						
+						"actions": 
+						[ 
+							{ "a": "End", "p": [ "break" ] }
+						]
+					}
+			]
+		}
+	]
+}

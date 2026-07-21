@@ -1,0 +1,32 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M1_7",
+			
+			"contentHeight": 460,
+			"position": { "x": -400, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "Следующая задача",
+					"headerImage": "imageSid",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Сражаясь с противником вы будете нести потери." ] },
+						{ "type": "text", "value": [ "В процессе игры очень важно восполнять свою армию." ] },
+						{ "type": "text", "value": [ "Наймите мечников и арбалетчиков в бараках которые расположены дальше по дороге, а затем продолжайте путь дальше." ] }
+					],
+	
+					"mapActions":
+					[
+						{ "a": "SubQuestActivate", "p": [ "Questlog", "step_8" ] },
+						{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter_7", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

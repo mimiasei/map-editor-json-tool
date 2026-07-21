@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_cm_fun_mews_guard1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "crossbowman", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"crossbowman"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 70000,
+				"units":
+				[
+					{ "s" : "crossbowman", "v": 70000 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "human"
+		}
+	]
+}

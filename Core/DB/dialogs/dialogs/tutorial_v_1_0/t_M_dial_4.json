@@ -1,0 +1,34 @@
+{
+	"array": [
+		{
+			"id": "t_M_dial_4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_4_1",
+					"mapActions": [ ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_4_2",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "1850", "1" ] }, { "a": "CounterPlus", "p": [ "Tutorial_M_Sub_Quest_3_activator", "1" ] } ],
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_daughter_quest_line_start_4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_daughter_quest_line_text_5_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_necromancer_14_shadespinner_oona_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "necro_hero_14",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_text_5",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_daughter_quest_line_text_5_1",
+					"end": true
+				}
+			]
+		}
+	]
+}

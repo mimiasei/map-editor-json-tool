@@ -1,0 +1,22 @@
+{
+	"array": [
+		{
+			"id": "t_M_post_mission",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_post_mission_4",
+					"mapActions": [ ],
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,121 @@
+{
+	"array": [
+		{
+			"id": "M4Q2_dial6",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"construction_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q2_dial6_0",
+					"next": "endingDisappear"
+				},
+				{
+					"id": "endingDisappear",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"construction_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"next": "1",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"construction_site_guard",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q2_dial6_1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				}
+			]
+		}
+	]
+}

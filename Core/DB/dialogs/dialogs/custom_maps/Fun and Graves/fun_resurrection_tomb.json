@@ -1,0 +1,287 @@
+{
+	"array": [
+		{
+			"id": "fun_resurrection_tomb",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"marl_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_quest_in_progress_0",
+					"next": "endingQuestInProgress"
+				},
+				{
+					"id": "endingQuestInProgress",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"marl_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_resurrection_tomb_1",
+					"next": "1_1"
+				},
+				{
+					"id": "1_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_1_1",
+					"next": "1_2"
+				},
+				{
+					"id": "1_2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_1_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_2",
+					"next": "2_1"
+				},
+				{
+					"id": "2_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_resurrection_tomb_2_1",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"weakening_mycelium_progress",
+								"<",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_3",
+					"next": "3_1"
+				},
+				{
+					"id": "3_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"weakening_mycelium_progress",
+								"<",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_3_1",
+					"next": "endingStartQuest"
+				},
+				{
+					"id": "endingStartQuest",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"weakening_mycelium_progress",
+								"<",
+								"7"
+							]
+						}
+					],
+					"next": "4",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"tomb",
+								"false"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"marl_quest",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"weakening_mycelium_progress",
+								"=",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_resurrection_tomb_4",
+					"next": "endingResurrection"
+				},
+				{
+					"id": "endingResurrection",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "Dialog",
+							"p": [
+								"fun_resurrection_completed"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

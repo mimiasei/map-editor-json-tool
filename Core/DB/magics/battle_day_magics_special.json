@@ -1,0 +1,914 @@
+{
+	"array":
+	[		
+		
+		{
+			"isSpecialMagic": true,
+
+			"normalMagicSid": "day_1_magic_healing_water",
+			
+			"id": "day_1_magic_healing_water_special",
+
+			"name": "day_1_magic_healing_water_name_spec",
+			"icon": "day_1_magic_healing_water",
+			"magicTypeDescription": "magic_type_healing",			
+			"description": [ 
+				"day_1_magic_healing_water_description_1",
+				"day_1_magic_healing_water_description_1",
+				"day_1_magic_healing_water_description_1_spec",
+				"day_1_magic_healing_water_description_2_spec"
+			],
+			"excaptionInTooltip": "description_effect_undead_embodiment_construct_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_heal_per_sp_0_1"}, 
+				{"level": 3, "description": "day_1_magic_healing_water_description_up_level_bonus_3"} , 
+				{"level": 4, "description": "description_up_effect_allies_all"} 
+			],
+
+			"usedOnMap": false,
+			"school_": "day",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 5, 5, 5, 5 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"hexEffect": "Prefabs_vfx/magic_healing_water_hex",
+				"effect": "Prefabs_vfx/magic_healing_water_unit",
+				"attackTimeBefore": 0.1,
+				"attackTimeAfter": 0.3,
+				"hexEffectTime": 0.1,
+
+				"magicDealers": 
+				[
+					{	"tags": [ "heal", "undead_immunities", "embodiment_immunities", "construct_immunities", "avatar_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",						
+						"targetMechanics":
+						[
+							{
+								"mech": "heal",	"values":	[ "50" ,  "1" ,  "5" , "without respawn" ]
+							},
+							{
+								"mech": "dispel", "values":  [ "negative" ]
+							}
+						]
+					},
+					{	"tags": [ "heal", "undead_immunities", "embodiment_immunities", "construct_immunities", "avatar_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[
+							{
+								"mech": "heal",	"values":	[ "50" ,  "1" ,  "10" , "without respawn" ]
+							},
+							{
+								"mech": "dispel", "values":  [ "negative" ]
+							}
+						]
+					},
+					{	"tags": [ "heal", "undead_immunities", "embodiment_immunities", "construct_immunities", "avatar_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "day_1_magic_healing_water_effect_special",
+							"duration": 2
+						},
+						"targetMechanics":
+						[
+							{
+								"mech": "heal",	"values":	[ "50" ,  "1" ,  "10" , "without respawn" ]
+							},
+							{
+								"mech": "dispel", "values":  [ "negative" ]
+							}
+						]
+					},
+					{	"tags": [ "heal", "undead_immunities", "embodiment_immunities", "construct_immunities", "avatar_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "day_1_magic_healing_water_effect_special",
+							"duration": 2
+						},
+						"targetMechanics":
+						[
+							{
+								"mech": "heal",	"values":	[ "50" ,  "1" ,  "10" , "without respawn" ]
+							},
+							{
+								"mech": "dispel", "values":  [ "negative" ]
+							}
+						]
+					}	
+				],
+				
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "day_2_magic_sharp_edge",
+			
+			"id": "day_2_magic_sharp_edge_special",
+
+			"name": "day_2_magic_sharp_edge_name_spec",
+			"icon": "day_2_magic_sharp_edge",
+			"magicTypeDescription": " ",
+			"description": [ 
+				"day_2_magic_sharp_edge_description_spec",
+				"day_2_magic_sharp_edge_description_spec",
+				"day_2_magic_sharp_edge_description_1_spec",
+				"day_2_magic_sharp_edge_description_1_spec"
+			],
+			"excaptionInTooltip": "description_effect_undead_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "day_2_magic_sharp_edge_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "description_up_effect_allies_all"}, 
+				{"level": 4, "description": "day_2_magic_sharp_edge_description_up_level_bonus_4"} 
+			],
+
+			"usedOnMap": false,
+			"school_": "day",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 7, 7, 7, 7 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"hexEffect": "Prefabs_vfx/magic_sharp_edge_unit",
+				"magicDealers": 
+				[
+					{	"tags": [ "undead_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_sharp_edge_effect_0_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{	"tags": [ "undead_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_sharp_edge_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{	"tags": [ "undead_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_sharp_edge_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{	"tags": [ "undead_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_sharp_edge_effect_2_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					}
+				],
+				
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "day_3_magic_haste",
+			
+			"id": "day_3_magic_haste_special",
+
+			"name": "day_3_magic_haste_name_spec",
+			"icon": "day_3_magic_haste",
+			"magicTypeDescription": " ",
+			"description": [ 
+				"day_3_magic_haste_description_spec",
+				"day_3_magic_haste_description_spec",
+				"day_3_magic_haste_description_1_spec",
+				"day_3_magic_haste_description_1_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "day_3_magic_haste_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "day_3_magic_haste_description_up_level_bonus_3"} , 
+				{"level": 4, "description": "day_3_magic_haste_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "day",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 6, 6, 6, 6 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"attackTimeBefore": 0.1,
+				"hexEffect": "Prefabs_vfx/magic_haste_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [ "haste" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_haste_effect_0",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						},
+						"targetMechanics":
+						[
+
+						]
+					},
+					{
+						"tags": [ "haste" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_haste_effect_1",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						},
+						"targetMechanics":
+						[
+
+						]
+					},
+					{
+						"tags": [ "haste" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_haste_effect_1",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						},
+						"targetMechanics":
+						[
+							{
+								"mech": "dispel", "values":  [ "slowEffect" ]
+							}
+						]
+					},
+					{
+						"tags": [ "haste" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_haste_effect_2",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						},
+						"targetMechanics":
+						[
+							{
+								"mech": "dispel", "values":  [ "slowEffect" ]
+							}
+						]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "day_9_magic_arinas_hymn",
+			
+			"id": "day_9_magic_arinas_hymn_special",
+
+			"name": "day_9_magic_arinas_hymn_name_spec",
+			"icon": "day_9_magic_arinas_hymn",
+			"magicTypeDescription": " ",
+			"description": [ 
+				"day_9_magic_arinas_hymn_description",
+				"day_9_magic_arinas_hymn_description",
+				"day_9_magic_arinas_hymn_description_1",
+				"day_9_magic_arinas_hymn_description_1"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "day_9_magic_arinas_hymn_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "description_up_effect_allies_all"}, 
+				{"level": 4, "description": "day_9_magic_arinas_hymn_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "day",
+			"rank": 3,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 6 },
+				{ "name": "crystals", "cost": 6 },
+				{ "name": "mercury", "cost": 6 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 14, 14, 14, 14 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"attackTimeBefore": 0.1,
+				"hexEffect": "Prefabs_vfx/magic_arina_hymn_hex",
+				"effect": "Prefabs_vfx/magic_arina_hymn_unit",
+				"magicDealers":  
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_hymn_effect_0_special",
+							"duration": 1,
+							"durationPerStack": [ 6, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_hymn_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 6, 1 ]
+						}
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_hymn_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 6, 1 ]
+						}
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_hymn_effect_2_special",
+							"duration": 1,
+							"durationPerStack": [ 6, 1 ]
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "day_16_magic_arinas_chosen",
+			
+			"id": "day_16_magic_arinas_chosen_special",
+
+			"name": "day_16_magic_arinas_chosen_name_spec",
+			"icon": "day_16_magic_arinas_chosen",
+			"magicTypeDescription": " ",
+			"description": [ 
+				"day_16_magic_arinas_chosen_description_spec",
+				"day_16_magic_arinas_chosen_description_spec",
+				"day_16_magic_arinas_chosen_description_spec",
+				"day_16_magic_arinas_chosen_description_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "day_16_magic_arinas_chosen_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "description_up_effect_duration_1_2"}, 
+				{"level": 4, "description": "day_16_magic_arinas_chosen_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "day",
+			"rank": 5,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 10 },
+				{ "name": "crystals", "cost": 10 },
+				{ "name": "mercury", "cost": 10 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 18, 18, 18, 18 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"hexEffect": "Prefabs_vfx/magic_healing_water_hex",
+				"effect": "Prefabs_vfx/magic_healing_water_unit",
+				"attackTimeBefore": 0.1,
+				"attackTimeAfter": 0.3,
+				"hexEffectTime": 0.1,
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_chosen_effect_0_special",
+							"duration": 2
+						},
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_action_points", "values": [ "1" ] } 
+						]
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_chosen_effect_1_special",
+							"duration": 2
+						},
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_action_points", "values": [ "1" ] } 
+						]
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_chosen_effect_1_special",
+							"duration": 4
+						},
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_action_points", "values": [ "1" ] } 
+						]
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_arinas_chosen_effect_2_special",
+							"duration": 4
+						},
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_action_points", "values": [ "1" ] } 
+						]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		}
+	]
+}

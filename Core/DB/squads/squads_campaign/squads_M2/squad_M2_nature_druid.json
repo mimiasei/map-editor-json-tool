@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M2_nature_druid",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "druid", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"druid"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 30000,
+				"units":
+				[
+					{ "s" : "druid", "v": 30000 }
+				]
+			},
+
+			"tier": 5,
+			"fraction": "nature"
+		}
+	]
+}

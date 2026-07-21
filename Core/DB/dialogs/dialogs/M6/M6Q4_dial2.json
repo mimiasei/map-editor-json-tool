@@ -1,0 +1,539 @@
+{
+	"array": [
+		{
+			"id": "M6Q4_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "dialogue_title_unknown",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_0",
+					"mapActions": [
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"zone_olgoi2"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q4_dial2_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn", "appear"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_2",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_c_olgoi",
+								"1226",
+								"10000",
+								"false",
+								"olgoi2"
+							]
+						},
+						{
+							"a": "SetFlagAutobattle",
+							"p": [
+								"olgoi2",
+								"false"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"olgoi2",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"olgoi2",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"1289"
+							]
+						}
+					],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q4_dial2_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q4_dial2_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_7",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q4_dial2_8",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_9",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_10",
+					"next": "11"
+				},
+				{
+					"id": "11",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_11",
+					"answers": [
+						{
+							"text": "dialogue_text_M6Q4_dial2_11_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"11a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M6Q4_dial2_11_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"11b"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "11a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_11a",
+					"next": "11a_s"
+				},
+				{
+					"id": "11b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_11b",
+					"next": "11b1"
+				},
+				{
+					"id": "11b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_olgoi",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worm",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q4_dial2_11b1",
+					"next": "endFight"
+				},
+				{
+					"id": "endFight",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"olgoi2",
+								"1"
+							]
+						},
+						{
+							"a": "AutoSave"
+						}
+					],
+					"actions": [
+						{
+							"a": "SetAchievement",
+							"p": [
+								"achievement_16"
+							]
+						}
+					],
+					"end": true,
+					"invokeOnlyActions": true
+				},
+				{
+					"id": "11a_s",
+					"fon": "",
+					"text": "dialogue_text_M6Q4_dial2_11a_s",
+					"actions": [
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Human",
+								"2"
+							]
+						},
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Undead",
+								"2"
+							]
+						},
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Nature",
+								"2"
+							]
+						},
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Dungeon",
+								"2"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"-2"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"undead_icon",
+								"-2"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"spring_icon",
+								"-2"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"dungeon_icon",
+								"-2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"olgoi2",
+								"2"
+							]
+						},
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"olgoi",
+								"5"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"mapActions": [
+						{
+							"a": "AutoSave"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

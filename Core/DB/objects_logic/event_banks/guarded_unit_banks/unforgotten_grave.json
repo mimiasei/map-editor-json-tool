@@ -1,0 +1,172 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "unforgotten_grave",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 25,
+					"value": 4000,
+					"customGuardValue": 5950,
+
+					"guardUnits":
+					[
+						{ "sid": "pet", "amount": 14 },
+						{ "sid": "pet", "amount": 14 },
+						{ "sid": "pet", "amount": 14 },
+						{ "sid": "pet", "amount": 14 },
+						{ "sid": "pet", "amount": 14 },
+						{ "sid": "pet", "amount": 14 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "avatar_of_war", "4" ]
+							}
+						]
+					}
+				},	
+				{
+					"rollChance": 25,
+					"value": 8000,
+					"customGuardValue": 5950,
+
+					"guardUnits":
+					[
+						{ "sid": "pet", "amount": 28 },
+						{ "sid": "pet_upg", "amount": 28 },
+						{ "sid": "pet", "amount": 28 },
+						{ "sid": "pet", "amount": 28 },
+						{ "sid": "pet_upg_alt", "amount": 28 },
+						{ "sid": "pet", "amount": 28 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "avatar_of_war", "8" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 25,
+					"value": 12000,
+					"customGuardValue": 5950,
+
+					"guardUnits":
+					[
+						{ "sid": "pet", "amount": 40 },
+						{ "sid": "pet_upg_alt", "amount": 40 },
+						{ "sid": "pet", "amount": 40 },
+						{ "sid": "pet", "amount": 40 },
+						{ "sid": "pet_upg", "amount": 40 },
+						{ "sid": "pet", "amount": 40 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "avatar_of_war", "12" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 15,
+					"value": 16000,
+					"customGuardValue": 5950,
+
+					"guardUnits":
+					[
+						{ "sid": "pet_upg", "amount": 50 },
+						{ "sid": "pet", "amount": 50 },
+						{ "sid": "pet_upg_alt", "amount": 50 },
+						{ "sid": "pet_upg_alt", "amount": 50 },
+						{ "sid": "pet", "amount": 50 },
+						{ "sid": "pet_upg", "amount": 50 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "avatar_of_war", "16" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

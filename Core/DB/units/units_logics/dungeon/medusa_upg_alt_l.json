@@ -1,0 +1,360 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "medusa_upg_alt",
+			"squadValue": 812,
+			"expBonus": 90,
+			"tier": 5,
+			"fraction": "dungeon",
+			"nativeBiome": "Dirt",
+
+			"ai": "range_type",
+			
+			"tags": [ "unit", "dungeon" ],
+
+			"baseSid": "medusa_upg",
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 720 }
+				]
+			},
+			
+			"stats":
+			{
+				"hp": 55,
+				"offence": 15,
+				"defence": 14,
+				"damageMin": 11,
+				"damageMax": 15,
+
+				"initiative": 7,
+				"speed": 3,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 1,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -3,
+				"moralMax": 3,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods":
+				{
+					"list":
+					[				
+						
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				},
+
+				"ignoreShootDmgBuff": true
+			},
+			
+			"passives" : 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "magic_creature_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_curse" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "medusa_debuff",
+							"duration": 2
+						},
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"alternativeAttacks":
+			[
+				{
+					"attackType_" : "melee",
+
+					"dontUseEnergy" : true,
+					"cd" : -1,
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+
+						"targetMechanics" : [ ]
+					}
+				},
+				{
+					"attackType_" : "shoot",
+
+					"dontUseEnergy" : true,
+					"cd" : -1,
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack", "armed_ability", "armed_ability_medusa" ],
+						"triggerCounter": true,
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "medusa_debuff",
+							"duration": 2
+						},
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "medusa_debuff",
+							"duration": 2
+						},
+						
+						"targetMechanics" : [ ]
+					}
+				},
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"abilities" : 
+			[ 
+				{
+					"attackType_" : "move",
+					"moveType": "walk",
+					"rank": 1,
+					
+					"selfMechanics" : [ ],
+					
+					"cd" : 1,
+					"actionCost": 0,
+					"energyLevel": 1,
+					
+					"damageDealer" : 
+					{
+						"tags": [ "ability", "movement_ability" ],
+
+						"useSpeedAsShootRange": true,
+
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_buff",
+
+						"castTargetParams":   
+						{ 
+							"selection": "hex",
+							"castTarget_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"selection": "hex",
+							"castTarget_": "all"
+						},
+
+						"damageTarget_": "none",
+
+						"targetMechanics" : [ ]
+					}
+				}
+			]
+		}
+	]
+}

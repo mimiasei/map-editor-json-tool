@@ -1,0 +1,117 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M4_hero_temple_3",
+
+			"description": "human_hero_9_description",
+			"motto": "human_hero_9_motto",
+
+			"mesh": "knight",
+			"mounts": [ "horse" ],
+			"icon": "hero_human_9_old_lord_mandall",
+			"fraction": "human",
+			"nativeBiome": "Grass",
+			"classType": "might",
+
+			"skillsRollVariant": "humans_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 8,
+
+			"startSquad" : [
+				{ "sid": "sunlight_cavalry", "min": 1, "max": 1 },
+				{ "sid": "sunlight_cavalry", "min": 1, "max": 1 },
+				{ "sid": "sunlight_cavalry", "min": 1, "max": 1 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "sunlight_cavalry", "min": 1, "max": 1 }
+			],
+
+			"specialization": "human_hero_9_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome": true,
+				
+				"offence":      4,
+				"defence":      4,
+				"spellPower":   2,
+				"intelligence": 1,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 35 },
+						{ "v": 1, "c": 35 },
+						{ "v": 2, "c": 10 },
+						{ "v": 3, "c": 20 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_humans",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_resistance",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "day_1_magic_healing_water",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_3_magic_haste",
+					"level": 2,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

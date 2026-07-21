@@ -1,0 +1,29 @@
+{
+	"array": [
+		{
+			"id": "t_C3_dial_end",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_end",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"text": "",
+					"mapActions": [ { "a": "CounterPlus", "p": [ "Tutorial_C3_Win_Counter", "1" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,45 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_end",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_end_1",
+					"mapActions": [ { "a": "SubQuestDone", "p": [ "Questlog_Main", "win_condition" ] }, { "a": "SubQuestDone", "p": [ "Questlog", "step_8" ] } ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_end_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "tutorial_M_BASIC_Win_Counter_Sub", "1" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

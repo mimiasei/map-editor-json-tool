@@ -1,0 +1,513 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_human_hero_1_specialization",
+			"name": "human_hero_1_spec_name",
+			"desc": "human_hero_1_spec_description",
+			"icon": "human_hero_1_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "movementPerBonus", "0.05" ],
+
+					"upgrade": {
+						"increment": 0.05,
+						"levelStep": 8
+					}
+				},
+
+				{ 
+					"type": "heroStat",
+					"parameters": [ "roadPerBonus", "0.33333334" ]
+				}
+			]
+		},
+		{
+			"id": "human_hero_3_specialization_basic",
+			"name": "human_hero_3_spec_name",
+			"desc": "human_hero_3_spec_description",
+			"icon": "human_hero_3_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "esquire", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "trogl", "trogl_upg", "trogl_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				}
+			]
+		},
+		{
+			"id": "tutorial_human_hero_3_specialization",
+			"name": "human_hero_3_spec_name",
+			"desc": "human_hero_3_spec_description",
+			"icon": "human_hero_3_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "esquire", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "moral", "-1" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "energyPerTakeDamage", "-1" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "energyPerCast", "-2" ]
+				}
+			]
+		},
+		{
+			"id": "tutorial_human_hero_7_specialization",
+			"name": "human_hero_7_spec_name",
+			"desc": "human_hero_7_spec_description",
+			"icon": "human_hero_7_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "sunlight_cavalry", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen" ],
+					"parameters": [ "speed", "-3" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen_upg_alt" ],
+					"parameters": [ "speed", "-4" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "moral", "-1" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "energyPerTakeDamage", "-1" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "energyPerCast", "-2" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen" ],
+					"parameters": [ "damageMin", "939" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen" ],
+					"parameters": [ "damageMax", "939" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen_upg_alt" ],
+					"parameters": [ "damageMin", "929" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen_upg_alt" ],
+					"parameters": [ "damageMax", "929" ]
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen" ],
+					"parameters": [ "hp", "100" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen_upg" ],
+					"parameters": [ "hp", "25" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen_upg_alt" ],
+					"parameters": [ "hp", "50" ]
+				},
+
+				{
+					"type": "unitBoolStat",
+					"receivers": [ "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "alwaysMaxDmg", "true" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "griffin", "griffin_upg", "griffin_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+
+				{
+					"type": "battleSubskillBonus",
+					"receivers": [ "sunlight_cavalry_upg_alt" ],
+					"parameters": [ "unit_buff", "magic_despair_effect_old_bonus" ]
+				},
+
+				{
+					"type": "battleSubskillBonus",
+					"receivers": [ "griffin", "griffin_upg", "griffin_upg_alt" ],
+					"parameters": [ "unit_buff", "magic_despair_effect_old_bonus" ]
+				}
+			]
+		},
+		{
+			"id": "tutorial_human_hero_12_specialization",
+			"name": "human_hero_12_spec_name",
+			"desc": "human_hero_12_spec_description",
+			"icon": "human_hero_12_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "lightweaver", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "5", "0" ]
+				},
+				{
+					"type": "learnMagicRemoteFromMagicGuild",
+					"parameters": [ "neutral" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen" ],
+					"parameters": [ "speed", "-2" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "moral", "-1" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "energyPerTakeDamage", "-1" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen", "hive_queen_upg_alt" ],
+					"parameters": [ "energyPerCast", "-2" ]
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen" ],
+					"parameters": [ "hp", "100" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen_upg" ],
+					"parameters": [ "hp", "25" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "hive_queen_upg_alt" ],
+					"parameters": [ "hp", "50" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicCdBonus", "-999" ]
+				}
+			]
+		}
+	]
+}

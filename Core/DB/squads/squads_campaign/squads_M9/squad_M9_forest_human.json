@@ -1,0 +1,53 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M9_forest_human",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "sunlight_cavalry_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"sunlight_cavalry_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 90000,
+				"units":
+				[
+					{ "s" : "griffin", "v": 10000 },
+					{ "s" : "griffin_upg", "v": 10000 },
+					{ "s" : "griffin", "v": 10000 },
+					{ "s" : "sunlight_cavalry_upg_alt", "v": 70000 },
+					{ "s" : "griffin", "v": 10000 },
+					{ "s" : "griffin_upg", "v": 10000 },
+					{ "s" : "griffin", "v": 10000 }
+				]
+			},
+
+			"tier": 5,
+			"fraction": "human"
+		}
+	]
+}

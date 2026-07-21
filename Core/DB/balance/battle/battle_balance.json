@@ -1,0 +1,7 @@
+{
+    "maxEnergyLevelsCount": 3,
+    "moralDistribution": [ 0.04, 0.08, 0.12, 0.16, 0.20 ],
+    "luckDistribution": [ 0.06, 0.12, 0.18, 0.24, 0.30 ],
+    "energyDistribution": [ 6, 6, 6, 6, 6, 6 ],
+    "moralDistributionPerFractionCount": [ 1, 0, -1, -2, -3, -4, -5 ]
+}

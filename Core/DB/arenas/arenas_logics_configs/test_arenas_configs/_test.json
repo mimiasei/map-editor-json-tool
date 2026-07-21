@@ -1,0 +1,38 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "_test",
+			"scenes": [ "testArena" ],
+			"spawnLeft": [ "2x9_standart_left" ],
+			"spawnRight": [ "2x9_standart_right" ],
+
+			"leftHeroPosition":  [ -10.64,	0,7.66 ],
+			"rightHeroPosition": [ 11.86,0,	7.66 ],
+
+			"blockTacticsPhase": false,
+			"tacticsPlacementSid": "tactics_placement_standard",
+		
+			"sizeX": 11,
+			"sizeZ": 9,
+			"map":
+			[
+				  2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2
+			],
+
+			"obstacles":
+			[
+				{"id": 3, "sid": "wall", "side": 0},
+				{"id": 4, "sid": "wall", "side": 1}
+			]
+		}
+	]
+}

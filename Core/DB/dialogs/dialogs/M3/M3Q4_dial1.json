@@ -1,0 +1,1086 @@
+{
+	"array": [
+		{
+			"id": "M3Q4_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								">=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_0",
+					"next": "1m"
+				},
+				{
+					"id": "1m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_1m",
+					"next": "2m"
+				},
+				{
+					"id": "2m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut",
+								"appear"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_2m",
+					"next": "3m"
+				},
+				{
+					"id": "3m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_lightweaver",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_3m",
+					"next": "4m"
+				},
+				{
+					"id": "4m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_4m",
+					"next": "5m"
+				},
+				{
+					"id": "5m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_5m",
+					"next": "5m_s"
+				},
+				{
+					"id": "5m_s",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial1_5m_s",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Human",
+								"1"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"+1"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"offence",
+								"campaign_hero_1",
+								"2"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"defence",
+								"campaign_hero_1",
+								"2"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_4",
+					"next": "4_s"
+				},
+				{
+					"id": "4_s",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial1_4_s",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Human",
+								"1"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"+1"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"offence",
+								"campaign_hero_1",
+								"2"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"defence",
+								"campaign_hero_1",
+								"2"
+							]
+						}
+					],
+					"next": "endingGood1"
+				},
+				{
+					"id": "endingGood1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"priestess_quest",
+								">=",
+								"3"
+							]
+						}
+					],
+					"next": "5",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"priestess",
+								"1"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_7",
+					"next": "8m"
+				},
+				{
+					"id": "8m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_8m",
+					"next": "8m1"
+				},
+				{
+					"id": "8m1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_8m1",
+					"next": "8m2"
+				},
+				{
+					"id": "8m2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_8m2",
+					"next": "endingBad"
+				},
+				{
+					"id": "endingBad",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "8",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"priestess"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_8",
+					"answers": [
+						{
+							"text": "dialogue_text_M3Q4_dial1_8_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Human",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"8a"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"+1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3Q4_dial1_8_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"8b"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Human",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"-1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "8a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_8a",
+					"next": "8a_s"
+				},
+				{
+					"id": "8a_s",
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial1_8a_s",
+					"mapActions": [
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"lightweaver_upg_alt",
+								"10"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"priestess",
+								"2"
+							]
+						}
+					],
+					"next": "8a1"
+				},
+				{
+					"id": "8a1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_8a1",
+					"next": "8a2"
+				},
+				{
+					"id": "8a2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_8a2",
+					"next": "endingGood2"
+				},
+				{
+					"id": "endingGood2",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"priestess_quest",
+								"1"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				},
+				{
+					"id": "8b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_8b",
+					"next": "8b1"
+				},
+				{
+					"id": "8b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial1_8b1",
+					"next": "8b2"
+				},
+				{
+					"id": "8b2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial1_8b2",
+					"next": "endingNeutral"
+				},
+				{
+					"id": "endingNeutral",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						},
+						{
+							"a": "SetQuestMarker",
+							"p": [
+								"priestess",
+								"effects/global_map/quest_mark_silver_02"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+	"array":
+	[
+        {
+            "id": "classicWinCondition",
+            "parameters":[
+                "standart_win_lose_all_city",
+                "standart_win_lose_all_city_desertion",
+                "standart_win_lose_all_city_vision",
+                "standart_win_lose_capture_city"
+            ]
+        }
+		
+	]
+}

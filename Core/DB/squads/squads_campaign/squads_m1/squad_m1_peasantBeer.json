@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m1_peasantBeer",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "peasant_normal", "v": 30 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"peasant_normal"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 0,
+				"units":
+				[
+					{ "s" : "peasant_normal", "v": 0 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "neutral"
+		}
+	]
+}

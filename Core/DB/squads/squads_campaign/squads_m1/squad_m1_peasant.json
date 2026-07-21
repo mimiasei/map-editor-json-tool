@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m1_peasant",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "peasant_normal", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"peasant_normal"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 99000,
+				"units":
+				[
+					{ "s" : "peasant_normal", "v": 99000 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "neutral"
+		}
+	]
+}

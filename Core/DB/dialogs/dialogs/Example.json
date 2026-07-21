@@ -1,0 +1,202 @@
+{
+	"array":
+	[
+		{
+			"id": "Example",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					[
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "true"							
+						},
+						{
+							"position": 3,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "true"							
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "true"							
+						}
+					],
+
+					"notification": "start",
+					"notificationDuration": 10,
+
+					"title": 
+					{ 
+						"sid": "dialogue_title_garrison_captain1",
+						"position": 1
+					},
+
+					"text": "dialogue_text_M1_peasants_dial1_4",	
+					
+					"showAnimationsImmediately": true,
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+
+					"fon": "",
+					"avatars":
+					[
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "true"
+						}
+					],
+
+					"notification": "start",
+
+					"title": 
+					{ 
+						"sid": "dialogue_title_garrison_captain1",
+						"position": 2
+					},
+
+					"text": "dialogue_text_M1_postmission_0",		
+					
+					"showAnimationsImmediately": true,
+
+					"next": "2"
+				},
+				{
+					"id": "2",
+
+					"fon": "",
+					"avatars":
+					[
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+
+					"notification": "start",
+
+					"title": 
+					{ 
+						"sid": "dialogue_title_garrison_captain1",
+						"position": 3
+					},
+
+					"text": "dialogue_text_M1_postmission_3a",		
+					
+					"showAnimationsImmediately": true,
+
+					"next": "3"
+				},
+				{
+					"id": "3",
+
+					"fon": "",
+					"avatars":
+					[
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut", "appear"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+
+					"notification": "start",
+
+					"title": 
+					{ 
+						"sid": "dialogue_title_garrison_captain1",
+						"position": 2
+					},
+
+					
+					"answers":
+					[
+						{
+							"text": "dialogue_text_M1Q1_dial1_3_answer_1",
+
+							"actions": 
+							[ 
+								{ "a": "StoryCounterMinus", "p": [ "fractionReputation_Nature" ,"1"] },
+								{ "a": "Go", "p": [ "4" ] }
+							]
+						},
+						{
+							"requests": 
+							[
+								{ "c": "ResCounter", "p": [ "gold", ">", "2499" ] }
+							],
+
+							"text": "dialogue_text_M1Q1_dial1_3_answer_2",
+							"actions": 
+							[ 
+								{ "a": "Go", "p": [ "4" ] }
+							]
+						},
+						{
+							"text": "dialogue_text_M1Q1_dial1_3_answer_3",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "4" ] }
+							]
+						}
+					],
+
+					"text": "dialogue_text_M3bQ1_dial1_3a1",			
+
+					"next": "4"
+				},
+				{
+					"id": "4",
+
+					"fon": "",
+					"avatars":
+					[
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+
+
+					"title": 
+					{ 
+						"sid": "dialogue_title_garrison_captain1",
+						"position": 2
+					},
+
+					"text": "dialogue_text_M3bQ1_dial1_3_answer_2",			
+
+					"end": true
+				}
+			]
+		}
+	]
+}

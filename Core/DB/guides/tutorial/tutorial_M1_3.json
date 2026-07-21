@@ -1,0 +1,56 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M1_3",
+			
+			"contentHeight": 460,
+			"position": { "x": -400, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "Обучение",
+					"headerImage": "imageSid",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Вы закончили ход и с наступлением нового дня ваш герой восстановил очки передвижения и может продолжил движение дальше." ] }
+					],
+	
+					"mapActions":
+					[
+						{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter_3", "1" ] },						
+						{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_3_Counter", "1" ] }
+					]
+				},
+				{
+					"title": "Обучение",
+					"headerImage": "imageSid",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Теперь вам стала доступна мини-карта, а на карте мира появилась цель вашего задания - замок." ] },
+						{ "type": "text", "value": [ "В любой момент игры вы можете перемещать камеру на глобальной карте, изучая разведанные территории." ] },
+						{ "type": "text", "value": [ "Для перемещения камеры вы можете воспользоваться миникартой, зажать правую кнопку мышки и двигать мышку, а также использовать горячие клавишы W-A-S-D." ] }
+					]
+				},
+				{
+					"title": "Следующая задача",
+					"headerImage": "imageSid",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Следуйте дальше по дороге, в поисках новых приключений." ] }
+					],
+	
+					"mapActions":
+					[
+						{ "a": "SubQuestActivate", "p": [ "Questlog", "step_4" ] },
+						{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter_4", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

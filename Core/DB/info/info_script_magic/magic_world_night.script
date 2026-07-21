@@ -1,0 +1,31 @@
+﻿modInt current_night_17_magic_read_minds_1
+{
+	CurrentHero ( viewRadius, "heroStat.viewRadius" )
+
+	Mul ( heroRadius, viewRadius, "3" )
+
+	Text( return, heroRadius )
+}
+
+string current_night_17_magic_read_minds_level_3
+{
+	Text( return, "1" )
+}
+
+//
+
+modInt current_night_18_magic_nairas_veil
+{
+	CurrentMagicWorld ( baseRadius, "parameters[0]" )
+	CurrentMagicWorld ( bonusRadius, "parameters[1]" )
+
+	CurrentMagicLevel ( level )
+	Sub ( levelSub, level, 1 )
+	
+	Mul ( bonusRadiusMul, bonusRadius, levelSub )
+	Add ( finalRadius, baseRadius, bonusRadiusMul )
+
+	Text( return, finalRadius )
+}
+
+//

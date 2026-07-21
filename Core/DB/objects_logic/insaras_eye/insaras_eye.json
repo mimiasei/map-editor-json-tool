@@ -1,0 +1,93 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "insaras_eye",
+			"aiIgnore": true,
+			"goodsValue": 2500,	
+			"maxPoints": 1,
+			"points":
+			[
+				{
+					"point": 0,
+					"openInformations":
+					[
+
+					]
+				},
+				{
+					"point": 1,
+					"openInformations":
+					[
+						"infoStrongHero",
+						"infoClassHero"
+					]
+				},
+				{
+					"point": 2,
+					"openInformations":
+					[
+						"infoStatsHero",
+						"infoStrongUnitHero"
+					]
+				},
+				{
+					"point": 3,
+					"openInformations":
+					[
+						"infoCountCity"
+					]
+				},
+				{
+					"point": 4,
+					"openInformations":
+					[
+						"infoArmyValue"
+					]
+				},
+				{
+					"point": 5,
+					"openInformations":
+					[
+						"infoEconomyValue"
+					]
+				},
+				{
+					"point": 6,
+					"openInformations":
+					[
+						"infoFractionLaws"
+					]
+				},
+				{
+					"point": 7,
+					"openInformations":
+					[
+						"infoMagicsValue"
+					]
+				},
+				{
+					"point": 8,
+					"openInformations":
+					[
+						"infoArtifactsValue"
+					]
+				},
+				{
+					"point": 9,
+					"openInformations":
+					[
+						"infoBuildGraal"
+					]
+				},
+				{
+					"point": 10,
+					"openInformations":
+					[
+						"infoInsaraPoints"
+					]
+				}
+			]
+		}
+	]
+}

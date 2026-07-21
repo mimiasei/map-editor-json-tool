@@ -1,0 +1,133 @@
+{
+	"array":
+	[
+		{
+			"id": "arena_might_buff_1",
+			
+			"icon": "offence",
+			"name": "arena_might_buff_1_name",
+			"description": "arena_might_buff_1_description",
+
+			"additionType": "CombineEffect",
+			"isPositive": true,
+			"hidden": true,
+			"isDispellable": false,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "offence", "4" ]
+				}
+			]
+		},
+		{
+			"id": "arena_might_buff_2",
+			
+			"icon": "defence",
+			"name": "arena_might_buff_2_name",
+			"description": "arena_might_buff_2_description",
+
+			"additionType": "CombineEffect",
+			"isPositive": true,
+			"hidden": true,
+			"isDispellable": false, 
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "4" ]
+				}
+			]
+		},
+		{
+			"id": "arena_might_buff_3",
+			
+			"icon": "defence",
+			"name": "arena_might_buff_3_name",
+			"description": "arena_might_buff_3_description",
+
+			"additionType": "CombineEffect",
+			"isPositive": true,
+			"hidden": true,
+			"isDispellable": false, 
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "offence", "2" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "2" ]
+				}
+			]
+		},
+		{
+			"id": "arena_mage_buff_1",
+			
+			"icon": "spellPower",
+			"name": "arena_mage_buff_1_name",
+			"description": "arena_mage_buff_1_description",
+
+			"additionType": "CombineEffect",
+			"isPositive": true,
+			"hidden": true,
+			"isDispellable": false,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "4" ]
+				}
+			]
+		},
+		{
+			"id": "arena_mage_buff_2",
+			
+			"icon": "intelligence",
+			"name": "arena_mage_buff_2_name",
+			"description": "arena_mage_buff_2_description",
+
+			"additionType": "CombineEffect",
+			"isPositive": true,
+			"hidden": true,
+			"isDispellable": false,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "4" ]
+				}
+			]
+		},
+		{
+			"id": "arena_mage_buff_3",
+			
+			"icon": "intelligence",
+			"name": "arena_mage_buff_3_name",
+			"description": "arena_mage_buff_3_description",
+
+			"additionType": "CombineEffect",
+			"isPositive": true,
+			"hidden": true,
+			"isDispellable": false,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "2" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "2" ]
+				}
+			]
+		}
+	]
+}

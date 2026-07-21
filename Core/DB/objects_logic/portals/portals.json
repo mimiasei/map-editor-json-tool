@@ -1,0 +1,69 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "portal_1",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_1_2",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_1_3",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_2",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_2_2",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_2_3",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_3",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_3_2",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_3_3",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_4",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_4_2",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_4_3",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_5",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_5_2",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_5_3",
+			"goodsValue": 0
+		},
+		{
+			"id": "portal_magic",
+			"goodsValue": 0
+		}
+	]
+}

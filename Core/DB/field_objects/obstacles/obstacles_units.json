@@ -1,0 +1,57 @@
+{
+	"array": 
+	[
+		{
+			"id": "ent_stone",
+			"vfx": "magic/Prefabs_vfx/ent_upg_obstacle",
+			"isEffect": true,
+			"tags": [ "obstacle", "attackable_object" ],
+			
+			"startTime": 0.1,	"endTime": 1,
+
+			"takeDamageSound": "sounds/battle/units/ent/obstacle/damage",
+			"destroyedSound": "sounds/battle/units/ent/obstacle/destroy",
+
+			"stats": 
+			{
+				"hp": 2,
+				"maxInDmg": 1
+			}
+		},
+
+		{
+			"id": "phoenix_heart",
+			"vfx": "magic/Prefabs_vfx/phoenix_rise_obstacle",
+			"isEffect": true,
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"takeDamageSound": "sounds/battle/units/phoenix/obstacle/damage",
+			"destroyedSound": "sounds/battle/units/phoenix/obstacle/destroy",
+
+			"lifetime": 1,
+			"stats": 
+			{
+				"hp": 3,
+				"maxInDmg": 1
+			},
+			"onTimeoutMechanic": { "mech": "spawn_revived_phoenix", "values": [ "unit", "phoenix_upg", "0.50" ] }
+		},
+
+		{
+			"id": "twinkle_mushroom",
+			"vfx": "magic/Prefabs_vfx/magic_crystal_crown_hex",
+
+			"tags": [ "unit" ],
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"stats": 
+			{
+				"hp": 3,
+				"maxInDmg": 1
+			}
+		}
+	]  
+}

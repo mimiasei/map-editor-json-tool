@@ -1,0 +1,16 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "one_hero_custom_ai_default",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[				
+				{
+					"task": "custom_ai_default_main_hero_tasks"
+				}
+			]
+		}
+	]
+}

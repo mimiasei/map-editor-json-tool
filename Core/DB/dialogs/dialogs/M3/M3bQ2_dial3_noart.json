@@ -1,0 +1,391 @@
+{
+	"array": [
+		{
+			"id": "M3bQ2_dial3_noart",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"shard_counter",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3bQ2_dial3_art_0",
+					"answers": [
+						{
+							"text": "dialogue_text_M3aQ2_dial3_art_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"2"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ2_dial2_nospy_1_answer_4",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0m"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Human",
+										"2"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"-2"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"graverobber_quest",
+										"4"
+									]
+								},
+								{
+									"a": "DeleteEntity",
+									"p": [
+										"shard"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "0m",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ2_dial2_nospy_1a",
+					"next": "endingRes"
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ2_dial3_art_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"reqStatus": "false",
+							"p": [
+								"tranquility_ring_of_serenity_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3bQ2_dial3_art_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"reqStatus": "false",
+							"p": [
+								"tranquility_ring_of_serenity_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3bQ2_dial3_art_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"tranquility_ring_of_serenity_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3bQ2_dial3_art_3",
+					"next": "3_s"
+				},
+				{
+					"id": "3_s",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"tranquility_ring_of_serenity_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3bQ2_dial3_art_3_s",
+					"actions": [
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Human",
+								"2"
+							]
+						},
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Undead",
+								"2"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"undead_icon",
+								"+2"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"-2"
+							]
+						},
+						{
+							"a": "RemoveItem",
+							"p": [
+								"tranquility_ring_of_serenity_artifact"
+							]
+						},						
+						{
+							"a": "CounterSet",
+							"p": [
+								"graverobber_quest",
+								"4"
+							]
+						}
+					],
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3bQ2_dial3_art_4",
+					"next": "endingNoRes"
+				},
+				{
+					"id": "endingNoRes",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"reqStatus": "false",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"resultDialog": "Interrupt",
+					"next": "endingRes",
+					"end": true
+				},
+				{
+					"id": "endingRes",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"scout_resurrection",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

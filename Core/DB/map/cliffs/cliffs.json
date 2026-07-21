@@ -1,0 +1,18 @@
+{
+	"array":
+	[
+		{
+			"id": 0,
+			"name": "cliff",
+			"icon": "cliff_icon",
+			"variantsCount": [ 8, 3, 3 ]
+		},
+
+		{
+			"id": 1,
+			"name": "cliff_vertical",
+			"icon": "cliff_icon",
+			"variantsCount": [ 4, 3, 0 ]
+		}
+	]	
+}

@@ -1,0 +1,102 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "necro_hero_16",
+			"mesh": "death_knight",
+			"mounts": [ "death_mount" ],
+			"icon": "hero_necromancer_16_lord_rufus",
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+			"classType": "magic",
+
+			"skillsRollVariant": "necros_magic_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 1,
+			"attacksTimesBefore": [0.5],
+
+			"startSquad" : [
+				{ "sid": "skeleton", "min": 20, "max": 27 },
+				{ "sid": "flicker", "min": 10, "max": 13 },
+				{ "sid": "pet", "min": 8, "max": 10 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "skeleton", "min": 1, "max": 1 }
+			],
+
+			"specialization": "necro_hero_16_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      1,
+				"defence":      0,
+				"spellPower":   2,
+				"intelligence": 4,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 10 },
+						{ "v": 1, "c": 15 },
+						{ "v": 2, "c": 35 },
+						{ "v": 3, "c": 40 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_undead",
+					"skillLevel": 1
+				},
+
+				{
+					"sid": "skill_wisdom",
+					"skillLevel": 1
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "space_12_magic_rewind",
+					"level": 1,
+					"isLearned": true
+				},
+
+				{
+					"sidConfig": "change_use_necromancy",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,41 @@
+{
+	"array":
+	[
+		{
+			"id": "M9Q1_dial2_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"title": "dialogue_title_hero_dungeon",
+					"text": "dialogue_text_M9Q1_dial2_0",
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+					 
+					"title": "dialogue_title_hero_dungeon",
+					"text": "dialogue_text_M9Q1_dial2_1",
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+
+					"end": true
+				}
+			]
+		}
+	]
+}

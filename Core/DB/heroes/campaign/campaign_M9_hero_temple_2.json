@@ -1,0 +1,133 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M9_hero_temple_2",
+			"mesh": "human_mage",
+			"mounts": [ "horse" ],
+			"icon": "hero_necromancer_4_kelghul",
+			"fraction": "human",
+			"nativeBiome": "Grass",
+			"classType": "might",
+
+			"skillsRollVariant": "humans_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 15,
+
+			"startSquad" : [
+				{ "sid": "esquire", "min": 18, "max": 18 },
+				{ "sid": "crossbowman", "min": 13, "max": 13 },
+				{ "sid": "griffin", "min": 6, "max": 6 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "esquire", "min": 18, "max": 18 },
+				{ "sid": "crossbowman", "min": 13, "max": 13 },
+				{ "sid": "griffin", "min": 6, "max": 6 }
+			],
+
+			"specialization": "human_hero_5_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      2,
+				"defence":      1,
+				"spellPower":   6,
+				"intelligence": 7,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 15 },
+						{ "v": 1, "c": 15 },
+						{ "v": 2, "c": 35 },
+						{ "v": 3, "c": 35 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_humans",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_magic_night",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_leadership",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_mastery",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_wisdom",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_economy",
+					"skillLevel": 1
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "night_11_magic_vulnerability",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_13_magic_berserker",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_8_magic_sleep",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_7_magic_fatal_decay",
+					"level": 4,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

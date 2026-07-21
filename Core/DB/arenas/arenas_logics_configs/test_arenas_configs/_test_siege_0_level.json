@@ -1,0 +1,44 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "_test_siege_0_level",
+			"scenes": [ "testArena" ],
+			"spawnLeft":  [ "2x11_alternative_left" ],
+			"spawnRight": [ "2x11_alternative_right" ],
+
+			"blockTacticsPhase": false,
+			"tacticsPlacementSid": "tactics_placement_siege",
+
+			"leftHeroPosition":  [ -13.28,	0,8.287 ],
+			"rightHeroPosition": [ 12,0,	8.287 ],
+		
+			"sizeX": 13,
+			"sizeZ": 11,
+			"map":
+			[
+				  2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2,
+				  2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2
+			],
+
+			"obstacles":
+			[
+				
+			],
+
+			"obstaclesOverrides": 
+			[
+				
+			]
+		}
+	]
+}

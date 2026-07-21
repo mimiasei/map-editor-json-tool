@@ -1,0 +1,80 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "dragon_upg",
+			"mesh": "Neutral/1Prefabs/dragon_upg",
+			"mapMesh": "Neutral/1Prefabs/dragon_upg_map",
+			"fadeTime": 2.15,
+			
+			"scale": 0.3,
+			"modelHeight": 0.85,
+			"moveSpeed": 6.0,
+			
+			"attackTimeBefore": [ 0.83, 2, 0.6, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 2.2, 0.9, 0.9, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,	
+
+			"takeoffPrepareTime": 0.5,
+			"ascentTime": 0.5,
+			"descentTime": 0.5,
+			"defaultHeight": 2,
+
+			"takeDamageTime": 1.167,
+			"deathTimeOffset": 2.51,
+			
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"abilities":
+			[
+
+			],
+
+			"baseClass":
+				{
+					"name": "base_class_dragon",
+					"description": "base_class_dragon_description"
+				},
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "base_passive_strike_reach_1_name",
+					"description": "base_passive_strike_reach_1_description"
+				},
+				{
+					"name": "base_passive_noncounter_name",
+					"description": "base_passive_noncounter_description"
+				},
+				{
+					"name": "base_passive_immunity_magic_4_name",
+					"description": "base_passive_immunity_magic_4_description_alt"
+				},
+				{
+					"name": "obsidian_dragon_passive_1_name",
+					"description": "obsidian_dragon_passive_1_description"
+				}
+			]
+		}
+	]
+}

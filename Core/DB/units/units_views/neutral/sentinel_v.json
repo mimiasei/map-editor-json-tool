@@ -1,0 +1,96 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "sentinel",
+			"mesh": "Neutral/1Prefabs/sentinel",
+			"mapMesh": "Neutral/1Prefabs/sentinel_map",
+			"fadeTime": 1.95,
+
+			"scale": 0.25,
+			"modelHeight": 1.08,
+			"moveSpeed": 6.33,
+
+			"attackTimeBefore": [ 0.53, 2.267, 2.2, 2.467, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.8, 0, 0, 0, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeoffPrepareTime": 0.5,
+			"ascentTime": 0.5,
+			"descentTime": 0.5,
+			"defaultHeight": 1.75,
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 2.01,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "sentinel_ability_1_name",
+					"abilityType": "Ability_type_special",
+					"description": "sentinel_ability_1_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 2,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "sentinel_ability_2_name",
+					"abilityType": "Ability_type_special",
+					"description": "sentinel_ability_2_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "sentinel_ability_3_name",
+					"abilityType": "Ability_type_special",
+					"description": "sentinel_ability_3_description",
+					"infoDescription": "ability_no_turn",
+					"startTpTime": 1.534,
+					"endTpTime": 0.768,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "sentinel_ability_4_name",
+					"abilityType": "Ability_type_special",
+					"description": "sentinel_ability_4_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 3,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_magic_creature",
+                    "description": "base_class_magic_creature_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				}
+			]
+		}
+	]
+}

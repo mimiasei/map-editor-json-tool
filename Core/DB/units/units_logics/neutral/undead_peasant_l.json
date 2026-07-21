@@ -1,0 +1,231 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "undead_peasant",
+			"squadValue": 1,
+			"expBonus": 0,
+			"tier": 2,
+			"fraction": "neutral",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "neutral" ],
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 200 }
+				]
+			},
+
+			"stats":
+			{
+				"hp": 20,
+				"offence": 9,
+				"defence": 6,
+				"damageMin": 4,
+				"damageMax": 7,
+
+				"initiative": 5,
+				"speed": 5,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": 0,
+				"moralMax": 0,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"outDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				}
+			},
+
+			"passives": 
+			[
+				{
+					"actions":
+					[
+						{
+							"trigger": "start_turn",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive" ],
+								"triggerCounter": false,
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"buffTarget_": "all",
+								"buff":
+								{
+									"sid": "undead_peasant_buff",
+									"duration": -1
+								},
+								
+								"targetMechanics" : [ ]
+							}
+						}
+					]
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "undead_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"disablers": 
+						[ 
+							{ "mech": "vampirism" },
+							{ "mech": "destroy_corpse_and_heal" }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_curse" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_blood" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+
+			"abilities": [ ]
+		}
+	]
+}

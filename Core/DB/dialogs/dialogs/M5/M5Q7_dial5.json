@@ -1,0 +1,295 @@
+{
+	"array": [
+		{
+			"id": "M5Q7_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial5_befriended_monster_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial5_befriended_monster_1",
+					"next": "1_s"
+				},
+				{
+					"id": "1_s",
+					"fon": "",
+					"text": "dialogue_text_M5Q7_dial5_befriended_monster_1_s",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut", "appear" ]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial5_befriended_monster_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial5_befriended_monster_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_forest_monster",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial5_befriended_monster_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial5_befriended_monster_5",
+					"next": "endingPeace"
+				},
+				{
+					"id": "endingPeace",
+					"fon": "",
+					"text": "",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Undead",
+								"2"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"undead_icon",
+								"+2"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"death_knight_quest",
+								"2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"death_knight",
+								"1"
+							]
+						},
+						{
+							"a": "SpawnSquadNPC",
+							"p": [
+								"squad_c_deathknight",
+								"3794",
+								"1",
+								"false",
+								"death_knight_happy"
+							]
+						},
+						{
+							"a": "SpawnSquadNPC",
+							"p": [
+								"squad_c_pet",
+								"3732",
+								"1",
+								"false",
+								"forest_friend"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"forest_empty_shack"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"campaign_M5_death_knight_house",
+								"3859",
+								"true",
+								"forest_friends_house"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

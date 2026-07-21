@@ -1,0 +1,22 @@
+{
+	"array": [
+		{
+			"id": "M9_final_gate_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "dialogue_text_M9_final_gate_dial1_0",
+					"mapActions": [
+						{
+							"a": "HeroStop"
+						}					
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

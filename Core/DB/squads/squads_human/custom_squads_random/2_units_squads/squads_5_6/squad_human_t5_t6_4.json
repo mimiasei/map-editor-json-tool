@@ -1,0 +1,44 @@
+{
+    "array": [
+        {
+            "id": "squad_human_t5_t6_4",
+            "useOldSquads": false,
+            "rollChance": 101,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "sunlight_cavalry",
+                        "v": 11026
+                    },
+                    {
+                        "s": "inquisitor_upg",
+                        "v": 18026
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 18026,
+                "units": [
+                    "sunlight_cavalry",
+                    "inquisitor_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 106026,
+                "units": [
+                    {
+                        "s": "sunlight_cavalry",
+                        "v": 35026
+                    },
+                    {
+                        "s": "inquisitor_upg",
+                        "v": 106026
+                    }
+                ]
+            },
+            "tier": 6,
+            "fraction": "human"
+        }
+    ]
+}

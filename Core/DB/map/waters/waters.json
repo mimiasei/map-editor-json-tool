@@ -1,0 +1,40 @@
+{
+	"array":
+	[
+		{
+			"id": 1,
+			"name": "water dirt",
+			"material": "water_1"
+		},
+		{
+			"id": 2,
+			"name": "water sand",
+			"material": "water_2"
+		},
+		{
+			"id": 3,
+			"name": "water death",
+			"material": "water_3"
+		},
+		{
+			"id": 4,
+			"name": "water snow",
+			"material": "water_4"
+		},
+		{
+			"id": 5,
+			"name": "water fallen",
+			"material": "water_5"
+		},
+		{
+			"id": 6,
+			"name": "lava",
+			"material": "water_6"
+		},
+		{
+			"id": 7,
+			"name": "water grass",
+			"material": "water_7"
+		}
+	]
+}

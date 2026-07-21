@@ -1,0 +1,45 @@
+﻿{
+	"array": [
+		{
+			"id": "squad_cm_god_enemy1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 0,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "skeleton",
+						"v": 1
+					},
+					{
+						"s": "skeleton_upg_alt",
+						"v": 1
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 0,
+				"units": [
+					"skeleton",
+					"skeleton_upg_alt"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 99000,
+				"units": [
+					{
+						"s": "skeleton",
+						"v": 99000
+					},
+					{
+						"s": "skeleton_upg_alt",
+						"v": 99000
+					}
+				]
+			},
+			"tier": 1,
+			"fraction": "undead"
+		}
+	]
+}

@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_skeleton",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "skeleton", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"skeleton"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 85000,
+				"units":
+				[
+					{ "s" : "skeleton", "v": 85000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "undead"
+		}
+	]
+}

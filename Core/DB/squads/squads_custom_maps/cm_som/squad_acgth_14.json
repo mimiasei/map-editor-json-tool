@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_som_14",
+			
+			"squad" : 
+			[
+					
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "phoenix_upg", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"phoenix_upg"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000000,
+				"units":
+				[
+					{ "s" : "phoenix_upg", "v": 1000000 }
+				]
+			},
+
+			"tier": 3,
+			"fraction": "neutral"
+		}
+	]
+}

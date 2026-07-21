@@ -1,0 +1,261 @@
+{
+	"array":
+	[
+		{
+			"id": "acgth_main_quest_line_end",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "acgth_main_quest_line_end_text_1",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "188", "4" ] }, { "a": "RevealFogOfWar", "p": [ "331", "3" ] }, { "a": "RevealFogOfWar", "p": [ "278", "4" ] }, { "a": "RevealFogOfWar", "p": [ "470", "4" ] }, { "a": "CounterPlus", "p": [ "main_quest_win_action", "1" ] } ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_3",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_4",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_5",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "all_cats_go_to_heaven_stranger_name",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_6",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_7",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "all_cats_go_to_heaven_stranger_name",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_8",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_9",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_10",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_11",
+					"next": "11"
+				},
+				{
+					"id": "11",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_12",
+					"next": "12"
+				},
+				{
+					"id": "12",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_13",
+					"next": "13"
+				},
+				{
+					"id": "13",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_14",
+					"next": "14"
+				},
+				{
+					"id": "14",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_15",
+					"next": "15"
+				},
+				{
+					"id": "15",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [  ],
+					"text": "acgth_main_quest_line_end_text_16",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_win", "1" ] } ],
+					"invokeOnlyActions": true,
+					"end": true						
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,245 @@
+{
+	"array":
+	[
+		{
+			"id": "M10Q1_dial8_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/heroes/hero_demon_9_Eligos_Duke_of_Battle" ]
+					},
+
+					"title": "dialogue_title_eligos",
+					"text": "dialogue_text_M10Q1_dial8_0",
+					
+					"next": "1"
+				},
+				{
+					"id": "1",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/heroes/hero_demon_9_Eligos_Duke_of_Battle" ]
+					},
+
+					"title": "dialogue_title_eligos",
+					"text": "dialogue_text_M10Q1_dial8_1",
+					
+					"next": "2"
+				},
+				{
+					"id": "2",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/heroes/hero_demon_9_Eligos_Duke_of_Battle" ]
+					},
+
+					"title": "dialogue_title_eligos",
+					"text": "dialogue_text_M10Q1_dial8_2",
+					
+					"next": "3"
+				},
+				{
+					"id": "3",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/heroes/hero_demon_9_Eligos_Duke_of_Battle" ]
+					},
+
+					"title": "dialogue_title_eligos",
+					"text": "dialogue_text_M10Q1_dial8_3",
+					
+					"next": "4"
+				},
+				{
+					"id": "4",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderGunnar", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial8_4",
+					
+					"next": "5"
+				},
+				{
+					"id": "5",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderGunnar", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/heroes/hero_demon_9_Eligos_Duke_of_Battle" ]
+					},
+
+					"title": "dialogue_title_eligos",
+					"text": "dialogue_text_M10Q1_dial8_5",
+					
+					"next": "6"
+				},
+				{
+					"id": "6",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderFilacus", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/dialogue/dialogue_hero_2_lafiur" ]
+					},
+
+					"title": "dialogue_title_hero_nature",
+					"text": "dialogue_text_M10Q1_dial8_6",
+					
+					"next": "7"
+				},
+				{
+					"id": "7",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderFilacus", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/dialogue/dialogue_hero_2_lafiur" ]
+					},
+
+					"title": "dialogue_title_hero_nature",
+					"text": "dialogue_text_M10Q1_dial8_7",
+					
+					"next": "8"
+				},
+				{
+					"id": "8",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderValentina", "=", "1" ] }
+					],
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_3_valentina_large" ]
+					},
+
+					"title": "dialogue_title_hero_human",
+					"text": "dialogue_text_M10Q1_dial8_8",
+					
+					"next": "9"
+				},
+				{
+					"id": "9",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderValentina", "=", "1" ] }
+					],
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_3_valentina_large" ]
+					},
+
+					"title": "dialogue_title_hero_human",
+					"text": "dialogue_text_M10Q1_dial8_9",
+					
+					"next": "10"
+				},
+				{
+					"id": "10",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderValentina", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/heroes/hero_demon_9_Eligos_Duke_of_Battle" ]
+					},
+
+					"title": "dialogue_title_eligos",
+					"text": "dialogue_text_M10Q1_dial8_10",
+					
+					"next": "11"
+				},
+				{
+					"id": "11",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderGalthran", "=", "1" ] }
+					],
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_4_galthran_large" ]
+					},
+
+					"title": "dialogue_title_hero_undead",
+					"text": "dialogue_text_M10Q1_dial8_11",
+					
+					"next": "12"
+				},
+				{
+					"id": "12",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M10_defenderGalthran", "=", "1" ] }
+					],
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/heroes/hero_demon_9_Eligos_Duke_of_Battle" ]
+					},
+
+					"title": "dialogue_title_eligos",
+					"text": "dialogue_text_M10Q1_dial8_12",
+					
+					"end": true
+				}
+			]
+		}
+	]
+}

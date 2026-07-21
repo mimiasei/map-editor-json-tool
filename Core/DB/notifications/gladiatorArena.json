@@ -1,0 +1,18 @@
+{
+	"array":
+	[
+        {
+            "id": "gladiatorArena",
+            "parameters":[
+                "gladiator_arena_new_registration",
+                "gladiator_arena_day_before_fight",
+                "gladiator_arena_last_day_before_fight",
+                "gladiator_arena_auto_registration",
+                "gladiator_arena_all_registration",
+                "gladiator_arena_cancel_fight"
+            ]
+
+        }
+		
+	]
+}

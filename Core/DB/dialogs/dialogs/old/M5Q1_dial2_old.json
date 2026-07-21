@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M5Q1_dial2_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "The way to castle is closed. You need to sacrifice creatures, to cast all spells or get Thant's help to open it",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

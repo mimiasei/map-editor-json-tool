@@ -1,0 +1,45 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_custom_2_2",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 84,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "lesser_eldritch_upg",
+                        "v": 2502
+                    },
+                    {
+                        "s": "frostworm_rider_upg",
+                        "v": 2502
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 2502,
+                "units": [
+                    "lesser_eldritch_upg",
+                    "frostworm_rider_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 15002,
+                "units": [
+                    {
+                        "s": "lesser_eldritch_upg",
+                        "v": 15002
+                    },
+                    {
+                        "s": "frostworm_rider_upg",
+                        "v": 15002
+                    }
+                ]
+            },
+            "tier": 2,
+            "fraction": "unfrozen"
+        }
+    ]
+}

@@ -1,0 +1,68 @@
+{
+	"array": [
+		{
+			"id": "fun_father_more_liches_added",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_father_more_liches_added_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_father_more_liches_added_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_father_more_liches_added_2",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

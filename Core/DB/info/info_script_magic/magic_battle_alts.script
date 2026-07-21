@@ -1,0 +1,395 @@
+﻿// Alt
+
+int current_magic_baseHeal
+{
+	CurrentMagicBattle ( baseHeal, "targetMechanics[0].values[0]" )
+
+	Text( return, baseHeal )
+}
+
+int current_magic_healPerCount
+{
+	CurrentMagicBattle ( healPerCount, "targetMechanics[0].values[2]" )
+
+	Text( return, healPerCount )
+}
+
+//
+
+modFloatPercentF1Numeric current_magic_baseHeal_percent
+{
+	CurrentMagicBattle ( baseHeal, "targetMechanics[0].values[2]" )
+
+	Text( return, baseHeal )
+}
+
+modFloatPercentF1Numeric current_magic_healPerCount_percent
+{
+	CurrentMagicBattle ( healPerCount, "targetMechanics[0].values[3]" )
+
+	Text( return, healPerCount )
+}
+
+modFloatPercentF1Numeric current_magic_baseHeal_percent_alt
+{
+	CurrentMagicBattle ( baseHeal, "targetMechanics[0].values[2]" )
+
+	Text( return, baseHeal )
+}
+
+modFloatPercentF1Numeric current_magic_healPerCount_percent_alt
+{
+	CurrentMagicBattle ( healPerCount, "targetMechanics[0].values[3]" )
+
+	Text( return, healPerCount )
+}
+
+//
+
+int current_magic_baseBuffDuration
+{
+	CurrentMagicBattle ( baseBuffDuration, "buff.duration" )
+
+	Text( return, baseBuffDuration )
+}
+
+int current_magic_durationBuffPerCount
+{
+	CurrentMagicBattle ( bonusBuffDuration, "buff.durationPerStack[1]" )
+
+	Text( return, bonusBuffDuration )
+}
+
+int current_magic_countBuffDuration
+{
+	CurrentMagicBattle ( countBuffDuration, "buff.durationPerStack[0]" )
+
+	Text( return, countBuffDuration )
+}
+
+//
+
+modInt current_magic_addBuffDuration_base
+{
+	CurrentMagicBattle ( baseDuration, "targetMechanics[0].values[1]" )
+
+	Text( return, baseDuration )
+}
+
+modInt current_magic_addBuffDuration_stackDuration
+{
+	CurrentMagicBattle ( stackDuration, "targetMechanics[0].values[2]" )
+
+	Text( return, stackDuration )
+}
+
+modInt current_magic_addBuffDuration_perStack
+{
+	CurrentMagicBattle ( perStack, "targetMechanics[0].values[3]" )
+
+	Text( return, perStack )
+}
+
+modInt current_magic_addBuffDuration_base_2
+{
+	CurrentMagicBattle ( baseDuration, "targetMechanics[1].values[1]" )
+
+	Text( return, baseDuration )
+}
+
+modInt current_magic_addBuffDuration_stackDuration_2
+{
+	CurrentMagicBattle ( stackDuration, "targetMechanics[1].values[2]" )
+
+	Text( return, stackDuration )
+}
+
+modInt current_magic_addBuffDuration_perStack_2
+{
+	CurrentMagicBattle ( perStack, "targetMechanics[1].values[3]" )
+
+	Text( return, perStack )
+}
+
+//
+
+int current_magic_baseDamage
+{
+	CurrentMagicBattle ( baseDamage, "minBaseDmg" )
+
+	Text( return, baseDamage )
+}
+
+int current_magic_damagePerCount
+{
+	CurrentMagicBattle ( damagePerCount, "minStackDmg" )
+
+	Text( return, damagePerCount )
+}
+
+//
+
+int current_magic_baseTrapDuration
+{
+	CurrentMagicBattle ( baseTrapDuration, "targetMechanics[0].values[2]" )
+
+	Text( return, baseTrapDuration )
+}
+
+int current_magic_durationTrapPerCount
+{
+	CurrentMagicBattle ( durationTrapPerCount, "targetMechanics[0].values[4]" )
+
+	Text( return, durationTrapPerCount )
+}
+
+int current_magic_countTrapDuration
+{
+	CurrentMagicBattle ( countTrapDuration, "targetMechanics[0].values[3]" )
+
+	Text( return, countTrapDuration )
+}
+
+//
+
+int current_magic_sightRadius1Multipler
+{
+	Text( return, "1" )
+}
+
+int current_magic_sightRadius2Multipler
+{
+	Text( return, "2" )
+}
+
+int current_magic_sightRadius3Multipler
+{
+	Text( return, "3" )
+}
+
+int current_magic_sightRadius4Multipler
+{
+	Text( return, "4" )
+}
+
+modInt current_magic_sightRadiusMultipler0
+{
+	CurrentMagicWorld ( return, "parameters[0]" )
+}
+
+modInt current_magic_sightRadiusMultipler1
+{
+	CurrentMagicWorld ( return, "parameters[1]" )
+}
+
+modInt current_magic_sightRadiusMultipler2
+{
+	CurrentMagicWorld ( return, "parameters[2]" )
+}
+
+modInt current_magic_sightRadiusMultipler3
+{
+	CurrentMagicWorld ( return, "parameters[3]" )
+}
+
+//
+
+int alt_text_damage_amount_earths_rage_1_1
+{
+	CurrentMagicBattle ( baseDamage, "targetMechanics[0].values[0]" )
+
+	Text( return, baseDamage )
+}
+
+int alt_text_damage_amount_earths_rage_1_2
+{
+	CurrentMagicBattle ( baseDamage, "targetMechanics[0].values[1]" )
+
+	Text( return, baseDamage )
+}
+
+int alt_text_damage_amount_earths_rage_2_1
+{
+	CurrentMagicBattle ( baseDamage, "targetMechanics[0].values[3]" )
+
+	Text( return, baseDamage )
+}
+
+//
+
+int current_magic_baseTrapDamage
+{
+	CurrentMagicBattle ( summonSid, "targetMechanics[0].values[1]" )
+	DbTrap ( baseTrapDamage, summonSid, "damageDealer.minBaseDmg" )
+
+	Text( return, baseTrapDamage )
+}
+
+int current_magic_countTrapDamage
+{
+	CurrentMagicBattle ( summonSid, "targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minStackDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+//
+
+modPercentNumeric current_magic_baseTrapDamage_percent
+{
+	CurrentMagicBattle ( summonSid, "targetMechanics[0].values[1]" )
+	DbTrap ( summonData, summonSid, "damageDealer.minPercentDmg" )
+
+	Text( return, summonData )
+}
+
+modPercentNumeric current_magic_trapDamagePerCount_percent
+{
+	CurrentMagicBattle ( summonSid, "targetMechanics[0].values[1]" )
+	DbTrap ( summonData, summonSid, "damageDealer.minStackPercentDmg" )
+
+	Text( return, summonData )
+}
+
+//
+
+int current_magic_baseCopyDuration
+{
+	CurrentMagicBattle ( baseCopyDuration, "targetMechanics[0].values[1]" )
+
+	Text( return, baseCopyDuration )
+}
+
+int current_magic_durationCopyPerCount
+{
+	CurrentMagicBattle ( durationCopyPerCount, "targetMechanics[0].values[2]" )
+
+	Text( return, durationCopyPerCount )
+}
+
+int current_magic_countCopyDuration
+{
+	CurrentMagicBattle ( countCopyDuration, "targetMechanics[0].values[3]" )
+
+	Text( return, countCopyDuration )
+}
+
+//
+
+modPercentNumeric current_magic_basePercentDamage
+{
+	CurrentMagicBattle ( basePercentDamage, "minPercentDmg" )
+
+	Text( return, basePercentDamage )
+}
+
+modPercentNumeric current_magic_percentDamagePerCount
+{
+	CurrentMagicBattle ( percentDamagePerCount, "minStackPercentDmg" )
+
+	Text( return, percentDamagePerCount )
+}
+
+//
+
+int current_magic_baseDotDamage
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.minBaseDmg" )
+}
+
+int current_magic_baseDotDamagePerCount
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.minStackDmg" )
+}
+
+//
+
+int current_magic_baseRevengeDamage
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[2]" )
+}
+
+int current_magic_baseRevengeDamagePerCount
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[3]" )
+}
+
+//
+
+int current_magic_baseSummon
+{
+	CurrentMagicBattle ( baseSummon, "targetMechanics[0].values[2]" )
+
+	Text( return, baseSummon )
+}
+
+int current_magic_summonPerCount
+{
+	CurrentMagicBattle ( summonPerCount, "targetMechanics[0].values[4]" )
+
+	Text( return, summonPerCount )
+}
+
+//
+
+int current_magic_baseBuffDuration_doreaths_tide
+{
+	CurrentMagicBattle ( baseBuffDuration, "targetMechanics[0].values[2]" )
+
+	Text( return, baseBuffDuration )
+}
+
+int current_magic_durationBuffPerCount_doreaths_tide
+{
+	CurrentMagicBattle ( bonusBuffDuration, "targetMechanics[0].values[3]" )
+
+	Text( return, bonusBuffDuration )
+}
+
+int current_magic_countBuffDuration_doreaths_tide
+{
+	CurrentMagicBattle ( countBuffDuration, "targetMechanics[0].values[4]" )
+
+	Text( return, countBuffDuration )
+}
+
+//
+
+modInt alt_text_summon_hp
+{
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( return, buffSid, "data.stats.hp" )
+}
+
+modInt alt_text_summon_dmg
+{
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( return, buffSid, "data.stats.damageMin" )
+}
+
+modInt alt_text_avatar_summon_dmg
+{
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( return, buffSid, "data.stats.damageMin" )
+}
+
+int alt_text_summon_hp_base
+{
+	Text( return, "100" )
+}
+
+int alt_text_summon_dmg_base
+{
+	Text( return, "5" )
+}
+
+int alt_text_avatar_summon_dmg_base
+{
+	Text( return, "12" )
+}
+
+//

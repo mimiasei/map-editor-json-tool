@@ -1,0 +1,61 @@
+{
+	"array": [
+		{
+			"id": "M3_resources",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"text": "dialogue_text_M3_resources_0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"text": "dialogue_text_M3_resources_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"text": "dialogue_text_M3_resources_2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"end": true
+				}
+			]
+		}
+	]
+}

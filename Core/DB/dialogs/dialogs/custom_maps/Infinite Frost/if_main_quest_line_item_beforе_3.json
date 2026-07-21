@@ -1,0 +1,54 @@
+{
+	"array":
+	[
+		{
+			"id": "if_main_quest_line_item_beforе_3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_demon_18_Pauper_X_Wistari_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "demon_hero_18",
+						"position": 3
+					},
+					"text": "if_main_quest_line_item_before_3_1",
+					"mapActions": [ ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_frostworm_rider_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_demon_18_Pauper_X_Wistari_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "infinity_frost_hero_1",
+						"position": 3
+					},
+					"text": "if_main_quest_line_item_before_3_2",
+					"end": true
+				}
+			]
+		}
+	]
+}

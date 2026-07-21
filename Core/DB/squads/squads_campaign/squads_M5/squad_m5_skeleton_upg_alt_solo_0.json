@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m5_skeleton_upg_alt_solo_0",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": false,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "skeleton_upg_alt", "v": 4700 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"skeleton_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100000,
+				"units":
+				[
+					{ "s" : "skeleton_upg_alt", "v": 100000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "undead"
+		}
+	]
+}

@@ -1,0 +1,431 @@
+{
+	"array": [
+		{
+			"id": "M3aQ7_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"2037"
+							]
+						}
+					],
+					"answers": [
+						{
+							"text": "dialogue_text_M3aQ7_dial1_0_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial1_0_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial1_0_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_3",
+					"answers": [
+						{
+							"text": "dialogue_text_M3aQ7_dial1_3_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Human",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"3a"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"+1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial1_3_answer_2",
+							"actions": [
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Human",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"3b"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"-1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "3a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_3a",
+					"next": "4"
+				},
+				{
+					"id": "3b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_3b",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Edgar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_general",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial1_6",
+					"answers": [
+						{
+							"text": "dialogue_text_M3aQ7_dial1_6_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Human",
+										"1"
+									]
+								},
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"+1"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"conscription_quest",
+										"1"
+									]
+								},
+								{
+									"a": "RevealFogOfWar",
+									"p": [
+										"3887",
+										"1"
+									]
+								},
+								{
+									"a": "RevealFogOfWar",
+									"p": [
+										"1724",
+										"1"
+									]
+								},
+								{
+									"a": "RevealFogOfWar",
+									"p": [
+										"1315",
+										"1"
+									]
+								},								
+								{
+									"a": "DeleteSquad",
+									"p": [
+										"colonel",
+										"1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial1_6_answer_2",
+							"actions": [
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "DeleteSquad",
+									"p": [
+										"colonel",
+										"1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial1_6_answer_3",
+							"actions": [
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Human",
+										"1"
+									]
+								},
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"-1"
+									]
+								},
+								{
+									"a": "DeleteSquad",
+									"p": [
+										"colonel",
+										"1"
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

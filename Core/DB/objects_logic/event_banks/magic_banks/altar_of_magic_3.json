@@ -1,0 +1,73 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "altar_of_magic_3",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 12000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "altar_of_magic_3_label",
+						"selectionWindowType": "spellsRewardSet",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroMagicRandomAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "space", "1: 60", "2: 40" ]
+							},
+							{
+								"rewardType": "HeroMagicRandomAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "space", "2: 60", "3: 30", "4: 10" ]
+							},
+							{
+								"rewardType": "HeroMagicRandomAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "space", "3: 60", "4: 30", "5: 10" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

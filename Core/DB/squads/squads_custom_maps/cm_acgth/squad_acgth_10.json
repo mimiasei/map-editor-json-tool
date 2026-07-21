@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_acgth_10",
+			
+			"squad" : 
+			[
+					
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "skeleton", "v": 1 },
+					{ "s" : "graverobber", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"skeleton", "graverobber"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000000,
+				"units":
+				[
+					{ "s" : "skeleton", "v": 1000000 },
+					{ "s" : "graverobber", "v": 1000000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "neutral"
+		}
+	]
+}

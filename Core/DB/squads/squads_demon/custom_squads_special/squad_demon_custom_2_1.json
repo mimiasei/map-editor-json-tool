@@ -1,0 +1,54 @@
+{
+	"array": [
+		{
+			"id": "squad_demon_custom_2_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 120,
+			"canBeMainGuard": false,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "locust",
+						"v": 5003
+					},
+					{
+						"s": "jaw",
+						"v": 5003
+					},
+					{
+						"s": "godslayer",
+						"v": 5003
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 5003,
+				"units": [
+					"locust",
+					"jaw",
+					"godslayer"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 15003,
+				"units": [
+					{
+						"s": "locust",
+						"v": 5003
+					},
+					{
+						"s": "jaw",
+						"v": 5003
+					},
+					{
+						"s": "godslayer",
+						"v": 5003
+					}
+				]
+			},
+			"tier": 4,
+			"fraction": "demon"
+		}
+	]
+}

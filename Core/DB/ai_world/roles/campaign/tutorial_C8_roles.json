@@ -1,0 +1,15 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tutorial_C8_main_hero",
+			"stepOrder": 4,
+			"tasks":
+			[
+				{
+					"task": "tutorial_C8_main_hero_yolo_attack_hero_tasks"
+				}
+			]
+		}
+	]
+}

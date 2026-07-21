@@ -1,0 +1,414 @@
+{
+	"array": [
+		{
+			"id": "M2_city_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_dwelling_owner1",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_city_dial2_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_city_dial2_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_dwelling_owner1",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_city_dial2_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_city_dial2_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_dwelling_owner1",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_city_dial2_4",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"conditionsLogic": "Or",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"reqStatus": "false",
+							"p": [
+								"trogl_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"reqStatus": "false",
+							"p": [
+								"spy_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"reqStatus": "false",
+							"p": [
+								"dancer_dwelling",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"mapActions": [
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"dwelling1",
+								"false"
+							]
+						},
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"dwelling1"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"trogl_dwelling",
+								"1"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Tier_1",
+								"1",
+								"outpost"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"next": "m"
+				},
+				{
+					"id": "m",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"trogl_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"spy_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"dancer_dwelling",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_city_dial5_0",
+					"next": "m1"
+				},
+				{
+					"id": "m1",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"trogl_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"spy_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"dancer_dwelling",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_city_dial5_1",
+					"next": "ending2"
+				},
+				{
+					"id": "ending2",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"trogl_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"spy_dwelling",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"dancer_dwelling",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"outpost_quest",
+								"2"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Main",
+								"2",
+								"outpost"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Bank",
+								"1",
+								"outpost"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Magic_Guild",
+								"1",
+								"outpost"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Magic_Guild",
+								"2",
+								"outpost"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Tier_1",
+								"2",
+								"outpost"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Tier_2",
+								"2",
+								"outpost"
+							]
+						},
+						{
+							"a": "UnlockBuildingCity",
+							"p": [
+								"Build_Tier_3",
+								"2",
+								"outpost"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"next": "endingCommon"
+				},
+				{
+					"id": "endingCommon",
+					"fon": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

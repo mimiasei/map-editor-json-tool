@@ -1,0 +1,43 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M_22",
+			
+			"contentHeight": 460,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_22_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_22_1", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_22_1" ] },
+						{ "type": "text", "value": [ "tutorial_M_22_2" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_22_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_22_2", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_22_3" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_22_3", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_22_4" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "CounterPlus", "p": [ "Tutorial_M_Counter_22", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,17 @@
+{
+	"array":
+	[
+		{
+			"id": "test",
+			"name": "Test River",
+			"penalty": 2,
+
+			"point": [ "point" ],
+			"line": [ "line", "line1", "line2" ],
+			"turn": [ "turn" ],
+			"join": [ "join" ],
+			"cross": [ "cross" ],
+			"waterfall" : [ "waterfall_river" ]
+		}
+	]
+}

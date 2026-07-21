@@ -1,0 +1,53 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "custom_point_of_balance",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 100,
+					"value": 1000,
+					"customGuardValue": 100,
+
+					"guardUnits":
+					[
+						{ "sid": "mech_guard", "amount": 1 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SidePropUnitReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+
+								"parameters": [  ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,55 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M2_nature_guard",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "aqualotl", "v": 1 },
+					{ "s" : "twinkle_upg", "v": 1 },
+					{ "s" : "ent_upg", "v": 1 },
+					{ "s" : "aqualotl", "v": 1 },
+					{ "s" : "ent_upg", "v": 1 },
+					{ "s" : "twinkle_upg", "v": 1 },
+					{ "s" : "aqualotl", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"aqualotl", "ent_upg", "twinkle_upg"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 140000,
+				"units":
+				[
+					{ "s" : "aqualotl", "v": 20000 },
+					{ "s" : "ent_upg", "v": 40000 },
+					{ "s" : "twinkle_upg", "v": 80000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "nature"
+		}
+	]
+}

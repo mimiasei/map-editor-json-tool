@@ -1,0 +1,16 @@
+{
+	"array": [
+		{
+			"id": "M3_portal_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "dialogue_text_M3_portal_dial1_0",
+					"end": true
+				}
+			]
+		}
+	]
+}

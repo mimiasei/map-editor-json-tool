@@ -1,0 +1,35 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M10_easy",
+
+			"strategies":
+			[
+				{
+					"sid": "multi_hero_defualt",
+
+					"lastAreaTasksMultiplier": 8,
+
+					"actionsBefore":
+					[
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] }
+					],
+					"actionsAfter":
+					[
+
+					],
+					
+					"roles": [ "multi_hero_M10_hero_easy" ],
+					"heroesSort": "Value"
+				}
+			]
+		}
+	]
+}

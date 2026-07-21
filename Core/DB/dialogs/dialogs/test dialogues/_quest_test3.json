@@ -1,0 +1,25 @@
+{
+	"array":
+	[
+		{
+			"id": "quest_test3",
+			"slides":
+			[
+				{
+					"id": "start",
+					"title": "",
+					"text": "Первый диалог только для героя Ister, следующий - тоже для него",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"end": true,
+					"resultDialog": "Default"
+				}
+			]
+		}
+	]
+}

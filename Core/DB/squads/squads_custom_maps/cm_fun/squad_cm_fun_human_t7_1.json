@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_cm_fun_human_t7_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "angel", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"angel"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 240007,
+				"units":
+				[
+					{ "s" : "angel", "v": 240007 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "human"
+		}
+	]
+}

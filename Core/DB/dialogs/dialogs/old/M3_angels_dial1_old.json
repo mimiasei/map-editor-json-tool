@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M3_angels_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "dialog after clearing angel bank",
+					
+					"end": true
+				}				
+			]
+			
+		}
+	]
+}

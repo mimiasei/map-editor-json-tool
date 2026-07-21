@@ -1,0 +1,14 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "test",
+			"standartRole": "firstDay_scout",
+			"roleForHero":
+			[
+				{ "hero": "human_hero_1", "role": "lastChance_main_hero" },
+				{ "hero": "human_hero_5", "role": "default_generalist" }
+			]
+		}
+	]
+}

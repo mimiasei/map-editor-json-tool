@@ -1,0 +1,29 @@
+{
+    "array": 
+    [
+        { "sid": "fractionReputation_Dungeon",      "value": 0 },
+        { "sid": "fractionReputation_Human",        "value": 0 },
+        { "sid": "fractionReputation_Undead",       "value": 0 },
+        { "sid": "fractionReputation_Nature",       "value": 0 },
+        { "sid": "fractionReputation_Unfrozen",     "value": 0 },
+        { "sid": "fractionReputation_Demon",        "value": -666 },
+
+        { "sid": "SelectedHero_tutorial_hero_1",    "value": 0 },
+        { "sid": "SelectedHero_tutorial_hero_1_basic",    "value": 0 },
+        { "sid": "SelectedHero_tutorial_hero_2",    "value": 0 },
+        { "sid": "SelectedHero_tutorial_hero_3",    "value": 0 },
+        { "sid": "SelectedHero_tutorial_hero_4",    "value": 0 },
+
+
+        { "sid": "Tutorial_Mission_1_Completed",    "value": 0 },
+
+        { "sid": "Tutorial_Challenge_Mission_1_Completed",    "value": 0 },
+        { "sid": "Tutorial_Challenge_Mission_2_Completed",    "value": 0 },
+        { "sid": "Tutorial_Challenge_Mission_3_Completed",    "value": 0 },
+        { "sid": "Tutorial_Challenge_Mission_4_Completed",    "value": 0 },
+        { "sid": "Tutorial_Challenge_Mission_5_Completed",    "value": 0 },
+        { "sid": "Tutorial_Challenge_Mission_6_Completed",    "value": 0 },
+        { "sid": "Tutorial_Challenge_Mission_7_Completed",    "value": 0 },
+        { "sid": "Tutorial_Challenge_Mission_8_Completed",    "value": 0 }
+    ]
+}

@@ -1,0 +1,145 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M10_hero_demon_2",
+
+			"description": "campaign_M10_hero_demon_2",
+			"motto": "campaign_M10_hero_demon_2",
+
+			"mesh": "hive_warrior",
+			"mounts": [ "hive_mount" ],
+			"icon": "hero_demon_5_Purson_Duke_of_Rage",
+			"fraction": "demon",
+			"nativeBiome": "Lava",
+			"classType": "might",
+
+			"skillsRollVariant": "demons_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 20,
+
+			"startSquad" : [
+				{ "sid": "godslayer_upg", "min": 10, "max": 10 },
+				{ "sid": "jaw_upg", "min": 35, "max": 35 },
+				{ "sid": "wasp_upg_alt", "min": 20, "max": 20 },
+				{ "sid": "hive_queen", "min": 4, "max": 4 },
+				{ "sid": "wasp_upg", "min": 20, "max": 20 },
+				{ "sid": "jaw_upg_alt", "min": 35, "max": 35 },
+				{ "sid": "godslayer_upg_alt", "min": 10, "max": 10 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "godslayer_upg", "min": 10, "max": 10 },
+				{ "sid": "jaw_upg", "min": 35, "max": 35 },
+				{ "sid": "wasp_upg_alt", "min": 20, "max": 20 },
+				{ "sid": "hive_queen", "min": 4, "max": 4 },
+				{ "sid": "wasp_upg", "min": 20, "max": 20 },
+				{ "sid": "jaw_upg_alt", "min": 35, "max": 35 },
+				{ "sid": "godslayer_upg_alt", "min": 10, "max": 10 }
+			],
+
+			"specialization": "demon_hero_5_specialization_alt",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     3,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      13,
+				"defence":      6,
+				"spellPower":   4,
+				"intelligence": 4,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 40 },
+						{ "v": 1, "c": 40 },
+						{ "v": 2, "c": 10 },
+						{ "v": 3, "c": 10 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_demons",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_logistic",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_siege",
+					"skillLevel": 2
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_formation",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "day_12_magic_radiant_armor",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_8_magic_sleep",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_9_magic_impending_fate",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_12_magic_chain_lightning",
+					"level": 4,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

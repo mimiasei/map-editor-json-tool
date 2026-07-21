@@ -1,0 +1,21 @@
+{
+	"array":
+	[		
+		{
+			"id": "M10_dungeon_city",
+			"buildings":
+			[
+				{ "sid": "Build_Tavern",					"level": 1 },
+				
+				{ "sid": "Build_Artifact_Market",			"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",				"level": 4 },
+				{ "sid": "Build_Magic_Guild",				"level": 5 },
+
+				{ "sid": "Build_Gymnasium",					"level": 1 },
+				{ "sid": "Build_Lyceum", 					"level": 1 },
+				{ "sid": "Build_Spy_Network", 				"level": 1 }
+			]
+		}
+	]
+}

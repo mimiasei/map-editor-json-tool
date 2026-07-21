@@ -1,0 +1,405 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "_test_siege_1_2_level",
+			"scenes": [ "testArena" ],
+			"spawnLeft":  [ "2x11_alternative_left" ],
+			"spawnRight": [ "2x11_alternative_right" ],
+
+			"blockTacticsPhase": false,
+			"tacticsPlacementSid": "tactics_placement_siege",
+
+			"leftHeroPosition":  [ -13.28,	0,8.287 ],
+			"rightHeroPosition": [ 12,0,	8.287 ],
+		
+			"sizeX": 13,
+			"sizeZ": 11,
+			"map":
+			[
+				  2, 1, 1, 1, 1, 11, 7, 4, 1, 1, 2, 2, 2,
+				2, 1, 1, 1, 1, 11, 7, 12, 1, 1, 1, 2, 2,
+				  1, 1, 1, 1, 1, 7, 8, 1, 1, 99, 1, 2, 2,
+				1, 1, 1, 1, 1, 1, 7, 5, 1, 1, 1, 1, 2,
+				  1, 1, 1, 1, 11, 7, 1, 1, 1, 11, 1, 2, 2,
+				1, 1, 1, 1, 1, 11, 1, 9, 1, 11, 1, 1, 2,
+				  1, 1, 1, 1, 11, 7, 1, 1, 1, 11, 1, 2, 2,
+				1, 1, 1, 1, 1, 1, 7, 4, 1, 1, 1, 1, 2,
+				  1, 1, 1, 1, 1, 7, 8, 1, 1, 1, 1, 2, 2,
+				2, 1, 1, 1, 1, 11, 7, 13, 1, 1, 1, 2, 2,
+				  2, 1, 1, 1, 1, 11, 7, 5, 1, 1, 2, 2, 2
+			],
+
+			"obstacles":
+			[
+				
+			],
+
+			"obstaclesOverrides": 
+			[
+				{
+					"condition": "siege_walls_1",
+					"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+				},				
+				{
+					"condition": "siege_walls_2",
+					"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+				},				
+					{
+						"condition": "siege_walls_2_human",
+						"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_undead",
+						"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_nature",
+						"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_demon",
+						"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_unfrozen",
+						"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_dungeon",
+						"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},
+				{
+					"condition": "siege_walls_3",
+					"obstacle": { "id": 4, "type": "obstacle", "sid": "wall_30", "side": 1 }
+				},
+				
+				{
+					"condition": "siege_walls_1",
+					"obstacle": { "id": 12, "type": "obstacle", "sid": "gate_backdoor", "side": 1 }
+				},				
+				{
+					"condition": "siege_walls_2",
+					"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+				},				
+					{
+						"condition": "siege_walls_2_human",
+						"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_undead",
+						"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_nature",
+						"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_demon",
+						"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_unfrozen",
+						"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_dungeon",
+						"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+					},
+				{
+					"condition": "siege_walls_3",
+					"obstacle": { "id": 12, "type": "obstacle", "sid": "wall_30", "side": 1 }
+				},
+
+
+
+				{
+					"condition": "siege_walls_1",
+					"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+				},				
+				{
+					"condition": "siege_walls_2",
+					"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+				},				
+					{
+						"condition": "siege_walls_2_human",
+						"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_undead",
+						"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_nature",
+						"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_demon",
+						"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_unfrozen",
+						"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_dungeon",
+						"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},
+				{
+					"condition": "siege_walls_3",
+					"obstacle": { "id": 5, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+				},
+
+				{
+					"condition": "siege_walls_1",
+					"obstacle": { "id": 13, "type": "obstacle", "sid": "gate_backdoor_neg", "side": 1 }
+				},				
+				{
+					"condition": "siege_walls_2",
+					"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+				},				
+					{
+						"condition": "siege_walls_2_human",
+						"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_undead",
+						"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_nature",
+						"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_demon",
+						"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_unfrozen",
+						"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_dungeon",
+						"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+					},
+				{
+					"condition": "siege_walls_3",
+					"obstacle": { "id": 13, "type": "obstacle", "sid": "wall_30_neg", "side": 1 }
+				},
+
+
+				{
+					"condition": "siege_walls_2",
+					"obstacle": { "id": 7, "type": "trap", "sid": "defense_trap", "side": 1, "stacks": 9999 }
+				},
+
+					{
+						"condition": "siege_walls_2_human",
+						"obstacle": { "id": 7, "type": "trap", "sid": "defense_trap_human", "side": 1, "stacks": 9999 }
+					},
+					{
+						"condition": "siege_walls_2_undead",
+						"obstacle": { "id": 7, "type": "trap", "sid": "defense_trap_undead", "side": 1, "stacks": 9999 }
+					},
+					{
+						"condition": "siege_walls_2_nature",
+						"obstacle": { "id": 7, "type": "trap", "sid": "defense_trap_nature", "side": 1, "stacks": 9999 }
+					},
+					{
+						"condition": "siege_walls_2_demon",
+						"obstacle": { "id": 7, "type": "trap", "sid": "defense_trap_demon", "side": 1, "stacks": 9999 }
+					},
+					{
+						"condition": "siege_walls_2_unfrozen",
+						"obstacle": { "id": 7, "type": "trap", "sid": "defense_trap_unfrozen", "side": 1, "stacks": 9999 }
+					},
+					{
+						"condition": "siege_walls_2_dungeon",
+						"obstacle": { "id": 7, "type": "trap", "sid": "defense_trap_dungeon", "side": 1, "stacks": 9999 }
+					},
+				
+
+				{
+					"condition": "siege_walls_1",
+					"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+				},				
+				{
+					"condition": "siege_walls_2",
+					"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+				},				
+					{
+						"condition": "siege_walls_2_human",
+						"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_undead",
+						"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_nature",
+						"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_demon",
+						"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_unfrozen",
+						"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_dungeon",
+						"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+					},
+				{
+					"condition": "siege_walls_3",
+					"obstacle": { "id": 9, "type": "obstacle", "sid": "gate_multiblock", "side": 1 }
+				},
+
+				{
+					"condition": "siege_walls_1",
+					"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+				},				
+				{
+					"condition": "siege_walls_2",
+					"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+				},				
+					{
+						"condition": "siege_walls_2_human",
+						"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_undead",
+						"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_nature",
+						"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_demon",
+						"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_unfrozen",
+						"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+					},				
+					{
+						"condition": "siege_walls_2_dungeon",
+						"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+					},
+				{
+					"condition": "siege_walls_3",
+					"obstacle": { "id": 8, "type": "obstacle", "sid": "wall_arc", "side": 1 }
+				},
+
+
+
+				{
+					"condition": "siege_walls_4",
+					"obstacle": { "id": 8, "type": "sentry", "sid": "defense_tower_siege_walls_4", "side": 1 }
+				},
+				{
+					"condition": "siege_walls_5",
+					"obstacle": { "id": 8, "type": "sentry", "sid": "defense_tower_siege_walls_5", "side": 1 }
+				},
+				{
+					"condition": "siege_walls_6",
+					"obstacle": { "id": 8, "type": "sentry", "sid": "defense_tower", "side": 1 }
+				},
+				
+
+
+				{
+					"condition": "siege_walls_7",
+					"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade", "side": 1 }
+				},
+
+					{
+						"condition": "siege_walls_7_human",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_human", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_7_undead",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_undead", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_7_nature",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_nature", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_7_demon",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_demon", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_7_unfrozen",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_unfrozen", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_7_dungeon",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_dungeon", "side": 1 }
+					},
+
+				{
+					"condition": "siege_walls_8",
+					"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade", "side": 1 }
+				},
+
+					{
+						"condition": "siege_walls_8_human",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_human", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_8_undead",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_undead", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_8_nature",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_nature", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_8_demon",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_demon", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_8_unfrozen",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_unfrozen", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_8_dungeon",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_dungeon", "side": 1 }
+					},
+
+				{
+					"condition": "siege_walls_9",
+					"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade", "side": 1 }
+				},
+
+					{
+						"condition": "siege_walls_9_human",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_human", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_9_undead",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_undead", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_9_nature",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_nature", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_9_demon",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_demon", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_9_unfrozen",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_unfrozen", "side": 1 }
+					},
+					{
+						"condition": "siege_walls_9_dungeon",
+						"obstacle": { "id": 11, "type": "obstacle", "sid": "obstacles_stockade_dungeon", "side": 1 }
+					}
+			]
+		}
+	]
+}

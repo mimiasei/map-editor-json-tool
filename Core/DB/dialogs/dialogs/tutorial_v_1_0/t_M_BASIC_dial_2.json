@@ -1,0 +1,33 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_2_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "tutorial_M_BASIC_Step_1_Counter", "1" ] }, { "a": "SetActiveVFX", "p": [ "Step_1_VFX", "false" ] }, { "a": "SetActiveVFX", "p": [ "Step_1_VFX_Zone", "false" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

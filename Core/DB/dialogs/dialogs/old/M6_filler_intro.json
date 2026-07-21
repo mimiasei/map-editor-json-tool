@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "M6_filler_intro",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "one hero needs to go right, other one left. otherwise - veri bed",
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "// Общая идея карты - один герой пробивается через толпы монстров по кругу, второй - собирает армию и переправляет ему ее на каждом сегменте своего пути",
+
+					"mapActions":
+					[
+						{ "a": "RevealFogOfWar", "p": [ "2016", "6" ] },
+						{ "a": "MoveCamera", "p": [ "2016" ] }
+					],
+
+					"end": true
+				}			
+			]
+		}
+	]
+}

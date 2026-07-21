@@ -1,0 +1,36 @@
+{
+	"array": [
+		{
+			"id": "squad_nature_one_unit_t6_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 750,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "qilin",
+						"v": 20006
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 20006,
+				"units": [
+					"qilin"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 180006,
+				"units": [
+					{
+						"s": "qilin",
+						"v": 180006
+					}
+				]
+			},
+			"tier": 6,
+			"fraction": "nature"
+		}
+	]
+}

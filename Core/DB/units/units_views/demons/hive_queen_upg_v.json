@@ -1,0 +1,97 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "hive_queen_upg",
+			"mesh": "Demons/1Prefabs/hive_queen_upg",
+			"mapMesh": "Demons/1Prefabs/hive_queen_upg_map",
+			"fadeTime": 2.85,
+
+			"scale": 0.25,
+			"modelHeight": 0.62,
+			"moveSpeed": 3.3,
+
+			"attackTimeBefore": [ 0.567, 1.6, 0.867, 0.733, 0.6, 0.6 ],
+			"attackTimeAfter": [ 1.3, 0, 1, 1.3, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 3.883,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "hive_queen_ability_1_name",
+					"abilityType": "Ability_type_buff",
+					"description": "hive_queen_ability_1_description_upg",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				},
+				{
+					
+					"name": "hive_queen_ability_4_name",
+					"abilityType": "Ability_type_attack",
+					"description": "hive_queen_ability_4_description",
+					"animationIndex": 2,
+					"useExpandTooltip": "false",
+					"projectile": "effects/projectiles/Hive_queen_projectile",
+					"projectileSpeed": 35,
+					"maxHeight":3.3,
+					"trajectory": "Parabolic"					
+				},
+				{
+					"name": "hive_queen_ability_3_name",
+					"abilityType": "Ability_type_special",
+					"description": "hive_queen_ability_3_description",
+					"animationIndex": 3,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_demon",
+                    "description": "base_class_demon_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "demon_passive_1_name",
+					"description": "demon_passive_1_description"
+				},
+				{
+					"name": "hive_queen_passive_1_name",
+					"description": "hive_queen_passive_1_description"
+				},
+				{
+					"name": "hive_queen_passive_2_name",
+					"description": "hive_queen_passive_2_description"
+				},
+				{
+					"name": "hive_queen_passive_3_name",
+					"description": "hive_queen_passive_3_description"
+				}
+			]
+		}
+	]
+}

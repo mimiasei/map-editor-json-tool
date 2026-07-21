@@ -1,0 +1,46 @@
+{
+	"array":
+	[
+		{
+			"id": "custom_ai_test",
+
+			"strategies":
+			[
+				{
+					"sid": "multi_hero_firstDay",
+					"off": false,
+
+					"lastAreaTasksMultiplier": 1,
+
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "dayFromStart",
+								"param": [ "1" ]
+							}
+						]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "recruitingHero" },
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "multi_hero_firstDay_scout_easy", "multi_hero_firstDay_scout_main_easy", "multi_hero_firstDay_scout_easy" ],
+					"heroesSort": "None"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,14 @@
+﻿{	
+	"array":
+	[
+		{
+			"id": "alchemy_lab",
+			"aiIgnore": true,
+			"goodsValue": 5000,
+
+			"spentResources": [ "mercury", "crystals", "gemstones" ],
+			"receivableResource": "dust",
+			"exchangeRate": 15
+		}
+	]
+}

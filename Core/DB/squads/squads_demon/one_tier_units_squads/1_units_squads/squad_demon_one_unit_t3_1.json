@@ -1,0 +1,36 @@
+{
+	"array": [
+		{
+			"id": "squad_demon_one_unit_t3_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 100,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "wasp",
+						"v": 5003
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 5003,
+				"units": [
+					"wasp"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 30003,
+				"units": [
+					{
+						"s": "wasp",
+						"v": 30003
+					}
+				]
+			},
+			"tier": 3,
+			"fraction": "demon"
+		}
+	]
+}

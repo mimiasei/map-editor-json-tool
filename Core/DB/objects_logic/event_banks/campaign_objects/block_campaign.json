@@ -1,0 +1,45 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "block_campaign",
+			
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "Unlimited",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 0,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "MovePointsAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+								
+								"parameters": [ "0" ]
+							}
+						]
+					}
+				}		
+			]
+		}
+	]
+}

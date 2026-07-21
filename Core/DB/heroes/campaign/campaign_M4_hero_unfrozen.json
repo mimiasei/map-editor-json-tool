@@ -1,0 +1,108 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M4_hero_unfrozen",
+
+			"description": "campaign_M4_hero_unfrozen",
+			"motto": "campaign_M4_hero_unfrozen",
+
+			"mesh": "dungeon_mage",
+			"mounts": [ "dungeon_mount" ],
+			"icon": "hero_campaign_9_lyssara",
+			"fraction": "unfrozen",
+			"nativeBiome": "Snow",
+			"classType": "might",
+
+			"skillsRollVariant": "campaign_hero_5_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 9,
+
+			"startSquad" : [
+				{ "sid": "assassin_upg_alt", "min": 16, "max": 16 },
+				{ "sid": "unfrozen_cultist", "min": 5, "max": 5 },
+				{ "sid": "assassin_upg_alt", "min": 16, "max": 16 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "assassin_upg_alt", "min": 16, "max": 16 },
+				{ "sid": "unfrozen_cultist", "min": 5, "max": 5 },
+				{ "sid": "assassin_upg_alt", "min": 16, "max": 16 }
+			],
+
+			"specialization": "campaign_hero_5_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     3,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome": true,
+
+				"offence":      6,
+				"defence":      7,
+				"spellPower":   9,
+				"intelligence": 8,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_unfrozen",
+					"skillLevel": 1
+				},
+				{
+					"sid": "skill_battlemage",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_tactics",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_magic_space",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

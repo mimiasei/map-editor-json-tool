@@ -1,0 +1,172 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "alvars_eye",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 30,
+					"value": 2500,
+					"customGuardValue": 2800,
+
+					"guardUnits":
+					[
+						{ "sid": "assassin", "amount": 16 },
+						{ "sid": "blade_dancer", "amount": 8 },
+						{ "sid": "assassin", "amount": 16 },
+						{ "sid": "blade_dancer", "amount": 8 },
+						{ "sid": "assassin", "amount": 16 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "wood", "4", "ore", "4", "gemstones", "2", "mercury", "2", "crystals", "2" ]
+							}
+						]
+					}
+				},	
+				{
+					"rollChance": 30,
+					"value": 3750,
+					"customGuardValue": 2800,
+
+					"guardUnits":
+					[				
+						{ "sid": "assassin_upg", "amount": 16 },
+						{ "sid": "blade_dancer", "amount": 12 },
+						{ "sid": "assassin", "amount": 16 },
+						{ "sid": "assassin", "amount": 16 },
+						{ "sid": "blade_dancer", "amount": 12 },
+						{ "sid": "assassin_upg_alt", "amount": 16 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "wood", "6", "ore", "6", "gemstones", "3", "mercury", "3", "crystals", "3" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 25,
+					"value": 5000,
+					"customGuardValue": 2800,
+
+					"guardUnits":
+					[						
+						{ "sid": "blade_dancer_upg_alt", "amount": 12 },
+						{ "sid": "assassin_upg", "amount": 24 },
+						{ "sid": "assassin", "amount": 24 },
+						{ "sid": "blade_dancer", "amount": 12 },
+						{ "sid": "assassin_upg_alt", "amount": 24 },
+						{ "sid": "blade_dancer_upg", "amount": 12 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "wood", "8", "ore", "8", "gemstones", "4", "mercury", "4", "crystals", "4" ]
+							}
+						]
+					}
+				},	
+				{
+					"rollChance": 15,
+					"value": 6250,
+					"customGuardValue": 2800,
+
+					"guardUnits":
+					[						
+						{ "sid": "assassin_upg", "amount": 24 },
+						{ "sid": "blade_dancer_upg_alt", "amount": 12 },
+						{ "sid": "assassin", "amount": 24 },
+						{ "sid": "blade_dancer", "amount": 12 },
+						{ "sid": "assassin", "amount": 24 },
+						{ "sid": "blade_dancer_upg", "amount": 12 },
+						{ "sid": "assassin_upg_alt", "amount": 24 }	
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "wood", "10", "ore", "10", "gemstones", "5", "mercury", "5", "crystals", "5" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

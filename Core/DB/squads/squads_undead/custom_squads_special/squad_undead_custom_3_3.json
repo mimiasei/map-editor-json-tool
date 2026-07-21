@@ -1,0 +1,45 @@
+{
+    "array": [
+        {
+            "id": "squad_undead_custom_3_3",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 84,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "skeleton_upg_alt",
+                        "v": 2502
+                    },
+                    {
+                        "s": "flicker_upg_alt",
+                        "v": 2502
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 2502,
+                "units": [
+                    "skeleton_upg_alt",
+                    "flicker_upg_alt"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 15002,
+                "units": [
+                    {
+                        "s": "skeleton_upg_alt",
+                        "v": 15002
+                    },
+                    {
+                        "s": "flicker_upg_alt",
+                        "v": 15002
+                    }
+                ]
+            },
+            "tier": 2,
+            "fraction": "undead"
+        }
+    ]
+}

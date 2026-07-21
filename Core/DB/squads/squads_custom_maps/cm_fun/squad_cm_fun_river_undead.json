@@ -1,0 +1,50 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_cm_fun_river_undead",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "skeleton_upg_alt", "v": 1 },
+					{ "s" : "avatar_of_war", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 8000,
+				"units":
+				[
+					"skeleton_upg_alt",
+					"avatar_of_war"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100000,
+				"units":
+				[
+					{ "s" : "skeleton_upg_alt", "v": 50000 },
+					{ "s" : "avatar_of_war", "v": 50000 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "undead"
+		}
+	]
+}

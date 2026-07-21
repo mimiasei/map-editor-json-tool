@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M9_gate_dial2",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "the gate has been opened",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

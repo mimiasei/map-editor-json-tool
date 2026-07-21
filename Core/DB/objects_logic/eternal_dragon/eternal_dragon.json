@@ -1,0 +1,126 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "eternal_dragon",
+			"goodsValue": 35000,
+			"unitsConverterData":
+			{
+				"unitsConverter":
+					[
+						{ 
+							"sid": "dragon", 
+							"sidConvert":"lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							], 
+
+							"countUnit": 3
+						},
+
+						{ 
+							"sid": "dragon_upg", 
+							"sidConvert": "lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							],
+
+							"countUnit": 2
+						},
+
+						{ 
+							"sid": "dragon_upg_alt", 
+							"sidConvert": "lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							],
+
+							"countUnit": 2
+						},
+
+						{ 
+							"sid": "black_dragon", 
+							"sidConvert":"lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							], 
+
+							"countUnit": 3
+						},
+
+						{ 
+							"sid": "black_dragon_upg", 
+							"sidConvert":"lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							], 
+
+							"countUnit": 2
+						},
+
+						{ 
+							"sid": "black_dragon_upg_alt", 
+							"sidConvert":"lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							], 
+
+							"countUnit": 2
+						},
+
+						{ 
+							"sid": "fairy_dragon" , 
+							"sidConvert": "lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							], 
+							
+							"countUnit": 15
+						},
+
+						{ 
+							"sid": "giant_frog" , 
+							"sidConvert": "lich_dragon",
+
+							"costResArray":
+							[
+								{ "name": "crystals", 	"cost": 15 },
+								{ "name": "gemstones",	"cost": 15 },
+								{ "name": "mercury", 	"cost": 15 }
+							], 
+							
+							"countUnit": 15
+						}
+					] 
+				}
+		}
+	]
+}

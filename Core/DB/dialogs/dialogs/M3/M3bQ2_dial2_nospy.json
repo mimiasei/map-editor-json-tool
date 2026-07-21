@@ -1,0 +1,317 @@
+{
+	"array": [
+		{
+			"id": "M3bQ2_dial2_nospy",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3bQ2_dial2_nospy_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3bQ2_dial2_nospy_1",
+					"answers": [
+						{
+							"text": "dialogue_text_M3bQ2_dial2_nospy_1_answer_1",
+							"requests": [
+								{
+									"c": "ItemOwnHero",
+									"reqStatus": "false",
+									"p": [
+										"tranquility_ring_of_serenity_artifact"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Human",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"-1"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"graverobber_quest",
+										"1"
+									]
+								},
+								{
+									"a": "StepBack"
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3bQ2_dial2_nospy_1_answer_2",
+							"requests": [
+								{
+									"c": "ItemOwnHero",
+									"p": [
+										"tranquility_ring_of_serenity_artifact"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"2"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Human",
+										"2"
+									]
+								},
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Undead",
+										"2"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"+2"
+									]
+								},
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"-2"
+									]
+								},
+								{
+									"a": "RemoveItem",
+									"p": [
+										"tranquility_ring_of_serenity_artifact"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"graverobber_quest",
+										"4"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3bQ2_dial2_nospy_1_answer_3",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ2_dial2_nospy_1_answer_4",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"shard_counter",
+										"=",
+										"1"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1a"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Human",
+										"2"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"human_icon",
+										"-2"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"graverobber_quest",
+										"4"
+									]
+								},
+								{
+									"a": "DeleteEntity",
+									"p": [
+										"shard"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ2_dial2_nospy_1a",
+					"next": "ending"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Klasto",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_glastor",
+						"position": 2
+					},
+					"text": "dialogue_text_M3bQ2_dial2_nospy_2",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"scout_resurrection",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

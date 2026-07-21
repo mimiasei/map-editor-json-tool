@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "test",
+			
+			"contentHeight": 460,
+
+			"position": {"x":300,"y":200},
+
+			"slides":
+			[
+				{
+					"title": "test_title",
+					"subtitle": "test_subTitle or null",
+					"headerImage": "demon_city",
+					"headerImageFrame": true,
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Campaign_Start_Phase_Mission_1_description" ] }
+					]
+				},
+				{
+					"title": "test_title",
+					"subtitle": "test_subTitle or null",
+					"headerImage": "icons/... or null",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "hero_demon_1_X_Nieven", "false" ] },
+						{ "type": "text", "value": [ "textSid" ] }
+					]
+				},
+				{
+					"title": "test_title",
+					"subtitle": "test_subTitle or null",
+					"headerImage": "icons/... or null",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "hero_demon_1_X_Nieven" ] },
+						{ "type": "text", "value": [ "textSid" ] }
+					]
+				}
+			]
+		}
+	]
+}

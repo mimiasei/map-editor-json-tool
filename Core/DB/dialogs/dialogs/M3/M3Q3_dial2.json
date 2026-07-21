@@ -1,0 +1,82 @@
+{
+	"array": [
+		{
+			"id": "M3Q3_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q3_dial2_0",
+					"next": "0m"
+				},
+				{
+					"id": "0m",
+					"fon": "",
+					"text": "dialogue_text_M3Q3_dial2_0m",
+					"actions": [
+						{
+							"a": "StoryCounterSet",
+							"p": [
+								"Campaign_Flag_M3_DeathKnightSaved",
+								"1"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3682"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"deathknight",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q3_dial2_1",
+					"end": true
+				}
+			]
+		}
+	]
+}

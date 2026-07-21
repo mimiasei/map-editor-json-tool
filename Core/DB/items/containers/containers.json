@@ -1,0 +1,35 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "hero_doll",
+			"slots":
+			[
+				{ "type": "left_hand", "count": 1 },
+				{ "type": "right_hand", "count": 1 },
+				{ "type": "armor", "count": 1 },
+				{ "type": "head", "count": 1 },
+				{ "type": "boots", "count": 1 },
+				{ "type": "back", "count": 1 },
+				{ "type": "belt", "count": 1 },
+				{ "type": "ring", "count": 2 },
+				{ "type": "item_slot", "count": 4 },
+				{ "type": "unic_slot", "count": 1 }
+			]
+		},
+		{
+			"id": "hero_inventory",
+			"slots":
+			[
+				{ "type": "any" }
+			]
+		},
+		{
+			"id":"wo_inventory",
+			"slots":
+			[
+				{ "type": "any" }
+			]
+		}
+	]
+}

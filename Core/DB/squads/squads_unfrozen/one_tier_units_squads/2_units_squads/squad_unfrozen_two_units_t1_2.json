@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_unfrozen_two_unit_t1_2",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 100,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "lesser_eldritch", "v": 1 },
+					{ "s" : "lesser_eldritch_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"lesser_eldritch", "lesser_eldritch_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 10001,
+				"units":
+				[
+					{ "s" : "lesser_eldritch", "v": 10001 },
+					{ "s" : "lesser_eldritch_upg_alt", "v": 10001 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "unfrozen"
+		}
+	]
+}

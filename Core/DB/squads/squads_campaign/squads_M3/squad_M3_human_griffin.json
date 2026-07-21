@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M3_human_griffin",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "griffin_upg_alt", "v": 1 },
+					{ "s" : "griffin_upg", "v": 1 },
+					{ "s" : "griffin", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"griffin_upg_alt", "griffin_upg", "griffin"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 20000,
+				"units":
+				[
+					{ "s" : "griffin_upg_alt", "v": 20000 },
+					{ "s" : "griffin_upg", "v": 20000 },
+					{ "s" : "griffin", "v": 20000 }
+				]
+			},
+
+			"tier": 3,
+			"fraction": "human"
+		}
+	]
+}

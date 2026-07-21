@@ -1,0 +1,69 @@
+{
+	"array": [
+		{
+			"id": "t_M_dial_1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_1_0",
+					"next": "0"
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_1_1",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "2008", "2" ] }, { "a": "MoveCamera", "p": [ "2008" ] } ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_1_2",
+					"mapActions": [ { "a": "MoveCamera", "p": [ "607" ] } ],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_1_3",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "888", "2" ] }, { "a": "RevealFogOfWar", "p": [ "471", "2" ] }, { "a": "RevealFogOfWar", "p": [ "116", "2" ] }, { "a": "CounterPlus", "p": [ "Tutorial_M_Sub_Quest_1_activator", "1" ] } ],
+					"end": true
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "Guide", "p": [ "tutorial_M_31" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

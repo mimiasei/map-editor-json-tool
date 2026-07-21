@@ -1,0 +1,58 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "orb_observatory_campaign",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 5000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "orb_observatory_label",
+						
+						"rewards":
+						[					
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "spellPower_2_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "intelligence_2_buff", "Infinite", "-1" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

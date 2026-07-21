@@ -1,0 +1,106 @@
+{
+	"array":
+	[
+		{
+			"id": "angel_upg",
+			"mesh": "Humans/1Prefabs/angel_upg",
+			"mapMesh": "Humans/1Prefabs/angel_upg_map",
+			"fadeTime": 2.05,
+
+			"scale": 1.27,
+			"modelHeight": 0.7,
+			"moveSpeed": 7.0,
+
+			"attackTimeBefore": [ 0.92, 0.68, 1.067, 2.167, 3.3, 0.55 ],
+			"attackTimeAfter": [ 1.58, 0.92, 2, 1, 0, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeoffPrepareTime": 0.5,
+			"ascentTime": 0.4,
+			"descentTime": 0.35,
+			"defaultHeight": 1.65,
+
+			"takeDamageTime": 1.433,
+			"deathTimeOffset": 2.17,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0,
+					"projectile": "effects/projectiles/Angel_upg_projectile",
+
+					"projectileSpeed": 45,
+					"trajectory": "linear"
+
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "angel_ability_1_name",
+					"abilityType": "Ability_type_special",
+					"description": "angel_ability_1_description",
+					"animationIndex": 2,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "angel_ability_3_name",
+					"abilityType": "Ability_type_special",
+					"description": "angel_ability_3_description",
+					"animationIndex": 3,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_embodiment",
+                    "description": "base_class_embodiment_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_ranged_attack_no_range_close_name",
+					"description": "base_passive_ranged_attack_no_range_close_description"
+				},
+				{
+					"name": "base_passive_sharpshooter_name",
+					"description": "base_passive_sharpshooter_description"
+				},
+				{
+					"name": "base_passive_duelist_name",
+					"description": "base_passive_duelist_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "angel_passive_1_name",
+					"description": "angel_passive_1_description"
+				}
+			]
+		}
+	]
+}

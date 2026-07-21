@@ -1,0 +1,10 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "market",
+			"aiIgnore": true,
+			"goodsValue": 5000
+		}
+	]
+}

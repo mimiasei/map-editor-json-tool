@@ -1,0 +1,23 @@
+{
+	"array": [
+		{
+			"id": "fun_resurrection_marl_reborn",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "fun_dialogue_resurrection_marl_reborn_0",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

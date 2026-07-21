@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M4_preacher",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "inquisitor_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"inquisitor_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 35000,
+				"units":
+				[
+					{ "s" : "inquisitor_upg_alt", "v": 35000 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "human"
+		}
+	]
+}

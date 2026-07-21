@@ -1,0 +1,617 @@
+{
+	"array": [
+		{
+			"id": "M4Q1_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Gingertail",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Capreola",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q1_dial5_0",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"main_quest_opponent_defeated",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Gingertail",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Capreola",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_faun_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial5_1",
+					"actions": [
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Nature",
+								"2"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"spring_icon",
+								"-2"
+							]
+						}
+					],
+					"next": "1m"
+				},
+				{
+					"id": "1m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"text": "dialogue_text_M3b_postmission_13",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial5_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial5_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q1_dial5_4",
+					"next": "0alt"
+				},
+				{
+					"id": "0alt",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Old_Lord_Mandall",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Nadir",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q1_dial5_0",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"main_quest_opponent_defeated",
+								"1"
+							]
+						}
+					],
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Old_Lord_Mandall",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Nadir",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_cavalry_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial5_5",
+					"actions": [
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Human",
+								"2"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"-2"
+							]
+						}
+					],
+					"next": "5m"
+				},
+				{
+					"id": "5m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"1"
+							]
+						}
+					],
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3b_postmission_13",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q1_dial5_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"main_quest_ignat_first_dialog",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q1_dial5_7",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"main_quest_ignat_first_dialog",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M4_Druid_kill",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_old_peregrinator",
+							"isForeground": "true",
+							"animations": ["zoomIn", "appear"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_druid",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial5_8",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"main_quest_ignat_first_dialog",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M4_Druid_kill",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_old_peregrinator",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_druid",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial5_9",
+					"mapActions": [
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"portal1"
+							]
+						},
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"portal2"
+							]
+						},
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"portal3"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"block_portal1",
+								"false"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"block_portal2",
+								"false"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"block_portal3",
+								"false"
+							]
+						},						
+						{
+							"a": "CounterSet",
+							"p": [
+								"go_to_burning_man_quest",
+								"1"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

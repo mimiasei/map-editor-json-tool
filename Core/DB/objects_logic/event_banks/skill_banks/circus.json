@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "circus",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 4000,
+
+					"guardUnits": [],
+					
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+
+						"rewardCost": [ ],
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroSkillLevelUpReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": false,
+
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "skillReward_notification",
+
+								"parameters": [ ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

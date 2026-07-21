@@ -1,0 +1,25 @@
+{
+	"array":
+	[
+		{
+			"id": "quest_test7",
+			"slides":
+			[
+				{
+					"id": "start",
+					"title": "",
+					"text": "Первый диалог для всех героев (не только human_hero_1, 2)",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

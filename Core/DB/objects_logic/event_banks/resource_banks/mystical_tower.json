@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "mystical_tower",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 15000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "starDust", "1" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

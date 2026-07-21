@@ -1,0 +1,39 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M9_normal",
+
+			"strategies":
+			[
+				{
+					"sid": "multi_hero_defualt",
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markCityToCourierWithBestGarnison" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "markCityToCourierWithBestGarnison" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "removeWeakUnits", "p": [ "0.05", "7", "notMain" ] },
+						{ "sid": "storyHeroResurect", "p": [ "2" ] }
+					],
+					
+					"roles": [ "multi_hero_M9_default_main_hero_normal" ],
+					"heroesSort": "Value"
+				}
+			]
+		}
+	]
+}

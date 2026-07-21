@@ -1,0 +1,97 @@
+{
+	"array": [
+		{
+			"id": "fun_pond_found",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						},
+						{
+							"position": 2,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "false",
+							"animations": [
+								"appear"
+							]
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_calls_funerella",
+					"next": "0"
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_pond_found_0",
+					"mapActions": [
+						{
+							"a": "HeroStop"
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"2167"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"2167",
+								"2"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "CreateVFX",
+							"p": [
+								"fx_map_object_blocked",
+								"2359",
+								"false",
+								"true",
+								"interactable_pond"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

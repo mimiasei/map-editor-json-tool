@@ -1,0 +1,61 @@
+{
+	"arenaConfig":
+	{
+		"enableTimers": true,
+		"timeInFight": 600,
+		"timeActionInFight": 60,
+
+		"enableTimerPreparation": true,
+		"timePreparation" : 30000
+	},
+	"classicConfig":
+	{
+		"enableBaseTimer": true,
+        "baseTime": 1800,
+        "extraTimeDay": 240,
+        "incTimeDay": 30,
+		"extraTimeWeek": 240,
+		"incTimeWeek": 60,
+		"maxAccumulationTimes":600,
+
+		"battlePVPTimersEnabled": true,
+		"startTimePvP": 600,
+		"extraTimePvP": 60,
+
+		"restartPoints": 2,
+
+		"battlePVETimerEnabled": true,
+		"startPVETime": 300,
+		"dif":
+		{
+			"economic": 4,
+			"squad": 4,
+			"ai": 2
+		}
+	},
+	"oneHeroConfig":
+	{
+		"enableBaseTimer": true,
+        "baseTime": 600,
+        "extraTimeDay": 120,
+        "incTimeDay": 30,
+		"extraTimeWeek": 120,
+		"incTimeWeek": 60,
+		"maxAccumulationTimes":600,
+
+		"battlePVPTimersEnabled": true,
+		"startTimePvP": 600,
+		"extraTimePvP": 60,
+
+		"restartPoints": 2,
+
+		"battlePVETimerEnabled": true,
+		"startPVETime": 300,
+		"dif":
+		{
+			"economic": 4,
+			"squad": 4,
+			"ai": 2
+		}
+	}
+}

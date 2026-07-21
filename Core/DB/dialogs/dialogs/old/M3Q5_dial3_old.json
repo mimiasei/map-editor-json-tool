@@ -1,0 +1,27 @@
+{
+	"array":
+	[
+		{
+			"id": "M3Q5_dial3_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "eridore quest failed, day ending",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

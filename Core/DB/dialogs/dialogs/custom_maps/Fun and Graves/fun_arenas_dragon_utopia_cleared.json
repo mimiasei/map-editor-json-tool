@@ -1,0 +1,117 @@
+{
+	"array": [
+		{
+			"id": "fun_arenas_dragon_utopia_cleared",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_dragon_utopia_cleared_0",
+					"mapActions": [
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"dragon_utopia"
+							]
+						}
+					],
+					"next": "1a"
+				},
+				{
+					"id": "1a",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"arenas_quest",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_dragon_utopia_cleared_1a",
+					"next": "1b"
+				},
+				{
+					"id": "1b",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"arenas_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_dragon_utopia_cleared_1b",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"text": "fun_dialogue_text_arenas_dragon_utopia_cleared_2",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"monster_head_artifact"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"monster_head_found",
+								"1"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

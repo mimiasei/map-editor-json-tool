@@ -1,0 +1,330 @@
+﻿{
+	"array":
+	[
+		{
+			"id" :"seven_league_boots_artifact", "slot_": "boots", "rarity": "legendary",
+
+			"icon": "seven_league_boots_artifact",
+
+			"name": "seven_league_boots_artifact_name",
+			"description": "seven_league_boots_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "seven_league_boots_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "movementBonus", "30" ]
+				}
+			]
+		},
+
+		{
+			"id" :"legions_step_artifact", "slot_": "boots", "rarity": "epic",
+
+			"icon": "legions_step_artifact",
+
+			"name": "legions_step_artifact_name",
+			"description": "legions_step_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "legions_step_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrementPer",
+					"parameters": [ "all", "0.5" ]
+				}
+			]
+		},
+
+		{
+			"id" :"power_of_the_dragon_father_dragonbone_greaves_artifact", "slot_": "boots", "rarity": "common", "itemSet": "power_of_the_dragon_father_item_set",
+
+			"icon": "power_of_the_dragon_father_dragonbone_greaves_artifact",
+
+			"name": "power_of_the_dragon_father_dragonbone_greaves_artifact_name",
+			"description": "power_of_the_dragon_father_dragonbone_greaves_artifact_description",
+			"upgradeDescription": "power_of_the_dragon_father_dragonbone_greaves_artifact_upgradeDescription",
+			"narrativeDescription": "power_of_the_dragon_father_dragonbone_greaves_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"shadow_of_death_bone_boots_artifact", "slot_": "boots", "rarity": "epic", "itemSet": "shadow_of_death_item_set",
+
+			"icon": "shadow_of_death_bone_boots_artifact",
+
+			"name": "shadow_of_death_bone_boots_artifact_name",
+			"description": "shadow_of_death_bone_boots_artifact_description",
+			"upgradeDescription": "shadow_of_death_bone_boots_artifact_upgradeDescription",
+			"narrativeDescription": "shadow_of_death_bone_boots_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "4" ],
+					"upgrade":
+					{
+						"increment": 2,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPowerPer", "0.15" ]
+				}
+			]
+		},
+
+		{
+			"id" :"angelic_alliance_sandals_of_the_saint_artifact", "slot_": "boots", "rarity": "legendary", "itemSet": "angelic_alliance_item_set",
+
+			"icon": "angelic_alliance_sandals_of_the_saint_artifact",
+
+			"name": "angelic_alliance_sandals_of_the_saint_artifact_name",
+			"description": "angelic_alliance_sandals_of_the_saint_artifact_description",
+			"upgradeDescription": "angelic_alliance_sandals_of_the_saint_artifact_upgradeDescription",
+			"narrativeDescription": "angelic_alliance_sandals_of_the_saint_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "offence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"shackles_of_war_artifact", "slot_": "item_slot", "rarity": "epic",
+
+			"icon": "shackles_of_war_artifact",
+
+			"name": "shackles_of_war_artifact_name",
+			"description": "shackles_of_war_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "shackles_of_war_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "all",
+					"parameters": [ "enableBattleEscapeBan", "true" ]
+				}
+			]
+		},
+
+		{
+			"id" :"swamp_boots_artifact", "slot_": "boots", "rarity": "epic",
+
+			"icon": "swamp_boots_artifact",
+
+			"name": "swamp_boots_artifact_name",
+			"description": "swamp_boots_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "swamp_boots_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "landscapePenaltyPerBonus", "-1" ]
+				}
+			]
+		},
+
+		{
+			"id" :"warlord_boots_artifact", "slot_": "boots", "rarity": "legendary",
+
+			"icon": "warlord_boots_artifact",
+
+			"name": "warlord_boots_artifact_name",
+			"description": "warlord_boots_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "warlord_boots_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"parameters": [ "initiative", "2" ]
+				}
+			]
+		},
+
+		{
+			"id" :"wanderers_way_boots_of_travel_artifact", "slot_": "boots", "rarity": "rare", "itemSet": "wanderers_way_item_set",
+
+			"icon": "wanderers_way_boots_of_travel_artifact",
+
+			"name": "wanderers_way_boots_of_travel_artifact_name",
+			"description": "wanderers_way_boots_of_travel_artifact_description",
+			"upgradeDescription": "wanderers_way_boots_of_travel_artifact_upgradeDescription",
+			"narrativeDescription": "wanderers_way_boots_of_travel_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "movementBonus", "10" ],
+					"upgrade":
+					{
+						"increment": 5,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"ethereal_knowledge_mirror_shoes_artifact", "slot_": "boots", "rarity": "common", "itemSet": "ethereal_knowledge_item_set",
+
+			"icon": "ethereal_knowledge_mirror_shoes_artifact",
+
+			"name": "ethereal_knowledge_mirror_shoes_artifact_name",
+			"description": "ethereal_knowledge_mirror_shoes_artifact_description",
+			"upgradeDescription": "ethereal_knowledge_mirror_shoes_artifact_upgradeDescription",
+			"narrativeDescription": "ethereal_knowledge_mirror_shoes_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "manaCostBonus", "-2" ],
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 1
+					}
+				}
+			]
+		}
+	]
+}

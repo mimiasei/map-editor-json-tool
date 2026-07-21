@@ -1,0 +1,199 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "vampire_upg",
+			"squadValue": 3276,
+			"expBonus": 328,
+			"tier": 7,
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "undead" ],
+
+			"baseSid": "vampire",
+			"upgradeSid": "vampire_upg_alt",
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 2000 },
+					{ "name": "mercury", "cost": 2 }
+				]
+			},
+			
+			"stats":
+			{
+				"hp": 175,
+				"offence": 22,
+				"defence": 26,
+				"damageMin": 30,
+				"damageMax": 30,
+
+				"initiative": 13,
+				"speed": 8,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": 0,
+				"moralMax": 0,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods":
+				{
+					"list":
+					[
+						
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				},
+				
+				"moveType":"fly"
+			},
+			
+			"passives" : 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "undead_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"disablers": 
+						[ 
+							{ "mech": "vampirism" },
+							{ "mech": "destroy_corpse_and_heal" }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_curse" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_blood" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				}
+			],
+
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : 
+					[
+						{ 
+							"mech": "vampirism", "values": [ "0" , "0.4" , "self" , "until start amount" ], "afterAttack": true 
+						}
+					],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : 
+					[
+						{ 
+							"mech": "vampirism", "values": [ "0" , "0.4" , "self" , "until start amount" ], "afterAttack": true 
+						}
+					],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter" : false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+				
+			"abilities": [ ]
+		}
+	]
+}

@@ -1,0 +1,35 @@
+{
+	"array":
+	[
+		{
+			"id": "test2",
+			
+			"contentHeight": 70,
+
+			"slides":
+			[
+				{
+					"title": "test_title",
+					"headerImage": "D_build_Bank",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Campaign_Start_Phase_Mission_1_description" ] },
+						{ "type": "image", "value": [ "imageSid" ] }
+					]
+				},
+				{
+					"title": "test_title",
+					"subtitle": "test_subTitle or null",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "skill_assault" ] },
+						{ "type": "text", "value": [ "textSid" ] },
+						{ "type": "image", "value": [ "sentinel", "false" ] }
+					]
+				}
+			]
+		}
+	]
+}

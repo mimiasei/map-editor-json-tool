@@ -1,0 +1,50 @@
+﻿string current_specialization_human_hero_9_spec_bonus
+{
+	Text( return, "10" )
+}
+
+string current_specialization_human_hero_9_spec_bonus_alt
+{
+	Text( return, "10" )
+}
+
+string current_specialization_human_hero_9_spec_increment
+{
+	Text( return, "5" )
+}
+
+string current_specialization_human_hero_9_spec_level_step
+{
+	Text( return, "6" )
+}
+
+//
+
+string current_specialization_human_hero_10_spec_bonus
+{
+	Text( return, "1" )
+}
+
+//
+
+string current_specialization_human_hero_13_spec_bonus
+{
+	Text( return, "1" )
+}
+
+string current_specialization_human_hero_13_spec_increment
+{
+	Text( return, "1" )
+}
+
+string current_specialization_human_hero_13_spec_level_step
+{
+	Text( return, "10" )
+}
+
+//
+
+string current_specialization_human_hero_16_spec_bonus
+{
+	Text( return, "1" )
+}

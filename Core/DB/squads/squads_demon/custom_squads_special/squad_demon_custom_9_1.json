@@ -1,0 +1,58 @@
+{
+	"array": [
+		{
+			"id": "squad_demon_custom_9_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 120,
+			"canBeMainGuard": false,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "trick_demon",
+						"v": 3763
+					},
+					{
+						"s": "locust",
+						"v": 3763
+					},
+					{
+						"s": "wasp",
+						"v": 3763
+					},
+					{
+						"s": "hive_queen",
+						"v": 3332
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 3763,
+				"units": [
+					"trick_demon",
+					"locust",
+					"wasp"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 10001,
+				"units": [
+					{
+						"s": "trick_demon",
+						"v": 10001
+					},
+					{
+						"s": "locust",
+						"v": 10001
+					},
+					{
+						"s": "wasp",
+						"v": 10001
+					}
+				]
+			},
+			"tier": 2,
+			"fraction": "demon"
+		}
+	]
+}

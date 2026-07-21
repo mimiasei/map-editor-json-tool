@@ -1,0 +1,241 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_daughter_quest_line_interaction_with_human_hero_16_after_save",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_save_text_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_save_text_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"rule_of_shadow_the_truthmaker_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_save_text_3",
+					"answers": [
+						{
+							"text": "attt_daughter_quest_line_after_save_text_3_answer_1",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "4" ] }
+							]
+						}
+					],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_daughter_quest_line_after_save_text_3",
+					"next": "5"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_save_text_4",
+					"next": "4_1"
+				},
+				{
+					"id": "4_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_final_text_1",
+					"next": "4_2"
+				},
+				{
+					"id": "4_2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_final_text_1_1",
+					"next": "4_3"
+				},
+				{
+					"id": "4_3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_final_text_2",
+					"mapActions": 
+					[
+						{ "a": "CounterSet", "p": [ "counter_interaction_with_human_hero_16_after_save_off", "1" ] },
+						{ "a": "CounterSet", "p": [ "counter_interaction_with_human_hero_16_final_on", "1" ] },
+						{ "a": "CounterPlus", "p": [ "daughter_quest_friend", "1" ] },
+						{ "a": "RemoveItem", "p": [ "rule_of_shadow_the_truthmaker_artifact" ] }
+					],
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": 
+					[
+						{ "a": "BreakInterruptions" },
+						{ "a": "StepBack", "p": [ ] }
+					],
+					"actions": 
+					[
+						{ "a": "End", "p": [ "break" ] }
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

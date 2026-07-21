@@ -1,0 +1,324 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "fairy_dragon",
+			"squadValue": 950,
+			"expBonus": 140,
+			"tier": 5,
+			"fraction": "neutral",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "neutral", "dragon" ],
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 1000 }
+				]
+			},
+
+			"stats":
+			{
+				"hp": 75,
+				"offence": 15,
+				"defence": 15,
+				"damageMin": 15,
+				"damageMax": 15,
+
+				"initiative": 10,
+				"speed": 5,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": 0,
+				"moralMax": 5,
+				"luckMin": 0,
+				"luckMax": 3,
+
+				"inDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"outDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"moveType" : "teleport"
+			},
+			
+			"passives": 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "magic_level", "tags": [ "5" ] },
+							
+							{ "type": "cast", "tags": [ "dragon_immunities" ] }
+						]
+					},
+					"actions": 
+					[
+						{
+							"trigger": "start_turn",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+							"damageDealer": 
+							{
+								"attackPatternSid": "attack_single_x100",
+
+								"instacast": true, 
+								"untargetedCast": true,
+						
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "all",
+									"selection": "hexOrObject",
+									"targetCondition_": "all"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "all",
+									"selection": "hexOrObject",
+									"targetCondition_": "all"
+								},
+								
+								"damageTarget_": "none",
+								"buffTarget_": "none",
+
+								"targetMechanics": 
+								[
+									{ "mech": "change_mana", "values": [ "transfer", "ally", "2", "0", "0", "false" ] }
+								]
+							}
+						}
+					]
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				}
+			],
+
+			"aura":
+			{
+				"radius": 1,
+
+				"tag": "fairy_dragon_aura",
+				"target": "enemy",
+				"power": 1,
+				"data":
+				{
+					"disablers":
+					[
+						{ "ability": "ability", "attack": "all" }
+					]
+				}
+			},
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+					
+			"abilities" : 
+			[
+				{
+					"disableForAi": true,
+					"attackType_" : "cast",
+					"rank": 2,
+					
+					"selfMechanics" : [ ],
+															
+					"cd" : 2,
+					"energyLevel": 2,
+					
+					"damageDealer" : 
+					{
+						"targetCondition_": "alive",
+						
+						"tags": [ "ability", "dispel_ability" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_buff",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "noself"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "noself"
+						},
+
+						"damageTarget_": "none",
+
+						"targetMechanics" : 
+						[ 
+							{
+								"mech": "dispel", "values":  [ "negative" ]
+							},
+							{
+								"mech": "dispel", "values":  [ "positive" ]
+							}
+						]
+					}
+				},
+				{
+					"disableForAi": true,
+					"attackType_" : "cast",
+					"rank": 2,
+					
+					"selfMechanics" : [ ],
+															
+					"cd" : 2,
+					"energyLevel": 2,
+
+					"damageDealer" : 
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage", "absolute_damage", "ability" ],
+						"triggerCounter": false,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "noself"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "noself"
+						},
+
+						"damageTarget_": "none",
+
+						"attackPatternSid": "attack_single_buff",
+
+						"targetMechanics" : 
+						[
+							{
+								"mech": "destroy_summon",	"values": [  ]
+							},
+							{
+								"mech": "destroy_temp_stacks", "values": []
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M3_human_crossbowman",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "crossbowman_upg_alt", "v": 1 },
+					{ "s" : "crossbowman_upg", "v": 1 },
+					{ "s" : "crossbowman", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"crossbowman_upg_alt", "crossbowman_upg", "crossbowman"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 15000,
+				"units":
+				[
+					{ "s" : "crossbowman_upg_alt", "v": 15000 },
+					{ "s" : "crossbowman_upg", "v": 15000 },
+					{ "s" : "crossbowman", "v": 15000 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "human"
+		}
+	]
+}

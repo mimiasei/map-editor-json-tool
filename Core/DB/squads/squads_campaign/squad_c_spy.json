@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_spy",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "assassin_upg", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"assassin_upg"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 20000,
+				"units":
+				[
+					{ "s" : "assassin_upg", "v": 20000 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "dungeon"
+		}
+	]
+}

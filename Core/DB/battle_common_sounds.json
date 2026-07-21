@@ -1,0 +1,7 @@
+﻿{
+	"start":		"",
+	"victory":		"sounds/battle/jingles/victory",
+	"victory_fast":	"sounds/battle/jingles/victory_fast",
+	"defeat":		"sounds/battle/jingles/defeat",
+	"defeat_fast":	"sounds/battle/jingles/defeat_fast"
+}

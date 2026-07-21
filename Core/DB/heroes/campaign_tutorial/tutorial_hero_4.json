@@ -1,0 +1,118 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tutorial_hero_4",
+
+			"name": "necro_hero_2",
+			"description": "necro_hero_2_description",
+			"motto": "necro_hero_2_motto",
+
+			"mesh": "death_knight",
+			"mounts": [ "death_mount" ],
+			"icon": "hero_necromancer_2_king_of_kings",
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+			"classType": "might",
+
+			"skillsRollVariant": "necros_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 1,
+
+			"startSquad" : [
+				{ "sid": "skeleton", "min": 26, "max": 34 },
+				{ "sid": "flicker", "min": 10, "max": 15 },
+				{ "sid": "pet", "min": 6, "max": 9 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "skeleton", "min": 1, "max": 1 }
+			],
+
+			"specialization": "necro_hero_2_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      1,
+				"defence":      2,
+				"spellPower":   1,
+				"intelligence": 2,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 45 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 15 },
+						{ "v": 3, "c": 15 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_undead",
+					"skillLevel": 1
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 1
+				},
+				{
+					"sid": "skill_magic_night",
+					"skillLevel": 1
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "night_1_magic_unnatural_calm",
+					"level": 1,
+					"isLearned": true
+				},			
+				{
+					"sidConfig": "night_4_magic_despair",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_12_magic_rewind",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_3_magic_wean",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

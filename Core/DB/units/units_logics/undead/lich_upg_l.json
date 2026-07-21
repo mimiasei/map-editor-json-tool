@@ -1,0 +1,306 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "lich_upg",
+			"squadValue": 505,
+			"expBonus": 56,
+			"tier": 5,
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+
+			"ai": "range_type",
+			
+			"tags": [ "unit", "undead" ],
+
+			"baseSid": "lich",
+			"upgradeSid": "lich_upg_alt",
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 450 }
+				]
+			},
+			
+			"stats":
+			{
+				"hp": 45,
+				"offence": 16,
+				"defence": 12,
+				"damageMin": 16,
+				"damageMax": 16,
+
+				"initiative": 5,
+				"speed": 3,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 1,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": 0,
+				"moralMax": 0,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods":
+				{
+					"list":
+					[				
+						
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				}
+			},
+			
+			"passives" : 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "undead_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"disablers": 
+						[ 
+							{ "mech": "vampirism" },
+							{ "mech": "destroy_corpse_and_heal" }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_curse" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_blood" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"alternativeAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+
+						"targetMechanics" : [ ]
+					}
+				},
+				{
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "noself",
+							"selection": "hexOrObject", 
+							"targetCondition_": "alive" 
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+
+			"abilities": 
+			[ 
+				{
+					"disableForAi": true,
+					"attackType_" : "cast",
+					"rank": 1,
+					
+					"selfMechanics" : [ ],
+															
+					"cd" : 1,
+					"energyLevel": 1,
+					
+					"damageDealer" : 
+					{
+						"tags": [ "ability", "debuff_ability" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "none",
+
+						"targetMechanics" : [ { "mech": "activate_all_buff_actions", "values":  [ "overTime_effect" ] } ]
+					}
+				}
+			]
+		}
+	]
+}

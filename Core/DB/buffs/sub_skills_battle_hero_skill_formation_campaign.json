@@ -1,0 +1,774 @@
+{
+	"array":
+	[
+		{
+			"id": "campaign_skill_formation_1_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_wait",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_1_offence_buff",
+							"duration": 1
+						}
+					}
+				},
+				{
+					"trigger": "unit_skip",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_1_defence_buff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "campaign_skill_formation_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_wait",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_2_offence_buff",
+							"duration": 1
+						}
+					}
+				},
+				{
+					"trigger": "unit_skip",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_2_defence_buff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "campaign_skill_formation_3_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_wait",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_3_offence_buff",
+							"duration": 1
+						}
+					}
+				},
+				{
+					"trigger": "unit_skip",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_3_defence_buff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "campaign_skill_formation_4_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_wait",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_4_offence_buff",
+							"duration": 1
+						}
+					}
+				},
+				{
+					"trigger": "unit_skip",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_4_defence_buff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "campaign_skill_formation_5_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_wait",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_5_offence_buff",
+							"duration": 1
+						}
+					}
+				},
+				{
+					"trigger": "unit_skip",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_skill_formation_5_defence_buff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+
+
+		{
+			"id": "campaign_skill_formation_1_offence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_1_offence_buff_icon",
+			"name_": "campaign_skill_formation_1_offence_buff_name",
+			"description_": "campaign_skill_formation_1_offence_buff_description",
+
+			"tags": [ "campaign_skill_formation_1_offence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"offencePerc": 0.20
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_2_offence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_2_offence_buff_icon",
+			"name_": "campaign_skill_formation_2_offence_buff_name",
+			"description_": "campaign_skill_formation_2_offence_buff_description",
+
+			"tags": [ "campaign_skill_formation_2_offence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"offencePerc": 0.30
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_3_offence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_3_offence_buff_icon",
+			"name_": "campaign_skill_formation_3_offence_buff_name",
+			"description_": "campaign_skill_formation_3_offence_buff_description",
+
+			"tags": [ "campaign_skill_formation_3_offence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"offencePerc": 0.40
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_4_offence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_4_offence_buff_icon",
+			"name_": "campaign_skill_formation_4_offence_buff_name",
+			"description_": "campaign_skill_formation_4_offence_buff_description",
+
+			"tags": [ "campaign_skill_formation_4_offence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"offencePerc": 0.50
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_5_offence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_5_offence_buff_icon",
+			"name_": "campaign_skill_formation_5_offence_buff_name",
+			"description_": "campaign_skill_formation_5_offence_buff_description",
+
+			"tags": [ "campaign_skill_formation_5_offence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"offencePerc": 0.60
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_1_defence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_1_defence_buff_icon",
+			"name_": "campaign_skill_formation_1_defence_buff_name",
+			"description_": "campaign_skill_formation_1_defence_buff_description",
+
+			"tags": [ "campaign_skill_formation_1_defence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"defencePerc": 0.20
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_2_defence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_2_defence_buff_icon",
+			"name_": "campaign_skill_formation_2_defence_buff_name",
+			"description_": "campaign_skill_formation_2_defence_buff_description",
+
+			"tags": [ "campaign_skill_formation_2_defence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"defencePerc": 0.30
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_3_defence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_3_defence_buff_icon",
+			"name_": "campaign_skill_formation_3_defence_buff_name",
+			"description_": "campaign_skill_formation_3_defence_buff_description",
+
+			"tags": [ "campaign_skill_formation_3_defence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"defencePerc": 0.40
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_4_defence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_4_defence_buff_icon",
+			"name_": "campaign_skill_formation_4_defence_buff_name",
+			"description_": "campaign_skill_formation_4_defence_buff_description",
+
+			"tags": [ "campaign_skill_formation_4_defence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"defencePerc": 0.50
+				}
+			}
+		},
+
+		{
+			"id": "campaign_skill_formation_5_defence_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "campaign_skill_formation_5_defence_buff_icon",
+			"name_": "campaign_skill_formation_5_defence_buff_name",
+			"description_": "campaign_skill_formation_5_defence_buff_description",
+
+			"tags": [ "campaign_skill_formation_5_defence_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"defencePerc": 0.60
+				}
+			}
+		},
+
+
+
+
+
+
+
+
+
+
+
+		{
+			"id": "campaign_sub_skill_formation_4_overwatch_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_wait",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_sub_skill_formation_4_overwatch_buff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "campaign_sub_skill_formation_5_preparation_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_skip",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "campaign_sub_skill_formation_5_preparation_buff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+
+
+		{
+			"id": "campaign_sub_skill_formation_4_overwatch_buff",
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_skill_formation_4_overwatch_buff_icon",
+			"name_": "sub_skill_formation_4_overwatch_buff_name",
+			"description_": "sub_skill_formation_4_overwatch_buff_description",
+
+			"tags": [ "sub_skill_formation_4_overwatch_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"stats":
+				{
+					"maxOverwatchStrikes": 999
+				}
+			},
+
+			"actions": 
+			[
+				{
+					"trigger": "continue_after_wait",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self"
+						},
+
+						"buffTarget_": "all",
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "dispel", "values":  [ "sub_skill_formation_4_overwatch_buff" ] } 
+						]
+					}
+				}
+			]
+		},
+
+
+
+		{
+			"id": "campaign_sub_skill_formation_5_preparation_buff",
+
+			"vfxList": [ "effects/status/buff_counterstrike_unit" ],
+
+			"hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_skill_formation_5_preparation_buff_icon",
+			"name_": "sub_skill_formation_5_preparation_buff_name",
+			"description_": "sub_skill_formation_5_preparation_buff_description",
+
+			"tags": [ "sub_skill_formation_5_preparation_buff" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"sequenceEffect": "counter_before_attack"
+			}
+		}
+	]  
+}

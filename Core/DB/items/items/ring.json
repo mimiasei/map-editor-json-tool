@@ -1,0 +1,526 @@
+﻿{
+	"array":
+	[
+		{
+			"id" :"soulscaller_ring_artifact", "slot_": "ring", "rarity": "legendary",
+
+			"icon": "soulscaller_ring_artifact",
+
+			"name": "soulscaller_ring_artifact_name",
+			"description": "soulscaller_ring_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "soulscaller_ring_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "magicSchoolSet", "day", "0", "-1" ]
+				},
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "magicSchoolSet", "night", "0", "-1" ]
+				},
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "magicSchoolSet", "space", "0", "-1" ]
+				},
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "magicSchoolSet", "primal", "0", "-1" ]
+				}
+			]
+		},
+
+		{
+			"id" :"duelists_pride_brass_knuckles_artifact", "slot_": "ring", "rarity": "epic", "itemSet": "duelists_pride_item_set",
+
+			"icon": "duelists_pride_brass_knuckles_artifact",
+
+			"name": "duelists_pride_brass_knuckles_artifact_name",
+			"description": "duelists_pride_brass_knuckles_artifact_description",
+			"upgradeDescription": "duelists_pride_brass_knuckles_artifact_upgradeDescription",
+			"narrativeDescription": "duelists_pride_brass_knuckles_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "modifierSet", "outDmgMods", "counter_attack", "-0.30" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "modifierSet", "outDmgMods", "counter_attack", "-0.15" ]
+				}
+			]
+		},
+
+		{
+			"id" :"sixth_finger_artifact", "slot_": "ring", "rarity": "rare",
+
+			"icon": "sixth_finger_artifact",
+
+			"name": "sixth_finger_artifact_name",
+			"description": "sixth_finger_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "sixth_finger_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "luck", "-1" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "moral", "-1" ]
+				}
+			]
+		},
+
+		{
+			"id" :"power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact", "slot_": "ring", "rarity": "common", "itemSet": "power_of_the_dragon_father_item_set",
+
+			"icon": "power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact",
+
+			"name": "power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact_name",
+			"description": "power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact_description",
+			"upgradeDescription": "power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact_upgradeDescription",
+			"narrativeDescription": "power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "offence", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"elixir_of_life_ring_of_life_artifact", "slot_": "ring", "rarity": "rare", "itemSet": "elixir_of_life_item_set",
+
+			"icon": "elixir_of_life_ring_of_life_artifact",
+
+			"name": "elixir_of_life_ring_of_life_artifact_name",
+			"description": "elixir_of_life_ring_of_life_artifact_description_alt",
+			"upgradeDescription": "elixir_of_life_ring_of_life_artifact_upgradeDescription_alt",
+			"narrativeDescription": "elixir_of_life_ring_of_life_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"parameters": [ "inComingBuffDuration", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"chain_link_artifact", "slot_": "ring", "rarity": "rare",
+
+			"icon": "chain_link_artifact",
+
+			"name": "chain_link_artifact_name",
+			"description": "chain_link_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "chain_link_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "minAllowedMagicRank", "3" ]
+				},
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "minAllowedMagicRank", "3" ]
+				}
+			]
+		},
+
+		{
+			"id" :"gifts_of_dwarven_lords_crimson_resonance_controller_artifact", "slot_": "ring", "rarity": "epic", "itemSet": "gifts_of_dwarven_lords_item_set",
+
+			"icon": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact",
+
+			"name": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_name",
+			"description": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_description",
+			"upgradeDescription": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_upgradeDescription",
+			"narrativeDescription": "gifts_of_dwarven_lords_crimson_resonance_controller_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "spellPowerPer", "-0.2" ],
+					"upgrade":
+					{
+						"increment": -0.1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"ring_of_neutrality_artifact", "slot_": "ring", "rarity": "rare",
+
+			"icon": "ring_of_neutrality_artifact",
+
+			"name": "ring_of_neutrality_artifact_name",
+			"description": "ring_of_neutrality_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "ring_of_neutrality_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "ring_of_neutrality_artifact_bonus_ally" ]
+				},
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "ring_of_neutrality_artifact_bonus_enemy" ]
+				}
+			]
+		},
+
+		{
+			"id" :"gifts_of_dwarven_lords_emerald_resonance_controller_artifact", "slot_": "ring", "rarity": "rare", "itemSet": "gifts_of_dwarven_lords_item_set",
+
+			"icon": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact",
+
+			"name": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_name",
+			"description": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_description",
+			"upgradeDescription": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_upgradeDescription",
+			"narrativeDescription": "gifts_of_dwarven_lords_emerald_resonance_controller_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "spellPowerPer", "-0.1" ],
+					"upgrade":
+					{
+						"increment": -0.05,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"ukhtabar_seal_tabar_seal_artifact", "slot_": "ring", "rarity": "rare", "itemSet": "ukhtabar_seal_item_set",
+
+			"icon": "ukhtabar_seal_tabar_seal_artifact",
+
+			"name": "ukhtabar_seal_tabar_seal_artifact_name",
+			"description": "ukhtabar_seal_tabar_seal_artifact_description",
+			"upgradeDescription": "ukhtabar_seal_tabar_seal_artifact_upgradeDescription",
+			"narrativeDescription": "ukhtabar_seal_tabar_seal_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "luck", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"tranquility_ring_of_serenity_artifact", "slot_": "ring", "rarity": "rare", "itemSet": "tranquility_item_set",
+
+			"icon": "tranquility_ring_of_serenity_artifact",
+
+			"name": "tranquility_ring_of_serenity_artifact_name",
+			"description": "tranquility_ring_of_serenity_artifact_description",
+			"upgradeDescription": "tranquility_ring_of_serenity_artifact_upgradeDescription",
+			"narrativeDescription": "tranquility_ring_of_serenity_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "manaRestoreBonus", "6" ],
+					"upgrade":
+					{
+						"increment": 6,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{ 
+			"id" :"paupers_glory_wooden_ring_artifact", "slot_": "ring", "rarity": "common", "itemSet": "paupers_glory_item_set",
+
+			"icon": "paupers_glory_wooden_ring_artifact",
+
+			"name": "paupers_glory_wooden_ring_artifact_name",
+			"description": "paupers_glory_wooden_ring_artifact_description",
+			"upgradeDescription": "paupers_glory_wooden_ring_artifact_upgradeDescription",
+			"narrativeDescription": "paupers_glory_wooden_ring_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "moral", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{ 
+			"id" :"shamaniac_soul_clutching_ring_artifact", "slot_": "ring", "rarity": "common", "itemSet": "shamaniac_soul_item_set",
+
+			"icon": "shamaniac_soul_clutching_ring_artifact",
+
+			"name": "shamaniac_soul_clutching_ring_artifact_name",
+			"description": "shamaniac_soul_clutching_ring_artifact_description",
+			"upgradeDescription": "shamaniac_soul_clutching_ring_artifact_upgradeDescription",
+			"narrativeDescription": "shamaniac_soul_clutching_ring_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "outComingBuffDuration", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "outComingDebuffDuration", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{ 
+			"id" :"lords_ring_artifact", "slot_": "ring", "rarity": "epic",
+
+			"icon": "lords_ring_artifact",
+
+			"name": "lords_ring_artifact_name",
+			"description": "lords_ring_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "lords_ring_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receivers": [  ],
+					"parameters": [ "initiative", "1" ]
+				}
+			]
+		},
+
+		{
+			"id" :"seal_of_silence_artifact", "slot_": "ring", "rarity": "epic",
+
+			"icon": "seal_of_silence_artifact",
+
+			"name": "seal_of_silence_artifact_name",
+			"description": "seal_of_silence_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "seal_of_silence_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "magicCdBonus", "1" ]
+				}
+			]
+		},
+
+		{ 
+			"id" :"keepers_fortitude_keepers_ring_artifact", "slot_": "ring", "rarity": "rare", "itemSet": "keepers_fortitude_item_set",
+
+			"icon": "keepers_fortitude_keepers_ring_artifact",
+
+			"name": "keepers_fortitude_keepers_ring_artifact_name",
+			"description": "keepers_fortitude_keepers_ring_artifact_description",
+			"upgradeDescription": "keepers_fortitude_keepers_ring_artifact_upgradeDescription",
+			"narrativeDescription": "keepers_fortitude_keepers_ring_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		}
+	]
+}

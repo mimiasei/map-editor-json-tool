@@ -1,0 +1,45 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "tutorial_M_BASIC_Step_2_Counter", "1" ] } ],
+					"text": "t_M_BASE_dial_5_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_5_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "SubQuestActivate", "p": [ "Questlog", "step_4" ] }, { "a": "SetActiveVFX", "p": [ "Step_4_VFX_Zone", "true" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

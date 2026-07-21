@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_neutral_one_unit_t7_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 1500,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "sentinel", "v": 25007 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 25007,
+				"units":
+				[
+					"sentinel"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 6000000,
+				"units":
+				[
+					{ "s" : "sentinel", "v": 6000000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "neutral"
+		}
+	]
+}

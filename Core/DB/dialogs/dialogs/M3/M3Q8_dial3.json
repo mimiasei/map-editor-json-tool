@@ -1,0 +1,39 @@
+{
+	"array": [
+		{
+			"id": "M3Q8_dial3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "dialogue_text_M3Q8_dial3_0",
+					"mapActions": [
+						{
+							"a": "SetActiveMarker",
+							"p": [
+								"zone_item_off1",
+								"true"
+							]
+						},
+						{
+							"a": "SetActiveMarker",
+							"p": [
+								"zone_item_off2",
+								"true"
+							]
+						},
+						{
+							"a": "SetActiveMarker",
+							"p": [
+								"zone_item_on",
+								"false"
+							]
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

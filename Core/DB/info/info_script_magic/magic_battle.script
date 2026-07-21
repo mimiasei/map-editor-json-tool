@@ -1,0 +1,115 @@
+﻿// Battle Magic General
+
+int current_magic_buff_duration
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle( baseDuration, "buff.duration" )
+	CurrentMagicBattle( spCount, "buff.durationPerStack[0]" )
+	CurrentMagicBattle( spBonusDuration, "buff.durationPerStack[1]" )
+
+	Mul ( spBonusDurationMul, count, spBonusDuration )
+	Div ( spBonusDurationMulDiv, spBonusDurationMul, spCount )
+	Floor ( spBonusDurationMulDivFloor, spBonusDurationMulDiv )
+	Add ( fullDuration, baseDuration, spBonusDurationMulDivFloor )
+
+			CurrentHero ( outComingBuffDuration, "heroStat.outComingBuffDuration" )	
+			Add ( finalDuration, fullDuration, outComingBuffDuration )
+
+	Text( return, finalDuration )
+}
+
+int current_magic_trap_duration
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle( baseDuration, "targetMechanics[0].values[2]" )
+	CurrentMagicBattle( spCount, "targetMechanics[0].values[3]" )
+	CurrentMagicBattle( spBonusDuration, "targetMechanics[0].values[4]" )
+
+	Mul ( spBonusDurationMul, count, spBonusDuration )
+	Div ( spBonusDurationMulDiv, spBonusDurationMul, spCount )
+	Floor ( spBonusDurationMulDivFloor, spBonusDurationMulDiv )
+	Add ( fullDuration, baseDuration, spBonusDurationMulDivFloor )
+
+	Text( return, fullDuration )
+}
+
+int current_magic_object_duration
+{
+	CurrentMagicBattle ( summonSid, "targetMechanics[0].values[1]" )
+	DbObstacle ( summonData, summonSid, "lifetime" )
+
+	Text( return, summonData )
+}
+
+int current_magic_numTargets
+{
+	CurrentMagicBattle ( return, "numTargets" )
+}
+
+int current_magic_damage_common
+{
+	CurrentMagicBattle ( minBaseDmg, "minBaseDmg" )
+	CurrentMagicBattle ( maxBaseDmg, "maxBaseDmg" )
+	CurrentMagicBattle ( minStackDmg, "minStackDmg" )
+	CurrentMagicBattle ( maxStackDmg, "maxStackDmg" )
+
+	Avg ( baseDmg, minBaseDmg, maxBaseDmg )
+	Avg ( stackDmg, minStackDmg, maxStackDmg )
+
+	SpellpowerForCurrentMagic ( count )
+
+	Mul ( dmgCount, count, stackDmg )
+
+	Add ( damage, baseDmg, dmgCount )
+
+			CurrentHero ( magicAttackPerBonus, "heroStat.magicAttackPerBonus" )	
+			Mul ( magicAttackPerBonusAmount, damage, magicAttackPerBonus )
+			Add ( finalDamage, damage, magicAttackPerBonusAmount )
+
+	Text( return, finalDamage )
+}
+
+modPercentNumeric current_magic_damage_max_unit_percent
+{
+	CurrentMagicBattle ( minPercentDmg, "minPercentDmg" )
+	CurrentMagicBattle ( maxPercentDmg, "maxPercentDmg" )
+	CurrentMagicBattle ( minStackPercentDmg, "minStackPercentDmg" )
+	CurrentMagicBattle ( maxStackPercentDmg, "maxStackPercentDmg" )
+
+	Avg ( baseDmg, minPercentDmg, maxPercentDmg )
+	Avg ( stackDmg, minStackPercentDmg, maxStackPercentDmg )
+
+	SpellpowerForCurrentMagic ( count )
+
+	Mul ( dmgCount, count, stackDmg )
+
+	Add ( damage, baseDmg, dmgCount )
+
+			CurrentHero ( magicAttackPerBonus, "heroStat.magicAttackPerBonus" )	
+			Mul ( magicAttackPerBonusAmount, damage, magicAttackPerBonus )
+			Add ( finalDamage, damage, magicAttackPerBonusAmount )
+
+	Text( return, finalDamage )
+}
+
+int current_magic_summon
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( baseSummon, "targetMechanics[0].values[2]" )
+	CurrentMagicBattle ( spCount, "targetMechanics[0].values[3]" )
+	CurrentMagicBattle ( spBonusSummon, "targetMechanics[0].values[4]" )
+
+	Mul ( fullStacksMul, count, spBonusSummon )
+	Div ( fullStacksDiv, fullStacksMul, spCount )
+	Floor ( fullStacksDivFloor, fullStacksDiv )
+	Add ( fullStacksSummon, baseSummon, fullStacksDivFloor )
+
+			CurrentHero ( finalSummonBonusPercent, "heroStat.finalSummonBonusPercent" )	
+			Mul ( finalSummonBonusPercentAmount, fullStacksSummon, finalSummonBonusPercent )
+			Add ( finalSummon, fullStacksSummon, finalSummonBonusPercentAmount )
+
+	Text( return, finalSummon )
+}

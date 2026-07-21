@@ -1,0 +1,12 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "pocket_dimension",
+			"aiIgnore": true,
+			"goodsValue": 5000,
+
+			"viewRadius": 6
+		}
+	]
+}

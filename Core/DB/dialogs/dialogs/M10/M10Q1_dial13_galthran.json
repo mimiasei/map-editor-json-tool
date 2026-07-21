@@ -1,0 +1,174 @@
+{
+	"array": [
+		{
+			"id": "M10Q1_dial13_galthran",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Dragonfly_King",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial13_galthran_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Dragonfly_King",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_demon_boss",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial13_galthran_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M10_antagonistGalthran",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Dragonfly_King",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_demon_boss",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial13_galthran_2",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M10_antagonistGalthran",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Dragonfly_King",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_demon_boss",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial13_galthran_7",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Dragonfly_King",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_demon_boss",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial13_galthran_9",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Dragonfly_King",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial13_galthran_10",
+					"end": true
+				}
+			]
+		}
+	]
+}

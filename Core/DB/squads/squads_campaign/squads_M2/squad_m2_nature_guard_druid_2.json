@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m2_nature_guard_druid_2",
+			
+			"squad" : 
+			[
+				{ "s" : "druid", "v": 2000 }		
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "druid_upg_alt", "v": 1 },
+					{ "s" : "druid_upg", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"druid_upg_alt", "druid_upg", "druid"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000000,
+				"units":
+				[
+					{ "s" : "druid_upg_alt", "v": 1000000 },
+					{ "s" : "druid_upg", "v": 1000000 }
+				]
+			},
+
+			"tier": 5,
+			"fraction": "nature"
+		}
+	]
+}

@@ -1,0 +1,129 @@
+{
+	"array":
+	[	
+		{
+			"id": "day_17_magic_clear_view",
+
+			"name": "day_17_magic_clear_view_name",
+			"icon": "day_17_magic_clear_view",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"day_17_magic_clear_view_description",
+				"day_17_magic_clear_view_description",
+				"day_17_magic_clear_view_description_1",
+				"day_17_magic_clear_view_description_2"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_mana_cost_0_1"}, 
+				{"level": 3, "description": "day_17_magic_clear_view_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "day_17_magic_clear_view_description_up_level_bonus_4"} 
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+			"usedOnMap": true,
+			"school_": "day",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 10, 6, 6, 6 ],
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": -1,
+						"mechType": "clear_view",
+						"parameters": [ "0" ],
+						"castInfoSid": "day_17_magic_clear_view_cast"
+					},
+					{
+						"usageLimit": -1,
+						"mechType": "clear_view",
+						"parameters": [ "1" ],
+						"castInfoSid": "day_17_magic_clear_view_cast"
+					},
+					{
+						"usageLimit": -1,
+						"mechType": "clear_view",
+						"parameters": [ "2" ],
+						"castInfoSid": "day_17_magic_clear_view_cast"
+					}
+				],
+				"settingPerLevels":
+				[
+					0, 0, 1, 2
+				]
+			}
+		},	
+		
+		{
+			"id": "day_18_magic_farsight",
+
+			"name": "day_18_magic_farsight_name",
+			"icon": "day_18_magic_farsight",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"day_18_magic_farsight_description",
+				"day_18_magic_farsight_description",
+				"day_18_magic_farsight_description",
+				"day_18_magic_farsight_description_1"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "day_18_magic_farsight_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "day_18_magic_farsight_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "day_18_magic_farsight_description_up_level_bonus_4"} 
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+
+			"usedOnMap": true,
+			"school_": "day",
+			"rank": 4,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 8 },
+				{ "name": "crystals", "cost": 8 },
+				{ "name": "mercury", "cost": 8 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 14, 14, 14, 14 ],
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "farsight",
+						"parameters": [ "5", "1" ,"2" ],
+						"castInfoSid": "day_18_magic_farsight_cast"
+					},
+					{
+						"usageLimit": 1,
+						"mechType": "farsight",
+						"parameters": [ "5", "1" ,"3" ],
+						"castInfoSid": "day_18_magic_farsight_cast"
+					},
+					{
+						"usageLimit": 1,
+						"mechType": "farsight",
+						"parameters": [ "8", "1" ,"3" ],
+						"castInfoSid": "day_18_magic_farsight_cast"
+					},
+					{
+						"usageLimit": 1,
+						"mechType": "farsight",
+						"parameters": [ "8", "1" ,"-1" ],
+						"castInfoSid": "day_18_magic_farsight_cast"
+					}
+				],
+				"settingPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		}
+	]
+}

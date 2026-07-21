@@ -1,0 +1,724 @@
+{
+	"array": [
+		{
+			"id": "fun_trogl",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_cant_interact",
+					"next": "endingMarl"
+				},
+				{
+					"id": "endingMarl",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"text": "",
+					"mapActions": [						
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_trogl",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Troglodyte",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_trogl_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_trogl",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_trogl_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_trogl",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Troglodyte",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_trogl_2",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"talked_with_trogl",
+								"1"
+							]
+						}
+					],
+					"next": "3_before"
+				},
+				{
+					"id": "3_before",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "bought_item1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item3", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item4", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item5", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Troglodyte",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_trogl_3_before",
+					"next": "endingSoldEverything"
+				},
+				{
+					"id": "endingSoldEverything",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "bought_item1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item3", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item4", "=", "1" ] },
+						{ "c": "Counter", "p": [ "bought_item5", "=", "1" ] }
+					],
+					"next": "3",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"trogl",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Troglodyte",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_trogl_3",
+					"answers": [
+						{
+							"text": "fun_dialogue_text_trogl_3_answer_1",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"bought_item1",
+										"=",
+										"0"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3a"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_trogl_3_answer_2",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"bought_item2",
+										"=",
+										"0"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3b"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_trogl_3_answer_3",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"bought_item3",
+										"=",
+										"0"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3c"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_trogl_3_answer_4",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"bought_item4",
+										"=",
+										"0"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3d"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_trogl_3_answer_5",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"bought_item5",
+										"=",
+										"0"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3e"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_trogl_3_answer_6",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"bought_item6",
+										"=",
+										"0"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3f"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_trogl_3_answer_7",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"ending"
+									]
+								}
+							]
+						}
+					]
+				},
+
+				{
+					"id": "3a",
+					"dialogPlayConditions": [
+						{
+							"c": "ResCounter",
+							"p": [
+								"gemstones",
+								"<",
+								"15"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3a",
+					"next": "3a1"
+				},
+				{
+					"id": "3a1",
+					"dialogPlayConditions": [
+						{
+							"c": "ResCounter",
+							"p": [
+								"gemstones",
+								">=",
+								"15"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3a1",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"swamp_boots_artifact"
+							]
+						},
+						{
+							"a": "RemoveRes",
+							"p": [
+								"gemstones",
+								"15"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"bought_item1",
+								"1"
+							]
+						}
+					],
+					"next": "3a2"
+				},
+				{
+					"id": "3a2",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "bought_item1", "=", "1" ] } ], "fon": "", "avatars": [ { "position": 5, "icon": "icons/dialogue_unit_portraits/Icon_Troglodyte", "isForeground": "true" } ], "title": { "sid": "fun_dialogue_title_trogl", "position": 2 },
+					"text": "fun_dialogue_text_trogl_4",
+					"next": "3"
+				},
+
+				{
+					"id": "3b",
+					"dialogPlayConditions": [
+						{
+							"c": "ResCounter",
+							"p": [
+								"gold",
+								"<",
+								"15000"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3b",
+					"next": "3b1"
+				},
+				{
+					"id": "3b1",
+					"dialogPlayConditions": [
+						{
+							"c": "ResCounter",
+							"p": [
+								"gold",
+								">=",
+								"15000"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3b1",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"duelists_pride_rapier_artifact"
+							]
+						},
+						{
+							"a": "RemoveRes",
+							"p": [
+								"gold",
+								"15000"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"bought_item2",
+								"1"
+							]
+						}
+					],
+					"next": "3b2"
+				},
+				{
+					"id": "3b2",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "bought_item2", "=", "1" ] } ], "fon": "", "avatars": [ { "position": 5, "icon": "icons/dialogue_unit_portraits/Icon_Troglodyte", "isForeground": "true" } ], "title": { "sid": "fun_dialogue_title_trogl", "position": 2 },
+					"text": "fun_dialogue_text_trogl_4",
+					"next": "3"
+				},
+
+				{
+					"id": "3c",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"reqStatus": "false",
+							"p": [
+								"paupers_glory_last_coin_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3c",
+					"next": "3c1"
+				},
+				{
+					"id": "3c1",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"paupers_glory_last_coin_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3c1",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"angelic_alliance_lions_shield_of_courage_artifact"
+							]
+						},
+						{
+							"a": "RemoveItem",
+							"p": [
+								"paupers_glory_last_coin_artifact"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"bought_item3",
+								"1"
+							]
+						}
+					],
+					"next": "3c2"
+				},
+				{
+					"id": "3c2",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "bought_item3", "=", "1" ] } ], "fon": "", "avatars": [ { "position": 5, "icon": "icons/dialogue_unit_portraits/Icon_Troglodyte", "isForeground": "true" } ], "title": { "sid": "fun_dialogue_title_trogl", "position": 2 },
+					"text": "fun_dialogue_text_trogl_4",
+					"next": "3"
+				},
+
+				{
+					"id": "3d",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"unicorn",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3d",
+					"next": "3d1"
+				},
+				{
+					"id": "3d1",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"unicorn",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3d1",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"shamaniac_soul_gemwood_mask_artifact"
+							]
+						},
+						{
+							"a": "RemoveUnitHero",
+							"p": [
+								"unicorn",
+								"1"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"bought_item4",
+								"1"
+							]
+						}
+					],
+					"next": "3d2"
+				},
+				{
+					"id": "3d2",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "bought_item4", "=", "1" ] } ], "fon": "", "avatars": [ { "position": 5, "icon": "icons/dialogue_unit_portraits/Icon_Troglodyte", "isForeground": "true" } ], "title": { "sid": "fun_dialogue_title_trogl", "position": 2 },
+					"text": "fun_dialogue_text_trogl_4",
+					"next": "3"
+				},
+
+				{
+					"id": "3e",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"reqStatus": "false",
+							"p": [
+								"milos_curse_golden_pig_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3e",
+					"next": "3e1"
+				},
+				{
+					"id": "3e1",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"milos_curse_golden_pig_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3e1",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"catechism_of_spacetime_magic_artifact"
+							]
+						},
+						{
+							"a": "RemoveItem",
+							"p": [
+								"milos_curse_golden_pig_artifact"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"bought_item5",
+								"1"
+							]
+						}
+					],
+					"next": "3e2"
+				},
+				{
+					"id": "3e2",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "bought_item5", "=", "1" ] } ], "fon": "", "avatars": [ { "position": 5, "icon": "icons/dialogue_unit_portraits/Icon_Troglodyte", "isForeground": "true" } ], "title": { "sid": "fun_dialogue_title_trogl", "position": 2 },
+					"text": "fun_dialogue_text_trogl_4",
+					"next": "3"
+				},
+
+				{
+					"id": "3f",
+					"dialogPlayConditions": [
+						{
+							"c": "ResCounter",
+							"p": [
+								"gold",
+								"<",
+								"8000"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3f",
+					"next": "3f1"
+				},
+				{
+					"id": "3f1",
+					"dialogPlayConditions": [
+						{
+							"c": "ResCounter",
+							"p": [
+								"gold",
+								">=",
+								"8000"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_trogl_3f1",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"shamaniac_soul_iridescent_cloak_artifact"
+							]
+						},
+						{
+							"a": "RemoveRes",
+							"p": [
+								"gold",
+								"8000"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"bought_item6",
+								"1"
+							]
+						}
+					],
+					"next": "3f2"
+				},
+				{
+					"id": "3f2",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "bought_item6", "=", "1" ] } ], "fon": "", "avatars": [ { "position": 5, "icon": "icons/dialogue_unit_portraits/Icon_Troglodyte", "isForeground": "true" } ], "title": { "sid": "fun_dialogue_title_trogl", "position": 2 },
+					"text": "fun_dialogue_text_trogl_4",
+					"next": "3"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

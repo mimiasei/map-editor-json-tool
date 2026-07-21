@@ -1,0 +1,76 @@
+{
+	"array": [
+		{
+			"id": "M2Q5_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2Q5_dial1_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"935"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"935",
+								"3"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2Q5_dial1_1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"hydra_quest",
+								"1"
+							]
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

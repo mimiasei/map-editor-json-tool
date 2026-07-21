@@ -1,0 +1,379 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "one_hero_unfair",
+
+			"strategies":
+			[
+				{
+					"sid": "one_hero_firstDay",
+					"off": false,
+
+					"lastAreaTasksMultiplier": 3,
+
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "dayFromStart",
+								"param": [ "1" ]
+							}
+						]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "buffSide", "p": [ "ai_side_buffs_solo_hero_4", "Infinite", "-1" ] },
+						
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },						
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_firstDay_main_hero_unfair" ],
+					"heroesSort": "None"
+				},
+
+
+				
+
+				{
+					"sid": "one_hero_isGladiatorArenaInProcess",
+
+					"lastAreaTasksMultiplier": 1,
+
+					"conditions": { "array": [ { "condition": "isGladiatorArenaInProcess" } ] },
+
+					"actionsBefore": [ { "sid": "cityBuilder" }, { "sid": "cityHireGarnison" }, { "sid": "garisonUnitsUpgrade" }, { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsOnSelectHero": [ { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsAfter": [ { "sid": "learnFractionLaw" } ],
+					
+					"roles": [ "one_hero_isGladiatorArenaInProcess_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+				{
+					"sid": "one_hero_isTournamentInProcess",
+
+					"lastAreaTasksMultiplier": 1,
+
+					"conditions": { "array": [ { "condition": "isTournamentInProcess" } ] },
+
+					"actionsBefore": [ { "sid": "cityBuilder" }, { "sid": "cityHireGarnison" }, { "sid": "garisonUnitsUpgrade" }, { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsOnSelectHero": [ { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsAfter": [ { "sid": "learnFractionLaw" } ],
+					
+					"roles": [ "one_hero_isTournamentInProcess_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+				{
+					"sid": "one_hero_isLostStartCityInProcess",
+
+					"lastAreaTasksMultiplier": 1,
+
+					"conditions": { "array": [ { "condition": "isLostStartCityInProcess" } ] },
+
+					"actionsBefore": [ { "sid": "cityBuilder" }, { "sid": "cityHireGarnison" }, { "sid": "garisonUnitsUpgrade" }, { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsOnSelectHero": [ { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsAfter": [ { "sid": "learnFractionLaw" } ],
+					
+					"roles": [ "one_hero_isLostStartCityInProcess_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+				{
+					"sid": "one_hero_isCityHoldInProcess",
+
+					"lastAreaTasksMultiplier": 1,
+
+					"conditions": { "array": [ { "condition": "isCityHoldInProcess" } ] },
+
+					"actionsBefore": [ { "sid": "cityBuilder" }, { "sid": "cityHireGarnison" }, { "sid": "garisonUnitsUpgrade" }, { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsOnSelectHero": [ { "sid": "markCityToCourierWithBestTradeToMain" }, { "sid": "markCityToUnitUpgrade" }, { "sid": "markNodeInLastArea" } ],
+					"actionsAfter": [ { "sid": "learnFractionLaw" } ],
+					
+					"roles": [ "one_hero_isCityHoldInProcess_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+
+
+
+
+				
+				{
+					"sid": "one_hero_lastChance",
+
+					"lastAreaTasksMultiplier": 3,
+
+					"conditions":
+					{
+						"array": [ { "condition": "dontHaveCity" } ]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "surrenderIfWeak", "p": [ "false", "0.1" ] },
+						{ "sid": "markNodeInLastArea" }					
+					],
+					"actionsAfter":
+					[
+						{ "sid": "surrenderIfWeak", "p": [ "true", "0.25" ] },
+						{ "sid": "surrenderIfWeak", "p": [ "false", "0.1" ] },
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_lastChance_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+
+
+
+
+				{
+					"sid": "one_hero_defenceActive",
+
+					"lastAreaTasksMultiplier": 3,
+
+					"conditions":
+					{
+						"array": [ { "condition": "weakEnemyInMyArea" } ]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_defenceActive_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+
+
+				{
+					"sid": "one_hero_defencePassive",
+
+					"lastAreaTasksMultiplier": 3,
+
+					"conditions":
+					{
+						"array": [ { "condition": "strongEnemyInMyArea" } ]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "markCityCloseToEnemy" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "markCityCloseToEnemy" },
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "removeGarnisonInMakerCity" },
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_defencePassive_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+
+				{
+					"sid": "one_hero_defualtWar",
+
+					"lastAreaTasksMultiplier": 20,
+
+					"conditions":
+					{
+						"array":
+						[
+							{
+								"condition": "canAttackArea",
+								"param": [ "1.0" ]
+							}
+						]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_defaultWar_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+
+				{
+					"sid": "one_hero_captureArea",
+
+					"lastAreaTasksMultiplier": 50,
+
+					"conditions":
+					{
+						"array": [ { "condition": "haveFreeToCaptureArena" } ]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "selectKeyObjectInFreeArea", "p": [ "-1", "false" ] },
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "selectKeyObjectInFreeArea", "p": [ "-1", "false" ] },
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "removeWeakUnits", "p": [ "0.05", "8", "all" ] },
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_captureArea_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+
+				{
+					"sid": "one_hero_expandArea",
+
+					"lastAreaTasksMultiplier": 3,
+
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "inOpenedAreasPercentLeftValues",
+								"param": [ "0.4", "true" ]
+							},
+							{
+								"condition": "isHaveFrontiers"
+							}
+						]
+					},
+
+					"actionsBefore":
+					[
+						{ "sid": "selectAreaToExpand" },
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "selectAreaToExpand" },
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markEnemyCityCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markEnemyHeroCloseToMain", "p": [ "-1", "false" ] },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_expandArea_main_hero_unfair" ],
+					"heroesSort": "Value"
+				},
+
+				
+				{
+					"sid": "one_hero_defualt",
+
+					"lastAreaTasksMultiplier": 8,
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "markCityToCourierWithBestTradeToMain" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "removeWeakUnits", "p": [ "0.05", "8", "all" ] },
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "one_hero_default_main_hero_unfair" ],
+					"heroesSort": "Value"
+				}
+			]
+		}
+	]
+}

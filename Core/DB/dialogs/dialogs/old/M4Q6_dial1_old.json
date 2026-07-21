@@ -1,0 +1,27 @@
+{
+	"array":
+	[
+		{
+			"id": "M4Q6_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "crazy stargazer quest",
+				
+					"end": true
+				}			
+			]
+		}
+	]
+}

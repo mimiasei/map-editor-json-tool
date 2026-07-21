@@ -1,0 +1,653 @@
+{
+	"array": [
+		{
+			"id": "vyr_Scenario2_Intro",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"next": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4",
+					"mapActions": [
+						{
+							"a": "MoveCameraToSelectHero"
+						}
+					],
+					"answers": [
+						{
+							"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4a"
+									]
+								}
+							]
+						},
+						{
+							"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4b"
+									]
+								}
+							]
+						},
+						{
+							"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "4a",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4a",
+					"next": "4"
+				},
+				{
+					"id": "4b",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4b",
+					"next": "4b1"
+				},
+				{
+					"id": "4b1",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4b1",
+					"next": "4b2"
+				},
+				{
+					"id": "4b2",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"5423",
+								"4"
+							]
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"5423"
+							]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a4b2",
+					"next": "4"
+				},
+				{
+					"id": "5",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"dungeon_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"5423",
+								"4"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"Counter_P1",
+								"1"
+							]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_a5",
+					"next": "b0"
+				},
+				{
+					"id": "b0",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b0",
+					"next": "b1"
+				},
+				{
+					"id": "b1",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b1",
+					"next": "b2"
+				},
+				{
+					"id": "b2",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b2",
+					"next": "b3"
+				},
+				{
+					"id": "b3",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b3",
+					"next": "b4"
+				},
+				{
+					"id": "b4",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"next": "b5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b4",
+					"mapActions": [
+						{
+							"a": "MoveCameraToSelectHero"
+						}
+					],
+					"answers": [
+						{
+							"text": "gs_dialogue_text_vyr_Scenario2_Intro_b4_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"b4a"
+									]
+								}
+							]
+						},
+						{
+							"text": "gs_dialogue_text_vyr_Scenario2_Intro_b4_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"b4b"
+									]
+								}
+							]
+						},
+						{
+							"text": "gs_dialogue_text_vyr_Scenario2_Intro_b4_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"b5"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "b4a",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b4a",
+					"next": "b4"
+				},
+				{
+					"id": "b4b",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b4b",
+					"next": "b4b1"
+				},
+				{
+					"id": "b4b1",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"5601",
+								"4"
+							]
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"5601"
+							]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b4b1",
+					"next": "b4"
+				},
+				{
+					"id": "b5",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"nature_hero_5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"5601",
+								"4"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"Counter_P2",
+								"1"
+							]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_Intro_b5",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

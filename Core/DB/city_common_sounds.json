@@ -1,0 +1,16 @@
+{
+	"array":
+	{
+		"data":
+		[
+			{
+				"key": "building_construction",
+
+				"val":
+				{
+					"soundSetName": "sounds/city/common/building_construction"
+				}
+			}
+		]
+	}	
+}

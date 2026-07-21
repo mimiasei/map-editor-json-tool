@@ -1,0 +1,83 @@
+{
+	"array":
+	[
+		{
+			"id": "test_mine",
+			"name": "mech_guard_ability_1_name",
+			"stoppingUnit": false,
+
+			"vfx": "debug/Mine",
+			"timeBeforeExplosion": 0.5,
+			"attackTimeBefore": 0,
+			"attackTimeAfter": 2,
+			
+			"damageDealer":
+			{
+				"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+				"attackPatternSid" : "attack_single_x100",
+				"castTarget_": "all",
+				"damageType_": "magic_pure",
+				"minBaseDmg": 25,
+				"maxBaseDmg": 25
+			}			
+		},
+
+
+		{
+			"id": "test_mine_2",
+			"name": "mech_guard_ability_1_name",
+			"stoppingUnit": false,
+
+			"vfx": "debug/Mine",
+			"timeBeforeExplosion": 0.5,
+			"attackTimeBefore": 0,
+			"attackTimeAfter": 2,
+
+			"damageDealer":
+			{
+				"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+				"attackPatternSid" : "attack_single_x100",
+				"castTarget_": "all",
+				"damageType_": "magic_pure",
+				"minBaseDmg": 25,
+				"maxBaseDmg": 25
+			}			
+		},
+
+
+		{
+			"id": "mech_guard_trap",
+			"name": "mech_guard_ability_1_name",
+			"sendBack": true,
+			"stopping": "all_path",
+			"charges": 1,
+			"vfx": "magic/Prefabs_vfx/magic_mech_guard_teleport_start_hex",
+			"vfxAlt": "magic/Prefabs_vfx/magic_mech_guard_teleport_end_hex",
+			"timeBeforeExplosion": 0.5,
+			"attackTimeBefore": 0.5,
+			"attackTimeAfter": 2,
+			"tags": [ "trap" ],
+
+			"damageDealer":
+			{
+				"tags": [ "trap_damage" ],
+				"attackPatternSid" : "attack_single_x100",
+
+				"castTargetParams":
+				{
+					"targetTags": [ "unit" ],
+					"castTarget_": "all"
+				},
+
+				"affectTargetParams":
+				{
+					"targetTags": [ "unit" ],
+					"castTarget_": "all"
+				},
+
+				"damageTarget_": "none",
+				"damageType_": "none"
+			}			
+		}
+	]  
+}

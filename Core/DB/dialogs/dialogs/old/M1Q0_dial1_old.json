@@ -1,0 +1,57 @@
+{
+	"array":
+	[
+		{
+			"id": "M1Q0_dial1_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/peasant" ]
+					},
+
+					"title": "dialogue_title_peasant_guide",
+					"text": "dialogue_text_M1Q0_dial1_0",			
+
+					"answers":
+					[
+						{
+							"text": "dialogue_text_M1Q0_dial1_0_answer_1",
+							"actions": 
+							[ 
+								{ "a": "Go", "p": [ "1" ] } 
+							]
+						},
+						{
+							"text": "dialogue_text_M1Q0_dial1_0_answer_2",
+							"actions": 
+							[ 
+								{ "a": "Go", "p": [ "1" ] } 
+							]
+						}
+					]
+				},
+				{
+					"id": "1",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/peasant" ]
+					},
+
+					"title": "dialogue_title_peasant_guide",
+					"text": "dialogue_text_M1Q0_dial1_1",	
+					
+					"end": true
+				}
+			]
+		}
+	]
+}

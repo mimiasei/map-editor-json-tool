@@ -1,0 +1,80 @@
+{
+	"array":
+	[
+		{
+			"id": "M2Q3_dial4_original",
+			"localization": false,
+			
+			"slides":
+			[
+				{
+					"id": "start",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "kitten_talked", "=", "1" ] } 
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+					
+					"title": "Gunnar",
+					"text": "There you go.",
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "kitten_talked", "=", "1" ] } 
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/kitten_horn" ]
+					},
+
+					"title": "Llimir",
+					"text": "Mrrrrr! Mreow! [They join you!]",
+
+					"mapActions":
+					[
+						{ "a": "GiveUnitHero", "p": [ "kitten_horn", "15" ] },
+						{ "a": "DeleteEntity", "p": [ "kitten1" ] },
+						{ "a": "DeleteEntity", "p": [ "kitten2" ] },
+						{ "a": "DeleteEntity", "p": [ "kitten3" ] },
+						{ "a": "DeleteEntity", "p": [ "kitten4" ] },
+						{ "a": "DeleteEntity", "p": [ "kitten5" ] },
+						{ "a": "DeleteEntity", "p": [ "kitten6" ] },
+						{ "a": "RemoveRes", "p": [ "crystals", "15" ] }	
+					],
+
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "kitten_talked", "=", "1" ] } 
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+					
+					"title": "Gunnar",
+					"text": "…Not what I expected, but okay. Here llimir-llimir…",
+					
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

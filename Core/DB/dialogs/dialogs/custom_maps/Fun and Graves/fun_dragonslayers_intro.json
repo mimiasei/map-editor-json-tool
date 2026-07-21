@@ -1,0 +1,412 @@
+{
+	"array": [
+		{
+			"id": "fun_dragonslayers_intro",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_cant_interact",
+					"next": "endingMarl"
+				},
+				{
+					"id": "endingMarl",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"text": "",
+					"mapActions": [						
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_intro_0",
+					"mapActions": [
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"2831",
+								"2"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"2898",
+								"2"
+							]
+						}
+					],
+					"next": "0_1"
+				},
+				{
+					"id": "0_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_dragonslayers_intro_0_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_intro_1",
+					"next": "1_1"
+				},
+				{
+					"id": "1_1",
+					"fon": "",
+					"text": "dialogue_text_M2_city_dial1_0m",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"963"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"963",
+								"2"
+							]
+						}
+					],
+					"next": "2a"
+				},
+				{
+					"id": "2a",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"monster_head_found",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_dragonslayers_intro_2a",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"2834"
+							]
+						}
+					],
+					"next": "2a1"
+				},
+				{
+					"id": "2a1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"monster_head_found",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_intro_2a1",
+					"next": "alt_ending"
+				},
+				{
+					"id": "alt_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"monster_head_found",
+								">",
+								"0"
+							]
+						}
+					],
+					"next": "2b",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"dragonslayers"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"snow_hill1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"snow_hill2"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_neutral_9",
+								"2894",
+								"false",
+								"dragonslayer_dwelling1"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_neutral_9",
+								"2962",
+								"true",
+								"dragonslayer_dwelling2"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog":"Interrupt"
+				},
+				{
+					"id": "2b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_intro_2b",
+					"mapActions": [						
+						{
+							"a": "MoveCamera",
+							"p": [
+								"2834"
+							]
+						}
+					],
+					"answers": [
+						{
+							"text": "fun_dialogue_text_dragonslayers_intro_2b_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"2ba"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_dragonslayers_intro_2b_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"2bb"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_dragonslayers_intro_2b_answer_3",
+							"actions": [
+								{
+									"a": "End"
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "2ba",
+					"fon": "",
+					"text": "fun_dialogue_text_dragonslayers_intro_2ba",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"dragonslayer_quest",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"dragonslayers",
+								"2"
+							]
+						},
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"dragon_hunter",
+								"4"
+							]
+						}
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "2bb",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_intro_2bb",
+					"mapActions": [
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"dragonslayers",
+								"false"
+							]
+						},
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"dragonslayers"
+							]
+						},
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

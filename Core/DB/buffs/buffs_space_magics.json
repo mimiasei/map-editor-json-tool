@@ -1,0 +1,954 @@
+{
+	"array":
+	[
+		{
+			"id": "magic_early_start_effect_0",
+
+			"aiValue": 4400,
+			"aiValuePerDuration": 220,
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 3
+				}
+			}
+		},
+		{
+			"id": "magic_early_start_effect_1",
+
+			"aiValue": 5100,
+			"aiValuePerDuration": 255,
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 4
+				}
+			}
+		},
+		{
+			"id": "magic_early_start_effect_2",
+
+			"aiValue": 6000,
+			"aiValuePerDuration": 300,
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 5
+				}
+			}
+		},
+		{
+			"id": "magic_early_start_effect_3",
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 370,
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 6
+				}
+			}
+		},
+
+
+
+		{
+			"id": "magic_energyze_effect_0",
+
+			"aiValue": 3700,
+			"aiValuePerDuration": 185,
+
+			"icon": "magic_energyze_effect_icon",
+			"name_": "space_3_magic_energyze_name",
+			"description_": "magic_energyze_effect_description_1",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"energyPerRound": 1
+				}
+			}
+		},
+		{
+			"id": "magic_energyze_effect_1",
+
+			"aiValue": 4300,
+			"aiValuePerDuration": 215,
+
+			"icon": "magic_energyze_effect_icon",
+			"name_": "space_3_magic_energyze_name",
+			"description_": "magic_energyze_effect_description_2",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"energyPerRound": 1,
+					"energyPerCast": 1
+				}
+			}
+		},
+		{
+			"id": "magic_energyze_effect_2",
+
+			"aiValue": 5400,
+			"aiValuePerDuration": 540,
+
+			"icon": "magic_energyze_effect_icon",
+			"name_": "space_3_magic_energyze_name",
+			"description_": "magic_energyze_effect_description_3",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"energyPerRound": 1,
+					"energyPerCast": 1,
+					"energyPerTakeDamage": 1
+				}
+			}
+		},
+
+
+
+		{
+			"id": "magic_optical_illusion_effect_0",
+
+			"aiValue": 3700,
+			"aiValuePerDuration": 185,
+
+			"icon": "magic_optical_illusion_icon",
+			"name_": "space_4_magic_optical_illusion_name",
+			"description_": "magic_optical_illusion_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.25 }	]	}	}	}
+		},
+		{
+			"id": "magic_optical_illusion_effect_1",
+
+			"aiValue": 4300,
+			"aiValuePerDuration": 215,
+
+			"icon": "magic_optical_illusion_icon",
+			"name_": "space_4_magic_optical_illusion_name",
+			"description_": "magic_optical_illusion_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.50 }	]	}	}	}
+		},
+		{
+			"id": "magic_optical_illusion_effect_2",
+
+			"aiValue": 5400,
+			"aiValuePerDuration": 540,
+
+			"icon": "magic_optical_illusion_icon",
+			"name_": "space_4_magic_optical_illusion_name",
+			"description_": "magic_optical_illusion_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "shoot_attack", "v": -0.50 },	{ "t": "range_attack", "v": -0.50 }	]	}	}	}
+		},
+
+
+		
+		{
+			"id": "magic_carapace_effect_0",
+
+			"aiValue": 9400,
+			"aiValuePerDuration": 470,
+			
+			"vfxList": ["magic/Prefabs_vfx/magic_carapace_unit"],
+
+			"icon": "magic_carapace_effect_icon",
+			"name_": "space_8_magic_carapace_name",
+			"description_": "magic_carapace_effect_description",
+
+			"tags": [ "positive", "bubble" ],
+			"isPositive": true,
+			
+			"addition": "duration"
+		},
+
+
+
+		{
+			"id": "magic_shackles_effect",
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 370,
+		
+			"vfxList": [ "effects/status/debuff_counterstrike_hex" ],
+
+
+			"icon": "magic_shackles_effect_icon",
+			"name_": "space_7_magic_shackles_name",
+			"description_": "magic_shackles_effect_description",
+
+			"tags": [ "negative", "shacklesEffect" ],
+			"isPositive": false,
+			
+			"addition": "duration",
+
+			"data": {
+				"stats": 
+				{
+					
+				},
+				"disablers": 
+				[
+					{
+						"ability": "counter_attack",
+						"attack": "all"
+					}
+				]
+			}
+		},
+
+		{
+			"id": "magic_mirror_copy_debuff_0",
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_10_magic_mirror_copy_name",
+			"description_": "magic_mirror_copy_effect_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+
+			"addition": "duration",
+
+			"data": {	
+				"stats": 	{	"inAllDmgMod": 3.00, "outAllDmgMod": -0.75	}	,
+				"disablers":
+				[
+					{
+						"ability": "ability",
+						"attack": "all"
+					}
+				]
+			},
+
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "destroy_self" ],
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+						"targetMechanics":	
+						[ 
+							{ "mech": "destroy_self", "values": [ ] } 
+						]
+					}
+				}
+			]		
+		},
+
+		{
+			"id": "magic_mirror_copy_debuff_1",
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_10_magic_mirror_copy_name",
+			"description_": "magic_mirror_copy_effect_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+
+			"addition": "duration",
+
+			"data": {	
+				"stats": 	{	"inAllDmgMod": 2.00, "outAllDmgMod": -0.67	},
+				"disablers":
+				[
+					{
+						"ability": "ability",
+						"attack": "all"
+					}
+				]
+			},
+
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "destroy_self" ],
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"targetMechanics":	
+						[ 
+							{ "mech": "destroy_self", "values": [ ] } 
+						]
+					}
+				}
+			]				
+		},
+
+		{
+			"id": "magic_mirror_copy_debuff_2",
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_10_magic_mirror_copy_name",
+			"description_": "magic_mirror_copy_effect_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+
+			"addition": "duration",
+
+			"data": {	
+				"stats": 	{	"inAllDmgMod": 1.00, "outAllDmgMod": -0.50	},
+				"disablers":
+				[
+					{
+						"ability": "ability",
+						"attack": "all"
+					}
+				]
+			},
+
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "destroy_self" ],
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"targetMechanics":	
+						[ 
+							{ "mech": "destroy_self", "values": [ ] } 
+						]
+					}
+				}
+			]				
+		},
+
+		{
+			"id": "magic_mirror_copy_debuff_3",
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_10_magic_mirror_copy_name",
+			"description_": "magic_mirror_copy_effect_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,	"hidden": false,	"canDispel": false,	"ignoreDurationBonus": true,
+
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"inAllDmgMod": 0.50, "outAllDmgMod": -0.30	},
+				"disablers":
+				[
+					{
+						"ability": "ability",
+						"attack": "all"
+					}
+				]
+			},
+			
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "destroy_self" ],
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"targetMechanics":	
+						[ 
+							{ "mech": "destroy_self", "values": [ ] } 
+						]
+					}
+				}
+			]				
+		},
+
+
+		
+		{
+			"id": "magic_decimate_effect",
+
+			"aiValue": 9400,
+			"aiValuePerDuration": 470,
+		
+			"icon": "magic_decimate_effect_icon",
+			"name_": "space_11_magic_decimate_name",
+			"description_": "magic_decimate_effect_description",
+
+			"infinite": true, "canDispel": false, 
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+			
+			"addition": "data",
+
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "decimate_damage", "v": 1.00 }	]	}	}	}
+		},
+		
+		{
+			"id": "magic_decimate_effect_special",
+
+			"aiValue": 11400,
+			"aiValuePerDuration": 570,
+	
+			"icon": "magic_decimate_effect_icon",
+			"name_": "space_11_magic_decimate_name",
+			"description_": "magic_decimate_effect_description",
+
+			"infinite": true, "canDispel": false, 
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+			
+			"addition": "data",
+
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "decimate_damage", "v": 2.00 }	]	}	}	}
+		},
+
+
+
+
+		{
+			"id": "magic_space_trap_snare_effect",
+
+			"aiValue": 9400,
+			"aiValuePerDuration": 470,
+
+			"icon": "magic_space_trap_snare_icon",
+			"name_": "space_15_magic_trap_snare_name",
+			"description_": "magic_trap_snare_effect_description",
+
+			"maxDuration": 2,	"ignoreDurationBuffs": true,
+
+			"tags": [ "negative", "sleep_effect" ],
+			"isPositive": false,
+			
+			"addition": "duration",
+
+			"data":	
+			{
+				"sequenceEffect": "skip_turn",
+				"disablers": 
+				[
+					{
+						"ability": "counter_attack",
+						"attack": "all"
+					}
+				]
+			}
+		},
+
+
+
+
+		{
+			"id": "magic_reality_distortion_effect_0",
+
+			"aiValue": 9300,
+			"aiValuePerDuration": 465,
+
+			"icon": "magic_reality_distortion_effect_icon",
+			"name_": "space_16_magic_reality_distortion_name",
+			"description_": "magic_reality_distortion_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"actions":
+			[
+				{
+					"trigger": "start_round",
+
+					"damageDealer": 
+					{
+						"tags": [ "passive" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "all"
+						},
+
+						"targetMechanics":
+						[
+							{ "mech": "take_accumulated_damage", "values": [ "1.0" ] }
+						]
+					}
+				}
+			],
+
+			"data": {	"stats": 	{	"accumulateDamage":	true	}	}
+		},
+
+		{
+			"id": "magic_reality_distortion_effect_1",
+
+			"aiValue": 5400,
+			"aiValuePerDuration": 540,
+
+			"icon": "magic_reality_distortion_effect_icon",
+			"name_": "space_16_magic_reality_distortion_name",
+			"description_": "magic_reality_distortion_effect_description_1",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"actions":
+			[
+				{
+					"trigger": "start_round",
+
+					"damageDealer": 
+					{
+						"tags": [ "passive" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "all"
+						},
+
+						"targetMechanics":
+						[
+							{ "mech": "take_accumulated_damage", "values": [ "0.8" ] }
+						]
+					}
+				}
+			],
+
+			"data": {	"stats": 	{	"accumulateDamage":	true	}	}
+		},
+
+		{
+			"id": "magic_reality_distortion_effect_2",
+
+			"aiValue": 13400,
+			"aiValuePerDuration": 670,
+
+			"icon": "magic_reality_distortion_effect_icon",
+			"name_": "space_16_magic_reality_distortion_name",
+			"description_": "magic_reality_distortion_effect_description_1",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",	
+
+			"actions":
+			[
+				{
+					"trigger": "start_round",
+
+					"damageDealer": 
+					{
+						"tags": [ "passive" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "all"
+						},
+
+						"targetMechanics":
+						[
+							{ "mech": "take_accumulated_damage", "values": [ "0.6" ] }
+						]
+					}
+				}
+			],
+
+			"data": {	"stats": 	{	"accumulateDamage":	true	}	}
+		},
+
+
+
+
+		{
+			"id": "magic_doreaths_tide_enemy_effect",
+
+			"aiValue": 4400,
+			"aiValuePerDuration": 440,
+	
+			"icon": "magic_doreaths_tide_enemy_effect_icon",
+			"name_": "space_14_magic_doreaths_tide_name",
+			"description_": "magic_doreaths_tide_enemy_effect_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			"isPositive": false,
+			
+			"addition": "duration",
+
+			"data": {
+				"stats": 
+				{
+					"speed": -1,
+					"initiative": -1
+				}
+			}
+		},
+		{
+			"id": "magic_doreaths_tide_ally_effect",
+
+			"aiValue": 4400,
+			"aiValuePerDuration": 440,
+	
+			"icon": "magic_doreaths_tide_ally_effect_icon",
+			"name_": "space_14_magic_doreaths_tide_name",
+			"description_": "magic_doreaths_tide_ally_effect_description",
+
+			"tags": [ "positive", "movementPositive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {
+				"stats": 
+				{
+					"speed": 1,
+					"initiative": 1
+				}
+			}
+		},
+
+		{
+			"id": "magic_doreaths_tide_enemy_effect_1",
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 740,
+		
+			"icon": "magic_doreaths_tide_enemy_effect_icon",
+			"name_": "space_14_magic_doreaths_tide_name",
+			"description_": "magic_doreaths_tide_enemy_effect_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			"isPositive": false,
+			
+			"addition": "duration",
+
+			"data": {
+				"stats": 
+				{
+					"speed": -2,
+					"initiative": -2
+				}
+			}
+		},
+		{
+			"id": "magic_doreaths_tide_ally_effect_1",
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 740,
+		
+			"icon": "magic_doreaths_tide_ally_effect_icon",
+			"name_": "space_14_magic_doreaths_tide_name",
+			"description_": "magic_doreaths_tide_ally_effect_description",
+
+			"tags": [ "positive", "movementPositive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {
+				"stats": 
+				{
+					"speed": 2,
+					"initiative": 2
+				}
+			}
+		},
+
+
+
+
+
+		{
+			"id": "magic_early_start_effect_0_special",
+
+			"canDispel": false,
+
+			"aiValue": 4400,
+			"aiValuePerDuration": 220,
+	
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description_special",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 3
+				}
+			}
+		},
+		{
+			"id": "magic_early_start_effect_1_special",
+
+			"aiValue": 5100,
+			"aiValuePerDuration": 255,
+	
+			"canDispel": false,
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description_special",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 4
+				}
+			}
+		},
+		{
+			"id": "magic_early_start_effect_2_special",
+
+			"aiValue": 6000,
+			"aiValuePerDuration": 300,
+	
+			"canDispel": false,
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description_special",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 5
+				}
+			}
+		},
+		{
+			"id": "magic_early_start_effect_3_special",
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 370,
+	
+			"canDispel": false,
+
+			"icon": "magic_early_start_effect_icon",
+			"name_": "space_1_magic_early_start_name",
+			"description_": "magic_early_start_effect_description_special",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": { 
+				"stats": 
+				{
+					"initiative": 6
+				}
+			}
+		},
+
+
+		
+		{
+			"id": "magic_carapace_effect_0_special",
+
+			"aiValue": 11400,
+			"aiValuePerDuration": 570,
+	
+			"vfxList": [ "effects/status/carapace_unit" ],
+
+			"icon": "magic_carapace_effect_icon_special",
+			"name_": "space_8_magic_carapace_name",
+			"description_": "magic_carapace_effect_description_special",
+
+			"tags": [ "positive", "bubble" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+			
+			"data": {
+				"immunities": 
+				[ 
+					{ "type": "effect", "tags": [ "negative" ] },
+					{ "type": "mechanic", "tags": [ "dispel" ] },
+					{ "type": "mechanic", "tags": [ "hard_dispel" ] }
+				]
+			}
+		}
+	]
+}

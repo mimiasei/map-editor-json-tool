@@ -1,0 +1,44 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_t5_t7_1",
+            "useOldSquads": false,
+            "rollChance": 163,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "succubus",
+                        "v": 10027
+                    },
+                    {
+                        "s": "unspeakable",
+                        "v": 20027
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 20027,
+                "units": [
+                    "succubus",
+                    "unspeakable"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 136027,
+                "units": [
+                    {
+                        "s": "succubus",
+                        "v": 42527
+                    },
+                    {
+                        "s": "unspeakable",
+                        "v": 136027
+                    }
+                ]
+            },
+            "tier": 7,
+            "fraction": "unfrozen"
+        }
+    ]
+}

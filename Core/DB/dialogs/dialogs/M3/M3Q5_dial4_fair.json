@@ -1,0 +1,29 @@
+{
+	"array": [
+		{
+			"id": "M3Q5_dial4_fair",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q5_dial4_fair_0",
+					"mapActions": [],
+					"end": true
+				}
+			]
+		}
+	]
+}

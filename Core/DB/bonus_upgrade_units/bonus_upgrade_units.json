@@ -1,0 +1,271 @@
+{
+	"array": 
+	[
+		{
+			"id": "bonus_upgrade_units",
+			"sourceUnits":["esquire"],
+			"targetUnits":["sunlight_cavalry"],
+			"coefficient": 1,
+			"isStandart": true,
+			"isFree": true
+		},
+		{
+			"id":"spec1_bonus_upgrade",
+			"sourceUnits":["crossbowman"],
+			"targetUnits":["sunlight_cavalry"],
+			"coefficient": 1,
+			"isStandart": true,
+			"isFree": true
+		},
+
+
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_human_1",
+			"sourceUnits": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 1,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_human_2",
+			"sourceUnits": [ "crossbowman", "crossbowman_upg", "crossbowman_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 2,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_human_3",
+			"sourceUnits": [ "griffin", "griffin_upg", "griffin_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 3,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_human_4",
+			"sourceUnits": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 4,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_human_5",
+			"sourceUnits": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 5,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_human_6",
+			"sourceUnits": [ "inquisitor", "inquisitor_upg", "inquisitor_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 6,
+			"isStandart": false,
+			"isFree": true
+		},
+
+
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_nature_1",
+			"sourceUnits": [ "elf_tracker", "elf_tracker_upg", "elf_tracker_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 1,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_nature_2",
+			"sourceUnits": [ "twinkle", "twinkle_upg", "twinkle_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 2,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_nature_3",
+			"sourceUnits": [ "druid", "gdruid_upg", "druid_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 5,
+			"isStandart": false,
+			"isFree": true
+		},
+
+
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_unfrozen_1",
+			"sourceUnits": [ "lesser_eldritch", "lesser_eldritch_upg", "lesser_eldritch_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 1,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_unfrozen_2",
+			"sourceUnits": [ "unfrozen_cultist", "unfrozen_cultist_upg", "unfrozen_cultist_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 2,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_unfrozen_3",
+			"sourceUnits": [ "frostworm_rider", "frostworm_rider_upg", "frostworm_rider_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 3,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_unfrozen_4",
+			"sourceUnits": [ "eldritch_flyer", "eldritch_flyer_upg", "eldritch_flyer_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 4,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_unfrozen_5",
+			"sourceUnits": [ "succubus", "succubus_upg", "succubus_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 5,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_unfrozen_6",
+			"sourceUnits": [ "arbitrator", "arbitrator_upg", "arbitrator_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 6,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_unfrozen_7",
+			"sourceUnits": [ "unspeakable", "unspeakable_upg", "unspeakable_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 7,
+			"isStandart": false,
+			"isFree": true
+		},
+
+
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_dungeon_1",
+			"sourceUnits": [ "trogl", "trogl_upg", "trogl_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 1,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_dungeon_2",
+			"sourceUnits": [ "assassin", "assassin_upg", "assassin_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 2,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_dungeon_3",
+			"sourceUnits": [ "blade_dancer", "blade_dancer_upg", "blade_dancer_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 3,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_dungeon_4",
+			"sourceUnits": [ "minos", "minos_upg", "minos_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 4,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_dungeon_5",
+			"sourceUnits": [ "medusa", "medusa_upg", "medusa_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 5,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_dungeon_6",
+			"sourceUnits": [ "hydra", "hydra_upg", "hydra_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 6,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_dungeon_7",
+			"sourceUnits": [ "black_dragon", "black_dragon_upg", "black_dragon_upg_alt" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 7,
+			"isStandart": false,
+			"isFree": true
+		},
+
+
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_neutral_1",
+			"sourceUnits": [ "halfling" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 2,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_neutral_2",
+			"sourceUnits": [ "kitten_horn" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 3,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_neutral_3",
+			"sourceUnits": [ "gorilla" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 3,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_neutral_4",
+			"sourceUnits": [ "fairy_dragon" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 4,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_neutral_5",
+			"sourceUnits": [ "giant_frog" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 5,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_neutral_6",
+			"sourceUnits": [ "coatl" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 6,
+			"isStandart": false,
+			"isFree": true
+		},
+		{
+			"id": "campaign_hero_4_specialization_upgrade_units_neutral_7",
+			"sourceUnits": [ "sentinel" ],
+			"targetUnits": [ "skeleton" ],
+			"coefficient": 7,
+			"isStandart": false,
+			"isFree": true
+		}
+	]
+}

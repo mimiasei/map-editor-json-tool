@@ -1,0 +1,37 @@
+﻿int unic_unit_esquire_passive_1
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modPercentNumeric unic_unit_esquire_passive_2
+{ 
+	CurrentUnitConfig ( return, "aura.data.stats.inDmgMods.list[0].v" )
+}
+
+string unic_unit_crossbowman_passive_1 
+{ 
+	Text( return, "1" )
+}
+
+string unic_unit_crossbowman_ability_2
+{ 
+	Text( return, "50" )
+}
+
+int unic_unit_lightweaver_passive_1 
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.damageMin" )
+}
+
+int unic_unit_sunlight_cavalry_passive_3
+{ 
+	CurrentUnitConfig ( buffSid, "passives[1].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modPercentNumeric unic_unit_angel_ability_2
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}

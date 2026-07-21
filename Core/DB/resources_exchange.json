@@ -1,0 +1,94 @@
+{
+	"resources":
+	[
+		{
+			"resName": "gold",
+			"exchange":
+			[
+				{ "name": "wood",   "inValue": 250, "outValue": 1 },
+				{ "name": "ore",  "inValue": 250, "outValue": 1 },
+				{ "name": "gemstones", "inValue": 500, "outValue": 1 },
+				{ "name": "crystals",  "inValue": 500, "outValue": 1 },
+				{ "name": "mercury",  "inValue": 500, "outValue": 1 },
+				{ "name": "dust",   "inValue": 250, "outValue": 1 }
+			]
+		},
+
+		{
+			"resName": "wood",
+			"exchange":
+			[
+				{ "name": "gold",   "inValue": 1, "outValue": 250 },
+				{ "name": "ore",  "inValue": 1, "outValue": 1 },
+				{ "name": "gemstones", "inValue": 2, "outValue": 1 },
+				{ "name": "crystals",  "inValue": 2, "outValue": 1 },
+				{ "name": "mercury",  "inValue": 2, "outValue": 1 },
+				{ "name": "dust",   "inValue": 1, "outValue": 1 }
+			]
+		},
+
+		{
+			"resName": "ore",
+			"exchange":
+			[
+				{ "name": "gold",   "inValue": 1, "outValue": 250 },
+				{ "name": "wood",   "inValue": 1, "outValue": 1 },
+				{ "name": "gemstones", "inValue": 2, "outValue": 1 },
+				{ "name": "crystals",  "inValue": 2, "outValue": 1 },
+				{ "name": "mercury",  "inValue": 2, "outValue": 1 },
+				{ "name": "dust",   "inValue": 1, "outValue": 1 }
+			]
+		},
+		{
+			"resName": "gemstones",
+			"exchange":
+			[
+				{ "name": "gold",   "inValue": 1, "outValue": 500 },
+				{ "name": "wood",   "inValue": 1, "outValue": 2 },
+				{ "name": "ore",  "inValue": 1, "outValue": 2 },
+				{ "name": "crystals",  "inValue": 1, "outValue": 1 },
+				{ "name": "mercury",  "inValue": 1, "outValue": 1 },
+				{ "name": "dust",   "inValue": 1, "outValue": 2 }
+			]
+		},
+
+		{
+			"resName": "crystals",
+			"exchange":
+			[
+				{ "name": "gold",   "inValue": 1, "outValue": 500 },
+				{ "name": "wood",   "inValue": 1, "outValue": 2 },
+				{ "name": "ore",  "inValue": 1, "outValue": 2 },
+				{ "name": "gemstones", "inValue": 1, "outValue": 1 },
+				{ "name": "mercury",  "inValue": 1, "outValue": 1 },
+				{ "name": "dust",   "inValue": 1, "outValue": 2 }
+			]
+		},
+
+		{
+			"resName": "mercury",
+			"exchange":
+			[
+				{ "name": "gold",   "inValue": 1, "outValue": 500 },
+				{ "name": "wood",   "inValue": 1, "outValue": 2 },
+				{ "name": "ore",  "inValue": 1, "outValue": 2 },
+				{ "name": "gemstones", "inValue": 1, "outValue": 1 },
+				{ "name": "crystals",  "inValue": 1, "outValue": 1 },
+				{ "name": "dust",   "inValue": 1, "outValue": 2 }
+			]
+		},
+
+		{
+			"resName": "dust",
+			"exchange":
+			[
+				{ "name": "gold",   "inValue": 1, "outValue": 250 },
+				{ "name": "wood",   "inValue": 1, "outValue": 1 },
+				{ "name": "ore",  "inValue": 1, "outValue": 1 },
+				{ "name": "gemstones", "inValue": 2, "outValue": 1 },
+				{ "name": "crystals",  "inValue": 2, "outValue": 1 },
+				{ "name": "mercury",  "inValue": 2, "outValue": 1 }
+			]
+		}
+	]
+}

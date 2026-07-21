@@ -1,0 +1,146 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "cursed_old_house",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 40,
+					"value": 5250,
+					"customGuardValue": 2600,
+
+					"guardUnits":
+					[
+						{ "sid": "flicker_upg", "amount": 18 },
+						{ "sid": "graverobber", "amount": 8 },
+						{ "sid": "flicker_upg_alt", "amount": 18 },
+						{ "sid": "pet", "amount": 12 },
+						{ "sid": "flicker_upg", "amount": 18 },
+						{ "sid": "pet", "amount": 12 },
+						{ "sid": "flicker_upg_alt", "amount": 18 }					
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroRandomItemsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "itemReward_notification",
+
+								"parameters":
+								[
+									"rare", "common"
+								]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 40,
+					"value": 7000,
+					"customGuardValue": 2600,
+
+					"guardUnits":
+					[
+						{ "sid": "flicker_upg", "amount": 24 },
+						{ "sid": "graverobber", "amount": 12 },
+						{ "sid": "flicker_upg_alt", "amount": 24 },
+						{ "sid": "pet", "amount": 16 },
+						{ "sid": "flicker_upg", "amount": 24 },
+						{ "sid": "pet", "amount": 16 },
+						{ "sid": "flicker_upg_alt", "amount": 24 }					
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroRandomItemsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "itemReward_notification",
+
+								"parameters":
+								[
+									"rare", "rare"
+								]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 20,
+					"value": 10500,
+					"customGuardValue": 2600,
+
+					"guardUnits":
+					[
+						{ "sid": "flicker_upg", "amount": 36 },
+						{ "sid": "graverobber_upg_alt", "amount": 12 },
+						{ "sid": "flicker_upg_alt", "amount": 36 },
+						{ "sid": "pet_upg", "amount": 16 },
+						{ "sid": "flicker_upg", "amount": 36 },
+						{ "sid": "pet_upg_alt", "amount": 16 },
+						{ "sid": "flicker_upg_alt", "amount": 36 }					
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroRandomItemsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "itemReward_notification",
+
+								"parameters":
+								[
+									"rare", "epic"
+								]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

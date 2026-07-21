@@ -1,0 +1,316 @@
+{
+	"array":
+	[
+		{
+			"id": "fish",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/fish" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "chicken_1",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/chicken_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "chicken_2",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/chicken_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "chick_1",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/chick_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "chick_2",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/chick_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "chick_3",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/chick_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "pig",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/pig" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "ram_1",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/ram_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "ram_2",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/ram_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "mushroom_cow",
+			"tag": "Animals",
+			"biome": "Grass",
+			"prefs": [ "environment/mushroom_cow" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "camel",
+			"tag": "Animals",
+			"biome": "Desert",
+			"prefs": [ "environment/camel" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "scarab_1",
+			"tag": "Animals",
+			"biome": "Desert",
+			"prefs": [ "environment/scarab_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "scarab_2",
+			"tag": "Animals",
+			"biome": "Desert",
+			"prefs": [ "environment/scarab_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "scorpion",
+			"tag": "Animals",
+			"biome": "Desert",
+			"prefs": [ "environment/scorpion" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "spider",
+			"tag": "Animals",
+			"biome": "Desert",
+			"prefs": [ "environment/spider" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+
+		
+
+		{
+			"id": "chicken_undead_1",
+			"tag": "Animals",
+			"biome": "Deathland",
+			"prefs": [ "environment/chicken_undead_1" ],
+
+			"sizeX": 1,
+			"sizeZ": 1,
+			"randomRotation": true
+
+		},
+		{
+			"id": "chicken_undead_2",
+			"tag": "Animals",
+			"biome": "Deathland",
+			"prefs": [ "environment/chicken_undead_2" ],
+
+			"sizeX": 1,
+			"sizeZ": 1,
+			"randomRotation": true
+
+		},
+		{
+			"id": "chicken_undead_3",
+			"tag": "Animals",
+			"biome": "Deathland",
+			"prefs": [ "environment/chicken_undead_3" ],
+
+			"sizeX": 1,
+			"sizeZ": 1,
+			"randomRotation": true
+
+		},
+		{
+			"id": "pig_undead",
+			"tag": "Animals",
+			"biome": "Deathland",
+			"prefs": [ "environment/pig_undead" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "ram_undead_1",
+			"tag": "Animals",
+			"biome": "Deathland",
+			"prefs": [ "environment/ram_undead" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "ram_undead_2",
+			"tag": "Animals",
+			"biome": "Deathland",
+			"prefs": [ "environment/ram_undead_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		
+
+
+		{
+			"id": "lesser_shoggoth_1",
+			"tag": "Animals",
+			"biome": "Snow",
+			"prefs": [ "environment/lesser_shoggoth_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "lesser_shoggoth_2",
+			"tag": "Animals",
+			"biome": "Snow",
+			"prefs": [ "environment/lesser_shoggoth_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "lesser_shoggoth_3",
+			"tag": "Animals",
+			"biome": "Snow",
+			"prefs": [ "environment/lesser_shoggoth_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "penguin",
+			"tag": "Animals",
+			"biome": "Snow",
+			"prefs": [ "environment/penguin" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+
+		{
+			"id": "lava_snails_1",
+			"tag": "Animals",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_snails_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "lava_snails_2",
+			"tag": "Animals",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_snails_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+
+		{
+			"id": "birds",
+			"tag": "Animals",
+			"prefs": [ "environment/birds" ]
+		},
+		{
+			"id": "birds_2",
+			"tag": "Animals",
+			"prefs": [ "environment/birds_2" ]
+		},
+		{
+			"id": "birds_3",
+			"tag": "Animals",
+			"prefs": [ "environment/birds_3" ]
+		},
+		{
+			"id": "birds_4",
+			"tag": "Animals",
+			"prefs": [ "environment/birds_4" ]
+		},
+		{
+			"id": "birds_5",
+			"tag": "Animals",
+			"prefs": [ "environment/birds_5" ]
+		},
+		{
+			"id": "birds_6",
+			"tag": "Animals",
+			"prefs": [ "environment/birds_6" ]
+		}
+	]
+}

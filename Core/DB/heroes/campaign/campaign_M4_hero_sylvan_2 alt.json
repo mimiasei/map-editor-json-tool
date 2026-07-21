@@ -1,0 +1,130 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M4_hero_sylvan_2_alt",
+
+			"description": "nature_hero_8_description",
+			"motto": "nature_hero_8_motto",
+
+			"mesh": "druid_warrior",
+			"mounts": [ "deer" ],
+			"icon": "hero_nature_8_Alluring_Sha",
+			"fraction": "nature",
+			"nativeBiome": "Autumn",
+			"classType": "might",
+
+			"skillsRollVariant": "nature_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 8,
+
+			"startSquad" : [
+				{ "sid": "elf_tracker", "min": 14, "max": 14 },
+				{ "sid": "elf_tracker", "min": 14, "max": 14 },
+				{ "sid": "elf_tracker", "min": 14, "max": 14 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "elf_tracker", "min": 14, "max": 14 },
+				{ "sid": "elf_tracker", "min": 14, "max": 14 },
+				{ "sid": "elf_tracker", "min": 14, "max": 14 }
+			],
+
+			"specialization": "nature_hero_3_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome": true,
+				
+				"offence":      4,
+				"defence":      3,
+				"spellPower":   3,
+				"intelligence": 1,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 35 },
+						{ "v": 1, "c": 35 },
+						{ "v": 2, "c": 15 },
+						{ "v": 3, "c": 15 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_nature",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_resistance",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "day_1_magic_healing_water",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_7_magic_inner_light",
+					"level": 1,
+					"isLearned": true
+				},
+
+				{
+					"sidConfig": "space_2_magic_energy_explosion",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_9_magic_impending_fate",
+					"level": 1,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

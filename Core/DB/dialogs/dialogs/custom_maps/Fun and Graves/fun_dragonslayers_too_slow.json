@@ -1,0 +1,201 @@
+{
+	"array": [
+		{
+			"id": "fun_dragonslayers_too_slow",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_too_slow_0",		
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"dragon_slayers_with_Funerella",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_too_slow_1",		
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"dragon_slayers_with_Marl",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_dragonslayers_too_slow_marl",		
+					"next": "1alt"
+				},
+				{
+					"id": "1alt",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"dragon_slayers_with_Funerella",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "Hero",
+							"p": [
+								"cm_fun_hero_1"
+							]
+						}
+					],
+					"next": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_too_slow_1",
+					"answers": [
+						{
+							"text": "fun_dialogue_text_dragonslayers_too_slow_1_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_dragonslayers_too_slow_1_answer_2",
+							"actions": [
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{ "a": "RemoveUnitHero", "p": [ "dragon_hunter", "all", "cm_fun_hero_1" ] },
+								{ "a": "RemoveUnitHero", "p": [ "dragon_hunter", "all", "necro_hero_7" ] },
+								{ "a": "SpawnSquad", "p": [ "squad_cm_fun_dragonslayers", "1", "6800", "false", "dragonslayers_leaving" ] },
+								{ "a": "SetFlagEscape", "p": [ "dragonslayers_leaving", "false" ] },
+								{ "a": "ChangeSquadReactionType", "p": [ "dragonslayers_leaving", "Aggressive" ] },
+								{ "a": "AddBuffHeroDays", "p": [ "cm_fun_necromancy_power_disabled", "", "1" ] },
+								{ "a": "InitiateAttack", "p": [ "dragonslayers_leaving" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"text": "fun_dialogue_text_dragonslayers_too_slow_2",
+					"mapActions": [
+						{
+							"a": "RemoveUnitHero",
+							"p": [
+								"dragon_hunter",
+								"all",
+								"cm_fun_hero_1"
+							]
+						},
+						{
+							"a": "RemoveUnitHero",
+							"p": [
+								"dragon_hunter",
+								"all",
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_dragonslayers_too_slow_3",
+					"end": true
+				}
+			]
+		}
+	]
+}

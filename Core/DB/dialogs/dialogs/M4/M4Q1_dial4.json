@@ -1,0 +1,175 @@
+{
+	"array": [
+		{
+			"id": "M4Q1_dial4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"main_quest_opponent_defeated",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_old_peregrinator",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_druid",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial4_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_old_peregrinator",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q1_dial4_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_old_peregrinator",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_druid",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q1_dial4_2",
+					"answers": [
+						{
+							"text": "dialogue_text_M4Q1_dial4_2_answer_1",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "BreakInterruptions"
+								},
+								{
+									"a": "StepBack"
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M4Q1_dial4_2_answer_2",							
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"endingFight"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "SetActiveVFX",
+									"p": [
+										"em_ignacius",
+										"false"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "endingFight",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

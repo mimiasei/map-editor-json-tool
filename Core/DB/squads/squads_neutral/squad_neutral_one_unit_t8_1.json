@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_neutral_one_unit_t8_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 250,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "lich_dragon", "v": 25007 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 25007,
+				"units":
+				[
+					"lich_dragon"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 24000000,
+				"units":
+				[
+					{ "s" : "lich_dragon", "v": 24000000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "neutral"
+		}
+	]
+}

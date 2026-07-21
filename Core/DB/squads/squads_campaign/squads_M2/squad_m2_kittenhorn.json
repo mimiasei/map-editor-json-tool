@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m2_kittenhorn",
+			
+			"squad" : 
+			[
+				{ "s" : "kitten_horn", "v": 2000 }		
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "kitten_horn", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"kitten_horn"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000000,
+				"units":
+				[
+					{ "s" : "kitten_horn", "v": 1000000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "neutral"
+		}
+	]
+}

@@ -1,0 +1,36 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_one_unit_t7_1",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 1510,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "unspeakable",
+                        "v": 25007
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 25007,
+                "units": [
+                    "unspeakable"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 240007,
+                "units": [
+                    {
+                        "s": "unspeakable",
+                        "v": 240007
+                    }
+                ]
+            },
+            "tier": 7,
+            "fraction": "unfrozen"
+        }
+    ]
+}

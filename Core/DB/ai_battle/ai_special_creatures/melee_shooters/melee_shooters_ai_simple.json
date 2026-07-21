@@ -1,0 +1,201 @@
+﻿{
+	"array":
+	[
+        {
+			"id": "range_type_melee_shooters_simple",
+
+			"lowUnitPowerThreshold": 0.05,	"suicideSelfPowerThreshold": 0.05,
+
+			"agressiveness": 7,	"agressivenessFuture": 3,	"agressivenessCareful": 5,
+			
+			"dangerMelee": -17,		"dangerMeleeFuture": -8,						
+			"dangerReach": -17,		"dangerReachFuture": -8,						
+			"dangerRange": 0,
+			"usePowerInDangerEvaluation": true,
+
+			"grouping": 80,						"targeting": -333,
+			"blockRangersValue": 80,			"lowPowerEnemyTargeting": 0,
+
+			"selfHexValue": 100,
+			"centerHexPositioning": 15,			"centerVerticalPositioning": 7,			"centerHorizontalPositioning": 7,
+			"enemyCorpseHexValue": 20,			"allyCorpseHexValue": -30,				"trapHexValue": -300,
+
+			"damageValue": 0,					"damageEffectiveValue": 40,				"usePowerInDamageEvaluation": false,
+			"killStackValue": 60, 				"usePowerInKillStackEvaluation": false,
+			"killValue": 1000,					"usePowerInKillEvaluation": false,
+			"killStackValuePerTierMultipliers": [1, 2, 3, 5, 8, 14, 30, 90],
+			"effectiveCounterDamageValue": -0.5,
+			"usePowerInCounterEvaluation": false,
+
+			"targetWithActionsValue": 0,		"targetWithoutActionsValue": -150,
+			"targetWaitValue": 250,				"targetSkipValue": -100,
+			"targetNoCounterValue": 500,		"targetLowPowerValue": 0,
+			"targetCanReachAllyValue": 500,		"targetSelectedThisRoundValue": 250,
+			"targetIsSummonMultiplier": 0.15,	"allyDamagePenaltyMultiplier": 0.9,
+			"targetWithNeighborValue": 250,
+
+			"finalDamageMultiplier": 1.0,		"finalBuffValueMultiplier": 1.0,		"finalHealValueMultiplier": 1.0,		"finalDispelValueMultiplier": 1.0,
+			
+			"obstacleNeighborValue": 100, 		"obstacleSecondNeighborValue": 50, 	"obstacleKillValueMultiplier": 3.0,
+
+			"topAbilityCasts": 1,
+			"unitMadeTurnAbilityValueMultiplier": 1,
+			"usePowerInBuffEvaluation": true,
+			"buffValuePerTargetMultiplier": 0.05,
+
+			"meleeDmgValueMultiplier": 1.0,     "reachDmgValueMultiplier": 0.75,     "rangeDmgValueMultiplier": 1.0,
+
+			"enableAggroMultipliers": true,
+			"aggroTakeDamageDelta": 0.05,
+			"aggroDealDamageDelta": -0.05,
+
+			"mechValues":
+			[																			
+				{
+					"name":		  "heal",
+					"mechs":	[ "heal_from_dispel", "heal" ],
+					"values":	[ "1000", "15" ]
+				},
+				{
+					"name":		  "dispel",
+					"mechs":	[ "dispel" ],
+					"values":	[]
+				},
+				{
+					"name":		  "revive",
+					"mechs":	[ "revive" ],
+					"values":	[ "1000", "5", "2" ]
+				},
+				{
+					"name":		  "substitute_by_hp",
+					"mechs":	[ "substitute_by_hp" ],
+					"values":	[ "1500", "5" ]
+				},
+				{
+					"name":		  "destroy_stack",
+					"mechs":	[ "destroy_summon", "destroy_temp_stacks", "kill_stacks" ],
+					"values":	[]
+				},
+				{
+					"name":		  "assasinate",
+					"mechs":	[ "assasinate" ],
+					"values":	[]
+				},
+				{
+					"name":		  "add_energy",
+					"mechs":	[ "add_energy" ],
+					"values":	[ "500", "3000" ]
+				},
+				{
+					"name":		  "global_buff",
+					"mechs":	[ "global_buff" ],
+					"values":	[]
+				}
+			],
+			"transitions":
+			[
+				{
+					"condition":  "blocked_range",
+					"conditionParams": [],
+					"nextState":  "range_type_melee_shooters_alt"
+				}
+			]
+		},
+		{
+			"id": "range_type_melee_shooters_alt_simple",
+
+			"lowUnitPowerThreshold": 0.05,	"suicideSelfPowerThreshold": 0.05,
+
+			"agressiveness": 40,	"agressivenessFuture": 25,	"agressivenessCareful": 33,
+			
+			"dangerMelee": -1200,	"dangerMeleeFuture": -200,						
+			"dangerReach": -1200,	"dangerReachFuture": -200,						
+			"dangerRange": 0,
+			"usePowerInDangerEvaluation": true,	
+
+			"grouping": -17,					"targeting": 500,
+			"blockRangersValue": 80,			"lowPowerEnemyTargeting": 0,
+
+			"selfHexValue": 150,
+			"centerHexPositioning": 10,			"centerVerticalPositioning": 5,			"centerHorizontalPositioning": 5,
+			"enemyCorpseHexValue": 20,			"allyCorpseHexValue": -30,				"trapHexValue": -300,
+
+			"damageValue": 0,					"damageEffectiveValue": 40,				"usePowerInDamageEvaluation": false,
+			"killStackValue": 60, 				"usePowerInKillStackEvaluation": false,
+			"killValue": 1000,					"usePowerInKillEvaluation":	false,
+			"killStackValuePerTierMultipliers": [1, 2, 3, 5, 8, 14, 30, 90],
+			"effectiveCounterDamageValue": -0.5,
+			"usePowerInCounterEvaluation": false,
+
+			"targetWithActionsValue": 0,		"targetWithoutActionsValue": -150,  
+			"targetWaitValue": 250,				"targetSkipValue": -100,			
+			"targetNoCounterValue": 500,		"targetLowPowerValue": 0,		 
+			"targetCanReachAllyValue": 500,		"targetSelectedThisRoundValue": 250,  
+			"targetIsSummonMultiplier": 0.15,	"allyDamagePenaltyMultiplier": 0.9, 
+			"targetWithNeighborValue": 250,
+
+			"finalDamageMultiplier": 1.0,		"finalBuffValueMultiplier": 1.0,		"finalHealValueMultiplier": 1.0,		"finalDispelValueMultiplier": 1.0,
+			
+			"obstacleNeighborValue": 100, 		"obstacleSecondNeighborValue": 50, 	"obstacleKillValueMultiplier": 3.0,
+
+			"topAbilityCasts": 1,
+			"unitMadeTurnAbilityValueMultiplier": 1,	
+			"usePowerInBuffEvaluation": true,
+			"buffValuePerTargetMultiplier": 0.05,
+
+			"meleeDmgValueMultiplier": 1.0,     "reachDmgValueMultiplier": 1.0,     "rangeDmgValueMultiplier": 1.0,
+
+			"enableAggroMultipliers": true,
+			"aggroTakeDamageDelta": 0.05,
+			"aggroDealDamageDelta": -0.05,
+
+			"mechValues":																
+			[																			
+				{
+					"name":		  "heal",
+					"mechs":	[ "heal_from_dispel", "heal" ],
+					"values":	[ "1000", "15" ]
+				},
+				{
+					"name":		  "dispel",
+					"mechs":	[ "dispel" ],
+					"values":	[]
+				},
+				{
+					"name":		  "revive",
+					"mechs":	[ "revive" ],
+					"values":	[ "1000", "5", "2" ]
+				},
+				{
+					"name":		  "substitute_by_hp",
+					"mechs":	[ "substitute_by_hp" ],
+					"values":	[ "1500", "5" ]
+				},
+				{
+					"name":		  "destroy_stack",
+					"mechs":	[ "destroy_summon", "destroy_temp_stacks", "kill_stacks" ],
+					"values":	[]
+				},
+				{
+					"name":		  "assasinate",
+					"mechs":	[ "assasinate" ],
+					"values":	[]
+				},
+				{
+					"name":		  "add_energy",
+					"mechs":	[ "add_energy" ],
+					"values":	[ "500", "3000" ]
+				},
+				{
+					"name":		  "global_buff",
+					"mechs":	[ "global_buff" ],
+					"values":	[]
+				}
+			],
+			"transitions":
+			[
+
+			]
+		}
+	]  
+}

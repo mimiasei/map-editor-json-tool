@@ -1,0 +1,25 @@
+{
+	"array":
+	[
+		{
+			"id": "quest_test",
+			"slides":
+			[
+				{
+					"id": "start",
+					"title": "",
+					"text": "Сквады ниже дороги должны выдавать диалог только герою Ister (human_hero_1), крайний правый должен выдавать уникальный диалог еще и персонажу Leon Sticky Fingers (human_hero_2)",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"end": true,
+					"resultDialog": "Default"
+				}
+			]
+		}
+	]
+}

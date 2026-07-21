@@ -1,0 +1,168 @@
+{
+	"array":
+	[
+		{
+			"id": "fx_fireflies_yellow",
+			"tag": "FX",
+			"prefs": [ "fx/fx_fireflies_yellow" ]
+		},
+		{
+			"id": "fx_fireflies_red",
+			"tag": "FX",
+			"prefs": [ "fx/fx_fireflies_red" ]
+		},
+		{
+			"id": "fx_fireflies_blue",
+			"tag": "FX",
+			"prefs": [ "fx/fx_fireflies_blue" ]
+		},
+		{
+			"id": "fx_fireflies_purple",
+			"tag": "FX",
+			"prefs": [ "fx/fx_fireflies_purple" ]
+		},
+		{
+			"id": "fx_map_fire",
+			"tag": "FX",
+			"prefs": [ "fx/fx_map_fire" ]
+		},
+		{
+			"id": "fx_map_light",
+			"tag": "FX",
+			"prefs": [ "fx/fx_map_light" ]
+		},
+		{
+			"id": "fx_map_object_blocked",
+			"tag": "FX",
+			"prefs": [ "fx/fx_map_object_blocked" ]
+		},
+		{
+			"id": "fx_map_smoke",
+			"tag": "FX",
+			"prefs": [ "fx/fx_map_smoke" ]
+		},
+		{
+			"id": "fx_light_sky",
+			"tag": "FX",
+			"prefs": [ "fx/fx_light_sky" ]
+		},
+		{
+			"id": "fx_fog",
+			"tag": "FX",
+			"prefs": [ "fx/fx_fog" ],
+
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				0, 0
+			]
+		},
+
+
+		
+		{
+			"id": "fx_quest_mark_gold_01",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_gold_01" ]
+		},
+		{
+			"id": "fx_quest_mark_gold_02",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_gold_02" ]
+		},
+		{
+			"id": "fx_quest_mark_gold_03",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_gold_03" ]
+		},
+		{
+			"id": "fx_quest_mark_silver_01",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_silver_01" ]
+		},
+		{
+			"id": "fx_quest_mark_silver_02",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_silver_02" ]
+		},
+		{
+			"id": "fx_quest_mark_silver_03",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_silver_03" ]
+		},
+		{
+			"id": "fx_2x2_quest_mark_gold_01",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_gold_01" ],
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				0, 0
+			]
+		},
+		{
+			"id": "fx_2x2_quest_mark_gold_02",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_gold_02" ],
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				0, 0
+			]
+		},
+		{
+			"id": "fx_2x2_quest_mark_gold_03",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_gold_03" ],
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				0, 0
+			]
+		},
+		{
+			"id": "fx_2x2_quest_mark_silver_01",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_silver_01" ],
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				0, 0
+			]
+		},
+		{
+			"id": "fx_2x2_quest_mark_silver_02",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_silver_02" ],
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				0, 0
+			]
+		},
+		{
+			"id": "fx_2x2_quest_mark_silver_03",
+			"tag": "FX",
+			"prefs": [ "fx/fx_quest_mark_silver_03" ],
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				0, 0
+			]
+		}
+	]
+}

@@ -1,0 +1,55 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m5_mega_guard_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "flicker", "v": 1 },
+					{ "s" : "pet", "v": 1 },
+					{ "s" : "graverobber", "v": 1 },
+					{ "s" : "lich", "v": 1 },
+					{ "s" : "avatar_of_war_upg", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 300000,
+				"units":
+				[
+					{ "s" : "flicker", "v": 50000 },
+					{ "s" : "pet", "v": 50000 },
+					{ "s" : "graverobber", "v": 50000 },
+					{ "s" : "lich", "v": 50000 },
+					{ "s" : "avatar_of_war", "v": 50000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "undead"
+		}
+	]
+}

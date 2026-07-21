@@ -1,0 +1,87 @@
+{
+	"array": [
+		{
+			"id": "M1Q1_dial2b",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "dialogue_text_M1Q1_dial2b_0_s",
+					"mapActions": [
+						{
+							"a": "RemoveRes",
+							"p": [
+								"wood",
+								"30"
+							]
+						}
+					],
+					"next": "0"
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1Q1_dial2b_0",
+					"mapActions": [
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"broken_bridge"
+							]
+						},
+						{
+							"a": "SpawnMapObject",
+							"p": [
+								"bridge_wood",
+								"1174",
+								"1",
+								"fixed_bridge"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"em_bridge",
+								"false"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"bridge_quest",
+								"2"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "AutoSave"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

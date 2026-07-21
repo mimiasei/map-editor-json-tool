@@ -1,0 +1,205 @@
+﻿//
+
+modPercentNumeric current_shamaniac_soul_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_knights_honor_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+modPercentNumeric current_knights_honor_item_set_param_2
+{
+	CurrentItemSet ( setData, "config.bonuses[1].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modPercentNumeric current_ukhtabar_seal_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_milos_curse_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_paupers_glory_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+modInt current_paupers_glory_item_set_param_2
+{
+	CurrentItemSet ( setData, "config.bonuses[1].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+modInt current_paupers_glory_item_set_param_3
+{
+	CurrentItemSet ( setData, "config.bonuses[2].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_angelic_alliance_item_set_param_2
+{
+	CurrentItemSet ( setData, "config.bonuses[1].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+string current_gifts_of_dwarven_lords_item_set_param_1
+{
+	Text( return, "1" )
+}
+
+//
+
+string current_elixir_of_life_item_set_param_1
+{
+	// CurrentItemSet ( buffSid, "heroBonuses[0].parameters[1]" )
+	// DbBuff( setData, buffSid, "actions[0].damageDealer.targetMechanics[0].values[2]" )
+	// 
+	// Text( return, setData )
+
+	Text( return, "2.5" )
+}
+
+modPercentNumeric current_elixir_of_life_item_set_param_2
+{
+	CurrentItemSet ( setData, "config.bonuses[1].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_shadow_of_death_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+modInt current_shadow_of_death_item_set_param_2
+{
+	CurrentItemSet ( setData, "config.bonuses[1].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_living_arrows_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_duelists_pride_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_ethereal_knowledge_item_set
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+string current_ethereal_knowledge_item_set_1
+{
+	Text( return, "8" )
+}
+
+//
+
+modInt current_power_of_the_dragon_father_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_beelzebubs_blessing_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_rule_of_shadow_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+//
+
+modInt current_warriors_strength_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+modInt current_keepers_fortitude_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+modInt current_wizards_might_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}
+
+modInt current_scholars_wisdom_item_set_param_1
+{
+	CurrentItemSet ( setData, "config.bonuses[0].heroBonuses[0].parameters[1]" )
+
+	Text( return, setData )
+}

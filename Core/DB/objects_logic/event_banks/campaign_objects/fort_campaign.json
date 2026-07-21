@@ -1,0 +1,58 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "fort_campaign",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 5000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "fort_label",
+						
+						"rewards":
+						[					
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "offence_2_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "defence_2_buff", "Infinite", "-1" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

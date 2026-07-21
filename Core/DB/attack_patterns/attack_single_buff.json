@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+
+	{
+	"id": "attack_single_buff",
+	"sid": "attack_single_buff",
+	"rotations": 
+		[
+			{
+			"dimX": 1,
+			"dimY": 1,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+					0.001
+				]
+			},
+			
+			{
+			"dimX": 1,
+			"dimY": 1,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+					0.001
+				]
+			},
+
+			{
+			"dimX": 1,
+			"dimY": 1,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+					0.001
+				]
+			}
+		]
+
+	}
+	]
+}

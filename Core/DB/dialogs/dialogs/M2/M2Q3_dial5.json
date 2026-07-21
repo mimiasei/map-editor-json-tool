@@ -1,0 +1,166 @@
+{
+	"array": [
+		{
+			"id": "M2Q3_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"kitten_talked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "endIfSkipped",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_kitten_horn",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_kitten",
+						"position": 2
+					},
+					"text": "dialogue_text_M2Q3_dial5_0",
+					"answers": [
+						{
+							"text": "dialogue_text_M2Q3_dial5_0_answer_1",
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							],
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q3_dial5_0_answer_2",
+							"actions": [
+								{
+									"a": "End"
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Nature",
+										"4"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"spring_icon",
+										"-4"
+									]
+								},
+								{
+									"a": "CounterPlus",
+									"p": [
+										"kitten_attacked",
+										"1"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"kitten_quest",
+										"2"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten1"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten2"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten3"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten4"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten5"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten6"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten11"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten12"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten13"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten14"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "endIfSkipped",
+					"fon": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

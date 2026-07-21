@@ -1,0 +1,107 @@
+{
+  "array": 
+  [
+
+    { "sid": "fractionReputation_Dungeon",    "value": 10 },
+    { "sid": "fractionReputation_Human",      "value": 0 },
+    { "sid": "fractionReputation_Undead",     "value": 0 },
+    { "sid": "fractionReputation_Nature",     "value": 0 },
+    { "sid": "fractionReputation_Unfrozen",   "value": 0 },
+    { "sid": "fractionReputation_Demon",      "value": -666 },
+
+
+    { "sid": "SelectedHero_Dungeon",    "value": 0 },
+    { "sid": "SelectedHero_Human",      "value": 0 },
+    { "sid": "SelectedHero_Undead",     "value": 0 },
+    { "sid": "SelectedHero_Nature",     "value": 0 },
+    { "sid": "SelectedHero_Unfrozen",   "value": 0 },
+
+    { "sid": "Campaign_Start_Phase_Mission_1_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_2_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_3_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_4_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_4_Completed_and_help_human", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_4_Completed_and_help_druid", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_5_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_6_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_7_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_8_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Mission_9_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Node_Additional_1_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Node_Additional_2_Completed", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Completed", "value": 0 },
+
+    { "sid": "Campaign_Start_Phase_Dialog_Node_1_Counter", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Dialog_Node_2_Counter", "value": 0 },
+    { "sid": "Campaign_Start_Phase_Dialog_Node_3_Counter", "value": 0 },
+
+
+    {
+      "sid": "node5Unlocked",
+      "value": 0
+    },
+    {
+      "sid": "node6Unlocked",
+      "value": 0
+    },
+    {
+      "sid": "node8Requirements",
+      "value": 0
+    },
+
+    
+    { "sid": "Campaign_Flag_M1_SpyFound", "value": 0 },
+    { "sid": "Campaign_Flag_M1_KnightIsFree", "value": 0 },
+    { "sid": "Campaign_Flag_M1_Bees", "value": 0 },
+
+    { "sid": "Campaign_Flag_M2_Spy", "value": 0 },
+    { "sid": "Campaign_Flag_M2_LafiurFound", "value": 0 },
+    { "sid": "Campaign_Flag_M2_SawEmptyMine", "value": 0 },
+    { "sid": "Campaign_Flag_M2_TouchedRed", "value": 0 },
+    { "sid": "Campaign_Flag_M2_DrankRed", "value": 0 },
+    { "sid": "Campaign_Flag_M2_LocustSeen", "value": 0 },
+    { "sid": "Campaign_Flag_M2_WatcherAttacked", "value": 0 },
+    { "sid": "Campaign_Flag_M2_WatcherCompleted", "value": 0 },
+
+    { "sid": "Campaign_Flag_M3_NecroDefeat", "value": 0 },
+    { "sid": "Campaign_Flag_M3_DocumentsStolen", "value": 0 },
+    { "sid": "Campaign_Flag_M3_GlastorQuest", "value": 0 },
+    { "sid": "Campaign_Flag_M3_SpyFound", "value": 0 },
+    { "sid": "Campaign_Flag_M3_ArtFound", "value": 0 },
+    { "sid": "Campaign_Flag_M3_DeathKnightSaved", "value": 0 },
+
+    { "sid": "Campaign_Flag_M4_SawSister", "value": 0 },
+    { "sid": "Campaign_Flag_M4_Stargazer", "value": 0 },
+    { "sid": "Campaign_Flag_M4_Druid_kill", "value": 0 },
+    { "sid": "Campaign_Flag_M4_HHB_kill", "value": 0 },
+
+    { "sid": "Campaign_Flag_M6_StabilityDungeon", "value": 0 },
+    { "sid": "Campaign_Flag_M6_AngelJoin", "value": 0 },
+    { "sid": "Campaign_Flag_M6_AngelLeave", "value": 0 },
+    
+    { "sid": "Campaign_Flag_M9_OweThant", "value": 0 },
+    { "sid": "Campaign_Flag_M9_GunnarBonus", "value": 0 },
+
+    { "sid": "Campaign_Flag_M10_defenderGunnar", "value": 0 },
+    { "sid": "Campaign_Flag_M10_defenderFilacus", "value": 0 },
+    { "sid": "Campaign_Flag_M10_defenderValentina", "value": 0 },
+    { "sid": "Campaign_Flag_M10_defenderGalthran", "value": 0 },
+    { "sid": "Campaign_Flag_M10_firstGunnar", "value": 0 },
+    { "sid": "Campaign_Flag_M10_firstFilacus", "value": 0 },
+    { "sid": "Campaign_Flag_M10_firstGalthran", "value": 0 },
+    { "sid": "Campaign_Flag_M10_firstValentina", "value": 0 },
+    { "sid": "Campaign_Flag_M10_GunnarFamily", "value": 0 },
+    { "sid": "Campaign_Flag_M10_FilacusDeath", "value": 0 },
+    { "sid": "Campaign_Flag_M10_ValentinaTemple", "value": 0 },
+    { "sid": "Campaign_Flag_M10_ValentinaHome", "value": 0 },
+    { "sid": "Campaign_Flag_M10_antagonistValentina", "value": 0 },
+    { "sid": "Campaign_Flag_M10_antagonistGalthran", "value": 0 },
+    { "sid": "Campaign_Flag_M10_VillagesSaved", "value": 0 },
+    
+    { "sid": "Hero_Trait_Generosity", "value": 0 },
+    { "sid": "Hero_Trait_AlvarsDefender", "value": 0 }
+  ]
+}

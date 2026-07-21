@@ -1,0 +1,159 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M10_hero_demon_4",
+
+			"description": "campaign_M10_hero_demon_4",
+			"motto": "campaign_M10_hero_demon_4",
+			
+			"mesh": "hive_warrior",
+			"mounts": [ "hive_mount" ],
+			"icon": "hero_campaign_10_dragonfly_king",
+			"fraction": "demon",
+			"nativeBiome": "Lava",
+			"classType": "might",
+
+			"skillsRollVariant": "demons_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 30,
+
+			"startSquad" : [
+				{ "sid": "godslayer_upg", "min": 250, "max": 250 },
+				{ "sid": "olgoi_upg", "min": 150, "max": 150 },
+				{ "sid": "hive_queen_upg_alt", "min": 50, "max": 50 },
+				{ "sid": "godslayer_upg_alt", "min": 250, "max": 250 },
+				{ "sid": "hive_queen_upg", "min": 50, "max": 50 },
+				{ "sid": "olgoi_upg_alt", "min": 150, "max": 150 },
+				{ "sid": "wasp_upg_alt", "min": 300, "max": 300 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "godslayer_upg", "min": 250, "max": 250 },
+				{ "sid": "olgoi_upg", "min": 150, "max": 150 },
+				{ "sid": "hive_queen_upg_alt", "min": 50, "max": 50 },
+				{ "sid": "godslayer_upg_alt", "min": 250, "max": 250 },
+				{ "sid": "hive_queen_upg", "min": 50, "max": 50 },
+				{ "sid": "olgoi_upg_alt", "min": 150, "max": 150 },
+				{ "sid": "wasp_upg_alt", "min": 300, "max": 300 }
+			],
+
+			"specialization": "campaign_hero_2_specialization_alt",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     3,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      58,
+				"defence":      58,
+				"spellPower":   58,
+				"intelligence": 59,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 40 },
+						{ "v": 1, "c": 40 },
+						{ "v": 2, "c": 10 },
+						{ "v": 3, "c": 10 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_demons",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_siege",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_tactics",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_wisdom",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_resistance",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_sorcery",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "night_14_magic_nairas_kiss",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_9_magic_arinas_hymn",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_14_magic_hksmillas_rampage",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_14_magic_doreaths_tide",
+					"level": 4,
+					"isLearned": true
+				},
+
+				{
+					"sidConfig": "primal_4_magic_fire_globe",
+					"level": 4,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

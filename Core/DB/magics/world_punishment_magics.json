@@ -1,0 +1,233 @@
+{
+	"array":
+	[		
+		{
+			"isSpecialMagic": true,
+			"id": "kara_darkness",
+
+			"name": "kara_darkness_name",
+			"icon": "neutral_1_magic_mana_transfer",
+			"magicTypeDescription": " ",
+			"description":
+			[
+				"kara_darkness_description",
+				"kara_darkness_description",
+				"kara_darkness_description",
+				"kara_darkness_description"
+			],
+
+			"usedOnMap": true,
+			"school_": "neutral",
+			"rank": 1,
+			"upgradeCost": [ 30 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"energyCost": [ 400, 400, 400, 400 ],
+			"energyType": "unfrozen",
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "kara_debuffs",
+						"parameters": [ "kara_darkness", "ForSeveralDays", "0" ]
+					}
+				],
+				"settingPerLevels":
+				[
+					0
+				]
+			}
+		},
+		{
+			"isSpecialMagic": true,
+			"id": "kara_mana",
+
+			"name": "kara_mana_name",
+			"icon": "neutral_1_magic_mana_transfer",
+			"magicTypeDescription": " ",
+			"description":
+			[
+				"kara_mana_description",
+				"kara_mana_description",
+				"kara_mana_description",
+				"kara_mana_description"
+			],
+
+			"usedOnMap": true,
+			"school_": "neutral",
+			"rank": 1,
+			"upgradeCost": [ 30 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"energyCost": [ 400, 400, 400, 400 ],
+			"energyType": "unfrozen",
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "kara_debuffs",
+						"parameters": [ "kara_mana", "ForSeveralDays", "0" ]
+					}
+				],
+				"settingPerLevels":
+				[
+					0
+				]
+			}
+		},
+		{
+			"isSpecialMagic": true,
+			"id": "kara_speed",
+
+			"name": "kara_speed_name",
+			"icon": "neutral_1_magic_mana_transfer",
+			"magicTypeDescription": " ",
+			"description":
+			[
+				"kara_speed_description",
+				"kara_speed_description",
+				"kara_speed_description",
+				"kara_speed_description"
+			],
+
+			"usedOnMap": true,
+			"school_": "neutral",
+			"rank": 1,
+			"upgradeCost": [ 30 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"energyCost": [ 600, 600, 600, 600 ],
+			"energyType": "unfrozen",
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "kara_debuffs",
+						"parameters": [ "kara_speed", "ForSeveralDays", "0" ]
+					}
+				],
+				"settingPerLevels":
+				[
+					0
+				]
+			}
+		},
+		{
+			"isSpecialMagic": true,
+			"id": "kara_weakness",
+
+			"name": "kara_weakness_name",
+			"icon": "neutral_1_magic_mana_transfer",
+			"magicTypeDescription": " ",
+			"description":
+			[
+				"kara_weakness_description",
+				"kara_weakness_description",
+				"kara_weakness_description",
+				"kara_weakness_description"
+			],
+
+			"usedOnMap": true,
+			"school_": "neutral",
+			"rank": 1,
+			"upgradeCost": [ 30 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"energyCost": [ 600, 600, 600, 600 ],
+			"energyType": "unfrozen",
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "kara_debuffs",
+						"parameters": [ "kara_weakness", "ForSeveralDays", "0" ]
+					}
+				],
+				"settingPerLevels":
+				[
+					0
+				]
+			}
+		},
+		{
+			"isSpecialMagic": true,
+			"id": "kara_silence",
+
+			"name": "kara_silence_name",
+			"icon": "neutral_1_magic_mana_transfer",
+			"magicTypeDescription": " ",
+			"description":
+			[
+				"kara_silence_description",
+				"kara_silence_description",
+				"kara_silence_description",
+				"kara_silence_description"
+			],
+
+			"usedOnMap": true,
+			"school_": "neutral",
+			"rank": 1,
+			"upgradeCost": [ 30 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"energyCost": [ 800, 800, 800, 800 ],
+			"energyType": "unfrozen",
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "kara_debuffs",
+						"parameters": [ "kara_silence", "ForSeveralDays", "0" ]
+					}
+				],
+				"settingPerLevels":
+				[
+					0
+				]
+			}
+		},
+		{
+			"isSpecialMagic": true,
+			"id": "kara_death",
+
+			"name": "kara_death_name",
+			"icon": "neutral_1_magic_mana_transfer",
+			"magicTypeDescription": " ",
+			"description":
+			[
+				"kara_death_description",
+				"kara_death_description",
+				"kara_death_description",
+				"kara_death_description"
+			],
+
+			"usedOnMap": true,
+			"school_": "neutral",
+			"rank": 1,
+			"upgradeCost": [ 30 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"energyCost": [ 800, 800, 800, 800 ],
+			"energyType": "unfrozen",
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "kara_debuffs",
+						"parameters": [ "kara_death", "ForSeveralDays", "0" ]
+					}
+				],
+				"settingPerLevels":
+				[
+					0
+				]
+			}
+		}
+	]
+}

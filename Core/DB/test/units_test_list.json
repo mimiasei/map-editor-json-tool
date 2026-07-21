@@ -1,0 +1,131 @@
+{
+	"objects":
+	[
+		{
+			"teamOne" :	[
+				{ "s" : "lightweaver", "v": 60 },
+				{ "s" : "crossbowman", "v": 140 },
+				{ "s" : "inquisitor", "v": 20 },
+				{ "s" : "esquire", "v": 220 },
+				{ "s" : "griffin", "v": 100 },
+				{ "s" : "sunlight_cavalry", "v": 30 },
+				{ "s" : "angel", "v": 10 }
+			],
+			"teamTwo" : [
+				{ "s" : "lich", "v": 100 },
+				{ "s" : "vampire", "v": 20 },
+				{ "s" : "pet", "v": 150 },
+				{ "s" : "graverobber", "v": 30 },
+				{ "s" : "flicker", "v": 220 },
+				{ "s" : "skeleton", "v": 350 },
+				{ "s" : "avatar_of_war", "v": 50 }
+			]
+		},
+		{
+			"teamOne" :	[
+				{ "s" : "lightweaver", "v": 60 },
+				{ "s" : "crossbowman", "v": 140 },
+				{ "s" : "inquisitor", "v": 20 },
+				{ "s" : "esquire", "v": 220 },
+				{ "s" : "griffin", "v": 100 },
+				{ "s" : "sunlight_cavalry", "v": 30 },
+				{ "s" : "angel", "v": 10 }
+			],
+			"teamTwo" : [
+				{ "s" : "lightweaverg", "v": 60 },
+				{ "s" : "crossbowman", "v": 140 },
+				{ "s" : "inquisitor", "v": 20 },
+				{ "s" : "esquire", "v": 220 },
+				{ "s" : "griffin", "v": 100 },
+				{ "s" : "sunlight_cavalry", "v": 30 },
+				{ "s" : "paragon", "v": 10 }
+			]
+		},
+		{
+			"teamOne" :	[
+				{ "s" : "lightweaverg", "v": 60 },
+				{ "s" : "crossbowman", "v": 140 },
+				{ "s" : "inquisitor", "v": 20 },
+				{ "s" : "esquire", "v": 220 },
+				{ "s" : "griffin", "v": 100 },
+				{ "s" : "sunlight_cavalry", "v": 30 },
+				{ "s" : "angel", "v": 10 }
+			],
+			"teamTwo" : [
+				{ "s" : "elf_tracker", "v": 160 },
+				{ "s" : "druid", "v": 30 },
+				{ "s" : "qilin", "v": 20 },
+				{ "s" : "twinkle", "v": 120 },
+				{ "s" : "phoenix", "v": 10 },
+				{ "s" : "ent", "v": 70 },
+				{ "s" : "aqualotl", "v": 50 }
+			]
+		},
+
+		
+
+		{
+			"teamOne" :	[
+				{ "s" : "lich", "v": 100 },
+				{ "s" : "vampire", "v": 20 },
+				{ "s" : "pet", "v": 150 },
+				{ "s" : "graverobber", "v": 30 },
+				{ "s" : "flicker", "v": 220 },
+				{ "s" : "skeleton", "v": 350 },
+				{ "s" : "avatar_of_war", "v": 50 }
+			],
+			"teamTwo" : [
+				{ "s" : "dragon", "v": 8 },
+				{ "s" : "scael_warrior", "v": 160 },
+				{ "s" : "dingonek", "v": 180 },
+				{ "s" : "goat_explorer", "v": 70 },
+				{ "s" : "kin_commander", "v": 40 },
+				{ "s" : "automaton", "v": 90 },
+				{ "s" : "scael_elite", "v": 20 }
+			]
+		},
+		{
+			"teamOne" :	[
+				{ "s" : "lich", "v": 100 },
+				{ "s" : "vampire", "v": 20 },
+				{ "s" : "pet", "v": 150 },
+				{ "s" : "graverobber", "v": 30 },
+				{ "s" : "flicker", "v": 220 },
+				{ "s" : "skeleton", "v": 350 },
+				{ "s" : "avatar_of_war", "v": 50 }
+			],
+			"teamTwo" : [
+				{ "s" : "elf_tracker", "v": 160 },
+				{ "s" : "druid", "v": 30 },
+				{ "s" : "qilin", "v": 20 },
+				{ "s" : "twinkle", "v": 120 },
+				{ "s" : "phoenix", "v": 10 },
+				{ "s" : "ent", "v": 70 },
+				{ "s" : "aqualotl", "v": 50 }
+			]
+		},
+
+
+		
+		{
+			"teamOne" :	[
+				{ "s" : "dragon", "v": 8 },
+				{ "s" : "scael_warrior", "v": 160 },
+				{ "s" : "dingonek", "v": 180 },
+				{ "s" : "goat_explorer", "v": 70 },
+				{ "s" : "kin_commander", "v": 40 },
+				{ "s" : "automaton", "v": 90 },
+				{ "s" : "scael_elite", "v": 20 }
+			],
+			"teamTwo" : [
+				{ "s" : "elf_tracker", "v": 160 },
+				{ "s" : "druid", "v": 30 },
+				{ "s" : "qilin", "v": 20 },
+				{ "s" : "twinkle", "v": 120 },
+				{ "s" : "phoenix", "v": 10 },
+				{ "s" : "ent", "v": 70 },
+				{ "s" : "aqualotl", "v": 50 }
+			]
+		}
+	]
+}

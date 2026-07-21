@@ -1,0 +1,122 @@
+{
+	"array":
+	[
+		{
+			"id": "_new_system_test_dialog",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+					"dialogPlayConditions":  
+					[
+						{ "c": "StoryCounter", "reqStatus": "true", "p": [ "fractionReputation_Dungeon", ">=", "10" ] }
+					],
+
+					"next": "test",
+
+					"title": "Peasant",
+					"text": "I love beets",
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/esquire" ]
+					},
+
+					"answers":
+					[
+						{
+							"text": "COUNTER #1 +1",
+
+							"requests": 
+							[
+								{ "c": "StoryCounter", "reqStatus": "true", "p": ["fractionReputation_Unfrozen", "<", "100"] }
+							],
+							
+							"actions": 
+							[ 
+								{ "a": "StoryCounterPlus", "p": [ "fractionReputation_Dungeon", "10"] },
+								{ "a": "StoryCounterMinus", "p": [ "fractionReputation_Nature", "5"] },
+								{ "a": "StoryCounterSet", "p": [ "fractionReputation_Undead", "100"] },
+								{ "a": "Go", "p": [ "test" ] }
+							]							
+						},
+						{
+							"text": "COUNTER #2 +5",
+							
+							"actions": [ { "a": "Go", "p": [ "test" ] } ],
+
+							"conditionsLogic": "Or",
+							"requests": 
+							[
+								{ "c": "StoryCounter", "reqStatus": "false",  "p": ["fractionReputation_Unfrozen", ">=", "100"] },
+								{ "c": "Hero", "reqStatus": "false", "p": [ "dungeon_hero_1" ] }
+							]
+						},
+						{
+							"text": "COUNTER #3 +5",
+							"actions": [ { "a": "Go", "p": [ "test" ] } ],
+
+							"requests": 
+							[
+								{ "c": "Hero", "reqStatus": "true", "p": [ "human_hero_1" ] },
+								{ "c": "StoryCounter", "reqStatus": "false", "p": ["fractionReputation_Unfrozen", ">=", "100"] }
+							]
+						}
+					]
+				},
+				{
+					"id": "test",
+					"title": "Gunnar:",
+					"text": "testSkip",
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/gorilla" ]
+					},
+
+					"actions":
+					[
+						{ "a": "StoryCounterPlus", "p": [ "fractionReputation_Dungeon", "100"] }
+					],
+
+					"next": "test2"
+				},
+				{
+					"id": "test2",
+					"title": "Gunnar:",
+					"text": "basic line",
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/gorilla" ]
+					},
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "Hero", "p": [ "human_hero_1" ] } 
+					],
+					
+					"next": "final"
+				},
+				{
+					"id": "final",
+
+					"title": "Peasant:",
+					"text": "Final Phase",
+					"fon": "",
+
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/esquire" ]
+					},
+
+					"end": true
+				}
+			]
+		}
+	]
+}

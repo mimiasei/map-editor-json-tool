@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_neutral_one_unit_t2_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 300,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "halfling", "v": 2503 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 2503,
+				"units":
+				[
+					"halfling"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 15002,
+				"units":
+				[
+					{ "s" : "halfling", "v": 15002 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "neutral"
+		}
+	]
+}

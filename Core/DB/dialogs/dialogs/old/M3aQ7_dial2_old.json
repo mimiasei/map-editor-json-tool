@@ -1,0 +1,33 @@
+{
+	"array":
+	[
+		{
+			"id": "M3aQ7_dial2_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "conscription_start", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "you are not finished, recruit more innocent people and ruin their lives for your convenience",
+					
+					"end": true,
+					"resultDialog": "Interrupt"
+				}				
+			]
+			
+		}
+	]
+}

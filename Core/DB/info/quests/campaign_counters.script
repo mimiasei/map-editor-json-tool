@@ -1,0 +1,95 @@
+﻿int test_subquest_current_value
+{ 
+	QuestCounter ( currentCounterValue, "gold_piles_collected" )
+
+	Text ( return, currentCounterValue )
+}
+
+int test_subquest_goal_value
+{
+	CurrentSubQuestParam ( goalValue, 0, 0, 2 )
+
+	Text ( return, goalValue ) 
+}
+
+int test_subquest_left_to_kill
+{
+	CurrentSubQuestCounter ( leftToKill, 1, 0 )
+
+	Text ( return, leftToKill ) 
+}
+
+
+int M2_Q2_tethers_cleared
+{ 
+	QuestCounter ( currentCounterValue, "tethers_visited" )
+
+	Text ( return, currentCounterValue )
+}
+
+int M2_Q2_tethers_to_clear
+{
+	CurrentSubQuestParam ( goalValue, 0, 0, 2 )
+
+	Text ( return, goalValue ) 
+}
+
+
+int M3_Q6_villages_visited
+{ 
+	QuestCounter ( currentCounterValue, "villages_visited" )
+
+	Text ( return, currentCounterValue )
+}
+
+
+int M4_Q5_houses_visited
+{
+	QuestCounter ( currentCounterValue, "pagan_dwelling_visited" )
+
+	Text ( return, currentCounterValue )
+}
+
+
+int M5_Q3_graves_marked
+{
+	QuestCounter ( currentCounterValue, "graves_marked" )
+
+	Text ( return, currentCounterValue ) 
+}
+
+int M5_Q2_left_to_kill
+{
+	CurrentSubQuestCounter ( leftToKill, 0, 0 )
+
+	Text ( return, leftToKill ) 
+}
+
+int M5_Q6_crystal_mines_captured
+{
+	QuestCounter ( currentCounterValue, "crystal_mines_captured" )
+
+	Text ( return, currentCounterValue ) 
+}
+
+int M9_Q2a_amplifiers_destroyed
+{ 
+	QuestCounter ( currentCounterValue, "total_amplifiers_destroyed" )
+
+	Text ( return, currentCounterValue )
+}
+
+int M9_Q5_sylvan_killed
+{ 
+	QuestCounter ( currentCounterValue, "sylvan_killed" )
+
+	Text ( return, currentCounterValue )
+}
+
+
+int M10_Q3_villages_saved
+{
+	QuestCounter ( currentCounterValue, "villages_visited" )
+
+	Text ( return, currentCounterValue ) 
+}

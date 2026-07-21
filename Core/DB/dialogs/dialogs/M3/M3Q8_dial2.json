@@ -1,0 +1,21 @@
+{
+	"array": [
+		{
+			"id": "M3Q8_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "dialogue_text_M3Q8_dial2_0",
+					"mapActions": [
+						{
+							"a": "MoveCameraToSelectHero"
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

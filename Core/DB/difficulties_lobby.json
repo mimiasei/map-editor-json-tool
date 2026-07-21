@@ -1,0 +1,189 @@
+﻿{
+	"economic":
+	[
+		{ 
+			"name": "easy",
+			"playerStartResources":	{ "gold": 25000,	"wood": 30,	"ore": 30,		"gemstones": 20,	"crystals": 20,		"mercury": 20,		"alchemicalDust": 250 },
+			"aiStartResources": 	{ "gold": 10000,	"wood": 10,	"ore": 10,		"gemstones": 5,		"crystals": 5,		"mercury": 5,		"alchemicalDust": 50 },
+			"coefFractionLawAI": 1.00, "coefFractionLawPlayer": 1.00, "coefAstrologyAI": 1.00, "coefAstrologyPlayer": 1.00
+		},
+		{ 
+			"name": "normal",
+			"playerStartResources":	{ "gold": 20000,	"wood": 20,	"ore": 20,		"gemstones": 15,	"crystals": 15,		"mercury": 15,		"alchemicalDust": 150 },
+			"aiStartResources": 	{ "gold": 15000,	"wood": 15,	"ore": 15,		"gemstones": 5,		"crystals": 5,		"mercury": 5,		"alchemicalDust": 100 },
+			"coefFractionLawAI": 1.00, "coefFractionLawPlayer": 1.00, "coefAstrologyAI": 1.00, "coefAstrologyPlayer": 1.00
+		},
+		{ 
+			"name": "hard",
+			"playerStartResources":	{ "gold": 15000,	"wood": 15,	"ore": 15,		"gemstones": 10,	"crystals": 10,		"mercury": 10,		"alchemicalDust": 100 },
+			"aiStartResources":		{ "gold": 20000,	"wood": 20,	"ore": 20,		"gemstones": 10,	"crystals": 10,		"mercury": 10,		"alchemicalDust": 150 },
+			"coefFractionLawAI": 1.00, "coefFractionLawPlayer": 1.00, "coefAstrologyAI": 1.00, "coefAstrologyPlayer": 1.00
+		},
+		{ 
+			"name": "impossible",
+			"playerStartResources":	{ "gold": 10000,	"wood": 10,	"ore": 10,		"gemstones": 5,		"crystals": 5,		"mercury": 5,		"alchemicalDust": 50 },
+			"aiStartResources":		{ "gold": 30000,	"wood": 25,	"ore": 25,		"gemstones": 15,	"crystals": 15,		"mercury": 15,		"alchemicalDust": 200 },
+			"coefFractionLawAI": 1.00, "coefFractionLawPlayer": 1.00, "coefAstrologyAI": 1.00, "coefAstrologyPlayer": 1.00
+		},
+		{ 
+			"name": "deadly",
+			"playerStartResources":	{ "gold": 5000,		"wood": 5,	"ore": 5,		"gemstones": 2,		"crystals": 2,		"mercury": 2,		"alchemicalDust": 25 },
+			"aiStartResources":		{ "gold": 40000,	"wood": 30,	"ore": 30,		"gemstones": 20,	"crystals": 20,		"mercury": 20,		"alchemicalDust": 250 },
+			"coefFractionLawAI": 1.00, "coefFractionLawPlayer": 1.00, "coefAstrologyAI": 1.00, "coefAstrologyPlayer": 1.00
+		},
+		{ 
+			"name": "hell",
+			"playerStartResources":	{ "gold": 2500,		"wood": 0,	"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0 },
+			"aiStartResources":		{ "gold": 50000,	"wood": 50,	"ore": 50,		"gemstones": 25,	"crystals": 25,		"mercury": 25,		"alchemicalDust": 500 },
+			"coefFractionLawAI": 1.00, "coefFractionLawPlayer": 1.00, "coefAstrologyAI": 1.00, "coefAstrologyPlayer": 1.00
+		}
+	],
+
+	"squad":
+	[
+		{ "name": "easy",			"power": 0.50,		"weeklyIncrementBonus": -0.10 },
+		{ "name": "normal",			"power": 0.75,		"weeklyIncrementBonus": -0.05 },
+		{ "name": "hard",			"power": 1.00,		"weeklyIncrementBonus":  0.00 },
+		{ "name": "impossible",		"power": 1.25,		"weeklyIncrementBonus":  0.05 },
+		{ "name": "deadly",			"power": 1.50,		"weeklyIncrementBonus":  0.05 },
+		{ "name": "hell",			"power": 2.00,		"weeklyIncrementBonus":  0.10 }
+	],
+
+	"guard":
+	[
+		{ "name": "easy",			"power": 0.50,		"weeklyIncrementBonus":  0.00 },
+		{ "name": "normal",			"power": 0.75,		"weeklyIncrementBonus":  0.00 },
+		{ "name": "hard",			"power": 1.00,		"weeklyIncrementBonus":  0.00 },
+		{ "name": "impossible",		"power": 1.00,		"weeklyIncrementBonus":  0.10 },
+		{ "name": "deadly",			"power": 1.25,		"weeklyIncrementBonus":  0.10 },
+		{ "name": "hell",			"power": 1.50,		"weeklyIncrementBonus":  0.20 }
+	],
+
+	"ai":
+	[
+		{ 
+			"name": "multiplayer_ai",
+			"script": "multi_hero_hard",
+			"battleScript": "simple",
+			"buildTag": "hard",
+			"resourceAddPercent": 1.0,
+			"tempStacksMultiplier": 1.45,
+
+			"heroCountMax": 2,
+			"heroCountIncrement": 1,
+			"heroMaxHirePerDay": 1,
+			"heroMaxHirePerDayIncrement": 0,
+			"heroCountMaxHard": 5,
+
+			"heroPowerMultipler": 1.2,
+			"valuesVsMobsMultiplier": 1.2,
+			"blockAreaByEnemyMultiplier": 1.25,
+
+			"manaPerDay": 15
+		},
+		{ 
+			"name": "easy_ai",
+			"script": "multi_hero_easy",
+			"battleScript": "simple",
+			"buildTag": "easy",
+			"resourceAddPercent": 0.0,
+			"tempStacksMultiplier": 0.75,
+			"buildingColdown": 4,
+
+			"heroCountMax": 2,
+			"heroCountIncrement": 0,
+			"heroMaxHirePerDay": 1,
+			"heroMaxHirePerDayIncrement": 0,
+			"heroCountMaxHard": 2,
+			
+			"heroPowerMultipler": 0.6,
+			"valuesVsMobsMultiplier": 0.6,
+			"blockAreaByEnemyMultiplier": 1.85,
+
+			"manaPerDay": 0
+		},
+		{ 
+			"name": "normal_ai",
+			"script": "multi_hero_normal",
+			"battleScript": "simple",
+			"buildTag": "easy",
+			"resourceAddPercent": 0.25,
+			"tempStacksMultiplier": 0.75,
+			"buildingColdown": 3,
+
+			"heroCountMax": 2,
+			"heroCountIncrement": 0,
+			"heroMaxHirePerDay": 1,
+			"heroMaxHirePerDayIncrement": 0,
+			"heroCountMaxHard": 2,
+			
+			"heroPowerMultipler": 0.8,
+			"valuesVsMobsMultiplier": 0.8,
+			"blockAreaByEnemyMultiplier": 1.55,
+
+			"manaPerDay": 5
+		},
+		{ 
+			"name": "complicated_ai",
+			"script": "multi_hero_complicated",
+			"battleScript": "normal",
+			"buildTag": "normal",
+			"resourceAddPercent": 0.50,
+			"tempStacksMultiplier": 1.70,
+			"buildingColdown": 2,
+
+			"heroCountMax": 2,
+			"heroCountIncrement": 1,
+			"heroMaxHirePerDay": 1,
+			"heroMaxHirePerDayIncrement": 0,
+			"heroCountMaxHard": 4,
+
+			"heroPowerMultipler": 1.0,
+			"valuesVsMobsMultiplier": 1.0,
+			"blockAreaByEnemyMultiplier": 1.4,
+
+			"manaPerDay": 10
+		},
+		{ 
+			"name": "hard_ai",
+			"script": "multi_hero_hard",
+			"battleScript": "hard",
+			"buildTag": "hard",
+			"resourceAddPercent": 0.75,
+			"tempStacksMultiplier": 2.25,
+			"buildingColdown": 1,
+
+			"heroCountMax": 3,
+			"heroCountIncrement": 1,
+			"heroMaxHirePerDay": 1,
+			"heroMaxHirePerDayIncrement": 1,
+			"heroCountMaxHard": 6,
+
+			"heroPowerMultipler": 1.1,
+			"valuesVsMobsMultiplier": 1.1,
+			"blockAreaByEnemyMultiplier": 1.25,
+
+			"manaPerDay": 15
+		},
+		{ 
+			"name": "unfair_ai",
+			"script": "multi_hero_unfair",
+			"battleScript": "hard",
+			"buildTag": "hard",
+			"resourceAddPercent": 1.0,
+			"tempStacksMultiplier": 2.75,
+
+			"heroCountMax": 4,
+			"heroCountIncrement": 1,
+			"heroMaxHirePerDay": 1,
+			"heroMaxHirePerDayIncrement": 1,
+			"heroCountMaxHard": 8,
+
+			"heroPowerMultipler": 1.4,
+			"valuesVsMobsMultiplier": 1.4,
+			"blockAreaByEnemyMultiplier": 1.25,
+
+			"manaPerDay": 20
+		}
+	]
+}

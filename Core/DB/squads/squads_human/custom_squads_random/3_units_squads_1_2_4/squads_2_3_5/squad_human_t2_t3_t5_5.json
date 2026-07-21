@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_human_t2_t3_t5_5",
+            "useOldSquads": false,
+            "rollChance": 11,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "crossbowman",
+                        "v": 4185
+                    },
+                    {
+                        "s": "griffin_upg",
+                        "v": 5015
+                    },
+                    {
+                        "s": "sunlight_cavalry_upg",
+                        "v": 7185
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 7185,
+                "units": [
+                    "crossbowman",
+                    "griffin_upg",
+                    "sunlight_cavalry_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 23355,
+                "units": [
+                    {
+                        "s": "crossbowman",
+                        "v": 8685
+                    },
+                    {
+                        "s": "griffin_upg",
+                        "v": 15015
+                    },
+                    {
+                        "s": "sunlight_cavalry_upg",
+                        "v": 23355
+                    }
+                ]
+            },
+            "tier": 5,
+            "fraction": "human"
+        }
+    ]
+}

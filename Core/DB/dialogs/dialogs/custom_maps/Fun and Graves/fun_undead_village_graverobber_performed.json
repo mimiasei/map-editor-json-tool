@@ -1,0 +1,162 @@
+{
+	"array": [
+		{
+			"id": "fun_undead_village_graverobber_performed",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"graverobber_upg_alt",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_undead_village_graverobber_performed_marl",
+					"next": "0m"
+				},
+				{
+					"id": "0m",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"graverobber_upg_alt",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Hero",
+							"p": [
+								"cm_fun_hero_1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_undead_village_graverobber_performed_0",
+					"next": "endingNoGraverobbers"
+				},
+				{
+					"id": "endingNoGraverobbers",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"graverobber_upg_alt",
+								"=",
+								"0"
+							]
+						}
+					],
+					"next": "1",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true						
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue_unit_portraits/Icon_Graverobber_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_graverobber",
+						"position": 1
+					},
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"zone_pet_raising"
+							]
+						}
+					],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"text": "fun_dialogue_text_undead_village_graverobber_performed_2",
+					"mapActions": [
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"pm_pet_raising",
+								"false"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"interactable_pet_raising",
+								"false"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"graverobber_quest",
+								"2"
+							]
+						},
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"pet",
+								"34"
+							]
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

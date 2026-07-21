@@ -1,0 +1,50 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_cm_fun_human_t1_6_2",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "esquire_upg", "v": 1 },
+					{ "s" : "inquisitor", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 8000,
+				"units":
+				[
+					"esquire_upg",
+					"inquisitor"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100000,
+				"units":
+				[
+					{ "s" : "esquire_upg", "v": 50000 },
+					{ "s" : "inquisitor", "v": 50000 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "human"
+		}
+	]
+}

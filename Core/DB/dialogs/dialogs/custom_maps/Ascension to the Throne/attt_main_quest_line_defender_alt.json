@@ -1,0 +1,192 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_main_quest_line_defender_alt",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_7",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_1_alt",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_7",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_2",
+					"answers": [
+						{
+							"text": "attt_main_quest_line_defender_text_2_answer_1",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1a" ] }
+							]
+						},
+						{
+							"text": "attt_main_quest_line_defender_text_2_answer_2",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1b" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_3",
+					"next": "2a"
+				},
+				{
+					"id": "2a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_7",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_3_1",
+					"next": "3a"
+				},
+				{
+					"id": "3a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_3_2",
+					"next": "4a"
+				},
+				{
+					"id": "4a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_7",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_3_3",
+					"end": true
+				},
+				{
+					"id": "1b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_4",
+					"mapActions": 
+					[
+						{ "a": "BreakInterruptions" },
+						{ "a": "StepBack", "p": [ ] }
+					],
+					"actions": 
+					[
+						{ "a": "End", "p": [ "break" ] }
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,177 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "mercenary_guild",
+
+			"goodsValue": 7500,
+
+			"extraCharge": 1.0,
+			"units":
+			[
+
+				{ "sids": [ "esquire" ],					"amount": 18,	"rollChance": 100 },
+				{ "sids": [ "crossbowman" ],				"amount": 14,	"rollChance": 90 },
+				{ "sids": [ "griffin" ],					"amount": 7,	"rollChance": 80 },
+				{ "sids": [ "lightweaver" ],				"amount": 6,	"rollChance": 70 },
+				{ "sids": [ "sunlight_cavalry" ],			"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "inquisitor" ],					"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "angel" ],						"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "esquire_upg" ],				"amount": 18,	"rollChance": 100 },
+				{ "sids": [ "crossbowman_upg" ],			"amount": 14,	"rollChance": 90 },
+				{ "sids": [ "griffin_upg" ],				"amount": 7,	"rollChance": 80 },
+				{ "sids": [ "lightweaver_upg" ],			"amount": 6,	"rollChance": 70 },
+				{ "sids": [ "sunlight_cavalry_upg" ],		"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "inquisitor_upg" ],				"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "angel_upg" ],					"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "esquire_upg_alt" ],			"amount": 18,	"rollChance": 100 },
+				{ "sids": [ "crossbowman_upg_alt" ],		"amount": 14,	"rollChance": 90 },
+				{ "sids": [ "griffin_upg_alt" ],			"amount": 7,	"rollChance": 80 },
+				{ "sids": [ "lightweaver_upg_alt" ],		"amount": 6,	"rollChance": 70 },
+				{ "sids": [ "sunlight_cavalry_upg_alt" ],	"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "inquisitor_upg_alt" ],			"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "angel_upg_alt" ],				"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "skeleton" ],					"amount": 30,	"rollChance": 100 }, 
+				{ "sids": [ "flicker" ],					"amount": 16,	"rollChance": 90 },
+				{ "sids": [ "pet" ],						"amount": 13,	"rollChance": 80 },
+				{ "sids": [ "graverobber" ],				"amount": 10,	"rollChance": 70 },
+				{ "sids": [ "lich" ],						"amount": 5,	"rollChance": 60 },
+				{ "sids": [ "avatar_of_war" ],				"amount": 3,	"rollChance": 50 },
+				{ "sids": [ "vampire" ],					"amount": 2,	"rollChance": 40 },
+
+				{ "sids": [ "skeleton_upg" ],				"amount": 30,	"rollChance": 100 }, 
+				{ "sids": [ "flicker_upg" ],				"amount": 16,	"rollChance": 90 },
+				{ "sids": [ "pet_upg" ],					"amount": 13,	"rollChance": 80 },
+				{ "sids": [ "graverobber_upg" ],			"amount": 10,	"rollChance": 70 },
+				{ "sids": [ "lich_upg" ],					"amount": 5,	"rollChance": 60 },
+				{ "sids": [ "avatar_of_war_upg" ],			"amount": 3,	"rollChance": 50 },
+				{ "sids": [ "vampire_upg" ],				"amount": 2,	"rollChance": 40 },
+
+				{ "sids": [ "skeleton_upg_alt" ],			"amount": 30,	"rollChance": 100 }, 
+				{ "sids": [ "flicker_upg_alt" ],			"amount": 16,	"rollChance": 90 },
+				{ "sids": [ "pet_upg_alt" ],				"amount": 13,	"rollChance": 80 },
+				{ "sids": [ "graverobber_upg_alt" ],		"amount": 10,	"rollChance": 70 },
+				{ "sids": [ "lich_upg_alt" ],				"amount": 5,	"rollChance": 60 },
+				{ "sids": [ "avatar_of_war_upg_alt" ],		"amount": 3,	"rollChance": 50 },
+				{ "sids": [ "vampire_upg_alt" ],			"amount": 2,	"rollChance": 40 },
+
+				{ "sids": [ "elf_tracker" ],				"amount": 12,	"rollChance": 100 },
+				{ "sids": [ "twinkle" ],					"amount": 8,	"rollChance": 90 },
+				{ "sids": [ "ent" ],						"amount": 6,	"rollChance": 80 },
+				{ "sids": [ "aqualotl" ],					"amount": 4,	"rollChance": 70 },
+				{ "sids": [ "druid" ],						"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "qilin" ],						"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "phoenix" ],					"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "elf_tracker_upg" ],			"amount": 12,	"rollChance": 100 },
+				{ "sids": [ "twinkle_upg" ],				"amount": 8,	"rollChance": 90 },
+				{ "sids": [ "ent_upg" ],					"amount": 6,	"rollChance": 80 },
+				{ "sids": [ "aqualotl_upg" ],				"amount": 4,	"rollChance": 70 },
+				{ "sids": [ "druid_upg" ],					"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "qilin_upg" ],					"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "phoenix_upg" ],				"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "elf_tracker_upg_alt" ],		"amount": 12,	"rollChance": 100 },
+				{ "sids": [ "twinkle_upg_alt" ],			"amount": 8,	"rollChance": 90 },
+				{ "sids": [ "ent_upg_alt" ],				"amount": 6,	"rollChance": 80 },
+				{ "sids": [ "aqualotl_upg_alt" ],			"amount": 4,	"rollChance": 70 },
+				{ "sids": [ "druid_upg_alt" ],				"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "qilin_upg_alt" ],				"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "phoenix_upg_alt" ],			"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "lesser_eldritch" ],			"amount": 20,	"rollChance": 100 },
+				{ "sids": [ "unfrozen_cultist" ],			"amount": 12,	"rollChance": 90 },
+				{ "sids": [ "frostworm_rider" ],			"amount": 8,	"rollChance": 80 },
+				{ "sids": [ "eldritch_flyer" ],				"amount": 4,	"rollChance": 70 },
+				{ "sids": [ "succubus" ],					"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "arbitrator" ],					"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "unspeakable" ],				"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "lesser_eldritch_upg" ],		"amount": 20,	"rollChance": 100 },
+				{ "sids": [ "unfrozen_cultist_upg" ],		"amount": 12,	"rollChance": 90 },
+				{ "sids": [ "frostworm_rider_upg" ],		"amount": 8,	"rollChance": 80 },
+				{ "sids": [ "eldritch_flyer_upg" ],			"amount": 4,	"rollChance": 70 },
+				{ "sids": [ "succubus_upg" ],				"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "arbitrator_upg" ],				"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "unspeakable_upg" ],			"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "lesser_eldritch_upg_alt" ],	"amount": 20,	"rollChance": 100 },
+				{ "sids": [ "unfrozen_cultist_upg_alt" ],	"amount": 12,	"rollChance": 90 },
+				{ "sids": [ "frostworm_rider_upg_alt" ],	"amount": 8,	"rollChance": 80 },
+				{ "sids": [ "eldritch_flyer_upg_alt" ],		"amount": 4,	"rollChance": 70 },
+				{ "sids": [ "succubus_upg_alt" ],			"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "arbitrator_upg_alt" ],			"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "unspeakable_upg_alt" ],		"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "trick_demon" ],				"amount": 21,	"rollChance": 100 },
+				{ "sids": [ "locust" ],						"amount": 13,	"rollChance": 90 },
+				{ "sids": [ "wasp" ],						"amount": 7,	"rollChance": 80 },
+				{ "sids": [ "jaw" ],						"amount": 5,	"rollChance": 70 },
+				{ "sids": [ "godslayer" ],					"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "olgoi" ],						"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "hive_queen" ],					"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "trick_demon_upg" ],			"amount": 21,	"rollChance": 100 },
+				{ "sids": [ "locust_upg" ],					"amount": 13,	"rollChance": 90 },
+				{ "sids": [ "wasp_upg" ],					"amount": 7,	"rollChance": 80 },
+				{ "sids": [ "jaw_upg" ],					"amount": 5,	"rollChance": 70 },
+				{ "sids": [ "godslayer_upg" ],				"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "olgoi_upg" ],					"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "hive_queen_upg" ],				"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "trick_demon_upg_alt" ],		"amount": 21,	"rollChance": 100 },
+				{ "sids": [ "locust_upg_alt" ],				"amount": 13,	"rollChance": 90 },
+				{ "sids": [ "wasp_upg_alt" ],				"amount": 7,	"rollChance": 80 },
+				{ "sids": [ "jaw_upg_alt" ],				"amount": 5,	"rollChance": 70 },
+				{ "sids": [ "godslayer_upg_alt" ],			"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "olgoi_upg_alt" ],				"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "hive_queen_upg_alt" ],			"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "trogl" ],						"amount": 27,	"rollChance": 100 },
+				{ "sids": [ "assassin" ],					"amount": 13,	"rollChance": 90 },
+				{ "sids": [ "blade_dancer" ],				"amount": 8,	"rollChance": 80 },
+				{ "sids": [ "minos" ],						"amount": 5,	"rollChance": 70 },
+				{ "sids": [ "medusa" ],						"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "hydra" ],						"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "black_dragon" ],				"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "trogl_upg" ],					"amount": 27,	"rollChance": 100 },
+				{ "sids": [ "assassin_upg" ],				"amount": 13,	"rollChance": 90 },
+				{ "sids": [ "blade_dancer_upg" ],			"amount": 8,	"rollChance": 80 },
+				{ "sids": [ "minos_upg" ],					"amount": 5,	"rollChance": 70 },
+				{ "sids": [ "medusa_upg" ],					"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "hydra_upg" ],					"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "black_dragon_upg" ],			"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "trogl_upg_alt" ],				"amount": 27,	"rollChance": 100 },
+				{ "sids": [ "assassin_upg_alt" ],			"amount": 13,	"rollChance": 90 },
+				{ "sids": [ "blade_dancer_upg_alt" ],		"amount": 8,	"rollChance": 80 },
+				{ "sids": [ "minos_upg_alt" ],				"amount": 5,	"rollChance": 70 },
+				{ "sids": [ "medusa_upg_alt" ],				"amount": 3,	"rollChance": 60 },
+				{ "sids": [ "hydra_upg_alt" ],				"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "black_dragon_upg_alt" ],		"amount": 1,	"rollChance": 40 },
+
+				{ "sids": [ "sentinel" ],					"amount": 1,	"rollChance": 40 },
+				{ "sids": [ "mech_guard" ],					"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "coatl" ],						"amount": 2,	"rollChance": 50 },
+				{ "sids": [ "fairy_dragon" ],				"amount": 4,	"rollChance": 60 },
+				{ "sids": [ "giant_frog" ],					"amount": 4,	"rollChance": 60 },
+				{ "sids": [ "unicorn" ],					"amount": 4,	"rollChance": 60 },
+				{ "sids": [ "dragon_hunter" ],				"amount": 4,	"rollChance": 60 },
+				{ "sids": [ "kitten_horn" ],				"amount": 8,	"rollChance": 70 },
+				{ "sids": [ "star_child" ],					"amount": 8,	"rollChance": 70 },
+				{ "sids": [ "primal_remnant" ],				"amount": 8,	"rollChance": 70 },
+				{ "sids": [ "animated_armor" ],				"amount": 16,	"rollChance": 80 },
+				{ "sids": [ "gorilla" ],					"amount": 16,	"rollChance": 80 },
+				{ "sids": [ "halfling" ],					"amount": 30,	"rollChance": 90 },
+				{ "sids": [ "peasant" ],					"amount": 30,	"rollChance": 90 },
+				{ "sids": [ "pixie" ],						"amount": 50,	"rollChance": 90 }
+
+
+			]
+		}
+	]
+}

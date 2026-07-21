@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+
+    {
+	"id": "attack_reach_x1_x100_x100",
+	"sid": "attack_reach_x1_x100_x100",
+	"rotations": 
+		[
+			{
+			"dimX": 2,
+			"dimY": 2,
+			"charX": 0,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				0.0, 1.0,
+				  1.0, 0.0
+				]
+			},
+
+			{
+			"dimX": 2,
+			"dimY": 1,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+					1.0, 1.0
+				]
+			},
+
+			{
+			"dimX": 2,
+			"dimY": 2,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+				1.0, 0.0,
+				  1.0, 0.0
+				]
+			}
+		]
+	}
+
+	]
+}

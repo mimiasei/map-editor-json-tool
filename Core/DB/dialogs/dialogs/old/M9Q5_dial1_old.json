@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M9Q5_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "bring me a demon",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

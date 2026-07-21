@@ -1,0 +1,164 @@
+{
+	"array":
+	[
+		{
+			"id": "M3aQ2_dial3_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					"conditionsLogic": "Or",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "ResCounter", "p": [ "gold", "<", "10000" ] },
+						{ "c": "ResCounter", "p": [ "mercury", "<", "20" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/graverobber" ]
+					},
+
+					"title": "filler",
+					"text": "no money no honey",
+					
+					"next": "0"
+				},
+				{
+					"id": "0",
+					"conditionsLogic": "Or",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "ResCounter", "p": [ "gold", "<", "10000" ] },
+						{ "c": "ResCounter", "p": [ "mercury", "<", "20" ] }
+					],
+					"fon": "","avatars": {"icons":[]},"title": "","text": "",
+					
+					"actions": 
+					[ 
+						{ "a": "End", "p": [ "break" ] }
+					],
+					
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"conditionsLogic": "And",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "ResCounter", "p": [ "gold", ">=", "10000" ] },
+						{ "c": "ResCounter", "p": [ "mercury", ">=", "20" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/graverobber" ]
+					},
+
+					"title": "filler",
+					"text": "bim bam bom sim salabim",
+					
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"conditionsLogic": "And",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "ResCounter", "p": [ "gold", ">=", "10000" ] },
+						{ "c": "ResCounter", "p": [ "mercury", ">=", "20" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/graverobber" ]
+					},
+
+					"title": "filler",
+					"text": "here, she is alive",
+
+					"mapActions":
+					[
+						{ "a": "SpawnSquadNPC", "p": [ "squad_c_spirit", "261", "1", "spirit" ] },
+						{ "a": "SetFlagEscape", "p": [ "spirit", "false" ] },
+						{ "a": "SetFlagAutobattle", "p": [ "spirit", "false" ] },
+						{ "a": "MoveCamera", "p": [ "261" ] }
+					],
+
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"conditionsLogic": "And",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "ResCounter", "p": [ "gold", ">=", "10000" ] },
+						{ "c": "ResCounter", "p": [ "mercury", ">=", "20" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/graverobber" ]
+					},
+
+					"title": "filler",
+					"text": "...aaaaand she is entirely yours",
+
+					"mapActions":
+					[
+						{ "a": "DeleteEntity", "p": [ "graverobber" ] }
+					],
+					
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"conditionsLogic": "And",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "ResCounter", "p": [ "gold", ">=", "10000" ] },
+						{ "c": "ResCounter", "p": [ "mercury", ">=", "20" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/flicker_upg_alt" ]
+					},
+
+					"title": "filler",
+					"text": "ill kill you",
+					
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"conditionsLogic": "And",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "ResCounter", "p": [ "gold", ">=", "10000" ] },
+						{ "c": "ResCounter", "p": [ "mercury", ">=", "20" ] }
+					],
+					"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+					"actions": 
+					[ 
+						{ "a": "End", "p": [ "break" ] }
+					],
+
+					"mapActions":
+					[
+						{ "a": "InitiateAttack", "p": [ "spirit" ] }
+					]
+				}
+			]
+			
+		}
+	]
+}

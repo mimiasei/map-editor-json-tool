@@ -1,0 +1,21 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_main_quest_line_3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_main_quest_line_text_5",
+					"end": true
+				}
+			]
+		}
+	]
+}

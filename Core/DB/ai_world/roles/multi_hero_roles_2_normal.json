@@ -1,0 +1,907 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "multi_hero_firstDay_scout_normal",
+			"stepOrder": 2,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_scout_firstDay_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_firstDay_scout_main_normal",
+			"stepOrder": 1,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_scout_main_firstDay_tasks"
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "multi_hero_isGladiatorArenaInProcess_main_hero_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isGladiatorArenaInProcess_main_hero" } ]
+		},
+		{
+			"id": "multi_hero_isTournamentInProcess_main_hero_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isTournamentInProcess_main_hero" } ]
+		},
+		{
+			"id": "multi_hero_isLostStartCityInProcess_main_hero_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isLostStartCityInProcess_main_hero" } ]
+		},
+		{
+			"id": "multi_hero_isCityHoldInProcess_main_hero_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isCityHoldInProcess_main_hero" } ]
+		},
+
+		{
+			"id": "multi_hero_isGladiatorArenaInProcess_courier_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isGladiatorArenaInProcess_courier" } ]
+		},
+		{
+			"id": "multi_hero_isTournamentInProcess_courier_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isTournamentInProcess_courier" } ]
+		},
+		{
+			"id": "multi_hero_isLostStartCityInProcess_courier_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isLostStartCityInProcess_courier" } ]
+		},
+		{
+			"id": "multi_hero_isCityHoldInProcess_courier_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks": [ { "task": "multi_hero_isCityHoldInProcess_courier" } ]
+		},
+
+
+
+
+
+		{
+			"id": "multi_hero_lastChance_main_hero_normal",
+			"stepOrder": 4,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_lastChance_main_hero_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "strategyDayGreaterOrEqual",
+                                "param": [ "3" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_lastChance_main_hero_needArmy_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_lastChance_courier_normal",
+			"valuesGiver": true,
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[		
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "strategyDayGreaterOrEqual",
+                                "param": [ "2" ]
+							},
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.05" ]
+							}
+						]
+					}
+				},		
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "multi_hero_defenceActive_main_hero_normal",
+			"stepOrder": 4,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_defenceActive_main_hero_tasks_customScenario_AttackMarkedHero",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedHero"
+							},
+							{
+								"condition": "isMarkedHeroCloserMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedHero",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defenceActive_main_hero_tasks_customScenario_AttackMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedEnemyCity"
+							},
+							{
+								"condition": "isMarkedHeroFurtherMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedCity",
+								"param": [ "1.0" ]
+							},
+							{
+								"condition": "mainValueMoreMarkedHeroAndCity",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defenceActive_main_hero_tasks_customScenario_AttackMarkedHero",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedHero"
+							},
+							{
+								"condition": "mainValueMoreMarkedHero",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defenceActive_main_hero_tasks_customScenario_AttackMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedCity",
+								"param": [ "1.0" ]
+							},
+							{
+								"condition": "mainValueMoreMarkedHeroAndCity",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defenceActive_main_hero_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_defenceActive_courier_main_normal",
+			"valuesGiver": true,
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_customScenario_TakeGarnisonFromMarkedCityToCourier",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityToCourier"
+							},
+							{
+								"condition": "heroValueLessMarkedCityGarnison",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.10" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_defenceActive_courier_normal",
+			"valuesGiver": true,
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.10" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+	
+
+
+
+		{
+			"id": "multi_hero_defencePassive_main_hero_normal",
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_defencePassive_main_hero_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_defencePassive_courier_main_normal",
+			"valuesGiver": true,
+			"stepOrder": 4,
+			"actionsOnSelect":	[ { "sid": "takeUnitsFromMarkCityToCourierWithBestGarnison", "condition": {  "sid":"dayOfWeek", "p": [ "4" ] } } ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_customScenario_TakeGarnisonFromMarkedCityToCourier",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityToCourier"
+							},
+							{
+								"condition": "heroValueLessMarkedCityGarnison",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.05" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_defencePassive_courier",
+			"valuesGiver": true,
+			"stepOrder": 4,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.05" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "multi_hero_captureArea_main_hero_normal",
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			
+			[
+				{
+					"task": "multi_hero_captureArea_main_hero_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_captureArea_courier_normal",
+			"valuesGiver": true,
+			"stepOrder": 2,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_scout_captureArea_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedObject"
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_scout_tasks"
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "multi_hero_expandArea_main_hero_normal",
+			"stepOrder": 2,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_expandArea_main_hero_tasks_customScenario_UpgradeUnitsInMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityForUpgrade"
+							},
+							{
+								"condition": "mainUpgradeUnitsInCityPercentMore",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_expandArea_main_hero_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "mainStrongerWeakedFrontier",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_expandArea_main_hero_needValue_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_expandArea_courier_main_normal",
+			"valuesGiver": true,
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_customScenario_TakeGarnisonFromMarkedCityToCourier",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityToCourier"
+							},
+							{
+								"condition": "heroValueLessMarkedCityGarnison",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainValueMore",
+								"param": [ "2500" ]
+							},
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.05" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_expandArea_courier_normal",
+			"valuesGiver": true,
+			"stepOrder": 5,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainValueMore",
+								"param": [ "2500" ]
+							},
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.05" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "multi_hero_defaultWar_main_hero_normal",
+			"stepOrder": 2,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_defaultWar_main_hero_tasks_customScenario_UpgradeUnitsInMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityForUpgrade"
+							},
+							{
+								"condition": "mainUpgradeUnitsInCityPercentMore",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defaultWar_main_hero_tasks_customScenario_TakeGarnisonFromMarkedCityToCourier",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityToCourier"
+							},
+							{
+								"condition": "heroValueLessMarkedCityGarnison",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defaultWar_main_hero_tasks_customScenario_AttackMarkedHero",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedHero"
+							},
+							{
+								"condition": "isMarkedHeroCloserMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedHero",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defaultWar_main_hero_tasks_customScenario_AttackMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedEnemyCity"
+							},
+							{
+								"condition": "isMarkedHeroFurtherMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedCity",
+								"param": [ "1.0" ]
+							},
+							{
+								"condition": "mainValueMoreMarkedHeroAndCity",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defaultWar_main_hero_tasks_customScenario_AttackMarkedHero",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedHero"
+							},
+							{
+								"condition": "mainValueMoreMarkedHero",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defaultWar_main_hero_tasks_customScenario_AttackMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedCity",
+								"param": [ "1.0" ]
+							},
+							{
+								"condition": "mainValueMoreMarkedHeroAndCity",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_defaultWar_main_hero_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_defaultWar_courier_main_normal",
+			"valuesGiver": true,
+			"stepOrder": 4,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_customScenario_TakeGarnisonFromMarkedCityToCourier",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityToCourier"
+							},
+							{
+								"condition": "heroValueLessMarkedCityGarnison",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainValueMore",
+								"param": [ "5000" ]
+							},
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.10" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_defaultWar_generalist_normal",
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_generalist_tasks"
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "multi_hero_default_main_hero_normal",
+			"stepOrder": 2,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_default_main_hero_tasks_customScenario_UpgradeUnitsInMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityForUpgrade"
+							},
+							{
+								"condition": "mainUpgradeUnitsInCityPercentMore",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_default_main_hero_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_default_courier_main_normal",
+			"valuesGiver": true,
+			"stepOrder": 4,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_customScenario_TakeGarnisonFromMarkedCityToCourier",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedCityToCourier"
+							},
+							{
+								"condition": "heroValueLessMarkedCityGarnison",
+								"param": [ "0.5" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainValueMore",
+								"param": [ "5000" ]
+							},
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.05" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_default_courier_normal",
+			"valuesGiver": true,
+			"stepOrder": 3,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_courier_goTo_tasks",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "reinforceMainValueMore",
+								"param": [ "5000" ]
+							},
+							{
+								"condition": "reinforceMainPercentMore",
+								"param": [ "0.05" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "multi_hero_courier_needValue_tasks"
+				}
+			]
+		},
+
+		{
+			"id": "multi_hero_default_generalist_normal",
+			"valuesGiver": true,
+			"stepOrder": 6,
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[
+				{
+					"task": "multi_hero_generalist_tasks"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,158 @@
+{
+	"array": [
+		{
+			"id": "M2Q4_dial3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M2Q4_dial3_0",
+					"answers": [
+						{
+							"text": "dialogue_text_M2Q4_dial3_0_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q4_dial3_0_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q4_dial3_0_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M2Q4_dial3_1",
+					"answers": [
+						{
+							"text": "dialogue_text_M2Q4_dial3_1_answer_1",
+							"mapActions": [
+								{
+									"a": "InitiateAttack",
+									"p": [
+										"watcher3"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "StoryCounterSet",
+									"p": [
+										"Campaign_Flag_M2_WatcherAttacked",
+										"1"
+									]
+								},
+								{
+									"a": "End"
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q4_dial3_1_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"2"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M2Q4_dial3_2",
+					"next": "endPeace"
+				},
+				{
+					"id": "endPeace",
+					"fon": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"watcher3",
+								"1"
+							]
+						}
+					],
+					"actions": [
+						{
+							"a": "StoryCounterSet",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"1"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,298 @@
+{
+"sid": "tutorial_challenges",
+"mainIconSid": "main_icon",
+"hubIconSid": "save_icon",
+
+"transferHeroProgressFromSession": false,
+"showReputationPanel": false,
+"showHeroPanel": false,
+
+"firstShowActions": 
+[
+    { "type":       "OpenGuide",
+    "values":     [ "tutorial_intro" ] }
+],
+
+"nodes": 
+    [
+        {
+            "sid": "Tutorial_Challenge_None_1",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": 50.0, "posY": -110.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_1" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_1_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        },
+
+        {
+            "sid": "Tutorial_Challenge_None_2",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": -180.0, "posY": 100.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_2" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_2_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        },
+
+        {
+            "sid": "Tutorial_Challenge_None_3",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": 160.0, "posY": 25.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_3" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_3_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        },
+
+        {
+            "sid": "Tutorial_Challenge_None_4",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": -475.0, "posY": -85.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_4" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_4_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        },
+
+        {
+            "sid": "Tutorial_Challenge_None_5",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": -565.0, "posY": 60.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_5" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_5_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        },
+
+        {
+            "sid": "Tutorial_Challenge_None_6",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": -320.0, "posY": -40.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_6" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_6_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        },
+
+        {
+            "sid": "Tutorial_Challenge_None_7",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": -570.0, "posY": -300.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_7" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_7_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        },
+
+        {
+            "sid": "Tutorial_Challenge_None_8",
+            "state": "Activated",
+
+            "repeatable": true,
+            "importanceType": "Side",
+
+            "posX": -375.0, "posY": 100.0, "posZ": 0.0,
+
+            "interactionActions": 
+            [
+                { "type":       "OpenMissionsPrologue",
+                "values":     [ "Tutorial_Challenge_Mission_8" ] }
+            ],
+
+            "onDoneActions": 
+            [
+                { "type":       "SetCounterValue",
+                "values":     [ "Tutorial_Challenge_Mission_8_Completed", "1" ] },
+
+                { "type":       "SetAchievement",
+                  "conditions": { "logicOperation": "And", "array": [ 
+                                { "counterSid": "Tutorial_Challenge_Mission_1_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_2_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_3_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_4_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_5_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_6_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_7_Completed", "operation": "==", "value": 1 },
+                                { "counterSid": "Tutorial_Challenge_Mission_8_Completed", "operation": "==", "value": 1 }
+                                                                    ] },
+                  "values":     [ "achievement_2" ] }
+            ]
+        }
+    ]
+}

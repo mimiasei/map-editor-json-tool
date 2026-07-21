@@ -1,0 +1,192 @@
+﻿string cm_fun_enemy_week_of_arrival
+{ 
+	Text ( return, "6" )
+}
+
+
+string cm_fun_pixies_flickers_raised
+{ 
+	Text ( return, "18" )
+}
+
+
+string cm_fun_dragonslayers_death_knights_raised
+{ 
+	Text ( return, "4" )
+}
+
+
+string cm_fun_mews_archers_raised_0
+{ 
+	Text ( return, "9" )
+}
+
+string cm_fun_mews_archers_raised_1
+{ 
+	Text ( return, "17" )
+}
+
+string cm_fun_mews_archers_raised_2
+{ 
+	Text ( return, "25" )
+}
+
+string cm_fun_mews_archers_raised_3
+{ 
+	Text ( return, "34" )
+}
+
+string cm_fun_mews_archers_raised_4
+{ 
+	Text ( return, "41" )
+}
+
+string cm_fun_mews_archers_raised_5
+{ 
+	Text ( return, "60" )
+}
+
+string cm_fun_mews_archers_raised_6
+{ 
+	Text ( return, "72" )
+}
+
+string cm_fun_mews_destroyed
+{ 
+	QuestCounter ( currentCounterValue, "mews_destroyed" )
+
+	Text ( return, currentCounterValue ) 
+}
+
+
+string cm_fun_undead_village_cost_1_type
+{ 
+	LocSid ( cost_type_name, "resource_gold_name" )
+
+	Text ( return, cost_type_name )
+}
+
+string cm_fun_undead_village_cost_1_amount
+{ 
+	Text ( return, "30000" )
+}
+
+string cm_fun_undead_village_cost_2_amount
+{ 
+	Text ( return, "30" )
+}
+
+string cm_fun_undead_village_reward_2_amount
+{ 
+	Text ( return, "8000" )
+}
+
+string cm_fun_undead_village_cost_3_amount
+{ 
+	Text ( return, "300" )
+}
+
+
+string cm_fun_pond_buff_power
+{ 
+	Text ( return, "2" )
+}
+
+
+string cm_fun_amplifier_cost_wood
+{
+	Text ( return, "20" ) 
+}
+
+string cm_fun_amplifier_cost_ore
+{
+	Text ( return, "20" ) 
+}
+
+string cm_fun_amplifier_buff_necromancy_percent
+{ 
+	Text ( return, "20" )
+}
+
+string cm_fun_amplifier_buff_spell_power
+{ 
+	Text ( return, "7" )
+}
+
+
+
+string cm_fun_trogl_item_1_name
+{ 
+	LocSid ( item_name, "swamp_boots_artifact_name" )
+
+	Text ( return, item_name )
+}
+
+
+
+string cm_fun_trogl_item_2_name
+{ 
+	LocSid ( item_name, "duelists_pride_rapier_artifact_name" )
+
+	Text ( return, item_name )
+}
+
+string cm_fun_trogl_item_2_currency_amount
+{ 
+	Text ( return, "15000" )
+}
+
+
+
+string cm_fun_trogl_item_3_name
+{ 
+	LocSid ( item_name, "angelic_alliance_lions_shield_of_courage_artifact_name" )
+
+	Text ( return, item_name )
+}
+
+string cm_fun_trogl_item_3_currency_type
+{ 
+	LocSid ( currency_type_name, "paupers_glory_last_coin_artifact_name" )
+
+	Text ( return, currency_type_name )
+}
+
+
+
+string cm_fun_trogl_item_4_name
+{ 
+	LocSid ( item_name, "shamaniac_soul_gemwood_mask_artifact_name" )
+
+	Text ( return, item_name )
+}
+
+
+
+string cm_fun_trogl_item_5_name
+{ 
+	LocSid ( item_name, "catechism_of_spacetime_magic_artifact_name" )
+
+	Text ( return, item_name )
+}
+
+string cm_fun_trogl_item_5_currency_type
+{ 
+	LocSid ( currency_type_name, "milos_curse_golden_pig_artifact_name" )
+
+	Text ( return, currency_type_name )
+}
+
+
+
+string cm_fun_trogl_item_6_name
+{ 
+	LocSid ( item_name, "shamaniac_soul_iridescent_cloak_artifact_name" )
+
+	Text ( return, item_name )
+}
+
+string cm_fun_trogl_item_6_currency_amount
+{ 
+	Text ( return, "8000" )
+}

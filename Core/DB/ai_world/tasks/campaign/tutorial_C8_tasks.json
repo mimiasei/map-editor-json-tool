@@ -1,0 +1,15 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tutorial_C8_main_hero_yolo_attack_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 5,
+
+			"priorities":
+			[	
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 200000, 	"valueMultipler": 0.00 } }
+			]
+		}
+	]
+}

@@ -1,0 +1,81 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "maze_campaign",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 15000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "offence_1_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "defence_1_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "spellPower_1_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "intelligence_1_buff", "Infinite", "-1" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

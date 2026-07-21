@@ -1,0 +1,73 @@
+﻿{
+	"groups":
+	[
+		{
+			"name": "pine tree",
+			"objects": [ "pinetree_1", "pinetree_2", "pinetree_3", "pinetree_4" ]
+		},
+		{
+			"name": "pine tree_withered",
+			"objects": ["pinetree_withered_1", "pinetree_withered_2", "pinetree_withered_3", "pinetree_withered_4" ]
+		},
+		{
+			"name": "pine tree snow",
+			"objects": [ "pinetree_snow_1", "pinetree_snow_2", "pinetree_snow_3", "pinetree_snow_4" ]
+		},
+		{
+			"name": "tree autumn",
+			"objects": [ "tree_autumn_1", "tree_autumn_2", "tree_autumn_3" ]
+		},
+		{
+			"name": "dead tree",
+			"objects": [ "tree_dead_1", "tree_dead_2", "tree_dead_3", "tree_dead_4" ]
+		},
+		{
+			"name": "dead tree 2",
+			"objects": [ "tree_dead_5", "tree_dead_6", "tree_dead_7", "tree_dead_8" ]
+		},
+		{
+			"name": "dead snow tree",
+			"objects": [ "tree_dead_snow_1", "tree_dead_snow_2", "tree_dead_snow_3", "tree_dead_snow_4" ]
+		},
+		{
+			"name": "ice",
+			"objects": [ "ice_1", "ice_2", "ice_3", "ice_4" ]
+		},
+		{
+			"name": "mountains_desert",
+			"objects": [ "mountain_desert_1","mountain_desert_2", "mountain_desert_3", "mountain_desert_4" ]
+		},
+		{
+			"name": "mountains_snow",
+			"objects": [ "mountain_snow_big_1", "mountain_snow_big_2", "mountain_snow_small_1"]
+		},
+		{
+			"name": "walkable_grass",
+			"objects": [ "flowers_1","flowers_2", "grass_1", "grass_2", "grass_stones_1", "grass_stones_2", "mushrooms_1", "mushrooms_2", "mushrooms_3", "mushrooms_4" ]
+		},
+		{
+			"name": "walkable_deathland",
+			"objects": [ "grass_death_1","grass_death_2", "dead_stones_1", "dead_stones_2", "three_sculls" ]
+		},
+		{
+			"name": "walkable_desert",
+			"objects": [ "desert_stones_1","desert_stones_2", "grass_desert_1", "grass_desert_2" ]
+		},
+		{
+			"name": "walkable_autumn",
+			"objects": [ "flowers_autumn_1", "grass_autumn_1", "grass_autumn_2", "autumn_stones_1", "autumn_stones_2", "mushrooms_1", "mushrooms_2", "mushrooms_3", "mushrooms_4" ]
+		},
+		{
+			"name": "walkable_dirt",
+			"objects": [ "flowers_1","flowers_2", "grass_1", "grass_2", "dirt_stones_1", "dirt_stones_2" ]
+		},
+		{
+			"name": "walkable_snow",
+			"objects": [ "grass_snow_1", "grass_snow_2", "snow_stones_1", "snow_stones_2", "snow_stones_3", "snow_stones_4" ]
+		},
+		{
+			"name": "walkable_lava",
+			"objects": [ "lava_stones_1","lava_stones_2" ]
+		}
+	]
+}

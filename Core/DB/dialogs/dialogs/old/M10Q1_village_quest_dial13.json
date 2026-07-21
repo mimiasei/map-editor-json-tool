@@ -1,0 +1,100 @@
+{
+	"array": [
+		{
+			"id": "M10Q1_village_quest_dial113",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"village13_saved",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_alvar_peasant",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial3_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"village13_saved",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M10Q1_village_quest_dial1_1",
+					"next": "ending1"
+				},
+				{
+					"id": "ending1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"village13_saved",
+								"=",
+								"0"
+							]
+						}
+					],
+					"next": "ending2",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "CounterPlus",
+							"p": [
+								"villages_visited",
+								"1"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"village13_saved",
+								"1"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				},
+				{
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"resultDialog": "Interrupt",
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,53 @@
+﻿{
+	"array":
+	[
+
+	{
+	"id": "attack_swipe_x100_x100",
+	"sid": "attack_swipe_x100_x100",
+	"rotations": 
+		[
+			{
+			"dimX": 3,
+			"dimY": 2,
+			"charX": 1,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+				1.0, 1.0, 0.0,
+				  0.0, 1.0, 0.0
+				]
+			},
+
+			{
+			"dimX": 2,
+			"dimY": 3,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				  1.0, 0.0,
+				0.0, 1.0,
+				  1.0, 0.0
+				]
+			},
+
+			{
+			"dimX": 3,
+			"dimY": 2,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				0.0, 0.0, 1.0,
+				  1.0, 1.0, 0.0
+				]
+			}
+		]
+	}
+
+	]
+}

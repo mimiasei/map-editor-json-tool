@@ -1,0 +1,1657 @@
+{
+	"array":
+	[
+		{
+			"id": "fraction_law_human_1",
+			"icon": "fraction_law_human_1_icon",
+			"name": "fraction_law_human_1_name",
+			"desc": "fraction_law_human_1_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "gold", 500 ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "gold", 1000 ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_2",
+			"icon": "fraction_law_human_2_icon",
+			"name": "fraction_law_human_2_name",
+			"desc": "fraction_law_human_2_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "viewRadius", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "viewRadius", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_3",
+			"icon": "fraction_law_human_3_icon",
+			"name": "fraction_law_human_3_name",
+			"desc": "fraction_law_human_3_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "gold", "2500" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "wood", "5" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "ore", "5" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_4",
+			"icon": "fraction_law_human_4_icon",
+			"name": "fraction_law_human_4_name",
+			"desc": "fraction_law_human_4_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "esquire", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+							"parameters": [ "defence", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "esquire", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "esquire", "esquire_upg", "esquire_upg_alt" ],
+							"parameters": [ "defence", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_5",
+			"icon": "fraction_law_human_5_icon",
+			"name": "fraction_law_human_5_name",
+			"desc": "fraction_law_human_5_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "inComingBuffDuration", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "inComingBuffDuration", "2" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "fraction_law_human_6",
+			"icon": "fraction_law_human_6_icon",
+			"name": "fraction_law_human_6_name",
+			"desc": "fraction_law_human_6_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_7",
+			"icon": "fraction_law_human_7_icon",
+			"name": "fraction_law_human_7_name",
+			"desc": "fraction_law_human_7_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_8",
+			"icon": "fraction_law_human_8_icon",
+			"name": "fraction_law_human_8_name",
+			"desc": "fraction_law_human_8_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_9",
+			"icon": "fraction_law_human_9_icon",
+			"name": "fraction_law_human_9_name",
+			"desc": "fraction_law_human_9_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_10",
+			"icon": "fraction_law_human_10_icon",
+			"name": "fraction_law_human_10_name",
+			"desc": "fraction_law_human_10_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "crossbowman", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "crossbowman", "crossbowman_upg", "crossbowman_upg_alt" ],
+							"parameters": [ "offence", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "crossbowman", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "crossbowman", "crossbowman_upg", "crossbowman_upg_alt" ],
+							"parameters": [ "offence", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_11",
+			"icon": "fraction_law_human_11_icon",
+			"name": "fraction_law_human_11_name",
+			"desc": "fraction_law_human_11_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "griffin", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "griffin", "griffin_upg", "griffin_upg_alt" ],
+							"parameters": [ "hp", "5" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "griffin", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "griffin", "griffin_upg", "griffin_upg_alt" ],
+							"parameters": [ "hp", "10" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_12",
+			"icon": "fraction_law_human_12_icon",
+			"name": "fraction_law_human_12_name",
+			"desc": "fraction_law_human_12_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 5,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "initiative", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_13",
+			"icon": "fraction_law_human_13_icon",
+			"name": "fraction_law_human_13_name",
+			"desc": "fraction_law_human_13_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "counter_attack", "0.50" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "counter_attack", "1.00" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "fraction_law_human_14",
+			"icon": "fraction_law_human_14_icon",
+			"name": "fraction_law_human_14_name",
+			"desc": "fraction_law_human_14_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "gemstones", 1 ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "gemstones", 2 ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_15",
+			"icon": "fraction_law_human_15_icon",
+			"name": "fraction_law_human_15_name",
+			"desc": "fraction_law_human_15_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "magicSchoolSet", "day", "0", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_16",
+			"icon": "fraction_law_human_16_icon",
+			"name": "fraction_law_human_16_name",
+			"desc": "fraction_law_human_16_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "gold", "5000" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "wood", "10" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "ore", "10" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_17",
+			"icon": "fraction_law_human_17_icon",
+			"name": "fraction_law_human_17_name",
+			"desc": "fraction_law_human_17_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "lightweaver", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+							"parameters": [ "damageMin", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+							"parameters": [ "damageMax", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "lightweaver", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+							"parameters": [ "damageMin", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lightweaver", "lightweaver_upg", "lightweaver_upg_alt" ],
+							"parameters": [ "damageMax", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_18",
+			"icon": "fraction_law_human_18_icon",
+			"name": "fraction_law_human_18_name",
+			"desc": "fraction_law_human_18_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.05" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "melee_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "melee_attack", "-0.10" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_19",
+			"icon": "fraction_law_human_20_icon",
+			"name": "fraction_law_human_20_name",
+			"desc": "fraction_law_human_19_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.05" ]
+						},
+
+						
+
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "range_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.10" ]
+						},
+
+
+
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_20",
+			"icon": "fraction_law_human_20_icon",
+			"name": "fraction_law_human_20_name",
+			"desc": "fraction_law_human_20_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.05" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "undead",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "nature",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "dungeon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "demon",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "unfrozen",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						},
+
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.10" ]
+						},
+						{ 
+							"type": "unitStat",
+							"fraction": "neutral",
+							"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.10" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "fraction_law_human_21",
+			"icon": "fraction_law_human_21_icon",
+			"name": "fraction_law_human_21_name",
+			"desc": "fraction_law_human_21_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "sideStat",
+							"parameters": [ "resPercentIncrementSet", "gold", "0.10" ]
+						}
+					]
+				},
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "sideStat",
+							"parameters": [ "resPercentIncrementSet", "gold", "0.20" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_22",
+			"icon": "fraction_law_human_22_icon",
+			"name": "fraction_law_human_22_name",
+			"desc": "fraction_law_human_22_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "moral", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "moral", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_23",
+			"icon": "fraction_law_human_23_icon",
+			"name": "fraction_law_human_23_name",
+			"desc": "fraction_law_human_23_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "sunlight_cavalry", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+							"parameters": [ "armorPen", "0.05" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+							"parameters": [ "speed", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "sunlight_cavalry", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+							"parameters": [ "armorPen", "0.10" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "sunlight_cavalry", "sunlight_cavalry_upg", "sunlight_cavalry_upg_alt" ],
+							"parameters": [ "speed", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_24",
+			"icon": "fraction_law_human_24_icon",
+			"name": "fraction_law_human_24_name",
+			"desc": "fraction_law_human_24_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "inquisitor", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "inquisitor", "inquisitor_upg", "inquisitor_upg_alt" ],
+							"parameters": [ "attackPen", "0.05" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "inquisitor", "inquisitor_upg", "inquisitor_upg_alt" ],
+							"parameters": [ "speed", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "inquisitor", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "inquisitor", "inquisitor_upg", "inquisitor_upg_alt" ],
+							"parameters": [ "attackPen", "0.10" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "inquisitor", "inquisitor_upg", "inquisitor_upg_alt" ],
+							"parameters": [ "speed", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_25",
+			"icon": "fraction_law_human_25_icon",
+			"name": "fraction_law_human_25_name",
+			"desc": "fraction_law_human_25_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "additionalActionChanceModifier", "0.01" ]
+						}
+					]
+				},
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "additionalActionChanceModifier", "0.02" ]
+						}
+					]
+				},
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "additionalActionChanceModifier", "0.03" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_26",
+			"icon": "fraction_law_human_26_icon",
+			"name": "fraction_law_human_26_name",
+			"desc": "fraction_law_human_26_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 6,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "heroSpellPowerModifier", "0.25" ]
+						},
+						{
+							"type": "unitStat",
+							"parameters": [ "heroIntelligenceModifier", "0.25" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "fraction_law_human_27",
+			"icon": "fraction_law_human_27_icon",
+			"name": "fraction_law_human_27_name",
+			"desc": "fraction_law_human_27_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"fraction": "human",
+							"parameters": [ "magicSchoolSet", "day", "5", "0" ]
+						},
+						{
+							"type": "heroStat",
+							"fraction": "human",
+							"parameters": [ "magicSchoolSet", "night", "5", "0" ]
+						},
+						{
+							"type": "heroStat",
+							"fraction": "human",
+							"parameters": [ "magicSchoolSet", "space", "5", "0" ]
+						},
+						{
+							"type": "heroStat",
+							"fraction": "human",
+							"parameters": [ "magicSchoolSet", "primal", "5", "0" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_28",
+			"icon": "fraction_law_human_28_icon",
+			"name": "fraction_law_human_28_name",
+			"desc": "fraction_law_human_28_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 6,
+					"bonuses":
+					[
+						{
+							"type": "constructionDailyLimit",
+							"parameters": [ "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_29",
+			"icon": "fraction_law_human_29_icon",
+			"name": "fraction_law_human_29_name",
+			"desc": "fraction_law_human_29_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "gold", "7500" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "wood", "15" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "ore", "15" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_30",
+			"icon": "fraction_law_human_30_icon",
+			"name": "fraction_law_human_30_name",
+			"desc": "fraction_law_human_30_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "angel", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "angel", "angel_upg", "angel_upg_alt" ],
+							"parameters": [ "heroOffenceModifier", "0.25" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "angel", "angel_upg", "angel_upg_alt" ],
+							"parameters": [ "heroDefenceModifier", "0.25" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "angel", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "angel", "angel_upg", "angel_upg_alt" ],
+							"parameters": [ "heroOffenceModifier", "0.5" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "angel", "angel_upg", "angel_upg_alt" ],
+							"parameters": [ "heroDefenceModifier", "0.5" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_31",
+			"icon": "fraction_law_human_31_icon",
+			"name": "fraction_law_human_31_name",
+			"desc": "fraction_law_human_31_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"fraction": "human",
+							"parameters": [ "energyPerRound", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_32",
+			"icon": "fraction_law_human_32_icon",
+			"name": "fraction_law_human_32_name",
+			"desc": "fraction_law_human_32_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "battleSubskillBonus",
+							"biomeType": "native",
+							"parameters": [ "unit_buff", "power_of_the_dragon_father_item_set_bonus_1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_33",
+			"icon": "fraction_law_human_33_icon",
+			"name": "fraction_law_human_33_name",
+			"desc": "fraction_law_human_33_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "summonDamagePercent", "0.25" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_human_34",
+			"icon": "fraction_law_human_34_icon",
+			"name": "fraction_law_human_34_name",
+			"desc": "fraction_law_human_34_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "astrologyExp",
+							"parameters": [ "250", "0.0" ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

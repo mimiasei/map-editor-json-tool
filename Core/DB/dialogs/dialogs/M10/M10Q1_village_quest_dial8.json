@@ -1,0 +1,270 @@
+{
+	"array": [
+		{
+			"id": "M10Q1_village_quest_dial8",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_1" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial1_1",
+					"next": "a1"
+				},
+				{
+					"id": "a1",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_1" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_alvar_peasant",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial3_0",
+					"mapActions": [
+						{ "a": "CounterPlus", "p": [ "villages_visited", "1" ] },
+						{ "a": "CounterSet", "p": [ "village8_saved", "1" ] },
+						{ "a": "SetActiveQuestMarker", "p": [ "village8", "false" ] }
+					],
+					"next": "b0"
+				},
+				{
+					"id": "b0",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_2" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial1_1",
+					"next": "b1"
+				},
+				{
+					"id": "b1",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_2" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_alvar_peasant",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial3_0",
+					"mapActions": [
+						{ "a": "CounterPlus", "p": [ "villages_visited", "1" ] },
+						{ "a": "CounterSet", "p": [ "village8_saved", "1" ] },
+						{ "a": "SetActiveQuestMarker", "p": [ "village8", "false" ] }
+					],
+					"next": "c0"
+				},
+				{
+					"id": "c0",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_3" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial1_1",
+					"next": "c1"
+				},
+				{
+					"id": "c1",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_3" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_alvar_peasant",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial3_0",
+					"mapActions": [
+						{ "a": "CounterPlus", "p": [ "villages_visited", "1" ] },
+						{ "a": "CounterSet", "p": [ "village8_saved", "1" ] },
+						{ "a": "SetActiveQuestMarker", "p": [ "village8", "false" ] }
+					],
+					"next": "d0"
+				},
+				{
+					"id": "d0",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_4" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial1_1",
+					"next": "d1"
+				},
+				{
+					"id": "d1",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Hero", "p": [ "campaign_hero_4" ] },
+						{ "c": "Counter", "p": [ "village8_saved", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unique_alvarian_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_alvar_peasant",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_village_quest_dial3_0",
+					"mapActions": [
+						{ "a": "CounterPlus", "p": [ "villages_visited", "1" ] },
+						{ "a": "CounterSet", "p": [ "village8_saved", "1" ] },
+						{ "a": "SetActiveQuestMarker", "p": [ "village8", "false" ] }
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_general",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "sunlight_cavalry_upg", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"sunlight_cavalry_upg"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 50000,
+				"units":
+				[
+					{ "s" : "sunlight_cavalry_upg", "v": 50000 }
+				]
+			},
+
+			"tier": 5,
+			"fraction": "human"
+		}
+	]
+}

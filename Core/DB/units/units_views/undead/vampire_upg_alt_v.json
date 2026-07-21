@@ -1,0 +1,98 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "vampire_upg_alt",
+			"mesh": "Undead/1Prefabs/vampire_upg_alt",
+			"mapMesh": "Undead/1Prefabs/vampire_upg_alt_map",
+			"fadeTime": 2.75,
+
+			"scale": 1.1,
+			"modelHeight": 0.7,
+			"moveSpeed": 6,
+
+			"attackTimeBefore": [ 0.593, 0.8, 1.467, 0.8, 0.8, 0.8 ],
+			"attackTimeAfter": [ 1.04, 1.2, 1, 1.2, 0.2, 0.2 ],
+			"rareIdleTime": 1.5,
+
+			"takeoffPrepareTime": 0.3,
+			"ascentTime": 0.4,
+			"descentTime": 0.5,
+			"defaultHeight": 2.2,
+
+			"takeDamageTime": 1.33,
+			"deathTimeOffset": 3.51,	
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"abilities":
+			[
+				{	
+					"name": "vampire_ability_1_name",
+					"abilityType": "Ability_type_special",
+					"description": "vampire_ability_1_description",
+					"excaptionInTooltip": "description_effect_embodiment_construct_immunities",
+					"animationIndex": 1,
+					
+					"projectile": "effects/rays/Vampire_alt_hit_distance_ray_vfx",
+					"trajectory": "ray",
+					"projectileSpeed": 50
+				},
+				{	
+					"name": "vampire_ability_3_name",
+					"abilityType": "Ability_type_special",
+					"description": "vampire_ability_3_description",
+					"excaptionInTooltip": "description_effect_embodiment_construct_immunities",
+					"animationIndex": 2
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_undead",
+                    "description": "base_class_undead_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_remote_attack_name",
+					"description": "base_passive_remote_attack_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "vampire_passive_1_name",
+					"description": "vampire_passive_1_description"
+				}
+			]
+
+		}
+	]
+}

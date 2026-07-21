@@ -1,0 +1,18 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "multi_hero_M10_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 10,
+
+			"priorities":
+			[	
+				{ "target": "MarkedObjectCapture",	"data": { "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+				{ "target": "AttackMarkedHero",		"data": { "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 200000, 	"valueMultipler": 0.00 } }
+			]
+		}
+	]
+}

@@ -1,0 +1,96 @@
+{
+	"array":
+	[
+		{
+			"id": "M3Q4_dial0_old",
+			"localization": false, 
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "We need to save my brothers (sisters), take me with you",
+
+					"answers":
+					[
+						{
+							"text": "Yes",
+							"actions": [ { "a": "Go", "p": [ "a" ] } ]
+						},
+						{
+							"text": "No",
+							"actions": [ { "a": "Go", "p": [ "b" ] } ]
+						}
+					]
+				},
+				{
+					"id": "a",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "Thank you, oh yes, they are to the south-east from here inside the big dragon skull",
+
+					"next": "endingGood"
+				},
+				{
+					"id": "endingGood",
+					"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+					"actions": 
+					[ 
+						{ "a": "End", "p": [ "break" ] }
+					],
+
+					"mapActions":
+					[
+						{ "a": "DeleteEntity", "p": [ "priestess" ] },
+						{ "a": "CounterSet", "p": [ "priestess_quest", "2" ] },
+						{ "a": "GiveUnitHero", "p": [ "lightweaver", "1" ] }
+					]
+				},
+
+				{
+					"id": "b",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "you are not nice, dont come again or ill kill you",
+
+					"next": "endingBad"
+				},
+				{
+					"id": "endingBad",
+					"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+					"actions": 
+					[ 
+						{ "a": "End", "p": [ "break" ] }
+					],
+
+					"mapActions":
+					[
+						{ "a": "CounterSet", "p": [ "priestess_quest", "1" ] }	
+					]
+				}
+			]
+		}
+	]
+}

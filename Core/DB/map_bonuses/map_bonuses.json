@@ -1,0 +1,157 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "add_bonus_hero_item",
+			"icon": "bonus_icon_1",
+			"name": "bonus_name_1",
+			"desc": "bonus_desc_1",
+
+			"receiversFilters": [ "start_hero", "all_heroes" ],
+
+			"type": "heroItemAddition",
+			"defaultParameters":
+			[
+				{
+					"tag": "item sid",
+					"value": "seven_league_boots_artifact"
+				}
+			]
+		},
+		{
+			"id": "add_bonus_res",
+			"icon": "bonus_icon_2",
+			"name": "bonus_name_2",
+			"desc": "bonus_desc_2",
+			
+			"type": "sideRes",
+			"defaultParameters":
+			[
+				{
+					"tag": "resource name",
+					"value": "gold"
+				},
+				{
+					"tag": "value",
+					"value": "15000"
+				}
+			]
+		},
+		{
+			"id": "add_bonus_hero_exp",
+			"icon": "bonus_icon_3",
+			"name": "bonus_name_3",
+			"desc": "bonus_desc_3",
+
+			"receiversFilters": [ "start_hero", "all_heroes" ],
+			
+			"type": "heroExp",
+			"defaultParameters":
+			[
+				{
+					"tag": "hero exp value",
+					"value": "750"
+				}
+			]
+		},
+		{
+			"id": "add_bonus_side_exp",
+			"icon": "bonus_icon_4",
+			"name": "bonus_name_4",
+			"desc": "bonus_desc_4",
+
+			"type": "sideExp",
+			"defaultParameters":
+			[
+				{
+					"tag": "side exp value",
+					"value": "1200"
+				}
+			]
+		},
+		{
+			"id": "add_bonus_hero_spell",
+			"icon": "bonus_icon_5",
+			"name": "bonus_name_5",
+			"desc": "bonus_desc_5",
+
+			"receiversFilters": [ "start_hero", "all_heroes" ],
+			
+			"type": "heroMagicAddition",
+			"defaultParameters":
+			[
+				{
+					"tag": "magic sid",
+					"value": "day_1_magic_healing_water"
+				}
+			]
+		},
+		{
+			"id": "add_bonus_hero_unit_multipler",
+			"icon": "bonus_icon_6",
+			"name": "bonus_name_6",
+			"desc": "bonus_desc_6",
+
+			"receiversFilters": [ "start_hero", "all_heroes" ],
+			
+			"type": "heroUnitsModifier",
+			"defaultParameters":
+			[
+				{
+					"tag": "unit's modifier",
+					"value": "2.5"
+				}
+			]
+		},
+		{
+			"id": "add_bonus_hero_unit",
+			"icon": "bonus_icon_7",
+			"name": "bonus_name_7",
+			"desc": "bonus_desc_7",
+
+			"receiversFilters": [ "start_hero", "all_heroes" ],
+			
+			"type": "heroUnitsAddition",
+			"defaultParameters":
+			[
+				{
+					"tag": "unit sid",
+					"value": "skeleton"
+				},
+				{
+					"tag": "value",
+					"value": "200"
+				}
+			]
+		},
+		{
+			"id": "add_bonus_hero_stat",
+			"icon": "bonus_icon_8",
+			"name": "bonus_name_8",
+			"desc": "bonus_desc_8",
+
+			"receiversFilters": [ "start_hero", "all_heroes" ],
+			
+			"type": "heroStat",
+			"defaultParameters":
+			[
+				{
+					"tag": "stat name",
+					"value": "offence"
+				},
+				{
+					"tag": "value1",
+					"value": "-"
+				},
+				{
+					"tag": "value2",
+					"value": "-"
+				},
+				{
+					"tag": "value3",
+					"value": "-"
+				}
+			]
+		}
+	]
+}

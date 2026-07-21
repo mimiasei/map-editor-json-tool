@@ -1,0 +1,101 @@
+{
+	"array": [
+		{
+			"id": "god_diary_repeatable_reading",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "god_diary_repeatable_reading_0",
+					"answers": [
+						{
+							"text": "god_diary_repeatable_reading_0_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5"
+									]
+								}
+							]
+						},
+						{
+							"text": "god_diary_repeatable_reading_0_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						}
+					]					
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_7",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_8",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_10",
+					"next": "11"
+				},
+				{
+					"id": "11",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_11",
+					"next": "12"
+				},
+				{
+					"id": "12",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_12",
+					"next": "13"
+				},
+				{
+					"id": "13",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_13",
+					"next": "14"
+				},
+				{
+					"id": "14",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_14",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,44 @@
+{
+    "array": [
+        {
+            "id": "squad_demon_t2_t4_4",
+            "useOldSquads": false,
+            "rollChance": 41,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "locust",
+                        "v": 5264
+                    },
+                    {
+                        "s": "jaw_upg",
+                        "v": 5264
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 5264,
+                "units": [
+                    "locust",
+                    "jaw_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 20014,
+                "units": [
+                    {
+                        "s": "locust",
+                        "v": 20014
+                    },
+                    {
+                        "s": "jaw_upg",
+                        "v": 20014
+                    }
+                ]
+            },
+            "tier": 4,
+            "fraction": "demon"
+        }
+    ]
+}

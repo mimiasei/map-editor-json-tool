@@ -1,0 +1,74 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "locust",
+			"mesh": "Demons/1Prefabs/locust",
+			"mapMesh": "Demons/1Prefabs/locust_map",
+			"fadeTime": 2.35,
+
+			"scale": 0.5,
+			"modelHeight": 0.62,
+			"moveSpeed": 5.0,
+
+			"attackTimeBefore": [ 0.43, 3.267, 0.6, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.7, 0, 0.9, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 2.57,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "locust_ability_1_name",
+					"abilityType": "Ability_type_movement",
+					"description": "locust_ability_1_description",
+					"excaptionInTooltip": "description_effect_undead_embodiment_construct_immunities",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 1,
+
+					"jumpPrepareTime": 0.55,
+					"jumpFlyTime": 0.50,
+					"jumpEndTime": 1.45,
+					"damageTimeOffset": 0.0,
+					"jumpMaxHeight": 0.65,
+
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_demon",
+                    "description": "base_class_demon_description"
+                },
+			
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_double_strike_name",
+					"description": "base_passive_double_strike_description"
+				}
+			]
+		}
+	]
+}

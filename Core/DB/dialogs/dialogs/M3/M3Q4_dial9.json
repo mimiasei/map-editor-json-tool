@@ -1,0 +1,614 @@
+{
+	"array": [
+		{
+			"id": "M3Q4_dial9",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								"<",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial9_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"undead_guard1",
+								"0"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"undead_guard2",
+								"0"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"undead_guard3",
+								"0"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"priestess_cage1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"priestess_cage2"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_с_injured_priestess",
+								"3841",
+								"1500",
+								"false",
+								"freed_priestess1"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_с_injured_priestess",
+								"3908",
+								"1500",
+								"false",
+								"freed_priestess2"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								"<",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_lightweaver",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial9_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								"<",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_lightweaver",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial9_2",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3880"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"3880",
+								"2"
+							]
+						},					
+						{
+							"a": "CounterSet",
+							"p": [
+								"priestess_quest",
+								"3"
+							]
+						}
+					],
+					"next": "2_s"
+				},
+				{
+					"id": "2_s",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								"<",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial9_2_s",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Human",
+								"2"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"+2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"freed_priestess1",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"freed_priestess2",
+								"1"
+							]
+						},
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"campaign_M3_freed_priestesses_item",
+								"campaign_hero_1"
+							]
+						}
+					],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial9_3",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"undead_guard1",
+								"0"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"undead_guard2",
+								"0"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"undead_guard3",
+								"0"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"priestess_cage1"
+							]
+						},						
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"priestess_cage2"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_с_injured_priestess",
+								"3841",
+								"1500",
+								"false",
+								"freed_priestess1"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_с_injured_priestess",
+								"3908",
+								"1500",
+								"false",
+								"freed_priestess2"
+							]
+						}
+					],
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_lightweaver",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial9_4",
+					"next": "4_s"
+				},
+				{
+					"id": "4_s",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial9_4_s",
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"freed_priestess1",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"freed_priestess2",
+								"1"
+							]
+						},
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"campaign_M3_freed_priestesses_item",
+								"campaign_hero_1"
+							]
+						}
+					],
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial9_5",
+					"next": "5_s"
+				},
+				{
+					"id": "5_s",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial9_5_s",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Human",
+								"3"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"+3"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"offence",
+								"campaign_hero_1",
+								"2"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"defence",
+								"campaign_hero_1",
+								"2"
+							]
+						}
+					],
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial9_6",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3880"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"3880",
+								"2"
+							]
+						},					
+						{
+							"a": "CounterSet",
+							"p": [
+								"priestess_quest",
+								"3"
+							]
+						}
+					],
+					"next": "6_s"
+				},
+				{
+					"id": "6_s",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial9_6_s",
+					"mapActions": [
+						{
+							"a": "RemoveUnitHero",
+							"p": [
+								"lightweaver_upg_alt",
+								"all"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

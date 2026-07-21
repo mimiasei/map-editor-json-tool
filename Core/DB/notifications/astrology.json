@@ -1,0 +1,196 @@
+{
+	"array":
+	[
+        {
+            "id": "astrologist_week_1",
+            "parameters":[
+                "astrologist_week_1_name",
+                "astrologist_week_1_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_2",
+            "parameters":[
+                "astrologist_week_2_name",
+                "astrologist_week_2_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_3",
+            "parameters":[
+                "astrologist_week_3_name",
+                "astrologist_week_3_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_4",
+            "parameters":[
+                "astrologist_week_4_name",
+                "astrologist_week_4_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_5",
+            "parameters":[
+                "astrologist_week_5_name",
+                "astrologist_week_5_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_6",
+            "parameters":[
+                "astrologist_week_6_name",
+                "astrologist_week_6_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_7",
+            "parameters":[
+                "astrologist_week_7_name",
+                "astrologist_week_7_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_8",
+            "parameters":[
+                "astrologist_week_8_name",
+                "astrologist_week_8_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_9",
+            "parameters":[
+                "astrologist_week_9_name",
+                "astrologist_week_9_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_10",
+            "parameters":[
+                "astrologist_week_10_name",
+                "astrologist_week_10_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_11",
+            "parameters":[
+                "astrologist_week_11_name",
+                "astrologist_week_11_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_12",
+            "parameters":[
+                "astrologist_week_12_name",
+                "astrologist_week_12_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_13",
+            "parameters":[
+                "astrologist_week_13_name",
+                "astrologist_week_13_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_14",
+            "parameters":[
+                "astrologist_week_14_name",
+                "astrologist_week_14_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_15",
+            "parameters":[
+                "astrologist_week_15_name",
+                "astrologist_week_15_desc"
+            ]
+        },
+        {
+            "id": "astrologist_week_16",
+            "parameters":[
+                "astrologist_week_16_name",
+                "astrologist_week_16_desc"
+            ]
+        },
+
+
+        {
+            "id": "astrologist_month_1",
+            "parameters":[
+                "astrologist_month_1_name",
+                "astrologist_month_1_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_2",
+            "parameters":[
+                "astrologist_month_2_name",
+                "astrologist_month_2_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_3",
+            "parameters":[
+                "astrologist_month_3_name",
+                "astrologist_month_3_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_4",
+            "parameters":[
+                "astrologist_month_4_name",
+                "astrologist_month_4_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_5",
+            "parameters":[
+                "astrologist_month_5_name",
+                "astrologist_month_5_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_6",
+            "parameters":[
+                "astrologist_month_6_name",
+                "astrologist_month_6_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_7",
+            "parameters":[
+                "astrologist_month_7_name",
+                "astrologist_month_7_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_8",
+            "parameters":[
+                "astrologist_month_8_name",
+                "astrologist_month_8_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_9",
+            "parameters":[
+                "astrologist_month_9_name",
+                "astrologist_month_9_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_10",
+            "parameters":[
+                "astrologist_month_10_name",
+                "astrologist_month_10_desc"
+            ]
+        },
+        {
+            "id": "astrologist_month_11",
+            "parameters":[
+                "astrologist_month_11_name",
+                "astrologist_week_16_desc"
+            ]
+        }	
+	]
+}

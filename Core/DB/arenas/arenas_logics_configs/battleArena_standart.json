@@ -1,0 +1,44 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "battleArena_standart",
+			"scenes": [ "testArena" ],
+			"spawnLeft":  [ "battleSpawns_standart_left" ],
+			"spawnRight": [ "battleSpawns_standart_right" ],
+
+			"blockTacticsPhase": false,
+			"tacticsPlacementSid": "battlePlacement_standart",
+
+			"leftHeroPosition":  [ -14.5, 0, 9.5 ],
+			"rightHeroPosition": [  13.5, 0, 9.5 ],
+		
+			"sizeX": 13,
+			"sizeZ": 11,
+			"map":
+			[
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2
+			],
+
+			"obstacles":
+			[
+				
+			],
+
+			"obstaclesOverrides": 
+			[
+				
+			]
+		}
+	]
+}

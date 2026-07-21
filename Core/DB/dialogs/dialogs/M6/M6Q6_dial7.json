@@ -1,0 +1,66 @@
+{
+	"array": [
+		{
+			"id": "M6Q6_dial7",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q6_dial7_0",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"actions": [
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Dungeon",
+								"3"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"dungeon_icon",
+								"-3"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"trogl_quest_failed",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M3_human_lightweaver",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "lightweaver_upg_alt", "v": 1 },
+					{ "s" : "lightweaver_upg", "v": 1 },
+					{ "s" : "lightweaver", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"lightweaver_upg_alt", "lightweaver_upg", "lightweaver"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 20000,
+				"units":
+				[
+					{ "s" : "lightweaver_upg_alt", "v": 20000 },
+					{ "s" : "lightweaver_upg", "v": 20000 },
+					{ "s" : "lightweaver", "v": 20000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "human"
+		}
+	]
+}

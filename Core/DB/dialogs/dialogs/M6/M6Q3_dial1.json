@@ -1,0 +1,501 @@
+{
+	"array": [
+		{
+			"id": "M6Q3_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial1_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial1_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial1_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial1_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial2_0",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial2_1",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial2_2",
+					"next": "endFight"
+				},
+				{
+					"id": "endFight",
+					"conditionsLogic": "Or",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherAttacked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "7",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_c_watcher",
+								"1",
+								"32000",
+								"true",
+								"worldwatcher"
+							]
+						},
+						{
+							"a": "SetFlagAutobattle",
+							"p": [
+								"worldwatcher",
+								"false"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"worldwatcher",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"worldwatcher",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"worldwatcher"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"worldwatcher1",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"worldwatcher2",
+								"1"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				},
+				{
+					"id": "7",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial3_0",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial3_1",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial3_2",
+					"next": "endPeace"
+				},
+				{
+					"id": "endPeace",
+					"dialogPlayConditions": [
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M2_WatcherCompleted",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"worldwatcher1",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"worldwatcher2",
+								"1"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				}
+			]
+		}
+	]
+}

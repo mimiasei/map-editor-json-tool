@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M9_mushrooms_dial1",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "strange mushroom field, eminates some energy but you cant really do anything with it (you will need to bring phoenix crystal here)",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

@@ -1,0 +1,77 @@
+﻿{
+	"standardDelay": 15.0,
+	"delayAfterNewDayStarted": 15.0,
+	"delayAfterLookForSideChanged": 2.0,
+	"delayAfterEnable": 0.1,
+	
+	"array":
+	{
+		"data":
+		[
+			{
+				"key": "Water",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/water"
+				}
+			},
+			{
+				"key": "Grass",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/grass"
+				}
+			},
+			{
+				"key": "Deathland",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/deathland"
+				}
+			},
+			{
+				"key": "Dirt",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/dirt"
+				}
+			},
+			{
+				"key": "Autumn",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/autumn"
+				}
+			},
+			{
+				"key": "Lava",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/lava"
+				}
+			},
+			{
+				"key": "Snow",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/snow"
+				}
+			},
+			{
+				"key": "Sand",
+
+				"val":
+				{
+					"soundSetName": "sounds/world_map/music/sand"
+				}
+			}
+		]
+	}	
+}

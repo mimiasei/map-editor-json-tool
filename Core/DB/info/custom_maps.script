@@ -1,0 +1,6 @@
+﻿int infinite_frost_1
+{
+	QuestCounter ( currentCounterValue, "main_quest_line_timer_count_1" )
+
+	Text ( return, currentCounterValue ) 
+}

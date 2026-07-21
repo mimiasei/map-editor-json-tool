@@ -1,0 +1,21 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_4_1",
+					"end": true
+				}
+			]
+		}
+	]
+}

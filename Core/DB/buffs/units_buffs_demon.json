@@ -1,0 +1,536 @@
+{
+	"array":
+	[
+		{
+			"id": "locust_selfbuff_1",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+
+			"icon": "locust_selfbuff_icon",
+			"name_": "locust_ability_1_name",
+			"description_": "locust_selfbuff_description",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"offence": 2,
+					"defence": 2,
+					"speed": 1,
+					"initiative": 1
+				}
+			}
+		},
+		{
+			"id": "locust_selfbuff_2",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "locust_selfbuff_icon",
+			"name_": "locust_ability_1_name",
+			"description_": "locust_selfbuff_description",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"offence": 4,
+					"defence": 4,
+					"speed": 1,
+					"initiative": 1
+				}
+			}
+		},
+		{
+			"id": "wasp_debuff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "wasp_debuff_icon",
+			"name_": "wasp_passive_1_name",
+			"description_": "wasp_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "duration",
+
+			"data": {
+				"stats": 
+				{
+					"alwaysMinDmg": true
+				}
+			}
+		},
+		{
+			"id": "jaw_buff_1",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "jaw_buff_1_icon",
+			"name_": "jaw_ability_1_name",
+			"description_": "jaw_buff_1_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"outAllDmgMod": 0.20
+				}
+			}
+		},
+		{
+			"id": "jaw_buff_2",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "jaw_buff_2_icon",
+			"name_": "jaw_ability_2_name",
+			"description_": "jaw_buff_2_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"inAllDmgMod": -0.20
+				}
+			}
+		},
+		{
+			"id": "jaw_buff_3",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "jaw_buff_3_icon",
+			"name_": "jaw_ability_3_name",
+			"description_": "jaw_buff_3_description",
+
+			"tags": [ "positive", "movementPositive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"speed": 2
+				}
+			}
+		},
+		{
+			"id": "jaw_buff_1_upg",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "jaw_buff_1_icon",
+			"name_": "jaw_ability_1_name",
+			"description_": "jaw_buff_1_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"outAllDmgMod": 0.3
+				}
+			}
+		},
+		{
+			"id": "jaw_buff_2_upg",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "jaw_buff_2_icon",
+			"name_": "jaw_ability_2_name",
+			"description_": "jaw_buff_2_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"inAllDmgMod": -0.3
+				}
+			}
+		},
+		{
+			"id": "jaw_buff_3_upg",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "jaw_buff_3_icon",
+			"name_": "jaw_ability_3_name",
+			"description_": "jaw_buff_3_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"speed": 3
+				}
+			}
+		},
+		{
+			"id": "godslayer_buff_1",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "godslayer_buff_1_icon",
+			"name_": "godslayer_ability_2_name",
+			"description_": "godslayer_buff_1_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"untargetByLowLevel": 4
+				}
+			}
+		},
+		{
+			"id": "godslayer_buff_2",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "godslayer_buff_2_icon",
+			"name_": "godslayer_buff_2_name",
+			"description_": "godslayer_buff_2_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+
+			}
+		},
+		{
+			"id": "godslayer_buff_3",
+
+			"maxDuration": 2,
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "godslayer_buff_3_icon",
+			"name_": "godslayer_ability_3_name",
+			"description_": "godslayer_buff_3_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+
+			},
+
+			"statOverrides": [  {  "stat": "moral", "value": 5  }, {  "stat": "luck", "value": 5  }  ]
+		},
+		{
+			"id": "hive_queen_debuff_1",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "hive_queen_debuff_1_icon",
+			"name_": "hive_queen_ability_2_name",
+			"description_": "hive_queen_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "duration",
+
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "magic_damage" ],
+						"attackPatternSid": "attack_rumble_x1_x100",
+
+						"castTargetParams": 
+						{ 
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"castTarget_": "self" 
+						},
+
+						"damageType_" : "magic_pure",
+						"minStackDmg": 25,
+						"maxStackDmg": 25,
+
+						"targetMechanics": [ ]
+					}
+				}
+			],
+
+			"data": {
+
+			}
+		},
+		{
+			"id": "hive_queen_debuff_2",
+
+			"aiValue": 10060,
+			"aiValuePerDuration": 1006,
+			
+			"icon": "hive_queen_debuff_1_icon",
+			"name_": "hive_queen_ability_2_name",
+			"description_": "hive_queen_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "duration",
+
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "magic_damage" ],
+						"attackPatternSid": "attack_rumble_x1_x100",
+						
+						"castTargetParams": 
+						{ 
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"castTarget_": "self" 
+						},
+
+						"damageType_" : "magic_pure",
+						"minStackDmg": 66,
+						"maxStackDmg": 66,
+
+						"targetMechanics": [ ]
+					}
+				}
+			],
+
+			"data": {
+
+			}
+		},
+		{
+			"id": "hive_queen_debuff_parasite",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "hive_queen_debuff_parasite_icon",
+			"name_": "hive_queen_ability_3_name",
+			"description_": "hive_queen_debuff_parasite_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			"isPositive": false,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"speed": -4,
+					"initiative": -4
+				}
+			}
+		},
+		{
+			"id": "hive_queen_buff_parasite",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "hive_queen_buff_parasite_icon",
+			"name_": "hive_queen_ability_3_name",
+			"description_": "hive_queen_buff_parasite_description",
+
+			"tags": [ "positive", "movementPositive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"speed": 4,
+					"initiative": 4
+				}
+			}
+		},
+		{
+			"id": "hive_queen_buff_null",
+
+			"maxDuration": 2,	"canDispel": false, 
+			
+			"icon": "hive_queen_buff_null_icon",
+			"name_": "conditional_passive_unique_units_count_1_name",
+			"description_": "conditional_passive_unique_units_count_1_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": { }
+		},
+
+		{
+			"id": "lava_larva_selfbuff",
+			
+			"icon": "assassin_buff_icon",
+			"name_": "assassin_ability_2_name",
+			"description_": "assassin_buff_description",
+
+			"hidden": true, "canDispel": false, "dontMimic": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"outDmgMods":
+					{
+						"list":
+						[
+							{ "t": "lava_larva_explosion_attack", "v": 1.00 }
+						]
+					}
+				}
+			}
+		},
+
+
+		{
+			"id": "sub_skill_faction_demons_6_unit_bonus",
+			
+			"icon": "fraction_law_demon_6_unit_bonus_icon",
+			"name_": "fraction_law_demon_6_name",
+			"description_": "fraction_law_demon_6_unit_bonus_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": false, "canDispel": false, "dontMimic": true, "ignoreDurationBuffs": true,
+
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"lifetimeBonus": 1	}	}
+		},
+
+		{
+			"id": "fraction_law_demon_6_unit_bonus",
+			
+			"icon": "fraction_law_demon_6_unit_bonus_icon",
+			"name_": "fraction_law_demon_6_name",
+			"description_": "fraction_law_demon_6_unit_bonus_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": false, "canDispel": false, "dontMimic": true, "ignoreDurationBuffs": true,
+
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"outDmgMods":	{	"list":	[	{ "t": "lava_larva_damage", "v": 1.0 }	]	}	}	}
+		},
+
+		{
+			"id": "fraction_law_demon_19_unit_bonus",
+			
+			"vfxList": [ "effects/status/double_all_hits_unit" ],
+
+			"icon": "fraction_law_demon_19_unit_bonus_icon",
+			"name_": "fraction_law_demon_19_name",
+			"description_": "fraction_law_demon_19_unit_bonus_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": false, "canDispel": false, "dontMimic": true, "ignoreDurationBuffs": true,
+
+			"addition": "duration",
+
+			"data": {
+				"sequenceEffect": "add_attack_after_counter"
+			}
+		},
+
+		{
+			"id": "fraction_law_demon_30_unit_bonus",
+			
+			"vfxList": [ "effects/status/taunt_hex" ],
+
+			"icon": "fraction_law_demon_30_unit_bonus_icon",
+			"name_": "fraction_law_demon_30_name",
+			"description_": "fraction_law_demon_30_unit_bonus_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": false, "canDispel": false, "dontMimic": true, "ignoreDurationBuffs": true,
+
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"tauntRadius": 1	}	}
+		}
+	]
+}

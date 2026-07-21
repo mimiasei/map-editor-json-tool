@@ -1,0 +1,580 @@
+{
+	"array": [
+		{
+			"id": "M5Q7_dial3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0",
+					"answers": [
+						{
+							"text": "dialogue_text_M5Q7_dial3_accepted_quest_0_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_dial3_accepted_quest_0_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0b"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"2"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-2"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_dial3_accepted_quest_0_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0c"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_dial3_accepted_quest_0_answer_4",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0d"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "0a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0a",
+					"next": "endingPeace"
+				},
+				{
+					"id": "0b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0b",
+					"next": "0b1"
+				},
+				{
+					"id": "0b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0b1",
+					"next": "endingRefused"
+				},
+				{
+					"id": "0c",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0с",
+					"next": "0c1"
+				},
+				{
+					"id": "0c1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0с1",
+					"next": "endingFight"
+				},
+				{
+					"id": "0d",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0d",
+					"next": "0d1"
+				},
+				{
+					"id": "0d1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0d1",
+					"next": "0d2"
+				},
+				{
+					"id": "0d2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0d2",
+					"next": "0d3"
+				},
+				{
+					"id": "0d3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0d3",
+					"next": "0d4"
+				},
+				{
+					"id": "0d4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0d4",
+					"next": "0d5"
+				},
+				{
+					"id": "0d5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_avatar_of_war_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_death_knight",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0d5",
+					"next": "0d6"
+				},
+				{
+					"id": "0d6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial3_accepted_quest_0d6",
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"death_knight",
+								"1"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"death_knight_quest",
+								"3"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"tree_block_for_body"
+							]
+						},
+						{
+							"a": "SpawnMapObject",
+							"p": [
+								"campaign_M5_death_knight_body",
+								"3597",
+								"0",
+								"death_knight_body"
+							]
+						}
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "endingPeace",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "endingRefused",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"death_knight_refused",
+								"1"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"death_knight_quest",
+								"3"
+							]
+						},
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"death_knight",
+								"false"
+							]
+						}			
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "endingFight",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"death_knight",
+								"false"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"death_knight_quest",
+								"3"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"death_knight"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

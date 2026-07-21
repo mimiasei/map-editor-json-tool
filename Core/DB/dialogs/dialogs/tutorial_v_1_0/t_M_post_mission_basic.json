@@ -1,0 +1,34 @@
+{
+	"array": [
+		{
+			"id": "t_M_post_mission_basic",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_post_mission_1",
+					"mapActions": [ ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_post_mission_3",
+					"mapActions": [ ],
+					"end": true
+				}
+			]
+		}
+	]
+}

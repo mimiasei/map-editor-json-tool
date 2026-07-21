@@ -1,0 +1,164 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "iridescent_abbey",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 30,
+					"value": 3000,
+					"customGuardValue": 2175,
+
+					"guardUnits":
+					[
+						{ "sid": "lightweaver", "amount": 5 },
+						{ "sid": "inquisitor", "amount": 2 },
+						{ "sid": "lightweaver_upg_alt", "amount": 5 },
+						{ "sid": "lightweaver_upg", "amount": 5 }								
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "gold", "3000", "gemstones", "4" ]
+							}
+						]
+					}
+				},	
+				{
+					"rollChance": 30,
+					"value": 4250,
+					"customGuardValue": 2175,
+
+					"guardUnits":
+					[
+						{ "sid": "lightweaver", "amount": 6 },
+						{ "sid": "inquisitor", "amount": 3 },
+						{ "sid": "lightweaver_upg_alt", "amount": 6 },
+						{ "sid": "lightweaver_upg", "amount": 6 }										
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "gold", "4000", "gemstones", "6" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 25,
+					"value": 5500,
+					"customGuardValue": 2175,
+
+					"guardUnits":
+					[						
+						{ "sid": "lightweaver", "amount": 7 },
+						{ "sid": "inquisitor", "amount": 4 },
+						{ "sid": "lightweaver_upg_alt", "amount": 7 },
+						{ "sid": "lightweaver_upg", "amount": 7 }			
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "gold", "5000", "gemstones", "8" ]
+							}
+						]
+					}
+				},	
+				{
+					"rollChance": 15,
+					"value": 6750,
+					"customGuardValue": 2175,
+
+					"guardUnits":
+					[						
+						{ "sid": "lightweaver", "amount": 8 },
+						{ "sid": "inquisitor", "amount": 5 },
+						{ "sid": "lightweaver_upg_alt", "amount": 8 },
+						{ "sid": "lightweaver_upg", "amount": 8 }	
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "gold", "6000", "gemstones", "10" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

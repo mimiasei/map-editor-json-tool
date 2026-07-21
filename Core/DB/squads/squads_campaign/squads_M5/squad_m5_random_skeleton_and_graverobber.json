@@ -1,0 +1,50 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m5_random_skeleton_and_graverobber",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": false,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "graverobber", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"graverobber"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100000,
+				"units":
+				[
+					{ "s" : "graverobber", "v": 100000 },
+					{ "s" : "skeleton", "v": 2500 },
+					{ "s" : "skeleton_upg", "v": 2500 },
+					{ "s" : "skeleton_upg_alt", "v": 2500 }
+				]
+			},
+
+			"tier": 3,
+			"fraction": "undead"
+		}
+	]
+}

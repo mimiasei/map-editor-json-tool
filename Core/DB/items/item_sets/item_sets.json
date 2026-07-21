@@ -1,0 +1,1016 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tranquility_item_set",
+			"name": "tranquility_item_set",
+		
+			"itemsInSet":
+			[
+				"tranquility_brightmind_tiara_artifact",
+				"tranquility_magic_mirror_artifact",
+				"tranquility_ring_of_serenity_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "3",	"desc": "tranquility_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "manaRestoreBonusPercent", "1" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "shamaniac_soul_item_set",
+			"name": "shamaniac_soul_item_set",
+		
+			"itemsInSet":
+			[
+				"shamaniac_soul_iridescent_cloak_artifact",
+				"shamaniac_soul_gemwood_mask_artifact",
+				"shamaniac_soul_shaman_staff_artifact",
+				"shamaniac_soul_clutching_ring_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "shamaniac_soul_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "manaBonusPercent", "0.25" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "4",	"desc": "shamaniac_soul_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "magicSchoolSet", "day", "0", "999" ]
+						},
+						{
+							"type": "heroStat",
+							"parameters": [ "magicSchoolSet", "night", "0", "999" ]
+						},
+						{
+							"type": "heroStat",
+							"parameters": [ "magicSchoolSet", "space", "0", "999" ]
+						},
+						{
+							"type": "heroStat",
+							"parameters": [ "magicSchoolSet", "primal", "0", "999" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "knights_honor_item_set",
+			"name": "knights_honor_item_set",
+		
+			"itemsInSet":
+			[
+				"knights_honor_plate_armor_artifact",
+				"knights_honor_armet_artifact",
+				"knights_honor_drums_of_war_artifact",
+				"knights_honor_misericorde_artifact",
+				"knights_honor_lance_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "3",	"desc": "knights_honor_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "moral", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "luck", "1" ] 
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "5",	"desc": "knights_honor_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "critChanceModifier", "0.03" ]
+						},
+						{
+							"type": "unitStat",
+							"parameters": [ "additionalActionChanceModifier", "0.03" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "ukhtabar_seal_item_set",
+			"name": "ukhtabar_seal_item_set",
+		
+			"itemsInSet":
+			[
+				"ukhtabar_seal_ukh_seal_artifact",
+				"ukhtabar_seal_tabar_seal_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "ukhtabar_seal_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "expPerBonus", "0.5" ] 
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "milos_curse_item_set",
+			"name": "milos_curse_item_set",
+		
+			"itemsInSet":
+			[
+				"milos_curse_skull_of_milos_artifact",
+				"milos_curse_golden_pig_artifact",
+				"milos_curse_golden_moth_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "3",	"desc": "milos_curse_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "gold", "4000" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "paupers_glory_item_set",
+			"name": "paupers_glory_item_set",
+		
+			"itemsInSet":
+			[
+				"paupers_glory_wooden_ring_artifact",
+				"paupers_glory_straw_hat_artifact",
+				"paupers_glory_rope_belt_artifact",
+				"paupers_glory_rags_artifact",
+				"paupers_glory_dumb_club_artifact",
+				"paupers_glory_last_coin_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "paupers_glory_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "offence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "defence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "intelligence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "spellPower", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "moral", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "luck", "1" ] 
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "4",	"desc": "paupers_glory_item_set_description_2",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "offence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "defence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "intelligence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "spellPower", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "moral", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "luck", "1" ] 
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "6",	"desc": "paupers_glory_item_set_description_3",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "offence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "defence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "intelligence", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "spellPower", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "moral", "1" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "luck", "1" ] 
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "angelic_alliance_item_set",
+			"name": "angelic_alliance_item_set",
+		
+			"itemsInSet":
+			[
+				"angelic_alliance_armor_of_wonder_artifact",
+				"angelic_alliance_celestial_sash_of_bliss_artifact",
+				"angelic_alliance_sandals_of_the_saint_artifact",
+				"angelic_alliance_helm_of_heavenly_enlightenment_artifact",
+				"angelic_alliance_lions_shield_of_courage_artifact",
+				"angelic_alliance_sword_of_judgement_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "3",	"desc": "angelic_alliance_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "unitBoolStat",
+							"parameters": [ "ignoreFractionsCount", "true" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "6",	"desc": "angelic_alliance_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [  ],
+							"parameters": [ "speed", "3" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [  ],
+							"parameters": [ "initiative", "3" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "gifts_of_dwarven_lords_item_set",
+			"name": "gifts_of_dwarven_lords_item_set",
+		
+			"itemsInSet":
+			[
+				"gifts_of_dwarven_lords_automated_antimagic_shield_artifact",
+				"gifts_of_dwarven_lords_protective_belt_artifact",
+				"gifts_of_dwarven_lords_crimson_resonance_controller_artifact",
+				"gifts_of_dwarven_lords_emerald_resonance_controller_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "3",	"desc": "gifts_of_dwarven_lords_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "day", "0", "-1" ]
+						},
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "night", "0", "-1" ]
+						},
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "space", "0", "-1" ]
+						},
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "primal", "0", "-1" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "4",	"desc": "gifts_of_dwarven_lords_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "unitBoolStat",
+							"parameters": [ "immuneToDebuffs", "true" ] 
+						},
+						{ 
+							"type": "unitBoolStat",
+							"parameters": [ "enableImmuneDebufInMap", "true" ] 
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "elixir_of_life_item_set",
+			"name": "elixir_of_life_item_set",
+		
+			"itemsInSet":
+			[
+				"elixir_of_life_flask_of_oblivion_artifact",
+				"elixir_of_life_lifeblood_fairy_artifact",
+				"elixir_of_life_ring_of_life_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "elixir_of_life_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "unit_buff", "elixir_of_life_item_set_bonus" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "3",	"desc": "elixir_of_life_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [  ],
+							"parameters": [ "hpPerc", "0.25" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "shadow_of_death_item_set",
+			"name": "shadow_of_death_item_set",
+		
+			"itemsInSet":
+			[
+				"shadow_of_death_cursed_armor_artifact",
+				"shadow_of_death_second_shade_artifact",
+				"shadow_of_death_bone_boots_artifact",
+				"shadow_of_death_dark_hatchet_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "shadow_of_death_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "luck", "-1" ]
+						},
+						{
+							"type": "unitStat",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "moral", "-1" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "3",	"desc": "shadow_of_death_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "initiative", "-1" ]
+						},
+						{
+							"type": "unitStat",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "speed", "-1" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "4",	"desc": "shadow_of_death_item_set_description_3",
+					"heroBonuses":
+					[
+						{
+							"type": "unitBoolStat",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "alwaysMinDmg", "true" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "wanderers_way_item_set",
+			"name": "wanderers_way_item_set",
+		
+			"itemsInSet":
+			[
+				"wanderers_way_backpack_artifact",
+				"wanderers_way_boots_of_travel_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "wanderers_way_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "landscapePenaltyPerBonus", "-1" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "living_arrows_item_set",
+			"name": "living_arrows_item_set",
+		
+			"itemsInSet":
+			[
+				"living_arrows_light_and_shade_cloak_artifact",
+				"living_arrows_quivering_quiver_artifact",
+				"living_arrows_shroomwood_bow_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "living_arrows_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [  ],
+							"parameters": [ "initiative", "1" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "3",	"desc": "living_arrows_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "unit_buff", "living_arrows_item_set_bonus" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "duelists_pride_item_set",
+			"name": "duelists_pride_item_set",
+		
+			"itemsInSet":
+			[
+				"duelists_pride_buckler_artifact",
+				"duelists_pride_rapier_artifact",
+				"duelists_pride_brass_knuckles_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "duelists_pride_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "offence", "3" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "defence", "3" ] 
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "3",	"desc": "duelists_pride_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [  ],
+							"parameters": [ "numCounters", "999" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "ethereal_knowledge_item_set",
+			"name": "ethereal_knowledge_item_set",
+		
+			"itemsInSet":
+			[
+				"ethereal_knowledge_vortex_dress_artifact",
+				"ethereal_knowledge_mirror_shoes_artifact",
+				"ethereal_knowledge_third_eye_artifact",
+				"ethereal_knowledge_glass_dagger_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "ethereal_knowledge_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "intelligence", "3" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "spellPower", "3" ] 
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "4",	"desc": "ethereal_knowledge_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "outComingBuffDuration", "8" ]
+						},
+						{
+							"type": "heroStat",
+							"parameters": [ "outComingDebuffDuration", "8" ]
+						},
+						{
+							"type": "unitStat",
+							"parameters": [ "outComingDebuffDuration", "8" ]
+						},
+						{
+							"type": "unitStat",
+							"parameters": [ "outComingBuffDuration", "8" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "inner_song_item_set",
+			"name": "inner_song_item_set",
+		
+			"itemsInSet":
+			[
+				"inner_song_fancy_mask_artifact",
+				"inner_song_music_sheet_artifact",
+				"inner_song_singing_pan_pipe_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "3",	"desc": "inner_song_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "unitBoolStat",
+							"parameters": [ "ignoreAbilityActionCost", "true" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "power_of_the_dragon_father_item_set",
+			"name": "power_of_the_dragon_father_item_set",
+		
+			"itemsInSet":
+			[
+				"power_of_the_dragon_father_dragon_scale_armor_artifact",
+				"power_of_the_dragon_father_dragon_wing_artifact",
+				"power_of_the_dragon_father_slithering_sash_artifact",
+				"power_of_the_dragon_father_dragonbone_greaves_artifact",
+				"power_of_the_dragon_father_dragon_crest_artifact",
+				"power_of_the_dragon_father_dragon_scale_shield_artifact",
+				"power_of_the_dragon_father_red_dragon_flame_tongue_artifact",
+				"power_of_the_dragon_father_piercing_eye_of_a_dragon_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "3",	"desc": "power_of_the_dragon_father_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "offence", "2" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "defence", "2" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "intelligence", "2" ] 
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "spellPower", "2" ] 
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "5",	"desc": "power_of_the_dragon_father_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "unit_buff", "power_of_the_dragon_father_item_set_bonus_1" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "8",	"desc": "power_of_the_dragon_father_item_set_description_3",
+					"heroBonuses":
+					[
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "unit_buff", "power_of_the_dragon_father_item_set_bonus_2" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "beelzebubs_blessing_item_set",
+			"name": "beelzebubs_blessing_item_set",
+		
+			"itemsInSet":
+			[
+				"beelzebubs_blessing_heartbeat_artifact",
+				"beelzebubs_blessing_demon_crest_artifact",
+				"beelzebubs_blessing_chitinous_shield_artifact",
+				"beelzebubs_blessing_demon_claw_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "beelzebubs_blessing_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [  ],
+							"parameters": [ "speed", "1" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "4",	"desc": "beelzebubs_blessing_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "unitBoolStat",
+							"parameters": [ "alwaysMaxDmg", "true" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "rule_of_shadow_item_set",
+			"name": "rule_of_shadow_item_set",
+		
+			"itemsInSet":
+			[
+				"rule_of_shadow_liquid_silence_artifact",
+				"rule_of_shadow_the_truthmaker_artifact",
+				"rule_of_shadow_the_truthseeker_artifact",
+				"rule_of_shadow_nostrias_gaze_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "rule_of_shadow_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicCdBonus", "1" ]
+						}
+					]
+				},
+				{
+					"requiredItemsAmount": "4",	"desc": "rule_of_shadow_item_set_description_2",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "day", "0", "-999" ]
+						},
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "night", "0", "-999" ]
+						},
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "space", "0", "-999" ]
+						},
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicSchoolSet", "primal", "0", "-999" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "ambassadors_word_item_set",
+			"name": "ambassadors_word_item_set",
+		
+			"itemsInSet":
+			[
+				"ambassadors_word_diplomatic_gifts_artifact",
+				"ambassadors_word_ambassadors_sash_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "ambassadors_word_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "diplomacyCostPerBonus", "-1.0" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "warriors_strength_item_set",
+			"name": "warriors_strength_item_set",
+		
+			"itemsInSet":
+			[
+				"warriors_strength_warriors_oberegus_artifact",
+				"warriors_strength_warriors_belt_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "warriors_strength_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "offence", "4" ] 
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "keepers_fortitude_item_set",
+			"name": "keepers_fortitude_item_set",
+		
+			"itemsInSet":
+			[
+				"keepers_fortitude_keepers_oberegus_artifact",
+				"keepers_fortitude_keepers_ring_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "keepers_fortitude_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "defence", "4" ] 
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "wizards_might_item_set",
+			"name": "wizards_might_item_set",
+		
+			"itemsInSet":
+			[
+				"wizards_might_wizards_oberegus_artifact",
+				"wizards_might_wizards_cloak_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "wizards_might_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "spellPower", "4" ] 
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "scholars_wisdom_item_set",
+			"name": "scholars_wisdom_item_set",
+		
+			"itemsInSet":
+			[
+				"scholars_wisdom_scholars_oberegus_artifact",
+				"scholars_wisdom_scholars_tiara_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "scholars_wisdom_item_set_description_1",
+					"heroBonuses":
+					[
+						{ 
+							"type": "heroStat",
+							"parameters": [ "intelligence", "4" ] 
+						}
+					]
+				}
+			]
+		},		
+
+
+
+		{
+			"id": "legendary_hero_item_set",
+			"name": "legendary_hero_item_set",
+		
+			"itemsInSet":
+			[
+				"excalibur_artifact",
+				"caduceus_artifact"
+			],
+		
+			"bonuses":
+			[
+				{
+					"requiredItemsAmount": "2",	"desc": "legendary_hero_item_set_description_1",
+					"heroBonuses":
+					[
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "hero_ability", "legendary_hero_item_set_warrior" ]
+						},
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "hero_ability", "legendary_hero_item_set_mage" ]
+						},
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "hero_ability", "legendary_hero_item_set_skill_campaign_hero_1_ability" ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

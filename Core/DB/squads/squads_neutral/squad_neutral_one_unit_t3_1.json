@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_neutral_one_unit_t3_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 750,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "gorilla", "v": 5003 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 5003,
+				"units":
+				[
+					"gorilla"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 30003,
+				"units":
+				[
+					{ "s" : "gorilla", "v": 30003 }
+				]
+			},
+
+			"tier": 3,
+			"fraction": "neutral"
+		}
+	]
+}

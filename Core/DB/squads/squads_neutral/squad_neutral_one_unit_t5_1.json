@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_neutral_one_unit_t5_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 900,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "fairy_dragon", "v": 15005 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 15005,
+				"units":
+				[
+					"fairy_dragon"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 120005,
+				"units":
+				[
+					{ "s" : "fairy_dragon", "v": 120005 }
+				]
+			},
+
+			"tier": 5,
+			"fraction": "neutral"
+		}
+	]
+}

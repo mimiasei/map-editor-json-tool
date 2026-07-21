@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M2_nature_aqualotl",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "aqualotl_upg_alt", "v": 1 },
+					{ "s" : "aqualotl_upg", "v": 1 },
+					{ "s" : "aqualotl", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"aqualotl_upg_alt", "aqualotl_upg", "aqualotl"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 25000,
+				"units":
+				[
+					{ "s" : "aqualotl_upg_alt", "v": 25000 },
+					{ "s" : "aqualotl_upg", "v": 25000 },
+					{ "s" : "aqualotl", "v": 25000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "nature"
+		}
+	]
+}

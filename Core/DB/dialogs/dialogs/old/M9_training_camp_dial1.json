@@ -1,0 +1,46 @@
+{
+	"array":
+	[
+		{
+			"id": "M9_training_camp_dial1",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "this is a place where retired legendary captain is training recruits",
+
+					"answers":
+					[				
+						{
+							"text": "Attack it and kill the captain (you get his hand, camp can no longer be used to hire units)",
+							
+							"actions": 
+							[ 
+								{ "a": "End", "p": [ "break" ] }  
+							]
+						},
+						{
+							"text": "Think about it some more",
+							
+							"actions": 
+							[ 
+								{ "a": "End" }  
+							]
+						}
+					]
+				}				
+			]
+		}
+	]
+}

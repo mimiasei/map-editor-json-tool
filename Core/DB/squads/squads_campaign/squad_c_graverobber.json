@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_graverobber",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "graverobber_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"graverobber_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 35005,
+				"units":
+				[					
+					{ "s" : "graverobber_upg_alt", "v": 35005 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "undead"
+		}
+	]
+}

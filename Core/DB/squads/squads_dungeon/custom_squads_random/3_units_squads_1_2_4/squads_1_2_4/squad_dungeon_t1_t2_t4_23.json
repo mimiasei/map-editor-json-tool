@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_dungeon_t1_t2_t4_23",
+            "useOldSquads": false,
+            "rollChance": 11,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "trogl_upg_alt",
+                        "v": 2514
+                    },
+                    {
+                        "s": "assassin_upg",
+                        "v": 2854
+                    },
+                    {
+                        "s": "minos_upg",
+                        "v": 3514
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 3514,
+                "units": [
+                    "trogl_upg_alt",
+                    "assassin_upg",
+                    "minos_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 16684,
+                "units": [
+                    {
+                        "s": "trogl_upg_alt",
+                        "v": 7684
+                    },
+                    {
+                        "s": "assassin_upg",
+                        "v": 12014
+                    },
+                    {
+                        "s": "minos_upg",
+                        "v": 16684
+                    }
+                ]
+            },
+            "tier": 4,
+            "fraction": "dungeon"
+        }
+    ]
+}

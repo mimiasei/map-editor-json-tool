@@ -1,0 +1,67 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_altar_of_magic_4",
+
+			"tooltipVisitType": "NotShow",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 8000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "altar_of_magic_4_label",
+						"selectionWindowType": "spellsRewardSet",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroMagicPropAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "spellReward_notification"
+							},
+							{
+								"rewardType": "HeroMagicPropAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "spellReward_notification"
+							},
+							{
+								"rewardType": "HeroMagicPropAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "spellReward_notification"
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

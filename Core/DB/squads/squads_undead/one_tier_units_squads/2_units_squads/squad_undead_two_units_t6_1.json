@@ -1,0 +1,45 @@
+{
+	"array": [
+		{
+			"id": "squad_undead_two_unit_t6_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 400,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "avatar_of_war",
+						"v": 20006
+					},
+					{
+						"s": "avatar_of_war_upg",
+						"v": 20006
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 20006,
+				"units": [
+					"avatar_of_war",
+					"avatar_of_war_upg"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 180006,
+				"units": [
+					{
+						"s": "avatar_of_war",
+						"v": 180006
+					},
+					{
+						"s": "avatar_of_war_upg",
+						"v": 180006
+					}
+				]
+			},
+			"tier": 6,
+			"fraction": "undead"
+		}
+	]
+}

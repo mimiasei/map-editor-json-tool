@@ -1,0 +1,142 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M9_hero_necromancer_ambush",
+
+			"description": "necro_hero_16_description",
+			"motto": "necro_hero_16_motto",
+
+			"mesh": "death_knight",
+			"mounts": [ "death_mount" ],
+			"icon": "hero_necromancer_16_lord_rufus",
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+			"classType": "magic",
+
+			"skillsRollVariant": "necros_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 20,
+			"attacksTimesBefore": [1.33],
+
+			"startSquad" : [
+				{ "sid": "lich", "min": 10, "max": 10 },
+				{ "sid": "vampire", "min": 3, "max": 3 },
+				{ "sid": "vampire_upg_alt", "min": 4, "max": 4 },
+				{ "sid": "vampire", "min": 3, "max": 3 },
+				{ "sid": "lich", "min": 10, "max": 10 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "lich", "min": 10, "max": 10 },
+				{ "sid": "vampire", "min": 3, "max": 3 },
+				{ "sid": "vampire_upg_alt", "min": 4, "max": 4 },
+				{ "sid": "vampire", "min": 3, "max": 3 },
+				{ "sid": "lich", "min": 10, "max": 10 }
+			],
+
+			"specialization": "necro_hero_16_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     3,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome": true,
+
+				"offence":      5,
+				"defence":      6,
+				"spellPower":   11,
+				"intelligence": 15,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 10 },
+						{ "v": 1, "c": 15 },
+						{ "v": 2, "c": 35 },
+						{ "v": 3, "c": 40 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_undead",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_resistance",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_luck",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_magic_night",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_scouting",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_battlemage",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "night_4_magic_despair",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_6_magic_deaths_grip",
+					"level": 4,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				},
+
+				{
+					"sidConfig": "change_use_necromancy",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

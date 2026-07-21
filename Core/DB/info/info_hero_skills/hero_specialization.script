@@ -1,0 +1,205 @@
+﻿// Flat Bonus
+
+modInt current_specialization_flat_base_bonus
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_flat_base_bonus_1
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_flat_increment
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].upgrade.increment" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_flat_increment_1
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].upgrade.increment" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_flat_level_step
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].upgrade.levelStep" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_flat_level_step_1
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].upgrade.levelStep" )
+
+	Text( return, specData )
+}
+
+// Perc Bonus
+
+modPercentNumeric current_specialization_perc_base_bonus
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modPercentNumeric current_specialization_perc_base_bonus_alt
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].parameters[3]" )
+
+	Text( return, specData )
+}
+
+modPercentNumeric current_specialization_perc_increment
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].upgrade.increment" )
+
+	Text( return, specData )
+}
+
+modFloatPercentF1Numeric current_specialization_perc_increment_alt
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].upgrade.increment" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_perc_level_step
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].upgrade.levelStep" )
+
+	Text( return, specData )
+}
+
+// Unit Spec
+
+modInt current_specialization_unit_base_bonus_1
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_unit_base_bonus_2
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modPercentNumeric current_specialization_unit_base_bonus_3
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[3].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_unit_increment
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[4].upgrade.increment" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_unit_level_step
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[4].upgrade.levelStep" )
+
+	Text( return, specData )
+}
+
+// Unic
+
+modInt current_specialization_moral_and_luck_base_bonus_1
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[0].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modPercentNumeric current_specialization_moral_and_luck_base_bonus_2
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].parameters[1]" )
+
+	Text( return, specData )
+}
+
+modPercentNumeric current_specialization_moral_and_luck_increment
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].upgrade.increment" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_moral_and_luck_level_step
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].upgrade.levelStep" )
+
+	Text( return, specData )
+}
+
+//
+
+modInt current_specialization_magic_increment
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].upgrade.increment" )
+
+	Text( return, specData )
+}
+
+modInt current_specialization_magic_step
+{
+	CurrentHeroSpecializationConfig ( specData, "bonuses[1].upgrade.levelStep" )
+
+	Text( return, specData )
+}
+
+//
+
+string current_specialization_25p
+{
+	Text( return, "25" )
+}
+
+string current_specialization_50p
+{
+	Text( return, "50" )
+}
+
+string current_specialization_100p
+{
+	Text( return, "100" )
+}
+
+string current_specialization_1
+{
+	Text( return, "1" )
+}
+
+string current_specialization_2
+{
+	Text( return, "2" )
+}
+
+string current_specialization_3
+{
+	Text( return, "3" )
+}
+
+string current_specialization_4
+{
+	Text( return, "4" )
+}
+
+string current_specialization_5
+{
+	Text( return, "5" )
+}

@@ -1,0 +1,51 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_unfrozen_three_units_t2_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 100,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "unfrozen_cultist", "v": 2502 },
+					{ "s" : "unfrozen_cultist_upg", "v": 2502 },
+					{ "s" : "unfrozen_cultist_upg_alt", "v": 2502 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 2502,
+				"units":
+				[
+					"unfrozen_cultist", "unfrozen_cultist_upg", "unfrozen_cultist_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 15002,
+				"units":
+				[
+					{ "s" : "unfrozen_cultist", "v": 15002 },
+					{ "s" : "unfrozen_cultist_upg", "v": 15002 },
+					{ "s" : "unfrozen_cultist_upg_alt", "v": 15002 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "unfrozen"
+		}
+	]
+}

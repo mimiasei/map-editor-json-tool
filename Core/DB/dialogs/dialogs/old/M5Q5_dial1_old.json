@@ -1,0 +1,169 @@
+{
+	"array":
+	[
+		{
+			"id": "M5Q5_dial1_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/esquire" ]
+					},
+
+					"title": "dialogue_title_templar",
+					"text": "dialogue_text_M5Q5_dial1_0",
+
+					"next": "1"
+				},
+				{
+					"id": "1",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+
+					"title": "dialogue_title_hero_dungeon",
+					"text": "dialogue_text_M5Q5_dial1_1",
+
+					"next": "2"
+				},
+				{
+					"id": "2",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/esquire" ]
+					},
+
+					"title": "dialogue_title_templar",
+					"text": "dialogue_text_M5Q5_dial1_2",
+
+					"next": "3"
+				},
+				{
+					"id": "3",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/esquire" ]
+					},
+
+					"title": "dialogue_title_templar",
+					"text": "dialogue_text_M5Q5_dial1_3",
+
+					"next": "4"
+				},
+				{
+					"id": "4",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+
+					"title": "dialogue_title_hero_dungeon",
+					"text": "dialogue_text_M5Q5_dial1_4",
+
+					"next": "5"
+				},
+				{
+					"id": "5",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/esquire" ]
+					},
+
+					"title": "dialogue_title_templar",
+					"text": "dialogue_text_M5Q5_dial1_5",
+
+					"answers":
+					[
+						{
+							"text": "dialogue_text_M5Q5_dial1_5_answer_1",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "5a" ] }
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q5_dial1_5_answer_2",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "5b" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "5a",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+
+					"title": "dialogue_title_hero_dungeon",
+					"text": "dialogue_text_M5Q5_dial1_5a",
+
+					"next": "5a1"
+				},
+				{
+					"id": "5a1",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/esquire" ]
+					},
+
+					"title": "dialogue_title_templar",
+					"text": "dialogue_text_M5Q5_dial1_5a1",
+
+					"next": "endFight"
+				},
+				{
+					"id": "5b",					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/esquire" ]
+					},
+
+					"title": "dialogue_title_templar",
+					"text": "dialogue_text_M5Q5_dial1_5b",
+
+					"next": "endFight"
+				},
+				{
+					"id": "endFight",
+					"fon": "","avatars":{"icons":[]},	"title": "","text": "",
+					
+					"mapActions":
+					[
+						{ "a": "InitiateAttack", "p": [ "templar" ] }
+					],
+				
+					"actions":
+					[
+						{ "a": "End" }
+					]
+				}
+			]
+		}
+	]
+}

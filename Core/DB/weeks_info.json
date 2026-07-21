@@ -1,0 +1,36 @@
+﻿{
+	"countToReturnWeek": 3,
+	"weeks":
+	[ 
+		{ "sid": "astrologist_week_1", "rollChance": 150 },
+		{ "sid": "astrologist_week_2", "rollChance": 125 },
+		{ "sid": "astrologist_week_3", "rollChance": 125 },
+		{ "sid": "astrologist_week_4", "rollChance": 50 },
+		{ "sid": "astrologist_week_5", "rollChance": 50 },
+		{ "sid": "astrologist_week_6", "rollChance": 50 },
+		{ "sid": "astrologist_week_7", "rollChance": 150 },
+		{ "sid": "astrologist_week_8", "rollChance": 100 },
+		{ "sid": "astrologist_week_9", "rollChance": 100 },
+		{ "sid": "astrologist_week_10", "rollChance": 600 },
+		{ "sid": "astrologist_week_11", "rollChance": 25 },
+		{ "sid": "astrologist_week_12", "rollChance": 150 },
+		{ "sid": "astrologist_week_13", "rollChance": 150 },
+		{ "sid": "astrologist_week_14", "rollChance": 150 },
+		{ "sid": "astrologist_week_15", "rollChance": 150 }
+	],
+	"countToReturnMonth": 1,
+	"months":
+	[
+		{ "sid": "astrologist_month_1", "rollChance": 25 },
+		{ "sid": "astrologist_month_2", "rollChance": 150 },
+		{ "sid": "astrologist_month_3", "rollChance": 150 },
+		{ "sid": "astrologist_month_4", "rollChance": 100 },
+		{ "sid": "astrologist_month_5", "rollChance": 75 },
+		{ "sid": "astrologist_month_6", "rollChance": 100 },
+		{ "sid": "astrologist_month_7", "rollChance": 75 },
+		{ "sid": "astrologist_month_8", "rollChance": 25 },
+		{ "sid": "astrologist_month_9", "rollChance": 100 },
+		{ "sid": "astrologist_month_10", "rollChance": 400 },
+		{ "sid": "astrologist_month_11", "rollChance": 100 }
+	]
+}

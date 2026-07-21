@@ -1,0 +1,1003 @@
+{
+	"array": [
+		{
+			"id": "M9Q1_dial3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"4848"
+							]
+						}
+					],
+					"next": "0m"
+				},
+				{
+					"id": "0m",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_0m",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1b"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1c"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1a",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1aa"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1ab"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1aa",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1b",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1ab",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c",
+					"next": "1ab1"
+				},
+				{
+					"id": "1ab1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c1",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1b",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1ba"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1bb"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1ba",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1a",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1bb",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c",
+					"next": "1bb1"
+				},
+				{
+					"id": "1bb1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c1",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"2"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1c",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c",
+					"next": "1c1"
+				},
+				{
+					"id": "1c1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c1",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1c1a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1c1b"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1c1a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1a",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1c1b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1b",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q1_dial3_1_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"2"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1a",
+					"next": "5"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1b",
+					"next": "5"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c",
+					"next": "4_1"
+				},
+				{
+					"id": "4_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_1c1",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_2",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_3",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false" ,
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q1_dial3_4",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true" ,
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q1_dial3_5",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false" ,
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q1_dial3_6",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"final_gate_opened",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false" ,
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q1_dial3_7",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"4464"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"4464",
+								"1"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "CreateVFX",
+							"p": [
+								"fx_quest_mark_gold_03",
+								"4464",
+								"false",
+								"true",
+								"pm_final_gate"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"found_antagonist",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"zone_antagonist"
+							]
+						},
+						{
+							"a": "AutoSave"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

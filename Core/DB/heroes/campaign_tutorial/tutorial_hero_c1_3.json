@@ -1,0 +1,89 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tutorial_hero_c1_3",
+
+			"name": "human_hero_1",
+			"description": "human_hero_1_description",
+			"motto": "human_hero_1_motto",
+
+			"mesh": "knight",
+			"mounts": [ "horse" ],
+			"icon": "hero_human_1_ister",
+			"fraction": "human",
+			"nativeBiome": "Grass",
+			"classType": "might",
+
+			"skillsRollVariant": "humans_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 3,
+
+			"startSquad" : [
+				{ "sid": "esquire", "min": 10, "max": 10 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "esquire", "min": 1, "max": 1 }
+			],
+
+			"specialization": "tutorial_human_hero_1_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+
+				"offence":      3,
+				"defence":      3,
+				"spellPower":   1,
+				"intelligence": 1,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 35 },
+						{ "v": 1, "c": 35 },
+						{ "v": 2, "c": 10 },
+						{ "v": 3, "c": 20 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_economy",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+
+			]
+		}
+	]
+}

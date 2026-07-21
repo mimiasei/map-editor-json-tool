@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_dungeon_t2_t4_t5_11",
+            "useOldSquads": false,
+            "rollChance": 11,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "assassin_upg",
+                        "v": 4185
+                    },
+                    {
+                        "s": "minos",
+                        "v": 5355
+                    },
+                    {
+                        "s": "medusa_upg",
+                        "v": 8185
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 8185,
+                "units": [
+                    "assassin_upg",
+                    "minos",
+                    "medusa_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 25015,
+                "units": [
+                    {
+                        "s": "assassin_upg",
+                        "v": 9015
+                    },
+                    {
+                        "s": "minos",
+                        "v": 15355
+                    },
+                    {
+                        "s": "medusa_upg",
+                        "v": 25015
+                    }
+                ]
+            },
+            "tier": 5,
+            "fraction": "dungeon"
+        }
+    ]
+}

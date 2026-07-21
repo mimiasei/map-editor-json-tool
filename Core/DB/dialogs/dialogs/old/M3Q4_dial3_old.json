@@ -1,0 +1,38 @@
+{
+	"array":
+	[
+		{
+			"id": "M3Q4_dial3_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"dialogPlayConditions":  
+					[
+						{ "c": "UnitOwnHero", "p": [ "lightweaver", ">=", "9" ] }
+					],
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/lightweaver", "4","icons/units/hex_portraits/lightweaver" ]
+					},
+
+					"title": "filler",
+					"text": "thanks, you can go now",
+
+					"mapActions":
+					[
+						{ "a": "RemoveUnitHero", "p": [ "lightweaver", "9" ] },
+						{ "a": "CounterSet", "p": [ "priestess_quest", "4" ] }
+					],
+
+					"end": true
+				}
+			]
+		}
+	]
+}

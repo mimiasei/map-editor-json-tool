@@ -1,0 +1,63 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_custom_4_2",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 84,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "lesser_eldritch_upg",
+                        "v": 5003
+                    },
+                    {
+                        "s": "unfrozen_cultist_upg",
+                        "v": 5003
+                    },
+                    {
+                        "s": "frostworm_rider_upg",
+                        "v": 5003
+                    },
+                    {
+                        "s": "eldritch_flyer_upg",
+                        "v": 5003
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 5003,
+                "units": [
+                    "lesser_eldritch_upg",
+                    "unfrozen_cultist_upg",
+                    "frostworm_rider_upg",
+                    "eldritch_flyer_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 20003,
+                "units": [
+                    {
+                        "s": "lesser_eldritch_upg",
+                        "v": 20003
+                    },
+                    {
+                        "s": "unfrozen_cultist_upg",
+                        "v": 20003
+                    },
+                    {
+                        "s": "frostworm_rider_upg",
+                        "v": 20003
+                    },
+                    {
+                        "s": "eldritch_flyer_upg",
+                        "v": 20003
+                    }
+                ]
+            },
+            "tier": 3,
+            "fraction": "unfrozen"
+        }
+    ]
+}

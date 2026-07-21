@@ -1,0 +1,72 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "custom_monty_hall",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 40,
+					"value": 3000,
+					
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "monty_hall_label",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroPropItemReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "itemReward_notification",
+								
+								"parameters": [  ]
+							},
+							{
+								"rewardType": "HeroPropItemReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "itemReward_notification",
+								
+								"parameters": [  ]
+							},
+							{
+								"rewardType": "HeroPropItemReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "itemReward_notification",
+								
+								"parameters": [  ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,27 @@
+{
+	"array":
+	[
+		{
+			"id": "M4Q1_dial2_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "you helped me, now i help you (i don't know how)",
+				
+					"end": true
+				}			
+			]
+		}
+	]
+}

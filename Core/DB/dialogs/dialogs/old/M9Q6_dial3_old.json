@@ -1,0 +1,186 @@
+{
+	"array": [
+		{
+			"id": "M9Q6_dial3_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q6_dial3_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial3_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial3_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q6_dial3_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial3_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial3_5",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q6_dial3_5_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q6_dial3_5_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5b"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q6_dial3_5_answer_3",
+							"actions": [
+								{
+									"a": "End"
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "5a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_skeleton",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_skeleton",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q6_dial3_5a",
+					"mapActions": [
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"skeleton"
+							]
+						}
+					],
+					"end": true
+				},
+				{
+					"id": "5b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q6_dial3_5b",
+					"end": true
+				}
+			]
+		}
+	]
+}

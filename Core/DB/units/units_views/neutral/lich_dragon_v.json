@@ -1,0 +1,89 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "lich_dragon",
+			"mesh": "Neutral/1Prefabs/lich_dragon",
+			"mapMesh": "Neutral/1Prefabs/lich_dragon_map",
+			"fadeTime": 2.05,
+
+			"scale": 95,
+			"modelHeight": 0.68,
+			"moveSpeed": 7,
+
+			"attackTimeBefore": [ 0.65, 2.563, 2.563, 0.9, 0.6, 0.6 ],
+			"attackTimeAfter": [ 1.317, 0.57, 0.57, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeoffPrepareTime": 0.5,
+			"ascentTime": 0.5,
+			"descentTime": 0.5,
+			"defaultHeight": 2,
+
+			"takeDamageTime": 1.34,
+			"deathTimeOffset": 2.14,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "lich_dragon_ability_2_name",
+					"abilityType": "Ability_type_special",
+					"description": "lich_dragon_ability_2_description",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "lich_dragon_ability_1_name",
+					"abilityType": "Ability_type_special",
+					"description": "lich_dragon_ability_1_description_alt",
+					"animationIndex": 2,
+					"useExpandTooltip": "false" 
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_undead",
+                    "description": "base_class_undead_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_strike_tri_reach_1_name",
+					"description": "base_passive_strike_tri_reach_1_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "base_passive_resistant_2_name",
+					"description": "base_passive_resistant_description"
+				},
+				{
+					"name": "lich_dragon_passive_1_name",
+					"description": "lich_dragon_passive_1_description"
+				}
+			]
+		}
+	]
+}

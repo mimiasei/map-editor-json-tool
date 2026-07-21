@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M1_skeleton_hat_together",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "skeleton", "v": 1000 },
+					{ "s" : "skeleton_upg_alt", "v": 1000 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"skeleton", "skeleton_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 99000,
+				"units":
+				[
+					{ "s" : "skeleton", "v": 99000 },
+					{ "s" : "skeleton_upg_alt", "v": 99000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "undead"
+		}
+	]
+}

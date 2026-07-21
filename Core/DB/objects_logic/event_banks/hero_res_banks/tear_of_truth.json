@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tear_of_truth",
+			"aiIgnore": true,
+
+			"tooltipVisitType": "CurrentHeroVisit",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "OnStartWeek",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 7500,
+
+					"guardUnits": 
+					[
+
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "MovePointsPercentAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "1.0" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

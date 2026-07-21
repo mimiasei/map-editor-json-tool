@@ -1,0 +1,48 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "mysterious_stone",
+			"aiIgnore": true,
+
+			"tooltipVisitType": "CurrentHeroVisit",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "OnStartWeek",
+			"visitType": "EachHeroOneTime",
+
+			"variants": 
+			[
+				{
+					"rollChance": 50,
+					"value": 3750,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "mysterious_stone_buff", "UntilNextWeek", "0" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

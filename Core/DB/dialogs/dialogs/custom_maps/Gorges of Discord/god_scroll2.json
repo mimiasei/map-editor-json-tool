@@ -1,0 +1,102 @@
+{
+	"array": [
+		{
+			"id": "god_scroll2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "god_dialogue_text_reached_library_a4m",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3965"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"light_scroll2",
+								"true"
+							]
+						}						
+					],
+					"invokeOnlyActions": true,
+					"next": "a0"
+				},
+				{
+					"id": "a0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P1",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_scroll2_a0",
+					"next": "b0"
+				},
+				{
+					"id": "b0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P2",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_scroll2_b0",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"scroll_progression",
+								"2"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,44 @@
+{
+    "array": [
+        {
+            "id": "squad_undead_t2_t5_6",
+            "useOldSquads": false,
+            "rollChance": 31,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "flicker_upg_alt",
+                        "v": 5265
+                    },
+                    {
+                        "s": "lich_upg",
+                        "v": 7265
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 7265,
+                "units": [
+                    "flicker_upg_alt",
+                    "lich_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 23515,
+                "units": [
+                    {
+                        "s": "flicker_upg_alt",
+                        "v": 20015
+                    },
+                    {
+                        "s": "lich_upg",
+                        "v": 23515
+                    }
+                ]
+            },
+            "tier": 5,
+            "fraction": "undead"
+        }
+    ]
+}

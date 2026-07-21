@@ -1,0 +1,33 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_1_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "452", "3" ] }, { "a": "SetActiveVFX", "p": [ "Step_1_VFX", "true" ] }, { "a": "SetActiveVFX", "p": [ "Step_1_VFX_Zone", "true" ] }, { "a": "MoveCamera", "p": [ "452" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

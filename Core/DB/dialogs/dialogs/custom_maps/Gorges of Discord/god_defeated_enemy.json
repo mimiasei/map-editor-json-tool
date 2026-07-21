@@ -1,0 +1,307 @@
+{
+	"array": [
+		{
+			"id": "god_defeated_enemy",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_a0a",
+					"next": "a1a"
+				},
+				{
+					"id": "a1a",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_a0a1",
+					"next": "a2a"
+				},
+				{
+					"id": "a2a",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_a0a2",
+					"next": "a3a"
+				},
+				{
+					"id": "a3a",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_a0a3",
+					"next": "a0b"
+				},
+				{
+					"id": "a0b",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_a0b",
+					"next": "a1b"
+				},
+				{
+					"id": "a1b",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_a0b1",
+					"next": "a2b"
+				},
+				{
+					"id": "a2b",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P1", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_human_11_pip_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_a0b2",
+					"next": "b0a"
+				},
+				{
+					"id": "b0a",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_b0a",
+					"next": "b1a"
+				},
+				{
+					"id": "b1a",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_b0a1",
+					"next": "b2a"
+				},
+				{
+					"id": "b2a",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_b0a2",
+					"next": "b3a"
+				},
+				{
+					"id": "b3a",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "0" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_b0a3",
+					"next": "b0b"
+				},
+				{
+					"id": "b0b",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_b0b",
+					"next": "b1b"
+				},
+				{
+					"id": "b1b",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{ "c": "Counter", "p": [ "Counter_P2", "=", "1" ] },
+						{ "c": "Counter", "p": [ "chose_violence", "=", "1" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_18_Lodos_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "god_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "god_dialogue_text_god_defeated_enemy_b0b1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions":
+					[
+						{ "a": "GameVictory" }
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,153 @@
+{
+	"array":
+	[
+		{
+			"id": "M9bQ2_dial5_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_3_valentina_large" ]
+					},
+
+					"title": "dialogue_title_hero_human",
+					"text": "dialogue_text_M9bQ2_dial5_0",
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_angel",
+					"text": "dialogue_text_M9bQ2_dial5_1",
+					
+					"next": "2"
+				},
+				{
+					"id": "2",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_angel",
+					"text": "dialogue_text_M9bQ2_dial5_2",
+
+					"next": "3"
+				},
+				{
+					"id": "3",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_angel",
+					"text": "dialogue_text_M9bQ2_dial5_3",
+
+					"next": "4"
+				},
+				{
+					"id": "4",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_3_valentina_large" ]
+					},
+
+					"title": "dialogue_title_hero_human",
+					"text": "dialogue_text_M9bQ2_dial5_4",
+
+					"next": "5"
+				},
+				{
+					"id": "5",
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_angel",
+					"text": "dialogue_text_M9bQ2_dial5_5",
+					
+					"next": "6"
+				},
+				{
+					"id": "6",
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_angel",
+					"text": "dialogue_text_M9bQ2_dial5_6",
+					
+					"next": "7"
+				},
+				{
+					"id": "7",
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_angel",
+					"text": "dialogue_text_M9bQ2_dial5_7",
+					
+					"next": "8"
+				},
+				{
+					"id": "8",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_3_valentina_large" ]
+					},
+
+					"title": "dialogue_title_hero_human",
+					"text": "dialogue_text_M9bQ2_dial5_8",
+
+					"next": "9"
+				},
+				{
+					"id": "9",
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_angel",
+					"text": "dialogue_text_M9bQ2_dial5_9",
+					
+					"end": true
+				}
+			]
+		}
+	]
+}

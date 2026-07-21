@@ -1,0 +1,1402 @@
+{
+	"array":
+	[
+		{
+			"id": "fraction_law_unfrozen_1",
+			"icon": "fraction_law_unfrozen_1_icon",
+			"name": "fraction_law_unfrozen_1_name",
+			"desc": "fraction_law_unfrozen_1_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "gold", 250 ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "gold", 500 ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_2",
+			"icon": "fraction_law_unfrozen_2_icon",
+			"name": "fraction_law_unfrozen_2_name",
+			"desc": "fraction_law_unfrozen_2_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "expPerBonus", "0.10" ]
+						}
+					]
+				},
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "expPerBonus", "0.20" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_3",
+			"icon": "fraction_law_unfrozen_3_icon",
+			"name": "fraction_law_unfrozen_3_name",
+			"desc": "fraction_law_unfrozen_3_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "gold", "2500" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "wood", "5" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "ore", "5" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_4",
+			"icon": "fraction_law_unfrozen_4_icon",
+			"name": "fraction_law_unfrozen_4_name",
+			"desc": "fraction_law_unfrozen_4_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"biomeType": "native",
+							"parameters": [ "offence", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"biomeType": "native",
+							"parameters": [ "defence", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"biomeType": "native",
+							"parameters": [ "offence", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"biomeType": "native",
+							"parameters": [ "defence", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"biomeType": "native",
+							"parameters": [ "offence", "3" ]
+						},
+						{
+							"type": "unitStat",
+							"biomeType": "native",
+							"parameters": [ "defence", "3" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_5",
+			"icon": "fraction_law_unfrozen_5_icon",
+			"name": "fraction_law_unfrozen_5_name",
+			"desc": "fraction_law_unfrozen_5_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "lesser_eldritch", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lesser_eldritch", "lesser_eldritch_upg", "lesser_eldritch_upg_alt" ],
+							"parameters": [ "initiative", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "lesser_eldritch", "8" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lesser_eldritch", "lesser_eldritch_upg", "lesser_eldritch_upg_alt" ],
+							"parameters": [ "initiative", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_6",
+			"icon": "fraction_law_unfrozen_6_icon",
+			"name": "fraction_law_unfrozen_6_name",
+			"desc": "fraction_law_unfrozen_6_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroOffenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroDefenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroSpellPowerModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroIntelligenceModifier", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroOffenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroDefenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroSpellPowerModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "1" ],
+							"parameters": [ "heroIntelligenceModifier", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "fraction_law_unfrozen_7",
+			"icon": "fraction_law_unfrozen_7_icon",
+			"name": "fraction_law_unfrozen_7_name",
+			"desc": "fraction_law_unfrozen_7_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "3" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_8",
+			"icon": "fraction_law_unfrozen_8_icon",
+			"name": "fraction_law_unfrozen_8_name",
+			"desc": "fraction_law_unfrozen_8_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "sideResHumGraal",
+							"parameters": [ "wood", "1" ]
+						},
+						{
+							"type": "sideResHumGraal",
+							"parameters": [ "ore", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "sideResHumGraal",
+							"parameters": [ "wood", "2" ]
+						},
+						{
+							"type": "sideResHumGraal",
+							"parameters": [ "ore", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_9",
+			"icon": "fraction_law_unfrozen_9_icon",
+			"name": "fraction_law_unfrozen_9_name",
+			"desc": "fraction_law_unfrozen_9_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"fraction": "unfrozen",
+							"parameters": [ "manaRestoreBonusPercent", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"fraction": "unfrozen",
+							"parameters": [ "manaRestoreBonusPercent", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_10",
+			"icon": "fraction_law_unfrozen_10_icon",
+			"name": "fraction_law_unfrozen_10_name",
+			"desc": "fraction_law_unfrozen_10_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroOffenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroDefenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroSpellPowerModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroIntelligenceModifier", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroOffenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroDefenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroSpellPowerModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "2" ],
+							"parameters": [ "heroIntelligenceModifier", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_11",
+			"icon": "fraction_law_unfrozen_11_icon",
+			"name": "fraction_law_unfrozen_11_name",
+			"desc": "fraction_law_unfrozen_11_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroOffenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroDefenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroSpellPowerModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroIntelligenceModifier", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroOffenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroDefenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroSpellPowerModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "3" ],
+							"parameters": [ "heroIntelligenceModifier", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_12",
+			"icon": "fraction_law_unfrozen_12_icon",
+			"name": "fraction_law_unfrozen_12_name",
+			"desc": "fraction_law_unfrozen_12_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "unfrozen_cultist", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unfrozen_cultist", "unfrozen_cultist_upg", "unfrozen_cultist_upg_alt" ],
+							"parameters": [ "damageMin", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unfrozen_cultist", "unfrozen_cultist_upg", "unfrozen_cultist_upg_alt" ],
+							"parameters": [ "damageMax", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_13",
+			"icon": "fraction_law_unfrozen_13_icon",
+			"name": "fraction_law_unfrozen_13_name",
+			"desc": "fraction_law_unfrozen_13_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "frostworm_rider", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "frostworm_rider", "frostworm_rider_upg", "frostworm_rider_upg_alt" ],
+							"parameters": [ "hp", "5" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "fraction_law_unfrozen_14",
+			"icon": "fraction_law_unfrozen_14_icon",
+			"name": "fraction_law_unfrozen_14_name",
+			"desc": "fraction_law_unfrozen_14_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "mercury", 1 ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideRes",
+							"parameters": [ "mercury", 2 ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_15",
+			"icon": "fraction_law_unfrozen_15_icon",
+			"name": "fraction_law_unfrozen_15_name",
+			"desc": "fraction_law_unfrozen_15_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_16",
+			"icon": "fraction_law_unfrozen_16_icon",
+			"name": "fraction_law_unfrozen_16_name",
+			"desc": "fraction_law_unfrozen_16_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 6,
+					"bonuses":
+					[
+						{
+							"type": "portalSummoningUsageLimit",
+							"parameters": [ "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_17",
+			"icon": "fraction_law_unfrozen_17_icon",
+			"name": "fraction_law_unfrozen_17_name",
+			"desc": "fraction_law_unfrozen_17_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "gold", "5000" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "wood", "10" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "ore", "10" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_18",
+			"icon": "fraction_law_unfrozen_18_icon",
+			"name": "fraction_law_unfrozen_18_name",
+			"desc": "fraction_law_unfrozen_18_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroOffenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroDefenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroSpellPowerModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroIntelligenceModifier", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroOffenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroDefenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroSpellPowerModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "4" ],
+							"parameters": [ "heroIntelligenceModifier", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_19",
+			"icon": "fraction_law_unfrozen_19_icon",
+			"name": "fraction_law_unfrozen_19_name",
+			"desc": "fraction_law_unfrozen_19_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "eldritch_flyer", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "eldritch_flyer", "eldritch_flyer_upg", "eldritch_flyer_upg_alt" ],
+							"parameters": [ "speed", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "eldritch_flyer", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "eldritch_flyer", "eldritch_flyer_upg", "eldritch_flyer_upg_alt" ],
+							"parameters": [ "speed", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_20",
+			"icon": "fraction_law_unfrozen_20_icon",
+			"name": "fraction_law_unfrozen_20_name",
+			"desc": "fraction_law_unfrozen_20_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "outComingBuffDuration", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"parameters": [ "outComingDebuffDuration", "1" ]
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "outComingBuffDuration", "1" ]
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "outComingDebuffDuration", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"parameters": [ "outComingBuffDuration", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"parameters": [ "outComingDebuffDuration", "2" ]
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "outComingBuffDuration", "2" ]
+						},
+						{ 
+							"type": "heroStat",
+							"parameters": [ "outComingDebuffDuration", "2" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "fraction_law_unfrozen_21",
+			"icon": "fraction_law_unfrozen_21_icon",
+			"name": "fraction_law_unfrozen_21_name",
+			"desc": "fraction_law_unfrozen_21_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "battleSubskillBonus",
+							"parameters": [ "side_buff", "fraction_law_unfrozen_21_bonus" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_22",
+			"icon": "fraction_law_unfrozen_22_icon",
+			"name": "fraction_law_unfrozen_22_name",
+			"desc": "fraction_law_unfrozen_22_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"fraction": "unfrozen",
+							"parameters": [ "finalSummonBonusPercent", "0.10" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lesser_eldritch", "lesser_eldritch_upg", "lesser_eldritch_upg_alt" ],
+							"parameters": [ "finalSummonBonusPercent", "0.10" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "eldritch_flyer", "eldritch_flyer_upg", "eldritch_flyer_upg_alt" ],
+							"parameters": [ "finalSummonBonusPercent", "0.10" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unspeakable", "unspeakable_upg", "unspeakable_upg_alt" ],
+							"parameters": [ "finalSummonBonusPercent", "0.10" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"fraction": "unfrozen",
+							"parameters": [ "finalSummonBonusPercent", "0.20" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "lesser_eldritch", "lesser_eldritch_upg", "lesser_eldritch_upg_alt" ],
+							"parameters": [ "finalSummonBonusPercent", "0.20" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "eldritch_flyer", "eldritch_flyer_upg", "eldritch_flyer_upg_alt" ],
+							"parameters": [ "finalSummonBonusPercent", "0.20" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unspeakable", "unspeakable_upg", "unspeakable_upg_alt" ],
+							"parameters": [ "finalSummonBonusPercent", "0.20" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_23",
+			"icon": "fraction_law_unfrozen_23_icon",
+			"name": "fraction_law_unfrozen_23_name",
+			"desc": "fraction_law_unfrozen_23_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+                            "type": "sideStat",
+                            "parameters": [ "percentDustForDestroyItem", "0.10" ]
+                        }
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+                            "type": "sideStat",
+                            "parameters": [ "percentDustForDestroyItem", "0.20" ]
+                        }
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+                            "type": "sideStat",
+                            "parameters": [ "percentDustForDestroyItem", "0.30" ]
+                        }
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_24",
+			"icon": "fraction_law_unfrozen_24_icon",
+			"name": "fraction_law_unfrozen_24_name",
+			"desc": "fraction_law_unfrozen_24_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroOffenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroDefenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroSpellPowerModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroIntelligenceModifier", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroOffenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroDefenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroSpellPowerModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "5" ],
+							"parameters": [ "heroIntelligenceModifier", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_25",
+			"icon": "fraction_law_unfrozen_25_icon",
+			"name": "fraction_law_unfrozen_25_name",
+			"desc": "fraction_law_unfrozen_25_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroOffenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroDefenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroSpellPowerModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroIntelligenceModifier", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroOffenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroDefenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroSpellPowerModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "6" ],
+							"parameters": [ "heroIntelligenceModifier", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_26",
+			"icon": "fraction_law_unfrozen_26_icon",
+			"name": "fraction_law_unfrozen_26_name",
+			"desc": "fraction_law_unfrozen_26_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "succubus", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "succubus", "succubus_upg", "succubus_upg_alt" ],
+							"parameters": [ "offence", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "succubus", "succubus_upg", "succubus_upg_alt" ],
+							"parameters": [ "defence", "4" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_27",
+			"icon": "fraction_law_unfrozen_27_icon",
+			"name": "fraction_law_unfrozen_27_name",
+			"desc": "fraction_law_unfrozen_27_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "arbitrator", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "arbitrator", "arbitrator_upg", "arbitrator_upg_alt" ],
+							"parameters": [ "damageMin", "4" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "arbitrator", "arbitrator_upg", "arbitrator_upg_alt" ],
+							"parameters": [ "damageMax", "4" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+
+		{
+			"id": "fraction_law_unfrozen_28",
+			"icon": "fraction_law_unfrozen_28_icon",
+			"name": "fraction_law_unfrozen_28_name",
+			"desc": "fraction_law_unfrozen_28_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "energyLevelsPerRoundBonus", "-1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_29",
+			"icon": "fraction_law_unfrozen_29_icon",
+			"name": "fraction_law_unfrozen_29_name",
+			"desc": "fraction_law_unfrozen_29_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 5,
+					"bonuses":
+					[
+						{
+							"type": "fractionEnergyRestoreBonus",
+							"parameters":[ "unfrozen" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_30",
+			"icon": "fraction_law_unfrozen_30_icon",
+			"name": "fraction_law_unfrozen_30_name",
+			"desc": "fraction_law_unfrozen_30_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "gold", "7500" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "wood", "15" ]
+						},
+						{
+							"type": "sideOneTimeAddRes",
+							"parameters": [ "ore", "15" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_31",
+			"icon": "fraction_law_unfrozen_31_icon",
+			"name": "fraction_law_unfrozen_31_name",
+			"desc": "fraction_law_unfrozen_31_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroOffenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroDefenceModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroSpellPowerModifier", "0.1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroIntelligenceModifier", "0.1" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroOffenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroDefenceModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroSpellPowerModifier", "0.2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "7" ],
+							"parameters": [ "heroIntelligenceModifier", "0.2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_32",
+			"icon": "fraction_law_unfrozen_32_icon",
+			"name": "fraction_law_unfrozen_32_name",
+			"desc": "fraction_law_unfrozen_32_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "unspeakable", "1" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unspeakable", "unspeakable_upg", "unspeakable_upg_alt" ],
+							"parameters": [ "initiative", "3" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unspeakable", "unspeakable_upg", "unspeakable_upg_alt" ],
+							"parameters": [ "speed", "3" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "cityUnitsIncrement",
+							"parameters": [ "unspeakable", "2" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unspeakable", "unspeakable_upg", "unspeakable_upg_alt" ],
+							"parameters": [ "initiative", "3" ]
+						},
+						{
+							"type": "unitStat",
+							"receivers": [ "unspeakable", "unspeakable_upg", "unspeakable_upg_alt" ],
+							"parameters": [ "speed", "3" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_33",
+			"icon": "fraction_law_unfrozen_33_icon",
+			"name": "fraction_law_unfrozen_33_name",
+			"desc": "fraction_law_unfrozen_33_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "unitStat",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "initiative", "-1" ]
+						},
+						{
+							"type": "unitStat",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "speed", "-1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_34",
+			"icon": "fraction_law_unfrozen_34_icon",
+			"name": "fraction_law_unfrozen_34_name",
+			"desc": "fraction_law_unfrozen_34_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "anyLandEqualNativeLandBonus"
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_35",
+			"icon": "fraction_law_unfrozen_35_icon",
+			"name": "fraction_law_unfrozen_35_name",
+			"desc": "fraction_law_unfrozen_35_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "astrologyExp",
+							"parameters": [ "250", "0.0" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "astrologyExp",
+							"parameters": [ "500", "0.0" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "astrologyExp",
+							"parameters": [ "750", "0.0" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "fraction_law_unfrozen_36",
+			"icon": "fraction_law_unfrozen_36_icon",
+			"name": "fraction_law_unfrozen_36_name",
+			"desc": "fraction_law_unfrozen_36_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStatBattle",
+							"receiverAllegiance": "enemy",
+							"parameters": [ "magicCdBonus", "1" ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

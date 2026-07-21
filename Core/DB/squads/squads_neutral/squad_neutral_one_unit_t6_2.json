@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_neutral_one_unit_t6_2",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 1300,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "mech_guard", "v": 20006 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 20006,
+				"units":
+				[
+					"mech_guard"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1800060,
+				"units":
+				[
+					{ "s" : "mech_guard", "v": 1800060 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "neutral"
+		}
+	]
+}

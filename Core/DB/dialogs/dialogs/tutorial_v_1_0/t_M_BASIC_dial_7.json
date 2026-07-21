@@ -1,0 +1,22 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_7",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_7_1",
+					"mapActions": [ { "a": "DeleteEntity", "p": [ "block_2_1" ] }, { "a": "DeleteEntity", "p": [ "block_2_2" ] }, { "a": "DeleteEntity", "p": [ "block_2_3" ] }, { "a": "SubQuestActivate", "p": [ "Questlog", "step_6" ] }, { "a": "SetActiveVFX", "p": [ "Step_6_VFX", "true" ] } ],
+					"end": true
+				}
+			]
+		}
+	]
+}

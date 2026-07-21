@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "custom_gardener",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+
+			"variantRerollType": "OnStartWeek",
+			"visitorsResetType": "OnStartWeek",
+			"visitType": "OneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 750,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SidePropResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [  ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

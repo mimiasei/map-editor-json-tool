@@ -1,0 +1,467 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "grass_arena",
+
+			"sceneName": "grassArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_grass",
+
+			"biome": "Grass",
+			"tileSets": [ "GrassTileSet" ],
+			"weatherOptions":
+			[
+				{
+					"prefabPath":"effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "grass_siege_arena",
+
+			"sceneName": "grassSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_grass",
+
+			"biome": "Grass",
+			"tileSets": [ "GrassTileSet", "RedTileSet", "BlackTileSet" ],
+			"weatherOptions":
+			[
+				{
+					"prefabPath":"effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "grass_siege_arena_0_level",
+
+			"sceneName": "grassSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_grass",
+
+			"biome": "Grass",
+			"tileSets": [ "GrassTileSet", "RedTileSet", "BlackTileSet" ],
+			"weatherOptions":
+			[
+				{
+					"prefabPath":"effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "autumn_arena",
+
+			"sceneName": "autumnArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_autumn",
+
+			"biome": "Autumn",
+			"tileSets": [ "AutumnTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "autumn_siege_arena",
+
+			"sceneName": "autumnSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_autumn",
+
+			"biome": "Autumn",
+			"tileSets": [ "AutumnTileSet", "NatureRedTileSet", "NatureBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "autumn_siege_arena_0_level",
+
+			"sceneName": "autumnSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_autumn",
+
+			"biome": "Autumn",
+			"tileSets": [ "AutumnTileSet", "NatureRedTileSet", "NatureBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "lava_arena",
+
+			"sceneName": "lavaArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_lava",
+
+			"biome": "Lava",
+			"tileSets": [ "LavaTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "lava_siege_arena",
+			
+			"sceneName": "lavaSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_lava",
+
+			"biome": "Lava",
+			"tileSets": [ "LavaTileSet", "DemonRedTileSet", "DemonBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "lava_siege_arena_0_level",
+			
+			"sceneName": "lavaSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_lava",
+
+			"biome": "Lava",
+			"tileSets": [ "LavaTileSet", "DemonRedTileSet", "DemonBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "snow_arena",
+
+			"sceneName": "snowArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_snow",
+
+			"biome": "Snow",
+			"tileSets": [ "SnowTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "snow_siege_arena",
+
+			"sceneName": "snowSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_snow",
+
+			"biome": "Snow",
+			"tileSets": [ "SnowTileSet","UnfrozenRedTileSet", "UnfrozenBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "snow_siege_arena_0_level",
+
+			"sceneName": "snowSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_snow",
+
+			"biome": "Snow",
+			"tileSets": [ "SnowTileSet","UnfrozenRedTileSet", "UnfrozenBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "dirt_arena",
+
+			"sceneName": "dirtArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_dirt",
+			
+			"biome": "Dirt",
+			"tileSets": [ "DirtTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "dirt_siege_arena",
+
+			"sceneName": "dirtSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_dirt",
+
+			"biome": "Dirt",
+			"tileSets": [ "DirtTileSet", "DungeonRedTileSet", "DungeonBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "dirt_siege_arena_0_level",
+
+			"sceneName": "dirtSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_dirt",
+
+			"biome": "Dirt",
+			"tileSets": [ "DirtTileSet", "DungeonRedTileSet", "DungeonBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "sand_arena",
+			
+			"sceneName": "sandArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_sand",
+
+			"biome": "Sand",
+			"tileSets": [ "SandTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "sand_siege_arena",
+			
+			"sceneName": "sandSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_sand",
+
+			"biome": "Sand",
+			"tileSets": [ "SandTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "sand_siege_arena_0_level",
+			
+			"sceneName": "sandSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_sand",
+
+			"biome": "Sand",
+			"tileSets": [ "SandTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "necro_arena",
+
+			"sceneName": "necroArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_deathland",
+
+			"biome": "Deathland",
+			"tileSets": [ "BackupTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "necro_siege_arena",
+
+			"sceneName": "necroSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_deathland",
+
+			"biome": "Deathland",
+			"tileSets": [ "BackupTileSet", "UndeadRedTileSet", "UndeadBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		},
+		{
+			"id": "necro_siege_arena_0_level",
+
+			"sceneName": "necroSiegeArena",
+
+			"cameraPosition": [ -0.57, 46.3, -72.5 ],
+			"cameraRotation": [ 33.4, 0, 0 ],
+			"cameraFov": 13.5,
+			"cameraFovIn": 12.0,
+			"cameraFovOut": 16.5,
+
+			"ambientSound": "ambient_deathland",
+
+			"biome": "Deathland",
+			"tileSets": [ "BackupTileSet", "UndeadRedTileSet", "UndeadBlackTileSet" ],
+			"weatherOptions": 
+			[
+				{
+					"prefabPath": "effects/weather/Test_rain_Scene_VFX"
+				}
+			]
+		}
+	]
+}

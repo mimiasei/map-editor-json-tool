@@ -1,0 +1,1159 @@
+{
+	"array": [
+		{
+			"id": "M9Q3_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_0",
+					"mapActions": [
+						{
+							"a": "HeroStop"
+						},
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"portal_nest"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"pm_phoenix_portal",
+								"false"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"Q3_necromancer_block"
+							]
+						},
+						{
+							"a": "SpawnHero",
+							"p": [
+								"campaign_M9_hero_necromancer_ambush",
+								"73",
+								"4"
+							]
+						},
+						{
+							"a": "DisableAiHero",
+							"p": [
+								"campaign_M9_hero_necromancer_ambush"
+							]
+						},
+						{
+							"a": "DisableAiResurrect",
+							"p": [
+								"campaign_M9_hero_necromancer_ambush"
+							]
+						},
+						{
+							"a": "HeroToNode",
+							"p": [
+								"campaign_M9_hero_necromancer_ambush",
+								"170"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"170",
+								"1"
+							]
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"170"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q3_dial2_4_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Nature",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"4a"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"+1"
+									]
+								},
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"spring_icon",
+										"-1"
+									]
+								},
+								{
+									"a": "RemoveItem",
+									"p": [
+										"campaign_M9_phoenix_egg_item"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q3_dial2_4_answer_2",
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Nature",
+										"1"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"4b"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-1"
+									]
+								},
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"spring_icon",
+										"+1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q3_dial2_4_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4c"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "4a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4a",
+					"next": "4a1"
+				},
+				{
+					"id": "4a1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4a1",
+					"next": "4a2"
+				},
+				{
+					"id": "4a2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4a2",
+					"next": "4a3"
+				},
+				{
+					"id": "4a3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4a3",
+					"next": "endGiveUpEgg"
+				},
+				{
+					"id": "endGiveUpEgg",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "DeleteHero",
+							"p": [
+								"campaign_M9_hero_necromancer_ambush"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"phoenix_quest",
+								"3"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				},
+				{
+					"id": "4b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4b",
+					"next": "4b1"
+				},
+				{
+					"id": "4b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4b1",
+					"next": "4b2"
+				},
+				{
+					"id": "4b2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4b2",
+					"next": "4b2alt"
+				},
+				{
+					"id": "4b2alt",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4b2alt",
+					"next": "4b3"
+				},
+				{
+					"id": "4b3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4b3",
+					"next": "endFight"
+				},
+				{
+					"id": "4c",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c",
+					"next": "4c1"
+				},
+				{
+					"id": "4c1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c1",
+					"next": "4c2"
+				},
+				{
+					"id": "4c2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c2",
+					"next": "4c3"
+				},
+				{
+					"id": "4c3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c3",
+					"next": "4c4"
+				},
+				{
+					"id": "4c4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c4",
+					"next": "4c5"
+				},
+				{
+					"id": "4c5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c5",
+					"next": "4c6"
+				},
+				{
+					"id": "4c6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c6",
+					"next": "4c7"
+				},
+				{
+					"id": "4c7",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_3_valentina",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_human",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c7",
+					"next": "4c7alt"
+				},
+				{
+					"id": "4c7alt",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c7alt",
+					"next": "4c8"
+				},
+				{
+					"id": "4c8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c8",
+					"next": "4c9"
+				},
+				{
+					"id": "4c9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c9",
+					"answers": [
+						{
+							"text": "dialogue_text_M9Q3_dial2_4c9_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"4c9a"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"+1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M9Q3_dial2_4c9_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4c9b"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "4c9a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c9a",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"demonologist_quest",
+								"1"
+							]
+						}
+					],
+					"next": "endPeace"
+				},
+				{
+					"id": "4c9b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Lord_Rufus",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q3_dial2_4c9b",
+					"next": "endFight"
+				},
+				{
+					"id": "endFight",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "HeroToNode",
+							"p": [
+								"campaign_M9_hero_necromancer_ambush",
+								"172"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				},
+				{
+					"id": "endPeace",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteHero",
+							"p": [
+								"campaign_M9_hero_necromancer_ambush"
+							]
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"4071"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"4071",
+								"5"
+							]
+						},
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"3590",
+								"2"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block_demonologist1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block_demonologist2"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

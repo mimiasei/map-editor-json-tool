@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_t2_t3_t5_8",
+            "useOldSquads": false,
+            "rollChance": 11,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "unfrozen_cultist",
+                        "v": 4185
+                    },
+                    {
+                        "s": "frostworm_rider_upg_alt",
+                        "v": 5015
+                    },
+                    {
+                        "s": "succubus_upg",
+                        "v": 7185
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 7185,
+                "units": [
+                    "unfrozen_cultist",
+                    "frostworm_rider_upg_alt",
+                    "succubus_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 23355,
+                "units": [
+                    {
+                        "s": "unfrozen_cultist",
+                        "v": 8685
+                    },
+                    {
+                        "s": "frostworm_rider_upg_alt",
+                        "v": 15015
+                    },
+                    {
+                        "s": "succubus_upg",
+                        "v": 23355
+                    }
+                ]
+            },
+            "tier": 5,
+            "fraction": "unfrozen"
+        }
+    ]
+}

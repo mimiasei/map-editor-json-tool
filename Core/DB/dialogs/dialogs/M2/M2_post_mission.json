@@ -1,0 +1,758 @@
+{
+	"array": [
+		{
+			"id": "M2_post_mission",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_a",
+					"sound": "sounds/locale/dialogs/02Post-mission2/01IGN_CampaignMissions_AMELCHIA_Line_09",
+					"next": "a"
+				},
+				{
+					"id": "a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_b",
+					"sound": "sounds/locale/dialogs/02Post-mission2/02IGN_CampaignMissions_BALTHAZAR_Line_06",
+					"next": "b"
+				},
+				{
+					"id": "b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_0",
+					"sound": "sounds/locale/dialogs/02Post-mission2/03IGN_CampaignMissions_Caspair_Line10",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn",
+								"appear"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_1",
+					"sound": "sounds/locale/dialogs/02Post-mission2/04IGN_CampaignMissions_Lafiur_Line1_alt2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_2",
+					"sound": "sounds/locale/dialogs/02Post-mission2/05ING_CampaignMissions_GUNNAR_Line_02",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_3",
+					"sound": "sounds/locale/dialogs/02Post-mission2/06IGN_CampaignMissions_Lafiur_Line2",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_4",
+					"sound": "sounds/locale/dialogs/02Post-mission2/07ING_CampaignMissions_GUNNAR_Line_03",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_5",
+					"sound": "sounds/locale/dialogs/02Post-mission2/08IGN_CampaignMissions_Lafiur_Line3_alt1",
+					"answers": [
+						{
+							"text": "dialogue_text_M2_postmission_5_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5a0"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2_postmission_5_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5b0"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "5a0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_5a0",
+					"sound": "sounds/locale/dialogs/02Post-mission2/09ING_CampaignMissions_GUNNAR_Line_04",
+					"next": "5a"
+				},
+				{
+					"id": "5a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_5a",
+					"sound": "sounds/locale/dialogs/02Post-mission2/10IGN_CampaignMissions_Lafiur_Line4",
+					"next": "6"
+				},
+				{
+					"id": "5b0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar_mirror",
+							"isForeground": "true"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_5b0",
+					"sound": "sounds/locale/dialogs/02Post-mission2/11ING_CampaignMissions_GUNNAR_Line_05",
+					"next": "5b"
+				},
+				{
+					"id": "5b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar_mirror",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_5b",
+					"sound": "sounds/locale/dialogs/02Post-mission2/12IGN_CampaignMissions_Lafiur_Line5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_6",
+					"sound": "sounds/locale/dialogs/02Post-mission2/13ING_CampaignMissions_GUNNAR_Line_06",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_7",
+					"sound": "sounds/locale/dialogs/02Post-mission2/14IGN_CampaignMissions_Lafiur_Line6",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_8",
+					"sound": "sounds/locale/dialogs/02Post-mission2/15ING_CampaignMissions_GUNNAR_Line_07_Alt2",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_9",
+					"sound": "sounds/locale/dialogs/02Post-mission2/16ING_CampaignMissions_GUNNAR_Line_08",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_10",
+					"sound": "sounds/locale/dialogs/02Post-mission2/17IGN_CampaignMissions_Lafiur_Line7",
+					"next": "11"
+				},
+				{
+					"id": "11",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_11",
+					"sound": "sounds/locale/dialogs/02Post-mission2/18ING_CampaignMissions_GUNNAR_Line_09",
+					"next": "12"
+				},
+				{
+					"id": "12",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_12",
+					"sound": "sounds/locale/dialogs/02Post-mission2/19ING_CampaignMissions_GUNNAR_Line_10",
+					"next": "13"
+				},
+				{
+					"id": "13",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_13",
+					"sound": "sounds/locale/dialogs/02Post-mission2/20IGN_CampaignMissions_Lafiur_Line8",
+					"next": "14"
+				},
+				{
+					"id": "14",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_14",
+					"sound": "sounds/locale/dialogs/02Post-mission2/21ING_CampaignMissions_GUNNAR_Line_11",
+					"next": "15"
+				},
+				{
+					"id": "15",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_15",
+					"sound": "sounds/locale/dialogs/02Post-mission2/22IGN_CampaignMissions_Lafiur_Line9",
+					"next": "16"
+				},
+				{
+					"id": "16",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": [
+								"zoomOut"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2_postmission_16",
+					"sound": "sounds/locale/dialogs/02Post-mission2/23ING_CampaignMissions_GUNNAR_Line_12",
+					"next": "17"
+				},
+				{
+					"id": "17",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": [
+								"zoomIn"
+							]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 2
+					},
+					"text": "dialogue_text_M2_postmission_17",
+					"sound": "sounds/locale/dialogs/02Post-mission2/24IGN_CampaignMissions_Lafiur_Line10",
+					"actions": [
+						{
+							"a": "StoryCounterSet",
+							"p": [
+								"Campaign_Flag_M2_LafiurFound",
+								"1"
+							]
+						},
+						{
+							"a": "SetAchievement",
+							"p": [
+								"achievement_6"
+							]
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

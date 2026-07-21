@@ -1,0 +1,28 @@
+﻿string current_specialization_nature_hero_10_spec_bonus
+{
+	Text( return, "1" )
+}
+
+//
+
+string current_specialization_nature_hero_12_bonus
+{
+	Text( return, "2" )
+}
+
+string current_specialization_nature_hero_14_bonus
+{
+	Text( return, "1" )
+}
+
+//
+
+string current_specialization_nature_hero_17_spec_bonus
+{
+	Text( return, "1" )
+}
+
+string current_specialization_nature_hero_17_spec_level_step
+{
+	Text( return, "2" )
+}

@@ -1,0 +1,135 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M2_hero_sylvan",
+
+			"description": "campaign_hero_2_description",
+			"motto": "campaign_hero_2_motto",
+
+			"mesh": "druid",
+			"mounts": [ "deer" ],
+			"icon": "hero_campaign_2_lafiur",
+			"fraction": "nature",
+			"nativeBiome": "Autumn",
+			"classType": "magic",
+
+			"skillsRollVariant": "nature_magic_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 8,
+
+			"startSquad" : [
+				{ "sid": "aqualotl_upg", "min": 3, "max": 3 },
+				{ "sid": "ent_upg_alt", "min": 4, "max": 4 },
+				{ "sid": "twinkle_upg", "min": 7, "max": 7 },
+				{ "sid": "ent_upg", "min": 5, "max": 5 },
+				{ "sid": "twinkle_upg_alt", "min": 8, "max": 8 },
+				{ "sid": "aqualotl_upg_alt", "min": 2, "max": 2 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "aqualotl_upg", "min": 3, "max": 3 },
+				{ "sid": "ent_upg_alt", "min": 4, "max": 4 },
+				{ "sid": "twinkle_upg", "min": 7, "max": 7 },
+				{ "sid": "ent_upg", "min": 5, "max": 5 },
+				{ "sid": "twinkle_upg_alt", "min": 8, "max": 8 },
+				{ "sid": "aqualotl_upg_alt", "min": 2, "max": 2 }
+			],
+
+			"specialization": "campaign_hero_2_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome": true,
+				
+				"offence":      2,
+				"defence":      3,
+				"spellPower":   8,
+				"intelligence": 6,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 10 },
+						{ "v": 1, "c": 10 },
+						{ "v": 2, "c": 40 },
+						{ "v": 3, "c": 40 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_nature",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_magic_primal",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_mastery",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_sorcery",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "day_2_magic_sharp_edge",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_3_magic_enlarge_shadow",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_8_magic_carapace",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_4_magic_fire_globe",
+					"level": 2,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

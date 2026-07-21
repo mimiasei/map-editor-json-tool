@@ -1,0 +1,22 @@
+﻿//
+
+modInt current_primal_18_magic_primordial_chaos_1
+{
+	CurrentMagicWorld ( baseRadius, "parameters[0]" )
+	CurrentHero ( viewRadius, "heroStat.viewRadius" )
+
+	Mul ( heroRadius, viewRadius, baseRadius )
+
+	Text( return, heroRadius )
+}
+
+modPercentNumeric current_primal_18_magic_primordial_chaos_2
+{
+	CurrentMagicWorld ( data, "parameters[1]" )
+	Sub ( return, "1", data )
+}
+
+modInt current_primal_18_magic_primordial_chaos_3
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}

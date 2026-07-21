@@ -1,0 +1,525 @@
+{
+	"array":
+	[
+		{
+			"id": "default_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Wall",					"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Bank",					"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "poor_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Wall",					"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Bank",					"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "medium_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Wall",					"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Bank",					"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "rich_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Wall",					"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Bank",					"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "extra_rich_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Wall",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Bank",					"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": true,	"level": 2 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "ultra_rich_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Wall",					"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Bank",					"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": true,	"level": 3 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "army_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 2 },
+
+				{ "sid": "Build_Wall",					"isConstructed": true,	"level": 2 },
+
+				{ "sid": "Build_Bank",					"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "siege_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 2 },
+
+				{ "sid": "Build_Wall",					"isConstructed": true,	"level": 3 },
+
+				{ "sid": "Build_Bank",					"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Tier_3",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_4",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_5",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_6",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Tier_7",				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		},
+		{
+			"id": "full_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 3 },
+
+				{ "sid": "Build_Wall",					"isConstructed": true,	"level": 3 },
+
+				{ "sid": "Build_Bank",					"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_3",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_4",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_5",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_6",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_7",				"isConstructed": true,	"level": 2 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": true,	"level": 5 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": true,	"level": 1 }
+			]
+		},
+		{
+			"id": "arcade_buildings_construction",
+			"buildings":
+			[
+				{ "sid": "Build_Main",					"isConstructed": true,	"level": 2 },
+
+				{ "sid": "Build_Wall",					"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Bank",					"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Treasury", 				"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Tavern",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Market",				"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Artifact_Market",		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Resource_Depot",		"isConstructed": true,	"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2","isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_2",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_3",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_4",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_5",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_6",				"isConstructed": true,	"level": 2 },
+				{ "sid": "Build_Tier_7",				"isConstructed": true,	"level": 2 },
+
+				{ "sid": "Build_Magic_Guild",			"isConstructed": true,	"level": 1 },
+
+				{ "sid": "Build_Intelligence_Academy",	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Training_Range", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Well_Of_Souls", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Skeleton_Converter", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Gaping_Maw", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Beelzebubs_Hand", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Rebirth_Of_Shrine", 	"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Eternal_Flame", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Endless_Library", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Portal_Summoning", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Frigid_Firmament", 		"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Gymnasium",				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Lyceum", 				"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spy_Network", 			"isConstructed": false,	"level": 1 },
+
+				{ "sid": "Build_Mother_Nature", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Mycelium_Roots", 		"isConstructed": false,	"level": 1 },
+				{ "sid": "Build_Spring_of_Life", 		"isConstructed": false,	"level": 1 }
+			]
+		}
+	]
+}

@@ -1,0 +1,1131 @@
+{
+	"array":
+	[	
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "space_1_magic_early_start",
+			
+			"id": "space_1_magic_early_start_special",
+
+			"name": "space_1_magic_early_start_name_spec",
+			"icon": "space_1_magic_early_start",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"space_1_magic_early_start_description_spec",
+				"space_1_magic_early_start_description_spec",
+				"space_1_magic_early_start_description_spec",
+				"space_1_magic_early_start_description_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "space_1_magic_early_start_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "space_1_magic_early_start_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "space_1_magic_early_start_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "space",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 6, 6, 6, 6 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"attackTimeBefore": 0.1,
+				"effect": "Prefabs_vfx/magic_early_start_unit",
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_early_start_effect_0_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_early_start_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_early_start_effect_2_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_early_start_effect_3_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "space_6_magic_blink",
+			
+			"id": "space_6_magic_blink_special",
+
+			"name": "space_6_magic_blink_name_spec",
+			"icon": "space_6_magic_blink",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"space_6_magic_blink_description_spec",
+				"space_6_magic_blink_description_spec",
+				"space_6_magic_blink_description_spec",
+				"space_6_magic_blink_description_spec"
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "space_6_magic_blink_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "space_6_magic_blink_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "space_6_magic_blink_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "space",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"battleMagic": 
+			{
+				"cd": -99,
+
+				"attackTimeBefore": 0.65,
+				"orderedEffects": [
+					{
+						"path": "Prefabs_vfx/magic_blink_unit"
+					},
+					{
+						"path": "Prefabs_vfx/magic_blink_end_unit"
+					}
+				],
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic", "teleport" ],
+
+						"castTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",						
+						"numTargets": 2,
+
+						"orderedCastParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 4
+							}
+						],
+
+						"orderedAffectParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 4
+							}
+						],
+
+						"attackPatternSid": "attack_single_buff",		"damageTarget_": "none",
+
+						"targetMechanics": [ { "mech": "teleport", "values": [] } ]
+					},
+					{
+						"tags": [ "magic", "teleport" ],
+
+						"castTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",						
+						"numTargets": 2,
+
+						"orderedCastParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 6
+							}
+						],
+
+						"orderedAffectParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 6
+							}
+						],
+
+						"attackPatternSid": "attack_single_buff",		"damageTarget_": "none",
+
+						"targetMechanics": [ { "mech": "teleport", "values": [] } ]
+					},
+					{
+						"tags": [ "magic", "teleport" ],
+
+						"castTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",						
+						"numTargets": 2,
+
+						"orderedCastParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 9
+							}
+						],
+
+						"orderedAffectParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 9
+							}
+						],
+
+						"attackPatternSid": "attack_single_buff",		"damageTarget_": "none",
+
+						"targetMechanics": [ { "mech": "teleport", "values": [] } ]
+					},
+					{
+						"tags": [ "magic", "teleport" ],
+
+						"castTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":
+						{
+							"targetTags": ["unit"],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",						
+						"numTargets": 2,
+
+						"orderedCastParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 13
+							}
+						],
+
+						"orderedAffectParams":
+						[
+							{
+								"targetTags": [],
+								"castTarget_": "none",
+								"selection": "hex",
+								"distanceFromFirst": 13
+							}
+						],
+
+						"attackPatternSid": "attack_single_buff",		"damageTarget_": "none",
+
+						"targetMechanics": [ { "mech": "teleport", "values": [] } ]
+					}
+				],
+				"dealersPerLevels": 
+				[ 
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "space_8_magic_carapace",
+			
+			"id": "space_8_magic_carapace_special",
+
+			"name": "space_8_magic_carapace_name_spec",
+			"icon": "space_8_magic_carapace",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"space_8_magic_carapace_description_spec",
+				"space_8_magic_carapace_description_spec",
+				"space_8_magic_carapace_description_spec",
+				"space_8_magic_carapace_description_1_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_mana_cost_0_1"}, 
+				{"level": 3, "description": "description_up_effect_duration_1_2"}, 
+				{"level": 4, "description": "space_8_magic_carapace_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "space",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 14, 11, 11, 11 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_carapace_effect_0_special",
+							"duration": 1,
+							"durationPerStack": [ 5, 1 ],
+							"charges": 1
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_carapace_effect_0_special",
+							"duration": 2,
+							"durationPerStack": [ 5, 1 ],
+							"charges": 1
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_carapace_effect_0_special",
+							"duration": 2,
+							"durationPerStack": [ 5, 1 ],
+							"charges": 2
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 0, 1, 2
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "space_10_magic_mirror_copy",
+			
+			"id": "space_10_magic_mirror_copy_special",
+
+			"name": "space_10_magic_mirror_copy_name_spec",
+			"icon": "space_10_magic_mirror_copy",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"space_10_magic_mirror_copy_description_spec",
+				"space_10_magic_mirror_copy_description_spec",
+				"space_10_magic_mirror_copy_description_spec",
+				"space_10_magic_mirror_copy_description_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "space_10_magic_mirror_copy_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "space_10_magic_mirror_copy_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "space_10_magic_mirror_copy_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "space",
+			"rank": 3,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 6 },
+				{ "name": "crystals", "cost": 6 },
+				{ "name": "mercury", "cost": 6 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 20, 20, 20, 20 ],
+			"battleMagic": 
+			{
+				"cd": -99,
+
+				"attackTimeBefore": 0.15,
+				"orderedEffects": [
+					{
+						"path": "Prefabs_vfx/magic_blink_unit"
+					},
+					{
+						"path": "Prefabs_vfx/magic_blink_end_unit"
+					}
+				],
+				"magicDealers": [
+					{
+						"tags": [ "magic", "copy", "avatar_immunities" ],
+						"attackPatternSid": "attack_single_buff",
+
+						"castTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",
+						"numTargets": 2,
+
+						"orderedCastParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"orderedAffectParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"damageTarget_": "none",
+
+						"targetMechanics": [
+							{
+								"mech": "copy_unit",
+								"values": [ "magic_mirror_copy_debuff_0", "1", "1", "7", "false" ]
+							}
+						]
+					},
+					{
+						"tags": [ "magic", "copy", "avatar_immunities" ],
+						"attackPatternSid": "attack_single_buff",
+
+						"castTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",
+						"numTargets": 2,
+
+						"orderedCastParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"orderedAffectParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"damageTarget_": "none",
+
+						"targetMechanics": [
+							{
+								"mech": "copy_unit",
+								"values": [ "magic_mirror_copy_debuff_1", "1", "1", "7", "false" ]
+							}
+						]
+					},
+					{
+						"tags": [ "magic", "copy", "avatar_immunities" ],
+						"attackPatternSid": "attack_single_buff",
+
+						"castTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",
+						"numTargets": 2,
+
+						"orderedCastParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"orderedAffectParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"damageTarget_": "none",
+
+						"targetMechanics": [
+							{
+								"mech": "copy_unit",
+								"values": [ "magic_mirror_copy_debuff_2", "1", "1", "7", "false" ]
+							}
+						]
+					},
+					{
+						"tags": [ "magic", "copy", "avatar_immunities" ],
+						"attackPatternSid": "attack_single_buff",
+
+						"castTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams": 
+						{
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"multitargetType": "ordered",
+						"numTargets": 2,
+
+						"orderedCastParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"orderedAffectParams": 
+						[ 
+							{ 
+								"targetTags": [],
+								"castTarget_": "all",
+								"selection": "hex",
+								"distanceFromFirst": 1 
+							} 
+						],
+
+						"damageTarget_": "none",
+
+						"targetMechanics": [
+							{
+								"mech": "copy_unit",
+								"values": [ "magic_mirror_copy_debuff_3", "1", "1", "7", "false" ]
+							}
+						]
+					}
+				],
+				"dealersPerLevels": 
+				[ 
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "space_11_magic_decimate",
+
+			"id": "space_11_magic_decimate_special",
+
+			"name": "space_11_magic_decimate_name_spec",
+			"icon": "space_11_magic_decimate",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"space_11_magic_decimate_description",
+				"space_11_magic_decimate_description",
+				"space_11_magic_decimate_description",
+				"space_11_magic_decimate_description"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "space_11_magic_decimate_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "space_11_magic_decimate_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "space_11_magic_decimate_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "space",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 7, 7, 7, 7 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"attackTimeBefore": 1,
+				"hexEffect": "Prefabs_vfx/magic_decimate_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic_damage", "decimate_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"percentDamage": "max_unit",
+						"minPercentDmg": 0.30,
+						"maxPercentDmg": 0.30,
+						"minStackPercentDmg": 0.03,
+						"maxStackPercentDmg": 0.03,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_decimate_effect_special",
+							"duration": 1
+						}
+					},
+					{
+						"tags": [ "magic_damage", "decimate_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"percentDamage": "max_unit",
+						"minPercentDmg": 0.45,
+						"maxPercentDmg": 0.45,
+						"minStackPercentDmg": 0.03,
+						"maxStackPercentDmg": 0.03,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_decimate_effect_special",
+							"duration": 1
+						}
+					},
+					{
+						"tags": [ "magic_damage", "decimate_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"percentDamage": "max_unit",
+						"minPercentDmg": 0.45,
+						"maxPercentDmg": 0.45,
+						"minStackPercentDmg": 0.06,
+						"maxStackPercentDmg": 0.06,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_decimate_effect_special",
+							"duration": 1
+						}
+					},
+					{
+						"tags": [ "magic_damage", "decimate_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"percentDamage": "max_unit",
+						"minPercentDmg": 0.45,
+						"maxPercentDmg": 0.45,
+						"minStackPercentDmg": 0.06,
+						"maxStackPercentDmg": 0.06,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_decimate_effect_special",
+							"duration": 1
+						},
+						"targetMechanics": 
+						[
+							{ "mech": "assasinate", "values": [ "0.25", "0.0" ] }
+						]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "space_12_magic_rewind",
+			
+			"id": "space_12_magic_rewind_special",
+
+			"name": "space_12_magic_rewind_name_spec",
+			"icon": "space_12_magic_rewind",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"space_12_magic_rewind_description_spec",
+				"space_12_magic_rewind_description_spec",
+				"space_12_magic_rewind_description_spec",
+				"space_12_magic_rewind_description_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_heal_0_1"}, 
+				{"level": 3, "description": "description_up_effect_heal_per_sp_1_2"}, 
+				{"level": 4, "description": "description_up_effect_heal_per_sp_2_3"}
+			],
+
+			"usedOnMap": false,
+			"school_": "space",
+			"rank": 4,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 8 },
+				{ "name": "crystals", "cost": 8 },
+				{ "name": "mercury", "cost": 8 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 17, 17, 17, 17 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"hexEffect": "Prefabs_vfx/magic_rewind_life_unit",
+				"magicDealers": 
+				[
+					{	"tags": [ "heal", "avatar_immunities" ],
+
+					"castTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+					"affectTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[	{	"mech": "revive",	"values":	[ "50" ,  "1" ,  "20" , "until start then temp" ]	}	]
+					},
+					{	"tags": [ "heal", "avatar_immunities" ],
+
+					"castTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+					"affectTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[	{	"mech": "revive",	"values":	[ "100" ,  "1" ,  "20" , "until start then temp" ]	}	]
+					},
+					{	"tags": [ "heal", "avatar_immunities" ],
+
+					"castTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+					"affectTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[	{	"mech": "revive",	"values":	[ "100" ,  "1" ,  "25" , "until start then temp" ]	}	]
+					},
+					{	"tags": [ "heal", "avatar_immunities" ],
+
+					"castTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+					"affectTargetParams":   
+					{ 				
+						"targetTags": [ "unit" ],		
+						"castTarget_": "ally",
+						"selection": "object",
+						"targetCondition_": "all"
+					},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[	{	"mech": "revive",	"values":	[ "100" ,  "1" ,  "35" , "until start then temp" ]	}	]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		}
+	]
+}

@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_human_t3_t5_t7_4",
+            "useOldSquads": false,
+            "rollChance": 26,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "griffin",
+                        "v": 6687
+                    },
+                    {
+                        "s": "sunlight_cavalry_upg",
+                        "v": 9187
+                    },
+                    {
+                        "s": "angel",
+                        "v": 14687
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 14687,
+                "units": [
+                    "griffin",
+                    "sunlight_cavalry_upg",
+                    "angel"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 98357,
+                "units": [
+                    {
+                        "s": "griffin",
+                        "v": 38027
+                    },
+                    {
+                        "s": "sunlight_cavalry_upg",
+                        "v": 59027
+                    },
+                    {
+                        "s": "angel",
+                        "v": 98357
+                    }
+                ]
+            },
+            "tier": 7,
+            "fraction": "human"
+        }
+    ]
+}

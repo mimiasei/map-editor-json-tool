@@ -1,0 +1,90 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "college_of_wonder_campaign",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 7500,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "college_of_wonder_label",
+						
+						"rewardCost":
+						[
+							{
+								"name": "gold",
+								"cost": 2500
+							}
+						],
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "offence_3_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "defence_3_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "spellPower_3_buff", "Infinite", "-1" ]
+							},
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "custom",
+								"rewardNotificationDesc": "statReward_notification",
+
+								"parameters": [ "intelligence_3_buff", "Infinite", "-1" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

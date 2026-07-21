@@ -1,0 +1,314 @@
+{
+	"array": [
+		{
+			"id": "M5_galthran_dial4_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_0",
+					"answers": [
+						{
+							"text": "dialogue_text_M5_galthran_dial4_0_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5_galthran_dial4_0_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0b"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5_galthran_dial4_0_answer_3",
+							"requests": [
+								{
+									"c": "Counter",
+									"reqStatus": "true",
+									"p": [
+										"thant_quest_finished",
+										"=",
+										"1"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0c"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "0a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_0a",
+					"actions": [
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Undead",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "0b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_0b",
+					"next": "1"
+				},
+				{
+					"id": "0c",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_0c",
+					"next": "0c1"
+				},
+				{
+					"id": "0c1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_0c1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5_galthran_dial4_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5_galthran_dial4_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5_galthran_dial4_7",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_8",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial4_9",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "GameVictory"
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

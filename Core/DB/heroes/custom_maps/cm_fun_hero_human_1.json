@@ -1,0 +1,205 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "cm_fun_hero_human_1",
+
+			"name": "human_hero_13",
+			"description": "human_hero_13_description",
+			"motto": "human_hero_13_motto",
+
+			"mesh": "human_mage",
+			"mounts": [ "horse" ],
+			"icon": "hero_human_13_lia_the_untethered",
+			"fraction": "human",
+			"nativeBiome": "Grass",
+			"classType": "magic",
+
+			"skillsRollVariant": "humans_magic_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 1,
+			"attacksTimesBefore": [0.5],
+
+			"startSquad" : [
+				{ "sid": "angel_upg", "min": 2, "max": 2 },
+				{ "sid": "crossbowman_upg_alt", "min": 86, "max": 86 },
+				{ "sid": "lightweaver_upg_alt", "min": 24, "max": 24 },
+				{ "sid": "griffin_upg", "min": 35, "max": 35 },
+				{ "sid": "inquisitor_upg", "min": 8, "max": 8 },
+				{ "sid": "griffin_upg_alt", "min": 35, "max": 35 },
+				{ "sid": "esquire_upg_alt", "min": 106, "max": 106 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "angel_upg", "min": 2, "max": 2 },
+				{ "sid": "crossbowman_upg_alt", "min": 86, "max": 86 },
+				{ "sid": "lightweaver_upg_alt", "min": 24, "max": 24 },
+				{ "sid": "griffin_upg", "min": 35, "max": 35 },
+				{ "sid": "inquisitor_upg", "min": 8, "max": 8 },
+				{ "sid": "griffin_upg_alt", "min": 35, "max": 35 },
+				{ "sid": "esquire_upg_alt", "min": 106, "max": 106 }
+			],
+
+			"specialization": "human_hero_5_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      27,
+				"defence":      20,
+				"spellPower":   17,
+				"intelligence": 31,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 10 },
+						{ "v": 1, "c": 20 },
+						{ "v": 2, "c": 35 },
+						{ "v": 3, "c": 35 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_humans",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_magic_day",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_leadership",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_resistance",
+					"skillLevel": 1
+				},
+				{
+					"sid": "skill_formation",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "day_1_magic_healing_water",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_2_magic_sharp_edge",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_3_magic_haste",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_4_magic_favorable_wind",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_5_magic_shorten_shadow",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_6_magic_cleansing_ray",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_7_magic_inner_light",
+					"level": 3,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_9_magic_arinas_hymn",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "day_12_magic_radiant_armor",
+					"level": 3,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_1_magic_early_start",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_3_magic_energyze",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_4_magic_optical_illusion",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_1_magic_thunderbolt",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_2_magic_thick_hide",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_3_magic_wean",
+					"level": 2,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_5_magic_crystal_crown",
+					"level": 2,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

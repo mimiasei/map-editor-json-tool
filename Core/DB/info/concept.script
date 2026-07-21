@@ -1,0 +1,129 @@
+﻿string test
+{ 
+	Text( return, "test" )
+}
+
+string current_arena_param_4
+{ 
+	Text( return, "4" )
+}
+
+string current_arena_param_2
+{ 
+	Text( return, "2" )
+}
+
+/*
+
+
+// DbBuff( return, buffData, "data.stats.inDmgMods.list[0].v" )
+
+Print( "damage=", damage )
+
+modPercentNumeric crossbowman_ability_1_add_damage
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	//Print( "buffSid = ", buffSid )
+	DbBuff( return, buffSid, "data.stats.outDmgMods.list[0].v" )
+}
+
+int crossbowman_ability_1_duration
+{
+	CurrentAbility( return, "damageDealer.buff.duration" )
+}
+
+
+[p:ability.damageBuff.data.stats.outDmgMods.array0.v%]
+
+modPercentNumeric crossbowman_ability_1_description
+{
+	Ability( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outDmgMods.list[0].v" )
+}
+
+int crossbowman_ability_1_duration
+{
+	 Ability( return, "damageDealer.buff.duration" )
+}
+
+int crossbowman_ability_1_duration { Text( return, "2" ) }
+
+
+int map_object_test_gold
+{
+	EventBankCurrentVariant( return, "rewardSet.rewards[0].parameters[1]" )
+}
+
+int map_object_test_gem
+{
+	EventBankCurrentVariant( return, "rewardSet.rewards[0].parameters[3]" )
+}
+*/
+
+
+/*
+String FuctionB
+int fuction_c 
+
+
+string text_red_damage_with_icon > "<icon=damage><color=red>[sid_from_locale]<color>"
+
+string text_red_damage_with_icon
+{
+	Text( r, "<icon=damage><color=red>[sid_from_locale]<color>" )
+	Return( r )
+}
+
+int unit_a1_value{
+	"1234567890.0123456789"
+	EgorInt(damage,"ability.1.damage")
+	Unit( damage, "ability.1.damage" )
+	Unit( damageMultipler, "stats.damageMultipler" )
+	Hero( meleDamageMultiler, "stats.meleDamageMultiler" )
+	Unit( flatDamage, "ability.1.flatDamage" )
+
+	//r = damage * damageMultipler;
+
+	Multiply( r, damage, damageMultipler )
+	Multiply( r, r, meleDamageMultiler )
+	Plus( r, r, flatDamage )
+	//r = r + flatDamage
+
+	Return( r )
+}
+
+int unit_a1_alt
+{
+	EgorInt( damage, "ability.1.damage" )
+	Unit( damage, "ability.1.damage" )
+	Unit( damageMultipler, "stats.damageMultipler" )
+	Hero( meleDamageMultiler, "stats.meleDamageMultiler" )
+	Unit( flatDamage, "ability.1.flatDamage" )
+	Side(...)
+	Player(...)
+	Campage(...)
+
+	//r = damage * damageMultipler;
+
+	Multiply( r, damage * damageMultipler )
+	Multiply( r, r * meleDamageMultiler )
+	Plus( r, r, flatDamage )
+
+	Text( t, "{r} = {damage} * {damageMultipler}" )
+
+	Return( t )
+}
+
+/*
+string unit_a1_text
+{
+	Call( textPrefix, "text_red_damage_with_icon" )
+	Call( value, "unit_a1_value" )
+
+	Text( r, "{textPrefix}<color=red>{value}<color>" )
+	Return( r )
+}
+
+ENG  						C5
+"damage {0}",  "unit_a1_value|unit_a1_alt", 
+*/

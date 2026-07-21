@@ -1,0 +1,45 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "shroom_of_growth",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "OnStartWeek",
+			"visitType": "EachSideOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 2500,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroExpReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "expReward_description",
+								
+								"parameters": [ "2000" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

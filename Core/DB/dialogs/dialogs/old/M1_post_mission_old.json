@@ -1,0 +1,277 @@
+{
+	"array":
+	[
+		{
+			"id": "M1_post_mission_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "4","icons/hero_large_portraits/hero_campaign_7_queen_amelchia_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_dragon",
+					"text": "dialogue_text_M1_postmission_0",			
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_Bees", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_1",	
+
+					"next": "2"
+				},
+				{
+					"id": "2",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_Bees", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_2",	
+
+					"next": "3"
+				},
+				{
+					"id": "3",
+
+					"conditionsLogic": "And",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_Bees", "=", "1" ] },
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_SpyFound", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_5_caspair_silvertounge_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_elf",
+					"text": "dialogue_text_M1_postmission_3",
+
+					"next": "4"
+				},
+				{
+					"id": "4",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_Bees", "=", "0" ] }
+					],
+
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_4",	
+
+					"next": "5"
+				},
+				{
+					"id": "5",
+
+					"conditionsLogic": "And",
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_Bees", "=", "0" ] },
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_SpyFound", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_5_caspair_silvertounge_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_elf",
+					"text": "dialogue_text_M1_postmission_5",
+
+					"next": "6"
+				},
+				{
+					"id": "6",
+
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_6",	
+
+					"next": "7"
+				},
+				{
+					"id": "7",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_5_caspair_silvertounge_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_elf",
+					"text": "dialogue_text_M1_postmission_7",
+
+					"next": "8"
+				},
+				{
+					"id": "8",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "4","icons/hero_large_portraits/hero_campaign_7_queen_amelchia_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_dragon",
+					"text": "dialogue_text_M1_postmission_8",			
+
+					"next": "9"
+				},
+				{
+					"id": "9",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_8_balthazar_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_minos",
+					"text": "dialogue_text_M1_postmission_9",
+
+					"next": "10"
+				},
+				{
+					"id": "10",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/hero_large_portraits/hero_campaign_8_balthazar_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_minos",
+					"text": "dialogue_text_M1_postmission_10",
+
+					"next": "11"
+				},
+				{
+					"id": "11",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_5_caspair_silvertounge_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_elf",
+					"text": "dialogue_text_M1_postmission_11",
+
+					"next": "12"
+				},
+				{
+					"id": "12",
+
+					"dialogPlayConditions":  
+					[ 
+						{ "c": "StoryCounter", "p": [ "Campaign_Flag_M1_SpyFound", "=", "1" ] }
+					],
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_5_caspair_silvertounge_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_elf",
+					"text": "dialogue_text_M1_postmission_12",
+
+					"next": "13"
+				},
+				{
+					"id": "13",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/hero_large_portraits/hero_campaign_5_caspair_silvertounge_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_elf",
+					"text": "dialogue_text_M1_postmission_13",
+
+					"next": "14"
+				},
+				{
+					"id": "14",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "4","icons/hero_large_portraits/hero_campaign_7_queen_amelchia_large" ]
+					},
+
+					"title": "dialogue_title_triumvirate_dragon",
+					"text": "dialogue_text_M1_postmission_14",			
+
+					"end": true					
+				}
+			]
+		}
+	]
+}

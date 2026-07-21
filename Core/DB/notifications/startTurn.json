@@ -1,0 +1,13 @@
+{
+	"array":
+	[
+        {
+            "id": "startTurn",
+            "parameters":[
+                "info_start_your_turn"
+            ]
+
+        }
+		
+	]
+}

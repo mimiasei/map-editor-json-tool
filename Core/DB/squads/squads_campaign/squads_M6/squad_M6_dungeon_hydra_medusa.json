@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M6_dungeon_hydra_medusa",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "hydra", "v": 1 },
+					{ "s" : "medusa", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"hydra", "medusa"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 85000,
+				"units":
+				[
+					{ "s" : "hydra", "v": 55000 },
+					{ "s" : "medusa", "v": 30000 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "dungeon"
+		}
+	]
+}

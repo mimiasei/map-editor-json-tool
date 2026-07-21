@@ -1,0 +1,364 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "olgoi_upg_alt",
+			"squadValue": 2250,
+			"expBonus": 236,
+			"tier": 6,
+			"fraction": "demon",
+			"nativeBiome": "Lava",
+
+			"ai": "range_type_eater",
+			
+			"tags": [ "unit", "demon" ],
+
+			"baseSid": "olgoi_upg",
+			
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 1900 }
+				]
+			},
+
+			"stats":
+			{	
+				"hp": 120,
+				"offence": 20,
+				"defence": 20,
+				"damageMin": 21,
+				"damageMax": 23,
+
+				"initiative": 9,
+				"speed": 8,
+				
+				"luck": 2,
+				"moral": 0,
+
+				"energyPerCast": 1,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -5,
+				"moralMax": 5,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods":
+				{
+					"list":
+					[
+
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				},
+
+				"moveType" : "teleport"
+			},
+			
+			"passives": 
+			[
+				{
+					"actions":
+					[
+						{
+							"trigger": "unit_end_move",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive", "undead_immunities", "embodiment_immunities", "construct_immunities" ],
+								"triggerCounter": false,
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+								"buffTarget_":"none", 
+
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"targetCondition_": "dead",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"targetCondition_": "alive",
+									"selection": "object"
+								},
+
+								"targetMechanics": 
+								[ 
+									{ "mech": "destroy_corpse_and_heal", "values": [ "one", "120" , "1" , "0" , "until start amount" ] } 
+								]
+							}
+						}
+					]
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "demon_immunities" ] }
+						]
+					}
+				},
+
+				{
+					"actions": 
+					[
+						{
+							"trigger": "unit_died",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance_both",
+									"values": [ "self", "enemy" ]
+								}
+							],
+							"damageDealer": 
+							{
+								"attackPatternSid": "attack_single_x100",
+
+								"instacast": true, 
+								"untargetedCast": true,
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self"
+								},
+
+								"targetMechanics" : [ { "mech": "add_energy", "values": [ "energy", "ally", "2", "0", "1" ] } ]
+							}
+						}
+					]
+				}
+			],
+			
+			"conditionalPassives": 
+			[
+				{
+					"condition": [ "unique_units_count", "ally", "demon" ],
+					"stats": 
+					{
+						"offence": 1
+					}
+				}
+			],
+			
+			"globalPassives" : 
+			[
+				{
+					"tag": "olgoi_aura",
+					"target": "enemy",
+					"power": 2,
+					"data": 
+					{
+						"stats" :
+						{
+							"luck" : -2
+						}
+					}	
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"alternativeAttacks":
+			[
+				{
+					"attackType_" : "melee",
+
+					"dontUseEnergy" : true,
+					"neverDisable" : true,
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				},
+				{
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "noself",
+							"selection": "hexOrObject", 
+							"targetCondition_": "alive" 
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"abilities" : 
+			[ 
+
+			]
+		}
+	]
+}

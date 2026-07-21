@@ -1,0 +1,83 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_main_quest_line_2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_text_1",
+					"answers": [
+						{
+							"text": "attt_main_quest_line_text_1_answer_2",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1a" ] }
+							]
+						},
+						{
+							"text": "attt_main_quest_line_text_1_answer_3",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1b" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_poison_stat", "1" ] }, { "a": "CounterPlus", "p": [ "main_quest_poison", "1" ] } ],
+					"text": "attt_main_quest_line_text_3",
+					"end": true
+				},
+				{
+					"id": "1b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_text_4",
+					"mapActions": 
+					[
+						{ "a": "BreakInterruptions" },
+						{ "a": "StepBack", "p": [ ] }
+					],
+					"actions": 
+					[
+						{ "a": "End", "p": [ "break" ] }
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

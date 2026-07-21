@@ -1,0 +1,51 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_dungeon_three_units_t4_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 100,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "minos", "v": 10004 },
+					{ "s" : "minos_upg", "v": 10004 },
+					{ "s" : "minos_upg_alt", "v": 10004 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 10004,
+				"units":
+				[
+					"minos", "minos_upg", "minos_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 60004,
+				"units":
+				[
+					{ "s" : "minos", "v": 60004 },
+					{ "s" : "minos_upg", "v": 60004 },
+					{ "s" : "minos_upg_alt", "v": 60004 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "dungeon"
+		}
+	]
+}

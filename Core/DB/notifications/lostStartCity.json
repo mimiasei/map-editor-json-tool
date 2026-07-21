@@ -1,0 +1,15 @@
+{
+	"array":
+	[
+        {
+            "id": "lostStartCity",
+            "parameters":[
+                "start_city_lose_capture",
+                "start_city_lose_back",
+                "start_city_lose_time"
+            ]
+
+        }
+		
+	]
+}

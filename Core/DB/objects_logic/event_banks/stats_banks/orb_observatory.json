@@ -1,0 +1,68 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "orb_observatory",
+
+			"tooltipVisitType": "CurrentHeroVisit",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 7500,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "orb_observatory_label",
+						
+						"rewardCost":
+						[
+							{
+								"name": "gold",
+								"cost": 1000
+							}
+						],
+						
+						"rewards":
+						[					
+							{
+								"rewardType": "HeroStatsReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "statReward_description",
+								"rewardNotificationDesc": "statReward_notification",
+								
+								"parameters": [ "spellPower", "2" ]
+							},
+							{
+								"rewardType": "HeroStatsReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "statReward_description",
+								"rewardNotificationDesc": "statReward_notification",
+								
+								"parameters": [ "intelligence", "2" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,59 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M5_final_guard",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "vampire_upg_alt", "v": 1 },
+					{ "s" : "avatar_of_war_upg", "v": 1 },
+					{ "s" : "lich_upg", "v": 1 },
+					{ "s" : "vampire_upg", "v": 1 },
+					{ "s" : "lich_upg_alt", "v": 1 },
+					{ "s" : "avatar_of_war_upg_alt", "v": 1 },
+					{ "s" : "vampire_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"skeleton"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 300000,
+				"units":
+				[
+					{ "s" : "vampire_upg_alt", "v": 20000 },
+					{ "s" : "avatar_of_war_upg", "v": 70000 },
+					{ "s" : "lich_upg", "v": 70000 },
+					{ "s" : "vampire_upg", "v": 20000 },
+					{ "s" : "lich_upg_alt", "v": 70000 },
+					{ "s" : "avatar_of_war_upg_alt", "v": 70000 },
+					{ "s" : "vampire", "v": 20000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "undead"
+		}
+	]
+}

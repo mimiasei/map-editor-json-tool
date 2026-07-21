@@ -1,0 +1,304 @@
+{
+	"array":
+	[
+		{
+			"id": "big_fissure",
+			"tag": "TEST",
+			"prefs": [ "test/big_fissure" ],
+			"customTerrain": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dark_fissure",
+			"tag": "TEST",
+			"prefs": [ "test/dark_fissure" ],
+			"customTerrain": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"nodes": 
+			[
+				0, 0,
+				1, 1
+			]
+		},
+		{
+			"id": "necro_fissure",
+			"tag": "TEST",
+			"prefs": [ "test/necro_fissure" ],
+			"customTerrain": true,
+
+			"sizeX": 4, "sizeZ": 4,
+			"offsetX": 1.5, "offsetZ": 1.5,
+			"nodes": 
+			[
+				0, 1, 1, 0,
+				0, 1, 1, 0,
+				0, 1, 1, 0,
+				0, 1, 1, 0
+				
+			]
+		},
+		{
+			"id": "waterfall",
+			"tag": "TEST",
+			"prefs": [ "test/waterfall" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "waterfall_big",
+			"tag": "TEST",
+			"prefs": [ "test/waterfall_big" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "waterfall_big_pool",
+			"tag": "TEST",
+			"prefs": [ "test/waterfall_big_pool" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		
+		{
+			"id": "Climb_N",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_N" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 0,
+			"sizeX": 3, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 1,
+			"nodes": 
+			[
+				0, 0, 0,
+				1, 0, 1,
+				1, 0, 1
+			]
+		},
+		{
+			"id": "Climb_N_X2",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_N_X2" ],
+			"customTerrain": true,
+
+			"pivotX": 2, "pivotZ": 0,
+			"sizeX": 4, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 1,
+			"nodes": 
+			[
+				0, 0, 0, 0,
+				1, 0, 0, 1,
+				1, 0, 0, 1
+			]
+		},
+		{
+			"id": "Climb_N_X3",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_N_X3" ],
+			"customTerrain": true,
+
+			"pivotX": 2, "pivotZ": 0,
+			"sizeX": 5, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 1,
+			"nodes": 
+			[
+				0, 0, 0, 0, 0,
+				1, 0, 0, 0, 1,
+				1, 0, 0, 0, 1
+			]
+		},
+		{
+			"id": "Climb_S",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_S" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 1,
+			"sizeX": 3, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 0,
+			"nodes": 
+			[
+				1, 0, 1,
+				1, 0, 1,
+				0, 0, 0
+			]
+		},
+		{
+			"id": "Climb_S_X2",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_S_X2" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 1,
+			"sizeX": 4, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 0,
+			"nodes": 
+			[
+				1, 0, 0, 1,
+				1, 0, 0, 1,
+				0, 0, 0, 0
+			]
+		},
+		{
+			"id": "Climb_S_X3",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_S_X3" ],
+			"customTerrain": true,
+
+			"pivotX": 2, "pivotZ": 1,
+			"sizeX": 5, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 0,
+			"nodes": 
+			[
+				1, 0, 0, 0, 1,
+				1, 0, 0, 0, 1,
+				0, 0, 0, 0, 0
+			]
+		},
+		{
+			"id": "Climb_E",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_E" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"sizeX": 3, "sizeZ": 3,
+			"nodes": 
+			[
+				1, 1, 0,
+				0, 0, 0,
+				1, 1, 0
+			]
+		},
+		{
+			"id": "Climb_E_X2",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_E_X2" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 2,
+			"offsetX": 0, "offsetZ": 0,
+			"sizeX": 3, "sizeZ": 4,
+			"nodes": 
+			[
+				1, 1, 0,
+				0, 0, 0,
+				0, 0, 0,
+				1, 1, 0
+			]
+		},
+		{
+			"id": "Climb_E_X3",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_E_X3" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 2,
+			"offsetX": 0, "offsetZ": 0,
+			"sizeX": 3, "sizeZ": 5,
+			"nodes": 
+			[
+				1, 1, 0,
+				0, 0, 0,
+				0, 0, 0,
+				0, 0, 0,
+				1, 1, 0
+			]
+		},
+		
+		{
+			"id": "Climb_W",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_W" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"sizeX": 3, "sizeZ": 3,
+			"nodes": 
+			[
+				0, 1, 1,
+				0, 0, 0,
+				0, 1, 1
+			]
+		},
+		{
+			"id": "Climb_W_X2",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_W_X2" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"sizeX": 3, "sizeZ": 4,
+			"nodes": 
+			[
+				0, 1, 1,
+				0, 0, 0,
+				0, 0, 0,
+				0, 1, 1
+			]
+		},
+		{
+			"id": "Climb_W_X3",
+			"tag": "TEST",
+			"prefs": [ "test/Climb_W_X3" ],
+			"customTerrain": true,
+
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"sizeX": 3, "sizeZ": 5,
+			"nodes": 
+			[
+				0, 1, 1,
+				0, 0, 0,
+				0, 0, 0,
+				0, 0, 0,
+				0, 1, 1
+			]
+		},
+		{
+			"id": "debugObject",
+			"tag": "TEST",
+			"prefs": [ "interactive/watchtower" ],
+
+			"sizeX": 2, "sizeZ": 4,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 1, "offsetZ": 1,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				2, 1,
+				2, 2,
+				0, 0,
+				0, 2
+			]
+		}
+		
+	]
+}

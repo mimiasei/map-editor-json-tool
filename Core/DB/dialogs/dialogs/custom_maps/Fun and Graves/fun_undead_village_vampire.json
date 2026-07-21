@@ -1,0 +1,346 @@
+{
+	"array": [
+		{
+			"id": "fun_undead_village_vampire",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_cant_interact",
+					"next": "endingMarl"
+				},
+				{
+					"id": "endingMarl",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"text": "",
+					"mapActions": [						
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_vampire",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_undead_village_vampire_0",
+					"next": "0_1"
+				},
+				{
+					"id": "0_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_vampire",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_vampire",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_undead_village_vampire_0_1",
+					"next": "0_2"
+				},
+				{
+					"id": "0_2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_vampire",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_vampire",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_undead_village_vampire_0_2",
+					"next": "0_3"
+				},
+				{
+					"id": "0_3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_vampire",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_vampire",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_undead_village_vampire_0_3",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"talked_with_vampire",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_vampire",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_undead_village_vampire_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"peasant",
+								"<",
+								"300"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_undead_village_vampire_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"peasant",
+								">=",
+								"300"
+							]
+						}
+					],
+					"fon": "",
+					"next": "ending",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_vampire",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_undead_village_vampire_3",
+					"answers": [
+						{
+							"text": "fun_dialogue_text_undead_village_vampire_3_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3a"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "RemoveUnitHero",
+									"p": [
+										"peasant",
+										"300"
+									]
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_undead_village_vampire_3_answer_2",
+							"actions": [
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "3a",
+					"fon": "",
+					"text": "fun_dialogue_text_undead_village_vampire_3a",
+					"mapActions": [
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"vampire_upg",
+								"3"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"vampire",
+								"2"
+							]
+						}
+					],
+					"end": true
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						},
+						{
+							"a": "SetQuestMarker",
+							"p": [
+								"vampire",
+								"effects/global_map/quest_mark_silver_01"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

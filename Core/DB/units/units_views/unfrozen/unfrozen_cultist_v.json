@@ -1,0 +1,76 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "unfrozen_cultist",
+			"mesh": "Unfrozen/1Prefabs/unfrozen_cultist",
+			"mapMesh": "Unfrozen/1Prefabs/unfrozen_cultist_map",
+			"fadeTime": 1.95,
+
+			"scale": 0.565,
+			"modelHeight": 0.9,
+			"moveSpeed": 4.5,
+
+			"attackTimeBefore": [ 0.633, 0.433, 1.967, 2.232, 0.6, 0.6 ],
+			"attackTimeAfter": [ 1, 0.9, 0.8, 0.868, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 2.01,
+
+			"bloodEffect": "effects/blood/blood_unfrozen",
+			"bloodHexEffect": "effects/blood/blood_unfrozen_hex",
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_mod",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "unfrozen_cultist_ability_1_name",
+					"abilityType": "Ability_type_special",
+					"description": "unfrozen_cultist_ability_1_description",
+					"excaptionInTooltip": "description_effect_magic_creature_undead_construct_immunities",
+					"animationIndex": 2
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_living",
+                    "description": "base_class_living_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_remote_attack_name",
+					"description": "base_passive_remote_attack_description"
+				}
+			]
+		}
+	]
+}

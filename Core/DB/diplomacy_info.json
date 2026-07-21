@@ -1,0 +1,22 @@
+﻿{
+	"unitCostExtraCharge": 0.5,
+	"squadUnitsPoints": [ 25, 50, 75, 125, 225, 425, 1250 ],
+	"reactionTypeModifiers": [ 0, 4.0, 2.0, 1.0, 0.5, 0 ],
+
+	"heroUnitsPoints": [ 9, 13, 21, 31, 44, 64, 150 ],
+	"fullUnitsMatchBonus": 2.0,
+	"partialUnitsMatchBonus": 1.0,
+	"heroStatsModifier": 5,
+	"heroLevelModifier": 200,
+
+	"valueChancePairs":
+	[
+		{ "value": 0.00, "chance": -0.40 },
+		{ "value": 0.40, "chance": -0.30 },
+		{ "value": 0.60, "chance": -0.20 },
+		{ "value": 0.80, "chance": -0.10 },
+		{ "value": 1.00, "chance": 	0.00 },
+		{ "value": 1.20, "chance": 	0.05 },
+		{ "value": 1.40, "chance": 	0.10 }
+	]
+}

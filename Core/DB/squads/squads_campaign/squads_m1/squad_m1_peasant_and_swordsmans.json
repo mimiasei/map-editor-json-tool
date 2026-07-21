@@ -1,0 +1,48 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m1_peasant_and_swordsmans",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "esquire", "v": 1 },
+					{ "s" : "peasant_normal", "v": 13 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"esquire"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 20000,
+				"units":
+				[
+					{ "s" : "esquire", "v": 20000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "neutral"
+		}
+	]
+}

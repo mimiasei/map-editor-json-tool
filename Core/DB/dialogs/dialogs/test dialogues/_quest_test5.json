@@ -1,0 +1,25 @@
+{
+	"array":
+	[
+		{
+			"id": "quest_test5",
+			"slides":
+			[
+				{
+					"id": "start",
+					"title": "",
+					"text": "Первый диалог только для героя leon_sticky_fingers",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"end": true,
+					"resultDialog": "Default"
+				}
+			]
+		}
+	]
+}

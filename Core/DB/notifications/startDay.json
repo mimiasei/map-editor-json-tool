@@ -1,0 +1,13 @@
+{
+	"array":
+	[
+        {
+            "id": "startDay",
+            "parameters":[
+                "info_start_new_day"
+            ]
+
+        }
+		
+	]
+}

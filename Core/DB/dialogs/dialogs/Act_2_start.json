@@ -1,0 +1,21 @@
+{
+	"array": [
+		{
+			"id": "Act_2_start",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "Act 2",
+						"position": 3
+					},
+					"text": "Act 2 Start Text",
+					"end": true
+				}
+			]
+		}
+	]
+}

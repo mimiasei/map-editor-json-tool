@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M6Q5_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "trogl wants to go home",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

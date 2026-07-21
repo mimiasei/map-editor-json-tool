@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m1_human_patrol_3",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "crossbowman", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"crossbowman"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 40000,
+				"units":
+				[
+					{ "s" : "crossbowman", "v": 40000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "human"
+		}
+	]
+}

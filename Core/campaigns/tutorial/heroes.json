@@ -1,0 +1,30 @@
+{
+    "array":
+    [
+        {
+            "id": "tutorial_hero_1",
+            "selectedCounterSid": "SelectedHero_tutorial_hero_1",
+            "isAvailableAtStart": true
+        },
+        {
+            "id": "tutorial_hero_1_basic",
+            "selectedCounterSid": "SelectedHero_tutorial_hero_1_basic",
+            "isAvailableAtStart": true
+        },
+        {
+            "id": "tutorial_hero_2",
+            "selectedCounterSid": "SelectedHero_tutorial_hero_2",
+            "isAvailableAtStart": true
+        },
+        {
+            "id": "tutorial_hero_3",
+            "selectedCounterSid": "SelectedHero_tutorial_hero_3",
+            "isAvailableAtStart": true
+        },
+        {
+            "id": "tutorial_hero_4",
+            "selectedCounterSid": "SelectedHero_tutorial_hero_4",
+            "isAvailableAtStart": true
+        }
+    ]
+}

@@ -1,0 +1,218 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "avatar_nature",
+			"squadValue": 275,
+			"expBonus": 275,
+			"tier": 8,
+			"fraction": "neutral",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "neutral" ],
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 300 }
+				]
+			},
+
+			"leaveCorpse": false,
+
+			"stats":
+			{
+				"hp": 1, "maxInDmg": 1,
+				"offence": 0,
+				"defence": 0,
+				"damageMin": 12,
+				"damageMax": 12,
+
+				"initiative": 5,
+				"speed": 5,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -3,
+				"moralMax": 3,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"outDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+				
+				"moveType" : "teleport",
+
+				"limitStacks": true,
+				"maxStacks": 1
+			},
+
+			"passives": 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "damage", "tags": [ "magic_damage" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "embodiment_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "avatar_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "mechanic", "tags": [ "heal" ] },
+							{ "type": "mechanic", "tags": [ "heal_percent" ] },
+							{ "type": "mechanic", "tags": [ "vampirism" ] },
+							{ "type": "mechanic", "tags": [ "revive" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"disablers": 
+						[ 
+							{ "mech": "vampirism" },
+							{ "mech": "destroy_corpse_and_heal" }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_blood" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+
+			"abilities": [ ]
+		}
+	]
+}

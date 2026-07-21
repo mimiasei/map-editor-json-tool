@@ -1,0 +1,82 @@
+{
+	"array": 
+	[
+		{
+			"id": "side_buff_dungeon_ability_offence_effect_4",
+
+			"infinite": true, "canDispel": true,
+
+			"tags": [ "side_buff_dungeon_ability_offence_effect" ],
+
+			"heroStat": 
+			{
+				"offence": 8
+			}
+		},
+
+		{
+			"id": "side_buff_dungeon_ability_defence_effect_4",
+
+			"infinite": true, "canDispel": true,
+
+			"tags": [ "side_buff_dungeon_ability_defence_effect" ],
+
+			"heroStat": 
+			{
+				"defence": 8
+			}
+		},
+
+		{
+			"id": "side_buff_dungeon_ability_spellPower_effect_4",
+
+			"infinite": true, "canDispel": true,
+
+			"tags": [ "side_buff_dungeon_ability_spellPower_effect" ],
+
+			"heroStat": 
+			{
+				"spellPower": 8
+			}
+		},
+
+		{
+			"id": "side_buff_dungeon_ability_offence_effect_5",
+
+			"infinite": true, "canDispel": true,
+
+			"tags": [ "side_buff_dungeon_ability_offence_effect" ],
+
+			"heroStat": 
+			{
+				"offence": 10
+			}
+		},
+
+		{
+			"id": "side_buff_dungeon_ability_defence_effect_5",
+
+			"infinite": true, "canDispel": true,
+
+			"tags": [ "side_buff_dungeon_ability_defence_effect" ],
+
+			"heroStat": 
+			{
+				"defence": 10
+			}
+		},
+
+		{
+			"id": "side_buff_dungeon_ability_spellPower_effect_5",
+
+			"infinite": true, "canDispel": true,
+
+			"tags": [ "side_buff_dungeon_ability_spellPower_effect" ],
+
+			"heroStat": 
+			{
+				"spellPower": 10
+			}
+		}
+	]
+}

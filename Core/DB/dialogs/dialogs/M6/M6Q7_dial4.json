@@ -1,0 +1,16 @@
+{
+	"array": [
+		{
+			"id": "M6Q7_dial4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "dialogue_text_M6Q7_dial4_0",
+					"end": true
+				}
+			]
+		}
+	]
+}

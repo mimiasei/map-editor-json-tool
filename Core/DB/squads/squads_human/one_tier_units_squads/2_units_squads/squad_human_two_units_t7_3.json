@@ -1,0 +1,45 @@
+{
+    "array": [
+        {
+            "id": "squad_human_two_unit_t7_3",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 563,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "angel_upg",
+                        "v": 25007
+                    },
+                    {
+                        "s": "angel_upg_alt",
+                        "v": 25007
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 25007,
+                "units": [
+                    "angel_upg",
+                    "angel_upg_alt"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 240007,
+                "units": [
+                    {
+                        "s": "angel_upg",
+                        "v": 240007
+                    },
+                    {
+                        "s": "angel_upg_alt",
+                        "v": 240007
+                    }
+                ]
+            },
+            "tier": 7,
+            "fraction": "human"
+        }
+    ]
+}

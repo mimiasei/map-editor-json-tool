@@ -1,0 +1,104 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "succubus_upg_alt",
+			"mesh": "Unfrozen/1Prefabs/succubus_upg_alt",
+			"mapMesh": "Unfrozen/1Prefabs/succubus_upg_alt_map",
+			"fadeTime": 3.95,
+
+			"scale": 0.8,
+			"modelHeight": 1.08,
+			"moveSpeed": 3.8,
+
+			"attackTimeBefore": [ 0.867, 0.657, 2.05, 1.467, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.9, 0.61, 1.3, 1.1, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"switchSoundToFly": true,
+			"flightSoundLoop": "sounds/battle/units/succubus/walk",
+
+			"takeDamageTime": 1.067,
+			"deathTimeOffset": 3.94,
+
+			"bloodEffect": "effects/blood/blood_unfrozen",
+			"bloodHexEffect": "effects/blood/blood_unfrozen_hex",
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0,
+					"projectile": "effects/rays/succubus_alt_hit_distance_ray",
+
+					"trajectory": "ray",
+					"projectileSpeed": 80
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "succubus_ability_3_name",
+					"abilityType": "Ability_type_attack",
+					"description": "succubus_ability_3_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 2,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "succubus_ability_4_name",
+					"abilityType": "Ability_type_debuff",
+					"description": "succubus_ability_4_description",
+					"excaptionInTooltip": "description_effect_living_immunities_only",
+					"animationIndex": 3,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_living",
+                    "description": "base_class_living_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_ranged_attack_no_close_name",
+					"description": "base_passive_ranged_attack_no_close_description"
+				},
+				{
+					"name": "base_passive_duelist_name",
+					"description": "base_passive_duelist_description"
+				},
+				{
+					"name": "base_passive_quickness_name",
+					"description": "base_passive_quickness_description"
+				},
+				{
+					"name": "succubus_passive_1_name",
+					"description": "succubus_passive_1_description"
+				}
+			]
+		}
+	]
+}

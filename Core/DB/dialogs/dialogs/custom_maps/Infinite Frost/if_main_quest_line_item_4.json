@@ -1,0 +1,144 @@
+{
+	"array":
+	[
+		{
+			"id": "if_main_quest_line_item_4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"beelzebubs_blessing_demon_crest_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"text": "if_main_quest_line_item_4_1",
+					"answers": [
+						{
+							"text": "if_main_quest_line_item_4_1_answer_1",
+							"mapActions": 
+							[
+								{ "a": "CounterPlus", "p": [ "main_quest_save_queen_beelzebubs_blessing_demon_crest_artifact", "1" ] },
+								{ "a": "SpawnObject", "p": [ "beelzebubs_blessing_demon_crest_artifact", "1573", "false", "beelzebubs_blessing_demon_crest_artifact" ] },
+								{ "a": "RemoveItem", "p": [ "beelzebubs_blessing_demon_crest_artifact" ] },
+								{ "a": "SetActiveQuestMarker", "p": [ "item_zone_4", "false" ] }, { "a": "DeleteEntity", "p": [ "item_zone_4" ] },
+								{ "a": "SetActiveVFX", "p": [ "fx_item_zone_4", "false" ] }, { "a": "SetActiveVFX", "p": [ "fx_item_zone_4_1", "false" ] }
+							],
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "2a" ] }
+							]
+						},
+						{
+							"text": "if_main_quest_line_item_4_1_answer_2",
+							"mapActions": 
+							[
+								{ "a": "BreakInterruptions" }
+							],
+							"actions": 
+							[
+								{ "a": "End", "p": [ "break" ] }
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"text": "if_main_quest_line_item_4_1",
+					"answers": [
+						{
+							"text": "if_main_quest_line_item_4_1_answer_3",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "2b" ] }
+							]
+						},
+						{
+							"text": "if_main_quest_line_item_4_1_answer_2",
+							"mapActions": 
+							[
+								{ "a": "BreakInterruptions" }
+							],
+							"actions": 
+							[
+								{ "a": "End", "p": [ "break" ] }
+							]
+						}
+					],
+					"next": "2b"
+				},
+
+				{
+					"id": "2a",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "if_main_quest_line_item_4_2",
+					"end": true
+				},
+
+				{
+					"id": "2b",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "if_main_quest_line_item_4_3",
+					"next": "3b"
+				},
+
+				{
+					"id": "3b",
+					"conditionsLogic": "Or",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"beelzebubs_blessing_demon_claw_artifact"
+							]
+						},	
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"beelzebubs_blessing_chitinous_shield_artifact"
+							]
+						},						
+						{
+							"c": "ItemOwnHero",
+							"p": [
+								"beelzebubs_blessing_heartbeat_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "if_main_quest_line_item_0_1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

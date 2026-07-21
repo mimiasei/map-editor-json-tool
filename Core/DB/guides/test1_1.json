@@ -1,0 +1,54 @@
+{
+	"array":
+	[
+		{
+			"id": "test1.1",
+			
+			"contentHeight": 235,
+
+			"slides":
+			[
+				{
+					"title": "test_title",
+					"subtitle": "test_subTitle or null",
+					"headerImage": "sentinel",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "textSid" ] }
+					]
+				},
+				{
+					"title": "test_title",
+					"subtitle": "test_subTitle or null",
+					"headerImage": "icons/... or null",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "imageSid" ] }
+					]
+				}
+			],
+	
+			"mapActions":
+			[
+				{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter", "1" ] }
+			],
+	
+			"actions":
+			[
+				{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter", "1" ] }
+			],
+	
+			"closeMapActions":
+			[
+				{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter", "1" ] }
+			],
+	
+			"closeActions":
+			[
+				{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter", "1" ] }
+			]
+		}
+	]
+}

@@ -1,0 +1,149 @@
+{
+	"array": [
+		{
+			"id": "fun_cavalryman",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_cant_interact",
+					"next": "endingMarl"
+				},
+				{
+					"id": "endingMarl",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"talked_with_cavalryman",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Sunlight_Cavalry_Upg",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_unit_cavalryman",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_cavalryman_0",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"talked_with_cavalryman",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Sunlight_Cavalry_Upg",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_unit_cavalryman",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_cavalryman_1",
+					"answers": [
+						{
+							"text": "fun_dialogue_text_cavalryman_1_answer_1",
+							"actions": [
+								{
+									"a": "End"
+								}
+							]
+						},
+						{
+							"text": "fun_dialogue_text_cavalryman_1_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1b1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1b1",
+					"fon": "",
+					"text": "fun_dialogue_text_cavalryman_1b1",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

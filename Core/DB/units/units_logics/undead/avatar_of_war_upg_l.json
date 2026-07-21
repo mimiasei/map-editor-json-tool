@@ -1,0 +1,268 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "avatar_of_war_upg",
+			"squadValue": 1530,
+			"expBonus": 161,
+			"tier": 6,
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "undead" ],
+
+			"baseSid": "avatar_of_war",
+			"upgradeSid": "avatar_of_war_upg_alt",
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 1300 }
+				]
+			},
+			
+			"stats":
+			{
+				"hp": 100,
+				"offence": 19,
+				"defence": 20,
+				"damageMin": 18,
+				"damageMax": 20,
+
+				"initiative": 11,
+				"speed": 8,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": 0,
+				"moralMax": 0,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods":
+				{
+					"list":
+					[				
+						
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				}
+			},
+			
+			"passives" : 
+			[
+				{
+					"data":
+					{
+						"sequenceEffect": "add_attack_after_counter_melee"
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "undead_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"disablers": 
+						[ 
+							{ "mech": "vampirism" },
+							{ "mech": "destroy_corpse_and_heal" }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_curse" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_blood" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				},
+				{
+					"actions":
+					[
+						{
+							"trigger": "unit_took_damage",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance_both",
+									"values": [ "self", "enemy" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive" ],
+								"triggerCounter": false,
+
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self"
+								},
+		
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self"
+								},						
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+		
+								"buffTarget_": "all",
+								"buff":
+								{
+									"sid": "avatar_of_war_buff",
+									"duration": -1
+								},
+								"targetMechanics" : [ ]
+							}
+						}
+					]
+				}
+			],
+			
+			"globalPassives" : 
+			[
+				{
+					"tag": "avatar_of_war_aura",
+					"target": "enemy",
+					"power": 2,
+					"data": 
+					{
+						"stats" :
+						{
+							"moral" : -2
+						}
+					}	
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter": true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "avatar_of_war_debuff",
+							"duration": -1
+						},
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "avatar_of_war_debuff",
+							"duration": -1
+						},
+
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"abilities" : [ ]
+		}
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"array":
+	[
+		{
+			"id": "som_main_quest_line_random_water_power_3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"showAnimationsImmediately": true,
+					"mapActions": [ { "a": "CounterSet", "p": [ "water_power_random_validator", "3" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

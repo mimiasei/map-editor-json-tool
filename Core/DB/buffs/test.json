@@ -1,0 +1,488 @@
+{
+	"array":
+	[
+		{
+			"id": "self_destruct_buff_sid",
+
+			"icon": "self_destruct_buff_icon",
+			"name_": "self_destruct_buff_name",
+			"description_": "self_destruct_buff_description",
+
+			"vfxList": [ "effects/status/buff_light_clone_unit" ],
+
+			"infinite": false, "hidden": false, "canDispel": false, "dontMimic": true, "ignoreDurationBuffs": true,
+
+			"tags": [ ],
+
+			"addition": "duration",
+
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "destroy_self" ],
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+						"targetMechanics":	
+						[ 
+							{ "mech": "destroy_self", "values": [ ] } 
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "self_destruct_buff",
+
+			"icon": "self_destruct_buff_icon",
+			"name_": "self_destruct_buff_name",
+			"description_": "self_destruct_buff_description",
+
+			"infinite": false, "hidden": false, "canDispel": false, "dontMimic": true, "ignoreDurationBuffs": true,
+
+			"tags": [ ],
+
+			"addition": "data",
+
+			"timeoutActions": 
+			[
+				{
+					"trigger": "buff_timeout",
+					"damageDealer": 
+					{
+						"tags": [ "buff", "destroy_self" ],
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+
+						"affectTargetParams": 
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self" 
+						},
+						"targetMechanics":	
+						[ 
+							{ "mech": "destroy_self", "values": [ ] } 
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "self_destruction_buff",
+
+			"icon": "self_destruct_buff_icon",
+			"name_": "self_destruct_buff_name",
+			"description_": "self_destruct_buff_description",
+
+			"infinite": false, "hidden": false, "canDispel": false, "dontMimic": true, "ignoreDurationBuffs": true,
+
+			"tags": [ ],
+
+			"addition": "data"
+		},
+
+
+		{
+			"id": "speed",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 2,
+
+			"infinite": true, "hidden": true, "canDispel": true, "dontMimic": true, "keepOnDeath": true,
+
+			"mechanics":
+			[
+				{
+					"trigger": "unit_took_damage",
+					"mech": "dispel_on_damage",
+					"values": [ "" ]
+				},
+				{
+					"trigger": "unit_took_damage",
+					"mech": "add_duration_on_damage",
+					"values": [ "-3", "enemy", "enemy" ]
+				}
+			],
+			
+			"data": {
+				"stats": 
+				{
+					"speed": 5,
+					"outDmgMods":
+					{
+						"list":
+						[
+							{ "t": "melee", "v": -0.9 }
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": "initiative",
+
+			"tags": [ "positive" ],
+
+			"mechanics":
+			[
+				{
+					"trigger": "unit_took_damage",
+					"mech": "add_duration_on_damage",
+					"values": [ "-3", "enemy", "enemy" ]
+				}
+			],
+
+			"data": {
+				"stats": 
+				{
+					"initiative": 5
+				}
+			}
+		},
+		{
+			"id": "burning",
+			"icon": "test_burning_icon",
+			"name_": "test_burning_name",
+			"description_": "test_burning_desc",
+			"tags": [ "negative" ],
+
+			"addition": "none",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "all",
+						"damageType_": "absolute",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self",
+							"targetTags": ["unit"]
+						},
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self",
+							"targetTags": ["unit"]
+						},
+						"minBaseDmg": 77,
+						"maxBaseDmg": 77
+					}
+				}
+			]
+		},
+		{
+			"id": "burning_2",
+
+			"tags": [ "negative" ],
+
+			"addition": "duration",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "all",
+						"damageType_": "absolute",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self",
+							"targetTags": ["unit"]
+						},
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self",
+							"targetTags": ["unit"]
+						},
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100
+					}
+				}
+			]
+		},
+		{
+			"id": "burning_3",
+
+			"tags": [ "negative" ],
+
+			"addition": "duration",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "all",
+						"damageType_": "normal",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "self",
+							"targetTags": ["unit"]
+						},
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "self",
+							"targetTags": ["unit"]
+						},
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+
+		{
+			"id": "god_mode",
+			"canDispel": false,
+			"infinite": true,
+			"dontMimic": true,
+			"data": 
+			{
+				"stats": 
+				{
+					"speed": 100,
+					"actionPoints": 1000000,
+					"maxEnergy": 1000000
+				}
+			}
+		},
+
+		{
+			"id": "stun",
+
+			"tags": [ "negative", "movementNegative" ],
+
+			"data":	
+			{
+				"sequenceEffect": "skip_turn"
+			}
+		},	
+		{
+			"id": "sleep",
+
+			"tags": [ "negative", "movementNegative" ],
+
+			"mechanics":
+			[
+				{
+					"trigger": "unit_took_damage",
+					"mech": "dispel_on_damage",
+					"values": [ "" ]
+				}
+			],
+
+			"data":	
+			{
+				"sequenceEffect": "skip_turn"
+			}
+		},
+		{
+			"id": "silence",
+			
+			"tags": [ "negative" ],
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"disablers":
+				[
+					{
+						"ability": "all",
+						"attack": "cast"
+					}
+				]
+			}
+		},
+		{
+			"id": "desorientation",
+			
+			"tags": [ "negative" ],
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"disablers":
+				[
+					{
+						"ability": "counter_attack",
+						"attack": "all"
+					}
+				]
+			}
+		},
+		{
+			"id": "blind",
+			
+			"tags": [ "negative" ],
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"disablers":
+				[
+					{
+						"ability": "all",
+						"attack": "shoot"
+					}
+				]
+			}
+		},
+		{
+			"id": "corrosion",
+			
+			"tags": [ "negative" ],
+
+			"addition": "duration",
+
+			"data": 
+			{
+				
+			}
+		},
+		{
+			"id": "curse",
+			
+			"tags": [ "negative" ],
+
+			"addition": "duration",
+
+			"data": {
+				"immunities": 
+				[ 
+					{ "type": "mechanic", "tags": [ "heal" ] },
+					{ "type": "mechanic", "tags": [ "heal_percent" ] },
+					{ "type": "mechanic", "tags": [ "vampirism" ] },
+					{ "type": "mechanic", "tags": [ "revive" ] }
+				]
+			}
+		},
+		{
+			"id": "root",
+			
+			"tags": [ "negative", "movementNegative" ],
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"disablers":
+				[
+					{ "movePoints": 0 }
+				]
+			}
+		},
+
+		{
+			"id": "fly_motion_buff_1",
+			
+			"infinite": true, "hidden": true, "canDispel": true, "dontMimic": true, "keepOnDeath": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"inAllDmgMod": -0.0	}	}
+		},
+
+		{
+			"id": "fly_motion_buff_2",
+			
+			"infinite": true, "hidden": true, "canDispel": true, "dontMimic": true, "keepOnDeath": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"inAllDmgMod": -0.00	}	}
+		},
+
+		{
+			"id": "fly_motion_buff_3",
+			
+			"infinite": true, "hidden": true, "canDispel": true, "dontMimic": true, "keepOnDeath": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {	"stats": 	{	"inAllDmgMod": -0.20	}	}
+		}
+	]  
+}

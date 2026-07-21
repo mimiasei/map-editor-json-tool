@@ -1,0 +1,220 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "elf_tracker_upg",
+			"squadValue": 121,
+			"expBonus": 16,
+			"tier": 1,
+			"fraction": "nature",
+			"nativeBiome": "Autumn",
+
+			"ai": "range_type",
+			
+			"tags": [ "unit", "nature" ],
+
+			"baseSid": "elf_tracker",
+			"upgradeSid": "elf_tracker_upg_alt",
+
+			"unitCost": 
+			{
+				"costResArray": 
+				[
+					{ "name": "gold", "cost": 150 }
+				]
+			},
+
+			"stats": 
+			{
+				"hp": 11,
+				"offence": 4,
+				"defence": 3,
+				"damageMin": 3,
+				"damageMax": 5,
+
+				"initiative": 5,
+				"speed": 3,
+
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 1,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -5,
+				"moralMax": 5,
+				"luckMin": -3,
+				"luckMax": 3,
+
+				"inDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"outDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"ignoreShootDmgBuff": true
+			},
+
+			"passives": 
+			[
+				{
+					"data":
+					{
+						"sequenceEffect": "counter_before_attack"
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "living_immunities" ] }
+						]
+					}
+				}
+			],
+
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "shoot",
+					
+					"selfMechanics" : [ ],
+					
+					"damageDealer" : 
+					{
+						"shootRange": -1,
+						"shootThreshold": 4,
+						"shootRedCount": 5,
+						"shootDmgBuff": -0.1,
+			
+						"tags": [ "shoot_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"alternativeAttacks":
+			[
+				{
+					"attackType_" : "melee",
+
+					"dontUseEnergy" : true,
+					"neverDisable" : true,
+					"cd" : -1,
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "elf_tracker_melee_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "counter_attack", "elf_tracker_melee_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+
+			"abilities": 
+			[ 
+
+			]
+		}
+	]
+}

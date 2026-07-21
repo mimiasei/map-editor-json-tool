@@ -1,0 +1,33 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_3_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_3_2",
+					"mapActions": [ { "a": "SubQuestActivate", "p": [ "Questlog", "step_3" ] } ],
+					"end": true
+				}
+			]
+		}
+	]
+}

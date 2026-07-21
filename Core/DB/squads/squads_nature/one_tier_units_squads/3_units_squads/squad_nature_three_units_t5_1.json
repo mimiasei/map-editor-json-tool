@@ -1,0 +1,54 @@
+{
+	"array": [
+		{
+			"id": "squad_nature_three_units_t5_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 150,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "druid",
+						"v": 15005
+					},
+					{
+						"s": "druid_upg",
+						"v": 15005
+					},
+					{
+						"s": "druid_upg_alt",
+						"v": 15005
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 15005,
+				"units": [
+					"druid",
+					"druid_upg",
+					"druid_upg_alt"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 120005,
+				"units": [
+					{
+						"s": "druid",
+						"v": 120005
+					},
+					{
+						"s": "druid_upg",
+						"v": 120005
+					},
+					{
+						"s": "druid_upg_alt",
+						"v": 120005
+					}
+				]
+			},
+			"tier": 5,
+			"fraction": "nature"
+		}
+	]
+}

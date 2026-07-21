@@ -1,0 +1,110 @@
+﻿{
+	"array":
+	[	
+		{
+			"id": "one_hero_M3_default_main_hero_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[				
+				{
+					"task": "one_hero_M3_default_main_hero_tasks"
+				}
+			]
+		},
+
+
+		{
+			"id": "one_hero_M3_yolo_attack_hero_normal",
+			"stepOrder": 4,
+			"tasks":
+			[
+				{
+					"task": "one_hero_M3_yolo_attack_hero_tasks_customScenario_AttackMarkedHero",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedHero"
+							},
+							{
+								"condition": "isMarkedHeroCloserMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedHero",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "one_hero_M3_yolo_attack_hero_tasks_customScenario_AttackMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedEnemyCity"
+							},
+							{
+								"condition": "isMarkedHeroFurtherMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedCity",
+								"param": [ "1.0" ]
+							},
+							{
+								"condition": "mainValueMoreMarkedHeroAndCity",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "one_hero_M3_yolo_attack_hero_tasks_customScenario_AttackMarkedHero",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedHero"
+							},
+							{
+								"condition": "mainValueMoreMarkedHero",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "one_hero_M3_yolo_attack_hero_tasks_customScenario_AttackMarkedCity",
+					"conditions":
+					{
+						"logic": "And",
+						"array":
+						[
+							{
+								"condition": "haveMarkedEnemyCity"
+							},
+							{
+								"condition": "mainValueMoreMarkedCity",
+								"param": [ "1.0" ]
+							},
+							{
+								"condition": "mainValueMoreMarkedHeroAndCity",
+								"param": [ "1.0" ]
+							}
+						]
+					}
+				},
+				{
+					"task": "one_hero_M3_yolo_attack_hero_tasks"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,80 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "gorilla",
+			"mesh": "Neutral/1Prefabs/gorilla",
+			"mapMesh": "Neutral/1Prefabs/gorilla_map",
+			"fadeTime": 2,
+
+			"scale": 1,
+			"modelHeight": 0.68,
+			"moveSpeed": 5.0,
+
+			"attackTimeBefore": [ 0.623, 0.0, 2.267, 0.0, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.91, 0.0, 1, 0.0, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+			"takeDamageTime": 1.2,
+			"deathTimeOffset": 2.34,
+
+			"defaultHeight": 1,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "gorilla_ability_1_name",
+					"abilityType": "Ability_type_attack",
+					"description": "gorilla_ability_1_description",
+					"animationIndex": 1,
+
+					"jumpPrepareTime": 0.55,
+					"jumpFlyTime": 0.60,
+					"jumpEndTime": 0.10,
+					"damageTimeOffset": 0.0,
+					"jumpMaxHeight": 1.0,
+
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "gorilla_ability_2_name",
+					"abilityType": "Ability_type_attack",
+					"description": "gorilla_ability_2_description",
+					"animationIndex": 2,
+					"useExpandTooltip": "false",
+					"projectile": "effects/projectiles/Gorilla_projectile",
+					"projectileSpeed": 45,
+					"trajectory": "linear"
+					
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_living",
+                    "description": "base_class_living_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				}
+			]
+		}
+	]
+}

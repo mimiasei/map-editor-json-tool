@@ -1,0 +1,132 @@
+﻿string unic_unit_dungeon_alt_attack
+{ 
+	Text( return, "50" )
+}
+
+modPercentNumeric unic_unit_trogl_passive_1
+{ 
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modInt unic_unit_trogl_passive_1_duration
+{ 
+	CurrentUnitConfig ( return, "defaultAttacks[0].damageDealer.buff.duration" )
+}
+
+modPercentNumeric unic_unit_trogl_passive_2
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modInt unic_unit_trogl_passive_2_duration
+{ 
+	CurrentUnitConfig ( return, "passives[0].actions[0].damageDealer.buff.duration" )
+}
+
+modPercentNumeric unic_unit_assassin_passive_1
+{ 
+	CurrentUnitConfig ( return, "stats.crit" )
+}
+
+string unic_unit_assassin_passive_1_2
+{ 
+	Text( return, "5" )
+}
+
+modInt unic_unit_assassin_passive_3
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.luck" )
+}
+
+modInt unic_unit_blade_dancer_passive_1
+{ 
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modPercentNumeric unic_unit_minos_passive_1
+{ 
+	CurrentUnitConfig ( return, "stats.additionalActionChanceModifier" )
+}
+
+string unic_unit_minos_passive_1_2
+{ 
+	Text( return, "5" )
+}
+
+modInt unic_unit_minos_passive_2
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.moral" )
+}
+
+modInt unic_unit_minos_passive_3_1
+{ 
+	CurrentUnitConfig ( buffSid, "passives[1].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+modInt unic_unit_minos_passive_3_2
+{ 
+	CurrentUnitConfig ( buffSid, "passives[1].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt unic_unit_medusa_passive_1
+{ 
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.initiative" )
+}
+
+modInt unic_unit_medusa_passive_1_duration
+{ 
+	CurrentUnitConfig ( return, "defaultAttacks[0].damageDealer.buff.duration" )
+}
+
+modPercentNumeric unic_unit_hydra_passive_1
+{ 
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+modInt unic_unit_hydra_passive_1_duration
+{ 
+	CurrentUnitConfig ( return, "defaultAttacks[0].damageDealer.buff.duration" )
+}
+
+string unic_unit_hydra_passive_2
+{ 
+	// CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	// DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+
+	Text( return, "25" )
+}
+
+modInt unic_unit_hydra_passive_2_duration
+{ 
+	CurrentUnitConfig ( return, "passives[0].actions[0].damageDealer.buff.duration" )
+}
+
+modInt unic_unit_hydra_passive_4
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt unic_unit_black_dragon_passive_1
+{ 
+	CurrentUnitConfig ( return, "globalPassives[0].data.stats.moral" )
+}
+
+string unic_unit_black_dragon_ability_3
+{ 
+	Text( return, "100" )
+}
+
+string unic_unit_medusa_stone_description
+{ 
+	Text( return, "100" )
+}

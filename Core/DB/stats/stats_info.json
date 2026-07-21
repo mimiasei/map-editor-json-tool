@@ -1,0 +1,41 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "offence",
+			"icon": "offence",
+			"name": "offence_name",
+			"desc": "offence_desc"
+		},
+		{
+			"id": "defence",
+			"icon": "defence",
+			"name": "defence_name",
+			"desc": "defence_desc"
+		},
+		{
+			"id": "spellPower",
+			"icon": "spellPower",
+			"name": "spellPower_name",
+			"desc": "spellPower_desc"
+		},
+		{
+			"id": "intelligence",
+			"icon": "intelligence",
+			"name": "intelligence_name",
+			"desc": "intelligence_desc"
+		},
+		{
+			"id": "luck",
+			"icon": "luck",
+			"name": "luck_name",
+			"desc": "luck_desc"
+		},
+		{
+			"id": "moral",
+			"icon": "moral",
+			"name": "moral_name",
+			"desc": "moral_desc"
+		}
+	]
+}

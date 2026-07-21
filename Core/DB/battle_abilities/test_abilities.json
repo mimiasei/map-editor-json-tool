@@ -1,0 +1,13 @@
+{
+	"array": 
+	[
+		{
+			"id": "battle_ability_command_tower",
+			"name": "battle_ability_command_tower_name",
+			"ability": "command_object",
+			"dealer": {
+
+			}
+		}
+	]
+}

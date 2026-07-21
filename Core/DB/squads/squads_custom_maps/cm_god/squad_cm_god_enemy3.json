@@ -1,0 +1,45 @@
+{
+	"array": [
+		{
+			"id": "squad_cm_god_enemy3",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 0,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "pet",
+						"v": 1
+					},
+					{
+						"s": "graverobber_upg_alt",
+						"v": 1
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 0,
+				"units": [
+					"pet",
+					"graverobber_upg_alt"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 90000,
+				"units": [
+					{
+						"s": "pet",
+						"v": 90000
+					},
+					{
+						"s": "graverobber_upg_alt",
+						"v": 90000
+					}
+				]
+			},
+			"tier": 4,
+			"fraction": "undead"
+		}
+	]
+}

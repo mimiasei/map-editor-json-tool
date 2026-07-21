@@ -1,0 +1,153 @@
+﻿{
+	"units": [
+		
+	],
+	"fractions": [
+		"human",
+		"undead",
+		"nature",
+		"demon",
+		"unfrozen",
+		"dungeon",
+		"neutral",
+		"mix"
+	],
+	"availableFractions": [
+		"human",
+		"undead",
+		"nature",
+		"demon",
+		"unfrozen",
+		"dungeon"
+	],
+	"tiers": [
+		1,
+		2,
+		3,
+		4,
+		5,
+		6,
+		7,
+		8,
+		-1
+	],
+
+	"bannedItems":
+	[
+		"magic_key_ring_artifact",
+		"demonic_heart_artifact",
+		"two_faced_mask_artifact",
+
+		"seven_league_boots_artifact",
+
+		"campaign_empty_crystal_item",
+		"campaign_ichor_item",
+		"campaign_M3_freed_priestesses",
+		"campaign_M3_captured_priestesses",
+		"campaign_M5_friend_item",
+		"campaign_M9_phoenix_egg_item"
+	],
+
+	"bannedMagics":
+	[
+
+	],
+	
+	"bannedSkills":
+	[
+		
+	],
+
+	"bannedHeroes":
+	[
+		
+	],
+
+	"campaignHeroes":
+	[
+		"tutorial_hero_1_basic",
+		"tutorial_hero_1",
+		"tutorial_hero_2",
+		"tutorial_hero_3",
+		"tutorial_hero_4",
+		"tutorial_M_hero_1",
+		"tutorial_M_hero_2",
+
+		"tutorial_hero_c1_1",
+		"tutorial_hero_c1_2",
+		"tutorial_hero_c1_3",
+		"tutorial_hero_c1_4",
+		"tutorial_hero_c1_5",
+		"tutorial_hero_c1_6",
+		"tutorial_hero_c1_7",
+		"tutorial_hero_c1_8",
+		"tutorial_hero_c1_9",
+		"tutorial_hero_c1_10",
+		"tutorial_hero_c1_11",
+		"tutorial_hero_c1_12",
+		"tutorial_hero_c1_13",
+		"tutorial_hero_c1_14",
+
+		"campaign_hero_1",
+		"campaign_hero_2",
+		"campaign_hero_3",
+		"campaign_hero_4",
+		"campaign_hero_5",
+
+		"campaign_M2_hero_sylvan",
+
+		"campaign_M3_hero_temple",
+		"campaign_M3_hero_undead",	
+
+		"campaign_M4_hero_sylvan_1",
+		"campaign_M4_hero_sylvan_2",
+		"campaign_M4_hero_sylvan_2_alt",
+		"campaign_M4_hero_sylvan_3",
+		"campaign_M4_hero_sylvan_3_alt",
+		"campaign_M4_hero_temple_1",
+		"campaign_M4_hero_temple_2",
+		"campaign_M4_hero_temple_3",
+		"campaign_M4_hero_temple_3_alt",	
+		"campaign_M4_hero_unfrozen",	
+		"campaign_M4_hero_preacher",
+
+		"campaign_M5_hero_undead_1",
+		"campaign_M5_hero_undead_2",
+		"campaign_M5_hero_undead_2alt",
+
+		"campaign_M6_hero_unfrozen",
+
+		"campaign_M9_hero_temple_1",
+		"campaign_M9_hero_temple_2",
+		"campaign_M9_hero_temple_3",
+		"campaign_M9_hero_temple_4",
+		"campaign_M9_hero_temple_5",
+		"campaign_M9_hero_temple_main",
+		"campaign_M9_hero_undead_1",
+		"campaign_M9_hero_undead_2",
+		"campaign_M9_hero_undead_3",
+		"campaign_M9_hero_undead_4",
+		"campaign_M9_hero_necromancer_ambush",
+		"campaign_M9_hero_undead_main",
+		"campaign_M9_hero_undead_npc",
+		
+		"campaign_M10_hero_demon_1",
+		"campaign_M10_hero_demon_2",
+		"campaign_M10_hero_demon_3",
+		"campaign_M10_hero_demon_4",
+		"campaign_M10_hero_demon_generic_1",
+		"campaign_M10_hero_demon_generic_2",
+		"campaign_M10_hero_demon_generic_3",
+		"campaign_M10_hero_demon_generic_4",
+		"campaign_M10_hero_demon_generic_5",
+		"campaign_M10_hero_demon_generic_6",
+		
+		"cm_fun_hero_1",
+		"cm_fun_hero_human_1"
+	],
+
+	"bannedUnits":
+	[
+		
+	]
+}

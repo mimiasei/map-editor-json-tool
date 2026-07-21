@@ -249,6 +249,33 @@ export default function ScenarioTree() {
   const entities = useMapContextStore((s) => s.context?.entities) ?? []
   const mapLoaded = useMapContextStore((s) => s.context !== null)
 
+  // Build a map of entitySid → first usage location in the scenario so we
+  // can make entity SID rows bold and navigable.
+  type EntityUsage = { type: 'trigger'; path: [number, number, number] } | { type: 'interruption'; path: [number] }
+  const entityUsageMap = useMemo<Map<string, EntityUsage>>(() => {
+    const map = new Map<string, EntityUsage>()
+    const register = (sid: string, usage: EntityUsage) => { if (!map.has(sid)) map.set(sid, usage) }
+    for (const [qi, quest] of scenario.quests.entries()) {
+      for (const [sqi, sq] of quest.subQuests.entries()) {
+        for (const [ti, trigger] of sq.triggers.entries()) {
+          const params = [
+            ...trigger.actions.flatMap(a => a.p ?? []),
+            ...trigger.conditions.flatMap(c => c.p ?? []),
+          ]
+          for (const p of params) {
+            if (typeof p === 'string' && p) register(p, { type: 'trigger', path: [qi, sqi, ti] })
+          }
+        }
+      }
+    }
+    for (const [ii, intr] of scenario.interruptions.entries()) {
+      for (const p of intr.actions.flatMap(a => a.p ?? [])) {
+        if (typeof p === 'string' && p) register(p, { type: 'interruption', path: [ii] })
+      }
+    }
+    return map
+  }, [scenario])
+
   // Group entities by type, sorted by type key then by SID within each group
   const entityGroups = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -279,6 +306,21 @@ export default function ScenarioTree() {
   })
   const [openQuests, setOpenQuests] = useState<Record<number, boolean>>({})
   const [openSubQuests, setOpenSubQuests] = useState<Record<string, boolean>>({})
+
+  // Navigate to the usage of an entity SID: expand tree nodes + select the item.
+  const navigateToUsage = (usage: { type: 'trigger'; path: [number, number, number] } | { type: 'interruption'; path: [number] }) => {
+    if (usage.type === 'trigger') {
+      const [qi, sqi, ti] = usage.path
+      setOpenSections(s => ({ ...s, quests: true }))
+      setOpenQuests(s => ({ ...s, [qi]: true }))
+      setOpenSubQuests(s => ({ ...s, [`${qi}-${sqi}`]: true }))
+      setSelection('trigger', [qi, sqi, ti])
+    } else {
+      setOpenSections(s => ({ ...s, interruptions: true }))
+      setSelection('interruption', usage.path)
+    }
+  }
+
   const [openEntityGroups, setOpenEntityGroups] = useState<Record<string, boolean>>({})
 
   const toggleSection = (key: keyof typeof openSections) =>
@@ -607,16 +649,31 @@ export default function ScenarioTree() {
                       <span className="ml-1 text-muted-foreground/60">({sids.length})</span>
                     </div>
                     {/* SID rows */}
-                    {groupOpen && sids.map((sid) => (
-                      <div
-                        key={sid}
-                        className="group relative flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground select-none"
-                        style={{ paddingLeft: '36px' }}
-                      >
-                        <span className="truncate font-mono flex-1" style={labelStyle}>{sid}</span>
-                        <CopySidButton sid={sid} />
-                      </div>
-                    ))}
+                    {groupOpen && sids.map((sid) => {
+                      const usage = entityUsageMap.get(sid)
+                      return (
+                        <div
+                          key={sid}
+                          className={cn(
+                            'group relative flex items-center gap-1 rounded py-0.5 text-xs select-none',
+                            usage
+                              ? 'text-foreground cursor-pointer hover:bg-accent'
+                              : 'text-muted-foreground cursor-default',
+                          )}
+                          style={{ paddingLeft: '36px' }}
+                          onClick={usage ? () => navigateToUsage(usage) : undefined}
+                          title={usage ? `Go to ${usage.type} [${usage.path.join(', ')}]` : undefined}
+                        >
+                          <span
+                            className={cn('truncate font-mono flex-1', usage && 'font-bold')}
+                            style={labelStyle}
+                          >
+                            {sid}
+                          </span>
+                          <CopySidButton sid={sid} />
+                        </div>
+                      )
+                    })}
                   </div>
                 )
               })}

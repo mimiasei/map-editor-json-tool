@@ -1,0 +1,194 @@
+
+{
+	"array":
+	[
+		{
+			"id": "sub_class_undead_might_1",
+			"icon": "sub_class_undead_might_1_icon",
+			"name": "sub_class_undead_might_1_name",
+			"desc": "sub_class_undead_might_1_desc",
+			
+			"faction": "undead",		"classType": "might",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_protection",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_sorcery",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_primal",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_luck",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_scouting",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "luck", "-999" ]
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "anticritChanceModifier", "1.0" ]
+				}
+			]
+		},
+		{
+			"id": "sub_class_undead_might_2",
+			"icon": "sub_class_undead_might_2_icon",
+			"name": "sub_class_undead_might_2_name",
+			"desc": "sub_class_undead_might_2_desc",
+			
+			"faction": "undead", 	"classType": "might",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_resistance",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_mastery",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_night",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_diplomacy",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_tactics",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "moral", "-999" ]
+				}
+			]
+		},
+
+		{
+			"id": "sub_class_undead_magic_1",
+			"icon": "sub_class_undead_magic_1_icon",
+			"name": "sub_class_undead_magic_1_name",
+			"desc": "sub_class_undead_magic_1_desc",
+			
+			"faction": "undead",		"classType": "magic",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_formation",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_summoner",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_space",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_enlightenment",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_logistic",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "sub_class_undead_magic_1_bonus" ]
+				}
+			]
+		},
+		{
+			"id": "sub_class_undead_magic_2",
+			"icon": "sub_class_undead_magic_2_icon",
+			"name": "sub_class_undead_magic_2_name",
+			"desc": "sub_class_undead_magic_2_desc",
+			
+			"faction": "undead", 	"classType": "magic",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_assault",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_battlemage",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_day",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_economy",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_tactics",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "enableNecromancyFactionBonus", "true" ]
+				}
+			]
+		}
+	]
+}

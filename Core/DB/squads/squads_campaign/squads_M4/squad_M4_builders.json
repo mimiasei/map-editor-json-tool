@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M4_builders",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "esquire", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"esquire"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 30000,
+				"units":
+				[
+					{ "s" : "esquire", "v": 30000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "human"
+		}
+	]
+}

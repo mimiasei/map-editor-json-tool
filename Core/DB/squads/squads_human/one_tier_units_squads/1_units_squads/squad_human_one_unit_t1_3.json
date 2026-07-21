@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_human_one_unit_t1_3",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 100,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "esquire_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"esquire_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 10001,
+				"units":
+				[
+					{ "s" : "esquire_upg_alt", "v": 10001 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "human"
+		}
+	]
+}

@@ -1,0 +1,530 @@
+{
+	"array": [
+		{
+			"id": "M9a_post_mission",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_0",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/01IGN_CampaignMissions_AMELCHIA_Line_23",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 1
+					},
+					"text": "dialogue_text_M9a_postmission_1",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/03IGN_CampaignMissions_LORDGALTRAN_Line8",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_undead",
+						"position": 1
+					},
+					"text": "dialogue_text_M9a_postmission_2",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/04IGN_CampaignMissions_LORDGALTRAN_Line9",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 3,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "true",
+							"animations": ["zoomIn", "appear"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_onyx_dancer",
+						"position": 3
+					},
+					"text": "dialogue_text_M9a_postmission_3",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/07IGN_CampaignMissions_OnyxDancer_Line1",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"text": "dialogue_text_M9a_postmission_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Dragonfly_King_shadow",
+							"isForeground": "true",
+							"animations": ["zoomIn", "appear"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_demon_boss",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_5",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/08IGN_CampaignMissions_DragonflyKing_Line1",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"text": "dialogue_text_M9a_postmission_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_4_galthran",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_7",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/09IGN_CampaignMissions_Caspair_Line33",
+					"next": "7m"
+				},
+				{
+					"id": "7m",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn", "appear"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 1
+					},
+					"text": "dialogue_text_M9a_postmission_7m",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/11IGN_CampaignMissions_BALTHAZAR_Line_21",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_onyx_dancer",
+						"position": 1
+					},
+					"text": "dialogue_text_M9a_postmission_8",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/12IGN_CampaignMissions_OnyxDancer_Line2",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_9",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/13IGN_CampaignMissions_AMELCHIA_Line_25_Alt1",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_10",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/14IGN_CampaignMissions_Caspair_Line35",
+					"next": "11"
+				},
+				{
+					"id": "11",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_onyx_dancer",
+						"position": 1
+					},
+					"text": "dialogue_text_M9a_postmission_11",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/15IGN_CampaignMissions_OnyxDancer_Line3",
+					"next": "12"
+				},
+				{
+					"id": "12",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_12",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/16IGN_CampaignMissions_AMELCHIA_Line_26",
+					"next": "13"
+				},
+				{
+					"id": "13",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_13",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/17IGN_CampaignMissions_Caspair_Line36",
+					"next": "14"
+				},
+				{
+					"id": "14",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_onyx_dancer",
+						"position": 1
+					},
+					"text": "dialogue_text_M9a_postmission_14",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/18IGN_CampaignMissions_OynxDancer_Line4",
+					"next": "15"
+				},
+				{
+					"id": "15",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M9a_postmission_15",
+					"sound": "sounds/locale/dialogs/07Post-mission7a+b/19IGN_CampaignMissions_Caspair_Line37_alt2",
+					"actions": [ { "a": "SetAchievement", "p": [ "achievement_7" ] } ],
+					"end": true
+				}
+			]
+		}
+	]
+}

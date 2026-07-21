@@ -1,0 +1,34 @@
+﻿{
+	"array": 
+		[
+			{
+				"id": "campaign_skill_siege_attack_siege_ability_bonus_1",
+				"targetAbilitySid":	"attack_siege_ability",
+				"deltaAbilitySid":	"campaign_skill_siege_attack_siege_ability_delta_1"
+			},
+
+			{
+				"id": "campaign_skill_siege_attack_siege_ability_bonus_2",
+				"targetAbilitySid":	"attack_siege_ability",
+				"deltaAbilitySid":	"campaign_skill_siege_attack_siege_ability_delta_2"
+			},
+
+			{
+				"id": "campaign_skill_siege_attack_siege_ability_bonus_3",
+				"targetAbilitySid":	"attack_siege_ability",
+				"deltaAbilitySid":	"campaign_skill_siege_attack_siege_ability_delta_3"
+			},
+
+			{
+				"id": "campaign_skill_siege_attack_siege_ability_bonus_4",
+				"targetAbilitySid":	"attack_siege_ability",
+				"deltaAbilitySid":	"campaign_skill_siege_attack_siege_ability_delta_4"
+			},
+
+			{
+				"id": "campaign_skill_siege_attack_siege_ability_bonus_5",
+				"targetAbilitySid":	"attack_siege_ability",
+				"deltaAbilitySid":	"campaign_skill_siege_attack_siege_ability_delta_5"
+			}
+		]
+}

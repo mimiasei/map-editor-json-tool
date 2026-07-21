@@ -1,0 +1,60 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "custom_village",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+
+			"variantRerollType": "OnStartWeek",
+			"visitorsResetType": "OnStartWeek",
+			"visitType": "OneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 2250,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "village_label",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SidePropResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [  ]
+							},
+							{
+								"rewardType": "SidePropResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [  ]
+							}
+						]
+					}					
+				}	
+			]
+		}
+	]
+}

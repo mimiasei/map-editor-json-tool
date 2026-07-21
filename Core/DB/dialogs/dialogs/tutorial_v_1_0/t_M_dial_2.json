@@ -1,0 +1,46 @@
+{
+	"array": [
+		{
+			"id": "t_M_dial_2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_2_1",
+					"mapActions": [ ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_2_2",
+					"mapActions": [ ],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_2_3",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "1257", "2" ] } ],
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,14 @@
+{
+	"array":
+	[
+        {
+            "id": "sideLose",
+            "parameters":[
+                "info_lose_player",
+                "info_lose_ai"
+            ]
+
+        }
+		
+	]
+}

@@ -1,0 +1,137 @@
+{
+	"array": [
+		{
+			"id": "vyr_Scenario2_P2_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Fairy_Dragon",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Fairy_Dragon",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_P2_dial2_0",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"Counter_P2_Q1_2",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Fairy_Dragon",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Fairy_Dragon",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_faerie_dragon",
+						"position": 2
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_P2_dial2_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_5_Octavia_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Fairy_Dragon",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Fairy_Dragon",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_faerie_dragon",
+						"position": 2
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_P2_dial2_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"text": "gs_dialogue_text_vyr_Scenario2_P2_dial2_3",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"Counter_P2_Q1_2",
+								"2"
+							]
+						},
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"fairy_dragon",
+								"25"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"FairyDragonDwelling"
+							]
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

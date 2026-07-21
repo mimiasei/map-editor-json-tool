@@ -1,0 +1,10 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "town_gate",
+			"goodsValue": 15000,
+			"aiIgnore": true
+		}
+	]
+}

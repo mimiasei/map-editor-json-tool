@@ -1,0 +1,138 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tutorial_hero_c1_14",
+
+			"name": "necro_hero_8",
+			"description": "necro_hero_8_description",
+			"motto": "necro_hero_8_motto",
+
+			"mesh": "death_warrior",
+			"mounts": [ "death_mount" ],
+			"icon": "hero_necromancer_8_iratus",
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+			"classType": "might",
+
+			"skillsRollVariant": "necros_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 20,
+			"attacksTimesBefore": [1.33],
+
+			"startSquad" : [
+				{ "sid": "skeleton_upg_alt", "min": 470, "max": 470 },
+				{ "sid": "flicker_upg_alt", "min": 175, "max": 175 },
+				{ "sid": "pet_upg", "min": 103, "max": 103 },
+				{ "sid": "graverobber_upg_alt", "min": 53, "max": 53 },
+				{ "sid": "lich", "min": 51, "max": 51 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "skeleton_upg_alt", "min": 470, "max": 470 },
+				{ "sid": "flicker_upg_alt", "min": 175, "max": 175 },
+				{ "sid": "pet_upg", "min": 103, "max": 103 },
+				{ "sid": "graverobber_upg_alt", "min": 53, "max": 53 },
+				{ "sid": "lich", "min": 51, "max": 51 }
+			],
+
+			"specialization": "necro_hero_8_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      12,
+				"defence":      12,
+				"spellPower":   12,
+				"intelligence": 12,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 45 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 15 },
+						{ "v": 3, "c": 15 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_undead",
+					"skillLevel": 3
+				},
+
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+
+				{
+					"sid": "skill_sorcery",
+					"skillLevel": 3
+				},
+
+				{
+					"sid": "skill_mastery",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "primal_1_magic_thunderbolt",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_2_magic_thick_hide",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_1_magic_unnatural_calm",
+					"level": 4,
+					"isLearned": true
+				},
+
+				{
+					"sidConfig": "change_use_necromancy",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

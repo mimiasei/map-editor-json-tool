@@ -1,0 +1,66 @@
+{
+	"array":
+	[
+		{
+			"id": "mission1Sid",
+			"titleSid": "mission1_title",
+			"descriptionSid": "mission1_description",
+			"mapSid": "__forTestHash",
+			"requiredHeroesCount": 1,
+			"sides": [
+				{
+					"type": "Player",
+					"fractionSid": "undead",
+					"heroSid": "random",
+					"spawnId": 1
+				},
+				{
+					"type": "Bot",
+					"fractionSid": "human",
+					"heroSid": "random",
+					"spawnId": 2
+				}
+			],
+			"variants": [
+				{
+					"titleSid": "mission1.1_title",
+					"descriptionSid": "mission1.1_description",
+					"mapSid": "1testObjects",
+					"sides": [
+						{
+							"type": "Player",
+							"fractionSid": "undead",
+							"heroSid": "random",
+							"spawnId": 1
+						},
+						{
+							"type": "Bot",
+							"fractionSid": "human",
+							"heroSid": "random",
+							"spawnId": 2
+						}
+					]
+				},
+				{
+					"titleSid": "mission1.2_title",
+					"descriptionSid": "mission1.2_description",
+					"mapSid": "AATEST",
+					"sides": [
+						{
+							"type": "Player",
+							"fractionSid": "undead",
+							"heroSid": "random",
+							"spawnId": 1
+						},
+						{
+							"type": "Bot",
+							"fractionSid": "human",
+							"heroSid": "random",
+							"spawnId": 2
+						}
+					]
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "wind_rose",
+
+			"tooltipVisitType": "Scouting",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "Unlimited",
+
+			"canAIVisitUnlimited": false,
+
+			"variants":
+			[		
+				{
+					"rollChance": 100,
+					"value": 75000,
+
+					"guardUnits":
+					[
+						
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideFogOfWarRevealing",
+								"rewardShowType": "Invisible",
+
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+								
+								"parameters": [ "1000" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "test_conditions_lessWood",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "У вас меньше 20 дерева",
+					
+					"answers":
+					[
+						{
+							"text": "Закончить диалог, прервать интеракт",
+							
+							"mapActions": 
+							[ 
+								{ "a": "StepBack", "p": [] }
+							],
+							"actions": 
+							[ 
+								{ "a": "End", "p": [ "break" ] }
+							]
+						},
+						{
+							"text": "Закончить диалог, продолжить интеракт",
+							
+							"actions": 
+							[ 
+								{ "a": "End" } 
+							]
+						}
+					]
+				}				
+			]
+		}
+	]
+}

@@ -1,0 +1,36 @@
+{
+	"array": [
+		{
+			"id": "squad_undead_one_unit_t7_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 1500,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "vampire",
+						"v": 25007
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 25007,
+				"units": [
+					"vampire"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 240007,
+				"units": [
+					{
+						"s": "vampire",
+						"v": 240007
+					}
+				]
+			},
+			"tier": 7,
+			"fraction": "undead"
+		}
+	]
+}

@@ -1,0 +1,1402 @@
+﻿// Battle Magic Upgrades Mana Cost
+
+modInt current_magic_upgrade_0_param_mana_cost
+{
+	CurrentMagicBattleRoot ( return, "manaCost[0]" )
+}
+
+modInt current_magic_upgrade_1_param_mana_cost
+{
+	CurrentMagicBattleRoot ( return, "manaCost[1]" )
+}
+
+modInt current_magic_upgrade_2_param_mana_cost
+{
+	CurrentMagicBattleRoot ( return, "manaCost[2]" )
+}
+
+modInt current_magic_upgrade_3_param_mana_cost
+{
+	CurrentMagicBattleRoot ( return, "manaCost[3]" )
+}
+
+//
+
+modInt current_magic_upgrade_0_1_param_mana_cost
+{
+	CurrentMagicBattleRoot ( manaCostBase, "manaCost[0]" )
+	CurrentMagicBattleRoot ( manaCostNext, "manaCost[1]" )
+
+	Sub ( return, manaCostBase, manaCostNext )
+}
+
+modInt current_magic_upgrade_1_2_param_mana_cost
+{
+	CurrentMagicBattleRoot ( manaCostBase, "manaCost[1]" )
+	CurrentMagicBattleRoot ( manaCostNext, "manaCost[2]" )
+
+	Sub ( return, manaCostBase, manaCostNext )
+}
+
+modInt current_magic_upgrade_2_3_param_mana_cost
+{
+	CurrentMagicBattleRoot ( manaCostBase, "manaCost[2]" )
+	CurrentMagicBattleRoot ( manaCostNext, "manaCost[3]" )
+
+	Sub ( return, manaCostBase, manaCostNext )
+}
+
+// Battle Magic Upgrades Base Damage
+
+modInt current_magic_upgrade_0_param_damage_base
+{
+	CurrentMagicBattleRoot ( minBaseDmg, "battleMagic.magicDealers[0].minBaseDmg" )
+	CurrentMagicBattleRoot ( maxBaseDmg, "battleMagic.magicDealers[0].maxBaseDmg" )
+
+	Avg ( return, minBaseDmg, maxBaseDmg )
+}
+
+modInt current_magic_upgrade_1_param_damage_base
+{
+	CurrentMagicBattleRoot ( minBaseDmg, "battleMagic.magicDealers[1].minBaseDmg" )
+	CurrentMagicBattleRoot ( maxBaseDmg, "battleMagic.magicDealers[1].maxBaseDmg" )
+
+	Avg ( return, minBaseDmg, maxBaseDmg )
+}
+
+modInt current_magic_upgrade_2_param_damage_base
+{
+	CurrentMagicBattleRoot ( minBaseDmg, "battleMagic.magicDealers[2].minBaseDmg" )
+	CurrentMagicBattleRoot ( maxBaseDmg, "battleMagic.magicDealers[2].maxBaseDmg" )
+
+	Avg ( return, minBaseDmg, maxBaseDmg )
+}
+
+modInt current_magic_upgrade_3_param_damage_base
+{
+	CurrentMagicBattleRoot ( minBaseDmg, "battleMagic.magicDealers[3].minBaseDmg" )
+	CurrentMagicBattleRoot ( maxBaseDmg, "battleMagic.magicDealers[3].maxBaseDmg" )
+
+	Avg ( return, minBaseDmg, maxBaseDmg )
+}
+
+// Battle Magic Upgrades Damage Per SP
+
+modInt current_magic_upgrade_0_param_damage_per_sp
+{
+	CurrentMagicBattleRoot ( minStackDmg, "battleMagic.magicDealers[0].minStackDmg" )
+	CurrentMagicBattleRoot ( maxStackDmg, "battleMagic.magicDealers[0].maxStackDmg" )
+
+	Avg ( return, minStackDmg, maxStackDmg )
+}
+
+modInt current_magic_upgrade_1_param_damage_per_sp
+{
+	CurrentMagicBattleRoot ( minStackDmg, "battleMagic.magicDealers[1].minStackDmg" )
+	CurrentMagicBattleRoot ( maxStackDmg, "battleMagic.magicDealers[1].maxStackDmg" )
+
+	Avg ( return, minStackDmg, maxStackDmg )
+}
+
+modInt current_magic_upgrade_2_param_damage_per_sp
+{
+	CurrentMagicBattleRoot ( minStackDmg, "battleMagic.magicDealers[2].minStackDmg" )
+	CurrentMagicBattleRoot ( maxStackDmg, "battleMagic.magicDealers[2].maxStackDmg" )
+
+	Avg ( return, minStackDmg, maxStackDmg )
+}
+
+modInt current_magic_upgrade_3_param_damage_per_sp
+{
+	CurrentMagicBattleRoot ( minStackDmg, "battleMagic.magicDealers[3].minStackDmg" )
+	CurrentMagicBattleRoot ( maxStackDmg, "battleMagic.magicDealers[3].maxStackDmg" )
+
+	Avg ( return, minStackDmg, maxStackDmg )
+}
+
+//B attle Magic Upgrades Base Damage %
+
+modPercentNumeric current_magic_upgrade_0_param_damage_percent_base
+{
+	CurrentMagicBattleRoot ( minPercentDmg, "battleMagic.magicDealers[0].minPercentDmg" )
+	CurrentMagicBattleRoot ( maxPercentDmg, "battleMagic.magicDealers[0].maxPercentDmg" )
+
+	Avg ( return, minPercentDmg, maxPercentDmg )
+}
+
+modPercentNumeric current_magic_upgrade_1_param_damage_percent_base
+{
+	CurrentMagicBattleRoot ( minPercentDmg, "battleMagic.magicDealers[1].minPercentDmg" )
+	CurrentMagicBattleRoot ( maxPercentDmg, "battleMagic.magicDealers[1].maxPercentDmg" )
+
+	Avg ( return, minPercentDmg, maxPercentDmg )
+}
+
+modPercentNumeric current_magic_upgrade_2_param_damage_percent_base
+{
+	CurrentMagicBattleRoot ( minPercentDmg, "battleMagic.magicDealers[2].minPercentDmg" )
+	CurrentMagicBattleRoot ( maxPercentDmg, "battleMagic.magicDealers[2].maxPercentDmg" )
+
+	Avg ( return, minPercentDmg, maxPercentDmg )
+}
+
+modPercentNumeric current_magic_upgrade_3_param_damage_percent_base
+{
+	CurrentMagicBattleRoot ( minPercentDmg, "battleMagic.magicDealers[3].minPercentDmg" )
+	CurrentMagicBattleRoot ( maxPercentDmg, "battleMagic.magicDealers[3].maxPercentDmg" )
+
+	Avg ( return, minPercentDmg, maxPercentDmg )
+}
+
+// Battle Magic Upgrades Trap Damage %
+
+modPercentNumeric current_magic_upgrade_0_trap_damage_percent
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[0].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+modPercentNumeric current_magic_upgrade_1_trap_damage_percent
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[1].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+modPercentNumeric current_magic_upgrade_2_trap_damage_percent
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[2].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+modPercentNumeric current_magic_upgrade_3_trap_damage_percent
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[3].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+// Battle Magic Upgrades Trap Damage % Per SP
+
+modPercentNumeric current_magic_upgrade_0_trap_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[0].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minStackPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+modPercentNumeric current_magic_upgrade_1_trap_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[1].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minStackPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+modPercentNumeric current_magic_upgrade_2_trap_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[2].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minStackPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+modPercentNumeric current_magic_upgrade_3_trap_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( summonSid, "battleMagic.magicDealers[3].targetMechanics[0].values[1]" )
+	DbTrap ( countTrapDamage, summonSid, "damageDealer.minStackPercentDmg" )
+
+	Text( return, countTrapDamage )
+}
+
+// Battle Magic Upgrades Damage Per %
+
+modPercentNumeric current_magic_upgrade_0_param_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( minStackPercentDmg, "battleMagic.magicDealers[0].minStackPercentDmg" )
+	CurrentMagicBattleRoot ( maxStackPercentDmg, "battleMagic.magicDealers[0].maxStackPercentDmg" )
+
+	Avg ( return, minStackPercentDmg, maxStackPercentDmg )
+}
+
+modPercentNumeric current_magic_upgrade_1_param_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( minStackPercentDmg, "battleMagic.magicDealers[1].minStackPercentDmg" )
+	CurrentMagicBattleRoot ( maxStackPercentDmg, "battleMagic.magicDealers[1].maxStackPercentDmg" )
+
+	Avg ( return, minStackPercentDmg, maxStackPercentDmg )
+}
+
+modPercentNumeric current_magic_upgrade_2_param_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( minStackPercentDmg, "battleMagic.magicDealers[2].minStackPercentDmg" )
+	CurrentMagicBattleRoot ( maxStackPercentDmg, "battleMagic.magicDealers[2].maxStackPercentDmg" )
+
+	Avg ( return, minStackPercentDmg, maxStackPercentDmg )
+}
+
+modPercentNumeric current_magic_upgrade_3_param_damage_percent_per_sp
+{
+	CurrentMagicBattleRoot ( minStackPercentDmg, "battleMagic.magicDealers[3].minStackPercentDmg" )
+	CurrentMagicBattleRoot ( maxStackPercentDmg, "battleMagic.magicDealers[3].maxStackPercentDmg" )
+
+	Avg ( return, minStackPercentDmg, maxStackPercentDmg )
+}
+
+// Battle Magic Upgrades Base Heal
+
+modInt current_magic_upgrade_0_param_heal_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_upgrade_1_param_heal_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_upgrade_2_param_heal_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_upgrade_3_param_heal_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[0]" )
+}
+
+// Battle Magic Upgrades Base Per SP
+
+modInt current_magic_upgrade_0_param_heal_per_sp
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_upgrade_1_param_heal_per_sp
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_upgrade_2_param_heal_per_sp
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_upgrade_3_param_heal_per_sp
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[2]" )
+}
+
+// Battle Magic Upgrades Base Duration
+
+modInt current_magic_upgrade_0_param_duration
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].buff.duration" )
+}
+
+modInt current_magic_upgrade_1_param_duration
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].buff.duration" )
+}
+
+modInt current_magic_upgrade_2_param_duration
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].buff.duration" )
+}
+
+modInt current_magic_upgrade_3_param_duration
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].buff.duration" )
+}
+
+//
+
+modPercentNumeric current_magic_upgrade_0_param_temp_stack_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[2]" )
+}
+
+modPercentNumeric current_magic_upgrade_1_param_temp_stack_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[2]" )
+}
+
+modPercentNumeric current_magic_upgrade_2_param_temp_stack_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[2]" )
+}
+
+modPercentNumeric current_magic_upgrade_3_param_temp_stack_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[2]" )
+}
+
+//
+
+modFloatPercentF1Numeric current_magic_upgrade_0_param_temp_stack_perCount
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[3]" )
+}
+
+modFloatPercentF1Numeric current_magic_upgrade_1_param_temp_stack_perCount
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[3]" )
+}
+
+modFloatPercentF1Numeric current_magic_upgrade_2_param_temp_stack_perCount
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[3]" )
+}
+
+modFloatPercentF1Numeric current_magic_upgrade_3_param_temp_stack_perCount
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[3]" )
+}
+
+// Battle Magic Upgrades
+
+modInt current_magic_unpgrade_0_param_buff_offence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt current_magic_unpgrade_1_param_buff_offence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt current_magic_unpgrade_2_param_buff_offence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt current_magic_unpgrade_3_param_buff_offence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_buff_defence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modInt current_magic_unpgrade_1_param_buff_defence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modInt current_magic_unpgrade_2_param_buff_defence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modInt current_magic_unpgrade_3_param_buff_defence
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_buff_speed
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+modInt current_magic_unpgrade_1_param_buff_speed
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+modInt current_magic_unpgrade_2_param_buff_speed
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+modInt current_magic_unpgrade_3_param_buff_speed
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_buff_initiative
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.initiative" )
+}
+
+modInt current_magic_unpgrade_1_param_buff_initiative
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.initiative" )
+}
+
+modInt current_magic_unpgrade_2_param_buff_initiative
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.initiative" )
+}
+
+modInt current_magic_unpgrade_3_param_buff_initiative
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.initiative" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_moral
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.moral" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_moral
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.moral" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_moral
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.moral" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_moral
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.moral" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_luck
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.luck" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_luck
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.luck" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_luck
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.luck" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_luck
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.luck" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_skipActionChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.skipActionChanceModifier" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_skipActionChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.skipActionChanceModifier" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_skipActionChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.skipActionChanceModifier" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_skipActionChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.skipActionChanceModifier" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_anticritChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.anticritChanceModifier" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_anticritChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.anticritChanceModifier" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_anticritChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.anticritChanceModifier" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_anticritChanceModifier
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.anticritChanceModifier" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_outAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_outAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_outAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_outAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_inAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_inAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_inAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_inAllDmgMod
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_outAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_outAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_outAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_outAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_inAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_inAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_inAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_inAllDmgMod_alt
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].targetMechanics[0].values[0]" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_hpPerc
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.hpPerc" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_hpPerc
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.hpPerc" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_hpPerc
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.hpPerc" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_hpPerc
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.hpPerc" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_finalHealingBonusPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.finalHealingBonusPercent" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_finalHealingBonusPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.finalHealingBonusPercent" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_finalHealingBonusPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.finalHealingBonusPercent" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_finalHealingBonusPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.finalHealingBonusPercent" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_healthLimitMinPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.healthLimitMinPercent" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_healthLimitMinPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.healthLimitMinPercent" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_healthLimitMinPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.healthLimitMinPercent" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_healthLimitMinPercent
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.healthLimitMinPercent" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_outDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_outDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_outDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_outDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outDmgMods.list[0].v" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_buff_inDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_buff_inDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_buff_inDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_buff_inDmgMods
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inDmgMods.list[0].v" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_buff_numCounters
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.numCounters" )
+}
+
+modInt current_magic_unpgrade_1_param_buff_numCounters
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.numCounters" )
+}
+
+modInt current_magic_unpgrade_2_param_buff_numCounters
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.numCounters" )
+}
+
+modInt current_magic_unpgrade_3_param_buff_numCounters
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.numCounters" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_buff_tauntRadius
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.tauntRadius" )
+}
+
+modInt current_magic_unpgrade_1_param_buff_tauntRadius
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.tauntRadius" )
+}
+
+modInt current_magic_unpgrade_2_param_buff_tauntRadius
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.tauntRadius" )
+}
+
+modInt current_magic_unpgrade_3_param_buff_tauntRadius
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "data.stats.tauntRadius" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_buff_actionsDamage
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_buff_actionsDamage
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_buff_actionsDamage
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_buff_actionsDamage
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_assasinate_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[0]" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_assasinate_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[0]" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_assasinate_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[0]" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_assasinate_base
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[0]" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_assasinate_buff_base
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[0].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_assasinate_buff_base
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[1].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_assasinate_buff_base
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[2].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_assasinate_buff_base
+{
+	CurrentMagicBattleRoot ( buffSid, "battleMagic.magicDealers[3].buff.sid" )
+	DbBuff( return, buffSid, "actions[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_kill_stacks
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_kill_stacks
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_kill_stacks
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_kill_stacks
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_summonRange
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].castTargetParams.distance" )
+}
+
+modInt current_magic_unpgrade_1_param_summonRange
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].castTargetParams.distance" )
+}
+
+modInt current_magic_unpgrade_2_param_summonRange
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].castTargetParams.distance" )
+}
+
+modInt current_magic_unpgrade_3_param_summonRange
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].castTargetParams.distance" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_summonSP
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[4]" )
+}
+
+modInt current_magic_unpgrade_1_param_summonSP
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[4]" )
+}
+
+modInt current_magic_unpgrade_2_param_summonSP
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[4]" )
+}
+
+modInt current_magic_unpgrade_3_param_summonSP
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[4]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_minDamagePerEnergyLevel
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].minDamagePerEnergyLevel" )
+}
+
+modInt current_magic_unpgrade_1_param_minDamagePerEnergyLevel
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].minDamagePerEnergyLevel" )
+}
+
+modInt current_magic_unpgrade_2_param_minDamagePerEnergyLevel
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].minDamagePerEnergyLevel" )
+}
+
+modInt current_magic_unpgrade_3_param_minDamagePerEnergyLevel
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].minDamagePerEnergyLevel" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_add_energy
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_unpgrade_1_param_add_energy
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_unpgrade_2_param_add_energy
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_unpgrade_3_param_add_energy
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[2]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_levelDmg
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].levelDmg" )
+}
+
+modInt current_magic_unpgrade_1_param_levelDmg
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].levelDmg" )
+}
+
+modInt current_magic_unpgrade_2_param_levelDmg
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].levelDmg" )
+}
+
+modInt current_magic_unpgrade_3_param_levelDmg
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].levelDmg" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_numTargets
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].numTargets" )
+}
+
+modInt current_magic_unpgrade_1_param_numTargets
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].numTargets" )
+}
+
+modInt current_magic_unpgrade_2_param_numTargets
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].numTargets" )
+}
+
+modInt current_magic_unpgrade_3_param_numTargets
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].numTargets" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_blink_range
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].orderedCastParams[0].distanceFromFirst" )
+}
+
+modInt current_magic_unpgrade_1_param_blink_range
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].orderedCastParams[0].distanceFromFirst" )
+}
+
+modInt current_magic_unpgrade_2_param_blink_range
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].orderedCastParams[0].distanceFromFirst" )
+}
+
+modInt current_magic_unpgrade_3_param_blink_range
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].orderedCastParams[0].distanceFromFirst" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_castleDamage_building
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_castleDamage_building
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_castleDamage_building
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_castleDamage_building
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_castleDamage_unit
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[0].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_unpgrade_1_param_castleDamage_unit
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[1].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_unpgrade_2_param_castleDamage_unit
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[2].targetMechanics[0].values[2]" )
+}
+
+modInt current_magic_unpgrade_3_param_castleDamage_unit
+{
+	CurrentMagicBattleRoot ( return, "battleMagic.magicDealers[3].targetMechanics[0].values[2]" )
+}
+
+//
+
+string text_description_up_effect_constant_1
+{
+	Text( return, "1" )
+}
+
+string text_description_up_effect_constant_2
+{
+	Text( return, "2" )
+}
+
+string text_description_up_effect_constant_3
+{
+	Text( return, "3" )
+}
+
+string text_description_up_effect_constant_4
+{
+	Text( return, "4" )
+}
+
+string text_description_up_effect_constant_5
+{
+	Text( return, "5" )
+}
+
+// World Magic Upgrades
+
+//
+
+modInt current_magic_unpgrade_0_param_add_move_points
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_add_move_points
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_add_move_points
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_add_move_points
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_create_portals
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_create_portals
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_create_portals
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_create_portals
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_farsight_range
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[2]" )
+}
+
+modInt current_magic_unpgrade_1_param_farsight_range
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[2]" )
+}
+
+modInt current_magic_unpgrade_2_param_farsight_range
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[2]" )
+}
+
+modInt current_magic_unpgrade_3_param_farsight_range
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[2]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_farsight_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_farsight_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_farsight_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_farsight_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_nairas_veil
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_nairas_veil
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_nairas_veil
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_nairas_veil
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_assemble_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_assemble_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_assemble_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_assemble_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_dimension_door_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_dimension_door_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_dimension_door_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_dimension_door_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_reinforcements_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_reinforcements_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_reinforcements_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_reinforcements_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modInt current_magic_unpgrade_0_param_primordial_chaos_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[0].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_1_param_primordial_chaos_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[1].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_2_param_primordial_chaos_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[2].parameters[0]" )
+}
+
+modInt current_magic_unpgrade_3_param_primordial_chaos_radius
+{
+	CurrentMagicBattleRoot ( return, "worldMagic.magicSettings[3].parameters[0]" )
+}
+
+//
+
+modPercentNumeric current_magic_unpgrade_0_param_primordial_chaos_power
+{
+	CurrentMagicBattleRoot ( data, "worldMagic.magicSettings[0].parameters[1]" )
+	Sub ( return, "1", data )
+}
+
+modPercentNumeric current_magic_unpgrade_1_param_primordial_chaos_power
+{
+	CurrentMagicBattleRoot ( data, "worldMagic.magicSettings[1].parameters[1]" )
+	Sub ( return, "1", data )
+}
+
+modPercentNumeric current_magic_unpgrade_2_param_primordial_chaos_power
+{
+	CurrentMagicBattleRoot ( data, "worldMagic.magicSettings[2].parameters[1]" )
+	Sub ( return, "1", data )
+}
+
+modPercentNumeric current_magic_unpgrade_3_param_primordial_chaos_power
+{
+	CurrentMagicBattleRoot ( data, "worldMagic.magicSettings[3].parameters[1]" )
+	Sub ( return, "1", data )
+}

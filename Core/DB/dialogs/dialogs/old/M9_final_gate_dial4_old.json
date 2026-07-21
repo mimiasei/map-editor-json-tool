@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M9_final_gate_dial4_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "The gate is sealed and will not open",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

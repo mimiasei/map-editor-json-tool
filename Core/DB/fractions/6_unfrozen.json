@@ -1,0 +1,83 @@
+{
+	"array":
+	[
+		{
+			"id": "unfrozen",
+			"name": "unfrozen_name",
+			"desc": "unfrozen_desc",
+			"narrativeDesc": "unfrozen_narrative_desc",
+			"icon": "fraction_unfrozen",
+			"iconFractionLaws": "Scroll_Faction_Unfrozen",
+			"biome": "Snow",
+			"resourceName": "mercury",
+
+			"fractionLawsLines":
+			[
+				{
+					"groups":
+					[
+						{ "laws": [ "fraction_law_unfrozen_3",  "fraction_law_unfrozen_23",  "fraction_law_unfrozen_9" ] },
+						{ "laws": [ "fraction_law_unfrozen_5",  "fraction_law_unfrozen_6",  "fraction_law_unfrozen_4" ] }
+					],
+					"countToUnlock": 0
+				},
+				{
+					"groups":
+					[
+						{ "laws": [ "fraction_law_unfrozen_1",   "fraction_law_unfrozen_14",  "fraction_law_unfrozen_2",  "fraction_law_unfrozen_7" ] },
+						{ "laws": [ "fraction_law_unfrozen_12",  "fraction_law_unfrozen_13", "fraction_law_unfrozen_10", "fraction_law_unfrozen_11" ] }
+					],
+					"countToUnlock": 5
+				},
+				{
+					"groups":
+					[
+						{ "laws": [ "fraction_law_unfrozen_17", "fraction_law_unfrozen_15", "fraction_law_unfrozen_22" ] },
+						{ "laws": [ "fraction_law_unfrozen_19", "fraction_law_unfrozen_18", "fraction_law_unfrozen_20" ] }
+					],
+					"countToUnlock": 15
+				},
+				{
+					"groups":
+					[
+						{ "laws": [ "fraction_law_unfrozen_8", "fraction_law_unfrozen_35", "fraction_law_unfrozen_36", "fraction_law_unfrozen_16" ] },
+						{ "laws": [ "fraction_law_unfrozen_26", "fraction_law_unfrozen_27", "fraction_law_unfrozen_24", "fraction_law_unfrozen_25" ] }
+					],
+					"countToUnlock": 30
+				},
+				{
+					"groups":
+					[
+						{ "laws": [ "fraction_law_unfrozen_30", "fraction_law_unfrozen_28", "fraction_law_unfrozen_29", "fraction_law_unfrozen_34" ] },
+						{ "laws": [ "fraction_law_unfrozen_32", "fraction_law_unfrozen_31", "fraction_law_unfrozen_33" ] }
+					],
+					"countToUnlock": 50
+				}
+			],
+
+			"cityNames":
+			[
+				"unfrozen_city_name_1",
+				"unfrozen_city_name_2",
+				"unfrozen_city_name_3",
+				"unfrozen_city_name_4",
+				"unfrozen_city_name_5",
+				"unfrozen_city_name_6",
+				"unfrozen_city_name_7",
+				"unfrozen_city_name_8",
+				"unfrozen_city_name_9",
+				"unfrozen_city_name_10",
+				"unfrozen_city_name_11",
+				"unfrozen_city_name_12",
+				"unfrozen_city_name_13",
+				"unfrozen_city_name_14",
+				"unfrozen_city_name_15",
+				"unfrozen_city_name_16",
+				"unfrozen_city_name_17",
+				"unfrozen_city_name_18",
+				"unfrozen_city_name_19",
+				"unfrozen_city_name_20"
+			]
+		}
+	]
+}

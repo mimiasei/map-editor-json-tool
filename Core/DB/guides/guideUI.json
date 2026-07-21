@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "guideUI",
+			
+			"contentHeight": 100,
+
+			"slides":
+			[
+				{
+					"title": "test_title",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "textSid" ] },
+						{ "type": "image", "value": [ "imageSid" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{"a":"OpenUI", "p":["LevelUp"]}
+					]
+				}
+			]
+		}
+	]
+}

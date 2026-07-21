@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M2_nature_t2",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": false,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "twinkle", "v": 1000 },
+					{ "s" : "elf_tracker", "v": 1000 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 2000,
+				"units":
+				[
+					"twinkle", "elf_tracker"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000,
+				"units":
+				[
+					{ "s" : "twinkle", "v": 1000 },
+					{ "s" : "elf_tracker", "v": 1000 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "nature"
+		}
+	]
+}

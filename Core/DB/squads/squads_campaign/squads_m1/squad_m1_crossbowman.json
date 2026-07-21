@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m1_crossbowman",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "crossbowman", "v": 2000 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 2000,
+				"units":
+				[
+					"crossbowman"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 15000,
+				"units":
+				[
+					{ "s" : "crossbowman", "v": 15000 }
+				]
+			},
+
+			"tier": 2,
+			"fraction": "human"
+		}
+	]
+}

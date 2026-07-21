@@ -1,0 +1,33 @@
+{
+	"array":
+	[
+		{
+			"id": "som_main_quest_line_flame_power_2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterSet", "p": [ "flame_power_validator", "2" ] }, { "a": "CounterSet", "p": [ "main_quest_stage", "1" ] }, { "a": "CounterPlus", "p": [ "power_index", "1" ] }, { "a": "CounterPlus", "p": [ "power_index_activator", "0" ] } ],
+					"text": "som_main_quest_line_flame_power_1_text_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "SubQuestActivate", "p": [ "main_quest_line", "f_2" ] } ],
+					"text": "som_main_quest_line_flame_power_1_text_3",
+					"end": true
+				}
+			]
+		}
+	]
+}

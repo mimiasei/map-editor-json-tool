@@ -1,0 +1,264 @@
+{
+	"array":
+	[
+		{
+			"id": "som_main_quest_line_forest_power",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_3_Gingertail_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_3",
+						"position": 3
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "song_of_murmurwood_count", "1" ] } ],
+					"text": "som_main_quest_line_forest_power_text_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_3_Gingertail_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_3",
+						"position": 3
+					},
+					"text": "som_main_quest_line_forest_power_text_2",
+					"answers": [
+						{
+							"text": "som_main_quest_line_forest_power_text_2_answer_1",							
+							"mapActions":  [ { "a": "CounterSet", "p": [ "earth_power_index", "1" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "2" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_2_answer_2",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "earth_power_index", "2" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "2" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_2_answer_3",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "earth_power_index", "3" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "2" ] } ]
+						}
+					]
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_3_Gingertail_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_3",
+						"position": 3
+					},
+					"text": "som_main_quest_line_forest_power_text_3",
+					"answers": [
+						{
+							"text": "som_main_quest_line_forest_power_text_3_answer_1",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "water_power_index", "1" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "3" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_3_answer_2",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "water_power_index", "2" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "3" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_3_answer_3",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "water_power_index", "3" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "3" ] } ]
+						}
+					]
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_3_Gingertail_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_3",
+						"position": 3
+					},
+					"text": "som_main_quest_line_forest_power_text_4",
+					"answers": [
+						{
+							"text": "som_main_quest_line_forest_power_text_4_answer_1",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "light_power_index", "1" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "4" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_4_answer_2",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "light_power_index", "2" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "4" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_4_answer_3",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "light_power_index", "3" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "4" ] } ]
+						}
+					]
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_3_Gingertail_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_3",
+						"position": 3
+					},
+					"text": "som_main_quest_line_forest_power_text_5",
+					"answers": [
+						{
+							"text": "som_main_quest_line_forest_power_text_5_answer_1",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "flame_power_index", "1" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "5" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_5_answer_2",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "flame_power_index", "2" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "5" ] } ]
+						},
+						{
+							"text": "som_main_quest_line_forest_power_text_5_answer_3",
+							"mapActions":  [ { "a": "CounterSet", "p": [ "flame_power_index", "3" ] } ],
+							"actions":  [ { "a": "Go", "p": [ "5" ] } ]
+						}
+					]
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "som_main_quest_line_forest_power_text_6",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": 
+					[ 
+						{ "c": "CompareCounters", "p": [ "earth_power_random_validator", "=", "earth_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "water_power_random_validator", "=", "water_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "light_power_random_validator", "=", "light_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "flame_power_random_validator", "=", "flame_power_index" ] }
+					],
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_forest_power_active", "1" ] }, { "a": "CounterSet", "p": [ "main_quest_stage", "2" ] } ],
+					"text": "som_main_quest_line_forest_power_text_7",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": 
+					[ 
+						{ "c": "CompareCounters", "p": [ "earth_power_random_validator", "=", "earth_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "water_power_random_validator", "=", "water_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "light_power_random_validator", "=", "light_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "flame_power_random_validator", "=", "flame_power_index" ] }
+					],
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "som_main_quest_line_forest_power_text_8",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": 
+					[ 
+						{ "c": "CompareCounters", "p": [ "earth_power_random_validator", "=", "earth_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "water_power_random_validator", "=", "water_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "light_power_random_validator", "=", "light_power_index" ] },
+						{ "c": "CompareCounters", "p": [ "flame_power_random_validator", "=", "flame_power_index" ] }
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_3_Gingertail_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},						
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_nature_9_Aunt_Daliar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_9",
+						"position": 3
+					},
+					"text": "som_main_quest_line_forest_power_text_10",
+					"next": "9",
+					"end": true
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_3_Gingertail_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_3",
+						"position": 3
+					},
+					"text": "som_main_quest_line_forest_power_text_9",
+					"end": true
+				}
+			]
+		}
+	]
+}

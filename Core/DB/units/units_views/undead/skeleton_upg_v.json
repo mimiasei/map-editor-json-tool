@@ -1,0 +1,39 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "skeleton_upg",
+			"mesh": "Undead/1Prefabs/skeleton_upg",
+			"mapMesh": "Undead/1Prefabs/skeleton_upg_map",
+			"fadeTime": 2.9,
+
+			"scale": 0.55,
+			"modelHeight": 0.5,
+			"moveSpeed": 2.4,
+			
+			"attackTimeBefore": [ 0.697, 0.8, 0.8, 0.8, 0.8, 0.8 ],
+			"attackTimeAfter": [ 0.87, 1, 1, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 2.5,
+
+			"takeDamageTime": 1.1,
+			"deathTimeOffset": 4.21,
+
+			"bloodEffect": "effects/blood/blood_skeleton",
+			"bloodHexEffect": "effects/blood/blood_skeleton_hex",
+			
+			"baseClass":
+                {
+                    "name": "base_class_undead",
+                    "description": "base_class_undead_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				}
+			]						
+		}
+	]
+}

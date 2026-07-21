@@ -1,0 +1,381 @@
+{
+	"array":
+	[
+		{
+			"id": "flicker_curse",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "flicker_curse_icon",
+			"name_": "flicker_passive_2_name",
+			"description_": "flicker_curse_description",
+			"tags": [ "negative", "overTime_effect", "overTime_effect_curse" ],
+			"isPositive": false,
+
+			"addition": "none",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "absolute_damage", "overTime_effect", "overTime_effect_curse" ],
+						"triggerCounter": false,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "absolute",
+						"statDmgMult": 0.0,
+
+						"minBaseDmg": 8,
+						"maxBaseDmg": 8,
+						"minStackDmg": 1,
+						"maxStackDmg": 1
+					}
+				}
+			]
+		},
+		{
+			"id": "pet_buff",
+
+			"aiValue": 4060,
+			"aiValuePerDuration": 406,
+			
+			"icon": "pet_buff_icon",
+			"name_": "pet_passive_1_name",
+			"description_": "pet_buff_description",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"defence": 1
+				}
+			}
+		},
+		{
+			"id": "pet_debuff",
+
+			"aiValue": 4060,
+			"aiValuePerDuration": 406,
+			
+			"icon": "pet_debuff_icon",
+			"name_": "pet_passive_1_name",
+			"description_": "pet_debuff_description",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"defence": -1
+				}
+			}
+		},	
+		{
+			"id": "pet_additionbuff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "pet_additionbuff_icon",
+			"name_": "pet_passive_2_name",
+			"description_": "pet_additionbuff_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"defence": 3
+				}
+			}
+		},
+		{
+			"id": "pet_blood",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "pet_blood_icon",
+			"name_": "pet_passive_3_name",
+			"description_": "pet_blood_description",
+			"tags": [ "negative", "overTime_effect", "overTime_effect_blood" ],
+			"isPositive": false,
+
+			"addition": "none",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "normal_damage", "overTime_effect", "overTime_effect_blood" ],
+						"triggerCounter": false,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "normal",
+						"statDmgMult": 0.0,
+
+						"minBaseDmg": 12,
+						"maxBaseDmg": 12,
+						"minStackDmg": 2,
+						"maxStackDmg": 2
+					}
+				}
+			]
+		},
+		{
+			"id": "graverobber_debuff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "graverobber_debuff_icon",
+			"name_": "graverobber_ability_4_name",
+			"description_": "graverobber_debuff_description",
+			
+			"tags": [ "negative" ],
+			"isPositive": false,
+			
+			"addition": "duration",
+
+			"data": {
+				"stats": 
+				{
+					"alwaysTakeMaxDmg": true
+				}
+			}
+		},
+		{
+			"id": "graverobber_poison",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "graverobber_poison_icon",
+			"name_": "graverobber_passive_2_name",
+			"description_": "graverobber_poison_description",
+			"tags": [ "negative", "overTime_effect", "overTime_effect_poison" ],
+			"isPositive": false,
+
+			"addition": "none",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "magic_damage", "overTime_effect", "overTime_effect_poison" ],
+						"triggerCounter": false,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "magic_pure",
+						"statDmgMult": 0.0,
+
+						"minBaseDmg": 16,
+						"maxBaseDmg": 16,
+						"minStackDmg": 3,
+						"maxStackDmg": 3
+					}
+				}
+			]
+		},
+		{
+			"id": "lich_debuff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"vfxList": [ "effects/status/poisoning_unit" ],
+
+			"icon": "lich_debuff_icon",
+			"name_": "lich_ability_2_name",
+			"description_": "lich_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "duration", 
+
+			"data": {
+				"immunities":
+				[
+					{ "type": "mechanic", "tags": [ "heal" ] },
+					{ "type": "mechanic", "tags": [ "heal_percent" ] },
+					{ "type": "mechanic", "tags": [ "vampirism" ] },
+					{ "type": "mechanic", "tags": [ "revive" ] }
+				]
+			}
+		},
+		{
+			"id": "avatar_of_war_buff",
+
+			"aiValue": 4060,
+			"aiValuePerDuration": 406,
+			
+			"icon": "avatar_of_war_buff_icon",
+			"name_": "avatar_of_war_passive_2_name",
+			"description_": "avatar_of_war_buff_description",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"offence": 1
+				}
+			}
+		},
+		{
+			"id": "avatar_of_war_debuff",
+
+			"aiValue": 4060,
+			"aiValuePerDuration": 406,
+			
+			"icon": "avatar_of_war_debuff_icon",
+			"name_": "avatar_of_war_passive_2_name",
+			"description_": "avatar_of_war_debuff_description",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"offence": -1
+				}
+			}
+		},	
+		{
+			"id": "avatar_of_war_additionbuff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "avatar_of_war_additionbuff_icon",
+			"name_": "avatar_of_war_passive_4_name",
+			"description_": "avatar_of_war_additionbuff_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"offence": 3
+				}
+			}
+		}
+	]
+}

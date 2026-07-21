@@ -1,0 +1,49 @@
+{
+    "array": [
+        {
+            "id": "squad_human_custom_3_1",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 84,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "esquire",
+                        "v": 2502
+                    },
+                    {
+                        "s": "crossbowman",
+                        "v": 2502
+                    },
+                    {
+                        "s": "lightweaver",
+                        "v": 1
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 2502,
+                "units": [
+                    "esquire",
+                    "crossbowman"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 15002,
+                "units": [
+                    {
+                        "s": "esquire",
+                        "v": 15002
+                    },
+                    {
+                        "s": "crossbowman",
+                        "v": 15002
+                    }
+                ]
+            },
+            "tier": 2,
+            "fraction": "human"
+        }
+    ]
+}

@@ -1,0 +1,130 @@
+{
+	"array": [
+		{
+			"id": "M2Q4_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2Q4_dial2_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_mech_guard",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_worldwatcher",
+						"position": 2
+					},
+					"text": "dialogue_text_M2Q4_dial2_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2Q4_dial2_2",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"watcher2",
+								"1"
+							]
+						},
+						{
+							"a": "SpawnSquadNPC",
+							"p": [
+								"squad_c_watcher",
+								"815",
+								"1",
+								"false",
+								"watcher3"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"watcher3",
+								"false"
+							]
+						},
+						{
+							"a": "SetFlagAutobattle",
+							"p": [
+								"watcher3",
+								"false"
+							]
+						},
+						{
+							"a": "SetQuestMarker",
+							"p": [
+								"watcher3",
+								"effects/global_map/quest_mark_silver_01"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"watcher3",
+								"Aggressive"
+							]
+						}
+					],
+					"resultDialog": "Interrupt",
+					"end": true
+				}
+			]
+		}
+	]
+}

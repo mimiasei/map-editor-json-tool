@@ -1,0 +1,124 @@
+{
+	"array":
+	[		
+		{
+			"id": "night_17_magic_read_minds",
+
+			"name": "night_17_magic_read_minds_name",
+			"icon": "night_17_magic_read_minds",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_17_magic_read_minds_description",
+				"night_17_magic_read_minds_description",
+				"night_17_magic_read_minds_description_1",
+				"night_17_magic_read_minds_description_2"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_mana_cost_0_1"}, 
+				{"level": 3, "description": "night_17_magic_read_minds_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "night_17_magic_read_minds_description_up_level_bonus_4"} 
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+
+			"usedOnMap": true,
+			"school_": "night",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 10, 7, 7, 7 ],
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "read_minds",
+						"parameters": [ "read_minds_buff_1" ],
+						"castInfoSid": "night_17_magic_read_minds_cast"
+					},
+					{
+						"usageLimit": 1,
+						"mechType": "read_minds",
+						"parameters": [ "read_minds_buff_2" ],
+						"castInfoSid": "night_17_magic_read_minds_cast"
+					},
+					{
+						"usageLimit": 1,
+						"mechType": "read_minds",
+						"parameters": [ "read_minds_buff_3" ],
+						"castInfoSid": "night_17_magic_read_minds_cast"
+					}
+				],
+				"settingPerLevels":
+				[
+					0, 0, 1, 2
+				]
+			}
+		},
+
+		{
+			"id": "night_18_magic_nairas_veil",
+
+			"name": "night_18_magic_nairas_veil_name",
+			"icon": "night_18_magic_nairas_veil",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_18_magic_nairas_veil_description",
+				"night_18_magic_nairas_veil_description",
+				"night_18_magic_nairas_veil_description",
+				"night_18_magic_nairas_veil_description"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_mana_cost_0_1"}, 
+				{"level": 3, "description": "night_18_magic_nairas_veil_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "night_18_magic_nairas_veil_description_up_level_bonus_4"} 
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+
+			"usedOnMap": true,
+			"school_": "night",
+			"rank": 3,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 6 },
+				{ "name": "crystals", "cost": 6 },
+				{ "name": "mercury", "cost": 6 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 16, 12, 12, 12 ],
+			"worldMagic":
+			{
+				"magicSettings":
+				[
+					{
+						"usageLimit": 1,
+						"mechType": "nairas_veil",
+						"parameters": [ "8", "1" ],
+						"castInfoSid": "night_18_magic_nairas_veil_cast"
+					},
+					{
+						"usageLimit": 1,
+						"mechType": "nairas_veil",
+						"parameters": [ "10", "1" ],
+						"castInfoSid": "night_18_magic_nairas_veil_cast"
+					},
+					{
+						"usageLimit": 1,
+						"mechType": "nairas_veil",
+						"parameters": [ "14", "1" ],
+						"castInfoSid": "night_18_magic_nairas_veil_cast"
+					}
+				],
+				"settingPerLevels":
+				[
+					0, 0, 1, 2
+				]
+			}
+		}
+	]
+}

@@ -1,0 +1,544 @@
+{
+	"array": [
+		{
+			"id": "M5Q7_dial6",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"death_knight_quest",
+								"<",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"death_knight_quest",
+								"<",
+								"1"
+							]
+						}
+					],
+					"next": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_1",
+					"answers": [
+						{
+							"text": "dialogue_text_M5Q7_dial6_monster_1_answer_1",
+							"actions": [
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "SetActiveQuestMarker",
+									"p": [
+										"forest_monster",
+										"false"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_dial6_monster_1_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_forest_monster",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_3",
+					"answers": [
+						{
+							"text": "dialogue_text_M5Q7_dial6_monster_3_answer_1",
+							"actions": [
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "SetActiveQuestMarker",
+									"p": [
+										"forest_monster",
+										"false"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_dial6_monster_3_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_forest_monster",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_5",
+					"answers": [
+						{
+							"text": "dialogue_text_M5Q7_dial6_monster_5_answer_1",
+							"requests": [
+								{
+									"c": "ResCounter",
+									"p": [
+										"wood",
+										">",
+										"0"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "RemoveRes",
+									"p": [
+										"wood",
+										"1"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_dial6_monster_5_answer_2",
+							"mapActions": [
+								{
+									"a": "AddBuffHeroDays",
+									"p": [
+										"campaign_M5_stat_debuff_1",
+										"",
+										"1"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"5b"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_dial6_monster_5_answer_3",
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							],
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "5a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_forest_monster",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_5a",
+					"next": "5a1"
+				},
+				{
+					"id": "5a1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_5a1",
+					"next": "5a2"
+				},
+				{
+					"id": "5a2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_forest_monster",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_5a2",
+					"next": "5a2_s"
+				},
+				{
+					"id": "5a2_s",
+					"fon": "",
+					"text": "dialogue_text_M5Q7_dial6_monster_5a2_s",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"monster_dealt_with",
+								"2"
+							]
+						},
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"forest_monster"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"forest_monster",
+								"1"
+							]
+						}
+					],
+					"next": "endingPeace"
+				},
+				{
+					"id": "endingPeace",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "5b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_forest_monster",
+						"position": 2
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_5b",
+					"next": "5b1"
+				},
+				{
+					"id": "5b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_pet",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q7_dial6_monster_5b1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"forest_monster",
+								"false"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

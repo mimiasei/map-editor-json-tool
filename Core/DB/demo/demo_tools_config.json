@@ -1,0 +1,16 @@
+{
+	"disableMorale": false,
+	"disableCrit": false,
+	"disableCameraShake": false,
+	"disableCloudsShadows": false,
+	"disableWeather": true,
+	"fastLoadCB": false,
+	"magicLevelCB": 4,
+	"animationSpeedIdCB": 0,
+	"disableMagicAI": false,
+	"disableHeroAbilitiesAI": false,
+	"enableAILogs": false,
+	"saveBattleCameraPosition": false,
+	"enableTestHotkeys": false,
+	"difficultyAICB": "simple"
+}

@@ -1,0 +1,45 @@
+{
+	"array": [
+		{
+			"id": "squad_demon_custom_7_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 120,
+			"canBeMainGuard": false,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "hive_queen",
+						"v": 34007
+					},
+					{
+						"s": "olgoi",
+						"v": 34007
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 34007,
+				"units": [
+					"hive_queen",
+					"olgoi"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 240007,
+				"units": [
+					{
+						"s": "hive_queen",
+						"v": 240007
+					},
+					{
+						"s": "olgoi",
+						"v": 240007
+					}
+				]
+			},
+			"tier": 7,
+			"fraction": "demon"
+		}
+	]
+}

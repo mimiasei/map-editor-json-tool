@@ -1,0 +1,52 @@
+{
+	"array": [
+		{
+			"id": "M1Q8_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_blade_dancer",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_squad1",
+						"position": 2
+					},
+					"text": "dialogue_text_M1Q8_dial5_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"text": "dialogue_text_M1Q8_dial5_1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "AutoSave"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

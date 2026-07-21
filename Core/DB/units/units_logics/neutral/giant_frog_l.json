@@ -1,0 +1,263 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "giant_frog",
+			"squadValue": 950,
+			"expBonus": 140,
+			"tier": 5,
+			"fraction": "neutral",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "neutral", "dragon" ],
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 1000 }
+				]
+			},
+
+			"stats":
+			{
+				"hp": 95,
+				"offence": 19,
+				"defence": 22,
+				"damageMin": 18,
+				"damageMax": 18,
+
+				"initiative": 8,
+				"speed": 4,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": 0,
+				"moralMax": 5,
+				"luckMin": 0,
+				"luckMax": 3,
+
+				"inDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"outDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				}
+			},
+			
+			"passives": 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "magic_level", "tags": [ "3" ] },
+							
+							{ "type": "cast", "tags": [ "dragon_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "frog_poison",
+							"duration": 2
+						},
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "frog_poison",
+							"duration": 2
+						},
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+					
+			"abilities" : 
+			[
+				{
+					"attackType_" : "jump",
+					"rank": 1,
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 1,
+					"actionCost": 0,
+					"energyLevel": 1,
+
+					"damageDealer" : 
+					{	
+						"shootRange": 2,
+
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "movement_ability" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_swirl_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [  ],
+							"castTarget_": "none",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object"
+						},
+
+						"damageTarget_": "none",
+
+						"targetMechanics" : [ ]
+					}
+				},
+				{
+					"attackType_" : "cast",
+					"rank": 1,
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 1,
+					"actionCost": 0,
+					"energyLevel": 1,
+
+					"damageDealer" : 
+					{
+						"tags": [ "ability" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_reach_x1_x100_x100",
+
+						"shootRange": 1,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "noself",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "noself",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"damageTarget_": "none",
+						
+						"targetMechanics": [ { "mech": "push_unit", "values": [ "true", "false" ] } ]
+					}
+				}
+			]
+		}
+	]
+}

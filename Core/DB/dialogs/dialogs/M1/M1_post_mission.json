@@ -1,0 +1,987 @@
+{
+	"array": [
+		{
+			"id": "M1_post_mission",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_0",
+					"sound": "sounds/locale/dialogs/01Post-mission1/01IGN_CampaignMissions_AMELCHIA_Line_03",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_1",
+					"sound": "sounds/locale/dialogs/01Post-mission1/02ING_CampaignMissions_GUNNAR_Line_01",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_2",
+					"sound": "sounds/locale/dialogs/01Post-mission1/03IGN_CampaignMissions_Caspair_Line4",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn", "appear"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3",
+					"sound": "sounds/locale/dialogs/01Post-mission1/04IGN_CampaignMissions_AMELCHIA_Line_04",
+					"answers": [
+						{
+							"text": "dialogue_text_M1_postmission_3_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M1_postmission_3_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3b"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "3a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3a",
+					"sound": "sounds/locale/dialogs/01Post-mission1/05IGN_CampaignMissions_BALTHAZAR_Line_02",
+					"next": "3a1"
+				},
+				{
+					"id": "3a1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3a1",
+					"sound": "sounds/locale/dialogs/01Post-mission1/06IGN_CampaignMissions_AMELCHIA_Line_05",
+					"next": "3a2"
+				},
+				{
+					"id": "3a2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3a2",
+					"sound": "sounds/locale/dialogs/01Post-mission1/07IGN_CampaignMissions_Caspair_Line5",
+					"next": "3a3"
+				},
+				{
+					"id": "3a3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3a3",
+					"sound": "sounds/locale/dialogs/01Post-mission1/08IGN_CampaignMissions_Caspair_Line6",
+					"next": "3a4"
+				},
+				{
+					"id": "3a4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3",
+					"sound": "sounds/locale/dialogs/01Post-mission1/04IGN_CampaignMissions_AMELCHIA_Line_04",
+					"answers": [
+						{
+							"text": "dialogue_text_M1_postmission_3_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3a5"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "3a5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b",
+					"sound": "sounds/locale/dialogs/01Post-mission1/09IGN_CampaignMissions_BALTHAZAR_Line_03",
+					"next": "3a6"
+				},
+				{
+					"id": "3a6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b1",
+					"sound": "sounds/locale/dialogs/01Post-mission1/10IGN_CampaignMissions_BALTHAZAR_Line_04",
+					"next": "3a7"
+				},
+				{
+					"id": "3a7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b2",
+					"sound": "sounds/locale/dialogs/01Post-mission1/11IGN_CampaignMissions_Caspair_Line7",
+					"next": "3a8"
+				},
+				{
+					"id": "3a8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3b3",
+					"sound": "sounds/locale/dialogs/01Post-mission1/12IGN_CampaignMissions_AMELCHIA_Line_06",
+					"next": "3a9"
+				},
+				{
+					"id": "3a9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3b4",
+					"sound": "sounds/locale/dialogs/01Post-mission1/13IGN_CampaignMissions_AMELCHIA_Line_07",
+					"next": "3a10"
+				},
+				{
+					"id": "3a10",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b5",
+					"sound": "sounds/locale/dialogs/01Post-mission1/14IGN_CampaignMissions_Caspair_Line8",
+					"next": "3a11"
+				},
+				{
+					"id": "3a11",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3b6",
+					"sound": "sounds/locale/dialogs/01Post-mission1/15IGN_CampaignMissions_AMELCHIA_Line_08",
+					"next": "4"
+				},
+				{
+					"id": "3b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b",
+					"sound": "sounds/locale/dialogs/01Post-mission1/09IGN_CampaignMissions_BALTHAZAR_Line_03",
+					"next": "3b1"
+				},
+				{
+					"id": "3b1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b1",
+					"sound": "sounds/locale/dialogs/01Post-mission1/10IGN_CampaignMissions_BALTHAZAR_Line_04",
+					"next": "3b2"
+				},
+				{
+					"id": "3b2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b2",
+					"sound": "sounds/locale/dialogs/01Post-mission1/11IGN_CampaignMissions_Caspair_Line7",
+					"next": "3b3"
+				},
+				{
+					"id": "3b3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3b3",
+					"sound": "sounds/locale/dialogs/01Post-mission1/12IGN_CampaignMissions_AMELCHIA_Line_06",
+					"next": "3b4"
+				},
+				{
+					"id": "3b4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3b4",
+					"sound": "sounds/locale/dialogs/01Post-mission1/13IGN_CampaignMissions_AMELCHIA_Line_07",
+					"next": "3b5"
+				},
+				{
+					"id": "3b5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3b5",
+					"sound": "sounds/locale/dialogs/01Post-mission1/14IGN_CampaignMissions_Caspair_Line8",
+					"next": "3b6"
+				},
+				{
+					"id": "3b6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3b6",
+					"sound": "sounds/locale/dialogs/01Post-mission1/15IGN_CampaignMissions_AMELCHIA_Line_08",
+					"next": "3b7"
+				},
+				{
+					"id": "3b7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3",
+					"sound": "sounds/locale/dialogs/01Post-mission1/04IGN_CampaignMissions_AMELCHIA_Line_04",
+					"answers": [
+						{
+							"text": "dialogue_text_M1_postmission_3_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3b8"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "3b8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3a",
+					"sound": "sounds/locale/dialogs/01Post-mission1/05IGN_CampaignMissions_BALTHAZAR_Line_02",
+					"next": "3b9"
+				},
+				{
+					"id": "3b9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_dragon",
+						"position": 1
+					},
+					"text": "dialogue_text_M1_postmission_3a1",
+					"sound": "sounds/locale/dialogs/01Post-mission1/06IGN_CampaignMissions_AMELCHIA_Line_05",
+					"next": "3b10"
+				},
+				{
+					"id": "3b10",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3a2",
+					"sound": "sounds/locale/dialogs/01Post-mission1/07IGN_CampaignMissions_Caspair_Line5",
+					"next": "3b11"
+				},
+				{
+					"id": "3b11",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_3a3",
+					"sound": "sounds/locale/dialogs/01Post-mission1/08IGN_CampaignMissions_Caspair_Line6",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_minos",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_4",
+					"sound": "sounds/locale/dialogs/01Post-mission1/16IGN_CampaignMissions_BALTHAZAR_Line_05_Alt1",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_7_queen_amelchia",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_hero_8_balthazar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_5_caspair",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_triumvirate_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M1_postmission_5",
+					"sound": "sounds/locale/dialogs/01Post-mission1/17IGN_CampaignMissions_Caspair_Line9",
+					"end": true
+				}
+			]
+		}
+	]
+}

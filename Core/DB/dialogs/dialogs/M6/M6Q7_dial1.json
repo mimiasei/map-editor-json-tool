@@ -1,0 +1,433 @@
+{
+	"array": [
+		{
+			"id": "M6Q7_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_2",
+					"answers": [
+						{
+							"text": "dialogue_text_M6Q7_dial1_2_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"3"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M6Q7_dial1_2_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"endingBack"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "ResCounter",
+							"p": [
+								"gold",
+								">=",
+								"10000"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_3",
+					"next": "3_s"
+				},
+				{
+					"id": "3_s",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								">=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M6Q7_dial1_3_s",
+					"mapActions": [
+						{
+							"a": "GiveItemHero",
+							"p": [
+								"ukhtabar_seal_tabar_seal_artifact"
+							]
+						}
+					],
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								">=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_4",
+					"next": "endingGood"
+				},
+				{
+					"id": "endingGood",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								">=",
+								"3"
+							]
+						}
+					],
+					"next": "5",
+					"fon": "",
+					"text": "",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Human",
+								"1"
+							]
+						},
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Undead",
+								"1"
+							]
+						},
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Nature",
+								"1"
+							]
+						},
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Dungeon",
+								"1"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"+1"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"undead_icon",
+								"+1"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"spring_icon",
+								"+1"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"dungeon_icon",
+								"+1"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"altar1_interacted",
+								"1"
+							]
+						},
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"altar1",
+								"false"
+							]
+						},
+						{
+							"a": "AutoSave"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "5",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								"<",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_5",
+					"next": "5_s"
+				},
+				
+				{
+					"id": "5_s",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								"<",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M6Q7_dial1_5_s",
+					"mapActions": [
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"campaign_M6_stat_debuff_luck",
+								"campaign_hero_1",
+								"999"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"campaign_M6_stat_debuff_luck",
+								"campaign_hero_2",
+								"999"
+							]
+						}
+					],
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								"<",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								"<",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q7_dial1_7",
+					"next": "endingBad"
+				},
+				{
+					"id": "endingBad",
+					"dialogPlayConditions": [
+						{
+							"c": "HeroStat",
+							"p": [
+								"luck",
+								"<",
+								"3"
+							]
+						}
+					],
+					"next": "endingBack",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"altar1_interacted",
+								"1"
+							]
+						},
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"altar1",
+								"false"
+							]
+						},
+						{
+							"a": "AutoSave"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "endingBack",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

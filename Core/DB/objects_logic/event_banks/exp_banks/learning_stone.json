@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "learning_stone",
+
+			"tooltipVisitType": "CurrentHeroVisit",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 2000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroExpReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "expReward_notification",
+								
+								"parameters": [ "1000" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

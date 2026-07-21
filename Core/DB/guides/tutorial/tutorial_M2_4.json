@@ -1,0 +1,48 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M2_4",
+			
+			"contentHeight": 460,
+			"position": { "x": -400, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "Обучение",
+					"headerImage": "imageSid",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Теперь вы владеете базовыми знаниями о строительстве зданий и найме юнитов в городе." ] },
+						{ "type": "text", "value": [ "Продолжайте развивать замок чтобы закончить обучающую миссию. Вам необходимо построить несколько здания: Улучшенное здание Т1, Улучшенное здание Т2, Защитные стены и Сокровищницу" ] }
+					]
+				},
+				{
+					"title": "Обучение",
+					"headerImage": "imageSid",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Не забывайте пополнять свои армию новыми войсками и продолжайте свой путь на восток." ] }
+					],
+	
+					"mapActions":
+					[
+						{ "a": "DeleteEntity", "p": [ "block_1" ] },
+						{ "a": "DeleteEntity", "p": [ "block_2" ] },
+						{ "a": "DeleteEntity", "p": [ "block_3" ] },
+						{ "a": "UnlockBuildingCity", "p": [ "Build_Tier_1", "2", "startCity" ] },
+						{ "a": "UnlockBuildingCity", "p": [ "Build_Tier_2", "2", "startCity" ] },
+						{ "a": "UnlockBuildingCity", "p": [ "Build_Wall", "1", "startCity" ] },
+						{ "a": "UnlockBuildingCity", "p": [ "Build_Treasury", "1", "startCity" ] },
+						{ "a": "UnlockBuildingCity", "p": [ "Build_Bank", "1", "startCity" ] },
+						{ "a": "UnlockBuildingCity", "p": [ "Build_Main", "2", "startCity" ] },
+						{ "a": "CounterPlus", "p": [ "Tutorial_M2_Step_by_Step_Counter_5", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

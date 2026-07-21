@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M3_undead_guard1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "lich", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"lich"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 70000,
+				"units":
+				[
+					{ "s" : "lich", "v": 70000 }
+				]
+			},
+
+			"tier": 5,
+			"fraction": "undead"
+		}
+	]
+}

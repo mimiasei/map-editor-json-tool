@@ -1,0 +1,73 @@
+{
+	"array": [
+		{
+			"id": "M6Q6_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q6_dial2_0",
+					"mapActions": [
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"1469",
+								"1"
+							]
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"1469"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_nature",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q6_dial2_1",
+					"end": true
+				}
+			]
+		}
+	]
+}

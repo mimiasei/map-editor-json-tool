@@ -1,0 +1,1532 @@
+{
+	"array":
+	[
+		{ 
+			"id": "skill_warrior_ability_specializations_base_bonus",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_specializations_level_bonus",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 5,
+						"maxBaseDmg": 5
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_specializations_base_bonus",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_specializations_level_bonus",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 5,
+						"maxBaseDmg": 5
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_sub_class_human_base_bonus",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 60,
+						"maxBaseDmg": 60
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_sub_class_nature_magic_2_bonus",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"attackPatternSid" : "attack_rumble_x1_x100"
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_law_nature_base_bonus_1",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_law_nature_base_bonus_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 20,
+						"maxBaseDmg": 20
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_law_nature_base_bonus_1",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_law_nature_base_bonus_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 20,
+						"maxBaseDmg": 20
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_sub_skill_wisdom_4_desc",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_sub_skill_wisdom_4_desc",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_sub_class_demon_base_bonus",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minStatDmg": 2,
+						"maxStatDmg": 2
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_skill_battle_artistry_1",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+		{ 
+			"id": "skill_warrior_ability_skill_battle_artistry_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 15,
+						"maxBaseDmg": 15
+					}
+				}
+			]
+		},
+		{ 
+			"id": "skill_warrior_ability_skill_battle_artistry_3",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 20,
+						"maxBaseDmg": 20
+					}
+				}
+			]
+		},
+		{ 
+			"id": "skill_warrior_ability_skill_battle_artistry_4",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 25,
+						"maxBaseDmg": 25
+					}
+				}
+			]
+		},
+		{ 
+			"id": "skill_warrior_ability_skill_battle_artistry_5",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 30,
+						"maxBaseDmg": 30
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_sub_skill_battle_artistry_1",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": -1
+				}
+			]
+		},
+		{ 
+			"id": "skill_warrior_ability_sub_skill_battle_artistry_4",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+
+					"damageDealer":
+					{
+						"damageMultiplerPerHeroLevel": 0.10
+					}
+				}
+			]
+		},
+		{ 
+			"id": "skill_warrior_ability_sub_skill_battle_artistry_6",
+			"levels":
+			[
+				{	
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"targetMechanics" : [ { "mech": "reduce_counters", "values":  [ "1" ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_excalibur_artifact_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"targetMechanics" : [ { "mech": "kill_stacks", "values": [ "1", "7" ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_caduceus_artifact_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 				
+								
+					"damageDealer":
+					{
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "6", "0", "0", "false" ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_sub_skill_mastery_7_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 				
+								
+					"damageDealer":
+					{
+						"targetMechanics" : [ { "mech": "destroy_temp_stacks", "values": [  ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "sub_skill_leadership_6_warrior_and_mage_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0,
+					"zeroCdChance": 0.05
+				}
+			]
+		},
+
+		{ 
+			"id": "legendary_hero_item_set_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"multitargetType": "multicast",
+						"autoFillSelection": true,
+						"numTargets": 2,
+						"multicastDelays": [ 1.0, 1.0 ],
+								
+						"orderedCastParams": 
+						[
+							{
+								"dmgMultiplierPerMultitarget": 1.0
+							}
+						],
+
+						"orderedAffectParams": 
+						[
+							{
+								"dmgMultiplierPerMultitarget": 1.0
+							}
+						]
+					}
+				}
+			]
+		},
+
+
+		
+
+		{ 
+			"id": "skill_warrior_and_mage_ancient_idol_artifact_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 40,
+						"maxBaseDmg": 40
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_orb_of_destruction_artifact_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 10,
+						"maxBaseDmg": 10
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_seal_of_silence_artifact_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"targetMechanics" : [ { "mech": "reduce_counters", "values":  [ "9999" ] } ]
+					}
+				}
+			]
+		},
+
+
+
+		{ 
+			"id": "skill_warrior_and_mage_skill_human_hero_9_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					"buffTarget_": "enemy",
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "skill_human_hero_9_debuff", "duration": 2 }
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_skill_unfrozen_hero_14_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					"buffTarget_": "enemy",
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "skill_unfrozen_hero_14_debuff", "duration": 2 }
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_skill_demon_hero_5_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					"buffTarget_": "enemy",
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "skill_demon_hero_5_debuff", "duration": 2 }
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_and_mage_skill_dungeon_hero_3_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					"buffTarget_": "enemy",
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "skill_dungeon_hero_3_debuff", "duration": 3 }
+					}
+				}
+			]
+		},
+
+
+
+
+
+		{ 
+			"id": "skill_warrior_ability_sub_skill_1_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "sub_skill_warrior_1_debuff", "duration": 1 }
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_sub_skill_2_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "sub_skill_warrior_2_debuff", "duration": 1 }
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_sub_skill_4_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"targetMechanics" : [ { "mech": "reduce_counters", "values":  [ "1" ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_warrior_ability_sub_skill_3_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 20,
+						"maxBaseDmg": 20
+					}
+				}
+			]
+		},
+
+
+		{ 
+			"id": "skill_mage_ability_sub_skill_1_old_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "sub_skill_mage_1_debuff", "duration": 1 }
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_sub_skill_2_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"buffTarget_": "enemy", "buff": { "sid": "sub_skill_mage_2_debuff", "duration": 1 }
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_sub_skill_1_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 				
+								
+					"damageDealer":
+					{
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "2", "0", "0", "false" ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_mage_ability_sub_skill_3_delta",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minStackDmg": 2,
+						"maxStackDmg": 2
+					}
+				}
+			]
+		},
+
+
+
+
+
+
+
+
+
+
+		{ 
+			"id": "skill_faction_dungeon_ability_offence_sub_skill_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_offence_2_sub_skill_faction_dungeon_2_1", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_offence_2_sub_skill_faction_dungeon_2_2", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_offence_2_sub_skill_faction_dungeon_2_3", "true" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_defence_sub_skill_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_defence_2_sub_skill_faction_dungeon_2_1", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_defence_2_sub_skill_faction_dungeon_2_2", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_defence_2_sub_skill_faction_dungeon_2_3", "true" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_spellPower_sub_skill_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_spellPower_2_sub_skill_faction_dungeon_2_1", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_spellPower_2_sub_skill_faction_dungeon_2_2", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_spellPower_2_sub_skill_faction_dungeon_2_3", "true" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_offence_sub_skill_4",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_offence_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_offence_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_offence_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_defence_sub_skill_4",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_defence_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_defence_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_defence_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_spellPower_sub_skill_4",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_spellPower_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_spellPower_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,						
+								
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_dungeon_ability_spellPower_4_sub_skill_faction_dungeon_4", "true" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_offence_sub_skill_5",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_defence_sub_skill_5",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_spellPower_sub_skill_5",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "add_energy", "values": [ "levels", "ally", "1", "0", "1" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_offence_sub_skill_6",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_defence_sub_skill_6",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_faction_dungeon_ability_spellPower_sub_skill_6",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				},
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer": 
+					{
+
+						"instacast": true, 
+						"untargetedCast": true,
+						
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				}
+			]
+		},
+
+
+	
+
+		
+
+		{ 
+			"id": "skill_siege_attack_siege_ability_delta_1",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 50,
+						"maxBaseDmg": 50
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_siege_attack_siege_ability_delta_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "skill_siege_attack_siege_ability_delta_3",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150
+					}
+				}
+			]
+		},
+
+
+	
+
+		
+
+		{ 
+			"id": "campaign_skill_siege_attack_siege_ability_delta_1",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 50,
+						"maxBaseDmg": 50
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "campaign_skill_siege_attack_siege_ability_delta_2",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "campaign_skill_siege_attack_siege_ability_delta_3",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "campaign_skill_siege_attack_siege_ability_delta_4",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 200,
+						"maxBaseDmg": 200
+					}
+				}
+			]
+		},
+
+		{ 
+			"id": "campaign_skill_siege_attack_siege_ability_delta_5",
+			"levels":
+			[
+				{
+					"charges": 0,
+					"cd": 0,
+					"energyLevel": 0, 
+					
+					"damageDealer":
+					{
+						"minBaseDmg": 250,
+						"maxBaseDmg": 250
+					}
+				}
+			]
+		}
+	]
+}

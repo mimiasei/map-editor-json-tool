@@ -1,0 +1,171 @@
+﻿string unic_unit_twinkle_passive_1
+{ 
+	Text( return, "1" )
+}
+
+modInt unic_unit_elem_active 
+{ 
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.maxEnergy" )
+}
+
+modInt unic_unit_twinkle_ability_1
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	CurrentAbility( baseMana, "damageDealer.targetMechanics[0].values[2]" )
+	CurrentAbility( unitsCount, "damageDealer.targetMechanics[0].values[3]" )
+	CurrentAbility( unitsBonusMana, "damageDealer.targetMechanics[0].values[4]" )
+
+	Mul ( fullStacksMul, currentStacks, unitsBonusMana )
+	Div ( fullStacksDiv, fullStacksMul, unitsCount )
+	Floor ( fullStacksDivFloor, fullStacksDiv )
+	Add ( fullStacksMana, baseMana, fullStacksDivFloor )
+
+	Text( return, fullStacksMana )
+}
+
+string unic_unit_twinkle_ability_2
+{ 
+	CurrentAbility( return, "damageDealer.targetMechanics[0].values[2]" )
+}
+
+string unic_unit_twinkle_ability_3
+{ 
+	// CurrentAbility( buffSid, "damageDealer.targetMechanics[0].values[0]" )
+	// DbSideBuff( return, buffSid, "heroStat.spellPower" )
+
+	Text( return, "2" )
+}
+
+string unic_unit_ent_passive_3
+{ 
+	// CurrentUnitConfig ( summonSid, "passives[1].actions[0].damageDealer.targetMechanics[0].values[1]" )
+	// DbObstacle ( summonData, summonSid, "stats.hp" )
+
+	// Text( return, summonData )
+
+	Text( return, "1" )
+}
+
+string unic_unit_ent_passive_4
+{ 
+	// CurrentUnitConfig ( summonSid, "passives[1].actions[0].damageDealer.targetMechanics[0].values[1]" )
+	// DbObstacle ( summonData, summonSid, "stats.hp" )
+
+	// Text( return, summonData )
+
+	Text( return, "2" )
+}
+
+string unic_unit_ent_ability_3
+{ 
+	Text( return, "2" )
+}
+
+int unic_unit_aqualotl_ability_4
+{ 
+	CurrentAbility( shootRange, "damageDealer.shootRange" )
+
+	Text( return, shootRange )
+}
+
+int unic_unit_druid_ability_1
+{ 
+	CurrentAbility( manaPerEnergy, "damageDealer.targetMechanics[0].values[1]" )
+
+	Text( return, manaPerEnergy )
+}
+
+string unic_unit_druid_passive_2
+{ 	
+	Text( return, "1" )
+}
+
+modInt unic_unit_druid_ability_2
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentAbility ( buffSid, "damageDealer.buff.sid" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	DbBuff( buffDataBase, buffSid, "actions[0].damageDealer.minBaseDmg" )
+	DbBuff( buffData, buffSid, "actions[0].damageDealer.minStackDmg" )
+
+	Mul ( MulData, currentStacks, buffData )	
+	Add ( return, MulData, buffDataBase )
+}
+
+modPercentNumeric unic_unit_qilin_ability_4
+{ 
+	CurrentAbility( return, "damageDealer.statDmgMult" )
+}
+
+string unic_unit_qilin_passive_3
+{ 
+	Text( return, "30" )
+}
+
+string unic_unit_qilin_passive_4
+{ 
+	Text( return, "1" )
+}
+
+modPercentNumeric unic_unit_qilin_ability_6
+{ 
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+string unic_unit_phoenix_passive_2
+{ 
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( maxStacks, startStacks, 1 )
+	Div ( startStacksPerc, maxStacks, 2 )
+	Floor ( startStacksPercFloor, startStacksPerc )
+
+	Add ( currentStacks, startStacksPercFloor, 1 )
+
+	Text( return, currentStacks )
+}
+
+string unic_unit_phoenix_passive_2_add
+{ 
+	Text( return, "3" )
+}
+
+modPercentNumeric unic_unit_phoenix_passive_3
+{ 
+	CurrentUnitConfig ( heal, "passives[0].actions[0].damageDealer.targetMechanics[0].values[2]" )
+
+	Text( return, heal )
+}
+
+modInt unic_unit_phoenix_ability_4
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentAbility ( buffSid, "damageDealer.buff.sid" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	DbBuff( buffData, buffSid, "actions[0].damageDealer.minStackDmg" )
+
+	Mul ( return, currentStacks, buffData )	
+}

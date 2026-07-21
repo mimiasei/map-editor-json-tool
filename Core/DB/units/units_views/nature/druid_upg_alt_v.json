@@ -1,0 +1,88 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "druid_upg_alt",
+			"mesh": "Nature/1Prefabs/druid_upg_alt",
+			"mapMesh": "Nature/1Prefabs/druid_upg_alt_map",
+			"fadeTime": 2.5,
+
+			"scale": 1.475,
+			"modelHeight": 0.68,
+			"moveSpeed": 2.35,
+
+			"attackTimeBefore": [ 0.59, 1.7, 1.033, 0.967, 3.067, 0.6 ],
+			"attackTimeAfter": [ 1, 1, 1.2, 1.4, 0, 1 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1.6,
+			"deathTimeOffset": 3.2,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 0,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "druid_ability_1_name",
+					"abilityType": "Ability_type_special",
+					"description": "druid_ability_1_description",
+					"animationIndex": 4,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "druid_ability_4_name",
+					"abilityType": "Ability_type_special",
+					"description": "druid_ability_4_description",
+					"animationIndex": 3,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_living",
+                    "description": "base_class_living_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_remote_attack_name",
+					"description": "base_passive_remote_attack_description"
+				},
+				{
+					"name": "druid_passive_1_name",
+					"description": "druid_passive_1_description"
+				},
+				{
+					"name": "druid_passive_2_name",
+					"description": "druid_passive_2_description"
+				}
+			]
+		}
+	]
+}

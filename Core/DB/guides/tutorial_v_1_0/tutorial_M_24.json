@@ -1,0 +1,64 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M_24",
+			
+			"contentHeight": 460,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_24_name",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "tutorial_M_24_1" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_2" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_24_1", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_3" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_24_2", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_4" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_24_3", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_5" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_24_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_24_4", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_6" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_7" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_8" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_24_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_24_5", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_9" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_10" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_24_6", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_10_5" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_10_5_1" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_10_5_2" ] },
+						{ "type": "text", "value": [ "tutorial_M_24_11" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "CounterPlus", "p": [ "Tutorial_M_Counter_24", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,30 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tutorial_C8",
+
+			"strategies": 
+			[
+				{
+					"sid": "tutorial_C8_strategy",
+					"off": false,
+
+					"lastAreaTasksMultiplier": 1,
+
+					"actionsBefore":
+					[
+
+					],
+					"actionsAfter":
+					[
+						
+					],
+					
+					"roles": [ "tutorial_C8_main_hero" ],
+					"heroesSort": "None"
+				}
+			]
+		}
+	]
+}

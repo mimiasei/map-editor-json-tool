@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_dungeon_one_unit_t6_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 750,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "hydra", "v": 20006 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 20006,
+				"units":
+				[
+					"hydra"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 180006,
+				"units":
+				[
+					{ "s" : "hydra", "v": 180006 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "dungeon"
+		}
+	]
+}

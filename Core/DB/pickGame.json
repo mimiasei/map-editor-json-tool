@@ -1,0 +1,10 @@
+﻿{
+	"factionBanCount": 1,
+	"heroBanCount": 3,
+	"mapPickTime": 30,
+	"factionBanTime": 30,
+	"factionPickTime": 30,
+	"heroBanTime": 30,
+	"heroPickTime": 30,
+	"gameStartTime": 5
+}

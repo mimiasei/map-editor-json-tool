@@ -1,0 +1,96 @@
+﻿string current_day_bonus_magic_1
+{
+	Text( return, "100" )
+}
+
+string current_night_bonus_magic_1
+{
+	Text( return, "50" )
+}
+
+string current_space_bonus_magic_1
+{
+	Text( return, "100" )
+}
+
+string current_primal_bonus_magic_1
+{
+	Text( return, "50" )
+}
+
+modInt current_bonus_magic_astral_summon_hp
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( hp, buffSid, "data.stats.hp" )
+
+	Mul ( mul, count, hp )
+	Add ( return, mul, "60" )
+}
+
+modInt current_bonus_magic_astral_summon_damage
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( damage, buffSid, "data.stats.damageMin" )
+
+	Mul ( mul, count, damage )
+	Add ( return, mul, "6" )
+}
+
+modInt current_bonus_magic_astral_summon_hp_new
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( hp, buffSid, "data.stats.hp" )
+
+	Mul ( mul, count, hp )
+	Add ( return, mul, "4" )
+}
+
+modInt current_bonus_magic_astral_summon_damage_new
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( damage, buffSid, "data.stats.damageMin" )
+
+	Mul ( mul, count, damage )
+	Add ( return, mul, "8" )
+}
+
+modInt current_bonus_magic_astral_summon_hp_new_1
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( hp, buffSid, "data.stats.hp" )
+
+	Mul ( mul, count, hp )
+	Add ( return, mul, "2" )
+}
+
+modInt current_bonus_magic_astral_summon_hp_new_2
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( hp, buffSid, "data.stats.hp" )
+
+	Mul ( mul, count, hp )
+	Add ( return, mul, "3" )
+}
+
+modInt current_bonus_magic_astral_summon_hp_new_3
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( buffSid, "targetMechanics[0].values[5]" )
+	DbBuff( hp, buffSid, "data.stats.hp" )
+
+	Mul ( mul, count, hp )
+	Add ( return, mul, "4" )
+}

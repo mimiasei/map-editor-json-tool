@@ -1,0 +1,58 @@
+{
+    "array": [
+        {
+            "id": "squad_undead_custom_8_1",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 84,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "skeleton",
+                        "v": 3763
+                    },
+                    {
+                        "s": "skeleton_upg",
+                        "v": 3763
+                    },
+                    {
+                        "s": "skeleton_upg_alt",
+                        "v": 3763
+                    },
+                    {
+                        "s": "vampire",
+                        "v": 1530
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 3763,
+                "units": [
+                    "skeleton",
+                    "skeleton_upg",
+                    "skeleton_upg_alt"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 20013,
+                "units": [
+                    {
+                        "s": "skeleton",
+                        "v": 20013
+                    },
+                    {
+                        "s": "skeleton_upg",
+                        "v": 20013
+                    },
+                    {
+                        "s": "skeleton_upg_alt",
+                        "v": 20013
+                    }
+                ]
+            },
+            "tier": 1,
+            "fraction": "undead"
+        }
+    ]
+}

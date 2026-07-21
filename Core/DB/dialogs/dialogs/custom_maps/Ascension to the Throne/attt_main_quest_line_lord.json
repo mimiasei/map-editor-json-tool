@@ -1,0 +1,492 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_main_quest_line_lord",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_1",
+					"next": "0"
+				},
+				{
+					"id": "0",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_2",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_2_1",
+					"answers": [
+						{
+							"text": "attt_main_quest_line_lord_text_2_answer_1",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1a" ] }
+							]
+						},
+						{
+							"text": "attt_main_quest_line_lord_text_2_answer_2",
+							"requests": [ { "c": "Counter", "p": [ "daughter_quest_friend", "=", "2" ] }
+							],
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1b" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_3",
+					"end": true
+				},
+				{
+					"id": "1b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_4",
+					"next": "1_1"
+				},
+				{
+					"id": "1_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_4_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_5",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_6",
+					"next": "3_1"
+				},
+				{
+					"id": "3_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_6_1",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_7",
+					"next": "4_1"
+				},
+				{
+					"id": "4_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_7_1",
+					"next": "4_2"
+				},
+				{
+					"id": "4_2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_main_quest_line_lord_text_7_2",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_8",
+					"next": "5_1"
+				},
+				{
+					"id": "5_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_8_1",
+					"next": "5_2"
+				},
+				{
+					"id": "5_2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_8_2",
+					"next": "5_3"
+				},
+				{
+					"id": "5_3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_9",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_lord_text_8_3",
+					"next": "5_4"
+				},
+				{
+					"id": "5_4",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_main_quest_line_lord_text_8_4",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_win_action", "1" ] } ],
+					"invokeOnlyActions": true,
+					"next": "start_final"
+				},
+
+				{
+					"id": "start_final",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 3,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_9_old_lord_mandall_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_end_2_text_1",
+					"mapActions": [ { "a": "Print", "p": [ "ACHIVKA_2" ] } ],
+					"next": "end_final"
+				},
+				{
+					"id": "end_final",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_win", "1" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

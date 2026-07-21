@@ -1,0 +1,149 @@
+{
+	"array":
+	[		
+		{
+			"id": "M4_human_city",
+			"buildings":
+			[
+				{ "sid": "Build_Tavern",					"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2",	"level": 1 },
+				
+				{ "sid": "Build_Main",					 	"level": 3 },
+				
+				{ "sid": "Build_Artifact_Market",			"level": 1 },
+				
+				{ "sid": "Build_Tier_6",				 	"level": 1 },
+				{ "sid": "Build_Tier_6",				 	"level": 2 },
+				{ "sid": "Build_Tier_7",				 	"level": 1 },
+				{ "sid": "Build_Tier_7",				 	"level": 2 },
+			
+				{ "sid": "Build_Magic_Guild",				"level": 3 },
+				{ "sid": "Build_Magic_Guild",				"level": 4 },
+				{ "sid": "Build_Magic_Guild",				"level": 5 },
+
+				{ "sid": "Build_Training_Range", 		 	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			 	"level": 1 },
+
+				{ "sid": "Build_Spring_of_Life", 		 	"level": 1 }
+			]
+		},
+		{
+			"id": "M4_sylvan_city",
+			"buildings":
+			[
+				{ "sid": "Build_Tavern",					"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2",	"level": 1 },
+				
+				{ "sid": "Build_Main",					 	"level": 3 },
+				
+				{ "sid": "Build_Artifact_Market",			"level": 1 },
+				
+				{ "sid": "Build_Tier_6",				 	"level": 1 },
+				{ "sid": "Build_Tier_6",				 	"level": 2 },
+				{ "sid": "Build_Tier_7",				 	"level": 1 },
+				{ "sid": "Build_Tier_7",				 	"level": 2 },
+			
+				{ "sid": "Build_Magic_Guild",				"level": 3 },
+				{ "sid": "Build_Magic_Guild",				"level": 4 },
+				{ "sid": "Build_Magic_Guild",				"level": 5 },
+
+				{ "sid": "Build_Training_Range", 		 	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			 	"level": 1 },
+
+				{ "sid": "Build_Spring_of_Life", 		 	"level": 1 }
+			]
+		},
+
+		{
+			"id": "M4_ai_human_city",
+			"buildings":
+			[
+				{ "sid": "Build_Tavern",					"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2",	"level": 1 },
+				
+				{ "sid": "Build_Main",					 	"level": 3 },
+				
+				{ "sid": "Build_Wall",						"level": 3 },
+				
+				{ "sid": "Build_Artifact_Market",			"level": 1 },
+				
+				{ "sid": "Build_Tier_6",				 	"level": 1 },
+				{ "sid": "Build_Tier_6",				 	"level": 2 },
+				{ "sid": "Build_Tier_7",				 	"level": 1 },
+				{ "sid": "Build_Tier_7",				 	"level": 2 },
+			
+				{ "sid": "Build_Magic_Guild",				"level": 3 },
+				{ "sid": "Build_Magic_Guild",				"level": 4 },
+				{ "sid": "Build_Magic_Guild",				"level": 5 },
+
+				{ "sid": "Build_Training_Range", 		 	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			 	"level": 1 },
+
+				{ "sid": "Build_Spring_of_Life", 		 	"level": 1 }
+			]
+		},
+		{
+			"id": "M4_ai_sylvan_city",
+			"buildings":
+			[
+				{ "sid": "Build_Tavern",					"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2",	"level": 1 },
+				
+				{ "sid": "Build_Main",					 	"level": 3 },
+				
+				{ "sid": "Build_Wall",						"level": 3 },
+				
+				{ "sid": "Build_Artifact_Market",			"level": 1 },
+				
+				{ "sid": "Build_Tier_6",				 	"level": 1 },
+				{ "sid": "Build_Tier_6",				 	"level": 2 },
+				{ "sid": "Build_Tier_7",				 	"level": 1 },
+				{ "sid": "Build_Tier_7",				 	"level": 2 },
+			
+				{ "sid": "Build_Magic_Guild",				"level": 3 },
+				{ "sid": "Build_Magic_Guild",				"level": 4 },
+				{ "sid": "Build_Magic_Guild",				"level": 5 },
+
+				{ "sid": "Build_Training_Range", 		 	"level": 1 },
+				{ "sid": "Build_Golden_Calf", 			 	"level": 1 },
+
+				{ "sid": "Build_Spring_of_Life", 		 	"level": 1 }
+			]
+		},
+
+		{
+			"id": "M4_druid_city",
+			"buildings":
+			[
+				{ "sid": "Build_Tavern",					"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2",	"level": 1 },
+				
+				{ "sid": "Build_Artifact_Market",			"level": 1 },
+				{ "sid": "Build_Resource_Depot_level_2",	"level": 1 },
+				
+				{ "sid": "Build_Wall",						"level": 1 },
+				{ "sid": "Build_Wall",						"level": 2 },
+				{ "sid": "Build_Wall",						"level": 3 },
+				
+				{ "sid": "Build_Tier_1",				 	"level": 1 },
+				{ "sid": "Build_Tier_2",				 	"level": 1 },
+				{ "sid": "Build_Tier_3",				 	"level": 1 },
+				{ "sid": "Build_Tier_4",				 	"level": 1 },
+				{ "sid": "Build_Tier_5",				 	"level": 1 },
+				{ "sid": "Build_Tier_6",				 	"level": 1 },
+				{ "sid": "Build_Tier_7",				 	"level": 1 },
+
+				{ "sid": "Build_Tier_1",				 	"level": 2 },
+				{ "sid": "Build_Tier_2",				 	"level": 2 },
+				{ "sid": "Build_Tier_3",				 	"level": 2 },
+				{ "sid": "Build_Tier_4",				 	"level": 2 },
+				{ "sid": "Build_Tier_5",				 	"level": 2 },
+				{ "sid": "Build_Tier_6",				 	"level": 2 },
+				{ "sid": "Build_Tier_7",				 	"level": 2 },
+			
+				{ "sid": "Build_Magic_Guild",				"level": 4 },
+				{ "sid": "Build_Magic_Guild",				"level": 5 }
+			]
+		}
+	]
+}

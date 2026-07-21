@@ -1,0 +1,15 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "abandoned_outpost",
+			"goodsValue": 2500,
+
+			"guardUnits":
+			[
+				{ "sid": "esquire", "amount": 2 },
+				{ "sid": "crossbowman", "amount": 2 }
+			]
+		}
+	]
+}

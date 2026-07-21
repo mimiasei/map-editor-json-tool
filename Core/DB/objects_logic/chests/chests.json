@@ -1,0 +1,143 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "chest",
+			"variants": 
+			[
+				{
+					"rollChance": 50,
+					"value": 500,
+					"aiValue": 2000,
+					"customGuardValue": 250,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "chest_label",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "Invisible",						
+								"applyRewardFloating": true,						
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+
+								"parameters": [ "gold", "1000" ]
+							},
+							{
+								"rewardType": "HeroExpReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,						
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "expReward_description",
+								"rewardNotificationDesc": "expReward_notification",
+
+								"parameters": [ "500" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 100,
+					"value": 750,
+					"aiValue": 3000,
+					"customGuardValue": 375,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "chest_label",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,						
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+
+								"parameters": [ "gold", "1500" ]
+							},
+							{
+								"rewardType": "HeroExpReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,						
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "expReward_description",
+								"rewardNotificationDesc": "expReward_notification",
+
+								"parameters": [ "750" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 50,
+					"value": 1000,
+					"aiValue": 4000,
+					"customGuardValue": 500,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "chest_label",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,						
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+
+								"parameters": [ "gold", "2000" ]
+							},
+							{
+								"rewardType": "HeroExpReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,						
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "expReward_description",
+								"rewardNotificationDesc": "expReward_notification",
+
+								"parameters": [ "1000" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

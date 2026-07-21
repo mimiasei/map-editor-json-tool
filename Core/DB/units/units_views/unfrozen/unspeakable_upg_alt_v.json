@@ -1,0 +1,87 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "unspeakable_upg_alt",
+			"mesh": "Unfrozen/1Prefabs/abyssal_envoy_upg_alt",
+			"mapMesh": "Unfrozen/1Prefabs/abyssal_envoy_upg_alt_map",
+			"fadeTime": 2.65,
+
+			"scale": 0.57,
+			"modelHeight": 0.65,
+			"moveSpeed": 3.2,
+
+			"attackTimeBefore": [ 0.677, 2.533, 0.943, 0.927, 0.633, 0.6 ],
+			"attackTimeAfter": [ 0.99, 0, 1.357, 1.64, 1.6, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"startTpTime": 0.834,
+			"endTpTime": 0.768,
+
+			"takeDamageTime": 1.34,
+			"deathTimeOffset": 2.99,
+
+			"bloodEffect": "effects/blood/blood_unfrozen",
+			"bloodHexEffect": "effects/blood/blood_unfrozen_hex",
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "unspeakable_ability_1_name_upg_alt",
+					"abilityType": "Ability_type_special",
+					"description": "unspeakable_ability_1_description_upg_alt",
+					"excaptionInTooltip": "description_effect_undead_embodiment_construct_immunities",
+					"animationIndex": 1
+				},
+				{
+					"name": "unspeakable_ability_4_name",
+					"abilityType": "Ability_type_attack",
+					"description": "unspeakable_ability_4_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 2,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "unspeakable_ability_5_name",
+					"abilityType": "Ability_type_debuff",
+					"description": "unspeakable_ability_5_description",
+					"excaptionInTooltip": "description_effect_embodiment_construct_immunities",
+					"animationIndex": 3,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_magic_creature",
+                    "description": "base_class_magic_creature_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_absolute_resistance_name",
+					"description": "base_passive_absolute_resistance_description"
+				}
+			]
+		}
+	]
+}

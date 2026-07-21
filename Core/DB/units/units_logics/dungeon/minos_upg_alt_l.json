@@ -1,0 +1,316 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "minos_upg_alt",
+			"squadValue": 552,
+			"expBonus": 62,
+			"tier": 4,
+			"fraction": "dungeon",
+			"nativeBiome": "Dirt",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "dungeon" ],
+
+			"baseSid": "minos_upg",
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 530 }
+				]
+			},
+			
+			"stats":
+			{
+				"hp": 40,
+				"offence": 15,
+				"defence": 11,
+				"damageMin": 14,
+				"damageMax": 16,
+
+				"initiative": 5,
+				"speed": 6,
+				
+				"luck": 0,
+				"moral": 2,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": 0,
+				"moralMax": 5,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"additionalActionChanceModifier": 0.05,
+
+				"inDmgMods":
+				{
+					"list":
+					[				
+						
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				}
+			},
+			
+			"passives" : 
+			[
+				{
+					"actions":
+					[
+						{
+							"trigger": "unit_took_damage",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive" ],
+								"triggerCounter": false,
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"buffTarget_": "all",
+								"buff":
+								{
+									"sid": "minos_selfbuff",
+									"duration": -1
+								},
+								
+								"targetMechanics" : [ ]
+							}
+						}
+					]
+				},
+				{
+					"actions":
+					[
+						{
+							"trigger": "double_turn",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive" ],
+								"triggerCounter": false,
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"buffTarget_": "all",
+								"buff":
+								{
+									"sid": "minos_moral_selfbuff",
+									"duration": 2
+								},
+								
+								"targetMechanics" : [ ]
+							}
+						}
+					]
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "magic_creature_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_curse" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+				
+			"alternativeAttacks" : 
+			[ 
+				{
+					"attackType_" : "melee",
+
+					"dontUseEnergy" : true,
+					"cd" : -1,
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "armed_ability", "armed_ability_minos" ],
+						"triggerCounter": true,
+						"attackPatternSid" : "attack_reach_x2_x100_x100_x100_with_delay",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "noself",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"abilities" : 
+			[ 
+
+			]
+		}
+	]
+}

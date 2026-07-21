@@ -1,0 +1,485 @@
+{
+	"array":
+	[
+		{
+			"id": "test_new_fraction_law_1",
+			"icon": "fraction_law_1_icon",
+			"name": "test_new_fraction_law_1_name",
+			"desc": "test_new_fraction_law_1_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "1000" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "2000" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "3000" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_2",
+			"icon": "fraction_law_2_icon",
+			"name": "test_new_fraction_law_2_name",
+			"desc": "test_new_fraction_law_2_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "1000" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "2000" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "3000" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_3",
+			"icon": "fraction_law_3_icon",
+			"name": "test_new_fraction_law_3_name",
+			"desc": "test_new_fraction_law_3_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "1000" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "2000" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "3000" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_4",
+			"icon": "fraction_law_4_icon",
+			"name": "test_new_fraction_law_4_name",
+			"desc": "test_new_fraction_law_4_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 1,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "1000" ]
+						}
+					]
+				},
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "2000" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "3000" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_5",
+			"icon": "fraction_law_5_icon",
+			"name": "test_new_fraction_law_5_name",
+			"desc": "test_new_fraction_law_5_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offencePer", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offencePer", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_6",
+			"icon": "fraction_law_6_icon",
+			"name": "test_new_fraction_law_6_name",
+			"desc": "test_new_fraction_law_6_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defencePer", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defencePer", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_7",
+			"icon": "fraction_law_7_icon",
+			"name": "test_new_fraction_law_7_name",
+			"desc": "test_new_fraction_law_7_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligencePer", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligencePer", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_8",
+			"icon": "fraction_law_8_icon",
+			"name": "test_new_fraction_law_8_name",
+			"desc": "test_new_fraction_law_8_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 2,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPowerPer", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPowerPer", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_9",
+			"icon": "fraction_law_9_icon",
+			"name": "test_new_fraction_law_9_name",
+			"desc": "test_new_fraction_law_9_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "viewRadius", "30" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_10",
+			"icon": "fraction_law_10_icon",
+			"name": "test_new_fraction_law_10_name",
+			"desc": "test_new_fraction_law_10_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "expPerBonus", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_11",
+			"icon": "fraction_law_11_icon",
+			"name": "test_new_fraction_law_11_name",
+			"desc": "test_new_fraction_law_11_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "heroResPercentSet", "all", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_12",
+			"icon": "fraction_law_12_icon",
+			"name": "test_new_fraction_law_12_name",
+			"desc": "test_new_fraction_law_12_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "movementBonus", "20" ]
+						}
+					]
+				},
+				{
+					"cost": 5,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "movementBonus", "40" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_13",
+			"icon": "fraction_law_13_icon",
+			"name": "test_new_fraction_law_13_name",
+			"desc": "test_new_fraction_law_13_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "movementRestoreBonus", "20" ]
+						}
+					]
+				},
+				{
+					"cost": 5,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "movementRestoreBonus", "40" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_14",
+			"icon": "fraction_law_14_icon",
+			"name": "test_new_fraction_law_14_name",
+			"desc": "test_new_fraction_law_14_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 3,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "roadPerBonus", "1" ]
+						}
+					]
+				},
+				{
+					"cost": 4,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "roadPerBonus", "2" ]
+						}
+					]
+				},
+				{
+					"cost": 5,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "roadPerBonus", "3" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "test_new_fraction_law_15",
+			"icon": "fraction_law_15_icon",
+			"name": "test_new_fraction_law_15_name",
+			"desc": "test_new_fraction_law_15_desc",
+		
+			"parametersPerLevel":
+			[
+				{
+					"cost": 5,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "manaCostBonus", "3" ]
+						}
+					]
+				},
+				{
+					"cost": 6,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "manaCostBonus", "6" ]
+						}
+					]
+				},
+				{
+					"cost": 7,
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "manaCostBonus", "9" ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,424 @@
+{
+	"array": [
+		{
+			"id": "M3aQ7_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_provost",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial5_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ7_dial5_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_provost",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial5_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ7_dial5_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_provost",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial5_4",
+					"answers": [
+						{
+							"text": "dialogue_text_M3aQ7_dial5_4_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial5_4_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4b"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "4a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_provost",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial5_4a",
+					"next": "4a1"
+				},
+				{
+					"id": "4a1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_provost",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial5_4a1",
+					"next": "4a2"
+				},
+				{
+					"id": "4a2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ7_dial5_4a2",
+					"answers": [
+						{
+							"text": "dialogue_text_M3aQ7_dial5_4a2_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4a3"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial5_4a2_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4a3"
+									]
+								},
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Nature",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"spring_icon",
+										"+1"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3aQ7_dial5_4a2_answer_3",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"4a3"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Dungeon",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"dungeon_icon",
+										"-1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "4a3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_provost",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial5_4a3",
+					"next": "4a4"
+				},
+				{
+					"id": "4a4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ7_dial5_4a4",
+					"next": "4b"
+				},
+				{
+					"id": "4b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_peasant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_provost",
+						"position": 2
+					},
+					"text": "dialogue_text_M3aQ7_dial5_4b",
+					"next": "4b_s"
+				},
+				{
+					"id": "4b_s",
+					"fon": "",
+					"mapActions": [
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"esquire",
+								"8"
+							]
+						}
+					],
+					"text": "dialogue_text_M3Q3_dial1_5a10a_s",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"village3"
+							]
+						},
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"village3",
+								"false"
+							]
+						},
+						{
+							"a": "CounterPlus",
+							"p": [
+								"villages_visited",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

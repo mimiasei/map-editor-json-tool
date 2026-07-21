@@ -1,0 +1,10 @@
+{
+	"keyValuePairs": 
+	[
+		{"key": "crit", "value": "effects/critical/critical_hit_unit"},
+		{"key": "anticrit", "value": "effects/critical/critical_miss_unit"},
+		{"key": "morale", "value": "effects/morale/morale"},
+		{"key": "dismoraled", "value": "effects/morale/dismoraled"},
+		{"key": "survived_overkill", "value": "effects/overkill_protection_effect_unit"}
+	]
+}

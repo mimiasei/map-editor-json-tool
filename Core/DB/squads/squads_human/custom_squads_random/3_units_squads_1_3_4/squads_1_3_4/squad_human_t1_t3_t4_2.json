@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_human_t1_t3_t4_2",
+            "useOldSquads": false,
+            "rollChance": 8,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "esquire",
+                        "v": 3354
+                    },
+                    {
+                        "s": "griffin",
+                        "v": 3684
+                    },
+                    {
+                        "s": "lightweaver_upg",
+                        "v": 4354
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 4354,
+                "units": [
+                    "esquire",
+                    "griffin",
+                    "lightweaver_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 18354,
+                "units": [
+                    {
+                        "s": "esquire",
+                        "v": 7684
+                    },
+                    {
+                        "s": "griffin",
+                        "v": 13014
+                    },
+                    {
+                        "s": "lightweaver_upg",
+                        "v": 18354
+                    }
+                ]
+            },
+            "tier": 4,
+            "fraction": "human"
+        }
+    ]
+}

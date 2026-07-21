@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M9_forest_elf_captain",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "elf_tracker_upg_alt", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"elf_tracker_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 90000,
+				"units":
+				[
+					{ "s" : "elf_tracker_upg_alt", "v": 90000 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "nature"
+		}
+	]
+}

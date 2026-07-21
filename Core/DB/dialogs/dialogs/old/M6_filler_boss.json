@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M6_filler_boss",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "boss battle with one of 2 final monsters",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

@@ -1,0 +1,239 @@
+{
+	"array": [
+		{
+			"id": "M9Q5_dial14",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_elf_tracker_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sylvan_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q5_dial14_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"4114"
+							]
+						},
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"sylvan_grove",
+								"false"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard1",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard2",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard3",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard4",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard5",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard6",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard7",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard8",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_guard9",
+								"1"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_nature_3",
+								"4777",
+								"false",
+								"grove_barracks1"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_nature_6",
+								"4972",
+								"false",
+								"grove_barracks2"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_nature_4",
+								"4979",
+								"false",
+								"grove_barracks3"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_nature_5",
+								"4120",
+								"false",
+								"grove_barracks4"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_nature_6",
+								"5176",
+								"true",
+								"grove_barracks5"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_elf_tracker_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sylvan_captain",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q5_dial14_1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"sylvan_grove",
+								"1"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_barracks1"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_barracks2"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_barracks3"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_barracks4"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_barracks5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,222 @@
+﻿modInt unic_unit_demon_defence_passive
+{ 
+	CurrentUnitConfig ( passiveBonus, "conditionalPassives[0].stats.defence" )
+
+	Text( return, passiveBonus )
+}
+
+modInt unic_unit_demon_offence_passive
+{ 
+	CurrentUnitConfig ( passiveBonus, "conditionalPassives[0].stats.offence" )
+
+	Text( return, passiveBonus )
+}
+
+modPercentNumeric unic_unit_demon_anticrit_passive
+{ 
+	CurrentUnitConfig ( passiveBonus, "conditionalPassives[1].stats.anticrit" )
+
+	Text( return, passiveBonus )
+}
+
+string unic_unit_demon_passive
+{ 
+	Text( return, "2" )
+}
+
+modPercentNumeric unic_unit_demon_crit_passive
+{ 
+	CurrentUnitConfig ( passiveBonus, "conditionalPassives[1].stats.crit" )
+
+	Text( return, passiveBonus )
+}
+
+modInt unic_unit_lava_larva_passive_1
+{ 
+	CurrentHero ( heroLevelBase, "level" )	
+	Sub ( heroLevel, heroLevelBase, "1" )	
+
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentUnitConfig( statDmgMult, "passives[0].actions[0].damageDealer.statDmgMult" )
+	CurrentUnitConfig( minBaseDmg, "passives[0].actions[0].damageDealer.minBaseDmg" )
+	CurrentUnitConfig( maxBaseDmg, "passives[0].actions[0].damageDealer.maxBaseDmg" )
+	CurrentUnitConfig( minStackDmg, "passives[0].actions[0].damageDealer.minStackDmg" )
+	CurrentUnitConfig( maxStackDmg, "passives[0].actions[0].damageDealer.maxStackDmg" )
+	CurrentUnitConfig( damageMultiplerPerHeroLevel, "passives[0].actions[0].damageDealer.damageMultiplerPerHeroLevel" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	Avg ( baseDmg, minBaseDmg, maxBaseDmg )
+	Avg ( stackDmg, minStackDmg, maxStackDmg )
+	Mul ( heroMultiplier, heroLevel, damageMultiplerPerHeroLevel )
+
+	Mul ( stackDmgMul, heroMultiplier, baseDmg )
+
+	Add ( damage, baseDmg, stackDmgMul )
+
+	Text( return, damage )
+}
+
+modInt unic_unit_lava_larva_passive_1_base
+{ 
+	CurrentUnitConfig( minBaseDmg, "passives[0].actions[0].damageDealer.minBaseDmg" )
+	CurrentUnitConfig( maxBaseDmg, "passives[0].actions[0].damageDealer.maxBaseDmg" )
+
+	Avg ( return, minBaseDmg, maxBaseDmg )
+}
+
+modInt unic_unit_lava_larva_passive_1_base_alt
+{ 
+	CurrentUnitConfig( minBaseDmg, "passives[0].actions[0].damageDealer.minBaseDmg" )
+	CurrentUnitConfig( maxBaseDmg, "passives[0].actions[0].damageDealer.maxBaseDmg" )
+
+	Avg ( avg, minBaseDmg, maxBaseDmg )
+
+	Mul ( return, avg, "2" )
+}
+
+modInt unic_unit_lava_larva_passive_2
+{ 
+	Invoke ( baseDmg, "unic_unit_lava_larva_passive_1" )
+
+	Mul ( return, baseDmg, "2" )
+}
+
+modPercentNumeric unic_unit_trick_demon_passive_1
+{ 
+	CurrentUnitConfig( return, "stats.damagePerDeltaLevel" )
+}
+
+modInt unic_unit_locust_ability_1
+{ 
+	CurrentAbility( shootRange, "damageDealer.shootRange" )
+
+	Text( return, shootRange )
+}
+
+modInt unic_unit_locust_ability_2
+{ 
+	CurrentAbility( buffSid, "damageDealer.targetMechanics[0].values[1]" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt unic_unit_locust_ability_3
+{ 
+	CurrentAbility( buffSid, "damageDealer.targetMechanics[0].values[1]" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+modInt unic_unit_wasp_passive_1
+{ 
+	CurrentUnitConfig ( return, "defaultAttacks[0].damageDealer.buff.duration" )
+}
+
+modInt unic_unit_wasp_passive_2
+{ 
+	CurrentUnitConfig( return, "defaultAttacks[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modPercentNumeric unic_unit_godslayer_passive_1
+{ 
+	CurrentUnitConfig( return, "stats.outDamageIfLevelAbove" )
+}
+
+modInt unic_unit_olgoi_passive_1
+{ 
+	CurrentUnitConfig( return, "passives[0].actions[0].damageDealer.targetMechanics[0].values[1]" )
+}
+
+modPercentNumeric unic_unit_olgoi_ability_1
+{ 
+	CurrentAbility( return, "damageDealer.targetMechanics[0].values[0]" )
+}
+
+string unic_unit_hive_queen_passive_1_1
+{ 
+	Text( return, "25" )
+}
+
+string unic_unit_hive_queen_passive_1_2
+{ 
+	Text( return, "25" )
+}
+
+string unic_unit_hive_queen_passive_1_3
+{ 
+	Text( return, "3" )
+}
+
+string unic_unit_hive_queen_passive_1_4
+{ 
+	Text( return, "20" )
+}
+
+string unic_unit_hive_queen_passive_1_5
+{ 
+	Text( return, "10" )
+}
+
+string unic_unit_hive_queen_passive_1_6
+{ 
+	Text( return, "2" )
+}
+
+string unic_unit_hive_queen_passive_2
+{ 
+	Text( return, "25" )
+}
+
+modPercentNumeric unic_unit_hive_queen_passive_4
+{ 
+	CurrentUnitConfig( return, "stats.damagePerDeltaLevelLower" )
+}
+
+int unic_unit_hive_queen_ability_1
+{ 
+	CurrentAbility( return, "damageDealer.targetMechanics[0].values[3]" )
+}
+
+int unic_unit_hive_queen_ability_2 
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( minStackDmg, buffSid, "timeoutActions[0].damageDealer.minStackDmg" )
+	DbBuff( maxStackDmg, buffSid, "timeoutActions[0].damageDealer.maxStackDmg" )
+
+	Avg ( stackDmg, minStackDmg, maxStackDmg )
+
+	Mul ( damage, currentStacks, stackDmg )
+	Floor ( return, damage )
+}
+
+modInt unic_unit_hive_queen_ability_3 
+{ 
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+// buffs
+
+modInt current_buff_hive_queen_ability_2 
+{
+	CurrentBuff( charges, "charges" )
+	CurrentBuff( minStackDmg, "config.timeoutActions[0].damageDealer.minStackDmg" )
+	CurrentBuff( maxStackDmg, "config.timeoutActions[0].damageDealer.maxStackDmg" )
+
+	Avg ( stackDmg, minStackDmg, maxStackDmg )
+	Mul ( damage, charges, stackDmg )
+
+	Floor ( return, damage )
+}

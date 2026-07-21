@@ -1,0 +1,32 @@
+﻿{
+	"array":
+	{
+		"data":
+		[
+			{
+				"key": "OnMap",
+
+				"val":
+				{
+					"soundSetName": "sounds/battle/music/battle_music_standard"
+				}
+			},
+			{
+				"key": "ForCity",
+
+				"val":
+				{
+					"soundSetName": "sounds/battle/music/battle_music_standard"
+				}
+			},
+			{
+				"key": "ForInteractObject",
+
+				"val":
+				{
+					"soundSetName": "sounds/battle/music/battle_music_standard"
+				}
+			}
+		]
+	}	
+}

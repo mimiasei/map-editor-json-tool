@@ -1,0 +1,48 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "fountain_2",
+			"aiIgnore": true,
+
+			"tooltipVisitType": "CurrentHeroVisit",
+			
+			"variantRerollType": "None",
+			"visitorsResetType": "OnStartDay",
+			"visitType": "EachHeroOneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 3750,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "MovePointsAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "movePointsReward_description",
+
+								"parameters": [ "40" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

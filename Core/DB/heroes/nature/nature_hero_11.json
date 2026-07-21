@@ -1,0 +1,95 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "nature_hero_11",
+			"mesh": "druid",
+			"mounts": [ "deer" ],
+			"icon": "hero_nature_11_Elder_Tsskish",
+			"fraction": "nature",
+			"nativeBiome": "Autumn",
+			"classType": "magic",
+
+			"skillsRollVariant": "nature_magic_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 1,
+			"attacksTimesBefore": [0.5],
+
+			"startSquad" : [
+				{ "sid": "elf_tracker", "min": 8, "max": 12 },
+				{ "sid": "druid", "min": 2, "max": 3 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "druid", "min": 1, "max": 1 }
+			],
+
+			"specialization": "nature_hero_11_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      1,
+				"defence":      2,
+				"spellPower":   2,
+				"intelligence": 2,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 15 },
+						{ "v": 1, "c": 15 },
+						{ "v": 2, "c": 35 },
+						{ "v": 3, "c": 35 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_nature",
+					"skillLevel": 1
+				},
+
+				{
+					"sid": "skill_wisdom",
+					"skillLevel": 1
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "space_3_magic_energyze",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

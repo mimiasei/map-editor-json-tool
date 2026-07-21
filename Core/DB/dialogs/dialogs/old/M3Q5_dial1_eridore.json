@@ -1,0 +1,36 @@
+{
+	"array":
+	[
+		{
+			"id": "M3Q5_dial1_eridore",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "You need to lak with 2 altars, get their spells and use all of them",
+
+					"mapActions":
+					[
+						{ "a": "DeleteEntity", "p": [ "zone_eridore1" ] },
+						{ "a": "DeleteEntity", "p": [ "zone_eridore2" ] },
+						{ "a": "MoveCamera", "p": [ "2080" ] },
+						{ "a": "RevealFogOfWar", "p": [ "2080", "5" ] },
+						{ "a": "CounterSet", "p": [ "eridore_quest", "1" ] }
+					],
+
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,44 @@
+{
+    "array": [
+        {
+            "id": "squad_nature_t5_t7_1",
+            "useOldSquads": false,
+            "rollChance": 162,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "druid",
+                        "v": 10027
+                    },
+                    {
+                        "s": "phoenix",
+                        "v": 20027
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 20027,
+                "units": [
+                    "druid",
+                    "phoenix"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 136027,
+                "units": [
+                    {
+                        "s": "druid",
+                        "v": 42527
+                    },
+                    {
+                        "s": "phoenix",
+                        "v": 136027
+                    }
+                ]
+            },
+            "tier": 7,
+            "fraction": "nature"
+        }
+    ]
+}

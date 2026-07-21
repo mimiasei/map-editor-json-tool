@@ -1,0 +1,155 @@
+{
+    "difficultiesConfigs":  
+    [
+        {
+            "sid": "Easy",
+            "nameSid": "EasyDifficultySid",
+            "descriptionSid": "This is an Easy difficulty setting.",
+
+            "playerStartResources": 
+            {
+                "gold": 30000,
+                "wood": 30,
+                "ore": 30,
+                "gemstones": 15,
+                "crystals": 15,
+                "mercury": 15,
+                "alchemicalDust": 150
+            },
+
+            "aiStartResources": 
+            {
+                "gold": 10000,
+                "wood": 10,
+                "ore": 10,
+                "gemstones": 5,
+                "crystals": 5,
+                "mercury": 5,
+                "alchemicalDust": 50
+            },
+
+            "neutralPowerMultiplier": 0.50
+        },
+        
+        {
+            "sid": "Normal",
+            "nameSid": "NormalDifficultySid",
+            "descriptionSid": "This is a Normal difficulty setting.",
+
+            "playerStartResources": 
+            {
+                "gold": 20000,
+                "wood": 20,
+                "ore": 20,
+                "gemstones": 10,
+                "crystals": 10,
+                "mercury": 10,
+                "alchemicalDust": 100
+            },
+
+            "aiStartResources": 
+            {
+                "gold": 20000,
+                "wood": 20,
+                "ore": 20,
+                "gemstones": 10,
+                "crystals": 10,
+                "mercury": 10,
+                "alchemicalDust": 100
+            },
+
+            "neutralPowerMultiplier": 0.75
+        },
+        
+        {
+            "sid": "Hard",
+            "nameSid": "HardDifficultySid",
+            "descriptionSid": "This is a Hard difficulty setting.",
+
+            "playerStartResources": 
+            {
+                "gold": 15000,
+                "wood": 15,
+                "ore": 15,
+                "gemstones": 7,
+                "crystals": 7,
+                "mercury": 7,
+                "alchemicalDust": 75
+            },
+
+            "aiStartResources": 
+            {
+                "gold": 30000,
+                "wood": 30,
+                "ore": 30,
+                "gemstones": 15,
+                "crystals": 15,
+                "mercury": 15,
+                "alchemicalDust": 150
+            },
+
+            "neutralPowerMultiplier": 1.0
+        },
+        
+        {
+            "sid": "Expert",
+            "nameSid": "ExpertDifficultySid",
+            "descriptionSid": "This is a Expert difficulty setting.",
+
+            "playerStartResources": 
+            {
+                "gold": 100000,
+                "wood": 10,
+                "ore": 10,
+                "gemstones": 5,
+                "crystals": 5,
+                "mercury": 5,
+                "alchemicalDust": 50
+            },
+
+            "aiStartResources": 
+            {
+                "gold": 40000,
+                "wood": 40,
+                "ore": 40,
+                "gemstones": 20,
+                "crystals": 20,
+                "mercury": 20,
+                "alchemicalDust": 150
+            },
+
+            "neutralPowerMultiplier": 1.50
+        },
+        
+        {
+            "sid": "Impossible",
+            "nameSid": "ImpossibleDifficultySid",
+            "descriptionSid": "This is a Impossible difficulty setting.",
+
+            "playerStartResources": 
+            {
+                "gold": 10000,
+                "wood": 5,
+                "ore": 5,
+                "gemstones": 0,
+                "crystals": 0,
+                "mercury": 0,
+                "alchemicalDust": 0
+            },
+
+            "aiStartResources": 
+            {
+                "gold": 50000,
+                "wood": 50,
+                "ore": 50,
+                "gemstones": 25,
+                "crystals": 25,
+                "mercury": 25,
+                "alchemicalDust": 250
+            },
+
+            "neutralPowerMultiplier": 2.00
+        }
+    ]
+}
+  

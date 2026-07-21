@@ -1,0 +1,640 @@
+{
+	"array": [
+		{
+			"id": "M3bQ6_dial1_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ6_dial1_0",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"spy_found",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ6_dial1_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_4",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"289"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block2"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block3"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block4"
+							]
+						}
+					],
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"reqStatus": "false",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"reqStatus": "false",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_6",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"289"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block2"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block3"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block4"
+							]
+						}
+					],
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_7",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_8",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"289"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block2"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block3"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"block4"
+							]
+						}
+					],
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ6_dial1_9",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"162"
+							]
+						}
+					],
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ6_dial1_10",
+					"next": "11"
+				},
+				{
+					"id": "11",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_11",
+					"next": "12"
+				},
+				{
+					"id": "12",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3aQ6_dial1_12",
+					"next": "13"
+				},
+				{
+					"id": "13",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_13",
+					"next": "14"
+				},
+				{
+					"id": "14",
+					"conditionsLogic": "And",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"0"
+							]
+						},
+						{
+							"c": "Counter",
+							"p": [
+								"graverobber_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": [
+							"3",
+							"icons/units/hex_portraits/assassin_upg"
+						]
+					},
+					"title": "dialogue_title_spy",
+					"text": "dialogue_text_M3aQ6_dial1_14",
+					"actions": [
+						{
+							"a": "StoryCounterSet",
+							"p": [
+								"Campaign_Flag_M3_DocumentsStolen",
+								"1"
+							]
+						}
+					],
+					"next": "endDespawn"
+				},
+				{
+					"id": "endDespawn",
+					"conditionsLogic": "Or",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"scout_quest_finished",
+								"=",
+								"1"
+							]
+						},
+						{
+							"c": "StoryCounter",
+							"p": [
+								"Campaign_Flag_M3_DocumentsStolen",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": {
+						"icons": []
+					},
+					"title": "",
+					"text": "",
+					"actions": [
+						{
+							"a": "End",
+							"p": [
+								"break"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"spy"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"graverobber_quest",
+								"3"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"scout_quest_finished",
+								"1"
+							]
+						}
+					],
+					"next": "endNoDespawn"
+				},
+				{
+					"id": "endNoDespawn",
+					"fon": "",
+					"avatars": {
+						"icons": []
+					},
+					"title": "",
+					"text": "",
+					"actions": [
+						{
+							"a": "End",
+							"p": [
+								"break"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					]
+				}
+			]
+		}
+	]
+}

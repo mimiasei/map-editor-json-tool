@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_demon_t2_t4_t5_17",
+            "useOldSquads": false,
+            "rollChance": 15,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "locust_upg",
+                        "v": 4185
+                    },
+                    {
+                        "s": "jaw_upg_alt",
+                        "v": 5355
+                    },
+                    {
+                        "s": "godslayer_upg",
+                        "v": 8185
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 8185,
+                "units": [
+                    "locust_upg",
+                    "jaw_upg_alt",
+                    "godslayer_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 25015,
+                "units": [
+                    {
+                        "s": "locust_upg",
+                        "v": 9015
+                    },
+                    {
+                        "s": "jaw_upg_alt",
+                        "v": 15355
+                    },
+                    {
+                        "s": "godslayer_upg",
+                        "v": 25015
+                    }
+                ]
+            },
+            "tier": 5,
+            "fraction": "demon"
+        }
+    ]
+}

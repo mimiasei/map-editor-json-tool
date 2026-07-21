@@ -1,0 +1,69 @@
+{
+	"array":
+	[
+		{
+			"id": "if_main_quest_line_start_attack_dialog",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "unfrozen_hero_13",
+						"position": 3
+					},
+					"text": "if_main_quest_line_start_attack_dialog_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 3,
+							"icon": "icons/dialogue/dialog_hero_unfrozen_13_The_Eye_Colletcive_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "unfrozen_hero_13",
+						"position": 3
+					},
+					"text": "if_main_quest_line_start_attack_dialog_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 3,
+							"icon": "icons/dialogue/dialog_hero_unfrozen_13_The_Eye_Colletcive_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "unfrozen_hero_13",
+						"position": 3
+					},
+					"text": "if_main_quest_line_start_attack_dialog_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_line_timer_count", "1" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,88 @@
+﻿{	
+	"array":
+	[	{	
+			"id": "mine_gold",
+			"resName": "gold", "resValue": 1000,
+			"goodsValue": 2500,
+			"aiValue": 4000,
+			"customGuardValue": 3000,
+
+			"viewRadius": 3,
+
+			"guardUnits":
+			[
+				
+			]
+		},
+		{	
+			"id": "mine_wood",
+			"resName": "wood", "resValue": 2,
+			"goodsValue": 1500,
+			"aiValue": 6000,
+			"customGuardValue": 2000,
+
+			"viewRadius": 3,
+
+			"guardUnits":
+			[
+		
+			]
+		},
+		{	
+			"id": "mine_ore",
+			"resName": "ore", "resValue": 2,
+			"goodsValue": 1500,
+			"aiValue": 6000,
+			"customGuardValue": 2000,
+
+			"viewRadius": 3,
+
+			"guardUnits":
+			[
+		
+			]
+		},
+		{	
+			"id": "mine_crystals",
+			"resName": "crystals", "resValue": 1,
+			"goodsValue": 2000,
+			"aiValue": 5000,
+			"customGuardValue": 4000,
+
+			"viewRadius": 3,
+
+			"guardUnits":
+			[
+		
+			]
+		},
+		{
+			"id": "mine_mercury",
+			"resName": "mercury", "resValue": 1,
+			"goodsValue": 2000,
+			"aiValue": 5000,
+			"customGuardValue": 4000,
+
+			"viewRadius": 3,
+
+			"guardUnits":
+			[
+
+			]
+		},
+		{	
+			"id": "mine_gemstones",
+			"resName": "gemstones", "resValue": 1,
+			"goodsValue": 2000,
+			"aiValue": 5000,
+			"customGuardValue": 4000,
+
+			"viewRadius": 3,
+
+			"guardUnits":
+			[
+		
+			]
+		}
+	]
+}

@@ -1,0 +1,80 @@
+{
+	"array": [
+		{
+			"id": "vyr_Scenario1_P2_dial1_1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/hero_large_portraits/hero_demon_4_Zoran_Self_Founded_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_infernal_ringmaster",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P2_dial1_1_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"1637"
+							]
+						},
+						{
+							"a": "SetActiveVFX",
+							"p": [
+								"InfernalCirqueHostiles_vfx",
+								"true"
+							]
+						}
+					],
+					"answers": [
+						{
+							"text": "tfp_dialogue_text_vyr_Scenario1_P2_dial1_1_0_answer_1",
+							"mapActions": [
+								{
+									"a": "InitiateInteract",
+									"p": [
+										"InfernalCirqueHostiles"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "End"
+								}
+							]
+						},
+						{
+							"text": "tfp_dialogue_text_vyr_Scenario1_P2_dial1_1_0_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "SetActiveVFX",
+									"p": [
+										"InfernalCirqueHostiles_vfx",
+										"false"
+									]
+								}
+							]
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

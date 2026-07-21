@@ -1,0 +1,112 @@
+{
+	"array": [
+		{
+			"id": "M10Q1_dial15_gunnar_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial15_gunnar_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial15_gunnar_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial15_gunnar_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial15_gunnar_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_trogl",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_trogl",
+						"position": 2
+					},
+					"text": "dialogue_text_M10Q1_dial15_gunnar_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M10Q1_dial15_gunnar_5",
+					"end": true
+				}
+			]
+		}
+	]
+}

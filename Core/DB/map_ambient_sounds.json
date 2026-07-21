@@ -1,0 +1,96 @@
+﻿{
+  "largeZoomAmbientSound": "sounds/world_map/ambient/large_zoom",
+
+  "array": {
+    "data": [
+      {
+        "key": "Water",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/water/main",
+
+          "additionalSound": "sounds/world_map/ambient/water/add",
+          "minDelay": 10,
+          "maxDelay": 20
+        }
+      },
+      {
+        "key": "Grass",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/grass/day",
+
+          "additionalSound": "",
+          "minDelay": 1,
+          "maxDelay": 10
+        }
+      },
+      {
+        "key": "Deathland",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/deathland/main",
+
+          "additionalSound": "sounds/world_map/ambient/deathland/add",
+          "minDelay": 10,
+          "maxDelay": 30
+        }
+      },
+      {
+        "key": "Dirt",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/dirt/day/main",
+
+          "additionalSound": "sounds/world_map/ambient/dirt/day/add",
+          "minDelay": 10,
+          "maxDelay": 30
+        }
+      },
+      {
+        "key": "Autumn",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/autumn/day",
+
+          "additionalSound": "",
+          "minDelay": 1,
+          "maxDelay": 10
+        }
+      },
+      {
+        "key": "Lava",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/lava",
+
+          "additionalSound": "",
+          "minDelay": 1,
+          "maxDelay": 10
+        }
+      },
+      {
+        "key": "Snow",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/snow/day",
+
+          "additionalSound": "",
+          "minDelay": 1,
+          "maxDelay": 10
+        }
+      },
+      {
+        "key": "Sand",
+
+        "val": {
+          "commonSound": "sounds/world_map/ambient/sand/day",
+
+          "additionalSound": "",
+          "minDelay": 1,
+          "maxDelay": 10
+        }
+      }
+    ]
+  }
+}

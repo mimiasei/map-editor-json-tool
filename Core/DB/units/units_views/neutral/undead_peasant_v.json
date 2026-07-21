@@ -1,0 +1,54 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "undead_peasant",
+			"mesh": "Neutral/1Prefabs/ghoul",
+			"mapMesh": "Neutral/1Prefabs/ghoul_map",
+			"fadeTime": 3.25,
+
+			"scale": 1.2,
+			"modelHeight": 0.4,
+			"moveSpeed": 4.0,
+			
+			"attackTimeBefore": [ 0.657, 0.6, 0.6, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.81, 0.9, 0.9, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1.43,
+			"deathTimeOffset": 3.47,
+			
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"baseClass":
+				{
+					"name": "base_class_undead",
+					"description": "base_class_undead_description"
+				},
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "peasant_passive_3_name",
+					"description": "peasant_passive_3_description"
+				}
+			]
+		}
+	]
+}

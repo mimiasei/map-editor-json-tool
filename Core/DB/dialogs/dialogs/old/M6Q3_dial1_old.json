@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M6Q3_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "angel is guarded (or not), you can take her with you (or not)",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

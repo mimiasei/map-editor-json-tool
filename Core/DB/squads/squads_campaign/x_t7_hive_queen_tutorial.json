@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "x_t7_hive_queen_tutorial",
+			
+			"squad" : 
+			[
+				{ "s" : "hive_queen", "v": 10000 }
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": false,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "hive_queen", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"hive_queen"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"requiredValue": 100000,
+				"units":
+				[
+					{ "s" : "hive_queen", "v": 100000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "demon"
+		}
+	]
+}

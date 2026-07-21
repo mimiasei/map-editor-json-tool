@@ -1,0 +1,32 @@
+﻿modInt current_space_18_magic_assemble_1
+{
+	CurrentMagicWorld ( baseRadius, "parameters[0]" )
+	CurrentHero ( viewRadius, "heroStat.viewRadius" )
+
+	Mul ( heroRadius, viewRadius, baseRadius )
+
+	Text( return, heroRadius )
+}
+
+modInt current_space_18_magic_assemble_2
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+// 
+
+modInt current_space_17_magic_reinforcements_1
+{
+	
+	CurrentMagicWorld ( baseRadius, "parameters[0]" )
+	CurrentHero ( viewRadius, "heroStat.viewRadius" )
+
+	Mul ( heroRadius, viewRadius, baseRadius )
+
+	Text( return, heroRadius )
+}
+
+modInt current_space_17_magic_reinforcements_2
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}

@@ -1,0 +1,259 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "primal_remnant",
+			"squadValue": 550,
+			"expBonus": 80,
+			"tier": 4,
+			"fraction": "neutral",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "neutral" ],
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 600 }
+				]
+			},
+
+			"stats":
+			{
+				"hp": 50,
+				"offence": 9,
+				"defence": 18,
+				"damageMin": 13,
+				"damageMax": 14,
+
+				"initiative": 6,
+				"speed": 5,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -3,
+				"moralMax": 3,
+				"luckMin": -3,
+				"luckMax": 3,
+
+				"inDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"outDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				}
+			},
+			
+			"passives": 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "embodiment_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"disablers": 
+						[ 
+							{ "mech": "vampirism" },
+							{ "mech": "destroy_corpse_and_heal" }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_blood" ] },
+							{ "type": "effect", "tags": [ "overTime_effect_poison" ] },
+							{ "type": "effect", "tags": [ "buff_effect_poison" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+					
+			"abilities" : 
+			[
+				{
+					"attackType_" : "cast",
+					"rank": 1,
+					
+					"selfMechanics" : [ ],
+															
+					"cd" : 1,
+					"energyLevel": 1,
+					
+					"damageDealer" : 
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "ability" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive"
+						},
+
+						"damageTarget_": "none",
+
+						"targetMechanics" : [ { "mech": "dispel", "values":  [ "negative" ] } ]
+					}
+				},
+				{
+					"attackType_" : "cast",
+					"rank": 3,
+					
+					"selfMechanics" : [ ],
+															
+					"cd" : 3,
+					"energyLevel": 3,
+
+					"damageDealer" : 
+					{
+						"shootRange": 1,
+
+						"tags": [ "ability", "summon_ability" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_buff",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [  ],
+							"castTarget_": "none",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "noself",
+							"selection": "object"
+						},
+
+						"damageTarget_": "none",
+						
+						"targetMechanics" : 
+						[
+							{ "mech": "copy_unit", "values": [ "primal_remnant_copy_buff", "1", "0", "1", "false" ] } 
+						]
+					}
+				}
+			]
+		}
+	]
+}

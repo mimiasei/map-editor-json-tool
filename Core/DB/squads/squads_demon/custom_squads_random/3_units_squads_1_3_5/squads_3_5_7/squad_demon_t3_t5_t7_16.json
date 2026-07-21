@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_demon_t3_t5_t7_16",
+            "useOldSquads": false,
+            "rollChance": 37,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "wasp_upg",
+                        "v": 6687
+                    },
+                    {
+                        "s": "godslayer_upg_alt",
+                        "v": 9187
+                    },
+                    {
+                        "s": "hive_queen",
+                        "v": 14687
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 14687,
+                "units": [
+                    "wasp_upg",
+                    "godslayer_upg_alt",
+                    "hive_queen"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 98357,
+                "units": [
+                    {
+                        "s": "wasp_upg",
+                        "v": 38027
+                    },
+                    {
+                        "s": "godslayer_upg_alt",
+                        "v": 59027
+                    },
+                    {
+                        "s": "hive_queen",
+                        "v": 98357
+                    }
+                ]
+            },
+            "tier": 7,
+            "fraction": "demon"
+        }
+    ]
+}

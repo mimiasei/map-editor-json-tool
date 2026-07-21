@@ -1,0 +1,461 @@
+{
+	"array":
+	[
+		{
+			"id": "lich_dragon_corpse_buff",
+
+			"aiValue": 10060,
+			"aiValuePerDuration": 1006,
+			
+			"icon": "lich_dragon_corpse_buff_icon",
+			"name_": "lich_dragon_passive_1_name",
+			"description_": "lich_dragon_corpse_buff_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"finalAbilityDamageBonusPercent": 1.0,
+					"finalHealingBonusPercent": 1.0
+				}
+			}
+		},
+
+		{
+			"id": "sentinel_buff_1",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "sentinel_buff_1_icon",
+			"name_": "sentinel_ability_2_name",
+			"description_": "sentinel_buff_1_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"outAllDmgMod": 0.40,
+					"inAllDmgMod": -0.40
+				}
+			}
+		},
+		{
+			"id": "sentinel_buff_2",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "sentinel_buff_2_icon",
+			"name_": "sentinel_ability_4_name",
+			"description_": "sentinel_buff_2_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"immunities":
+				[
+					{ "type": "damage", "tags": [ "magic_damage" ] },
+					
+					{ "type": "magic_level", "tags": [ "5" ] },
+					
+					{ "type": "ability_rank", "tags": [ "5" ] }
+				]
+			}
+		},
+
+		{
+			"id": "undead_peasant_buff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "undead_peasant_buff_icon",
+			"name_": "undead_peasant_buff_name",
+			"description_": "undead_peasant_buff_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"damageMin": 2,
+					"damageMax": 2
+				}
+			}
+		},
+
+		{
+			"id": "kitten_horn_buff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "kitten_horn_buff_icon",
+			"name_": "kitten_horn_ability_1_name",
+			"description_": "kitten_horn_buff_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"moral": 3
+				}
+			}
+		},
+
+		{
+			"id": "gorilla_stun",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "gorilla_stun_icon",
+			"name_": "gorilla_ability_2_name",
+			"description_": "gorilla_stun_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			"isPositive": false,
+
+			"data":
+			{
+				"sequenceEffect": "skip_turn"
+			}
+		},
+
+		{
+			"id": "primal_remnant_buff",
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "primal_remnant_buff_icon",
+			"name_": "primal_remnant_ability_1_name",
+			"description_": "primal_remnant_buff_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"data": {
+				"stats":
+				{
+					"hpPerc": 0.2
+				}
+			}
+		},
+
+		{
+			"id": "primal_remnant_copy_buff",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"icon": "primal_remnant_copy_buff_icon",
+			"name_": "primal_remnant_ability_2_name",
+			"description_": "primal_remnant_copy_buff_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			
+			"isPositive": false, 
+			
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions":
+			[
+				{
+					"trigger": "unit_took_damage",
+					"triggerConditions": [ { "checkFunction": "allegiance", "values": [ "self" ] } ],
+					"damageDealer" : 
+					{
+						"tags": [ "buff_attack" ],
+						"triggerCounter" : false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "none",
+						"damageType_": "normal",
+
+						"targetMechanics" : [ { "mech": "destroy_self", "values": [ ], "afterAttack": false  } ]
+					}
+				}
+			],
+
+			"data": {
+
+			}
+		},
+
+		{
+			"id": "frog_debuff",
+
+			"aiValue": 8560,
+			"aiValuePerDuration": 856,
+			
+			"maxDuration": 2,
+
+			"icon": "frog_debuff_icon",
+			"name_": "giant_frog_passive_1_name",
+			"description_": "frog_debuff_description",
+
+			 "dontMimic": true,
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"hp": -0.25
+				}
+			}
+		},
+		{
+			"id": "frog_poison",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "frog_poison_icon",
+			"name_": "giant_frog_passive_1_name",
+			"description_": "frog_poison_description",
+			"tags": [ "negative", "overTime_effect", "overTime_effect_poison" ],
+			"isPositive": false,
+
+			"addition": "none",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "magic_damage", "overTime_effect", "overTime_effect_poison" ],
+						"triggerCounter": false,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "magic_pure",
+						"statDmgMult": 0.0,
+
+						"minBaseDmg": 24,
+						"maxBaseDmg": 24,
+						"minStackDmg": 6,
+						"maxStackDmg": 6
+					}
+				}
+			]
+		},
+		{
+			"id": "dragon_hunter_blood",
+
+			"aiValue": 7060,
+			"aiValuePerDuration": 706,
+			
+			"icon": "dragon_hunter_blood_icon",
+			"name_": "dragon_hunter_passive_1_name",
+			"description_": "dragon_hunter_blood_description",
+			"tags": [ "negative", "overTime_effect", "overTime_effect_blood" ],
+			"isPositive": false,
+
+			"addition": "none",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "normal_damage", "overTime_effect", "overTime_effect_blood" ],
+						"triggerCounter": false,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "normal",
+						"statDmgMult": 0.0,
+
+						"minBaseDmg": 32,
+						"maxBaseDmg": 32,
+						"minStackDmg": 8,
+						"maxStackDmg": 8
+					}
+				}
+			]
+		},
+		{
+			"id": "dragon_hunter_buff",
+
+			"maxDuration": 2,
+
+			"aiValue": 5560,
+			"aiValuePerDuration": 556,
+			
+			"icon": "dragon_hunter_buff_icon",
+			"name_": "dragon_hunter_ability_1_name",
+			"description_": "dragon_hunter_buff_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": {
+				"immunities":  [  { "type": "magic_level", "tags": [ "5" ] }, { "type": "ability_rank", "tags": [ "5" ] } ]
+			}
+		},
+
+
+
+		{
+			"id": "unicorn_blind",
+
+			"aiValue": 7600,
+			"aiValuePerDuration": 380,
+			
+			"vfxList": [ "effects/status/dream_unit" ],
+
+			"icon": "magic_unicorn_blind_effect_icon",
+			"name_": "unicorn_ability_1_name",
+			"description_": "magic_sleep_effect_description",
+
+			"tags": [ "negative", "sleep_effect" ],
+			"isPositive": false,
+			
+			"addition": "duration",
+			"skipMechTriggers": 1,
+			
+			"mechanics":
+			[
+				{
+					"trigger": "unit_took_damage",
+					"mech": "zero_duration_on_damage",
+					"values": [ "" ]
+				}
+			],
+
+			"data":	
+			{
+				"sequenceEffect": "skip_turn",
+				"disablers": 
+				[
+					{
+						"ability": "counter_attack",
+						"attack": "all"
+					}
+				]
+			}
+		},	
+		
+		
+
+		{
+			"id": "avatar_carapace_effect",
+
+			"infinite": true, 
+
+			"maxDuration": 1,
+
+			"aiValue": 9400,
+			"aiValuePerDuration": 470,
+			
+			"vfxList": ["magic/Prefabs_vfx/magic_carapace_unit"],
+
+			"icon": "magic_carapace_effect_icon",
+			"name_": "avatar_passive_unfrozen_name",
+			"description_": "magic_carapace_effect_description",
+
+			"tags": [ "positive", "bubble" ],
+			"isPositive": true,
+			
+			"addition": "duration"
+		}
+	]
+}

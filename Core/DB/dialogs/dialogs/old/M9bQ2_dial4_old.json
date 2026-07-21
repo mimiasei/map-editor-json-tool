@@ -1,0 +1,113 @@
+{
+	"array":
+	[
+		{
+			"id": "M9bQ2_dial4_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_ambusher",
+					"text": "dialogue_text_M9bQ2_dial4_0",
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+					 
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_ambusher",
+					"text": "dialogue_text_M9bQ2_dial4_1",
+					
+					"answers":
+					[
+						{
+							"text": "dialogue_text_M9bQ2_dial4_1_answer_1",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "1a" ] }
+							]
+						},
+						{
+							"text": "dialogue_text_M9bQ2_dial4_1_answer_2",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "1b" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_ambusher",
+					"text": "dialogue_text_M9bQ2_dial4_1a",
+
+					"next": "endFight"
+				},
+				{
+					"id": "endFight",
+					"fon": "","avatars":{"icons":[]},	"title": "","text": "",
+					
+					"mapActions":
+					[
+						{ "a": "InitiateAttack", "p": [ "ambusher" ] }
+					],
+				
+					"actions":
+					[
+						{ "a": "End" }
+					]
+				},
+				{
+					"id": "1b",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_ambusher",
+					"text": "dialogue_text_M9bQ2_dial4_1b",
+
+					"next": "1b1"
+				},
+				{
+					"id": "1b1",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/angel" ]
+					},
+
+					"title": "dialogue_title_ambusher",
+					"text": "dialogue_text_M9bQ2_dial4_1b1",
+
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,36 @@
+{
+    "points": [
+        {
+            "name": "point_2",
+            "index": 1,
+            "data": {
+                "r": 39.91627502441406,
+                "ryAngle": 1.0192723274230958,
+                "rxAngle": -1.5707963705062867,
+                "rotCenterX": 1.7266783714294434,
+                "rotCenterY": 0.0,
+                "rotCenterZ": -0.41274261474609377,
+                "fov": 11.5,
+                "dof": false,
+                "ssaoI": -1.0,
+                "ssaoR": -1.0
+            }
+        },
+        {
+            "name": "point_2",
+            "index": 2,
+            "data": {
+                "r": 39.91627502441406,
+                "ryAngle": 1.0192723274230958,
+                "rxAngle": -1.5707963705062867,
+                "rotCenterX": 0.5988953113555908,
+                "rotCenterY": 0.0,
+                "rotCenterZ": -0.41274261474609377,
+                "fov": 11.5,
+                "dof": false,
+                "ssaoI": -1.0,
+                "ssaoR": -1.0
+            }
+        }
+    ]
+}

@@ -1,0 +1,1023 @@
+{
+	"array":
+	[		
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "night_1_magic_unnatural_calm",
+			
+			"id": "night_1_magic_unnatural_calm_special",
+
+			"name": "night_1_magic_unnatural_calm_name_spec",
+			"icon": "night_1_magic_unnatural_calm",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_1_magic_unnatural_calm_description",
+				"night_1_magic_unnatural_calm_description",
+				"night_1_magic_unnatural_calm_description_1",
+				"night_1_magic_unnatural_calm_description_1"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "night_1_magic_unnatural_calm_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "description_up_effect_enemies_all"}, 
+				{"level": 4, "description": "night_1_magic_unnatural_calm_description_up_level_bonus_4"} 
+			],
+
+			"usedOnMap": false,
+			"school_": "night",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 6, 6, 6, 6 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"effect": "Prefabs_vfx/magic_unnatural_calm_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_unnatural_calm_effect_0_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_unnatural_calm_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_unnatural_calm_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_unnatural_calm_effect_2_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "night_2_magic_web",
+			
+			"id": "night_2_magic_web_special",
+
+			"name": "night_2_magic_web_name_spec",
+			"icon": "night_2_magic_web",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_2_magic_web_description_spec",
+				"night_2_magic_web_description_spec",
+				"night_2_magic_web_description_1_spec",
+				"night_2_magic_web_description_1_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "night_2_magic_web_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "night_2_magic_web_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "night_2_magic_web_description_up_level_bonus_4"} 
+			],
+
+			"usedOnMap": false,
+			"school_": "night",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 9, 9, 9, 9 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"effect": "Prefabs_vfx/magic_web_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [ "web", "slow" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_web_effect_0",
+							"duration": 1,
+							"durationPerStack": [ 5, 1 ]
+						},
+						"targetMechanics":
+						[
+
+						]
+					},
+					{
+						"tags": [ "web", "slow" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_web_effect_1",
+							"duration": 1,
+							"durationPerStack": [ 5, 1 ]
+						},
+						"targetMechanics":
+						[
+
+						]
+					},
+					{
+						"tags": [ "web", "slow" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_web_effect_1",
+							"duration": 1,
+							"durationPerStack": [ 5, 1 ]
+						},
+						"targetMechanics":
+						[
+							{
+								"mech": "dispel", "values":  [ "hasteEffect" ]
+							}
+						]
+					},					{
+						"tags": [ "web", "slow" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_web_effect_2",
+							"duration": 1,
+							"durationPerStack": [ 5, 1 ]
+						},
+						"targetMechanics":
+						[
+							{
+								"mech": "dispel", "values":  [ "hasteEffect" ]
+							}
+						]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "night_4_magic_despair",
+			
+			"id": "night_4_magic_despair_special",
+
+			"name": "night_4_magic_despair_name_spec",
+			"icon": "night_4_magic_despair",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_4_magic_despair_description",
+				"night_4_magic_despair_description",
+				"night_4_magic_despair_description",
+				"night_4_magic_despair_description_1"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_duration_0_1"}, 
+				{"level": 3, "description": "night_4_magic_despair_description_up_level_bonus_3_alt"}, 
+				{"level": 4, "description": "description_up_effect_enemies_adjacent"}
+			],
+
+			"usedOnMap": false,
+			"school_": "night",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 9, 9, 9, 9 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"attackTimeBefore": 0.1,
+				"hexEffect": "Prefabs_vfx/magic_despair_hex",
+				"effect": "Prefabs_vfx/magic_despair_unit",
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_despair_effect_special",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_despair_effect_special",
+							"duration": 2,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_despair_effect_1_special",
+							"duration": 2,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_despair_effect_1_special",
+							"duration": 2,
+							"durationPerStack": [ 4, 1 ]
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "night_6_magic_deaths_grip",
+			
+			"id": "night_6_magic_deaths_grip_special",
+
+			"name": "night_6_magic_deaths_grip_name_spec",
+			"icon": "night_6_magic_deaths_grip",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_6_magic_deaths_grip_description_spec",
+				"night_6_magic_deaths_grip_description_spec",
+				"night_6_magic_deaths_grip_description_spec",
+				"night_6_magic_deaths_grip_description_1_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_per_sp_0_1"}, 
+				{"level": 3, "description": "description_up_effect_damage_per_sp_1_2"}, 
+				{"level": 4, "description": "night_6_magic_deaths_grip_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "night",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"hexEffect": "Prefabs_vfx/magic_death_grip_spec_hex",
+				"attackTimeBefore": 1.35,
+
+				"magicDealers": 
+				[
+					{
+						"tags": [ "absolute_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "enemy",	"damageType_": "absolute",
+						"minBaseDmg": 40,
+						"maxBaseDmg": 40,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					},
+					{
+						"tags": [ "absolute_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "enemy",	"damageType_": "absolute",
+						"minBaseDmg": 40,
+						"maxBaseDmg": 40,
+						"minStackDmg": 15,
+						"maxStackDmg": 15
+					},
+					{
+						"tags": [ "absolute_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "enemy",	"damageType_": "absolute",
+						"minBaseDmg": 40,
+						"maxBaseDmg": 40,
+						"minStackDmg": 20,
+						"maxStackDmg": 20
+					},
+					{
+						"tags": [ "absolute_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "enemy",	"damageType_": "absolute",
+						"minBaseDmg": 40,
+						"maxBaseDmg": 40,
+						"minStackDmg": 20,
+						"maxStackDmg": 20,
+
+						"targetMechanics" : [ { "mech": "kill_stacks", "values": [ "1", "7" ] } ]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "night_11_magic_vulnerability",
+			
+			"id": "night_11_magic_vulnerability_special",
+
+			"name": "night_11_magic_vulnerability_name_spec",
+			"icon": "night_11_magic_vulnerability",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_11_magic_vulnerability_description_spec",
+				"night_11_magic_vulnerability_description_spec",
+				"night_11_magic_vulnerability_description_spec",
+				"night_11_magic_vulnerability_description_1_spec"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "night_11_magic_vulnerability_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "night_11_magic_vulnerability_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "description_up_effect_enemies_adjacent"}
+			],
+
+			"usedOnMap": false,
+			"school_": "night",
+			"rank": 4,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 8 },
+				{ "name": "crystals", "cost": 8 },
+				{ "name": "mercury", "cost": 8 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 11, 11, 11, 11 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"effect": "Prefabs_vfx/magic_vulnerability_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_vulnerability_effect_0_special",
+							"duration": 1,
+							"durationPerStack": [ 7, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_vulnerability_effect_1_special",
+							"duration": 1,
+							"durationPerStack": [ 7, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_vulnerability_effect_2_special",
+							"duration": 1,
+							"durationPerStack": [ 7, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_vulnerability_effect_2_special",
+							"duration": 1,
+							"durationPerStack": [ 7, 1 ]
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"isSpecialMagic": true,
+			
+			"normalMagicSid": "night_13_magic_berserker",
+			
+			"id": "night_13_magic_berserker_special",
+
+			"name": "night_13_magic_berserker_name_spec",
+			"icon": "night_13_magic_berserker",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"night_13_magic_berserker_description_spec",
+				"night_13_magic_berserker_description_1_spec",
+				"night_13_magic_berserker_description_1_spec",
+				"night_13_magic_berserker_description_1_spec" 
+			],
+			"excaptionInTooltip": "description_effect_embodiment_construct_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "night_13_magic_berserker_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "night_13_magic_berserker_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "night_13_magic_berserker_description_up_level_bonus_4"}
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+
+			"usedOnMap": false,
+			"school_": "night",
+			"rank": 4,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 8 },
+				{ "name": "crystals", "cost": 8 },
+				{ "name": "mercury", "cost": 8 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 16, 16, 16, 16 ],
+			"battleMagic":
+			{
+				"cd": -99,
+
+				"disableForAi": true,
+				"hexEffect": "Prefabs_vfx/magic_berserk_hex",
+
+				"magicDealers": 
+				[
+					{
+						"tags": [ "embodiment_immunities", "construct_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_berserker_effect_0_no_damage",
+							"duration": 1
+						},
+						
+						"targetMechanics" : [ { "mech": "berserk",  "values": [ ] } ]
+					},
+					{
+						"tags": [ "embodiment_immunities", "construct_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_berserker_effect_0",
+							"duration": 1
+						},
+						
+						"targetMechanics" : [ { "mech": "berserk",  "values": [ ] } ]
+					},
+					{
+						"tags": [ "embodiment_immunities", "construct_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_berserker_effect_1",
+							"duration": 1
+						},
+						
+						"targetMechanics" : [ { "mech": "berserk",  "values": [ ] } ]
+					},
+					{
+						"tags": [ "embodiment_immunities", "construct_immunities" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_berserker_effect_2",
+							"duration": 1
+						},
+						
+						"targetMechanics" : [ { "mech": "berserk",  "values": [ ] } ]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		}
+	]
+}

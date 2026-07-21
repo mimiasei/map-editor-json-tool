@@ -1,0 +1,10 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tavern",
+			"aiIgnore": true,
+			"goodsValue": 2500
+		}
+	]
+}

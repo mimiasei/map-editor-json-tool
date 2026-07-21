@@ -1,0 +1,135 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M10_hero_demon_generic_6",
+
+			"name": "campaign_M10_hero_demon_generic_6",
+			"description": "campaign_M10_hero_demon_generic_6",
+			"motto": "campaign_M10_hero_demon_generic_6",
+			
+			"mesh": "hive_mage",
+			"mounts": [ "hive_mount" ],
+			"icon": "hero_demon_14_Grooo",
+			"fraction": "demon",
+			"nativeBiome": "Lava",
+			"classType": "magic",
+
+			"skillsRollVariant": "demons_magic_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 15,
+
+			"startSquad" : [
+				{ "sid": "trick_demon_upg", "min": 1000, "max": 1000 },
+				{ "sid": "locust_upg", "min": 750, "max": 750 },
+				{ "sid": "wasp_upg", "min": 600, "max": 600 },
+				{ "sid": "jaw_upg", "min": 500, "max": 500 },
+				{ "sid": "godslayer_upg", "min": 450, "max": 450 },
+				{ "sid": "olgoi_upg", "min": 300, "max": 300 },
+				{ "sid": "hive_queen_upg", "min": 99, "max": 99 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "trick_demon_upg", "min": 1000, "max": 1000 },
+				{ "sid": "locust_upg", "min": 750, "max": 750 },
+				{ "sid": "wasp_upg", "min": 600, "max": 600 },
+				{ "sid": "jaw_upg", "min": 500, "max": 500 },
+				{ "sid": "godslayer_upg", "min": 450, "max": 450 },
+				{ "sid": "olgoi_upg", "min": 300, "max": 300 },
+				{ "sid": "hive_queen_upg", "min": 99, "max": 99 }
+			],
+
+			"specialization": "demon_hero_10_specialization",
+
+			"stats":
+			{
+				"movementBonus": -90,
+				
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome": true,
+
+				"offence":      25,
+				"defence":      25,
+				"spellPower":   40,
+				"intelligence": 40,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 10 },
+						{ "v": 1, "c": 10 },
+						{ "v": 2, "c": 40 },
+						{ "v": 3, "c": 40 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_logistic",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_scouting",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_resistance",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_sorcery",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_mastery",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_summoner",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

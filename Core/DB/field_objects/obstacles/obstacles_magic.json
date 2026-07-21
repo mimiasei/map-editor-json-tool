@@ -1,0 +1,144 @@
+{
+	"array": 
+	[
+		{
+			"id": "crystal_crown",
+			"name": "primal_5_magic_crystal_crown_name",
+			"vfx": "magic/Prefabs_vfx/magic_crystal_crown_hex",
+
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"lifetime": 2,
+			"useHeroHpBonus": false,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			}
+		},
+
+		{
+			"id": "crystal_crown_1",
+			"name": "primal_5_magic_crystal_crown_name",
+			"vfx": "magic/Prefabs_vfx/magic_crystal_crown_hex",
+
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"lifetime": 3,
+			"useHeroHpBonus": false,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			}
+		},
+
+		{
+			"id": "crystal_crown_2",
+			"name": "primal_5_magic_crystal_crown_name",
+			"vfx": "magic/Prefabs_vfx/magic_crystal_crown_hex",
+
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"lifetime": 3,
+			"useHeroHpBonus": false,
+
+			"stats": 
+			{
+				"hp": 2, "maxInDmg": 1
+			}
+		},
+
+		{
+			"id": "cave_in_obstacle",
+			"name": "primal_8_magic_cave_in_name",
+			"vfx": "magic/Prefabs_vfx/magic_cave_in_obstacle_hex",
+
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"lifetime": 1,
+			"useHeroHpBonus": false,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			}
+		},
+
+		{
+			"id": "cave_in_obstacle_1",
+			"name": "primal_8_magic_cave_in_name",
+			"vfx": "magic/Prefabs_vfx/magic_cave_in_obstacle_hex",
+
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"lifetime": 2,
+			"useHeroHpBonus": false,
+
+			"stats": 
+			{
+				"hp": 1, "maxInDmg": 1
+			}
+		},
+
+		{
+			"id": "cave_in_obstacle_special",
+			"name": "primal_8_magic_cave_in_name",
+			"vfx": "magic/Prefabs_vfx/magic_cave_in_obstacle_hex",
+
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"lifetime": 1,
+			"useHeroHpBonus": false,
+
+			"stats": 
+			{
+				"hp": 2, "maxInDmg": 1
+			}
+		},
+
+		{
+			"id": "cave_in_obstacle_special_1",
+			"name": "primal_8_magic_cave_in_name",
+			"vfx": "magic/Prefabs_vfx/magic_cave_in_obstacle_hex",
+
+			"isEffect": true,
+
+			"startTime": 0.1,	"endTime": 1,
+
+			"tags": [ "obstacle", "attackable_object" ],
+
+			"lifetime": 2,
+			"useHeroHpBonus": false,
+
+			"stats": 
+			{
+				"hp": 2, "maxInDmg": 1
+			}
+		}
+	]  
+}

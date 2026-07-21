@@ -1,0 +1,9 @@
+{
+	"friendCheckRadius": 8,
+	"friendCheckMinPenalty": 0.0,
+	"friendCheckMaxPenalty": 1.0,
+
+	"enemyCheckRadius": 8,
+	"enemyCheckMinPenalty": 0.0,
+	"enemyCheckMaxPenalty": 1.0
+}

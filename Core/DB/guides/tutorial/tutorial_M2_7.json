@@ -1,0 +1,30 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M2_7",
+			
+			"contentHeight": 460,
+			"position": { "x": -400, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "Обучение",
+					"headerImage": "imageSid",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "Вы обнаружили еще один нейтральный отряд, который на этот раз охраняет несколько ценных предметов." ] },
+						{ "type": "text", "value": [ "Одержите победу над противником и заберите охраняемые им сокровища." ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "SubQuestActivate", "p": [ "Questlog", "step_6" ] }
+					]
+				}
+			]
+		}
+	]
+}

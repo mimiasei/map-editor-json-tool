@@ -1,0 +1,78 @@
+{
+	"array":
+	[
+		{
+			"id": "if_main_quest_line_start_items",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_unfrozen_cultist_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "infinity_frost_hero_2",
+						"position": 3
+					},
+					"text": "if_main_quest_line_item_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_frostworm_rider_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_unfrozen_cultist_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "infinity_frost_hero_1",
+						"position": 3
+					},
+					"text": "if_main_quest_line_item_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_frostworm_rider_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_unfrozen_cultist_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "infinity_frost_hero_1",
+						"position": 3
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_line_item_3", "0" ] }, { "a": "SubQuestActivate", "p": [ "main_quest_line_queen", "2" ] }, { "a": "SubQuestActivate", "p": [ "main_quest_line_queen", "3" ] }, { "a": "SubQuestActivate", "p": [ "main_quest_line_queen", "4" ] }, { "a": "SubQuestActivate", "p": [ "main_quest_line_queen", "5" ] }, { "a": "CounterPlus", "p": [ "main_quest_line_item_1", "0" ] }, { "a": "CounterPlus", "p": [ "main_quest_line_item_2", "0" ] }, { "a": "CounterPlus", "p": [ "main_quest_line_item_3", "0" ] }, { "a": "CounterPlus", "p": [ "main_quest_line_item_4", "0" ] } ],
+					"text": "if_main_quest_line_item_3",
+					"end": true
+				}
+			]
+		}
+	]
+}

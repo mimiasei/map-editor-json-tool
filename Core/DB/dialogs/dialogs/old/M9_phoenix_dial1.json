@@ -1,0 +1,80 @@
+{
+	"array":
+	[
+		{
+			"id": "M9_phoenix_dial1",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "phoenix quest start, necromancer wants the crystal to himself",
+
+					"mapActions":
+					[
+						{ "a": "DeleteEntity", "p": [ "phoenix" ] }
+					],
+
+					"answers":
+					[				
+						{
+							"text": "don't give crystal to the necromancer",
+
+							"actions": 
+							[
+								{ "a": "End", "p": [ "break" ] }
+							]
+						},
+						{
+							"text": "agrree to give up crystal",
+
+							"actions": 
+							[
+								{ "a": "End", "p": [ "break" ] }
+							]
+						},
+						{
+							"text": "suggest he experiments with demons",
+
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "1",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "now you can visit necro-demonologist",
+
+					"mapActions":
+					[
+						{ "a": "MoveCamera", "p": [ "4455" ] },
+						{ "a": "DeleteEntity", "p": [ "block_necromancer1" ] },						
+						{ "a": "DeleteEntity", "p": [ "block_necromancer2" ] }
+					],
+
+					"end": true
+				}			
+			]
+		}
+	]
+}

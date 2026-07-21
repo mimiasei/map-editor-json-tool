@@ -1,0 +1,376 @@
+﻿{
+	"array":
+	[
+		{
+			"id" :"banner_of_four_winds_artifact", "slot_": "back", "rarity": "epic",
+
+			"icon": "banner_of_four_winds_artifact",
+
+			"name": "banner_of_four_winds_artifact_name",
+			"description": "banner_of_four_winds_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "banner_of_four_winds_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receivers": [  ],
+					"parameters": [ "speed", "1" ]
+				}
+			]
+		},
+
+		{
+			"id" :"fallen_angel_wings_artifact", "slot_": "back", "rarity": "legendary",
+
+			"icon": "fallen_angel_wings_artifact",
+
+			"name": "fallen_angel_wings_artifact_name",
+			"description": "fallen_angel_wings_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "fallen_angel_wings_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "flyMotionPerBonus", "0" ]
+				}
+			]
+		},
+
+		{
+			"id" :"power_of_the_dragon_father_dragon_wing_artifact", "slot_": "back", "rarity": "rare", "itemSet": "power_of_the_dragon_father_item_set",
+
+			"icon": "power_of_the_dragon_father_dragon_wing_artifact",
+
+			"name": "power_of_the_dragon_father_dragon_wing_artifact_name",
+			"description": "power_of_the_dragon_father_dragon_wing_artifact_description",
+			"upgradeDescription": "power_of_the_dragon_father_dragon_wing_artifact_upgradeDescription",
+			"narrativeDescription": "power_of_the_dragon_father_dragon_wing_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"living_arrows_light_and_shade_cloak_artifact", "slot_": "back", "rarity": "epic", "itemSet": "living_arrows_item_set",
+
+			"icon": "living_arrows_light_and_shade_cloak_artifact",
+
+			"name": "living_arrows_light_and_shade_cloak_artifact_name",
+			"description": "living_arrows_light_and_shade_cloak_artifact_description",
+			"upgradeDescription": "living_arrows_light_and_shade_cloak_artifact_upgradeDescription",
+			"narrativeDescription": "living_arrows_light_and_shade_cloak_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "living_arrows_light_and_shade_cloak_artifact_bonus" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "unitStat",
+					"parameters": [ "modifierSet", "outDmgMods", "shoot_attack", "0.05" ]
+				}
+			]
+		},
+
+		{
+			"id" :"wanderers_way_backpack_artifact", "slot_": "back", "rarity": "rare", "itemSet": "wanderers_way_item_set",
+
+			"icon": "wanderers_way_backpack_artifact",
+
+			"name": "wanderers_way_backpack_artifact_name",
+			"description": "wanderers_way_backpack_artifact_description",
+			"upgradeDescription": "wanderers_way_backpack_artifact_upgradeDescription",
+			"narrativeDescription": "wanderers_way_backpack_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "movementBonus", "10" ],
+					"upgrade":
+					{
+						"increment": 5,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"gifts_of_dwarven_lords_automated_antimagic_shield_artifact", "slot_": "back", "rarity": "rare", "itemSet": "gifts_of_dwarven_lords_item_set",
+
+			"icon": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact",
+
+			"name": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact_name",
+			"description": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact_description",
+			"upgradeDescription": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact_upgradeDescription",
+			"narrativeDescription": "gifts_of_dwarven_lords_automated_antimagic_shield_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"parameters": [ "modifierSet", "inDmgMods", "magic_damage", "-0.10" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "unitStat",
+					"parameters": [ "modifierSet", "inDmgMods", "magic_damage", "-0.05" ]
+				}
+			]
+		},
+
+		{
+			"id" :"flag_of_truce_artifact", "slot_": "item_slot", "rarity": "epic",
+
+			"icon": "flag_of_truce_artifact",
+
+			"name": "flag_of_truce_artifact_name",
+			"description": "flag_of_truce_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "flag_of_truce_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "enableSavePartyByEscape", "true" ]
+				}
+			]
+		},
+
+		{
+			"id" :"monster_head_artifact", "slot_": "back", "rarity": "rare",
+
+			"icon": "monster_head_artifact",
+
+			"name": "monster_head_artifact_name",
+			"description": "monster_head_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "monster_head_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "monster_head_artifact_bonus_ally" ]
+				},
+				{
+					"type": "battleSubskillBonus",
+					"parameters": [ "unit_buff", "monster_head_artifact_bonus_enemy" ]
+				}
+			]
+		},
+
+		{ 
+			"id" :"omencaller_artifact", "slot_": "back", "rarity": "common",
+
+			"icon": "omencaller_artifact",
+
+			"name": "omencaller_artifact_name",
+			"description": "omencaller_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "omencaller_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "luck", "-1" ]
+				}
+			]
+		},
+
+		{ 
+			"id" :"shadow_of_death_second_shade_artifact", "slot_": "back", "rarity": "epic", "itemSet": "shadow_of_death_item_set",
+
+			"icon": "shadow_of_death_second_shade_artifact",
+
+			"name": "shadow_of_death_second_shade_artifact_name",
+			"description": "shadow_of_death_second_shade_artifact_description",
+			"upgradeDescription": "shadow_of_death_second_shade_artifact_upgradeDescription",
+			"narrativeDescription": "shadow_of_death_second_shade_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "4" ],
+					"upgrade":
+					{
+						"increment": 2,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligencePer", "0.15" ]
+				}
+			]
+		},
+
+
+
+
+		{
+			"id" :"ambassadors_word_ambassadors_sash_artifact", "slot_": "back", "rarity": "legendary", "itemSet": "ambassadors_word_item_set",
+
+			"icon": "ambassadors_word_ambassadors_sash_artifact",
+
+			"name": "ambassadors_word_ambassadors_sash_artifact_name",
+			"description": "ambassadors_word_ambassadors_sash_artifact_description",
+			"upgradeDescription": "ambassadors_word_ambassadors_sash_artifact_upgradeDescription",
+			"narrativeDescription": "ambassadors_word_ambassadors_sash_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "diplomacyEfficiencyPerBonus", "0.10" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "heroStat",
+					"parameters": [ "diplomacyEfficiencyPerBonus", "0.05" ]
+				}
+			]
+		},
+
+		{ 
+			"id" :"wizards_might_wizards_cloak_artifact", "slot_": "back", "rarity": "rare", "itemSet": "wizards_might_item_set",
+
+			"icon": "wizards_might_wizards_cloak_artifact",
+
+			"name": "wizards_might_wizards_cloak_artifact_name",
+			"description": "wizards_might_wizards_cloak_artifact_description",
+			"upgradeDescription": "wizards_might_wizards_cloak_artifact_upgradeDescription",
+			"narrativeDescription": "wizards_might_wizards_cloak_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		}
+	]
+}

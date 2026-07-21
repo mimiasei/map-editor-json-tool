@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": 1,
+			"name": "tiles_1",
+			"penalty": 0.40,
+			"biome": "Grass"
+		},
+		{
+			"id": 2,
+			"name": "tiles_2",
+			"penalty": 0.80,
+			"biome": "Sand"
+		},
+		{
+			"id": 3,
+			"name": "tiles_3",
+			"penalty": 0.40,
+			"biome": "Deathland"
+		},
+		{
+			"id": 4,
+			"name": "tiles_4",
+			"penalty": 0.40,
+			"biome": "Snow"
+		},
+		{
+			"id": 5,
+			"name": "tiles_5",
+			"penalty": 0.40,
+			"biome": "Autumn"
+		},
+		{
+			"id": 6,
+			"name": "tiles_6",
+			"penalty": 0.40,
+			"biome": "Lava"
+		},
+		{
+			"id": 7,
+			"name": "tiles_7",
+			"penalty": 0.40,
+			"biome": "Dirt"
+		}
+	]
+}

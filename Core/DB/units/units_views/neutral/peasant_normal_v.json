@@ -1,0 +1,58 @@
+﻿{
+	"array":
+	[
+		{
+			"name_": "peasant_name",
+			"narrativeDescription_":"peasant_narrativeDescription",
+
+			"id": "peasant_normal",
+			"mesh": "Neutral/1Prefabs/peasant",
+			"mapMesh": "Neutral/1Prefabs/peasant_map",
+			"fadeTime": 1.85,
+			"fadeOnDeathImmediately": true,
+
+			"scale": 0.53,
+			"modelHeight": 0.4,
+			"moveSpeed": 4.0,
+			
+			"attackTimeBefore": [ 0.72, 0.6, 0.6, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.78, 0.9, 0.9, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1.23,
+			"deathTimeOffset": 1.77,
+			
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"baseClass":
+                {
+                    "name": "base_class_living",
+                    "description": "base_class_living_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "peasant_passive_1_name",
+					"description": "peasant_passive_1_description"
+				}
+			]
+		}
+	]
+}

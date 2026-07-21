@@ -1,0 +1,552 @@
+{
+	"array":
+	[
+		{
+			"id": "none_effect_buff",
+			
+			"icon": "none_effect_buff_icon",
+			"name": "none_effect_buff_name",
+			"description": "none_effect_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+
+			]
+		},
+		{
+			"id": "astrologist_week_1_buff",
+			
+			"icon": "astrologist_week_1_icon",
+			"name": "astrologist_week_1_name",
+			"description": "astrologist_week_1_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroMana",
+					"parameters": [  ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_2_buff",
+			
+			"icon": "astrologist_week_2_buff_icon",
+			"name": "astrologist_week_2_buff_name",
+			"description": "astrologist_week_2_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "luck", "999" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_3_buff",
+			
+			"icon": "astrologist_week_3_buff_icon",
+			"name": "astrologist_week_3_buff_name",
+			"description": "astrologist_week_3_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "moral", "999" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_4_buff",
+			
+			"icon": "astrologist_week_4_buff_icon",
+			"name": "astrologist_week_4_buff_name",
+			"description": "astrologist_week_4_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "gold", "0.5" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_5_buff",
+			
+			"icon": "astrologist_week_5_buff_icon",
+			"name": "astrologist_week_5_buff_name",
+			"description": "astrologist_week_5_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "restoreFogOfWar",
+					"parameters": [ "false" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_6_buff",
+			
+			"icon": "astrologist_week_6_buff_icon",
+			"name": "astrologist_week_6_buff_name",
+			"description": "astrologist_week_6_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "daysInWeekBonus",
+					"parameters": [ "-4" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_7_buff",
+			
+			"icon": "astrologist_week_7_buff_icon",
+			"name": "astrologist_week_7_buff_name",
+			"description": "astrologist_week_7_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "expPerBonus", "1.0" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_8_buff",
+			
+			"icon": "astrologist_week_8_buff_icon",
+			"name": "astrologist_week_8_buff_name",
+			"description": "astrologist_week_8_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "movementBonus", "40" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_9_buff",
+			
+			"icon": "astrologist_week_9_buff_icon",
+			"name": "astrologist_week_9_buff_name",
+			"description": "astrologist_week_9_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "heroResPercentSet", "all", "0.5" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_11_buff",
+			
+			"icon": "astrologist_week_11_buff_icon",
+			"name": "astrologist_week_11_buff_name",
+			"description": "astrologist_week_11_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "enableSavePartyByEscape", "true" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_12_buff",
+			
+			"icon": "astrologist_week_12_buff_icon",
+			"name": "astrologist_week_12_buff_name",
+			"description": "astrologist_week_12_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "increaseSquadsStrength",
+					"parameters": [ "-0.2" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_13_buff",
+			
+			"icon": "astrologist_week_13_buff_icon",
+			"name": "astrologist_week_13_buff_name",
+			"description": "astrologist_week_13_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "increaseSquadsStrength",
+					"parameters": [ "0.2" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_14_buff",
+			
+			"icon": "astrologist_week_14_buff_icon",
+			"name": "astrologist_week_14_buff_name",
+			"description": "astrologist_week_14_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "offence", "4" ]
+				},				
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "4" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_week_15_buff",
+			
+			"icon": "astrologist_week_15_buff_icon",
+			"name": "astrologist_week_15_buff_name",
+			"description": "astrologist_week_15_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "4" ]
+				},				
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "4" ]
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "tutorial_one_day_week_buff",
+			
+			"icon": "astrologist_week_6_buff_icon",
+			"name": "astrologist_week_6_buff_name",
+			"description": "astrologist_week_6_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "daysInWeekBonus",
+					"parameters": [ "-6" ]
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "astrologist_month_1_buff",
+			
+			"icon": "astrologist_month_1_buff_icon",
+			"name": "astrologist_month_1_buff_name",
+			"description": "astrologist_month_1_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "clearHireAssortments",
+					"parameters": [  ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_2_buff",
+			
+			"icon": "astrologist_month_2_buff_icon",
+			"name": "astrologist_month_2_buff_name",
+			"description": "astrologist_month_2_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "refillHireAssortments",
+					"parameters": [  ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_3_buff",
+			
+			"icon": "astrologist_month_3_buff_icon",
+			"name": "astrologist_month_3_buff_name",
+			"description": "astrologist_month_3_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "constructionDailyLimit",
+					"parameters": [ "1" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_4_buff",
+			
+			"icon": "astrologist_month_4_buff_icon",
+			"name": "astrologist_month_4_buff_name",
+			"description": "astrologist_month_4_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "gold", "-99999" ]
+				},
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "wood", "-999" ]
+				},
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "ore", "-999" ]
+				},
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "gemstones", "-999" ]
+				},
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "crystals", "-999" ]
+				},
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "mercury", "-999" ]
+				},
+				{
+					"type": "unitUpgradingDiscount",
+					"parameters": [ "dust", "-999" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_5_buff",
+			
+			"icon": "astrologist_month_5_buff_icon",
+			"name": "astrologist_month_5_buff_name",
+			"description": "astrologist_month_5_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "dispelFogOfWar",
+					"parameters": []
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_6_buff",
+			
+			"icon": "astrologist_month_6_buff_icon",
+			"name": "astrologist_month_6_buff_name",
+			"description": "astrologist_month_6_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "day", "0", "999" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "999" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "999" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "primal", "0", "999" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_7_buff",
+			
+			"icon": "astrologist_month_7_buff_icon",
+			"name": "astrologist_month_7_buff_name",
+			"description": "astrologist_month_7_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{ 
+					"type": "unitStat",
+					"parameters": [ "outAllDmgMod", "1.0" ]
+				},
+				{ 
+					"type": "unitStat",
+					"parameters": [ "inAllDmgMod", "-0.5" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_8_buff",
+			
+			"icon": "astrologist_month_8_buff_icon",
+			"name": "astrologist_month_8_buff_name",
+			"description": "astrologist_month_8_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "constructionDailyLimit",
+					"parameters": [ "-2" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_9_buff",
+			
+			"icon": "astrologist_month_9_buff_icon",
+			"name": "astrologist_month_9_buff_name",
+			"description": "astrologist_month_9_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": true,
+
+			"bonuses":
+			[
+				{
+					"type": "sideOneTimeAddRes",
+					"parameters": [ "gold", "10000" ]
+				},
+				{
+					"type": "sideOneTimeAddRes",
+					"parameters": [ "wood", "20" ]
+				},
+				{
+					"type": "sideOneTimeAddRes",
+					"parameters": [ "ore", "20" ]
+				},
+				{
+					"type": "sideOneTimeAddRes",
+					"parameters": [ "crystals", "10" ]
+				},
+				{
+					"type": "sideOneTimeAddRes",
+					"parameters": [ "gemstones", "10" ]
+				},
+				{
+					"type": "sideOneTimeAddRes",
+					"parameters": [ "mercury", "10" ]
+				},
+				{
+					"type": "sideOneTimeAddRes",
+					"parameters": [ "dust", "100" ]
+				}
+			]
+		},
+		{
+			"id": "astrologist_month_11_buff",
+			
+			"icon": "astrologist_month_11_buff_icon",
+			"name": "astrologist_month_11_buff_name",
+			"description": "astrologist_month_11_buff_description",
+
+			"additionType": "LeftNew",
+			"isPositive": false,
+
+			"bonuses":
+			[
+				{
+					"type": "changeSquadsUnits",
+					"parameters": [ "1.0" ]
+				}
+			]
+		}
+	]
+}

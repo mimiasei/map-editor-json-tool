@@ -1,0 +1,149 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M10_hero_demon_3",
+
+			"description": "campaign_M10_hero_demon_3",
+			"motto": "campaign_M10_hero_demon_3",
+			
+			"mesh": "hive_warrior",
+			"mounts": [ "hive_mount" ],
+			"icon": "hero_demon_9_Eligos_Duke_of_Battle",
+			"fraction": "demon",
+			"nativeBiome": "Lava",
+			"classType": "might",
+
+			"skillsRollVariant": "demons_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 25,
+
+			"startSquad" : [
+				{ "sid": "wasp_upg_alt", "min": 30, "max": 30 },
+				{ "sid": "jaw_upg_alt", "min": 40, "max": 40 },
+				{ "sid": "hive_queen_upg_alt", "min": 5, "max": 5 },
+				{ "sid": "olgoi_upg", "min": 16, "max": 16 },
+				{ "sid": "hive_queen_upg", "min": 5, "max": 5 },
+				{ "sid": "jaw_upg", "min": 40, "max": 40 },
+				{ "sid": "olgoi_upg_alt", "min": 8, "max": 8 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "wasp_upg_alt", "min": 30, "max": 30 },
+				{ "sid": "jaw_upg_alt", "min": 40, "max": 40 },
+				{ "sid": "hive_queen_upg_alt", "min": 5, "max": 5 },
+				{ "sid": "olgoi_upg", "min": 16, "max": 16 },
+				{ "sid": "hive_queen_upg", "min": 5, "max": 5 },
+				{ "sid": "jaw_upg", "min": 40, "max": 40 },
+				{ "sid": "olgoi_upg_alt", "min": 8, "max": 8 }
+			],
+
+			"specialization": "demon_hero_9_specialization_alt",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     3,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      15,
+				"defence":      8,
+				"spellPower":   9,
+				"intelligence": 6,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 40 },
+						{ "v": 1, "c": 40 },
+						{ "v": 2, "c": 10 },
+						{ "v": 3, "c": 10 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_demons",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_logistic",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_siege",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_tactics",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_summoner",
+					"skillLevel": 3
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "day_13_magic_holy_arms",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_15_magic_deaths_call",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_8_magic_carapace",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_11_magic_armageddon",
+					"level": 4,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

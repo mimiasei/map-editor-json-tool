@@ -1,0 +1,14 @@
+{
+	"array":
+	[
+        {
+            "id": "infinityStep",
+            "parameters":[
+                "info_start_infinity_step",
+                "info_end_infinity_step"
+            ],
+            "isSaveForClearStartDay": true
+        }
+		
+	]
+}

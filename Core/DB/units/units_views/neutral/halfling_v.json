@@ -1,0 +1,87 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "halfling",
+			"mesh": "Neutral/1Prefabs/halfling",
+			"mapMesh": "Neutral/1Prefabs/halfling_map",
+			"fadeTime": 1.65,
+
+			"scale": 0.25,
+			"modelHeight": 0.4,
+			"moveSpeed": 5.2,
+
+			"attackTimeBefore": [ 1.4, 0.6, 0.6, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 1.2, 0.833, 0.9, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 0.8,
+			"deathTimeOffset": 1.98,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0,
+					"projectile": "effects/projectiles/Halfling_projectile",
+
+					"trajectory": "linear",
+					"projectileSpeed": 45
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "halfling_ability_1_name",
+					"abilityType": "Ability_type_movement",
+					"description": "halfling_ability_1_description",
+					"infoDescription": "ability_no_turn",					
+					"startTpTime": 3.034,
+					"endTpTime": 0.568,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_living",
+                    "description": "base_class_living_description"
+                },
+			
+			"passives":
+			[
+				{
+					"name": "base_passive_ranged_attack_name",
+					"description": "base_passive_ranged_attack_description"
+				},
+				{
+					"name": "base_passive_sharpshooter_name",
+					"description": "base_passive_sharpshooter_description"
+				},
+				{
+					"name": "base_passive_duelist_name",
+					"description": "base_passive_duelist_description"
+				}
+			]
+		}
+	]
+}

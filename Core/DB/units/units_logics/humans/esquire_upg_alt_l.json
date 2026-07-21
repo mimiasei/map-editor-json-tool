@@ -1,0 +1,220 @@
+﻿{
+	"array":
+	[
+
+		{
+			"id": "esquire_upg_alt",
+			"squadValue": 87,
+			"expBonus": 12,
+			"tier": 1,
+			"fraction": "human",
+			"nativeBiome": "Grass",
+
+			"ai": "melee_type_grouping",
+			
+			"tags": [ "unit", "human" ],
+
+			"baseSid": "esquire_upg",
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 110 }
+				]
+			},
+
+			"stats":
+			{	
+				"hp": 15,
+				"offence": 5,
+				"defence": 8,
+				"damageMin": 2,
+				"damageMax": 3,
+
+				"initiative": 5,
+				"speed": 5,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -5,
+				"moralMax": 5,
+				"luckMin": -3,
+				"luckMax": 3,
+
+				"inDmgMods":
+				{
+					"list":
+					[
+						{ "t": "shoot_attack", "v": -0.3 }
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				}
+			},
+			
+			"passives" : 
+			[
+				{
+					"actions": 
+					[
+						{
+							"trigger": "unit_got_buff",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance_receiving_tags",
+									"values": [ "self", "receiving", "positive" ]
+								}
+							],
+							"damageDealer": 
+							{
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"buffTarget_": "all",
+								"buff": 
+								{
+									"sid": "esquire_additionbuff",
+									"duration": 1
+								}
+							}
+						}
+					]
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "living_immunities" ] }
+						]
+					}
+				}
+			],
+
+			"aura":
+			{
+				"radius": 1,
+
+				"tag": "esquire_aura",
+				"target": "allynoself",
+				"power": 1,
+				"data":
+				{
+					"stats":
+					{
+						"inDmgMods":	{	"list":		[	{ "t": "shoot_attack", "v": -0.3 }		]	}
+					}
+				}
+			},
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"abilities" : [ ]
+		}
+	]
+}

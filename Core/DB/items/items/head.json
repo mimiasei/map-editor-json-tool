@@ -1,0 +1,533 @@
+﻿{
+	"array":
+	[
+		{
+			"id" :"beelzebubs_blessing_demon_crest_artifact", "slot_": "head", "rarity": "legendary", "itemSet": "beelzebubs_blessing_item_set",
+
+			"icon": "beelzebubs_blessing_demon_crest_artifact",
+
+			"name": "beelzebubs_blessing_demon_crest_artifact_name",
+			"description": "beelzebubs_blessing_demon_crest_artifact_description",
+			"upgradeDescription": "beelzebubs_blessing_demon_crest_artifact_upgradeDescription",
+			"narrativeDescription": "beelzebubs_blessing_demon_crest_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "12" ],
+					"upgrade":
+					{
+						"increment": 4,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "-4" ],
+					"upgrade":
+					{
+						"increment": 0,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"crown_of_the_supreme_magi_artifact", "slot_": "head", "rarity": "rare",
+
+			"icon": "crown_of_the_supreme_magi_artifact",
+
+			"name": "crown_of_the_supreme_magi_artifact_name",
+			"description": "crown_of_the_supreme_magi_artifact_description",
+			"upgradeDescription": "crown_of_the_supreme_magi_artifact_upgradeDescription",
+			"narrativeDescription": "crown_of_the_supreme_magi_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 60,
+			"costPerLevel": 60,
+			"rewardForDestroy": 20,
+			"maxLevel": 999,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "4" ],
+					"upgrade":
+					{
+						"increment": 2,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"ethereal_knowledge_third_eye_artifact", "slot_": "head", "rarity": "legendary", "itemSet": "ethereal_knowledge_item_set",
+
+			"icon": "ethereal_knowledge_third_eye_artifact",
+
+			"name": "ethereal_knowledge_third_eye_artifact_name",
+			"description": "ethereal_knowledge_third_eye_artifact_description",
+			"upgradeDescription": "ethereal_knowledge_third_eye_artifact_upgradeDescription",
+			"narrativeDescription": "ethereal_knowledge_third_eye_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "day", "0", "1" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "primal", "0", "1" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "day", "0", "1" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"activationLevel": 2,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "primal", "0", "1" ]
+				}
+			]
+		},
+
+		{
+			"id" :"power_of_the_dragon_father_dragon_crest_artifact", "slot_": "head", "rarity": "legendary", "itemSet": "power_of_the_dragon_father_item_set",
+
+			"icon": "power_of_the_dragon_father_dragon_crest_artifact",
+
+			"name": "power_of_the_dragon_father_dragon_crest_artifact_name",
+			"description": "power_of_the_dragon_father_dragon_crest_artifact_description",
+			"upgradeDescription": "power_of_the_dragon_father_dragon_crest_artifact_upgradeDescription",
+			"narrativeDescription": "power_of_the_dragon_father_dragon_crest_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "4" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "4" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"two_faced_mask_artifact", "slot_": "head", "rarity": "legendary",
+
+			"icon": "two_faced_mask_artifact",
+
+			"name": "two_faced_mask_artifact_name",
+			"description": "two_faced_mask_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "two_faced_mask_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "magicCastsPerRound", "1" ]
+				}
+			]
+		},
+
+		{
+			"id" :"tranquility_brightmind_tiara_artifact", "slot_": "head", "rarity": "epic", "itemSet": "tranquility_item_set",
+
+			"icon": "tranquility_brightmind_tiara_artifact",
+
+			"name": "tranquility_brightmind_tiara_artifact_name",
+			"description": "tranquility_brightmind_tiara_artifact_description",
+			"upgradeDescription": "tranquility_brightmind_tiara_artifact_upgradeDescription",
+			"narrativeDescription": "tranquility_brightmind_tiara_artifact_narrativeDescription",
+
+			"goodsValue": 12000,
+
+			"costBase": 45,
+			"costPerLevel": 30,
+			"rewardForDestroy": 30,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "manaRestoreBonus", "8" ],
+					"upgrade":
+					{
+						"increment": 8,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"angelic_alliance_helm_of_heavenly_enlightenment_artifact", "slot_": "head", "rarity": "legendary", "itemSet": "angelic_alliance_item_set",
+
+			"icon": "angelic_alliance_helm_of_heavenly_enlightenment_artifact",
+
+			"name": "angelic_alliance_helm_of_heavenly_enlightenment_artifact_name",
+			"description": "angelic_alliance_helm_of_heavenly_enlightenment_artifact_description",
+			"upgradeDescription": "angelic_alliance_helm_of_heavenly_enlightenment_artifact_upgradeDescription",
+			"narrativeDescription": "angelic_alliance_helm_of_heavenly_enlightenment_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "offence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"shamaniac_soul_gemwood_mask_artifact", "slot_": "head", "rarity": "legendary", "itemSet": "shamaniac_soul_item_set",
+
+			"icon": "shamaniac_soul_gemwood_mask_artifact",
+
+			"name": "shamaniac_soul_gemwood_mask_artifact_name",
+			"description": "shamaniac_soul_gemwood_mask_artifact_description",
+			"upgradeDescription": "shamaniac_soul_gemwood_mask_artifact_upgradeDescription",
+			"narrativeDescription": "shamaniac_soul_gemwood_mask_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "magicCdBonus", "-1" ],
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"knights_honor_armet_artifact", "slot_": "head", "rarity": "common", "itemSet": "knights_honor_item_set",
+
+			"icon": "knights_honor_armet_artifact",
+
+			"name": "knights_honor_armet_artifact_name",
+			"description": "knights_honor_armet_artifact_description",
+			"upgradeDescription": "knights_honor_armet_artifact_upgradeDescription",
+			"narrativeDescription": "knights_honor_armet_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"head_torch_artifact", "slot_": "head", "rarity": "common",
+
+			"icon": "head_torch_artifact",
+
+			"name": "head_torch_artifact_name",
+			"description": "head_torch_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "head_torch_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "viewRadius", "1" ]
+				}
+			]
+		},
+
+		{ 
+			"id" :"paupers_glory_straw_hat_artifact", "slot_": "head", "rarity": "common", "itemSet": "paupers_glory_item_set",
+
+			"icon": "paupers_glory_straw_hat_artifact",
+
+			"name": "paupers_glory_straw_hat_artifact_name",
+			"description": "paupers_glory_straw_hat_artifact_description",
+			"upgradeDescription": "paupers_glory_straw_hat_artifact_upgradeDescription",
+			"narrativeDescription": "paupers_glory_straw_hat_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "1" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{ 
+			"id" :"inner_song_fancy_mask_artifact", "slot_": "head", "rarity": "common", "itemSet": "inner_song_item_set",
+
+			"icon": "inner_song_fancy_mask_artifact",
+
+			"name": "inner_song_fancy_mask_artifact_name",
+			"description": "inner_song_fancy_mask_artifact_description",
+			"upgradeDescription": "inner_song_fancy_mask_artifact_upgradeDescription",
+			"narrativeDescription": "inner_song_fancy_mask_artifact_narrativeDescription",
+
+			"goodsValue": 3000,
+
+			"costBase": 15,
+			"costPerLevel": 10,
+			"rewardForDestroy": 10,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{ 
+					"type": "heroStat",
+					"parameters": [ "startEnergyBonus", "2" ],
+					"upgrade":
+					{
+						"increment": 2,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+
+
+		{
+			"id" :"rule_of_shadow_nostrias_gaze_artifact", "slot_": "head", "rarity": "legendary", "itemSet": "rule_of_shadow_item_set",
+
+			"icon": "rule_of_shadow_nostrias_gaze_artifact",
+
+			"name": "rule_of_shadow_nostrias_gaze_artifact_name",
+			"description": "rule_of_shadow_nostrias_gaze_artifact_description",
+			"upgradeDescription": "rule_of_shadow_nostrias_gaze_artifact_upgradeDescription",
+			"narrativeDescription": "rule_of_shadow_nostrias_gaze_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "initiative", "-1" ],
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{ 
+			"id" :"scholars_wisdom_scholars_tiara_artifact", "slot_": "head", "rarity": "rare", "itemSet": "scholars_wisdom_item_set",
+
+			"icon": "scholars_wisdom_scholars_tiara_artifact",
+
+			"name": "scholars_wisdom_scholars_tiara_artifact_name",
+			"description": "scholars_wisdom_scholars_tiara_artifact_description",
+			"upgradeDescription": "scholars_wisdom_scholars_tiara_artifact_upgradeDescription",
+			"narrativeDescription": "scholars_wisdom_scholars_tiara_artifact_narrativeDescription",
+
+			"goodsValue": 6000,
+
+			"costBase": 30,
+			"costPerLevel": 20,
+			"rewardForDestroy": 20,
+			"maxLevel": 2,
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "2" ],
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 1
+					}
+				}
+			]
+		},
+
+		{
+			"id" :"spellbinders_hat_artifact", "slot_": "head", "rarity": "legendary", 
+
+			"icon": "spellbinders_hat_artifact",
+
+			"name": "spellbinders_hat_artifact_name",
+			"description": "spellbinders_hat_artifact_description",
+			"upgradeDescription": "artifact_tech_cannot_be_upgraded",
+			"narrativeDescription": "spellbinders_hat_artifact_narrativeDescription",
+
+			"goodsValue": 24000,
+
+			"costBase": 60,
+			"costPerLevel": 40,
+			"rewardForDestroy": 40,
+			"maxLevel": 1,
+
+			"bonuses":
+			[
+				{
+					"type": "heroMagicAdditionMass",
+					"parameters": [ "any", "any", "5" ]
+				}
+			]
+		}
+	]
+}

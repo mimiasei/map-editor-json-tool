@@ -1,0 +1,58 @@
+{
+	"array": [
+		{
+			"id": "t_M_dial_3",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_3_1",
+					"mapActions": [ ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_3_2",
+					"mapActions": [ ],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_3_3",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "1878", "2" ] }, { "a": "MoveCamera", "p": [ "1878" ] }, { "a": "CounterPlus", "p": [ "Tutorial_M_Sub_Quest_2_activator", "1" ] } ],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "MoveCamera", "p": [ "1257" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,36 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M_28",
+			
+			"contentHeight": 460,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_28_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_28_1", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_28_1" ] },
+						{ "type": "text", "value": [ "tutorial_M_28_2" ] },
+						{ "type": "text", "value": [ "tutorial_M_28_3" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_28_2", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_28_3_5_new" ] },
+						{ "type": "text", "value": [ "tutorial_M_28_4" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "CounterPlus", "p": [ "Tutorial_M_Counter_28", "1" ] },
+						{ "a": "OpenUI", "p": [ "MagicBook" ] }
+					]
+				}
+			]
+		}
+	]
+}

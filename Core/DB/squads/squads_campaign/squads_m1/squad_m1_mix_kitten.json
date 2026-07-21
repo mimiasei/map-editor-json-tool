@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m1_mix_kitten",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "peasant", "v": 500 },
+					{ "s" : "esquire", "v": 100 },
+					{ "s" : "kitten_horn", "v": 350 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 100,
+				"units":
+				[
+					{ "s" : "peasant", "v": 100 }
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 100,
+				"units":
+				[
+					{ "s" : "peasant", "v": 100 }					
+				]
+			},
+
+			"tier": 2,
+			"fraction": "neutral"
+		}
+	]
+}

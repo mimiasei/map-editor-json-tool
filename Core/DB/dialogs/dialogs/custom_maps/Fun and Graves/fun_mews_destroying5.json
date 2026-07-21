@@ -1,0 +1,1104 @@
+{
+	"array": [
+		{
+			"id": "fun_mews_destroying5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_cant_interact",
+					"next": "endingMarl"
+				},
+				{
+					"id": "endingMarl",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "1_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [						
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "1_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_crossbowman",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying1_0",
+					"next": "1_1"
+				},
+				{
+					"id": "1_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying1_1",
+					"next": "1_ending"
+				},
+				{
+					"id": "1_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"0"
+							]
+						}
+					],
+					"next": "2_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard1",
+								"1",
+								"1000",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+
+
+				{
+					"id": "2_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_crossbowman",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying2_0",
+					"next": "2_1"
+				},
+				{
+					"id": "2_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying2_1",
+					"next": "2_2"
+				},
+				{
+					"id": "2_2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_crossbowman",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying2_2",
+					"next": "2_ending"
+				},
+				{
+					"id": "2_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "3_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard1",
+								"1",
+								"2000",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+
+
+				{
+					"id": "3_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman_Upg",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman_Upg",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_crossbowman_upg",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying3_0",
+					"next": "3_1"
+				},
+				{
+					"id": "3_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying3_1",
+					"next": "3_ending"
+				},
+				{
+					"id": "3_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"2"
+							]
+						}
+					],
+					"next": "4_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard2",
+								"1",
+								"3500",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+
+
+				{
+					"id": "4_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"text": "fun_dialogue_text_mews_destroying4_0",
+					"next": "4_1"
+				},
+				{
+					"id": "4_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying4_1",
+					"next": "4_ending"
+				},
+				{
+					"id": "4_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"3"
+							]
+						}
+					],
+					"next": "5_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard2",
+								"1",
+								"5000",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+
+
+				{
+					"id": "5_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying5_0",
+					"next": "5_1"
+				},
+				{
+					"id": "5_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying5_1",
+					"next": "5_2"
+				},
+				{
+					"id": "5_2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying5_2",
+					"next": "5_ending"
+				},
+				{
+					"id": "5_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"4"
+							]
+						}
+					],
+					"next": "6_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard2",
+								"1",
+								"6000",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+
+
+				{
+					"id": "6_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"5"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying6_0",
+					"next": "6_ending"
+				},
+				{
+					"id": "6_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"5"
+							]
+						}
+					],
+					"next": "7_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard3",
+								"1",
+								"9500",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+
+
+				{
+					"id": "7_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"6"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman_Upg_Alt",
+							"isForeground": "false"
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Crossbowman_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_crossbowman_upg_alt",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying7_0",
+					"next": "7_1"
+				},
+				{
+					"id": "7_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"6"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying7_1",
+					"next": "7_ending"
+				},
+				{
+					"id": "7_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"6"
+							]
+						}
+					],
+					"next": "8_0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard3",
+								"1",
+								"9200",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+
+
+				{
+					"id": "8_0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying8_0",
+					"next": "8_1"
+				},
+				{
+					"id": "8_1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying8_1",
+					"next": "8_2"
+				},
+				{
+					"id": "8_2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying8_2",
+					"next": "8_3"
+				},
+				{
+					"id": "8_3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_mews_destroying8_3",
+					"next": "8_4"
+				},
+				{
+					"id": "8_4",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_mews_destroying8_4",
+					"next": "8_ending"
+				},
+				{
+					"id": "8_ending",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"mews_destroyed",
+								"=",
+								"7"
+							]
+						}
+					],
+					"next": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_cm_fun_mews_guard3",
+								"1",
+								"10000",
+								"true",
+								"mews_guard5"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"mews_guard5",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"mews_guard5",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "AddBuffHeroDays",
+							"p": [
+								"cm_fun_necromancy_power_disabled",
+								"",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"mews_guard5"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

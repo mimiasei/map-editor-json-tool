@@ -1,0 +1,96 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "unfrozen_hero_14",
+			"mesh": "unfrozen_mage",
+			"mounts": [ "unfrozen_mount" ],
+			"icon": "hero_unfrozen_14_Tolketh_Guiding_Star",
+			"fraction": "unfrozen",
+			"nativeBiome": "Snow",
+			"classType": "magic",
+
+			"skillsRollVariant": "unfrozen_magic_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 1,
+			"attacksTimesBefore": [0.5],
+			
+			"startSquad" : [
+				{ "sid": "lesser_eldritch", "min": 15, "max": 20 },
+				{ "sid": "unfrozen_cultist", "min": 8, "max": 11 },
+				{ "sid": "frostworm_rider", "min": 5, "max": 7 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "lesser_eldritch", "min": 1, "max": 1 }
+			],
+
+			"specialization": "unfrozen_hero_14_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      1,
+				"defence":      1,
+				"spellPower":   3,
+				"intelligence": 2,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_unfrozen",
+					"skillLevel": 1
+				},
+
+				{
+					"sid": "skill_logistic",
+					"skillLevel": 1
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "primal_13_magic_avalanche",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

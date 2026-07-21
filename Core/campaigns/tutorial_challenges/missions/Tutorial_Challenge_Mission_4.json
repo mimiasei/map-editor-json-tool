@@ -1,0 +1,194 @@
+{
+	"array":
+	[
+		{
+			"id": "Tutorial_Challenge_Mission_4",
+
+			"requiredHeroesCount": 0,
+			"fixedHeroesSet": 
+			[
+				
+			],
+			"bannedMagics":
+			[
+				
+			],
+			
+			"idSidesWithoutTimer": [ 0 ],
+
+			"difficultiesParameters":
+			[
+				{
+					"index": 0,
+					"nameSid": "campaign_difficulty_name_1",
+					"descriptionSid": "campaign_difficulty_description_1",
+					"isAvailable": false
+				},
+				{
+					"index": 1,
+					"nameSid": "campaign_difficulty_name_2",
+					"descriptionSid": "campaign_difficulty_description_2",
+					"isAvailable": false
+				},
+				{
+					"index": 2,
+					"nameSid": "campaign_difficulty_name_3",
+					"descriptionSid": "campaign_difficulty_description_3",
+					"isAvailable": true
+				},
+				{
+					"index": 3,
+					"nameSid": "campaign_difficulty_name_4",
+					"descriptionSid": "campaign_difficulty_description_4",
+					"isAvailable": false
+				},
+				{
+					"index": 4,
+					"nameSid": "campaign_difficulty_name_5",
+					"descriptionSid": "campaign_difficulty_description_5",
+					"isAvailable": false
+				}	  
+			],
+
+			"importanceType": "Side",
+
+			"variants": 
+			[
+				{
+					"titleSid": "Tutorial_Challenge_Mission_4_title",
+					"descriptionSid": "Tutorial_Challenge_Mission_4_description",
+
+					"mapSid": "t_C4",
+
+					"difficulties":
+					[
+						{	
+							"index": 0,
+							
+							"economic": 
+							{
+								"playerStartResources": { "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  },
+								"aiStartResources": 	{ "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  }
+							},
+							
+							"ai":
+							{
+								"script": "tutorial_M",
+								"resourceAddPercent": 1.0,		"tempStacksMultiplier": 1.0,
+								"valuesVsMobsMultiplier": 1, 	"blockAreaByEnemyMultiplier": 1.0
+							},
+
+							"neutralPowerMultiplier": 1.0,
+
+							"heroesArmies": 
+							[
+								{	"spawnId": 1, "units": [ { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 } ] }
+							]
+						},
+						{	
+							"index": 1,
+							
+							"economic": 
+							{
+								"playerStartResources": { "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  },
+								"aiStartResources": 	{ "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  }
+							},
+							
+							"ai":
+							{
+								"script": "tutorial_M",
+								"resourceAddPercent": 1.0,		"tempStacksMultiplier": 1.0,
+								"valuesVsMobsMultiplier": 1, 	"blockAreaByEnemyMultiplier": 1.0
+							},
+
+							"neutralPowerMultiplier": 1.0,
+
+							"heroesArmies": 
+							[
+								{	"spawnId": 1, "units": [ { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 } ] }
+							]
+						},
+						{	
+							"index": 2,
+							
+							"economic": 
+							{
+								"playerStartResources": { "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  },
+								"aiStartResources": 	{ "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  }
+							},
+							
+							"ai":
+							{
+								"script": "tutorial_M",
+								"resourceAddPercent": 1.0,		"tempStacksMultiplier": 1.0,
+								"valuesVsMobsMultiplier": 1, 	"blockAreaByEnemyMultiplier": 1.0
+							},
+
+							"neutralPowerMultiplier": 1.0,
+
+							"heroesArmies": 
+							[
+								{	"spawnId": 1, "units": [ { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 } ] }
+							]
+						},
+						{	
+							"index": 3,
+							
+							"economic": 
+							{
+								"playerStartResources": { "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  },
+								"aiStartResources": 	{ "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  }
+							},
+							
+							"ai":
+							{
+								"script": "tutorial_M",
+								"resourceAddPercent": 1.0,		"tempStacksMultiplier": 1.0,
+								"valuesVsMobsMultiplier": 1, 	"blockAreaByEnemyMultiplier": 1.0
+							},
+
+							"neutralPowerMultiplier": 1.0,
+
+							"heroesArmies": 
+							[
+								{	"spawnId": 1, "units": [ { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 } ] }
+							]
+						},
+						{	
+							"index": 4,
+							
+							"economic": 
+							{
+								"playerStartResources": { "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  },
+								"aiStartResources": 	{ "gold": 0,		"wood": 0,		"ore": 0,		"gemstones": 0,		"crystals": 0,		"mercury": 0,		"alchemicalDust": 0  }
+							},
+							
+							"ai":
+							{
+								"script": "tutorial_M",
+								"resourceAddPercent": 1.0,		"tempStacksMultiplier": 1.0,
+								"valuesVsMobsMultiplier": 1, 	"blockAreaByEnemyMultiplier": 1.0
+							},
+
+							"neutralPowerMultiplier": 1.0,
+
+							"heroesArmies": 
+							[
+								{	"spawnId": 1, "units": [ { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 }, { "unitTier": "1", "min": 10, "max": 14 } ] }
+							]
+						}
+					],
+
+					"sides": 
+					[
+						{
+							"type": "Player",
+							"fractionSid": "human",
+							"spawns": [ 1 ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

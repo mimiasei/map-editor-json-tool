@@ -1,0 +1,16 @@
+{
+	"array":
+	[
+        {
+            "id": "tournament",
+            "parameters":[
+                "tournament_of_champions_start",
+                "tournament_of_champions_day_before_fight",
+                "tournament_of_champions_last_day_before_fight",
+                "tournament_of_champions_win",
+                "tournament_of_champions_lose"
+            ]
+        }
+		
+	]
+}

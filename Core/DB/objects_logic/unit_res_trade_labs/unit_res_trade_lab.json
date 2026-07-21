@@ -1,0 +1,29 @@
+﻿{	
+	"array":
+	[
+		{
+			"id": "unit_trade_lab_kitten_horn",
+			"aiIgnore": true,
+			"goodsValue": 5000,
+
+			"nameResources": [ "crystals" ],
+			"countResources": [ "1" ],
+			"unitCount": 1 ,
+			"sidUnit":"kitten_horn",
+			"locNameBuild":"barracks_neutral_10_name",
+			"locNameUnit":"kitten_horn_name"
+		},		
+		{
+			"id": "unit_trade_lab_gnat",
+			"aiIgnore": true,
+			"goodsValue": 5000,
+
+			"nameResources": [ "crystals" ],
+			"countResources": [ "1" ],
+			"unitCount": 1 ,
+			"sidUnit":"gnat",
+			"locNameBuild":"barracks_demon_1_name",
+			"locNameUnit":"gnat_name"
+		}
+	]
+}

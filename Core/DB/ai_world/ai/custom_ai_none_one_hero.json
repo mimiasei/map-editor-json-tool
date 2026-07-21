@@ -1,0 +1,30 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "custom_ai_none_one_hero",
+
+			"strategies":
+			[
+				{
+					"sid": "one_hero_defualt",
+
+					"actionsBefore":
+					[
+					],
+					"actionsOnSelectHero":
+					[
+
+					],
+					"actionsAfter":
+					[
+
+					],
+					
+					"roles": [ "one_hero_custom_ai_default" ],
+					"heroesSort": "Value"
+				}
+			]
+		}
+	]
+}

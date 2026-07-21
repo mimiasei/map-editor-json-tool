@@ -1,0 +1,12 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "remote_foothold",
+			"aiIgnore": true,
+			"goodsValue": 5000,
+
+			"viewRadius": 6
+		}
+	]
+}

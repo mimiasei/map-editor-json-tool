@@ -1,0 +1,352 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "hydra_upg",
+			"squadValue": 2377,
+			"expBonus": 250,
+			"tier": 6,
+			"fraction": "dungeon",
+			"nativeBiome": "Dirt",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "dungeon" ],
+
+			"baseSid": "hydra",
+			"upgradeSid": "hydra_upg_alt",
+
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 2000 }
+				]
+			},
+			
+			"stats":
+			{
+				"hp": 160,
+				"offence": 24,
+				"defence": 34,
+				"damageMin": 25,
+				"damageMax": 28,
+
+				"initiative": 8,
+				"speed": 5,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -3,
+				"moralMax": 3,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"inDmgMods":
+				{
+					"list":
+					[				
+						
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				}
+			},
+			
+			"passives" : 
+			[
+				{
+					"actions":
+					[
+						{
+							"trigger": "unit_took_damage",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive" ],
+								"triggerCounter": false,
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"buffTarget_": "all",
+								"buff":
+								{
+									"sid": "hydra_selfbuff_1",
+									"duration": -1
+								},
+								
+								"targetMechanics" : [ ]
+							}
+						},
+						{
+							"trigger": "start_turn",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive", "heal_damage", "avatar_immunities" ],
+								"triggerCounter": false,
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+
+								"attackPatternSid": "attack_single_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"targetMechanics":
+								[
+									{
+										"mech": "heal_percent",	"values":	[ "without respawn",  "max_unit",  "1.0",  "0.00",  "true" ]
+									}
+								]
+							}
+						},
+						{
+							"trigger": "unit_took_damage",
+							"triggerConditions": 
+							[
+								{
+									"checkFunction": "allegiance",
+									"values": [ "self" ]
+								}
+							],
+
+							"damageDealer": 
+							{
+								"tags": [ "passive" ],
+								"triggerCounter": false,
+
+								"damageTarget_": "none",
+								"statDmgMult": 0.0,
+
+								"attackPatternSid": "attack_swirl_x1_x100",
+
+								"castTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "self",
+									"selection": "object"
+								},
+
+								"affectTargetParams":   
+								{ 
+									"targetTags": [ "unit" ],
+									"castTarget_": "all",
+									"selection": "object"
+								},
+
+								"buffTarget_": "enemy",
+								"buff":
+								{
+									"sid": "hydra_debuff",
+									"duration": 2
+								},
+								
+								"targetMechanics": [ ]
+							}
+						}
+					]
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "magic_creature_immunities" ] }
+						]
+					}
+				},
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "effect", "tags": [ "overTime_effect_curse" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : false,
+						"attackPatternSid" : "attack_swipe_x100_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+				
+			"alternativeAttacks" : 
+			[ 
+				{
+					"attackType_" : "melee",
+
+					"dontUseEnergy" : true,
+					"cd" : -1,
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "armed_ability", "armed_ability_hydra" ],
+						"triggerCounter" : false,
+						"attackPatternSid" : "attack_swirl_with_target_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 0.5,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack", "armed_ability_hydra" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_swirl_with_target_x50",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+				
+			"abilities" : 
+			[ 
+
+			]
+		}
+	]
+}

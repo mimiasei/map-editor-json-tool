@@ -1,0 +1,57 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_8",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_8_1",
+					"mapActions": [ { "a": "SubQuestActivate", "p": [ "Questlog", "step_7" ] }, { "a": "SetActiveVFX", "p": [ "Step_6_VFX", "false" ] } ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_8_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_8_3",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "216", "3" ] }, { "a": "RevealFogOfWar", "p": [ "403", "3" ] }, { "a": "RevealFogOfWar", "p": [ "347", "3" ] } ],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_8_4",
+					"mapActions": [ { "a": "SubQuestActivate", "p": [ "Questlog", "step_7" ] } ],
+					"end": true
+				}
+			]
+		}
+	]
+}

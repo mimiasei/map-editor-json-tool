@@ -1,0 +1,63 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "_test_basic_dialogue2",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/peasant" ]
+					},
+					
+					"title": "Peasant",
+					"text": "one two three for five",
+					
+					"next": "2"
+				},	
+				{
+					"id": "2",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/sunlight_cavalry" ]
+					},
+
+					"title": "Knight",
+					"text": "six seven eight nine",			
+
+					"answers":
+					[
+						{
+							"text": "ten",
+							"requests": 
+							[
+								{ "c": "Counter", "reqStatus": "true", "p": ["fractionReputation_Unfrozen", "<", "100"] }
+							],
+
+							"actions": 
+							[ 
+								{ "a": "End" } 
+							]
+						},
+						{
+							"text": "eleven",
+
+							"actions": 
+							[ 
+								{ "a": "End" } 
+							]
+						}
+					]
+				}	
+			]
+		}
+	]
+}

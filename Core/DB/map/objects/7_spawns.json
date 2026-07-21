@@ -1,0 +1,163 @@
+{
+	"array":
+	[
+		{
+			"id": "city-spawner",
+			"tag": "meta",
+			"prefs": [ "spawners/city-spawner" ],
+			"canBeMirrored": true,
+			"selectionUiPrefabID":"3x3",
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 1, "offsetZ": 1,
+			"flippedOffset": 2,
+			
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				2, 1, 1
+			]
+		},
+		{
+			"id": "hero-spawner",
+			"tag": "meta",
+			"prefs": [ "spawners/hero-spawner" ],
+			"canBeMirrored": true,
+			"selectionUiPrefabID": "3x3",
+
+			"sizeX": 3,
+			"sizeZ": 3,
+			"pivotX": 0,
+			"pivotZ": 0,
+			"offsetX": 1,
+			"offsetZ": 1,
+			"flippedOffset": 2,
+
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				2, 1, 1
+			]
+		},
+		{	
+			"id": "random-city",
+			"tag": "meta",
+			"prefs": [ "test/random_castle" ],
+			"canBeMirrored": true,
+			"selectionUiPrefabID":"3x3",
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 1, "offsetZ": 1,
+			"flippedOffset": 2,
+			
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				2, 1, 1
+			]
+		},
+		{
+			"id": "random-hero",
+			"tag": "meta",
+			"prefs": [ "test/random_horse" ],
+			"selectionUiPrefabID":"1x1",
+
+			"pivotX": 1, "pivotZ": 1,
+			"sizeX": 3, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 0,
+			"nodes": 
+			[
+				2, 2, 2,
+				2, 1, 2,
+				2, 2, 2
+			]
+		},
+		{
+			"id": "random-squad",
+			"tag": "meta",
+			"prefs": [ "test/random_squad" ],
+			"canBeMirrored": false,
+			"selectionUiPrefabID": "1x1",
+
+			"sizeX": 3,
+			"sizeZ": 3,
+			"pivotX": 1,
+			"pivotZ": 1,
+			"offsetX": 0,
+			"offsetZ": 0,
+			"flippedOffset": 0,
+
+			"nodes": 
+			[
+				2, 2, 2,
+				2, 0, 2,
+				2, 2, 2
+			]
+		},
+		{
+			"id": "random-res",
+			"tag": "meta",
+			"prefs": [ "test/random_res" ],
+			"canBeMirrored": false,
+			"selectionUiPrefabID":"1x1",
+
+			"pivotX": 1, "pivotZ": 1,
+			"sizeX": 3, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 0,
+			"nodes": 
+			[
+				2, 2, 2,
+				2, 1, 2,
+				2, 2, 2
+			]
+		},
+		{
+			"id": "random-item",
+			"tag": "meta",
+			"prefs": [ "test/random_item" ],
+			"canBeMirrored": false,
+			"selectionUiPrefabID":"1x1",
+
+			"pivotX": 1, "pivotZ": 1,
+			"sizeX": 3, "sizeZ": 3,
+			"offsetX": 0, "offsetZ": 0,
+			"nodes": 
+			[
+				2, 2, 2,
+				2, 1, 2,
+				2, 2, 2
+			]
+		},
+		{
+			"id": "random-hire",
+			"tag": "meta",
+			"prefs": [ "test/random_hire" ],
+			"canBeMirrored": true,
+			"selectionUiPrefabID":"2x2",
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1, 0,
+				1, 1, 2,
+				0, 2, 2
+			],
+			"generatorConfig": 
+			{
+				"buildingSizeX": 2,
+				"buildingSizeZ": 2,
+      			"buildingLeftBottomX" : 0,
+       			"buildingLeftBottomZ" : 1,
+       			"buildingInteractionLayout" : 0
+			}
+		}
+	]
+}

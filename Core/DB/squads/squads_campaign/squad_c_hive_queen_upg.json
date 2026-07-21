@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_hive_queen_upg",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "hive_queen_upg", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"hive_queen_upg"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 90000,
+				"units":
+				[
+					{ "s" : "hive_queen_upg", "v": 90000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "demon"
+		}
+	]
+}

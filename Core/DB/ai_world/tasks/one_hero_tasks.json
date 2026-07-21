@@ -1,0 +1,530 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "one_hero_wait",
+			
+			"scouting": false,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 0,		"scanMaxTurns": 0,
+
+			"priorities": [ ]
+		},
+
+
+
+		
+
+		{
+			"id": "one_hero_scout_main_firstDay_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[	
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 25.0 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 10.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "OneByHeroPerWeek",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.25 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 300000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 300000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureMine",			"data":	{ "enabled": true,		"valueFlat": 25000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 15000, 	"valueMultipler": 0.00 } }
+			]
+		},
+
+
+
+
+
+		{
+			"id": "one_hero_lastChance_main_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 6,
+
+			"priorities":
+			[
+				{ "target": "CaptureCityYolo",		"data":	{ "enabled": true,		"valueFlat": 25000, 	"valueMultipler": 0 } },
+				{ "target": "AttackHeroYolo",		"data":	{ "enabled": true,		"valueFlat": 5000,		"valueMultipler": 0 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 10000, 	"valueMultipler": 0 } }
+			]
+		},
+
+		{
+			"id": "one_hero_lastChance_main_hero_needArmy_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 6,
+
+			"priorities":
+			[
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 2.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 250000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 250000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 50000, 	"valueMultipler": 0.00 } }
+			]
+		},
+
+
+
+
+
+		{
+			"id": "one_hero_defenceActive_main_hero_tasks_customScenario_AttackMarkedHero",
+			"customScenario": "AttackMarkedHero",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 6,
+
+			"priorities":
+			[				
+
+			]
+		},
+		{
+			"id": "one_hero_defenceActive_main_hero_tasks_customScenario_AttackMarkedCity",
+			"customScenario": "AttackMarkedCity",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 6,
+
+			"priorities":
+			[				
+
+			]
+		},
+		{
+			"id": "one_hero_defenceActive_main_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 6,
+
+			"priorities":
+			[				
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 10.00 } },
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 0.00 } },
+
+				{ "target": "AttackMarkedHero",		"data":	{ "enabled": true,		"valueFlat": 100000,	"valueMultipler": 0.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 100000, 	"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 2500000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 2500000, 	"valueMultipler": 0.00 } }
+			]
+		},
+
+
+
+
+
+		{
+			"id": "one_hero_defencePassive_main_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 5,
+
+			"priorities":
+			[
+				{ "target": "GoToMarkedCity",		"data":	{ "enabled": true,		"valueFlat": 100000,	"valueMultipler": 0.00 } },
+				{ "target": "HireInMarkedCity",		"data":	{ "enabled": true,		"valueFlat": 2500,		"valueMultipler": 0.00 } },
+
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 100000,	"valueMultipler": 10.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 5.00 } },
+
+				{ "target": "MarkedObjectCapture",	"data": { "enabled": true,		"valueFlat": 0,			"valueMultipler": 0.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": -0.50 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 2500000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 2500000, 	"valueMultipler": 0.00 } }
+			]
+		},
+
+
+
+
+
+		{
+			"id": "one_hero_captureArea_main_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 4,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "GoToMarkedCity",		"data":	{ "enabled": true,		"valueFlat": 1000000,	"valueMultipler": 0.00 } },
+
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 0.00 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 2.00 } },
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 10.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 2500000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 2500000, 	"valueMultipler": 0.00 } }
+			]
+		},
+
+
+
+
+
+		{
+			"id": "one_hero_expandArea_main_hero_tasks",
+			"customScenario": "AttackMarkedAreaGuard",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 2,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "MarkedSquadAttack",	"data": { "enabled": true,		"valueFlat": 10000, 	"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_expandArea_main_hero_tasks_customScenario_TakeGarnisonFromMarkedCityToCourier",
+			"customScenario": "TakeGarnisonFromMarkedCityToCourier",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_expandArea_main_hero_tasks_customScenario_UpgradeUnitsInMarkedCity",
+			"customScenario": "UpgradeUnitsInMarkedCity",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_expandArea_main_hero_needValue_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "MarkedSquadAttack",	"data": { "enabled": true,		"valueFlat": 0,			"valueMultipler": 0.00 } },
+
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 0.00 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 25.00 } },
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 10.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "OneByHero",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "OneByHeroPerWeek",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 250000,	"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 0,			"valueMultipler": 0.50 } }
+			]
+		},
+
+
+
+
+		{
+			"id": "one_hero_defaultWar_main_hero_tasks_customScenario_AttackMarkedHero",
+			"customScenario": "AttackMarkedHero",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[	
+
+			]
+		},
+		{
+			"id": "one_hero_defaultWar_main_hero_tasks_customScenario_AttackMarkedCity",
+			"customScenario": "AttackMarkedCity",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[	
+
+			]
+		},
+		{
+			"id": "one_hero_defaultWar_main_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[	
+				{ "target": "MarkedObjectCapture",	"data": { "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+				{ "target": "AttackMarkedHero",		"data": { "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 10000, 	"valueMultipler": 0.00 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 10.00 } },
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 5000, 		"valueMultipler": 10.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 50000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": -0.50 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.50 } }
+			]
+		},
+
+		{
+			"id": "one_hero_defaultWar_main_hero_tasks_customScenario_TakeGarnisonFromMarkedCityToCourier",
+			"customScenario": "TakeGarnisonFromMarkedCityToCourier",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_defaultWar_main_hero_tasks_customScenario_UpgradeUnitsInMarkedCity",
+			"customScenario": "UpgradeUnitsInMarkedCity",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } }
+			]
+		},
+
+
+
+
+
+		{
+			"id": "one_hero_default_main_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 2.00 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 10.00 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 5000, 		"valueMultipler": 0.00 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 5.00 } },
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "OneByHero",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "OneByHeroPerWeek",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.25 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureMine",			"data":	{ "enabled": true,		"valueFlat": 40000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 20000, 	"valueMultipler": 1.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 60000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_default_main_hero_tasks_customScenario_TakeGarnisonFromMarkedCityToCourier",
+			"customScenario": "TakeGarnisonFromMarkedCityToCourier",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_default_main_hero_tasks_customScenario_UpgradeUnitsInMarkedCity",
+			"customScenario": "UpgradeUnitsInMarkedCity",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_default_main_hero_tasks_customScenario_GoToMarkedNode",
+			"customScenario": "GoToMarkedNode",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				
+			]
+		},
+
+
+
+
+
+		{
+			"id": "one_hero_isGladiatorArenaInProcess_main_hero",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 2.00 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 10.00 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 5000, 		"valueMultipler": 0.00 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 5.00 } },
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "OneByHero",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "OneByHeroPerWeek",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.25 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureMine",			"data":	{ "enabled": true,		"valueFlat": 40000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 20000, 	"valueMultipler": 1.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 60000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } }
+			]
+		},
+		{
+			"id": "one_hero_isTournamentInProcess_main_hero",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 2.00 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 10.00 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 5000, 		"valueMultipler": 0.00 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 5.00 } },
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 2500, 		"valueMultipler": 0.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "OneByHero",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "OneByHeroPerWeek",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.25 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureMine",			"data":	{ "enabled": true,		"valueFlat": 40000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 20000, 	"valueMultipler": 1.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 60000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } }
+			]
+		},
+		{
+			"id": "one_hero_isLostStartCityInProcess_main_hero",
+			"customScenario": "ReturnStartCity",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureMine",			"data":	{ "enabled": true,		"valueFlat": 40000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 20000, 	"valueMultipler": 1.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 60000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } }
+			]
+		},
+		{
+			"id": "one_hero_isCityHoldInProcess_main_hero",
+			"customScenario": "TakeCityHold",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureMine",			"data":	{ "enabled": true,		"valueFlat": 40000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 20000, 	"valueMultipler": 1.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 60000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureGladiatorArena","data":	{ "enabled": true,		"valueFlat": 500000,	"valueMultipler": 0.00 } },
+
+				{ "target": "TakeFromCourier",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } }
+			]
+		}
+	]
+}

@@ -1,0 +1,34 @@
+{
+	"array": [
+		{
+			"id": "vyr_Scenario2_P1_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"text": "gs_dialogue_text_vyr_Scenario2_P1_dial2_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_dungeon_5_Mouaren_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "gs_dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "gs_dialogue_text_vyr_Scenario2_P1_dial2_1",
+					"end": true
+				}
+			]
+		}
+	]
+}

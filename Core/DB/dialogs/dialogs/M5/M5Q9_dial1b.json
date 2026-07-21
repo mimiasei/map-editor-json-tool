@@ -1,0 +1,198 @@
+{
+	"array": [
+		{
+			"id": "M5Q9_dial1b",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_vampire1",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q9_dial1b_0",
+					"mapActions": [
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"vampire",
+								"false"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_vampire2",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q9_dial1b_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_vampire1",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q9_dial1b_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_vampire_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_vampire1",
+						"position": 1
+					},
+					"text": "dialogue_text_M5Q9_dial1b_3",
+					"answers": [
+						{
+							"text": "dialogue_text_M5Q9_dial1_1_answer_3",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "RandomDialog",
+									"p": [
+										"M5Q9_dial1a",
+										"M5Q9_dial1c",
+										"M5Q9_dial1d",
+										"M5Q9_dial1e",
+										"M5Q9_dial1f"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q9_dial1_1_answer_1",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "BreakInterruptions"
+								},
+								{
+									"a": "StepBack"
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q9_dial1_1_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-1"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"vampire_kill",
+										"1"
+									]
+								},
+								{
+									"a": "InitiateAttack",
+									"p": [
+										"vampire"
+									]
+								}
+							]	
+						}
+					]
+				}
+			]
+		}
+	]
+}

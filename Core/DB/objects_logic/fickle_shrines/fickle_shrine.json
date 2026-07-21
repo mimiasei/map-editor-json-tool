@@ -1,0 +1,10 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "fickle_shrine",
+			"tooltipVisitType": "CurrentHeroVisit",
+			"goodsValue": 30000
+		}
+	]
+}

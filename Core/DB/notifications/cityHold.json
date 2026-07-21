@@ -1,0 +1,16 @@
+{
+	"array":
+	[
+        {
+            "id": "cityHold",
+            "parameters":[
+                "city_hold_win_lose_capture_city_enemy",
+                "city_hold_win_lose_capture_city_enemy_daily",
+                "city_hold_win_lose_capture_city_you",
+                "city_hold_win_lose_capture_city_you_daily",
+                "city_hold_win_lose_capture_city_info"
+            ]
+        }
+		
+	]
+}

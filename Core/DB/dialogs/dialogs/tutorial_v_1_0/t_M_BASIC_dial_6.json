@@ -1,0 +1,46 @@
+{
+	"array": [
+		{
+			"id": "t_M_BASIC_dial_6",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_6_1",
+					"mapActions": [ { "a": "CounterPlus", "p": [ "tutorial_M_BASIC_Step_3_Counter", "1" ] }, { "a": "CounterPlus", "p": [ "tutorial_M_BASIC_Win_Condition_Counter", "1" ] }, { "a": "SetActiveVFX", "p": [ "Step_4_VFX_Zone", "false" ] } ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_BASE_dial_6_2",
+					"mapActions": [ { "a": "DeleteEntity", "p": [ "block_1_1" ] }, { "a": "DeleteEntity", "p": [ "block_1_2" ] }, { "a": "DeleteEntity", "p": [ "block_1_3" ] } ],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"mapActions": [ { "a": "SubQuestActivate", "p": [ "Questlog", "step_5" ] } ],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

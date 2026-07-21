@@ -1,0 +1,36 @@
+{
+	"array": [
+		{
+			"id": "squad_nature_one_unit_t2_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 100,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "twinkle",
+						"v": 2502
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 2502,
+				"units": [
+					"twinkle"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 15002,
+				"units": [
+					{
+						"s": "twinkle",
+						"v": 15002
+					}
+				]
+			},
+			"tier": 2,
+			"fraction": "nature"
+		}
+	]
+}

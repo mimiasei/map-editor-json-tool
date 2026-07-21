@@ -1,0 +1,108 @@
+﻿{
+	"array":
+	{
+		"data":
+		[
+			{
+				"key": "River",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/water",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "Grass",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/grass",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "Sand",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/sand",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "Deathland",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/mud",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "Snow",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/snow",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "Autumn",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/autumn_grass",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "Lava",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/lava",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "Dirt",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/dirt",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "RockyRoad",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/stone",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			},
+			{
+				"key": "DirtRoad",
+				"val":
+				{
+					"soundSetName": "sounds/world_map/hero/dirt",
+					"maxDistance": 15,
+					"rollOffDecayCurve": "hero_roll_off",
+					"spreadCurve": "hero_spread"
+				}
+			}
+		]
+	}	
+}

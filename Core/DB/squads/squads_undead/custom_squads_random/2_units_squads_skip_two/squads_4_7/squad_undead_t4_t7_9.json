@@ -1,0 +1,44 @@
+{
+    "array": [
+        {
+            "id": "squad_undead_t4_t7_9",
+            "useOldSquads": false,
+            "rollChance": 133,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "graverobber_upg_alt",
+                        "v": 9527
+                    },
+                    {
+                        "s": "vampire_upg_alt",
+                        "v": 18027
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 18027,
+                "units": [
+                    "graverobber_upg_alt",
+                    "vampire_upg_alt"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 132527,
+                "units": [
+                    {
+                        "s": "graverobber_upg_alt",
+                        "v": 40027
+                    },
+                    {
+                        "s": "vampire_upg_alt",
+                        "v": 132527
+                    }
+                ]
+            },
+            "tier": 7,
+            "fraction": "undead"
+        }
+    ]
+}

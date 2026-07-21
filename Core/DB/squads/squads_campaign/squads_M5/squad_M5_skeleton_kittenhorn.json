@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M5_skeleton_kittenhorn",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "kitten_horn", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"kitten_horn"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 50005,
+				"units":
+				[
+					{ "s" : "kitten_horn", "v": 50000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "neutral"
+		}
+	]
+}

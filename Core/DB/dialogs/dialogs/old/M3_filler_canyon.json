@@ -1,0 +1,27 @@
+{
+	"array":
+	[
+		{
+			"id": "M3_filler_canyon",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "resource canyon",
+									
+					"end": true
+				}				
+			]
+		}
+	]
+}

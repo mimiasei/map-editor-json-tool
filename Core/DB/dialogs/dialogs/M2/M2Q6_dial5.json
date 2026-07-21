@@ -1,0 +1,84 @@
+{
+	"array": [
+		{
+			"id": "M2Q6_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_kitten_horn",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_kitten",
+						"position": 2
+					},
+					"text": "dialogue_text_M2Q6_dial5_0",
+					"answers": [
+						{
+							"text": "dialogue_text_M2Q6_dial5_0_answer_1",
+							"actions": [
+								{
+									"a": "End"
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Nature",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{ "a": "ShowFloatingUI", "p": [ "spring_icon", "-1" ] },
+								{ "a": "CounterPlus", "p": [ "kitten_attacked", "1" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten1" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten2" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten3" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten4" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten5" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten6" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten11" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten12" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten13" ] },
+								{ "a": "EntityActionsOff", "p": [ "kitten14" ] },
+								{ "a": "SetActiveQuestMarker", "p": [ "kitten11", "false" ] },
+								{ "a": "SetActiveQuestMarker", "p": [ "kitten12", "false" ] },
+								{ "a": "SetActiveQuestMarker", "p": [ "kitten13", "false" ] },
+								{ "a": "SetActiveQuestMarker", "p": [ "kitten14", "false" ] }
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q6_dial5_0_answer_2",
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							],
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

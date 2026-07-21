@@ -1,0 +1,53 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M9_amplifier_guard",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "skeleton", "v": 5000 },
+					{ "s" : "skeleton_upg", "v": 5000 },
+					{ "s" : "vampire_upg_alt", "v": 10000 },
+					{ "s" : "skeleton_upg_alt", "v": 5000 },
+					{ "s" : "lich_upg_alt", "v": 5000 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"vampire_upg_alt"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 85000,
+				"units":
+				[
+					{ "s" : "skeleton", "v": 40000 },
+					{ "s" : "skeleton_upg", "v": 40000 },
+					{ "s" : "skeleton_upg_alt", "v": 40000 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "undead"
+		}
+	]
+}

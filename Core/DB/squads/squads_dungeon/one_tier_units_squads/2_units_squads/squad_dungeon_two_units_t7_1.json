@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_dungeon_two_unit_t7_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 800,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "black_dragon", "v": 25007 },
+					{ "s" : "black_dragon_upg", "v": 25007 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 25007,
+				"units":
+				[
+					"black_dragon", "black_dragon_upg"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 240007,
+				"units":
+				[
+					{ "s" : "black_dragon", "v": 240007 },
+					{ "s" : "black_dragon_upg", "v": 240007 }
+				]
+			},
+
+			"tier": 7,
+			"fraction": "dungeon"
+		}
+	]
+}

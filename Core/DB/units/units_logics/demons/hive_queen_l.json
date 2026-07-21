@@ -1,0 +1,268 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "hive_queen",
+			"squadValue": 3162,
+			"expBonus": 316,
+			"tier": 7,
+			"fraction": "demon",
+			"nativeBiome": "Lava",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "demon" ],
+
+			"upgradeSid": "hive_queen_upg",
+			
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 2100 },
+					{ "name": "crystals", "cost": 1  }
+				]
+			},
+
+			"stats":
+			{	
+				"hp": 200,
+				"offence": 25,
+				"defence": 25,
+				"damageMin": 60,
+				"damageMax": 60,
+
+				"initiative": 8,
+				"speed": 6,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -5,
+				"moralMax": 5,
+				"luckMin": -5,
+				"luckMax": 5,
+
+				"damagePerDeltaLevelLower": 0.03,
+
+				"inDmgMods":
+				{
+					"list":
+					[
+
+					]
+				},
+
+				"outDmgMods":
+				{
+					"list":
+					[
+									
+					]
+				}
+			},
+			
+			"passives": 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "demon_immunities" ] }
+						]
+					}
+				}
+			],
+			"conditionalPassives": 
+			[
+				{
+					"condition": 
+					[ 
+						"unique_fractions_buff", 
+						"enemy", 
+						"human",	"hive_queen_passive_human", 
+						"undead",	"hive_queen_passive_undead",
+						"nature",	"hive_queen_passive_nature",
+						"unfrozen",	"hive_queen_passive_unfrozen",
+						"dungeon",	"hive_queen_passive_dungeon",
+						"neutral",	"hive_queen_passive_neutral"
+					]
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"triggerCounter" : true,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"targetMechanics" : [ ]
+					}
+				} 
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+						
+						"targetMechanics" : [ ]
+					}
+				}
+			],
+
+			"abilities" : 
+			[
+				{
+					"attackType_" : "cast",
+					"rank": 1,
+					
+					"selfMechanics" : [ ],
+												
+					"cd" : 1,								
+					"actionCost": 0,
+					"energyLevel": 1,
+					
+					"damageDealer" : 
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "ability", "buff_ability" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_buff",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"damageTarget_": "none",
+
+						"buffTarget_": "all",
+						"buff":
+						{
+							"sid": "hive_queen_buff_null",
+							"duration": 2
+						},
+						
+						"targetMechanics" : [ { "mech": "copy_buff", "values": [ "conditional_passive", "0", "1", "2" ] } ]
+					}
+				},
+				{
+					"attackType_" : "cast",
+					"rank": 3,
+					
+					"selfMechanics" : [ ],
+
+					"cd" : 3,
+					"energyLevel": 3,
+
+					"damageDealer" : 
+					{
+						"tags": [ "ability", "magic_damage" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_rumble_x2_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "magic_pure",
+
+						"statDmgMult": 0.5,
+
+						"targetMechanics" : [ ]
+					}
+				}
+			]
+		}
+	]
+}

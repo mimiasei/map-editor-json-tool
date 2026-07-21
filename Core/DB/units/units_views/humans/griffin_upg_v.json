@@ -1,0 +1,75 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "griffin_upg",
+			"mesh": "Humans/1Prefabs/griffin_upg",
+			"mapMesh": "Humans/1Prefabs/griffin_upg_map",
+			"fadeTime": 1.75,
+
+			"scale": 0.7,
+			"modelHeight": 0.34,
+			"moveSpeed": 7,
+			
+			"attackTimeBefore": [ 0.57, 3.133, 0.71, 0.71, 0.71, 0.71 ],
+			"attackTimeAfter": [ 0.863, 0, 0.9, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 1.5,
+
+			"takeoffPrepareTime": 0.25,
+			"ascentTime": 0.5,
+			"descentTime": 0.45,
+			"defaultHeight": 1.75,
+
+			"takeDamageTime": 1.33,
+			"deathTimeOffset": 1.57,
+			
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+			
+			"abilities":
+			[
+				{	
+					"name": "griffin_ability_1_name",
+					"abilityType": "Ability_type_buff",
+					"description": "griffin_ability_1_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+				{
+					"name": "base_class_magic_creature",
+					"description": "base_class_magic_creature_description"
+				},
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "base_passive_aware_2_name",
+					"description": "base_passive_aware_2_description"
+				}
+			]
+		}
+	]
+}

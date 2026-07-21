@@ -1,0 +1,61 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M_2",
+			
+			"contentHeight": 460,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_2_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_2_1", "true", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_1" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_1_5" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_2_name",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "tutorial_M_2_1_5_1" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_2_2", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_1_5_2" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_2_3", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_1_5_3" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_2_4", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_1_5_4" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_1_5_5" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_2_name",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "tutorial_M_2_2" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_3" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_4" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_5" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_2_1", "true", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_2_6" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "CounterPlus", "p": [ "Tutorial_M_Counter_2", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

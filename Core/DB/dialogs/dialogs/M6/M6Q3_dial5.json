@@ -1,0 +1,501 @@
+{
+	"array": [
+		{
+			"id": "M6Q3_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sentinel",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial5_0",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_c_angel",
+								"2702",
+								"1",
+								"false",
+								"angel_ambush1"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_c_angel",
+								"2444",
+								"1",
+								"false",
+								"angel_ambush2"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_c_angel",
+								"2446",
+								"1",
+								"false",
+								"angel_ambush3"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"zone_angel_ambush"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial5_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sentinel",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial5_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial5_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sentinel",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial5_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial5_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sentinel",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial5_6",
+					"answers": [
+						{
+							"text": "dialogue_text_M6Q3_dial5_6_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"6a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M6Q3_dial5_6_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"6_s"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "6a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M6Q3_dial5_6a",
+					"next": "endFight"
+				},
+				{
+					"id": "endFight",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_c_angel",
+								"1",
+								"48000",
+								"true",
+								"angel_ambush"
+							]
+						},
+						{
+							"a": "SetFlagAutobattle",
+							"p": [
+								"angel_ambush",
+								"false"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"angel_ambush",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"angel_ambush",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"angel_ambush"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"angel_ambush1",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"angel_ambush2",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"angel_ambush3",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				},
+				{
+					"id": "6_s",
+					"fon": "",
+					"text": "dialogue_text_M6Q3_dial5_6_s",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"angel_quest_failed",
+								"1"
+							]
+						},
+						{
+							"a": "RemoveUnitHero",
+							"p": [
+								"sentinel",
+								"all",
+								"campaign_hero_1"
+							]
+						}
+					],
+					"next": "6b"
+				},
+				{
+					"id": "6b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sentinel",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sentinel",
+						"position": 2
+					},
+					"text": "dialogue_text_M6Q3_dial5_6b",
+					"next": "6b_s"
+				},
+				{
+					"id": "6b_s",
+					"fon": "",
+					"text": "dialogue_text_M6Q3_dial5_6b_s",
+					"mapActions": [
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"offence",
+								"campaign_hero_1",
+								"2"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"defence",
+								"campaign_hero_1",
+								"2"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"spellPower",
+								"campaign_hero_1",
+								"2"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"intelligence",
+								"campaign_hero_1",
+								"2"
+							]
+						}
+					],
+					"next": "endPeace"
+				},
+				{
+					"id": "endPeace",
+					"fon": "",
+					"text": "",
+					"mapActions": [						
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"angel_ambush1",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"angel_ambush2",
+								"1"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"angel_ambush3",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

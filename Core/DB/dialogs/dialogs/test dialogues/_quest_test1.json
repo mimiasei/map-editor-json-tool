@@ -1,0 +1,25 @@
+{
+	"array":
+	[
+		{
+			"id": "quest_test1",
+			"slides":
+			[
+				{
+					"id": "start",
+					"title": "",
+					"text": "После этого диалога должен сразу же начаться бой",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"end": true,
+					"resultDialog": "Default"
+				}
+			]
+		}
+	]
+}

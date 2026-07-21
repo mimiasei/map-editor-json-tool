@@ -1,0 +1,68 @@
+{
+	"array":
+	[
+		{
+			"id": "acgth_main_quest_line_end_alt",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"text": "acgth_main_quest_line_end_alt_text_1",
+					"mapActions": [ { "a": "RevealFogOfWar", "p": [ "188", "4" ] }, { "a": "RevealFogOfWar", "p": [ "331", "3" ] }, { "a": "RevealFogOfWar", "p": [ "278", "4" ] }, { "a": "RevealFogOfWar", "p": [ "470", "4" ] } ],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_win_action", "1" ] } ],
+					"text": "acgth_main_quest_line_end_alt_text_2",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_nature_6_Mreowa_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "nature_hero_6",
+						"position": 3
+					},
+					"mapActions": [ { "a": "Print", "p": [ "ACHIVKA_4" ] } ],
+					"text": "acgth_main_quest_line_end_alt_text_3",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [ { "a": "CounterPlus", "p": [ "main_quest_win", "1" ] } ],
+					"invokeOnlyActions": true,
+					"end": true						
+				}
+			]
+		}
+	]
+}

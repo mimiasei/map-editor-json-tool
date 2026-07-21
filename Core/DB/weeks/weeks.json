@@ -1,0 +1,125 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "astrologist_week_1",
+			"icon": "astrologist_week_1_icon",
+			"name": "astrologist_week_1_name",
+			"desc": "astrologist_week_1_desc",
+
+			"buffSid": "astrologist_week_1_buff"
+		},
+		{
+			"id": "astrologist_week_2",
+			"icon": "astrologist_week_2_icon",
+			"name": "astrologist_week_2_name",
+			"desc": "astrologist_week_2_desc",
+
+			"buffSid": "astrologist_week_2_buff"
+		},
+		{
+			"id": "astrologist_week_3",
+			"icon": "astrologist_week_3_icon",
+			"name": "astrologist_week_3_name",
+			"desc": "astrologist_week_3_desc",
+
+			"buffSid": "astrologist_week_3_buff"
+		},
+		{
+			"id": "astrologist_week_4",
+			"icon": "astrologist_week_4_icon",
+			"name": "astrologist_week_4_name",
+			"desc": "astrologist_week_4_desc",
+
+			"buffSid": "astrologist_week_4_buff"
+		},
+		{
+			"id": "astrologist_week_5",
+			"icon": "astrologist_week_5_icon",
+			"name": "astrologist_week_5_name",
+			"desc": "astrologist_week_5_desc",
+
+			"buffSid": "astrologist_week_5_buff"
+		},
+		{
+			"id": "astrologist_week_6",
+			"icon": "astrologist_week_6_icon",
+			"name": "astrologist_week_6_name",
+			"desc": "astrologist_week_6_desc",
+
+			"buffSid": "astrologist_week_6_buff"
+		},
+		{
+			"id": "astrologist_week_7",
+			"icon": "astrologist_week_7_icon",
+			"name": "astrologist_week_7_name",
+			"desc": "astrologist_week_7_desc",
+
+			"buffSid": "astrologist_week_7_buff"
+		},
+		{
+			"id": "astrologist_week_8",
+			"icon": "astrologist_week_8_icon",
+			"name": "astrologist_week_8_name",
+			"desc": "astrologist_week_8_desc",
+
+			"buffSid": "astrologist_week_8_buff"
+		},
+		{
+			"id": "astrologist_week_9",
+			"icon": "astrologist_week_9_icon",
+			"name": "astrologist_week_9_name",
+			"desc": "astrologist_week_9_desc",
+
+			"buffSid": "astrologist_week_9_buff"
+		},
+		{
+			"id": "astrologist_week_10",
+			"icon": "astrologist_week_10_icon",
+			"name": "astrologist_week_10_name",
+			"desc": "astrologist_week_10_desc",
+
+			"buffSid": "none_effect_buff"
+		},
+		{
+			"id": "astrologist_week_11",
+			"icon": "astrologist_week_11_icon",
+			"name": "astrologist_week_11_name",
+			"desc": "astrologist_week_11_desc",
+
+			"buffSid": "astrologist_week_11_buff"
+		},
+		{
+			"id": "astrologist_week_12",
+			"icon": "astrologist_week_12_icon",
+			"name": "astrologist_week_12_name",
+			"desc": "astrologist_week_12_desc",
+
+			"buffSid": "astrologist_week_12_buff"
+		},
+		{
+			"id": "astrologist_week_13",
+			"icon": "astrologist_week_13_icon",
+			"name": "astrologist_week_13_name",
+			"desc": "astrologist_week_13_desc",
+
+			"buffSid": "astrologist_week_13_buff"
+		},
+		{
+			"id": "astrologist_week_14",
+			"icon": "astrologist_week_14_icon",
+			"name": "astrologist_week_14_name",
+			"desc": "astrologist_week_14_desc",
+
+			"buffSid": "astrologist_week_14_buff"
+		},
+		{
+			"id": "astrologist_week_15",
+			"icon": "astrologist_week_15_icon",
+			"name": "astrologist_week_15_name",
+			"desc": "astrologist_week_15_desc",
+
+			"buffSid": "astrologist_week_15_buff"
+		}
+	]
+}

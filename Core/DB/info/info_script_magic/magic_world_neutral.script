@@ -1,0 +1,212 @@
+﻿string text_description_need_level_1
+{
+	Text( return, "1" )
+}
+
+string text_description_need_level_2
+{
+	Text( return, "1" )
+}
+
+string text_description_need_level_3
+{
+	Text( return, "4" )
+}
+
+string text_description_need_level_4
+{
+	Text( return, "8" )
+}
+
+string text_description_need_level_5
+{
+	Text( return, "12" )
+}
+
+//
+
+modInt current_neutral_1_magic_back_to_garrison_usageLimit
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+//
+
+modInt current_neutral_1_magic_back_to_city
+{
+	Text( return, "16" )
+}
+
+modInt current_neutral_1_magic_back_to_city_old
+{
+	CurrentHero ( viewRadius, "heroStat.viewRadius" )
+
+	Mul ( heroRadius, viewRadius, "3" )
+
+	Text( return, heroRadius )
+}
+
+modInt current_neutral_1_magic_back_to_city_usageLimit
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+//
+
+modInt current_neutral_1_magic_mana_transfer
+{
+	CurrentHero ( viewRadius, "heroStat.viewRadius" )
+
+	Mul ( heroRadius, viewRadius, "3" )
+
+	Text( return, heroRadius )
+}
+
+modInt current_neutral_1_magic_mana_transfer_usageLimit
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+string current_neutral_1_magic_mana_transfer_1
+{
+	Text( return, "10" )
+}
+
+string current_neutral_1_magic_mana_transfer_2
+{
+	Text( return, "20" )
+}
+
+//
+
+modInt current_neutral_1_magic_units_replace_usageLimit
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+//
+
+string current_neutral_1_magic_mana_restore_1
+{
+	Text( return, "1" )
+}
+
+string current_neutral_1_magic_mana_restore_2
+{
+	Text( return, "1" )
+}
+
+//
+
+//
+
+modInt current_neutral_magic_second_sight_1
+{
+	CurrentMagicWorld ( baseMove, "parameters[0]" )
+	CurrentMagicWorld ( bonusMove, "parameters[1]" )
+
+	CurrentMagicLevel ( level )
+	Sub ( levelSub, level, 1 )
+	
+	Mul ( bonusMoveMul, bonusMove, levelSub )
+	Add ( finalMove, baseMove, bonusMoveMul )
+
+	Text( return, finalMove )
+}
+
+modInt current_neutral_magic_second_sight_2
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+//
+
+modPercentNumeric current_neutral_magic_shadow_form
+{
+	CurrentMagicWorld ( buffSid, "parameters[0]" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+string current_neutral_magic_shadow_form_2
+{
+	Text( return, "30" )
+}
+
+string current_neutral_magic_shadow_form_bonus_3
+{
+	Text( return, "20" )
+}
+
+string current_neutral_magic_shadow_form_bonus_4
+{
+	Text( return, "40" )
+}
+
+// 
+
+modInt current_neutral_magic_dimension_door_1
+{
+	CurrentMagicWorld ( baseRadius, "parameters[0]" )
+	CurrentMagicWorld ( bonusRadius, "parameters[1]" )
+
+	CurrentMagicLevel ( level )
+	Sub ( levelSub, level, 1 )
+	
+	Mul ( bonusRadiusMul, bonusRadius, levelSub )
+	Add ( finalRadius, baseRadius, bonusRadiusMul )
+
+	Text( return, baseRadius )
+}
+
+modInt current_neutral_magic_dimension_door_2
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+//
+
+modInt current_neutral_magic_light_gate_1
+{
+	CurrentMagicWorld ( baseRadius, "parameters[0]" )
+	CurrentMagicWorld ( bonusRadius, "parameters[1]" )
+
+	CurrentMagicLevel ( level )
+	Sub ( levelSub, level, 1 )
+	
+	Mul ( bonusRadiusMul, bonusRadius, levelSub )
+	Add ( finalRadius, baseRadius, bonusRadiusMul )
+
+	Text( return, baseRadius )
+}
+
+modInt current_neutral_magic_light_gate_2
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+modInt current_neutral_magic_pocket_dimension_1
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+string current_neutral_magic_pocket_dimension_2
+{
+	Text( return, "4" )
+}
+
+//
+
+modInt current_neutral_magic_town_portal
+{
+	CurrentMagicWorld ( return, "usageLimit" )
+}
+
+string current_neutral_magic_town_portal_bonus_3
+{
+	Text( return, "1" )
+}
+
+string current_neutral_magic_town_portal_bonus_4
+{
+	Text( return, "1" )
+}

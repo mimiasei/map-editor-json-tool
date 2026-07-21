@@ -1,0 +1,36 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_one_unit_t1_2",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 70,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "lesser_eldritch_upg",
+                        "v": 1
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 1,
+                "units": [
+                    "lesser_eldritch_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 10001,
+                "units": [
+                    {
+                        "s": "lesser_eldritch_upg",
+                        "v": 10001
+                    }
+                ]
+            },
+            "tier": 1,
+            "fraction": "unfrozen"
+        }
+    ]
+}

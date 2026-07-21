@@ -1,0 +1,60 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_gingerbread_house",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+
+			"variantRerollType": "OnStartWeek",
+			"visitorsResetType": "OnStartWeek",
+			"visitType": "OneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 3000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Directly",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "gingerbread_house_label",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SidePropResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [  ]
+							},
+							{
+								"rewardType": "SidePropResReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "resReward_description",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [  ]
+							}
+						]
+					}					
+				}
+			]
+		}
+	]
+}

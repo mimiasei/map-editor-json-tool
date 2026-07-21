@@ -1,0 +1,38 @@
+{
+	"array":
+	[
+		{
+			"id": "M9_altar_grove_dial2",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "do you have every unit needed for the sacrifice?",
+
+					"answers":
+					[
+						{
+							"text": "Yes",
+							"actions": [ { "a": "End" } ]
+						},
+						{
+							"text": "No",
+							"actions": [ { "a": "End" } ]
+						}
+					]
+				}				
+			]
+		}
+	]
+}

@@ -1,0 +1,34 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M_23",
+			
+			"contentHeight": 460,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_23_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_23_1", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_23_1" ] },
+						{ "type": "text", "value": [ "tutorial_M_23_2" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_23_2", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_23_3" ] },
+						{ "type": "text", "value": [ "tutorial_M_23_4" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "CounterPlus", "p": [ "Tutorial_M_Counter_23", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

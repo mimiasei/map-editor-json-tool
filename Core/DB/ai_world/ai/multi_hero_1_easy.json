@@ -1,0 +1,44 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "multi_hero_easy",
+
+			"strategies":
+			[
+				{
+					"sid": "multi_hero_defualt",
+
+					"lastAreaTasksMultiplier": 35,
+
+					"actionsBefore":
+					[
+						{ "sid": "cityBuilder" },
+						{ "sid": "cityHireGarnison" },
+						{ "sid": "garisonUnitsUpgrade" },	
+						{ "sid": "markCityToCourierWithBestGarnison" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsOnSelectHero":
+					[
+						{ "sid": "buffSide", "p": [ "ai_side_buffs_multi_hero_0", "Infinite", "-1" ] },
+
+						{ "sid": "markCityToCourierWithBestGarnison" },
+						{ "sid": "markCityToUnitUpgrade" },
+						{ "sid": "markNodeInLastArea" }
+					],
+					"actionsAfter":
+					[
+						{ "sid": "recruitingHero" },
+						{ "sid": "removeWeakUnits", "p": [ "0.05", "7", "notMain" ] },
+						{ "sid": "learnFractionLaw" }
+					],
+					
+					"roles": [ "multi_hero_default_main_hero_easy" ],
+					"heroesSort": "Value"
+				}
+			]
+		}
+	]
+}

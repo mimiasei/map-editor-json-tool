@@ -1,0 +1,249 @@
+{
+	"array": [
+		{
+			"id": "M5_galthran_dial2",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial2_0",
+					"mapActions": [
+						{
+							"a": "BreakInterruptions"
+						}
+					],
+					"answers": [
+						{
+							"text": "dialogue_text_M5_galthran_dial2_0_answer_1",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0a"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5_galthran_dial2_0_answer_2",
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0b"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M5_galthran_dial2_0_answer_3",
+							"requests": [
+								{
+									"c": "Counter",
+									"reqStatus": "true",
+									"p": [
+										"thant_quest_finished",
+										"=",
+										"1"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"0c"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "0a",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial2_0a",
+					"actions": [
+						{
+							"a": "StoryCounterMinus",
+							"p": [
+								"fractionReputation_Undead",
+								"1"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"undead_icon",
+								"-1"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "0b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial2_0b",
+					"next": "ending"
+				},
+				{
+					"id": "0c",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial2_0c",
+					"next": "0c1"
+				},
+				{
+					"id": "0c1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_hero_Thant",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_thant",
+						"position": 2
+					},
+					"text": "dialogue_text_M5_galthran_dial2_0c1",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "DeleteHero",
+							"p": [
+								"campaign_M5_hero_undead_2alt"
+							]
+						},
+						{
+							"a": "Dialog",
+							"p": [
+								"M5_galthran_dial2_1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

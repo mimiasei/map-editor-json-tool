@@ -1,0 +1,263 @@
+{
+	"array":
+	[
+		{
+			"id": "skill_pseudo_1",
+			"icon": "offence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_1_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_2",
+			"icon": "defence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_2_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_3",
+			"icon": "spellPower",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_3_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "1" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_4",
+			"icon": "intelligence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_4_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "1" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "skill_pseudo_5",
+			"icon": "offence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_5_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_6",
+			"icon": "defence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_6_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_7",
+			"icon": "spellPower",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_7_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "2" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_8",
+			"icon": "intelligence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_8_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "2" ]
+						}
+					]
+				}
+			]
+		},
+
+
+
+		{
+			"id": "skill_pseudo_9",
+			"icon": "offence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_9_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "offence", "3" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_10",
+			"icon": "defence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_10_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "defence", "3" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_11",
+			"icon": "spellPower",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_11_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "spellPower", "3" ]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": "skill_pseudo_12",
+			"icon": "intelligence",
+			"name": "skill_pseudo_name",
+			"desc": "skill_pseudo_12_desc",
+
+			"isPseudoSkill": true,
+
+			"parametersPerLevel":
+			[
+				{
+					"bonuses":
+					[
+						{
+							"type": "heroStat",
+							"parameters": [ "intelligence", "3" ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

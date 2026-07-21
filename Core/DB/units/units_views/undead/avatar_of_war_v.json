@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "avatar_of_war",
+			"mesh": "Undead/1Prefabs/avatar_of_war",
+			"mapMesh": "Undead/1Prefabs/avatar_of_war_map",
+			"fadeTime": 1.9,
+			
+			"scale": 1.68,
+			"modelHeight": 0.68,
+			"moveSpeed": 3.2,
+			
+			"attackTimeBefore": [ 0.78, 0.87, 0.8, 0.8, 0.8, 0.8 ],
+			"attackTimeAfter": [ 0.95, 1.297, 1, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.967,
+
+			"takeDamageTime": 1.33,
+			"deathTimeOffset": 2.3,
+			
+			"bloodEffect": "effects/blood/blood_avatar_of_war",
+			"bloodHexEffect": "effects/blood/blood_avatar_of_war_hex",
+
+			"baseClass":
+                {
+                    "name": "base_class_undead",
+                    "description": "base_class_undead_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_double_strike_name",
+					"description": "base_passive_double_strike_description"
+				},
+				{
+					"name": "avatar_of_war_passive_1_name",
+					"description": "avatar_of_war_passive_1_description"
+				}
+			]
+		}
+	]
+}

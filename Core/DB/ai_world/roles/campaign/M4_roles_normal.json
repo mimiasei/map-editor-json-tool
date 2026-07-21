@@ -1,0 +1,16 @@
+﻿{
+	"array":
+	[	
+		{
+			"id": "multi_hero_M4_default_main_hero_normal",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[				
+				{
+					"task": "multi_hero_M4_default_main_hero_tasks"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,194 @@
+﻿
+modInt unic_unit_flicker_passive_2
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	DbBuff( buffDataBase, buffSid, "actions[0].damageDealer.minBaseDmg" )
+	DbBuff( buffData, buffSid, "actions[0].damageDealer.minStackDmg" )
+
+	Mul ( MulData, currentStacks, buffData )	
+	Add ( return, MulData, buffDataBase )
+}
+
+modInt unic_unit_pet_passive_1
+{ 
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modInt unic_unit_pet_passive_2
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modInt unic_unit_pet_passive_3
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	DbBuff( buffDataBase, buffSid, "actions[0].damageDealer.minBaseDmg" )
+	DbBuff( buffData, buffSid, "actions[0].damageDealer.minStackDmg" )
+
+	Mul ( MulData, currentStacks, buffData )	
+	Add ( return, MulData, buffDataBase )
+}
+
+modInt unic_unit_pet_ability_2
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	CurrentAbility( unitsBonusStacks, "damageDealer.targetMechanics[0].values[2]" )
+
+	Mul ( fullStacksMul, currentStacks, unitsBonusStacks )
+
+	Text( return, fullStacksMul )
+}
+
+modPercentNumeric unic_unit_pet_ability_2_add
+{
+	CurrentAbility( return, "damageDealer.targetMechanics[0].values[2]" )
+}
+
+modInt unic_unit_graverobber_passive_1
+{ 
+	CurrentUnitConfig ( energy, "passives[0].actions[0].damageDealer.targetMechanics[0].values[2]" )
+
+	Text( return, energy )
+}
+
+modInt unic_unit_graverobber_passive_2
+{ 
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentUnitConfig ( buffSid, "defaultAttacks[0].damageDealer.buff.sid" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	DbBuff( buffDataBase, buffSid, "actions[0].damageDealer.minBaseDmg" )
+	DbBuff( buffData, buffSid, "actions[0].damageDealer.minStackDmg" )
+
+	Mul ( MulData, currentStacks, buffData )	
+	Add ( return, MulData, buffDataBase )
+}
+
+modPercentNumeric unic_unit_lich_passive_1
+{ 
+	CurrentUnitConfig ( heal, "defaultAttacks[0].selfMechanics[0].values[1]" )
+
+	Text( return, heal )
+}
+
+string unic_unit_lich_passive_2
+{ 
+	Text( return, "10" )
+}
+
+modInt unic_unit_avatar_of_war_passive_2
+{ 
+	CurrentUnitConfig ( buffSid, "passives[4].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt unic_unit_avatar_of_war_passive_3
+{ 
+	CurrentUnitConfig( return, "defaultAttacks[0].damageDealer.targetMechanics[0].values[0]" )
+}
+
+modInt unic_unit_avatar_of_war_passive_4
+{ 
+	CurrentUnitConfig ( buffSid, "passives[0].actions[0].damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+int current_unit_vampire_ability_1_1
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( baseDmg, "damageDealer.targetMechanics[0].values[1]" )
+	CurrentAbility( stackDmg, "damageDealer.targetMechanics[0].values[2]" )
+
+	Mul ( stackDmgMul, baseDmg, currentStacks )
+
+	Text( return, stackDmgMul )
+}
+
+string current_unit_vampire_ability_1_2
+{
+	// Invoke ( dmg, "current_unit_vampire_ability_1_1" )
+	// 
+	// CurrentAbility( healMultipler, "damageDealer.targetMechanics[0].values[3]" )
+	// 
+	// Mul ( heal, dmg, healMultipler )
+	// 
+	// Text( return, heal )
+
+	Text( return, "100" )
+}
+
+int current_unit_vampire_ability_2_1
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( baseDmg, "damageDealer.targetMechanics[0].values[0]" )
+	CurrentAbility( stackDmg, "damageDealer.targetMechanics[0].values[1]" )
+
+	Mul ( stackDmgMul, baseDmg, currentStacks )
+
+	Text( return, stackDmgMul )
+}
+
+int current_unit_vampire_ability_2_2
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( baseHeal, "damageDealer.targetMechanics[0].values[2]" )
+	CurrentAbility( stackHeal, "damageDealer.targetMechanics[0].values[3]" )
+
+	Mul ( stackHealMul, baseHeal, currentStacks )
+
+	Text( return, stackHealMul )
+}

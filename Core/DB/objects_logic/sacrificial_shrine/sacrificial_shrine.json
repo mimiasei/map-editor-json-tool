@@ -1,0 +1,12 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "sacrificial_shrine",
+			"goodsValue": 10000,
+			"aiIgnore": true,
+			"coefExpUnit": 5,
+			"coefExpArtefact": 0.5
+		}
+	]
+}

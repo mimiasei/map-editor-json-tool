@@ -1,0 +1,80 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "flicker_upg_alt",
+			"mesh": "Undead/1Prefabs/flicker_upg_alt",
+			"mapMesh": "Undead/1Prefabs/flicker_upg_alt_map",
+			"fadeTime": 1.6,
+
+			"scale": 100,
+			"modelHeight": 0.7,
+			"moveSpeed": 7,
+
+			"attackTimeBefore": [ 0.61, 0.815, 0.6, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 2.057, 1.685, 0.2, 0.2, 0.2, 0.2 ],
+			"rareIdleTime": 3.33,
+			
+			"flightSoundLoop": "sounds/battle/units/flicker/fly",
+
+			"takeoffPrepareTime": 0.0,
+			"ascentTime": 0.01,
+			"descentTime": 0.01,
+			"defaultHeight": 0,
+
+			"takeDamageTime": 2,
+			"deathTimeOffset": 1.41,
+
+			"bloodEffect": "effects/blood/blood_flicker",
+			"bloodHexEffect": "effects/blood/blood_flicker_hex",
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_undead",
+                    "description": "base_class_undead_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "flicker_passive_1_name",
+					"excaptionInTooltip": "description_effect_undead_embodiment_construct_immunities",
+					"description": "flicker_passive_1_description"
+				},
+				{
+					"name": "flicker_passive_2_name",
+					"excaptionInTooltip": "description_effect_magic_creature_undead_construct_immunities",
+					"description": "flicker_passive_2_description",
+					"useExpandTooltip": "true"
+				}
+			]
+		}
+	]
+}

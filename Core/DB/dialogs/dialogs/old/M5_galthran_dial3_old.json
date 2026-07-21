@@ -1,0 +1,55 @@
+{
+	"array":
+	[
+		{
+			"id": "M5_galthran_dial3_old",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3", "icons/hero_large_portraits/hero_campaign_4_galthran_large" ]
+					},
+
+					"title": "dialogue_title_hero_undead",
+					"text": "dialogue_text_M5_galthran_dial3_0",
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+
+					"title": "dialogue_title_hero_dungeon",
+					"text": "dialogue_text_M5_galthran_dial3_1",
+
+					"next": "2"
+				},
+				{
+					"id": "2",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3", "icons/hero_large_portraits/hero_campaign_4_galthran_large" ]
+					},
+
+					"title": "dialogue_title_hero_undead",
+					"text": "dialogue_text_M5_galthran_dial3_2",
+					
+					"end": true
+				}
+			]
+		}
+	]
+}

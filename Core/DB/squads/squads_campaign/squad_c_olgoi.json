@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_olgoi",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "olgoi", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"olgoi"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 35005,
+				"units":
+				[					
+					{ "s" : "olgoi", "v": 35005 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "demon"
+		}
+	]
+}

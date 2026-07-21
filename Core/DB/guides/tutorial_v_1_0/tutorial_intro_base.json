@@ -1,0 +1,39 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_intro_base",
+			
+			"contentHeight": 240,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_intro_name",
+					"headerImage": "tutorial_hommoe_logo",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "tutorial_intro_1" ] },
+						{ "type": "text", "value": [ "tutorial_intro_2" ] },
+						{ "type": "text", "value": [ "tutorial_intro_3" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_intro_name",
+					"headerImage": "tutorial_hommoe_logo",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "tutorial_intro_4" ] },
+						{ "type": "text", "value": [ "tutorial_intro_5" ] },
+						{ "type": "text", "value": [ "tutorial_intro_6" ] }
+					]
+				}
+			]
+		}
+	]
+}

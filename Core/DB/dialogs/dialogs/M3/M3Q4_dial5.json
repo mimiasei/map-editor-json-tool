@@ -1,0 +1,342 @@
+{
+	"array": [
+		{
+			"id": "M3Q4_dial5",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"4"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial5_4",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						}
+					],
+					"next": "0"
+				},
+				{
+					"id": "0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial5_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial5_1",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						}
+					],
+					"next": "1_s"
+				},
+				{
+					"id": "1_s",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"2"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial5_1_s",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Undead",
+								"2"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"priestess_cage1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"priestess_cage2"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_с_injured_priestess",
+								"3841",
+								"1500",
+								"false",
+								"freed_priestess1"
+							]
+						},
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_с_injured_priestess",
+								"3908",
+								"1500",
+								"false",
+								"freed_priestess2"
+							]
+						},
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"undead_icon",
+								"+2"
+							]
+						},
+						{
+							"a": "RemoveItem",
+							"p": [
+								"campaign_M3_captured_priestesses_item"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"sacrifice_quest",
+								"3"
+							]
+						}
+					],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial5_2",
+					"next": "2_s"
+				},
+				{
+					"id": "2_s",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M3Q4_dial5_2_s",
+					"mapActions": [
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"freed_priestess1",
+								"0"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"freed_priestess2",
+								"0"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"spellPower",
+								"campaign_hero_1",
+								"4"
+							]
+						},
+						{
+							"a": "GiveStatsHero",
+							"p": [
+								"intelligence",
+								"campaign_hero_1",
+								"4"
+							]
+						}
+					],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"sacrifice_quest",
+								"=",
+								"3"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial5_3",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"sacrifice_quest",
+								"4"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

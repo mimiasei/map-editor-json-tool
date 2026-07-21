@@ -1,0 +1,27 @@
+{
+	"array":
+	[
+		{
+			"id": "test_conditions_counter",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "Счетчик 'поговорили с отрядами' стал больше 2",
+					
+					"end": true
+				}				
+			]
+		}
+	]
+}

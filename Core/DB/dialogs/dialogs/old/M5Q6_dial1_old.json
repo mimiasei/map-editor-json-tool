@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M5Q6_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "Thant",
+					"text": "skelet is reborn, you need to capture all crystal quarries",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

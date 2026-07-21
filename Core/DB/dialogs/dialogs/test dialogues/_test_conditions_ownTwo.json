@@ -1,0 +1,27 @@
+{
+	"array":
+	[
+		{
+			"id": "test_conditions_own_two",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "Игрок контролирует 2 здания с грифонами",
+					
+					"end": true
+				}				
+			]
+		}
+	]
+}

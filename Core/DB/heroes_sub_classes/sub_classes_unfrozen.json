@@ -1,0 +1,223 @@
+
+{
+	"array":
+	[
+		{
+			"id": "sub_class_unfrozen_might_1",
+			"icon": "sub_class_unfrozen_might_1_icon",
+			"name": "sub_class_unfrozen_might_1_name",
+			"desc": "sub_class_unfrozen_might_1_desc",
+			
+			"faction": "unfrozen",		"classType": "might",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_assault",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_sorcery",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_day",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_leadership",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_scouting",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "day", "2", "999" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "2", "999" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "2", "999" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "primal", "2", "999" ]
+				}
+			]
+		},
+		{
+			"id": "sub_class_unfrozen_might_2",
+			"icon": "sub_class_unfrozen_might_2_icon",
+			"name": "sub_class_unfrozen_might_2_name",
+			"desc": "sub_class_unfrozen_might_2_desc",
+			
+			"faction": "unfrozen", 	"classType": "might",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_resistance",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_mastery",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_night",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_diplomacy",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_economy",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "energyPerRoundBonus", "-999" ]
+				},
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "startEnergyBonus", "-999" ]
+				}
+			]
+		},
+
+		{
+			"id": "sub_class_unfrozen_magic_1",
+			"icon": "sub_class_unfrozen_magic_1_icon",
+			"name": "sub_class_unfrozen_magic_1_name",
+			"desc": "sub_class_unfrozen_magic_1_desc",
+			
+			"faction": "unfrozen",		"classType": "magic",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_formation",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_battlemage",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_primal",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_enlightenment",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_tactics",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "offence", "10" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "defence", "10" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPower", "10" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "intelligence", "10" ]
+				}
+			]
+		},
+		{
+			"id": "sub_class_unfrozen_magic_2",
+			"icon": "sub_class_unfrozen_magic_2_icon",
+			"name": "sub_class_unfrozen_magic_2_name",
+			"desc": "sub_class_unfrozen_magic_2_desc",
+			
+			"faction": "unfrozen", 	"classType": "magic",
+			
+			"activationConditions":
+			[
+				{
+					"skillSid": "skill_protection",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_summoner",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_magic_space",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_luck",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				},
+				{
+					"skillSid": "skill_logistic",
+					"skillLevel": 3,
+					"subSkillSids": 	[  ]
+				}
+			],
+
+			"bonuses":
+			[
+				{
+					"type": "unitBoolStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "alwaysMinDmg", "true" ]
+				},
+				{
+					"type": "unitBoolStat",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "alwaysTakeMaxDmg", "true" ]
+				}
+			]
+		}
+	]
+}

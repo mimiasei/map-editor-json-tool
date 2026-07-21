@@ -1,0 +1,181 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "prison",
+			"aiIgnore": true,
+
+			"variants":
+			[
+				{
+					"rollChance": 60,
+					"value": 2500,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroLevelUpReward",
+								"rewardShowType": "Invisible",
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "1" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 50,
+					"value": 5000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroLevelUpReward",
+								"rewardShowType": "Invisible",
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "5" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 40,
+					"value": 10000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroLevelUpReward",
+								"rewardShowType": "Invisible",
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "10" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 30,
+					"value": 17500,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroLevelUpReward",
+								"rewardShowType": "Invisible",
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "15" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 20,
+					"value": 27500,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroLevelUpReward",
+								"rewardShowType": "Invisible",
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "20" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 10,
+					"value": 40000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroLevelUpReward",
+								"rewardShowType": "Invisible",
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "25" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,93 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "astrologist_month_1",
+			"icon": "astrologist_month_1_icon",
+			"name": "astrologist_month_1_name",
+			"desc": "astrologist_month_1_desc",
+
+			"buffSid": "astrologist_month_1_buff"
+		},
+		{
+			"id": "astrologist_month_2",
+			"icon": "astrologist_month_2_icon",
+			"name": "astrologist_month_2_name",
+			"desc": "astrologist_month_2_desc",
+
+			"buffSid": "astrologist_month_2_buff"
+		},
+		{
+			"id": "astrologist_month_3",
+			"icon": "astrologist_month_3_icon",
+			"name": "astrologist_month_3_name",
+			"desc": "astrologist_month_3_desc",
+
+			"buffSid": "astrologist_month_3_buff"
+		},
+		{
+			"id": "astrologist_month_4",
+			"icon": "astrologist_month_4_icon",
+			"name": "astrologist_month_4_name",
+			"desc": "astrologist_month_4_desc",
+
+			"buffSid": "astrologist_month_4_buff"
+		},
+		{
+			"id": "astrologist_month_5",
+			"icon": "astrologist_month_5_icon",
+			"name": "astrologist_month_5_name",
+			"desc": "astrologist_month_5_desc",
+
+			"buffSid": "astrologist_month_5_buff"
+		},
+		{
+			"id": "astrologist_month_6",
+			"icon": "astrologist_month_6_icon",
+			"name": "astrologist_month_6_name",
+			"desc": "astrologist_month_6_desc",
+
+			"buffSid": "astrologist_month_6_buff"
+		},
+		{
+			"id": "astrologist_month_7",
+			"icon": "astrologist_month_7_icon",
+			"name": "astrologist_month_7_name",
+			"desc": "astrologist_month_7_desc",
+
+			"buffSid": "astrologist_month_7_buff"
+		},
+		{
+			"id": "astrologist_month_8",
+			"icon": "astrologist_month_8_icon",
+			"name": "astrologist_month_8_name",
+			"desc": "astrologist_month_8_desc",
+
+			"buffSid": "astrologist_month_8_buff"
+		},
+		{
+			"id": "astrologist_month_9",
+			"icon": "astrologist_month_9_icon",
+			"name": "astrologist_month_9_name",
+			"desc": "astrologist_month_9_desc",
+
+			"buffSid": "astrologist_month_9_buff"
+		},
+		{
+			"id": "astrologist_month_10",
+			"icon": "astrologist_month_10_icon",
+			"name": "astrologist_month_10_name",
+			"desc": "astrologist_month_10_desc",
+
+			"buffSid": "none_effect_buff"
+		},
+		{
+			"id": "astrologist_month_11",
+			"icon": "astrologist_month_11_icon",
+			"name": "astrologist_month_11_name",
+			"desc": "astrologist_week_16_desc",
+
+			"buffSid": "astrologist_month_11_buff"
+		}
+	]
+}

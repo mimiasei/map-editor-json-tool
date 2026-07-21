@@ -1,0 +1,35 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "_test_interactObject",
+			"scenes": [ "testArena" ],
+			"spawnLeft": [ "interactObject_left" ],
+			"spawnRight": [ "interactObject_right" ],
+
+			"blockTacticsPhase": false,
+			"tacticsPlacementSid": "tactics_placement_interact",
+		
+			"sizeX": 11,
+			"sizeZ": 9,
+			"map":
+			[
+				  2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				  2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2
+			],
+
+			"obstacles":
+			[
+				{"id": 3, "sid": "wall", "side": 0},
+				{"id": 4, "sid": "wall", "side": 1}
+			]
+		}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"array": [
+		{
+			"id": "M9Q6_dial8_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M9Q6_dial8_0",
+					"end": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+	"array":
+	[
+		{
+			"id": 1,
+			"name": "test Road",
+			"bonus": 0.20
+		},
+		{
+			"id": 2,
+			"name": "test Road2",
+			"bonus": 0.30
+		}
+	]
+}

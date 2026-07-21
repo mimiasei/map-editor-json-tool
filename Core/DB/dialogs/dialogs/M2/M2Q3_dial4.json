@@ -1,0 +1,383 @@
+{
+	"array": [
+		{
+			"id": "M2Q3_dial4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"kitten_talked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_kitten_horn",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_kitten",
+						"position": 2
+					},
+					"text": "dialogue_text_M2Q3_dial4_0",
+					"answers": [
+						{
+							"text": "dialogue_text_M2Q3_dial4_0_answer_1",
+							"requests": [
+								{
+									"c": "ResCounter",
+									"p": [
+										"crystals",
+										">=",
+										"15"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "Go",
+									"p": [
+										"1"
+									]
+								},
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Nature",
+										"1"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"spring_icon",
+										"+1"
+									]
+								},
+								{
+									"a": "RemoveRes",
+									"p": [
+										"crystals",
+										"15"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q3_dial4_0_answer_2",
+							"requests": [
+								{
+									"c": "ResCounter",
+									"p": [
+										"crystals",
+										"<",
+										"15"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							],
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q3_dial4_0_answer_3",
+							"actions": [
+								{
+									"a": "End"
+								},
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Nature",
+										"4"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"spring_icon",
+										"-4"
+									]
+								},
+								{
+									"a": "CounterPlus",
+									"p": [
+										"kitten_attacked",
+										"1"
+									]
+								},
+								{
+									"a": "CounterSet",
+									"p": [
+										"kitten_quest",
+										"2"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten1"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten2"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten3"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten4"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten5"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten6"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten11"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten12"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten13"
+									]
+								},
+								{
+									"a": "EntityActionsOff",
+									"p": [
+										"kitten14"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M2Q3_dial4_0_answer_4",
+							"requests": [
+								{
+									"c": "ResCounter",
+									"p": [
+										"crystals",
+										">=",
+										"15"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							],
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"kitten_talked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M2Q3_dial4_1",
+					"next": "1_s"
+				},
+				{
+					"id": "1_s",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"kitten_talked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "dialogue_text_M2Q3_dial4_1_s",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"kitten_quest",
+								"2"
+							]
+						},
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"kitten_horn",
+								"15"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"kitten1",
+								"2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"kitten2",
+								"2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"kitten3",
+								"2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"kitten4",
+								"2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"kitten5",
+								"2"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"kitten6",
+								"2"
+							]
+						},
+						{
+							"a": "CounterPlus",
+							"p": [
+								"kitten_join",
+								"1"
+							]
+						}
+					],
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"kitten_talked",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_kitten_horn",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M2Q3_dial4_2",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"mapActions": [
+						{
+							"a": "AutoSave"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

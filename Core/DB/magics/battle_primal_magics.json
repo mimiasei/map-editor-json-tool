@@ -1,0 +1,2586 @@
+{
+	"array":
+	[		
+		
+		{
+			"id": "primal_1_magic_thunderbolt",
+
+			"name": "primal_1_magic_thunderbolt_name",
+			"icon": "primal_1_magic_thunderbolt",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_1_magic_thunderbolt_description",
+				"primal_1_magic_thunderbolt_description",
+				"primal_1_magic_thunderbolt_description",
+				"primal_1_magic_thunderbolt_description"
+			],
+			"excaptionInTooltip": "description_effect_light_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_0_1"}, 
+				{"level": 3, "description": "description_up_effect_damage_1_2"}, 
+				{"level": 4, "description": "description_up_effect_damage_per_sp_2_3"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 6, 6, 6, 6 ],
+			"battleMagic":
+			{
+				"attackTimeBefore": 0.2,
+				"hexEffect": "Prefabs_vfx/magic_lightning_strike_hex",
+
+				"shakeSettings":"lightning_shake",
+				"shakeType":"perlin",
+				"magicDealers":
+
+				[
+					{
+						"tags": [ "magic_damage", "primal_1_magic_thunderbolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 25,
+						"maxBaseDmg": 25,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					},
+					{
+						"tags": [ "magic_damage", "primal_1_magic_thunderbolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 50,
+						"maxBaseDmg": 50,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					},
+					{
+						"tags": [ "magic_damage", "primal_1_magic_thunderbolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					},
+					{
+						"tags": [ "magic_damage", "primal_1_magic_thunderbolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 15,
+						"maxStackDmg": 15
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_2_magic_thick_hide",
+
+			"name": "primal_2_magic_thick_hide_name",
+			"icon": "primal_2_magic_thick_hide",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_2_magic_thick_hide_description",
+				"primal_2_magic_thick_hide_description",
+				"primal_2_magic_thick_hide_description_1",
+				"primal_2_magic_thick_hide_description_1"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "primal_2_magic_thick_hide_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "description_up_effect_allies_all"}, 
+				{"level": 4, "description": "primal_2_magic_thick_hide_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 1,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 2 },
+				{ "name": "crystals", "cost": 2 },
+				{ "name": "mercury", "cost": 2 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 6, 6, 6, 6 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_thieck_hide_hex",
+				
+				"magicDealers": 
+				[
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_thick_hide_effect_0",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_thick_hide_effect_1",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						"instacast": true,
+						"multitargetType": "simultaneous",
+					
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_thick_hide_effect_1",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						"instacast": true,
+						"multitargetType": "simultaneous",
+					
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_thick_hide_effect_2",
+							"duration": 1,
+							"durationPerStack": [ 4, 1 ]
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_3_magic_wean",
+
+			"name": "primal_3_magic_wean_name",
+			"icon": "primal_3_magic_wean",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_3_magic_wean_alt_description",
+				"primal_3_magic_wean_alt_description",
+				"primal_3_magic_wean_alt_description_1",
+				"primal_3_magic_wean_alt_description_2"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "primal_3_magic_wean_alt_descript_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "description_up_effect_enemies_adjacent"}, 
+				{"level": 4, "description": "description_up_effect_enemies_all"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 8, 8, 8, 8 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_primal_state_hex",
+				"hexEffectTime": 0.1,
+				"effect": "Prefabs_vfx/magic_primal_state_unit",
+				"effectTime": 0.1,
+				"magicDealers": 
+				[
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[
+							{
+								"mech": "add_buff_duration", "values":  [ "positive", "-2", "-1", "5", "positive" ]
+							}
+						]
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"selection": "object",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[
+							{
+								"mech": "add_buff_duration", "values":  [ "positive", "-4", "-1", "5", "positive" ]
+							}
+						]
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[
+							{
+								"mech": "add_buff_duration", "values":  [ "positive", "-4", "-1", "5", "positive" ]
+							}
+						]
+					},
+					{	
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+						"targetMechanics":
+						[
+							{
+								"mech": "add_buff_duration", "values":  [ "positive", "-4", "-1", "5", "positive" ]
+							}
+						]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_4_magic_fire_globe",
+			
+
+			"name": "primal_4_magic_fire_globe_name",
+			"icon": "primal_4_magic_fire_globe",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_4_magic_fire_globe_description",
+				"primal_4_magic_fire_globe_description",
+				"primal_4_magic_fire_globe_description",
+				"primal_4_magic_fire_globe_description"
+			],
+			"excaptionInTooltip": "description_effect_fire_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_0_1"}, 
+				{"level": 3, "description": "description_up_effect_damage_1_2"}, 
+				{"level": 4, "description": "description_up_effect_damage_2_3"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 13, 13, 13, 13 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_meteor_hex",
+				"attackTimeBefore": 0.6,
+				"attackTimeAfter": 0.5,
+				"shakeSettings":"meteor_shake",
+				"shakeType":"perlin",
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic_damage", "primal_4_magic_fire_globe_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 50,
+						"maxBaseDmg": 50,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					},
+					{
+						"tags": [ "magic_damage", "primal_4_magic_fire_globe_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 75,
+						"maxBaseDmg": 75,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					},
+					{
+						"tags": [ "magic_damage", "primal_4_magic_fire_globe_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 125,
+						"maxBaseDmg": 125,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					},
+					{
+						"tags": [ "magic_damage", "primal_4_magic_fire_globe_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_rumble_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 200,
+						"maxBaseDmg": 200,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]				
+			}
+		},
+
+		{
+			"id": "primal_5_magic_crystal_crown",
+
+			"name": "primal_5_magic_crystal_crown_name",
+			"icon": "primal_5_magic_crystal_crown",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_5_magic_crystal_crown_description",
+				"primal_5_magic_crystal_crown_description",
+				"primal_5_magic_crystal_crown_description",
+				"primal_5_magic_crystal_crown_description"
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "primal_5_magic_crystal_crown_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "primal_5_magic_crystal_crown_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_5_magic_crystal_crown_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 8, 8, 8, 8 ],
+			"battleMagic":
+			{
+				"hexEffect": "",
+				"magicDealers": 
+				[
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 2,
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : [ { "mech": "spawn_object", "values": [ "obstacle", "crystal_crown", "1" ] } ]
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 2,
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : [ { "mech": "spawn_object", "values": [ "obstacle", "crystal_crown_1", "1" ] } ]
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 3,
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : [ { "mech": "spawn_object", "values": [ "obstacle", "crystal_crown_1", "1" ] } ]
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 3,
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : [ { "mech": "spawn_object", "values": [ "obstacle", "crystal_crown_2", "1" ] } ]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_6_magic_ice_bolt",
+			
+
+			"name": "primal_6_magic_ice_bolt_name",
+			"icon": "primal_6_magic_ice_bolt",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_6_magic_ice_bolt_description",
+				"primal_6_magic_ice_bolt_description",
+				"primal_6_magic_ice_bolt_description",
+				"primal_6_magic_ice_bolt_description"
+			],
+			"excaptionInTooltip": "description_effect_ice_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_0_1"}, 
+				{"level": 3, "description": "description_up_effect_damage_per_sp_1_2"}, 
+				{"level": 4, "description": "primal_6_magic_ice_bolt_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 2,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 4 },
+				{ "name": "crystals", "cost": 4 },
+				{ "name": "mercury", "cost": 4 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"battleMagic":
+			{
+				"casterEffect": "Prefabs_vfx/magic_snowball_idle_root",
+				"projectilesCount": 1,
+
+				"projectileConfig":
+				{
+					"path": "magic/Prefabs_vfx/magic_snowball_projectile",
+					"emitter": "",
+					"trajectory": "Linear",
+					"flightSound": "",
+					"speed": 35,
+					"maxHeight": 0,
+					"angle": 0,
+					"delay": 0,
+					"startDelay": 2
+				},
+
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic_damage", "primal_6_magic_ice_bolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 75,
+						"maxBaseDmg": 75,
+						"minStackDmg": 10,
+						"maxStackDmg": 10,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_ice_bolt_effect_0",
+							"duration": 2
+						}
+					},
+					{
+						"tags": [ "magic_damage", "primal_6_magic_ice_bolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
+						"minStackDmg": 10,
+						"maxStackDmg": 10,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_ice_bolt_effect_0",
+							"duration": 2
+						}
+					},
+					{
+						"tags": [ "magic_damage", "primal_6_magic_ice_bolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
+						"minStackDmg": 15,
+						"maxStackDmg": 15,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_ice_bolt_effect_0",
+							"duration": 2
+						}
+					},
+					{
+						"tags": [ "magic_damage", "primal_6_magic_ice_bolt_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
+						"minStackDmg": 15,
+						"maxStackDmg": 15,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_ice_bolt_effect_1",
+							"duration": 2
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_7_magic_wall_of_flame",
+			
+
+			"name": "primal_7_magic_wall_of_flame_name",
+			"icon": "primal_7_magic_wall_of_flame",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_7_magic_wall_of_flame_description",
+				"primal_7_magic_wall_of_flame_description",
+				"primal_7_magic_wall_of_flame_description",
+				"primal_7_magic_wall_of_flame_description"
+			],
+			"excaptionInTooltip": "description_effect_fire_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_mana_cost_0_1"}, 
+				{"level": 3, "description": "primal_7_magic_wall_of_flame_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_7_magic_wall_of_flame_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 3,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 6 },
+				{ "name": "crystals", "cost": 6 },
+				{ "name": "mercury", "cost": 6 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 12, 9, 9, 9 ],
+			"battleMagic":
+			{
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 2,
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : [ { "mech": "spawn_object", "values": [ "trap", "magic_primal_wall_of_flame_summon", "2", "1", "0", "true" ] } ]
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 3,
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : [ { "mech": "spawn_object", "values": [ "trap", "magic_primal_wall_of_flame_summon", "2", "1", "0", "true" ] } ]
+					},
+					{
+						"tags": [  ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ ],
+							"castTarget_": "all",
+							"selection": "hex"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 3,
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : [ { "mech": "spawn_object", "values": [ "trap", "magic_primal_wall_of_flame_summon_1", "2", "1", "0", "true" ] } ]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 0, 1, 2
+				]
+			}
+		},
+
+		{
+			"id": "primal_8_magic_cave_in",
+			
+
+			"name": "primal_8_magic_cave_in_name",
+			"icon": "primal_8_magic_cave_in",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_8_magic_cave_in_description",
+				"primal_8_magic_cave_in_description",
+				"primal_8_magic_cave_in_description",
+				"primal_8_magic_cave_in_description"
+			],
+			"excaptionInTooltip": "description_effect_earth_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_0_1"}, 
+				{"level": 3, "description": "primal_8_magic_cave_in_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "description_up_effect_damage_per_sp_2_3"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 3,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 6 },
+				{ "name": "crystals", "cost": 6 },
+				{ "name": "mercury", "cost": 6 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 10, 10, 10, 10 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_cave_in_big_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic_damage", "primal_8_magic_cave_in_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 50,
+						"maxBaseDmg": 50,
+						"minStackDmg": 15,
+						"maxStackDmg": 15,
+						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
+					},
+					{
+						"tags": [ "magic_damage", "primal_8_magic_cave_in_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 15,
+						"maxStackDmg": 15,
+						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
+					},
+					{
+						"tags": [ "magic_damage", "primal_8_magic_cave_in_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 15,
+						"maxStackDmg": 15,
+						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle_1", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
+					},
+					{
+						"tags": [ "magic_damage", "primal_8_magic_cave_in_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 20,
+						"maxStackDmg": 20,
+						"targetMechanics" : [ { "mech": "summon_in_pattern", "values": [ "obstacle", "cave_in_obstacle_1", "1", "1", "0", "attack_circle_x1_x100", "false" ] } ]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_9_magic_earths_rage",
+
+			"name": "primal_9_magic_earths_rage_name",
+			"icon": "primal_9_magic_earths_rage",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_9_magic_earths_rage_description",
+				"primal_9_magic_earths_rage_description",
+				"primal_9_magic_earths_rage_description",
+				"primal_9_magic_earths_rage_description"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "primal_9_magic_earths_rage_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "primal_9_magic_earths_rage_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_9_magic_earths_rage_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 3,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 6 },
+				{ "name": "crystals", "cost": 6 },
+				{ "name": "mercury", "cost": 6 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 16, 16, 16, 16 ],
+			"battleMagic":
+			{
+
+				"globalEffect": "Prefabs_vfx/magic_earths_rage_global",
+				"attackTimeBefore": 1.5,
+				"attackTimeAfter": 0.1,
+				"shakeSettings":"energy_explosion_shake",
+				"shakeType":"perlin",
+				"magicDealers": 
+				[
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "normal",
+						"targetMechanics": [ { "mech": "castle_damage", "values": [ "100", "15", "0", "15" ] } ]
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "normal",
+						"targetMechanics": [ { "mech": "castle_damage", "values": [ "200", "15", "0", "15" ] } ]
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "normal",
+						"targetMechanics": [ { "mech": "castle_damage", "values": [ "200", "15", "100", "15" ] } ]
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+
+						"affectTargetParams":   
+						{ 
+							"castTarget_": "all",
+							"targetTags": [ "defense_structure" ]
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "normal",
+						"targetMechanics": [ { "mech": "castle_damage", "values": [ "400", "15", "100", "15" ] } ]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_10_magic_primordial_purity",
+
+			"name": "primal_10_magic_primordial_purity_name",
+			"icon": "primal_10_magic_primordial_purity",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_10_magic_primordial_purity_description",
+				"primal_10_magic_primordial_purity_description",
+				"primal_10_magic_primordial_purity_description",
+				"primal_10_magic_primordial_purity_description"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_duration_0_1"}, 
+				{"level": 3, "description": "primal_10_magic_primordial_purity_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_10_magic_primordial_purity_description_up_level_bonus_4"}
+			],
+			"upEffectDescription": "description_up_effect_no_sp",
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 4,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 8 },
+				{ "name": "crystals", "cost": 8 },
+				{ "name": "mercury", "cost": 8 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 16, 16, 16, 16 ],
+			"battleMagic":
+			{
+
+				"effect": "Prefabs_vfx/magic_primordial_purity_unit",
+				"effectTime": 0.1,
+				"magicDealers": 
+				[
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_primordial_purity_effect_1",
+							"duration": 1
+						},
+						"targetMechanics":
+						[
+							{ 
+								"mech": "destroy_summon",	"values": [  ] 
+							},
+							{ 
+								"mech": "destroy_temp_stacks", "values": [  ] 
+							}
+						]
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_primordial_purity_effect_1",
+							"duration": 2
+						},
+						"targetMechanics":
+						[
+							{ 
+								"mech": "destroy_summon",	"values": [  ] 
+							},
+							{ 
+								"mech": "destroy_temp_stacks", "values": [  ] 
+							}
+						]
+					},
+					{
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_primordial_purity_effect_2",
+							"duration": 2
+						},
+						"targetMechanics":
+						[
+							{ 
+								"mech": "destroy_summon",	"values": [  ] 
+							},
+							{ 
+								"mech": "destroy_temp_stacks", "values": [  ] 
+							}
+						]
+					},
+					{	
+						"tags": [ ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "magic_primordial_purity_effect_3",
+							"duration": 2
+						},
+						"targetMechanics":
+						[
+							{ 
+								"mech": "destroy_summon",	"values": [  ] 
+							},
+							{ 
+								"mech": "destroy_temp_stacks", "values": [  ] 
+							}
+						]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_11_magic_armageddon",
+
+			"name": "primal_11_magic_armageddon_name",
+			"icon": "primal_11_magic_armageddon",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_11_magic_armageddon_description",
+				"primal_11_magic_armageddon_description",
+				"primal_11_magic_armageddon_description",
+				"primal_11_magic_armageddon_description"
+			],
+			"excaptionInTooltip": "description_effect_fire_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_0_1"}, 
+				{"level": 3, "description": "description_up_effect_damage_1_2"}, 
+				{"level": 4, "description": "description_up_effect_damage_per_sp_2_3"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 5,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 10 },
+				{ "name": "crystals", "cost": 10 },
+				{ "name": "mercury", "cost": 10 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 40, 40, 40, 40 ],
+			"battleMagic":
+			{	
+				"globalEffect": "Prefabs_vfx/magic_apocalypse_global",
+				"attackTimeBefore": 3.0,
+				"attackTimeAfter": 1.0,
+				"shakeSettings":"phoenix_rise_shake",
+				"shakeType":"perlin",
+				"magicDealers": 
+				[
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+
+						"tags": [ "magic_damage", "primal_11_magic_armageddon_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
+						"minStackDmg": 15,
+						"maxStackDmg": 15
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage", "primal_11_magic_armageddon_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 250,
+						"maxBaseDmg": 250,
+						"minStackDmg": 15,
+						"maxStackDmg": 15
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage", "primal_11_magic_armageddon_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 350,
+						"maxBaseDmg": 350,
+						"minStackDmg": 15,
+						"maxStackDmg": 15
+					},
+					{
+						"instacast": true,
+						"multitargetType": "simultaneous",
+						
+						"tags": [ "magic_damage", "primal_11_magic_armageddon_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 350,
+						"maxBaseDmg": 350,
+						"minStackDmg": 25,
+						"maxStackDmg": 25
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_12_magic_chain_lightning",
+			
+
+			"name": "primal_12_magic_chain_lightning_name",
+			"icon": "primal_12_magic_chain_lightning",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_12_magic_chain_lightning_description",
+				"primal_12_magic_chain_lightning_description",
+				"primal_12_magic_chain_lightning_description",
+				"primal_12_magic_chain_lightning_description"
+			],
+			"excaptionInTooltip": "description_effect_light_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "primal_12_magic_chain_lightning_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "primal_12_magic_chain_lightning_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_12_magic_chain_lightning_description_up_level_bonus_4"}
+			],
+			
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 4,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 8 },
+				{ "name": "crystals", "cost": 8 },
+				{ "name": "mercury", "cost": 8 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 24, 24, 24, 24 ],
+			"battleMagic":
+			{
+				"attackTimeBefore": 0.1,
+				"attackTimeAfter": 0.01,
+
+				"hexEffect": "Prefabs_vfx/magic_lightning_strike_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic_damage", "primal_12_magic_chain_lightning_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"numTargets": 2,
+
+						"orderedCastParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"orderedAffectParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"excludeAffected": true,
+						"autoFillSelection": true,
+
+						"multitargetType": "chain",
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 20,
+						"maxStackDmg": 20
+					},
+					{
+						"tags": [ "magic_damage", "primal_12_magic_chain_lightning_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"numTargets": 3,
+
+						"orderedCastParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"orderedAffectParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"excludeAffected": true,
+						"autoFillSelection": true,
+
+						"multitargetType": "chain",
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 20,
+						"maxStackDmg": 20
+					},
+					{
+						"tags": [ "magic_damage", "primal_12_magic_chain_lightning_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"numTargets": 4,
+
+						"orderedCastParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"orderedAffectParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"excludeAffected": true,
+						"autoFillSelection": true,
+
+						"multitargetType": "chain",
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 300,
+						"maxBaseDmg": 300,
+						"minStackDmg": 20,
+						"maxStackDmg": 20
+					},
+					{
+						"tags": [ "magic_damage", "primal_12_magic_chain_lightning_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"numTargets": 5,
+
+						"orderedCastParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"orderedAffectParams": 
+						[
+							{
+								"targetTags": [ "unit" ],
+								"castTarget_": "all",
+								"targetCondition_": "alive",
+								"selection": "object",
+								"distanceFromFirst": 3,
+								"dmgMultiplierPerMultitarget": 0.5
+							}
+						],
+
+						"excludeAffected": true,
+						"autoFillSelection": true,
+
+						"multitargetType": "chain",
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 300,
+						"maxBaseDmg": 300,
+						"minStackDmg": 30,
+						"maxStackDmg": 30
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_13_magic_avalanche",
+
+			"name": "primal_13_magic_avalanche_name",
+			"icon": "primal_13_magic_avalanche",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_13_magic_avalanche_description",
+				"primal_13_magic_avalanche_description",
+				"primal_13_magic_avalanche_description",
+				"primal_13_magic_avalanche_description"
+			],
+			"excaptionInTooltip": "description_effect_ice_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_per_sp_0_1"}, 
+				{"level": 3, "description": "primal_13_magic_avalanche_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_13_magic_avalanche_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 4,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 8 },
+				{ "name": "crystals", "cost": 8 },
+				{ "name": "mercury", "cost": 8 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 19, 19, 19, 19 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_avalanche_hex",
+				"attackTimeBefore": 0.3,
+				"attackTimeAfter": 0.25,
+				"shakeSettings":"meteor_shake",
+				"shakeType":"perlin",
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic_damage", "primal_13_magic_avalanche_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_circle_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						
+						"minBaseDmg": 75,
+						"maxBaseDmg": 75,
+						"minStackDmg": 15,
+						"maxStackDmg": 15,
+						
+						"targetMechanics": [ { "mech": "push_unit", "values": [ "false" ] } ]
+					},
+					{
+						"tags": [ "magic_damage", "primal_13_magic_avalanche_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_circle_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						
+						"minBaseDmg": 75,
+						"maxBaseDmg": 75,
+						"minStackDmg": 20,
+						"maxStackDmg": 20,
+						
+						"targetMechanics": [ { "mech": "push_unit", "values": [ "false" ] } ]
+					},
+					{
+						"tags": [ "magic_damage", "primal_13_magic_avalanche_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_circle_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 75,
+						"maxBaseDmg": 75,
+						"minStackDmg": 20,
+						"maxStackDmg": 20,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_avalanche_effect_0",
+							"duration": 2
+						},
+						
+						"targetMechanics": [ { "mech": "push_unit", "values": [ "false" ] } ]
+					},
+					{
+						"tags": [ "magic_damage", "primal_13_magic_avalanche_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "hexOrObject",
+							"targetCondition_": "all"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "all",
+							"selection": "object", 
+							"targetCondition_": "alive" 
+						},
+
+						"attackPatternSid": "attack_circle_x1_x100",	"damageTarget_": "all",	"damageType_": "magic_pure",
+						"minBaseDmg": 150,
+						"maxBaseDmg": 150,
+						"minStackDmg": 20,
+						"maxStackDmg": 20,
+
+						"buffTarget_": "enemy",
+						"buff": 
+						{
+							"sid": "magic_avalanche_effect_1",
+							"duration": 2
+						},
+						
+						"targetMechanics": [ { "mech": "push_unit", "values": [ "false" ] } ]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]				
+			}
+		},
+
+		{
+			"id": "primal_14_magic_hksmillas_rampage",
+
+			"name": "primal_14_magic_hksmillas_rampage_name",
+			"icon": "primal_14_magic_hksmillas_rampage",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_14_magic_hksmillas_rampage_description",
+				"primal_14_magic_hksmillas_rampage_description",
+				"primal_14_magic_hksmillas_rampage_description",
+				"primal_14_magic_hksmillas_rampage_description"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "primal_14_magic_hksmillas_rampage_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "primal_14_magic_hksmillas_rampage_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_14_magic_hksmillas_rampage_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 5,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 10 },
+				{ "name": "crystals", "cost": 10 },
+				{ "name": "mercury", "cost": 10 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 28, 28, 28, 28 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_hksmilla_rampage_hex",
+				"magicDealers": 
+				[
+					{
+						"tags": [ ],		
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},				
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_hksmillas_rampage_effect_0",
+							"duration": 1,
+							"durationPerStack": [ 8, 1 ]
+						}
+					},
+					{
+						"tags": [ ],		
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},			
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_hksmillas_rampage_effect_1",
+							"duration": 1,
+							"durationPerStack": [ 8, 1 ]
+						}
+					},
+					{
+						"tags": [ ],		
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},			
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_hksmillas_rampage_effect_2",
+							"duration": 1,
+							"durationPerStack": [ 8, 1 ]
+						}
+					},
+					{
+						"tags": [ ],		
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "ally",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},			
+						
+						"attackPatternSid": "attack_single_x100",	"damageTarget_": "none",	"damageType_": "none",
+
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "magic_hksmillas_rampage_effect_3",
+							"duration": 1,
+							"durationPerStack": [ 8, 1 ]
+						}
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_15_magic_summon_primal_remnant",
+
+			"name": "primal_15_magic_summon_primal_remnant_name",
+			"icon": "primal_15_magic_summon_primal_remnant",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_15_magic_summon_primal_remnant_description",
+				"primal_15_magic_summon_primal_remnant_description_1",
+				"primal_15_magic_summon_primal_remnant_description_2",
+				"primal_15_magic_summon_primal_remnant_description_2"
+			],
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "primal_15_magic_summon_primal_remnant_description_up_level_bonus_2"}, 
+				{"level": 3, "description": "primal_15_magic_summon_primal_remnant_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "primal_15_magic_summon_primal_remnant_description_up_level_bonus_4"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 5,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 10 },
+				{ "name": "crystals", "cost": 10 },
+				{ "name": "mercury", "cost": 10 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 20, 20, 20, 20 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_summon_primal_remnant_hex",
+				"attackTimeBefore": 1.2,
+				"attackTimeAfter": 1.2,
+				"magicDealers": 
+				[
+					{
+						"tags": [  ],		
+
+						"castTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 1
+						},
+
+						"affectTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 1
+						},	
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : 
+						[
+							{
+								"mech": "summon_with_buff",	"values": [ "unit", "primal_remnant", "12", "1", "1", "primal_15_magic_summon_primal_remnant_silence_effect", "spellPower", "false", "true" ]
+							}
+						]
+					},
+					{
+						"tags": [  ],		
+
+						"castTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 2
+						},
+
+						"affectTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 2
+						},
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : 
+						[
+							{
+								"mech": "summon_with_buff",	"values": [ "unit", "primal_remnant", "12", "1", "1", "primal_15_magic_summon_primal_remnant_silence_effect", "spellPower", "false", "true" ]
+							}
+						]
+					},
+					{
+						"tags": [  ],		
+
+						"castTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 2
+						},
+
+						"affectTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 2
+						},
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : 
+						[
+							{
+								"mech": "spawn_object",	"values": [ "unit", "primal_remnant", "12", "1", "1" ]
+							}
+						]
+					},
+					{
+						"tags": [  ],		
+
+						"castTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 2
+						},
+
+						"affectTargetParams":   
+						{
+							"castTarget_": "ally",
+							"selection": "hex",
+							"areaType": "near_units",
+							"distance": 2
+						},
+						
+						"attackPatternSid": "attack_single_x100",
+						"targetMechanics" : 
+						[
+							{
+								"mech": "spawn_object",	"values": [ "unit", "primal_remnant", "12", "1", "2" ]
+							}
+						]
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		},
+
+		{
+			"id": "primal_16_magic_stone_fangs",
+
+			"name": "primal_16_magic_stone_fangs_name",
+			"icon": "primal_16_magic_stone_fangs",
+			"magicTypeDescription": " ",			
+			"description": [ 
+				"primal_16_magic_stone_fangs_description",
+				"primal_16_magic_stone_fangs_description",
+				"primal_16_magic_stone_fangs_description",
+				"primal_16_magic_stone_fangs_description"
+			],
+			"excaptionInTooltip": "description_effect_earth_immunities",
+			"bonusDescriptions": [ 
+				{"level": 2, "description": "description_up_effect_damage_0_1"}, 
+				{"level": 3, "description": "primal_16_magic_stone_fangs_description_up_level_bonus_3"}, 
+				{"level": 4, "description": "description_up_effect_damage_per_sp_2_3"}
+			],
+
+			"usedOnMap": false,
+			"school_": "primal",
+			"rank": 3,
+			"learnCost":
+			[
+				{ "name": "gemstones", "cost": 6 },
+				{ "name": "crystals", "cost": 6 },
+				{ "name": "mercury", "cost": 6 }
+			],
+			"upgradeCost": [ 25, 25, 25 ],
+			"manaCost": [ 18, 18, 18, 18 ],
+			"battleMagic":
+			{
+				"hexEffect": "Prefabs_vfx/magic_stones_fangs_hex",
+				"attackTimeBefore": 0.1,
+
+				"magicDealers": 
+				[
+					{
+						"tags": [ "magic_damage", "primal_16_magic_stone_fangs_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 3,
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 50,
+						"maxBaseDmg": 50,
+						"minStackDmg": 5,
+						"maxStackDmg": 5
+					},
+					{
+						"tags": [ "magic_damage", "primal_16_magic_stone_fangs_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 3,
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 5,
+						"maxStackDmg": 5
+					},
+					{
+						"tags": [ "magic_damage", "primal_16_magic_stone_fangs_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 4,
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 5,
+						"maxStackDmg": 5
+					},
+					{
+						"tags": [ "magic_damage", "primal_16_magic_stone_fangs_damage" ],
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"multitargetType": "simultaneous",
+						"numTargets": 4,
+						
+						"attackPatternSid": "attack_single_x100",		"damageTarget_": "enemy",	"damageType_": "magic_pure",
+						"minBaseDmg": 100,
+						"maxBaseDmg": 100,
+						"minStackDmg": 10,
+						"maxStackDmg": 10
+					}
+				],
+				"dealersPerLevels":
+				[
+					0, 1, 2, 3
+				]
+			}
+		}
+	]
+}

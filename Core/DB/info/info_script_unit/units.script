@@ -1,0 +1,584 @@
+﻿
+// Универсальные Функции
+
+int current_unit_ability_buff_duration
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( baseDuration, "damageDealer.buff.duration" )
+	CurrentAbility( unitsCount, "damageDealer.buff.durationPerStack[0]" )
+	CurrentAbility( unitsBonusDuration, "damageDealer.buff.durationPerStack[1]" )
+
+	Mul ( fullStacksMul, currentStacks, unitsBonusDuration )
+	Div ( fullStacksDiv, fullStacksMul, unitsCount )
+	Floor ( fullStacksDivFloor, fullStacksDiv )
+	Add ( fullStacksAdd, baseDuration, fullStacksDivFloor )
+
+			CurrentUnitData ( outComingBuffDuration, "unit.stats.outComingBuffDuration" )	
+			Add ( finalDuration, fullStacksAdd, outComingBuffDuration )
+
+	Text( return, finalDuration )
+}
+
+int current_unit_passive_buff_duration
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentUnitConfig( baseDuration, "defaultAttacks[0].damageDealer.buff.duration" )
+	CurrentUnitConfig( unitsCount, "defaultAttacks[0].damageDealer.buff.durationPerStack[0]" )
+	CurrentUnitConfig( unitsBonusDuration, "defaultAttacks[0].damageDealer.buff.durationPerStack[1]" )
+
+	Mul ( fullStacksMul, currentStacks, unitsBonusDuration )
+	Div ( fullStacksDiv, fullStacksMul, unitsCount )
+	Floor ( fullStacksDivFloor, fullStacksDiv )
+	Add ( fullStacksAdd, baseDuration, fullStacksDivFloor )
+
+			CurrentUnitData ( outComingBuffDuration, "unit.stats.outComingBuffDuration" )	
+			Add ( finalDuration, fullStacksAdd, outComingBuffDuration )
+
+	Text( return, finalDuration )
+}
+
+int current_unit_ability_min_stat_damage
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentUnitStats ( damageMin, "damageMin" )
+	CurrentUnitStats ( damageMax, "damageMax" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( statDmgMult, "damageDealer.statDmgMult" )
+
+	Mul ( damageMult, statDmgMult, damageMin )
+	Mul ( damage, currentStacks, damageMult )
+
+	Text( return, damage )
+}
+
+int current_unit_ability_max_stat_damage
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	CurrentUnitStats ( damageMin, "damageMin" )
+	CurrentUnitStats ( damageMax, "damageMax" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( statDmgMult, "damageDealer.statDmgMult" )
+
+	Mul ( damageMult, statDmgMult, damageMax )
+	Mul ( damage, currentStacks, damageMult )
+
+	Text( return, damage )
+}
+
+int current_unit_ability_avg_stat_damage
+{
+	Invoke ( minDmg, "current_unit_ability_min_stat_damage" )
+	Invoke ( maxDmg, "current_unit_ability_max_stat_damage" )
+
+	Text( return, "1" )
+}
+
+int current_unit_ability_common_self_heal
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	CurrentAbility( baseHeal, "selfMechanics[0].values[0]" )
+	CurrentAbility( unitsCount, "selfMechanics[0].values[1]" )
+	CurrentAbility( unitsBonusHeal, "selfMechanics[0].values[2]" )
+
+	Mul ( fullStacksMul, currentStacks, unitsBonusHeal )
+	Div ( fullStacksDiv, fullStacksMul, unitsCount )
+	Floor ( fullStacksDivFloor, fullStacksDiv )
+	Add ( fullStacksHeal, baseHeal, fullStacksDivFloor )
+
+			CurrentUnitData ( finalHealingBonusPercent, "unit.stats.finalHealingBonusPercent" )	
+			Mul ( finalHealingBonusPercentAmount, fullStacksHeal, finalHealingBonusPercent )
+			Add ( finalHeal, fullStacksHeal, finalHealingBonusPercentAmount )
+
+	Text( return, finalHeal )
+}
+
+int current_unit_ability_common_heal
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	CurrentAbility( baseHeal, "damageDealer.targetMechanics[0].values[0]" )
+	CurrentAbility( unitsCount, "damageDealer.targetMechanics[0].values[1]" )
+	CurrentAbility( unitsBonusHeal, "damageDealer.targetMechanics[0].values[2]" )
+
+	Mul ( fullStacksMul, currentStacks, unitsBonusHeal )
+	Div ( fullStacksDiv, fullStacksMul, unitsCount )
+	Floor ( fullStacksDivFloor, fullStacksDiv )
+	Add ( fullStacksHeal, baseHeal, fullStacksDivFloor )
+
+			CurrentUnitData ( finalHealingBonusPercent, "unit.stats.finalHealingBonusPercent" )	
+			Mul ( finalHealingBonusPercentAmount, fullStacksHeal, finalHealingBonusPercent )
+			Add ( finalHeal, fullStacksHeal, finalHealingBonusPercentAmount )
+
+	Text( return, finalHeal )
+}
+
+int current_unit_ability_percent_self_heal
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+	CurrentUnitData ( hp, "unit.stats.hp" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	CurrentAbility( baseHeal, "selfMechanics[0].values[2]" )
+
+	Mul ( healMul, hp, baseHeal )
+
+	Text( return, healMul )
+}
+
+int current_unit_ability_damage
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( statDmgMult, "damageDealer.statDmgMult" )
+
+	CurrentAbility( minBaseDmg, "damageDealer.minBaseDmg" )
+	CurrentAbility( maxBaseDmg, "damageDealer.maxBaseDmg" )
+	CurrentAbility( minStackDmg, "damageDealer.minStackDmg" )
+	CurrentAbility( maxStackDmg, "damageDealer.maxStackDmg" )
+
+	Avg ( baseDmg, minBaseDmg, maxBaseDmg )
+	Avg ( stackDmg, minStackDmg, maxStackDmg )
+
+	Mul ( stackDmgMul, currentStacks, stackDmg )
+
+	Add ( damage, baseDmg, stackDmgMul )
+
+			CurrentUnitData ( finalDamageBonusPercent, "unit.stats.finalAbilityDamageBonusPercent" )	
+			Mul ( finalDamageBonusPercentAmount, damage, finalDamageBonusPercent )
+			Add ( finalDamage, damage, finalDamageBonusPercentAmount )
+
+	Text( return, finalDamage )
+}
+
+int current_unit_ability_damage_per_buff
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( minBuffNumDmg, "damageDealer.minBuffNumDmg" )
+	CurrentAbility( maxBuffNumDmg, "damageDealer.maxBuffNumDmg" )
+	CurrentAbility( minBuffNumStackDmg, "damageDealer.minBuffNumStackDmg" )
+	CurrentAbility( maxBuffNumStackDmg, "damageDealer.maxBuffNumStackDmg" )
+	CurrentAbility( minDebuffNumDmg, "damageDealer.minDebuffNumDmg" )
+	CurrentAbility( maxDebuffNumDmg, "damageDealer.maxDebuffNumDmg" )
+	CurrentAbility( minDebuffNumStackDmg, "damageDealer.minDebuffNumStackDmg" )
+	CurrentAbility( maxDebuffNumStackDmg, "damageDealer.maxDebuffNumStackDmg" )
+
+	Avg ( buffNumDmg, minBuffNumDmg, maxBuffNumDmg )
+	Avg ( buffNumStackDmg, minBuffNumStackDmg, maxBuffNumStackDmg )
+	Avg ( debuffNumDmg, minDebuffNumDmg, maxDebuffNumDmg )
+	Avg ( debuffNumStackDmg, minDebuffNumStackDmg, maxDebuffNumStackDmg )
+
+	Mul ( buffNumStackDmgMul, currentStacks, buffNumStackDmg )
+	Mul ( debuffNumStackDmgMul, currentStacks, debuffNumStackDmg )
+
+	Add ( fullBuffNumDmg, buffNumDmg, buffNumStackDmgMul )
+	Add ( fullDebuffNumDmg, debuffNumDmg, debuffNumStackDmg )
+	Add ( damage, fullBuffNumDmg, fullDebuffNumDmg )
+
+	Text( return, damage )
+}
+
+int current_unit_ability_summon_count
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+	
+	CurrentAbility( baseSummon, "damageDealer.targetMechanics[0].values[2]" )
+	CurrentAbility( unitsCount, "damageDealer.targetMechanics[0].values[3]" )
+	CurrentAbility( unitsBonusSummon, "damageDealer.targetMechanics[0].values[4]" )
+
+	Mul ( fullStacksMul, currentStacks, unitsBonusSummon )
+	Div ( fullStacksDiv, fullStacksMul, unitsCount )
+	Floor ( fullStacksDivFloor, fullStacksDiv )
+	Add ( fullStacksSummon, baseSummon, fullStacksDivFloor )
+
+			CurrentUnitData ( finalSummonBonusPercent, "unit.stats.finalSummonBonusPercent" )	
+			Mul ( finalSummonBonusPercentAmount, fullStacksSummon, finalSummonBonusPercent )
+			Add ( finalSummon, fullStacksSummon, finalSummonBonusPercentAmount )
+
+	Text( return, finalSummon )
+}
+
+int current_unit_ability_trap_duration
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( baseDuration, "damageDealer.targetMechanics[0].values[2]" )
+	CurrentAbility( spCount, "damageDealer.targetMechanics[0].values[3]" )
+	CurrentAbility( spBonusDuration, "damageDealer.targetMechanics[0].values[4]" )
+
+	Mul ( spBonusDurationMul, currentStacks, spBonusDuration )
+	Div ( spBonusDurationMulDiv, spBonusDurationMul, spCount )
+	Floor ( spBonusDurationMulDivFloor, spBonusDurationMulDiv )
+	Add ( fullDuration, baseDuration, spBonusDurationMulDivFloor )
+
+	Text( return, fullDuration )
+}
+
+modInt current_unit_ability_buff_revenge_damage_param
+{
+	CurrentUnitData ( fullStacksBase, "fullStacks" )
+	CurrentUnitData ( fullStacksTemp, "tempFullStacks" )
+	Add ( fullStacks, fullStacksBase, fullStacksTemp )
+	CurrentUnitData ( startStacks, "startBattleFullStacks" )
+
+	Add ( currentStacks, fullStacks, 1 )
+	Add ( maxStacks, startStacks, 1 )
+
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( baseDamage, buffSid, "actions[0].damageDealer.targetMechanics[0].values[2]" )
+	DbBuff( stackBonus, buffSid, "actions[0].damageDealer.targetMechanics[0].values[3]" )
+
+	Mul ( stackDamage, stackBonus, currentStacks )
+	Add ( return, baseDamage, stackDamage )
+}
+
+modInt current_unit_ability_buff_damage_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.damageMin" )
+}
+
+modInt current_unit_ability_buff_hp_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.hp" )
+}
+
+modPercentNumeric current_unit_ability_buff_hpPerc_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.hpPerc" )
+}
+
+modInt current_unit_ability_buff_offence_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.offence" )
+}
+
+modInt current_unit_ability_buff_defence_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.defence" )
+}
+
+modInt current_unit_ability_buff_speed_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.speed" )
+}
+
+modInt current_unit_ability_buff_initiative_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.initiative" )
+}
+
+modInt current_unit_ability_buff_moral_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.moral" )
+}
+
+modInt current_unit_ability_buff_luck_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.luck" )
+}
+
+modPercentNumeric current_unit_ability_buff_outDmgMods_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_unit_ability_buff_inDmgMods_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_unit_ability_buff_inAllDmgMod_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inAllDmgMod" )
+}
+
+modPercentNumeric current_unit_ability_buff_outAllDmgMod_param
+{
+	CurrentAbility( buffSid, "damageDealer.buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+
+
+// Специфические функции (не совсем уникальное, но редко используется в игре)
+
+int current_ability_selfMechanics_values_0
+{
+	CurrentAbility( return, "selfMechanics[0].values[0]" )
+}
+
+modPercentNumeric current_unit_damagePerHex
+{
+	CurrentUnitStats( return, "damagePerHex" )
+}
+
+modPercentNumeric current_unit_anticrit
+{
+	CurrentUnitStats( return, "anticrit" )
+}
+
+modInt current_unit_globalPassives_morale
+{
+	CurrentUnitConfig( return, "globalPassives[0].data.stats.moral" )
+}
+
+modInt current_unit_globalPassives_luck
+{
+	CurrentUnitConfig( return, "globalPassives[0].data.stats.luck" )
+}
+
+modInt current_unit_globalPassives_mana
+{
+	CurrentUnitConfig( return, "passives[0].data.sideModifiers[0].heroStat.manaCostBonus" )
+}
+
+modPercentNumeric current_unit_passives_attackPen
+{
+	CurrentUnitConfig( return, "passives[0].data.stats.attackPen" )
+}
+
+modPercentNumeric current_unit_passives_armorPen
+{
+	CurrentUnitConfig( return, "passives[0].data.stats.armorPen" )
+}
+
+modPercentNumeric unic_unit_vampirism_passive
+{ 
+	CurrentUnitConfig ( vampirism, "defaultAttacks[0].selfMechanics[0].values[1]" )
+
+	Text( return, vampirism )
+}
+
+modInt current_unit_energyPerTakeDamage
+{
+	CurrentUnitStats( return, "energyPerTakeDamage" )
+}
+
+modInt current_unit_energyPerRound
+{
+	CurrentUnitStats( return, "energyPerRound" )
+}
+
+modInt current_unit_energyPerCast
+{
+	CurrentUnitStats( return, "energyPerCast" )
+}
+
+
+// Спросить Илью про кейс с Анимейтед Армором
+
+modPercentNumeric current_unit_inDmgMods_1_param
+{
+	CurrentUnitStats( return, "inDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_unit_inDmgMods_2_param
+{
+	CurrentUnitStats( return, "inDmgMods.list[1].v" )
+}
+
+modPercentNumeric current_unit_inDmgMods_3_param
+{
+	CurrentUnitStats( return, "inDmgMods.list[2].v" )
+}
+
+modPercentNumeric current_unit_outDmgMods_1_param
+{
+	CurrentUnitStats( return, "outDmgMods.list[0].v" )
+}
+
+modPercentNumeric current_unit_outDmgMods_2_param
+{
+	CurrentUnitStats( return, "outDmgMods.list[1].v" )
+}
+
+modPercentNumeric current_unit_outDmgMods_3_param
+{
+	CurrentUnitStats( return, "outDmgMods.list[2].v" )
+}
+
+
+
+// Уникальные функции общие
+
+int base_class_caster_energy
+{ 
+	CurrentUnitStats ( return, "maxEnergy" )
+}
+
+int base_class_caster_start_energy
+{ 
+	CurrentUnitStats ( return, "startEnergy" )
+}
+
+string base_passive_luck_moral_1
+{ 
+	Text( return, "5" )
+}
+
+string base_passive_luck_moral_2
+{ 
+	Text( return, "3" )
+}
+
+string base_passive_luck_moral_3
+{ 
+	Text( return, "0" )
+}
+
+string base_passive_luck_moral_4
+{ 
+	Text( return, "3" )
+}
+
+string base_passive_luck_moral_5
+{ 
+	Text( return, "5" )
+}
+
+string base_passive_ranged_attack_distance
+{ 
+	Text( return, "3" )
+}
+
+string base_passive_ranged_penalty
+{ 
+	Text( return, "10" )
+}
+
+string base_passive_ranged_penalty_max
+{ 
+	Text( return, "50" )
+}
+
+string base_passive_ranged_penalty_melee
+{ 
+	Text( return, "50" )
+}
+
+string base_passive_patterns_penalty
+{ 
+	Text( return, "50" )
+}
+
+string base_level_param_1
+{ 
+	Text( return, "1" )
+}
+
+string base_level_param_2
+{ 
+	Text( return, "2" )
+}
+
+string base_level_param_3
+{ 
+	Text( return, "3" )
+}
+
+string base_level_param_4
+{ 
+	Text( return, "4" )
+}
+
+string base_level_param_5
+{ 
+	Text( return, "5" )
+}
+
+string base_level_param_6
+{ 
+	Text( return, "6" )
+}
+
+string base_level_param_7
+{ 
+	Text( return, "7" )
+}
+
+string base_level_param_8
+{ 
+	Text( return, "8" )
+}

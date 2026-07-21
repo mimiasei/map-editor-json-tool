@@ -1,0 +1,53 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "custom_petrified_memorial",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 100,
+					"value": 1000,
+					"customGuardValue": 100,
+
+					"guardUnits":
+					[
+						{ "sid": "minos", "amount": 1 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SidePropUnitReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+
+								"parameters": [  ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

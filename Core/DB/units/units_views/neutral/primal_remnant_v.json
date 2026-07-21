@@ -1,0 +1,68 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "primal_remnant",
+			"mesh": "Neutral/1Prefabs/primal_remnant",
+			"mapMesh": "Neutral/1Prefabs/primal_remnant_map",
+			"fadeTime": 1.85,
+
+			"scale": 0.19,
+			"modelHeight": 1.08,
+			"moveSpeed": 5.0,
+
+			"attackTimeBefore": [ 0.34, 0.6, 0.437, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.66, 1.133, 0.73, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 2.34,
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "primal_remnant_ability_1_name_new",
+					"abilityType": "Ability_type_special",
+					"description": "primal_remnant_ability_1_description_new",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "primal_remnant_ability_2_name",
+					"abilityType": "Ability_type_special",
+					"description": "primal_remnant_ability_2_description",
+					"animationIndex": 2,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_embodiment",
+                    "description": "base_class_embodiment_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				}
+			]
+		}
+	]
+}

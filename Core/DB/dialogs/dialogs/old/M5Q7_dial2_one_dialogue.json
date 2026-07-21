@@ -1,0 +1,440 @@
+{
+	"array":
+	[
+		{
+			"id": "M5Q7_dial2_one_dialogue",
+			"localization": true,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "death_knight_refused", "=", "1" ] }
+					],	
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+					},
+
+					"title": "dialogue_title_death_knight",
+					"text": "dialogue_text_M5Q7_refused_0",
+
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "death_knight_refused", "=", "1" ] }
+					],	
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+					},
+
+					"title": "dialogue_title_death_knight",
+					"text": "dialogue_text_M5Q7_refused_1",
+
+					"next": "endingRefused"
+				},
+					{
+						"id": "endingRefused",
+						"dialogPlayConditions":  
+						[
+							{ "c": "Counter", "p": [ "death_knight_refused", "=", "1" ] }
+						],	
+						"next": "2",
+
+						"fon": "","avatars":{"icons":[]},"title": "","text": "",
+						"mapActions":
+						[
+							{ "a": "StepBack" }
+						],
+						"actions": 
+						[
+							{ "a": "End", "p": [ "break" ] }
+						]
+					},
+				{
+					"id": "2",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "monster_dealt_with", "=", "0" ] }
+					],	
+					"next": "3",
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+					},
+
+					"title": "dialogue_title_death_knight",
+					"text": "dialogue_text_M5Q7_accepted_quest_0",
+
+					"answers":
+					[
+						{
+							"text": "dialogue_text_M5Q7_accepted_quest_0_answer_1",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "2a" ] }
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_accepted_quest_0_answer_2",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "2b" ] }
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_accepted_quest_0_answer_3",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "2c" ] }
+							]
+						},
+						{
+							"text": "dialogue_text_M5Q7_accepted_quest_0_answer_4",
+							"actions":
+							[ 
+								{ "a": "Go", "p": [ "2d" ] }
+							]
+						}
+					]
+				},
+					{
+						"id": "2a",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+						},
+
+						"title": "dialogue_title_death_knight",
+						"text": "dialogue_text_M5Q7_accepted_quest_0a",
+
+						"next": "endingPeace"
+					},
+
+					{
+						"id": "2b",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+						},
+
+						"title": "dialogue_title_death_knight",
+						"text": "dialogue_text_M5Q7_accepted_quest_0b",
+
+						"next": "2b1"
+					},
+					{
+						"id": "2b1",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+						},
+
+						"title": "dialogue_title_death_knight",
+						"text": "dialogue_text_M5Q7_accepted_quest_0b1",
+
+						"mapActions":
+						[
+							{ "a": "CounterSet", "p": [ "death_knight_refused", "1" ] }
+						],
+
+						"next": "endingPeace"
+					},
+
+					{
+						"id": "2c",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+						},
+
+						"title": "dialogue_title_death_knight",
+						"text": "dialogue_text_M5Q7_accepted_quest_0с",
+
+						"next": "2c1"
+					},
+					{
+						"id": "2c1",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+						},
+
+						"title": "dialogue_title_hero_dungeon",
+						"text": "dialogue_text_M5Q7_accepted_quest_0с1",
+
+						"next": "endingFight"
+					},
+
+					{
+						"id": "2d",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+						},
+
+						"title": "dialogue_title_death_knight",
+						"text": "dialogue_text_M5Q7_accepted_quest_0d",
+
+						"next": "2d1"
+					},
+					{
+						"id": "2d1",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+						},
+
+						"title": "dialogue_title_hero_dungeon",
+						"text": "dialogue_text_M5Q7_accepted_quest_0d1",
+
+						"next": "2d2"
+					},
+					{
+						"id": "2d2",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+						},
+
+						"title": "dialogue_title_hero_dungeon",
+						"text": "dialogue_text_M5Q7_accepted_quest_0d2",
+
+						"next": "2d3"
+					},
+					{
+						"id": "2d3",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+						},
+
+						"title": "dialogue_title_hero_dungeon",
+						"text": "dialogue_text_M5Q7_accepted_quest_0d3",
+
+						"next": "2d4"
+					},
+					{
+						"id": "2d4",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+						},
+
+						"title": "dialogue_title_death_knight",
+						"text": "dialogue_text_M5Q7_accepted_quest_0d4",
+
+						"next": "2d5"
+					},
+					{
+						"id": "2d5",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+						},
+
+						"title": "dialogue_title_death_knight",
+						"text": "dialogue_text_M5Q7_accepted_quest_0d5",
+
+						"next": "2d6"
+					},
+					{
+						"id": "2d6",
+						
+						"fon": "",
+						"avatars":
+						{
+							"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+						},
+
+						"title": "dialogue_title_hero_dungeon",
+						"text": "dialogue_text_M5Q7_accepted_quest_0d6",
+
+						"mapActions":
+						[
+							{ "a": "DeleteEntity", "p": [ "death_knight" ] }
+						],
+
+						"next": "endingDisappeared"
+					},
+				
+				{
+					"id": "3",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "monster_dealt_with", "=", "1" ] }
+					],	
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1", "icons/hero_large_portraits/hero_campaign_6_gunnar_large" ]
+					},
+
+					"title": "dialogue_title_hero_dungeon",
+					"text": "dialogue_text_M5Q7_killed_monster_0",
+
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "monster_dealt_with", "=", "1" ] }
+					],	
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+					},
+
+					"title": "dialogue_title_death_knight",
+					"text": "dialogue_text_M5Q7_killed_monster_1",
+
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "monster_dealt_with", "=", "1" ] }
+					],	
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+					},
+
+					"title": "dialogue_title_death_knight",
+					"text": "dialogue_text_M5Q7_killed_monster_2",
+
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "monster_dealt_with", "=", "1" ] }
+					],	
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+					},
+
+					"title": "dialogue_title_death_knight",
+					"text": "dialogue_text_M5Q7_killed_monster_3",
+
+					"next": "endingKilledMonster"
+				},
+					{
+						"id": "endingKilledMonster",
+						"dialogPlayConditions":  
+						[
+							{ "c": "Counter", "p": [ "monster_dealt_with", "=", "1" ] }
+						],	
+						"next": "7",
+
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+						"mapActions":
+						[
+							{ "a": "DeleteEntity", "p": [ "death_knight" ] }
+						],
+
+						"actions": 
+						[
+							{ "a": "End", "p": [ "break" ] }
+						]
+					},
+				{
+					"id": "7",
+					"dialogPlayConditions":  
+					[
+						{ "c": "Counter", "p": [ "monster_dealt_with", "=", "2" ] }
+					],	
+					
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "3","icons/units/hex_portraits/avatar_of_war_upg_alt" ]
+					},
+
+					"title": "dialogue_title_death_knight",
+					"text": "dialogue if you befriended the dog",
+
+					"next": "endingPeace"
+				},
+					{
+						"id": "endingPeace",
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+
+						"mapActions":
+						[
+							{ "a": "StepBack" }
+						],
+
+						"actions": 
+						[
+							{ "a": "End", "p": [ "break" ] }
+						]
+					},
+					{
+						"id": "endingFight",
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+	
+						"actions": 
+						[
+							{ "a": "End" }
+						]
+					},
+					{
+						"id": "endingDisappeared",
+						"fon": "","avatars": {"icons":[]},"title": "","text": "",
+	
+						"actions": 
+						[
+							{ "a": "End", "p": [ "break" ] }
+						]
+					}
+			]
+		}
+	]
+}

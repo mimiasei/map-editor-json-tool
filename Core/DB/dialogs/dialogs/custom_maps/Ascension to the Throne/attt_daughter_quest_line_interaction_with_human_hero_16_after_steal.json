@@ -1,0 +1,269 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_daughter_quest_line_interaction_with_human_hero_16_after_steal",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"mapActions": 
+					[
+						{ "a": "CounterSet", "p": [ "daughter_quest_finded", "1" ] }
+					],
+					"text": "attt_daughter_quest_line_after_steal_text_0",
+					"next": "startA"
+				},
+				{
+					"id": "startA",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_2",
+					"answers": [
+						{
+							"text": "attt_daughter_quest_line_after_steal_text_2_answer_1",
+							"mapActions": 
+							[
+								{ "a": "TeleportHero", "p": [ "human_hero_16", "4030" ] },
+								{ "a": "CounterSet", "p": [ "daughter_quest_kidnaped", "1" ] },
+								{ "a": "CounterSet", "p": [ "daughter_quest_started", "2" ] }
+							],
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1a" ] }
+							]
+						},
+						{
+							"text": "attt_daughter_quest_line_after_steal_text_2_answer_2",
+							"mapActions": 
+							[
+								{ "a": "CounterSet", "p": [ "counter_interaction_with_human_hero_16_after_steal_off", "1" ] },
+								{ "a": "CounterSet", "p": [ "counter_interaction_with_human_hero_16_after_save_on", "1" ] },
+								{ "a": "TeleportHero", "p": [ "human_hero_16", "2180" ] },
+								{ "a": "RevealFogOfWar", "p": [ "2180", "2" ] },
+								{ "a": "CounterSet", "p": [ "daughter_quest_disable", "1" ] },
+								{ "a": "CounterSet", "p": [ "daughter_quest_save", "1" ] },
+								{ "a": "CounterPlus", "p": [ "daughter_quest_friend", "1" ] }
+							],
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "1b" ] }
+							]
+						}
+					]
+				},
+				{
+					"id": "1a",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_3",
+					"mapActions": 
+					[
+
+					],
+					"actions": 
+					[
+
+					],
+					"next": "2a"
+				},
+				{
+					"id": "2a",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_3",
+					"mapActions": 
+					[
+						{ "a": "BreakInterruptions" }
+					],
+					"actions": 
+					[
+						{ "a": "End", "p": [ "break" ] }
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "1b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_4",
+					"next": "2b"
+				},
+				{
+					"id": "2b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_5",
+					"next": "3b"
+				},
+				{
+					"id": "3b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_6",
+					"next": "4b"
+				},
+				{
+					"id": "4b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_7",
+					"next": "5b"
+				},
+				{
+					"id": "5b",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_8",
+					"next": "6b"
+				},
+				{
+					"id": "6b",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_after_steal_text_4",
+					"mapActions": 
+					[
+						{ "a": "BreakInterruptions" }
+					],
+					"actions": 
+					[
+						{ "a": "End", "p": [ "break" ] }
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

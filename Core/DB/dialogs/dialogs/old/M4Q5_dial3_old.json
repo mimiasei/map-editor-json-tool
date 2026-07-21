@@ -1,0 +1,144 @@
+{
+	"array": [
+		{
+			"id": "M4Q5_dial3_old",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q5_dial3_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_druid",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q5_dial3_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q5_dial3_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q5_dial3_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_druid",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q5_dial3_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M4Q5_dial3_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_druid",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_elf",
+						"position": 2
+					},
+					"text": "dialogue_text_M4Q5_dial3_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "InitiateInteract",
+							"p": [
+								"elf_tracker"
+							]
+						}
+					],
+					"end": true
+				}
+			]
+		}
+	]
+}

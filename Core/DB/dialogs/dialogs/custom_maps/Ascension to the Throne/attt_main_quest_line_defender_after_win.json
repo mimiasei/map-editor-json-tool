@@ -1,0 +1,71 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_main_quest_line_defender_after_win",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_main_quest_line_defender_text_5_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_7",
+						"position": 3
+					},
+					"text": "attt_main_quest_line_defender_text_5",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_7_leandra_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_8",
+						"position": 3
+					},
+					"mapActions": [ { "a": "SetActiveQuestMarker", "p": [ "Def_Zone_1", "false" ] }, { "a": "SetActiveQuestMarker", "p": [ "Def_Zone_2", "false" ] },
+									{ "a": "DeleteEntity", "p": [ "Def_Zone_1" ] }, { "a": "DeleteEntity", "p": [ "Def_Zone_2" ] } ],
+					"text": "attt_main_quest_line_defender_text_6",
+					"end": true
+				}
+			]
+		}
+	]
+}

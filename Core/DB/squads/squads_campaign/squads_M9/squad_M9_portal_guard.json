@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_M9_portal_guard",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "star_child", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"star_child"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000000,
+				"units":
+				[
+					{ "s" : "star_child", "v": 1000000 }
+				]
+			},
+
+			"tier": 4,
+			"fraction": "neutral"
+		}
+	]
+}

@@ -1,0 +1,15 @@
+﻿{
+	"fractionsByBiome":
+	{
+		"data":
+		[
+			{ "key": "Grass", "val": "human" },
+			{ "key": "Deathland", "val": "undead" },
+			{ "key": "Dirt", "val": "dungeon" },
+			{ "key": "Autumn", "val": "nature" },
+			{ "key": "Lava", "val": "demon" },
+			{ "key": "Snow", "val": "unfrozen" },
+			{ "key": "Sand", "val": "neutral" }
+		]
+	}
+}

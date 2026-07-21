@@ -1,0 +1,243 @@
+{
+	"array": [
+		{
+			"id": "M9Q5_dial4",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_templar",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q5_dial4_0",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"forest_quest",
+								"5"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_hero_2_lafiur",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_sunlight_cavalry_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_templar",
+						"position": 2
+					},
+					"text": "dialogue_text_M9Q5_dial4_1",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"4595"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"mine_wood",
+								"4777",
+								"false",
+								"grove_mill1"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"mine_wood",
+								"4972",
+								"false",
+								"grove_mill2"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"mine_wood",
+								"4979",
+								"false",
+								"grove_mill3"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"mine_wood",
+								"4120",
+								"false",
+								"grove_mill4"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"mine_wood",
+								"5176",
+								"true",
+								"grove_mill5"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_mill1"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_mill2"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_mill3"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_mill4"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"grove_mill5"
+							]
+						}
+					],
+					"next": "1_s"
+				},
+				{
+					"id": "1_s",
+					"fon": "",
+					"text": "dialogue_text_M9Q5_dial4_1_s",
+					"actions": [
+						{
+							"a": "StoryCounterPlus",
+							"p": [
+								"fractionReputation_Human",
+								"3"
+							]
+						}
+					],
+					"mapActions": [
+						{
+							"a": "ShowFloatingUI",
+							"p": [
+								"human_icon",
+								"+3"
+							]
+						},
+						{ "a": "DeleteEntity", "p": [ "tree_empty_1" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_2" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_3" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_4" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_5" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_6" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_7" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_8" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_9" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_10" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_11" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_12" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_13" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_14" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_15" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_16" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_17" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_18" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_19" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_20" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_21" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_22" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_23" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_24" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_25" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_empty_26" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_1" ] },
+						{ "a": "SpawnMapObject", "p": [ "stump_1", "4584", "0", "stump_1" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_2" ] },
+						{ "a": "SpawnMapObject", "p": [ "stump_2", "4112", "3", "stump_2" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_3" ] },
+						{ "a": "SpawnMapObject", "p": [ "grass_stump_1", "4690", "1", "stump_3" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_4" ] },
+						{ "a": "SpawnMapObject", "p": [ "grass_stump_3", "5175", "1", "stump_4" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_5" ] },
+						{ "a": "SpawnMapObject", "p": [ "stump_1", "5469", "2", "stump_5" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_6" ] },
+						{ "a": "SpawnMapObject", "p": [ "grass_stump_1", "4220", "3", "stump_6" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_7" ] },
+						{ "a": "SpawnMapObject", "p": [ "stump_1", "3927", "3", "stump_7" ] },
+						{ "a": "DeleteEntity", "p": [ "tree_stump_8" ] },
+						{ "a": "SpawnMapObject", "p": [ "stump_2", "4969", "0", "stump_8" ] },
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"crossbowman",
+								"250"
+							]
+						},
+						{
+							"a": "DeleteSquad",
+							"p": [
+								"human_grove",
+								"1"
+							]
+						}
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

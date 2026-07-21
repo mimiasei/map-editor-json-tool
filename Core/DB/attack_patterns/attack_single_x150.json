@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+
+	{
+	"id": "attack_single_x150",
+	"sid": "attack_single_x150",
+	"rotations": 
+		[
+			{
+			"dimX": 1,
+			"dimY": 1,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+					1.5
+				]
+			},
+			
+			{
+			"dimX": 1,
+			"dimY": 1,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+					1.5
+				]
+			},
+
+			{
+			"dimX": 1,
+			"dimY": 1,
+			"charX": 0,
+			"charY": 0,
+
+				"damagePattern": 
+				[
+					1.5
+				]
+			}
+		]
+	}
+	
+	]
+}

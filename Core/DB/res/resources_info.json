@@ -1,0 +1,110 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "gold",
+			"icon": "gold",
+			"name": "gold_name",
+			"desc": "gold_desc",
+			"narrativeDesc": "gold_narrative_desc"
+		},
+		{
+			"id": "wood",
+			"icon": "wood",
+			"name": "wood_name",
+			"desc": "wood_desc",
+			"narrativeDesc": "wood_narrative_desc"
+		},
+		{
+			"id": "ore",
+			"icon": "ore",
+			"name": "ore_name",
+			"desc": "ore_desc",
+			"narrativeDesc": "ore_narrative_desc"
+		},
+		{
+			"id": "gemstones",
+			"icon": "gemstones",
+			"name": "gemstones_name",
+			"desc": "gemstones_desc",
+			"narrativeDesc": "gemstones_narrative_desc"
+		},
+		{
+			"id": "crystals",
+			"icon": "crystals",
+			"name": "crystals_name",
+			"desc": "crystals_desc",
+			"narrativeDesc": "crystals_narrative_desc"
+		},
+		{
+			"id": "mercury",
+			"icon": "mercury",
+			"name": "mercury_name",
+			"desc": "mercury_desc",
+			"narrativeDesc": "mercury_narrative_desc"
+		},
+		{
+			"id": "dust",
+			"icon": "dust",
+			"name": "dust_name",
+			"desc": "dust_desc",
+			"narrativeDesc": "dust_narrative_desc"
+		},
+		{
+			"id": "graal",
+			"icon": "graal",
+			"name": "graal_name",
+			"desc": "graal_desc",
+			"narrativeDesc": "graal_narrative_desc"
+		},
+		{
+			"id": "starDust",
+			"icon": "star_dust",
+			"name": "star_dust_name",
+			"desc": "star_dust_desc",
+			"narrativeDesc": "start_dust_narrative_desc"
+		},
+		{
+			"id": "hero_mana",
+			"icon": "hero_mana_icon",
+			"name": "hero_mana_name",
+			"desc": "hero_mana_desc",
+			"narrativeDesc": "hero_mana_narrative_desc"
+		},
+		{
+			"id": "hero_move_points",
+			"icon": "hero_move_points_icon",
+			"name": "hero_move_points_name",
+			"desc": "hero_move_points_desc",
+			"narrativeDesc": "hero_move_points_narrative_desc"
+		},
+		{
+			"id": "hero_exp",
+			"icon": "hero_exp_reward_icon",
+			"name": "hero_exp_name",
+			"desc": "hero_exp_desc",
+			"narrativeDesc": "hero_exp_narrative_desc"
+		},
+		{
+			"id": "side_exp",
+			"icon": "side_exp_icon",
+			"name": "side_exp_name",
+			"desc": "side_exp_desc",
+			"narrativeDesc": "side_exp_narrative_desc"
+		},
+		{
+			"id": "faction_laws_points",
+			"icon": "faction_laws_points_icon",
+			"name": "faction_laws_points_name",
+			"desc": "faction_laws_points_desc",
+			"narrativeDesc": "faction_laws_points_narrative_desc"
+		},
+		{
+			"id": "astrology_exp",
+			"icon": "astrology_exp_icon",
+			"name": "astrology_exp_name",
+			"desc": "astrology_exp_desc",
+			"narrativeDesc": "astrology_exp_narrative_desc"
+		}
+	]
+}

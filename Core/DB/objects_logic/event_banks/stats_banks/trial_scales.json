@@ -1,0 +1,84 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "trial_scales",
+
+			"tooltipVisitType": "CurrentHeroVisit",
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 30000,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "OnlySelected",
+						"rewardSetCancelType": "CancelAndDelete",
+						"label": "orb_observatory_label",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroStatsReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "statReward_description",
+								"rewardNotificationDesc": "statReward_notification",
+								
+								"parameters": [ "offence", "4" ]
+							},
+							{
+								"rewardType": "HeroStatsReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "statReward_description",
+								"rewardNotificationDesc": "statReward_notification",
+								
+								"parameters": [ "defence", "4" ]
+							},
+							{
+								"rewardType": "HeroStatsReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "statReward_description",
+								"rewardNotificationDesc": "statReward_notification",
+								
+								"parameters": [ "spellPower", "4" ]
+							},
+							{
+								"rewardType": "HeroStatsReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "custom",
+								"rewardName": "custom",
+								"rewardDesc": "statReward_description",
+								"rewardNotificationDesc": "statReward_notification",
+								
+								"parameters": [ "intelligence", "4" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

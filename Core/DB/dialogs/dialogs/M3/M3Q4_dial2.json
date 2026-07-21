@@ -1,0 +1,806 @@
+{
+	"array": [
+		{
+			"id": "M3Q4_dial2",
+			"localization": true,
+			"slides": [				
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"next": "0m",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_sun_herald",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial2_1",
+					"answers": [
+						{
+							"text": "dialogue_text_M3Q4_dial2_1_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"2"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"2"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-2"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3Q4_dial2_1_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "2",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut", "appear"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut", "appear"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial2_2",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						}
+					],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"dialogPlayConditions": [
+						{
+							"c": "UnitOwnHero",
+							"p": [
+								"lightweaver_upg_alt",
+								">",
+								"0"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 2,
+							"icon": "icons/dialogue/dialogue_unit_lightweaver_upg_alt",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_3",
+					"next": "endingFight"
+				},
+				{
+					"id": "0m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"altar_previously_visited",
+								"=",
+								"1"
+							]
+						}
+					],
+					"next": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_0m",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						}
+					],
+					"answers": [
+						{
+							"text": "dialogue_text_M3Q4_dial2_0m_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"2"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"endingFight"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-2"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3Q4_dial2_0m_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3Q4_dial2_0m_answer_3",
+							"requests": [
+								{
+									"c": "Counter",
+									"p": [
+										"starting_side",
+										"=",
+										"1"
+									]
+								}
+							],
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"8"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"+1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_4",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"3843"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"altar_previously_visited",
+								"1"
+							]
+						}
+					],
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial2_5",
+					"next": "6m"
+				},
+				{
+					"id": "6m",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"0"
+							]
+						}
+					],
+					"next": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_6",
+					"answers": [
+						{
+							"text": "dialogue_text_M3Q4_dial2_7_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"2"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"endingFight"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-2"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3Q4_dial2_7_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "SetQuestMarker",
+									"p": [
+										"sacrificial_altar",
+										"effects/global_map/quest_mark_silver_02"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "6",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"starting_side",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_7",
+					"answers": [
+						{
+							"text": "dialogue_text_M3Q4_dial2_7_answer_1",
+							"actions": [
+								{
+									"a": "StoryCounterMinus",
+									"p": [
+										"fractionReputation_Undead",
+										"2"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"endingFight"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"-2"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3Q4_dial2_7_answer_2",
+							"actions": [
+								{
+									"a": "End",
+									"p": [
+										"break"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "SetQuestMarker",
+									"p": [
+										"sacrificial_altar",
+										"effects/global_map/quest_mark_silver_02"
+									]
+								}
+							]
+						},
+						{
+							"text": "dialogue_text_M3Q4_dial2_7_answer_3",
+							"actions": [
+								{
+									"a": "StoryCounterPlus",
+									"p": [
+										"fractionReputation_Undead",
+										"1"
+									]
+								},
+								{
+									"a": "Go",
+									"p": [
+										"8"
+									]
+								}
+							],
+							"mapActions": [
+								{
+									"a": "ShowFloatingUI",
+									"p": [
+										"undead_icon",
+										"+1"
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_necromancer_altar",
+						"position": 2
+					},
+					"text": "dialogue_text_M3Q4_dial2_8",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialogue_hero_6_gunnar",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue/dialogue_unit_lich",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialogue_unit_lich_upg",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "dialogue_title_hero_dungeon",
+						"position": 1
+					},
+					"text": "dialogue_text_M3Q4_dial2_9",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"priestess_quest",
+								"2"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"sacrifice_quest",
+								"1"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "SetQuestMarker",
+							"p": [
+								"sacrificial_altar",
+								"effects/global_map/quest_mark_silver_02"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "endingFight",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"mapActions": [
+						{
+							"a": "SpawnSquad",
+							"p": [
+								"squad_M3_undead_guard",
+								"0",
+								"40000",
+								"true",
+								"undead_guard"
+							]
+						},
+						{
+							"a": "SetFlagEscape",
+							"p": [
+								"undead_guard",
+								"false"
+							]
+						},
+						{
+							"a": "SetFlagAutobattle",
+							"p": [
+								"undead_guard",
+								"false"
+							]
+						},
+						{
+							"a": "ChangeSquadReactionType",
+							"p": [
+								"undead_guard",
+								"Aggressive"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"undead_guard_attacked",
+								"1"
+							]
+						},
+						{
+							"a": "InitiateAttack",
+							"p": [
+								"undead_guard"
+							]
+						},
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"sacrificial_altar",
+								"false"
+							]
+						}
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

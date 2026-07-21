@@ -1,0 +1,65 @@
+﻿{
+	"array":
+	[
+		{
+			"name_": "avatar_name",
+			"narrativeDescription_":"avatar_narrativeDescription",
+
+			"id": "avatar_unfrozen",
+			"mesh": "Neutral/1Prefabs/avatar",
+			"mapMesh": "Neutral/1Prefabs/avatar_map",
+			"fadeTime": 2.7,
+
+			"scale": 1.2,
+			"modelHeight": 1.08,
+			"moveSpeed": 5.0,
+			
+			"attackTimeBefore": [ 0.5, 0.5, 0.6, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.6, 0.6, 0.9, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 2.47,
+			
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+			
+			"baseClass":
+                {
+                    "name": "base_class_magic_creature",
+                    "description": "base_class_magic_creature_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_noncounter_name",
+					"description": "base_passive_noncounter_description"
+				},
+				{
+					"name": "base_passive_blink_name",
+					"description": "base_passive_blink_description"
+				},
+				{
+					"name": "avatar_passive_unfrozen_name",
+					"description": "avatar_passive_unfrozen_description"
+				}
+			]
+		}
+	]
+}

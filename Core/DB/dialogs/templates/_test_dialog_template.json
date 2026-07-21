@@ -1,0 +1,17 @@
+{
+	"array":
+	[
+		{
+			"id": "testLeft",
+			"fon": "",
+			"leftAvatars": [ "icons/units/hex_portraits/esquire" ],
+			"rightAwatars": []
+		},
+		{
+			"id": "testRight",
+			"fon": "",
+			"leftAvatars": [],
+			"rightAwatars": [ "icons/units/hex_portraits/gorilla" ]
+		}
+	]
+}

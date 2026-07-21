@@ -1,0 +1,36 @@
+{
+	"array": [
+		{
+			"id": "squad_nature_one_unit_t7_1",
+			"squad": [],
+			"useOldSquads": false,
+			"rollChance": 1500,
+			"canBeMainGuard": true,
+			"baseSquad": {
+				"units": [
+					{
+						"s": "phoenix",
+						"v": 25007
+					}
+				]
+			},
+			"dynamicSquad": {
+				"requiredValue": 25007,
+				"units": [
+					"phoenix"
+				]
+			},
+			"randomSquad": {
+				"maxValue": 240007,
+				"units": [
+					{
+						"s": "phoenix",
+						"v": 240007
+					}
+				]
+			},
+			"tier": 7,
+			"fraction": "nature"
+		}
+	]
+}

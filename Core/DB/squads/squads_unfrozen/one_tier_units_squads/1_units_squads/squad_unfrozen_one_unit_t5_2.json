@@ -1,0 +1,36 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_one_unit_t5_2",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 176,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "succubus_upg",
+                        "v": 15005
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 15005,
+                "units": [
+                    "succubus_upg"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 120005,
+                "units": [
+                    {
+                        "s": "succubus_upg",
+                        "v": 120005
+                    }
+                ]
+            },
+            "tier": 5,
+            "fraction": "unfrozen"
+        }
+    ]
+}

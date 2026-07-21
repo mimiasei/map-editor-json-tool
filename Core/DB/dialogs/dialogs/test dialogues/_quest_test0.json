@@ -1,0 +1,25 @@
+{
+	"array":
+	[
+		{
+			"id": "quest_test0",
+			"slides":
+			[
+				{
+					"id": "start",
+					"title": "",
+					"text": "Диалог при первом интеракте. При повторном интеракте вместо него должен быть другой",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"end": true,
+					"resultDialog": "Default"
+				}
+			]
+		}
+	]
+}

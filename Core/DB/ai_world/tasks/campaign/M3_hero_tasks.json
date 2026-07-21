@@ -1,0 +1,79 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "one_hero_M3_default_main_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": true,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 6,
+
+			"priorities":
+			[
+				{ "target": "PickupObject",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "PickupEventBank",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "PickupChest",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 2.00 } },
+				{ "target": "PickupItem",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 10.00 } },
+				{ "target": "PickupRes",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				
+				{ "target": "HireUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "UpgradeUnits",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 5.00 } },
+				{ "target": "TakeGarnison",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "LearnMagicInCity",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+
+				{ "target": "OneByHero",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 1.00 } },
+				{ "target": "OneByHeroPerWeek",		"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.25 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 600000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureMine",			"data":	{ "enabled": true,		"valueFlat": 40000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureHire",			"data":	{ "enabled": true,		"valueFlat": 20000, 	"valueMultipler": 1.00 } },
+
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 100000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": 0.00 } },
+				{ "target": "SquadAttackMainGuard",	"data":	{ "enabled": true,		"valueFlat": 50000, 	"valueMultipler": 0.00 } }
+			]
+		},
+
+		{
+			"id": "one_hero_M3_yolo_attack_hero_tasks",
+
+			"scouting": true,	"tasksAroundPath": true,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 5,
+
+			"priorities":
+			[	
+				{ "target": "MarkedObjectCapture",	"data": { "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+				{ "target": "AttackMarkedHero",		"data": { "enabled": true,		"valueFlat": 500000, 	"valueMultipler": 0.00 } },
+
+				{ "target": "CaptureCityYolo",		"data":	{ "enabled": true,		"valueFlat": 200000, 	"valueMultipler": 0 } },
+				{ "target": "AttackHeroYolo",		"data":	{ "enabled": true,		"valueFlat": 200000,	"valueMultipler": 0 } },
+
+				{ "target": "CaptureCity",			"data":	{ "enabled": true,		"valueFlat": 200000, 	"valueMultipler": 0.00 } },
+				{ "target": "CaptureOutpost",		"data":	{ "enabled": true,		"valueFlat": 200000, 	"valueMultipler": 0.00 } },
+				{ "target": "AttackHero",			"data":	{ "enabled": true,		"valueFlat": 200000, 	"valueMultipler": 0.00 } },
+				{ "target": "SquadAttack",			"data":	{ "enabled": true,		"valueFlat": 0, 		"valueMultipler": -0.50 } }
+			]
+		},
+
+		{
+			"id": "one_hero_M3_yolo_attack_hero_tasks_customScenario_AttackMarkedHero",
+			"customScenario": "AttackMarkedHeroDontCheckFight",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[	
+
+			]
+		},
+		{
+			"id": "one_hero_M3_yolo_attack_hero_tasks_customScenario_AttackMarkedCity",
+			"customScenario": "AttackMarkedCityDontCheckFight",
+
+			"scouting": true,	"tasksAroundPath": false,	"scoutingStepRadius": 2,  "fogOfWar": false,	"enemyHeroPenalty": false,		"scanMinTurns": 1,		"scanMaxTurns": 4,
+
+			"priorities":
+			[	
+
+			]
+		}
+	]
+}

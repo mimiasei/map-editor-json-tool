@@ -1,0 +1,77 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "phoenix_upg_alt",
+			"mesh": "Nature/1Prefabs/phoenix_upg_alt",
+			"mapMesh": "Nature/1Prefabs/phoenix_upg_alt_map",
+			"fadeTime": 4.95,
+			
+			"scale": 1.2,
+			"modelHeight": 0.68,
+			"moveSpeed": 6,
+
+			"attackTimeBefore": [ 0.874, 1, 0.6, 1.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 1.026, 3.367, 1, 1, 1, 1 ],
+			"rareIdleTime": 6.067,
+
+			"takeoffPrepareTime": 0.25,
+			"ascentTime": 0.3,
+			"descentTime": 0.4,
+			"defaultHeight": 1.75,
+
+			"takeDamageTime": 1.467,
+			"deathTimeOffset": 4.433,
+
+			"abilities":
+			[
+				{
+					"name": "phoenix_ability_2_name",
+					"abilityType": "Ability_type_special",
+					"description": "phoenix_ability_2_description",
+					"infoDescription": "ability_no_turn",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				},
+				{
+					"name": "phoenix_ability_4_name",
+					"abilityType": "Ability_type_attack",
+					"description": "phoenix_ability_4_description",
+					"excaptionInTooltip": "description_effect_fire_immunities_no_dot",
+					"infoDescription": "ability_no_start",
+					"animationIndex": 1
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_embodiment",
+                    "description": "base_class_embodiment_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_strike_swipe_1_name",
+					"description": "base_passive_strike_swipe_1_description"
+				},
+				{
+					"name": "phoenix_passive_1_name",
+					"description": "phoenix_passive_1_description"
+				},
+				{
+					"name": "phoenix_passive_3_name",
+					"description": "phoenix_passive_3_description"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "test_conditions_squadInteraction",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "Диалог ДО (прерывает интеракт ТОЛЬКО с драконом за счет resultDialog)",
+					
+					"end": true,
+					"resultDialog": "Interrupt"
+				}				
+			]
+		}
+	]
+}

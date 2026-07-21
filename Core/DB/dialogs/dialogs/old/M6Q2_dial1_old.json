@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M6Q2_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "spy is hidden here. imagine you can't see him please",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

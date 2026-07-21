@@ -1,0 +1,99 @@
+{
+	"array": [
+		{
+			"id": "vyr_Scenario2_Message1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P1",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "gs_dialogue_text_vyr_Scenario2_Message1_a0",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P1",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "gs_dialogue_text_vyr_Scenario2_Message1_a1",
+					"mapActions": [
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"black_dragon",
+								"1"
+							]
+						}
+					],
+					"next": "b0"
+				},
+				{
+					"id": "b0",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P2",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "gs_dialogue_text_vyr_Scenario2_Message1_b0",
+					"next": "b1"
+				},
+				{
+					"id": "b1",
+					"dialogPlayConditions": [
+						{
+							"c": "Counter",
+							"p": [
+								"Counter_P2",
+								"=",
+								"1"
+							]
+						}
+					],
+					"fon": "",
+					"text": "gs_dialogue_text_vyr_Scenario2_Message1_b1",
+					"mapActions": [
+						{
+							"a": "GiveUnitHero",
+							"p": [
+								"phoenix",
+								"1"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

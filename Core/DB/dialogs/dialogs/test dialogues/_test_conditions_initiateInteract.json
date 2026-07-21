@@ -1,0 +1,63 @@
+{
+	"array":
+	[
+		{
+			"id": "test_conditions_initiateInteract",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "Начался диалог по экшену initiateInteract",
+					
+					"next": "1"
+				},
+				{
+					"id": "1",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "Закончился диалог по экшену initiateInteract, будет драка",
+
+					"next": "system"
+				},
+				{
+					"id": "system",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "",
+					
+					"mapActions":
+					[
+						{ "a": "InitiateAttack", "p": [ "spy" ] }
+					],
+					
+					"actions":
+					[
+						{ "a": "End" }
+					]
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,99 @@
+{
+	"array":
+	[
+		{
+			"id": "tutorial_M_13",
+			
+			"contentHeight": 460,
+			"position": { "x": 0, "y": 0 },
+
+			"slides":
+			[
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_13_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_13_1", "true", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_1" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_2" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_2_5" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_13_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_13_2", "false" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_3" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_4" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_5" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_6" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_13_name",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_13_3", "false" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_7" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_8" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_10" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_9" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_13_10_5",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_13_4", "false" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_11" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_12" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_13" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_14" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_13_10_5",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_13_5", "false" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_15" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_13_9", "false" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_16" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_17" ] },
+						{ "type": "image", "value": [ "tutorial_pic_M_13_6", "false", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_18" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_19" ] }
+					]
+				},
+				{
+					"title": "t_M_title",
+					"subtitle": "tutorial_M_13_10_5",
+
+					"content":
+					[
+						{ "type": "image", "value": [ "tutorial_pic_M_13_7", "true", "true" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_20" ] },
+						{ "type": "text", "value": [ "tutorial_M_13_21" ] }
+					],
+	
+					"closeMapActions":
+					[
+						{ "a": "OpenUI", "p": [ "LevelUp" ] },
+						{ "a": "CounterPlus", "p": [ "Tutorial_M_Counter_13", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

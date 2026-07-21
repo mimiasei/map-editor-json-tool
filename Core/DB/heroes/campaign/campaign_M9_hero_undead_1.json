@@ -1,0 +1,145 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M9_hero_undead_1",
+
+			"name": "necro_hero_7",
+			"description": "necro_hero_7_description",
+			"motto": "necro_hero_7_motto",
+
+			"mesh": "death_knight",
+			"mounts": [ "death_mount" ],
+			"icon": "hero_necromancer_7_marl",
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+			"classType": "might",
+
+			"skillsRollVariant": "necros_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 15,
+			"attacksTimesBefore": [1.33],
+
+			"startSquad" : [
+				{ "sid": "skeleton", "min": 30, "max": 30 },
+				{ "sid": "flicker", "min": 15, "max": 15 },
+				{ "sid": "pet", "min": 12, "max": 12 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "skeleton", "min": 30, "max": 30 },
+				{ "sid": "flicker", "min": 15, "max": 15 },
+				{ "sid": "pet", "min": 12, "max": 12 }
+			],
+
+			"specialization": "necro_hero_7_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      11,
+				"defence":      3,
+				"spellPower":   1,
+				"intelligence": 1,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 45 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 15 },
+						{ "v": 3, "c": 15 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_undead",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_magic_night",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_assault",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_luck",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_trainer",
+					"skillLevel": 3
+				},
+				{
+					"sid": "skill_logistic",
+					"skillLevel": 1
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "night_2_magic_web",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_3_magic_enlarge_shadow",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_9_magic_twilight",
+					"level": 4,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_14_magic_nairas_kiss",
+					"level": 4,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				},
+
+				{
+					"sidConfig": "change_use_necromancy",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,243 @@
+﻿string current_primal_1_magic_thunderbolt_bonus_1
+{
+	Text( return, "25" )
+}
+
+string current_primal_1_magic_thunderbolt_bonus_2
+{
+	Text( return, "50" )
+}
+
+//
+
+modPercentNumeric current_primal_2_magic_thick_hide
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "data.stats.inDmgMods.list[0].v" )
+}
+
+//
+
+
+
+modInt current_primal_3_magic_wean
+{
+	CurrentMagicBattle ( baseDuration, "targetMechanics[0].values[1]" )
+	CurrentMagicBattle ( stackDuration, "targetMechanics[0].values[2]" )
+	CurrentMagicBattle ( perStack, "targetMechanics[0].values[3]" )
+
+	SpellpowerForCurrentMagic ( count )
+
+	Div ( perSpBonus, count, perStack )
+	Mul ( spDuration, stackDuration, perSpBonus )
+
+	Add ( duration, baseDuration, spDuration )
+
+	Text( return, duration )
+}
+
+//
+
+modInt current_primal_5_magic_crystal_crown
+{
+	CurrentMagicBattle ( summonSid, "targetMechanics[0].values[1]" )
+	DbObstacle ( summonData, summonSid, "stats.hp" )
+
+	Text( return, summonData )
+}
+
+modInt current_primal_5_magic_crystal_crown_numTargets
+{
+	CurrentMagicBattle ( return, "numTargets" )
+}
+
+string current_primal_5_magic_crystal_crown_bonus_4
+{
+	Text( return, "2" )
+}
+
+//
+
+modInt current_primal_6_magic_ice_bolt
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "data.stats.initiative" )
+}
+
+//
+
+modInt current_primal_7_magic_wall_of_flame
+{
+	CurrentMagicBattle ( summonSid, "targetMechanics[0].values[1]" )
+	DbTrap ( minBaseDmg, summonSid, "damageDealer.minBaseDmg" )
+	DbTrap ( maxBaseDmg, summonSid, "damageDealer.maxBaseDmg" )
+	DbTrap ( minStackDmg, summonSid, "damageDealer.minStackDmg" )
+	DbTrap ( maxStackDmg, summonSid, "damageDealer.maxStackDmg" )
+
+	Avg ( baseDmg, minBaseDmg, maxBaseDmg )
+	Avg ( stackDmg, minStackDmg, maxStackDmg )
+
+	SpellpowerForCurrentMagic ( count )
+
+	Mul ( dmgCount, count, stackDmg )
+
+	Add ( damage, baseDmg, dmgCount )
+
+			CurrentHero ( magicAttackPerBonus, "heroStat.magicAttackPerBonus" )	
+			Mul ( magicAttackPerBonusAmount, damage, magicAttackPerBonus )
+			Add ( finalDamage, damage, magicAttackPerBonusAmount )
+
+	Text( return, finalDamage )
+}
+
+modInt current_primal_7_magic_wall_of_flame_duration
+{
+	CurrentMagicBattle ( return, "targetMechanics[0].values[2]" )
+}
+
+modInt current_primal_7_magic_wall_of_flame_numTargets
+{
+	CurrentMagicBattle ( return, "numTargets" )
+}
+
+string current_primal_7_magic_wall_of_flame_bonus_1
+{
+	Text( return, "50" )
+}
+
+//
+
+string current_primal_8_magic_cave_in_1
+{
+	Text( return, "1" )
+}
+
+string current_primal_8_magic_cave_in_2
+{
+	Text( return, "2" )
+}
+
+string current_primal_8_magic_cave_in_bonus_1
+{
+	Text( return, "1" )
+}
+
+//
+
+modInt current_primal_9_magic_earths_rage_damage_buildings
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( baseDmg, "targetMechanics[0].values[0]" )
+	CurrentMagicBattle ( stackDmg, "targetMechanics[0].values[1]" )
+
+	Mul ( damageCount, count, stackDmg )
+	Add ( damage, baseDmg, damageCount )
+
+			CurrentHero ( magicAttackPerBonus, "heroStat.magicAttackPerBonus" )	
+			Mul ( magicAttackPerBonusAmount, damage, magicAttackPerBonus )
+			Add ( finalDamage, damage, magicAttackPerBonusAmount )
+
+	Text( return, finalDamage )
+}
+
+modInt current_primal_9_magic_earths_rage_damage_units
+{
+	SpellpowerForCurrentMagic ( count )
+
+	CurrentMagicBattle ( baseDmg, "targetMechanics[0].values[2]" )
+	CurrentMagicBattle ( stackDmg, "targetMechanics[0].values[3]" )
+
+	Mul ( damageCount, count, stackDmg )
+	Add ( damage, baseDmg, damageCount )
+
+			CurrentHero ( magicAttackPerBonus, "heroStat.magicAttackPerBonus" )	
+			Mul ( magicAttackPerBonusAmount, damage, magicAttackPerBonus )
+			Add ( finalDamage, damage, magicAttackPerBonusAmount )
+
+	Text( return, finalDamage )
+}
+
+//
+
+string current_primal_10_magic_primordial_purity_1
+{
+	Text( return, "1-3" )
+}
+
+string current_primal_10_magic_primordial_purity_2
+{
+	Text( return, "1-4" )
+}
+
+string current_primal_10_magic_primordial_purity_3
+{
+	Text( return, "1-5" )
+}
+
+modInt current_primal_10_magic_primordial_purity
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "data.immunities[0].tags[0]" )
+}
+
+modInt current_primal_10_magic_primordial_purity_effect
+{
+	CurrentBuff( return, "config.data.immunities[0].tags[0]" )
+}
+
+string current_primal_10_magic_primordial_purity_3_1
+{
+	Text( return, "4" )
+}
+
+string current_primal_10_magic_primordial_purity_4_1
+{
+	Text( return, "5" )
+}
+
+//
+
+modInt current_primal_12_magic_chain_lightning_count
+{
+	CurrentMagicBattle ( CurrentMagicBattle, "numTargets" )
+	Sub ( return, CurrentMagicBattle, 1 )
+}
+//
+
+string current_primal_12_magic_chain_lightning_range
+{
+	Text( return, "3" )
+}
+
+string current_primal_12_magic_chain_lightning_bonus
+{
+	Text( return, "1" )
+}
+
+string current_primal_12_magic_chain_lightning
+{
+	Text( return, "50" )
+}
+
+string current_primal_12_magic_chain_lightning_2
+{
+	Text( return, "25" )
+}
+
+//
+
+modPercentNumeric current_primal_14_magic_hksmillas_rampage
+{
+	CurrentMagicBattle ( buffSid, "buff.sid" )
+	DbBuff( return, buffSid, "data.stats.outAllDmgMod" )
+}
+
+//
+
+//
+
+string current_primal_13_magic_avalanche_bonus_2
+{
+	Text( return, "2" )
+}

@@ -1,0 +1,29 @@
+{
+	"array":
+	[
+		{
+			"id": "hive_queen_passive_human",
+			"stat": { "offencePerc": 0.25 }
+		},
+		{
+			"id": "hive_queen_passive_undead",
+			"stat": { "defencePerc": 0.25 }
+		},
+		{
+			"id": "hive_queen_passive_nature",
+			"stat": { "luck": 2, "moral": 2 }
+		},
+		{
+			"id": "hive_queen_passive_unfrozen",
+			"stat": { "hpPerc": 0.2 }
+		},
+		{
+			"id": "hive_queen_passive_dungeon",
+			"stat": { "damagePerc": 0.1 }
+		},
+		{
+			"id": "hive_queen_passive_neutral",
+			"stat": { "speed": 2 }
+		}
+	]  
+}

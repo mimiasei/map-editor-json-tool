@@ -1,0 +1,4222 @@
+{
+	"array":
+	[
+		{
+			"id": "tree_dirt_1",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/tree_dirt_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dirt_2",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/tree_dirt_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dirt_3",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/tree_dirt_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dirt_4",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/tree_dirt_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "dirt_crack_in_the_ground",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_crack_in_the_ground" ],
+			"randomRotation": true,
+			
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dirt_old_stump",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_old_stump" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "dirt_rock_1",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_rock_1" ],
+			"randomRotation": true,
+			
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dirt_rock_2",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_rock_2" ],
+			"randomRotation": true,
+			
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dirt_rock_3",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_rock_3" ],
+			"randomRotation": true,
+			
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dirt_rock_4",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_rock_4" ],
+			"randomRotation": true,
+			
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dirt_strange_flower",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_strange_flower" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "dirt_volcanic_rock",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_volcanic_rock" ],
+			"randomRotation": true,
+			
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_dirt_small_1",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/mountain_dirt_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},{
+			"id": "mountain_dirt_small_2",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/mountain_dirt_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_dirt_big_1",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/mountain_dirt_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_dirt_big_2",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/mountain_dirt_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_dirt_big_3",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/mountain_dirt_big_3" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_dirt_big_4",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/mountain_dirt_big_4" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+				
+			]
+		},
+		{
+			"id": "pool_dirt_small_1",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/pool_dirt_small_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dirt_big_1",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/pool_dirt_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "pinetree_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/Pinetree_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/Pinetree_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_3",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/Pinetree_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_4",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/Pinetree_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_stump_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_stump_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_stump_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_stump_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_stump_3",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_stump_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_log_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_log_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_log_2_walkable",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_log_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				0
+			]
+		},
+		{
+			"id": "grass_forest_lawn_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_forest_lawn_1" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "grass_forest_lawn_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_forest_lawn_2" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_tropical_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_tropical_1" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_tropical_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_tropical_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "grass_hill_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_hill_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "grass_hill_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_hill_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mushrooms_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mushrooms_1" ],
+			"randomRotation": true
+		},
+		{
+			"id": "mushrooms_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mushrooms_2" ],
+			"randomRotation": true
+		},
+		{
+			"id": "mushrooms_3",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mushrooms_3" ],
+			"randomRotation": true
+		},
+		{
+			"id": "mushrooms_4",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mushrooms_4" ],
+			"randomRotation": true
+		},
+		{
+			"id": "grass_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_death_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/grass_death_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_death_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/grass_death_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_snow_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/grass_snow_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_snow_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/grass_snow_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "water_reed_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/water_reed_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "water_reed_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/water_reed_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "water_weed_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/water_weed_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "water_weed_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/water_weed_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_stones_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_stones_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_stones_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/grass_stones_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "dead_stones_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_stones_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "dead_stones_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_stones_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "desert_stones_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/desert_stones_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "desert_stones_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/desert_stones_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "snow_stones_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/snow_stones_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "snow_stones_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/snow_stones_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "snow_stones_3",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/snow_stones_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "snow_stones_4",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/snow_stones_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "autumn_stones_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/autumn_stones_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "autumn_stones_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/autumn_stones_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "dirt_stones_1",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_stones_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "dirt_stones_2",
+			"tag": "Environment",
+			"biome": "Dirt",
+			"prefs": [ "environment/dirt_stones_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "lava_stones_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_stones_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "lava_stones_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_stones_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "lava_walkable_eggs_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_walkable_eggs_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "lava_walkable_eggs_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_walkable_eggs_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "flowers_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/flowers_1" ],
+			"randomRotation": true
+		},
+		{
+			"id": "flowers_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/flowers_2" ],
+			"randomRotation": true
+		},
+		{
+			"id": "flowers_autumn_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/flowers_autumn_1" ],
+			"randomRotation": true
+		},
+		{
+			
+			"id": "pumpkin_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/pumpkin_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pumpkin_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/pumpkin_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "field_fence",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/field_fence" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "stump_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/stump_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "stump_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/stump_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "log_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/log_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "log_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/log_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+			
+		},
+		{
+			"id": "bridge_wood",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/bridge_wood" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false
+			
+		},
+		{
+			"id": "bridge_stone",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/bridge_stone" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false
+			
+		},
+		{
+			"id": "pool_small",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/pool_small" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_big",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/pool_big" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "rocks_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/rocks_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "rocks_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/rocks_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_small_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/hill_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_small_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/hill_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_big",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/hill_big" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_green_small_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_green_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},{
+			"id": "mountain_green_small_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_green_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_green_big_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_green_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_green_big_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_green_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_green_big_3",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_green_big_3" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_green_big_4",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_green_big_4" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+				
+			]
+		},
+		{
+			"id": "mountain_water_small_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_water_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_water_small_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_water_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_water_small_3",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_water_small_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_water_big_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_water_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_water_big_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_water_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		
+		},
+		{
+			"id": "mountain_water_big_3",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/mountain_water_big_3" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		
+		{
+			"id": "tree_dead_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_4",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_5",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_5" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_6",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_6" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_7",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_7" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_8",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_dead_8" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_mushroom_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_mushroom_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_mushroom_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_mushroom_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_mushroom_4",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/tree_mushroom_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_withered_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pinetree_withered_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_withered_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pinetree_withered_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_withered_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pinetree_withered_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_withered_4",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pinetree_withered_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "snag_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/snag_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "thorns_dead",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/thorns_dead" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "gallows_dead",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/gallows_dead" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "three_sculls",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/three_sculls" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "bones_dead_pack",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/bones_dead_pack" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "dead_meadow",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_meadow" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "dead_strange_plants",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_strange_plants" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "dead_burials_tree",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_burials_tree" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dead_cliffs_of_the_dead",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_cliffs_of_the_dead" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dead_mountain_lake",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_mountain_lake" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dead_mushroom_cliff",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_mushroom_cliff" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dead_sculls_bones_hill",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_sculls_bones_hill" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dead_shadowy_hill",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_shadowy_hill" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dead_sinister_roots",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_sinister_roots" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "dead_skulls_hill",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/dead_skulls_hill" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "bones_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/bones_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "bones_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/bones_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "bones_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/bones_3" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "coffins_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/coffins_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "coffins_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/coffins_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "coffins_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/coffins_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "coffins_4",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/coffins_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_dead_big",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/hill_dead_big" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dead_small_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_small_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dead_big_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "pool_dead_acid_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_acid_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dead_acid_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_acid_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dead_acid_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_acid_3" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dead_blood_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_blood_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dead_blood_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_blood_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_dead_blood_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/pool_dead_blood_3" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "autumn_ground_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/autumn_ground_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "autumn_ground_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/autumn_ground_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "autumn_ground_3",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/autumn_ground_3" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "autumn_ground_4",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/autumn_ground_4" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "autumn_ground_5",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/autumn_ground_5" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_autumn_small_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/mountain_autumn_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},{
+			"id": "mountain_autumn_small_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/mountain_autumn_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_autumn_big_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/mountain_autumn_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_autumn_big_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/mountain_autumn_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_autumn_big_3",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/mountain_autumn_big_3" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_autumn_big_4",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/mountain_autumn_big_4" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+				
+			]
+		},
+		{
+			"id": "hill_autumn_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/hill_autumn_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_autumn_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/hill_autumn_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_autumn_3",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/hill_autumn_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_autumn_4",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/hill_autumn_4" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_autumn_5",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/hill_autumn_5" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "hill_autumn_6",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/hill_autumn_6" ],
+			"randomRotation": false,
+			"canBeMirrored": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				0, 0
+			]
+		},
+		{
+			"id": "pool_autumn_small_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/pool_autumn_small_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_autumn_big_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/pool_autumn_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		
+		{
+			"id": "tree_lava_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_3",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_ash_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_ash_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_ash_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_ash_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_ash_3",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_ash_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_mum_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_mum_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_mum_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_mum_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_lava_mum_3",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/tree_lava_mum_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "lava_eggs_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_eggs_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "lava_eggs_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_eggs_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "lava_eggs_ash_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_eggs_ash_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "lava_eggs_ash_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_eggs_ash_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "lava_eggs_mum_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_eggs_mum_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "lava_eggs_mum_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_eggs_mum_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "lava_ground_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_ground_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "lava_ground_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_ground_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "lava_ground_3",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_ground_3" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "lava_ground_4",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/lava_ground_4" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_lava_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_3",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_lava_4",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_lava_small_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_lava_small_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_lava_small_3",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_small_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_lava_small_4",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_small_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_lava_big_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_big_1wl",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_1wl" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_big_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_big_2wl",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_2wl" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_big_3",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_3" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_big_3wl",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_3wl" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_big_4",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_4" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_big_4wl",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_big_4wl" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_8",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_8" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_lava_9",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/mountain_lava_9" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_lava_small_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/pool_lava_small_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_lava_big_1",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/pool_lava_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "pool_lava_big_2",
+			"tag": "Environment",
+			"biome": "Lava",
+			"prefs": [ "environment/pool_lava_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_dead_big_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/mountain_dead_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_dead_big_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/mountain_dead_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			
+			]
+		},
+		{
+			"id": "mountain_dead_big_3",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/mountain_dead_big_3" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_dead_big_4",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/mountain_dead_big_4" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_dead_small_1",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/mountain_dead_small_1" ],
+			
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_dead_small_2",
+			"tag": "Environment",
+			"biome": "Deathland",
+			"prefs": [ "environment/mountain_dead_small_2" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "grass_desert_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/grass_desert_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_desert_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/grass_desert_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_autumn_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/grass_autumn_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "grass_autumn_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/grass_autumn_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true
+			
+		},
+		{
+			"id": "pinetree_snow_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/pinetree_snow_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_snow_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/pinetree_snow_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_snow_3",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/pinetree_snow_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "pinetree_snow_4",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/pinetree_snow_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "palms_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/palms_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "palms_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/palms_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "palms_3",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/palms_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "cactus_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/cactus_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "cactus_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/cactus_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "cactus_3",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/cactus_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "cactus_dry_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/cactus_dry_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "cactus_dry_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/cactus_dry_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "cactus_dry_3",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/cactus_dry_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_autumn_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/tree_autumn_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_autumn_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/tree_autumn_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_autumn_3",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/tree_autumn_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_big_autumn_1",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/tree_big_autumn_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_big_autumn_2",
+			"tag": "Environment",
+			"biome": "Autumn",
+			"prefs": [ "environment/tree_big_autumn_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_snow_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/tree_dead_snow_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_snow_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/tree_dead_snow_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_snow_3",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/tree_dead_snow_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "tree_dead_snow_4",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/tree_dead_snow_4" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "desert_cracked_stones_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/desert_cracked_stones_2" ],
+			"sizeX": 2, "sizeZ": 1,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1
+			]
+		},
+		{
+			"id": "desert_cracked_stones_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/desert_cracked_stones_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "desert_dune_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/desert_dune_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "desert_dune_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/desert_dune_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_desert_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/mountain_desert_1" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_desert_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/mountain_desert_2" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_desert_3",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/mountain_desert_3" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_desert_4",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/mountain_desert_4" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_desert_5",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/mountain_desert_5" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_desert_6",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/mountain_desert_6" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		
+		
+		{
+			"id": "mountain_snow_small_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/mountain_snow_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},{
+			"id": "mountain_snow_small_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/mountain_snow_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "mountain_snow_big_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/mountain_snow_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_snow_big_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/mountain_snow_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "mountain_snow_big_3",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/mountain_snow_big_3" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "mountain_snow_big_4",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/mountain_snow_big_4" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+				
+			]
+		},
+		{
+			"id": "pool_desert_big_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/pool_desert_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "pool_desert_small_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/pool_desert_small_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "hill_desert_small_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/hill_desert_small_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_desert_small_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/hill_desert_small_2" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_desert_big_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/hill_desert_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "hill_desert_big_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/hill_desert_big_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "hill_snow_small",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/hill_snow_small" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "hill_snow_big",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/hill_snow_big" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.5, "offsetZ": 0.5,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "ice_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/ice_1" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		
+		},
+		{
+			"id": "ice_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/ice_2" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "ice_3",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/ice_3" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "ice_4",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/ice_4" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "snow_grassy_hill_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/snow_grassy_hill_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "snow_tree_hill_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/snow_tree_hill_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "snow_rock_hill_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/snow_rock_hill_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_snow_small_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/pool_snow_small_1" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_snow_small_2",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/pool_snow_small_2" ],
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "pool_snow_big_1",
+			"tag": "Environment",
+			"biome": "Snow",
+			"prefs": [ "environment/pool_snow_big_1" ],
+			"randomRotation": true,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+			]
+		},
+		{
+			"id": "ruins_desert_1",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/ruins_desert_1" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "ruins_desert_2",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/ruins_desert_2" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "ruins_desert_3",
+			"tag": "Environment",
+			"biome": "Desert",
+			"prefs": [ "environment/ruins_desert_3" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_corpse_avatar_of_war_map",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_corpse_avatar_of_war_map" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_corpse_esquire_map",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_corpse_esquire_map" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_abandoned_hut",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_abandoned_hut" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": true,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_fire_heart",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_fire_heart" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_four_obstacle",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_four_obstacle" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_druids_altar",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_druids_altar" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_broken_bridge",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_broken_bridge" ],
+			
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_shrooms",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_shrooms" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_shrooms_small",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "interactive/fairy_ring" ],
+
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_necromancer_altar",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_necromancer_altar" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_necromancer_hat",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_necromancer_hat" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		
+		{
+			"id": "campaign_necromancy_amplifier_foundation",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "barracks/barracks_demon_6" ],
+
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_prop_construction_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_construction_1" ],
+			
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_prop_construction_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_construction_2" ],
+			
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_prop_6",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_6" ],
+			
+			"sizeX": 4, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 0,
+			"nodes": 
+			[
+				1, 1, 1, 1, 
+				1, 1, 1, 1,
+				1, 1, 1, 1
+				
+				
+			]
+		},
+		{
+			"id": "campaign_prop_7_1",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_7_1" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_prop_7_2",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_7_2" ],
+			
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_prop_7_3",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_7_3" ],
+			
+			"randomRotation": true,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_prop_7_4",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_7_4" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 2, "sizeZ": 2,
+			"pivotX": 0, "pivotZ": 0,
+			"offsetX": 0.48, "offsetZ": 0.6,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1,
+				1, 1
+			]
+		},
+		{
+			"id": "campaign_prop_7_5",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_prop_7_5" ],
+			
+			"randomRotation": false,
+
+			"sizeX": 3, "sizeZ": 3,
+			"pivotX": 1, "pivotZ": 1,
+			"offsetX": 0, "offsetZ": 0,
+			"flippedOffset": 1,
+			"nodes": 
+			[
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1
+				 
+			]
+		},
+
+		{
+			"id": "campaign_M3_scout_body",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_corpse_esquire_map" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		
+		{
+			"id": "campaign_M5_death_knight_body",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "environment/campaign_corpse_avatar_of_war_map" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+
+		{
+			"id": "campaign_M9_block_angel",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "test/Obstacle_test" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		},
+		{
+			"id": "campaign_FX_block",
+			"tag": "Environment",
+			"biome": "Grass",
+			"prefs": [ "fx/fx_map_smoke" ],
+			"sizeX": 1, "sizeZ": 1,
+			"randomRotation": false,
+			"nodes": 
+			[
+				1
+			]
+		}
+	]
+}

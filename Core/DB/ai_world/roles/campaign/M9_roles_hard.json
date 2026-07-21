@@ -1,0 +1,16 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "multi_hero_M9_default_main_hero_hard",
+			"actionsOnSelect":	[  ], 
+			"actionsOnStep":	[  ],
+			"tasks":
+			[				
+				{
+					"task": "multi_hero_M9_default_main_hero_tasks"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,230 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "frostworm_rider_upg_alt",
+			"squadValue": 256,
+			"expBonus": 31,
+			"tier": 3,
+			"fraction": "unfrozen",
+			"nativeBiome": "Snow",
+
+			"ai": "melee_type",
+			
+			"tags": [ "unit", "unfrozen" ],
+
+			"baseSid": "frostworm_rider_upg",
+			
+			"unitCost":
+			{
+				"costResArray":
+				[
+					{ "name": "gold", "cost": 270 }
+				]
+			},
+
+			"stats":
+			{	
+				"hp": 25,
+				"offence": 7,
+				"defence": 7,
+				"damageMin": 5,
+				"damageMax": 7,
+
+				"initiative": 7,
+				"speed": 6,
+				
+				"luck": 0,
+				"moral": 0,
+
+				"energyPerCast": 2,
+				"energyPerRound": 0,
+				"energyPerTakeDamage": 1,
+				
+				"actionPoints": 1,
+				"numCounters": 1,
+
+				"moralMin": -5,
+				"moralMax": 5,
+				"luckMin": -3,
+				"luckMax": 3,
+
+				"inDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				},
+
+				"outDmgMods": 
+				{
+					"list": 
+					[ 
+
+					]
+				}
+			},
+			
+			"passives" : 
+			[
+				{
+					"data": 
+					{
+						"immunities": 
+						[ 
+							{ "type": "cast", "tags": [ "living_immunities" ] }
+						]
+					}
+				}
+			],
+			
+			"defaultAttacks": 
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack" ],
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "frostworm_rider_debuff",
+							"duration": 2
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "damage", "values":  [ "20" ,  "0" ] }
+						]
+					}
+				}
+			],
+			
+			"counterAttacks":
+			[
+				{
+					"attackType_" : "melee",
+					
+					"selfMechanics" : [ ],
+
+					"damageDealer" : 
+					{
+						"tags": [ "melee_attack", "normal_damage", "basic_attack", "counter_attack" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit", "attackable_object" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "normal",
+
+						"statDmgMult": 1.0,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "frostworm_rider_debuff",
+							"duration": 2
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "damage", "values":  [ "20" ,  "0" ] }
+						]
+					}
+				}
+			],
+
+			"abilities" : 
+			[
+				{
+					"attackType_" : "cast",
+					"rank": 2,
+					
+					"selfMechanics" : [ ],
+															
+					"cd" : 2,
+					"actionCost": 0,
+					"energyLevel": 2,
+					
+					"damageDealer" : 
+					{
+						"tags": [ "ability", "absolute_damage" ],
+						"triggerCounter": false,
+						"attackPatternSid" : "attack_rumble_x1_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "enemy",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "enemy",
+						"damageType_": "absolute",
+
+						"statDmgMult": 0.5,
+
+						"buffTarget_": "enemy",
+						"buff":
+						{
+							"sid": "frostworm_rider_debuff",
+							"duration": 2
+						},
+						"targetMechanics" : [ ]
+					}
+				}
+			]
+		}
+	]
+}

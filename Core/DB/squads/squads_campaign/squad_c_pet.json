@@ -1,0 +1,47 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_c_pet",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "pet", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"pet"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 85000,
+				"units":
+				[
+					{ "s" : "pet", "v": 85000 }
+				]
+			},
+
+			"tier": 3,
+			"fraction": "undead"
+		}
+	]
+}

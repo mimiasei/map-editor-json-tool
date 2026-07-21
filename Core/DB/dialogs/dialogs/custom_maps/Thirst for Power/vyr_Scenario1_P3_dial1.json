@@ -1,0 +1,296 @@
+{
+	"array": [
+		{
+			"id": "vyr_Scenario1_P3_dial1",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/hero_large_portraits/hero_nature_8_Alluring_Sha_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_tree_of_knowledge",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_0",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"Counter_P3_Q1_1",
+								"1"
+							]
+						}
+					],
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_11_Elder_Tsskish_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/hero_large_portraits/hero_nature_8_Alluring_Sha_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_tree_of_knowledge",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_11_Elder_Tsskish_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Twinkle",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_pixie",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/hero_large_portraits/hero_nature_8_Alluring_Sha_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_tree_of_knowledge",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_5",
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_11_Elder_Tsskish_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_6",
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/hero_large_portraits/hero_nature_8_Alluring_Sha_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_tree_of_knowledge",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_7",
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/hero_large_portraits/hero_nature_8_Alluring_Sha_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_tree_of_knowledge",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_8",
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_11_Elder_Tsskish_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_9",
+					"next": "10"
+				},
+				{
+					"id": "10",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/hero_large_portraits/hero_nature_8_Alluring_Sha_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_tree_of_knowledge",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_10",
+					"mapActions": [
+						{
+							"a": "RevealFogOfWar",
+							"p": [
+								"235",
+								"3"
+							]
+						},
+						{
+							"a": "MoveCamera",
+							"p": [
+								"235"
+							]
+						},
+						{
+							"a": "SetQuestMarker",
+							"p": [
+								"library",
+								"effects/global_map/quest_mark_silver_02"
+							]
+						}
+					],
+					"next": "11"
+				},
+				{
+					"id": "11",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_nature_11_Elder_Tsskish_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_hero_sylvan",
+						"position": 1
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_11",
+					"mapActions": [
+						{
+							"a": "MoveCameraToSelectHero"
+						}
+					],
+					"next": "12"
+				},
+				{
+					"id": "12",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Twinkle",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "tfp_dialogue_title_pixie",
+						"position": 2
+					},
+					"text": "tfp_dialogue_text_vyr_Scenario1_P3_dial1_12",
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"Counter_P3_Q1_1",
+								"2"
+							]
+						},
+						{
+							"a": "SetActiveQuestMarker",
+							"p": [
+								"tree",
+								"false"
+							]
+						},
+						{
+							"a": "EntityActionsOff",
+							"p": [
+								"tree"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

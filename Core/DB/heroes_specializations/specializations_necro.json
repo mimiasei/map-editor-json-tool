@@ -1,0 +1,1484 @@
+{
+	"array":
+	[
+		{
+			"id": "necro_hero_1_specialization",
+			"name": "necro_hero_1_spec_name",
+			"desc": "necro_hero_1_spec_description",
+			"icon": "necro_hero_1_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"parameters": [ "modifierSet", "inDmgMods", "basic_attack", "-0.10" ],
+
+					"upgrade":
+					{
+						"increment": -0.01,
+						"levelStep": 4
+					}
+				},
+
+				{
+					"activationLevel": 4,
+
+					"type": "unitStat",
+					"parameters": [ "modifierSet", "inDmgMods", "range_attack", "-0.01" ],
+
+					"upgrade":
+					{
+						"increment": -0.01,
+						"levelStep": 4
+					}
+				},
+
+				{
+					"activationLevel": 4,
+
+					"type": "unitStat",
+					"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.01" ],
+
+					"upgrade":
+					{
+						"increment": -0.01,
+						"levelStep": 4
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_2_specialization",
+			"name": "necro_hero_2_spec_name",
+			"desc": "necro_hero_2_spec_description",
+			"icon": "necro_hero_2_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "diplomacyEfficiencyPerBonus", "0.10" ],
+
+					"upgrade":
+					{
+						"increment": 0.01,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "enableSavePartyByEscapeNeutral", "true" ]
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_3_specialization",
+			"name": "necro_hero_3_spec_name",
+			"desc": "necro_hero_3_spec_description",
+			"icon": "necro_hero_3_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "skeleton", "2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "skeleton", "skeleton_upg", "skeleton_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "skeleton", "skeleton_upg", "skeleton_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "skeleton", "skeleton_upg", "skeleton_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "skeleton", "skeleton_upg", "skeleton_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "skeleton", "skeleton_upg", "skeleton_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "skeleton", "skeleton_upg", "skeleton_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "skeleton", "skeleton_upg", "skeleton_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_4_specialization",
+			"name": "necro_hero_4_spec_name",
+			"desc": "necro_hero_4_spec_description",
+			"icon": "necro_hero_4_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "avatar_of_war", "2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "avatar_of_war", "avatar_of_war_upg", "avatar_of_war_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "avatar_of_war", "avatar_of_war_upg", "avatar_of_war_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "avatar_of_war", "avatar_of_war_upg", "avatar_of_war_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "avatar_of_war", "avatar_of_war_upg", "avatar_of_war_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "avatar_of_war", "avatar_of_war_upg", "avatar_of_war_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "avatar_of_war", "avatar_of_war_upg", "avatar_of_war_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "avatar_of_war", "avatar_of_war_upg", "avatar_of_war_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_5_specialization",
+			"name": "necro_hero_5_spec_name",
+			"desc": "necro_hero_5_spec_description",
+			"icon": "necro_hero_5_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "pet", "2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "pet", "pet_upg", "pet_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "pet", "pet_upg", "pet_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "pet", "pet_upg", "pet_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "pet", "pet_upg", "pet_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "pet", "pet_upg", "pet_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "pet", "pet_upg", "pet_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "pet", "pet_upg", "pet_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_6_specialization",
+			"name": "necro_hero_6_spec_name",
+			"desc": "necro_hero_6_spec_description",
+			"icon": "necro_hero_6_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroMagicReplace",
+					"parameters": [ "night_13_magic_berserker", "night_13_magic_berserker_special" ]
+				},
+				{
+                    "type": "heroStat",
+                    "parameters": [ "magicCostSidSet", "night_13_magic_berserker_special", "-1", "0" ],
+
+                    "upgrade":
+                    {
+                        "increment": -1,
+                        "levelStep": 3
+                    }
+                },
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_7_specialization",
+			"name": "necro_hero_7_spec_name",
+			"desc": "necro_hero_7_spec_description",
+			"icon": "necro_hero_7_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroMagicReplace",
+					"parameters": [ "night_2_magic_web", "night_2_magic_web_special" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPowerSidSet", "night_2_magic_web_special", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 2
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_8_specialization",
+			"name": "necro_hero_8_spec_name",
+			"desc": "necro_hero_8_spec_description",
+			"icon": "necro_hero_8_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "necromancyPerBonus", "0.05" ],
+
+					"upgrade":
+					{
+						"increment": 0.02,
+						"levelStep": 5
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_9_specialization",
+			"name": "necro_hero_9_spec_name",
+			"desc": "necro_hero_9_spec_description",
+			"icon": "necro_hero_9_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "sideRes",
+					"parameters": [ "mercury", "1" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 5
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "heroResPercentSet", "mercury", "1.0" ]
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_warrior_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_10_specialization",
+			"name": "necro_hero_10_spec_name",
+			"desc": "necro_hero_10_spec_description",
+			"icon": "necro_hero_10_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"activationLevel": 9,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"activationLevel": 17,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"activationLevel": 25,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"activationLevel": 33,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"activationLevel": 41,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+				{
+					"activationLevel": 49,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "space", "0", "1" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicCounterSet", "space", "0", "true", "false", "0", "true" ]
+				},
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "magicCounterSet", "space", "0", "false", "true", "0" ]
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_11_specialization",
+			"name": "necro_hero_11_spec_name",
+			"desc": "necro_hero_11_spec_description",
+			"icon": "necro_hero_11_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "flicker", "2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "flicker", "flicker_upg", "flicker_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "flicker", "flicker_upg", "flicker_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "flicker", "flicker_upg", "flicker_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "flicker", "flicker_upg", "flicker_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "flicker", "flicker_upg", "flicker_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "flicker", "flicker_upg", "flicker_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "flicker", "flicker_upg", "flicker_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_12_specialization",
+			"name": "necro_hero_12_spec_name",
+			"desc": "necro_hero_12_spec_description",
+			"icon": "necro_hero_12_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "lich", "2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lich", "lich_upg", "lich_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lich", "lich_upg", "lich_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lich", "lich_upg", "lich_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lich", "lich_upg", "lich_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "lich", "lich_upg", "lich_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "lich", "lich_upg", "lich_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "lich", "lich_upg", "lich_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_13_specialization",
+			"name": "necro_hero_13_spec_name",
+			"desc": "necro_hero_13_spec_description",
+			"icon": "necro_hero_13_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "cityUnitsIncrement",
+					"parameters": [ "graverobber", "2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "graverobber", "graverobber_upg", "graverobber_upg_alt" ],
+					"parameters": [ "speed", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "graverobber", "graverobber_upg", "graverobber_upg_alt" ],
+					"parameters": [ "initiative", "1" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "graverobber", "graverobber_upg", "graverobber_upg_alt" ],
+					"parameters": [ "hpPerc", "0.2" ]
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "graverobber", "graverobber_upg", "graverobber_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receivers": [ "graverobber", "graverobber_upg", "graverobber_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 3
+					}
+				},
+
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "graverobber", "graverobber_upg", "graverobber_upg_alt" ],
+					"parameters": [ "offence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "unitStat",
+					"receiverAllegiance": "enemy",
+					"receivers": [ "graverobber", "graverobber_upg", "graverobber_upg_alt" ],
+					"parameters": [ "defence", "0" ],
+
+					"upgrade":
+					{
+						"increment": -1,
+						"levelStep": 3
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_14_specialization",
+			"name": "necro_hero_14_spec_name",
+			"desc": "necro_hero_14_spec_description",
+			"icon": "necro_hero_14_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"activationLevel": 9,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"activationLevel": 17,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"activationLevel": 25,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"activationLevel": 33,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"activationLevel": 41,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+				{
+					"activationLevel": 49,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "night", "0", "1" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicCounterSet", "night", "0", "true", "false", "0", "true" ]
+				},
+				{
+					"type": "heroStatBattle",
+					"receiverAllegiance": "enemy",
+					"parameters": [ "magicCounterSet", "night", "0", "false", "true", "0" ]
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_15_specialization",
+			"name": "necro_hero_15_spec_name",
+			"desc": "necro_hero_15_spec_description",
+			"icon": "necro_hero_15_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroMagicReplace",
+					"parameters": [ "night_4_magic_despair", "night_4_magic_despair_special" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPowerSidSet", "night_4_magic_despair_special", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 2
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_16_specialization",
+			"name": "necro_hero_16_spec_name",
+			"desc": "necro_hero_16_spec_description",
+			"icon": "necro_hero_16_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroMagicReplace",
+					"parameters": [ "space_12_magic_rewind", "space_12_magic_rewind_special" ]
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "spellPowerSidSet", "space_12_magic_rewind_special", "0" ],
+
+					"upgrade":
+					{
+						"increment": 1,
+						"levelStep": 2
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_17_specialization",
+			"name": "necro_hero_17_spec_name",
+			"desc": "necro_hero_17_spec_description",
+			"icon": "necro_hero_17_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "heroStat",
+					"parameters": [ "necromancyPerBonus", "0.05" ],
+
+					"upgrade":
+					{
+						"increment": 0.02,
+						"levelStep": 5
+					}
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		},
+		{
+			"id": "necro_hero_18_specialization",
+			"name": "necro_hero_18_spec_name",
+			"desc": "necro_hero_18_spec_description",
+			"icon": "necro_hero_18_specialization_icon",
+
+			"bonuses":
+			[
+				{
+					"type": "sideRes",
+					"parameters": [ "gold", "500" ],
+
+					"upgrade":
+					{
+						"increment": 100,
+						"levelStep": 3
+					}
+				},
+				{
+					"type": "heroStat",
+					"parameters": [ "heroResPercentSet", "gold", "0.25" ]
+				},
+				
+
+				{
+					"type": "heroBattleAbility",
+					"parameters": [ "skill_mage_ability", "0" ]
+				},
+
+				{
+					"type": "heroBattleAbility",
+					"battleType": "forCity",
+					"receiverRole": "attacker",
+					"parameters": [ "attack_siege_ability", "0" ]
+				},
+
+				{
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "1", "0" ]
+				},
+				{
+					"activationLevel": 4,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "2", "0" ]
+				},
+				{
+					"activationLevel": 8,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "3", "0" ]
+				},
+				{
+					"activationLevel": 12,
+
+					"type": "heroStat",
+					"parameters": [ "magicSchoolSet", "neutral", "4", "0" ]
+				}
+			]
+		}
+	]
+}

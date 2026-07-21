@@ -1,0 +1,45 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_two_unit_t6_3",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 282,
+            "canBeMainGuard": true,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "arbitrator_upg",
+                        "v": 20006
+                    },
+                    {
+                        "s": "arbitrator_upg_alt",
+                        "v": 20006
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 20006,
+                "units": [
+                    "arbitrator_upg",
+                    "arbitrator_upg_alt"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 180006,
+                "units": [
+                    {
+                        "s": "arbitrator_upg",
+                        "v": 180006
+                    },
+                    {
+                        "s": "arbitrator_upg_alt",
+                        "v": 180006
+                    }
+                ]
+            },
+            "tier": 6,
+            "fraction": "unfrozen"
+        }
+    ]
+}

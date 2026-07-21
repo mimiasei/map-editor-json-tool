@@ -1,0 +1,79 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "lesser_eldritch_upg_alt",
+			"mesh": "Unfrozen/1Prefabs/lesser_eldritch_upg_alt",
+			"mapMesh": "Unfrozen/1Prefabs/lesser_eldritch_upg_alt_map",
+			"fadeTime": 2.5,
+
+			"scale": 0.38,
+			"modelHeight": 0.68,
+			"moveSpeed": 5.5,
+
+			"attackTimeBefore": [ 0.45, 0.78, 2.167, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.617, 1.12, 0, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+
+			"takeoffPrepareTime": 0.2,
+			"ascentTime": 0.4,
+			"descentTime": 0.45,
+			"defaultHeight": 1.5,
+
+			"flightSoundLoop": "sounds/battle/units/lesser_eldritch/upg_fly",
+
+			"takeDamageTime": 1.067,
+			"deathTimeOffset": 2.64,
+
+			"bloodEffect": "effects/blood/blood_unfrozen",
+			"bloodHexEffect": "effects/blood/blood_unfrozen_hex",
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 0
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "lesser_eldritch_ability_1_name_upg_alt",
+					"abilityType": "Ability_type_special",
+					"description": "lesser_eldritch_ability_1_description_upg_alt",
+					"excaptionInTooltip": "description_effect_undead_embodiment_construct_immunities",
+					"animationIndex": 2
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_magic_creature",
+                    "description": "base_class_magic_creature_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_strike_swipe_1_name",
+					"description": "base_passive_strike_swipe_1_description_alt"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				}
+			]
+		}
+	]
+}

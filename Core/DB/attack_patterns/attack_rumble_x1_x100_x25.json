@@ -1,0 +1,55 @@
+﻿{
+	"array":
+	[
+
+    {
+	"id": "attack_rumble_x1_x100_x25",
+	"sid": "attack_rumble_x1_x100_x25",
+	"rotations": 
+		[
+			{
+			"dimX": 3,
+			"dimY": 3,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				   0.25, 0.25, 0.0,
+				0.25, 1.0, 0.25,
+				   0.25, 0.25, 0.0
+				]
+			},
+
+			{
+			"dimX": 3,
+			"dimY": 3,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				   0.25, 0.25, 0.0,
+				0.25, 1.0, 0.25,
+				   0.25, 0.25, 0.0
+				]
+			},
+
+			{
+			"dimX": 3,
+			"dimY": 3,
+			"charX": 1,
+			"charY": 1,
+
+				"damagePattern": 
+				[
+				   0.25, 0.25, 0.0,
+				0.25, 1.0, 0.25,
+				   0.25, 0.25, 0.0
+				]
+			}
+		]
+    }
+
+	]
+}

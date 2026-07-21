@@ -1,0 +1,1867 @@
+{
+	"array":
+	[
+		{
+			"id": "skill_summon_1_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "skill_summon_1_bonus_icon",
+			"name_": "skill_summon_1_bonus_name",
+			"description_": "skill_summon_1_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"damageMin": 12,
+					"damageMax": 12
+				}
+			}
+		},
+
+		{
+			"id": "skill_summon_2_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "skill_summon_2_bonus_icon",
+			"name_": "skill_summon_2_bonus_name",
+			"description_": "skill_summon_2_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"damageMin": 12,
+					"damageMax": 12
+				}
+			}
+		},
+
+		{
+			"id": "skill_summon_3_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "skill_summon_3_bonus_icon",
+			"name_": "skill_summon_3_bonus_name",
+			"description_": "skill_summon_3_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"damageMin": 12,
+					"damageMax": 12
+				}
+			}
+		},
+
+		{
+			"id": "skill_summon_4_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "skill_summon_3_bonus_icon",
+			"name_": "skill_summon_3_bonus_name",
+			"description_": "skill_summon_3_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"damageMin": 12,
+					"damageMax": 12
+				}
+			}
+		},
+
+		{
+			"id": "skill_summon_5_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "skill_summon_3_bonus_icon",
+			"name_": "skill_summon_3_bonus_name",
+			"description_": "skill_summon_3_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"damageMin": 12,
+					"damageMax": 12
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_summoner_1_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "subskill_summoner_1_unit_bonus_icon",
+			"name_": "subskill_summoner_1_unit_bonus_name",
+			"description_": "subskill_summoner_1_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"offence": 10
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_summoner_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "subskill_summoner_1_unit_bonus_icon",
+			"name_": "subskill_summoner_1_unit_bonus_name",
+			"description_": "subskill_summoner_1_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"defence": 10
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_summoner_3_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "subskill_summoner_1_unit_bonus_icon",
+			"name_": "subskill_summoner_1_unit_bonus_name",
+			"description_": "subskill_summoner_1_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"speed": 2,
+					"initiative": 2
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_summoner_4_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "subskill_summoner_1_unit_bonus_icon",
+			"name_": "subskill_summoner_1_unit_bonus_name",
+			"description_": "subskill_summoner_1_unit_bonus_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"data": {
+				"immunities": 
+				[ 
+					{ "type": "mechanic", "tags": [ "destroy_summon" ] }
+				]
+			}
+		},
+
+		{
+			"id": "sub_skill_assault_6_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_skill_assault_3_unit_bonus_icon",
+			"name_": "sub_skill_assault_3_unit_bonus_name",
+			"description_": "sub_skill_assault_3_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"mimicStats": [ { "fromType": "flat", "toType": "flat", "from": "moral", "to": "offence", "stackCountInt": 1, "bonusInt": 2, "checkPositivity": true, "positivity": true } ]
+		},
+
+		{
+			"id": "sub_skill_protection_6_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_skill_protection_3_unit_bonus_icon",
+			"name_": "sub_skill_protection_3_unit_bonus_name",
+			"description_": "sub_skill_protection_3_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"mimicStats": [ { "fromType": "flat", "toType": "flat", "from": "luck", "to": "defence", "stackCountInt": 1, "bonusInt": 2, "checkPositivity": true, "positivity": true } ]
+		},
+
+
+
+
+		{
+			"id": "living_arrows_light_and_shade_cloak_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "living_arrows_light_and_shade_cloak_artifact_unit_bonus_icon",
+			"name_": "living_arrows_light_and_shade_cloak_artifact_unit_bonus_name",
+			"description_": "living_arrows_light_and_shade_cloak_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"ignoreShootingBlock": true
+				}
+			}
+		},
+
+		{
+			"id": "living_arrows_shroomwood_bow_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "living_arrows_shroomwood_bow_artifact_unit_bonus_icon",
+			"name_": "living_arrows_shroomwood_bow_artifact_unit_bonus_name",
+			"description_": "living_arrows_shroomwood_bow_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"ignoreShootDmgBuff": true
+				}
+			}
+		},
+
+		{
+			"id": "living_arrows_shroomwood_bow_law_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "living_arrows_shroomwood_bow_artifact_unit_bonus_icon",
+			"name_": "living_arrows_shroomwood_bow_artifact_unit_bonus_name",
+			"description_": "living_arrows_shroomwood_bow_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"stats":
+				{
+					"ignoreShootDmgBuff": true
+				}
+			}
+		},
+
+		{
+			"id": "living_arrows_item_set_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "living_arrows_item_set_unit_bonus_icon",
+			"name_": "living_arrows_item_set_unit_bonus_name",
+			"description_": "living_arrows_item_set_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data":
+			{
+				"sequenceEffect": "add_attack_after_counter_shoot"
+			}
+		},
+
+		{
+			"id": "power_of_the_dragon_father_item_set_unit_bonus_1",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "power_of_the_dragon_father_item_set_unit_bonus_icon",
+			"name_": "power_of_the_dragon_father_item_set_unit_bonus_name",
+			"description_": "power_of_the_dragon_father_item_set_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"immunities": 
+				[ 
+					{ "type": "effect", "tags": [ "negative" ] }
+				]
+			}
+		},
+
+		{
+			"id": "power_of_the_dragon_father_item_set_unit_bonus_2",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "power_of_the_dragon_father_item_set_unit_bonus_icon",
+			"name_": "power_of_the_dragon_father_item_set_unit_bonus_name",
+			"description_": "power_of_the_dragon_father_item_set_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+				"immunities": 
+				[ 
+					{ "type": "damage", "tags": [ "magic_damage" ] }
+				]
+			}
+		},
+
+		{
+			"id": "elixir_of_life_item_set_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "elixir_of_life_item_set_unit_bonus_icon",
+			"name_": "elixir_of_life_item_set_unit_bonus_name",
+			"description_": "elixir_of_life_item_set_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage", "avatar_immunities" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"targetCondition_": "alive",
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{
+							"targetTags": ["unit"],
+							"targetCondition_": "alive",
+							"castTarget_": "self"
+						},
+						
+						"targetMechanics":
+						[
+							{
+								"mech": "heal_percent",	"values":	[ "until start amount",  "start_squad",  "0.025",  "0.00",  "true" ]
+							}
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "ring_of_neutrality_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "ring_of_neutrality_artifact_unit_bonus_icon",
+			"name_": "ring_of_neutrality_artifact_unit_bonus_name",
+			"description_": "ring_of_neutrality_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"statOverrides": [  {  "stat": "luck", "value": 0  }  ]
+		},
+
+		{
+			"id": "monster_head_artifact_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "monster_head_artifact_unit_bonus_icon",
+			"name_": "monster_head_artifact_unit_bonus_name",
+			"description_": "monster_head_artifact_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"statOverrides": [  {  "stat": "moral", "value": 0  }  ]
+		},
+
+		{
+			"id": "sub_skill_siege_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_skill_siege_2_unit_bonus_icon",
+			"name_": "sub_skill_siege_2_unit_bonus_name",
+			"description_": "sub_skill_siege_2_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data":
+			{
+				"stats":
+				{
+					"ignoreCastleProtection": true
+				}
+			}
+		},
+
+
+
+
+
+		{
+			"id": "sub_class_nature_warrior_1_unit_bonus",
+
+			"infinite": true, "hidden": false, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_class_undead_magic_1_unit_bonus_icon",
+			"name_": "sub_class_undead_magic_1_unit_bonus_name",
+			"description_": "sub_class_undead_magic_1_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"data": {
+
+			},
+
+			"statOverrides": [ {  "stat": "luck", "value": 5  }  ]
+		},
+
+
+
+
+
+		{
+			"id": "sub_class_undead_magic_1_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_class_undead_magic_1_unit_bonus_icon",
+			"name_": "sub_class_undead_magic_1_unit_bonus_name",
+			"description_": "sub_class_undead_magic_1_unit_bonus_description",
+
+			"tags": [ "positive" ],
+
+			"maxDuration": 1,
+
+			"addition": "duration",
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{
+								"mech": "summon_percent",	"values": [ "unit", "flicker", "enemy", "start_squad", 0.5, "", "true", "2", "0", "1" ]
+							}
+						]
+					}
+				}
+			]
+		},
+
+
+
+
+
+		{
+			"id": "skill_faction_humans_1_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "ally" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "skill_faction_humans_1_unit_bonus_additionbuff",
+							"duration": 2
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_1_unit_bonus_additionbuff",
+
+			"infinite": false, "hidden": false, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": false,
+
+			"icon": "skill_faction_humans_unit_bonus_additionbuff_icon",
+			"name_": "skill_faction_humans_name",
+			"description_": "skill_faction_humans_unit_bonus_additionbuff_description",
+
+			"tags": [ "positive", "skill_faction_humans_additionbuff" ],
+
+			"addition": "duration",
+
+			"maxDuration": 2,
+
+			"data": {
+				"stats":
+				{
+					"hpPerc": 0.10
+				}
+			}
+		},
+
+		{
+			"id": "skill_faction_humans_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "ally" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "skill_faction_humans_2_unit_bonus_additionbuff",
+							"duration": 2
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_2_unit_bonus_additionbuff",
+
+			"infinite": false, "hidden": false, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": false,
+
+			"icon": "skill_faction_humans_unit_bonus_additionbuff_icon",
+			"name_": "skill_faction_humans_name",
+			"description_": "skill_faction_humans_unit_bonus_additionbuff_description",
+
+			"tags": [ "positive", "skill_faction_humans_additionbuff" ],
+
+			"addition": "duration",
+
+			"maxDuration": 2,
+
+			"data": {
+				"stats":
+				{
+					"hpPerc": 0.20
+				}
+			}
+		},
+
+		{
+			"id": "skill_faction_humans_3_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "ally" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "skill_faction_humans_3_unit_bonus_additionbuff",
+							"duration": 2
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_3_unit_bonus_additionbuff",
+
+			"infinite": false, "hidden": false, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": false,
+
+			"icon": "skill_faction_humans_unit_bonus_additionbuff_icon",
+			"name_": "skill_faction_humans_name",
+			"description_": "skill_faction_humans_unit_bonus_additionbuff_description",
+
+			"tags": [ "positive", "skill_faction_humans_additionbuff" ],
+
+			"addition": "duration",
+
+			"maxDuration": 2,
+
+			"data": {
+				"stats":
+				{
+					"hpPerc": 0.30
+				}
+			}
+		},
+
+		{
+			"id": "skill_faction_humans_4_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "ally" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "skill_faction_humans_4_unit_bonus_additionbuff",
+							"duration": 2
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_4_unit_bonus_additionbuff",
+
+			"infinite": false, "hidden": false, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": false,
+
+			"icon": "skill_faction_humans_unit_bonus_additionbuff_icon",
+			"name_": "skill_faction_humans_name",
+			"description_": "skill_faction_humans_unit_bonus_additionbuff_description",
+
+			"tags": [ "positive", "skill_faction_humans_additionbuff" ],
+
+			"addition": "duration",
+
+			"maxDuration": 2,
+
+			"data": {
+				"stats":
+				{
+					"hpPerc": 0.40
+				}
+			}
+		},
+
+		{
+			"id": "skill_faction_humans_5_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "ally" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "skill_faction_humans_5_unit_bonus_additionbuff",
+							"duration": 2
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_5_unit_bonus_additionbuff",
+
+			"infinite": false, "hidden": false, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": false,
+
+			"icon": "skill_faction_humans_unit_bonus_additionbuff_icon",
+			"name_": "skill_faction_humans_name",
+			"description_": "skill_faction_humans_unit_bonus_additionbuff_description",
+
+			"tags": [ "positive", "skill_faction_humans_additionbuff" ],
+
+			"addition": "duration",
+
+			"maxDuration": 2,
+
+			"data": {
+				"stats":
+				{
+					"hpPerc": 0.50
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_faction_humans_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "ally" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"buffTarget_": "ally",
+						"buff": 
+						{
+							"sid": "sub_skill_faction_humans_2_unit_bonus_additionbuff",
+							"duration": 2
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "sub_skill_faction_humans_2_unit_bonus_additionbuff",
+
+			"infinite": false, "hidden": false, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": false,
+
+			"icon": "sub_skill_faction_humans_unit_bonus_additionbuff_icon",
+			"name_": "sub_skill_faction_humans_2_name",
+			"description_": "sub_skill_faction_humans_unit_bonus_additionbuff_description",
+
+			"tags": [ "positive", "skill_faction_humans_additionbuff" ],
+
+			"addition": "combined",
+
+			"maxDuration": 2,
+
+			"data": {
+				"stats":
+				{
+					"outAllDmgMod": 0.1
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_faction_humans_4_unit_bonus",
+
+			"tags": [ "summon_immmun" ],
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{
+								"mech": "summon_percent",	"values": [ "unit", "self_copy", "ally", "start_squad", 0.1, "self_destruct_buff_sid", "true", "1", "0", "1" ]
+							}
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "sub_skill_faction_humans_5_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "ally" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage", "avatar_immunities" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "ally"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "ally"
+						},
+
+						"targetMechanics":
+						[
+							{
+								"mech": "heal_percent",	"values":	[ "without respawn",  "max_unit",  "1.0",  "0.00",  "false" ]
+							}
+						]
+					}
+				}
+			]
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		{
+			"id": "skill_faction_humans_new_1_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+						
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_1" ] }
+						]
+					}
+				},
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_1" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_new_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_2" ] }
+						]
+					}
+				},
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_2" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_new_3_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_3" ] }
+						]
+					}
+				},
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_3" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_new_4_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_4" ] }
+						]
+					}
+				},
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_4" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "skill_faction_humans_new_5_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_5" ] }
+						]
+					}
+				},
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_5" ] }
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "sub_skill_faction_humans_new_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage", "avatar_immunities" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"targetMechanics":
+						[
+							{
+								"mech": "heal_percent",	"values":	[ "without respawn",  "max_unit",  "1.0",  "0.00",  "false" ]
+							}
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "sub_skill_faction_humans_new_alt_2_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				},
+
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : [ { "mech": "change_mana", "values": [ "add", "ally", "3", "0", "0", "true" ] } ]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "sub_skill_faction_humans_new_4_unit_bonus",
+
+			"tags": [ "summon_immmun" ],
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{
+								"mech": "summon_percent",	"values": [ "unit", "self_copy", "ally", "start_squad", 0.1, "self_destruct_buff_sid", "true", "1", "0", "1" ]
+							}
+						]
+					}
+				}
+			]
+		},
+
+		{
+			"id": "sub_skill_faction_humans_new_5_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"tags": [ "passive", "heal_damage" ],
+						"triggerCounter": false,
+
+						"damageTarget_": "none",
+						"statDmgMult": 0.0,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+						
+						"buffTarget_": "all",
+						"buff": 
+						{
+							"sid": "sub_skill_faction_humans_new_5_unit_bonus_additionbuff",
+							"duration": 1
+						}
+					}
+				}
+			]
+		},
+
+		{
+			"id": "sub_skill_faction_humans_new_5_unit_bonus_additionbuff",
+
+			"infinite": false, "hidden": true, "canDispel": true, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": false,
+
+			"icon": "skill_faction_humans_unit_bonus_additionbuff_icon",
+			"name_": "skill_faction_humans_name",
+			"description_": "magic_carapace_effect_description",
+
+			"tags": [ "positive", "bubble" ],
+			"isPositive": true,
+			
+			"addition": "duration",
+
+			"maxDuration": 1
+		},
+
+		{
+			"id": "sub_skill_faction_humans_new_6_unit_bonus",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"actions": 
+			[
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance_both",
+							"values": [ "self", "enemy" ]
+						}
+					],
+
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_sub_skill_faction_human_6" ] }
+						]
+					}
+				},
+				{
+					"trigger": "unit_died",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					"damageDealer": 
+					{
+						"attackPatternSid": "attack_single_x100",
+
+						"instacast": true, 
+						"untargetedCast": true,
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self"
+						},
+
+						"targetMechanics" : 
+						[ 
+							{ "mech": "side_buff", "values": [ "side_buff_human_ability_sub_skill_faction_human_6" ] }
+						]
+					}
+				}
+			]
+		}
+	]  
+}

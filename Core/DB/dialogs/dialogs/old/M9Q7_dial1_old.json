@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M9Q7_dial1_old",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "please help us with necroes, they are doing something terrible over there with the bones of our lovely baroness",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

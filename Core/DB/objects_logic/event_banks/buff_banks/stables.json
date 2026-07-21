@@ -1,0 +1,60 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "stables",
+			"aiIgnore": true,
+
+			"tooltipVisitType": "CurrentHeroVisit",
+			
+			"variantRerollType": "OnStartWeek",
+			"visitorsResetType": "OnStartWeek",
+			"visitType": "EachHeroOneTime",
+
+			"variants": 
+			[
+				{
+					"rollChance": 50,
+					"value": 3750,
+
+					"guardUnits": [],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroBuffReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "stable_buff", "UntilNextWeek", "0" ]
+							},
+							{
+								"rewardType": "MovePointsPercentAdditionReward",
+								"rewardShowType": "Invisible",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "default",
+
+								"parameters": [ "0.3" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,434 @@
+{
+	"array": [
+		{
+			"id": "fun_arenas_at_the_source",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_7_marl_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead2",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_marl_cant_interact",
+					"next": "endingMarl"
+				},
+				{
+					"id": "endingMarl",
+					"dialogPlayConditions": [
+						{
+							"c": "Hero",
+							"p": [
+								"necro_hero_7"
+							]
+						}
+					],
+					"next": "0",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				},
+				{
+					"id": "0",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"reqStatus": "false",
+							"p": [
+								"monster_head_artifact"
+							]
+						}
+					],
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_0",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"947"
+							]
+						}
+					],
+					"next": "endingNoHead"
+				},
+				{
+					"id": "endingNoHead",
+					"dialogPlayConditions": [
+						{
+							"c": "ItemOwnHero",
+							"reqStatus": "false",
+							"p": [
+								"monster_head_artifact"
+							]
+						}
+					],
+					"next": "1",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "StepBack"
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_1",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"947"
+							]
+						}
+					],
+					"answers": [
+						{
+							"text": "fun_dialogue_text_arenas_at_the_source_1_answer_1",
+							"actions": 
+							[
+								{ "a": "Go", "p": [ "2" ] }
+							]
+						},
+						{
+							"text": "fun_dialogue_text_arenas_at_the_source_1_answer_2",
+							"actions": [
+								{
+									"a": "End"
+								}
+							],
+							"mapActions": [
+								{
+									"a": "StepBack"
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"text": "fun_dialogue_text_arenas_at_the_source_2",
+					"mapActions": [
+						{
+							"a": "RemoveItem",
+							"p": [
+								"monster_head_artifact"
+							]
+						},
+						{
+							"a": "CounterSet",
+							"p": [
+								"ritual_started",
+								"1"
+							]
+						}
+					],
+					"next": "2m"
+				},
+				{
+					"id": "2m",
+					"fon": "",
+					"text": "fun_dialogue_text_enemy_appears_2",
+					"mapActions": [
+						{ "a": "DeleteEntity", "p": [ "pond1" ] },
+						{ "a": "DeleteEntity", "p": [ "pond2" ] },
+						{ "a": "DeleteEntity", "p": [ "pond3" ] },
+						{ "a": "DeleteEntity", "p": [ "pond4" ] },	
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond1" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond2" ] },
+
+						{ "a": "SpawnMapObject", "p": [ "pool_dead_small_1", "1009", "3", "pond1_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pool_dead_big_1", "1075", "3", "pond2_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pool_dead_small_1", "1076", "1", "pond3_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pool_dead_big_1", "947", "1", "pond4_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_4", "946", "1", "pinetree_pond1_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_3", "1012", "2", "pinetree_pond2_corrupted" ] }
+					],
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_4",
+					"next": "5"
+				},
+				{
+					"id": "5",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_5",
+					"next": "5_1"
+				},
+				{
+					"id": "5_1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_5_1",
+					"next": "5_2"
+				},
+				{
+					"id": "5_2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_5_2",
+					"next": "5m"
+				},
+				{
+					"id": "5m",
+					"fon": "",
+					"text": "fun_dialogue_text_enemy_appears_2",
+					"mapActions": [
+						{ "a": "MoveCamera", "p": [ "821" ] }
+					],
+					"next": "6"
+				},
+				{
+					"id": "6",
+					"fon": "",
+					"text": "fun_dialogue_text_arenas_at_the_source_6",
+					"mapActions": [
+						{ "a": "DeleteSquad", "p": [ "squad_neutral_river", "0" ] },
+
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond3" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond4" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_4", "820", "3", "pinetree_pond3_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_2", "821", "1", "pinetree_pond4_corrupted" ] }
+					],
+					"next": "6m"
+				},
+				{
+					"id": "6m",
+					"fon": "",
+					"text": "fun_dialogue_text_enemy_appears_2",
+					"mapActions": [
+						{ "a": "MoveCamera", "p": [ "629" ] }
+					],
+					"next": "7"
+				},
+				{
+					"id": "7",
+					"fon": "",
+					"text": "fun_dialogue_text_arenas_at_the_source_7",
+					"mapActions": [
+						{ "a": "DeleteSquad", "p": [ "squad_river", "0" ] },
+
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond5" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond6" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_3", "693", "2", "pinetree_pond5_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_3", "564", "3", "pinetree_pond6_corrupted" ] }
+					],
+					"next": "7m"
+				},
+				{
+					"id": "7m",
+					"fon": "",
+					"text": "fun_dialogue_text_enemy_appears_2",
+					"mapActions": [
+						{ "a": "MoveCamera", "p": [ "367" ] },
+						{ "a": "SpawnSquad", "p": [ "squad_cm_fun_river_undead","629","10000","true","squad_river_undead" ] },
+						{ "a": "ChangeCampaignDiplomacy", "p": [ "squad_river_undead", "true" ] }
+					],
+					"next": "8"
+				},
+				{
+					"id": "8",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "squad_river_killed", "=", "0" ] } ],
+					"fon": "",
+					"text": "fun_dialogue_text_arenas_at_the_source_8",
+					"mapActions": [
+						{ "a": "SetQuestMarker", "p": [ "squad_river_undead", "effects/global_map/quest_mark_silver_02" ] },
+
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond7" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond8" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond9" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond10" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_2", "498", "2", "pinetree_pond7_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_3", "306", "0", "pinetree_pond8_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_4", "366", "0", "pinetree_pond9_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_2", "493", "3", "pinetree_pond10_corrupted" ] },
+						{ "a": "DeleteEntity", "p": [ "arena_pond1" ] },
+						{ "a": "DeleteEntity", "p": [ "arena_pond2" ] },
+						{ "a": "DeleteEntity", "p": [ "arena_pond3" ] },
+						{ "a": "SpawnObject", "p": [ "barracks_necropolis_6", "624", "true", "dk_barracks_1" ] },
+						{ "a": "SpawnObject", "p": [ "barracks_necropolis_6", "364", "false", "dk_barracks_2" ] },
+						{ "a": "SpawnObject", "p": [ "barracks_necropolis_6", "240", "true", "dk_barracks_3" ] },
+						{ "a": "CaptureObject", "p": [ "dk_barracks_1" ] },
+						{ "a": "CaptureObject", "p": [ "dk_barracks_2" ] },
+						{ "a": "CaptureObject", "p": [ "dk_barracks_3" ] }
+					],
+					"next": "8m"
+				},
+				{
+					"id": "8m",
+					"dialogPlayConditions": [ { "c": "Counter", "p": [ "squad_river_killed", "=", "1" ] } ],
+					"fon": "",
+					"text": "fun_dialogue_text_arenas_at_the_source_8",
+					"mapActions": [
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond7" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond8" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond9" ] },
+						{ "a": "DeleteEntity", "p": [ "pinetree_pond10" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_2", "498", "2", "pinetree_pond7_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_3", "306", "0", "pinetree_pond8_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_4", "366", "0", "pinetree_pond9_corrupted" ] },
+						{ "a": "SpawnMapObject", "p": [ "pinetree_withered_2", "493", "3", "pinetree_pond10_corrupted" ] },
+						{ "a": "DeleteEntity", "p": [ "arena_pond1" ] },
+						{ "a": "DeleteEntity", "p": [ "arena_pond2" ] },
+						{ "a": "DeleteEntity", "p": [ "arena_pond3" ] },
+						{ "a": "SpawnObject", "p": [ "barracks_necropolis_6", "624", "true", "dk_barracks_1" ] },
+						{ "a": "SpawnObject", "p": [ "barracks_necropolis_6", "364", "false", "dk_barracks_2" ] },
+						{ "a": "SpawnObject", "p": [ "barracks_necropolis_6", "240", "true", "dk_barracks_3" ] },
+						{ "a": "CaptureObject", "p": [ "dk_barracks_1" ] },
+						{ "a": "CaptureObject", "p": [ "dk_barracks_2" ] },
+						{ "a": "CaptureObject", "p": [ "dk_barracks_3" ] }
+					],
+					"next": "9"
+				},
+				{
+					"id": "9",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_arenas_at_the_source_9",
+					"mapActions": [
+						{ "a": "MoveCamera", "p": [ "1078" ] }
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"mapActions": [
+						{
+							"a": "CounterSet",
+							"p": [
+								"ritual_performed",
+								"1"
+							]
+						}
+					],
+					"invokeOnlyActions": true,
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}

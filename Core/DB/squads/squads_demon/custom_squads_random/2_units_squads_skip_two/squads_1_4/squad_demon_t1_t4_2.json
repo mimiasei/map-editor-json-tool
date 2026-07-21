@@ -1,0 +1,44 @@
+{
+    "array": [
+        {
+            "id": "squad_demon_t1_t4_2",
+            "useOldSquads": false,
+            "rollChance": 33,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "trick_demon_upg",
+                        "v": 2514
+                    },
+                    {
+                        "s": "jaw",
+                        "v": 4014
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 4014,
+                "units": [
+                    "trick_demon_upg",
+                    "jaw"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 17514,
+                "units": [
+                    {
+                        "s": "trick_demon_upg",
+                        "v": 15014
+                    },
+                    {
+                        "s": "jaw",
+                        "v": 17514
+                    }
+                ]
+            },
+            "tier": 4,
+            "fraction": "demon"
+        }
+    ]
+}

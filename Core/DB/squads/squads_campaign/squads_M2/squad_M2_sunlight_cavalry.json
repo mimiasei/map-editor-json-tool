@@ -1,0 +1,49 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_M2_sunlight_cavalry",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "sunlight_cavalry", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"sunlight_cavalry"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 30000,
+				"units":
+				[
+					{ "s" : "sunlight_cavalry_upg_alt", "v": 30000 },
+					{ "s" : "sunlight_cavalry_upg", "v": 30000 },
+					{ "s" : "sunlight_cavalry", "v": 30000 }
+				]
+			},
+
+			"tier": 5,
+			"fraction": "human"
+		}
+	]
+}

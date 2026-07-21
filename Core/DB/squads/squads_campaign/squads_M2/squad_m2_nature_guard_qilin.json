@@ -1,0 +1,51 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "squad_m2_nature_guard_qilin",
+			
+			"squad" : 
+			[
+				{ "s" : "qilin", "v": 2000 }		
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "qilin_upg_alt", "v": 1 },
+					{ "s" : "qilin_upg", "v": 1 },
+					{ "s" : "qilin", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"qilin_upg_alt", "qilin_upg", "qilin"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 1000000,
+				"units":
+				[
+					{ "s" : "qilin_upg_alt", "v": 1000000 },
+					{ "s" : "qilin_upg", "v": 1000000 },
+					{ "s" : "qilin", "v": 1000000 }
+				]
+			},
+
+			"tier": 6,
+			"fraction": "nature"
+		}
+	]
+}

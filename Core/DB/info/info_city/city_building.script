@@ -1,0 +1,251 @@
+﻿string current_city_main_param_1
+{ 
+	Text( return, "500" )
+}
+
+string current_city_main_param_1_1
+{ 
+	Text( return, "500" )
+}
+
+string current_city_main_param_1_2
+{ 
+	Text( return, "750" )
+}
+
+string current_city_main_param_1_3
+{ 
+	Text( return, "1000" )
+}
+
+string current_city_main_param_2
+{ 
+	Text( return, "500" )
+}
+
+string current_city_main_param_3
+{ 
+	Text( return, "750" )
+}
+
+string current_city_main_param_4
+{ 
+	Text( return, "1000" )
+}
+
+string current_city_main_param_5
+{ 
+	Text( return, "1" )
+}
+
+//
+
+string current_city_wall_param_1
+{ 
+	Text( return, "50" )
+}
+
+string current_city_wall_param_2
+{ 
+	Text( return, "100" )
+}
+
+//
+
+
+
+string current_city_graal_param
+{ 
+	Text( return, "100" )
+}
+
+//
+
+string current_city_magic_param_0_level
+{ 
+	Text( return, "1" )
+}
+
+string current_city_magic_param_1_level
+{ 
+	Text( return, "1" )
+}
+
+string current_city_magic_param_2_level
+{ 
+	Text( return, "2" )
+}
+
+string current_city_magic_param_3_level
+{ 
+	Text( return, "3" )
+}
+
+string current_city_magic_param_4_level
+{ 
+	Text( return, "4" )
+}
+
+string current_city_magic_param_5_level
+{ 
+	Text( return, "5" )
+}
+
+string current_city_magic_param_1_count
+{ 
+	Text( return, "7" )
+}
+
+string current_city_magic_param_2_count
+{ 
+	Text( return, "6" )
+}
+
+string current_city_magic_param_3_count
+{ 
+	Text( return, "5" )
+}
+
+string current_city_magic_param_4_count
+{ 
+	Text( return, "4" )
+}
+
+string current_city_magic_param_5_count
+{ 
+	Text( return, "3" )
+}
+
+//
+
+string current_city_bank_param
+{ 
+	Text( return, "1000" )
+}
+
+string current_city_treasury_param
+{ 
+	Text( return, "2000" )
+}
+
+string current_city_depot_param
+{ 
+	Text( return, "1" )
+}
+
+string current_city_depot_2_param
+{ 
+	Text( return, "5" )
+}
+
+//
+
+string current_city_Undead_Build_Unic_Graal_1
+{ 
+	Text( return, "10" )
+}
+
+string current_city_Undead_Build_Unic_Graal_2
+{ 
+	Text( return, "50" )
+}
+
+//
+
+string current_city_Demon_Build_Unic_Graal_1
+{ 
+	Text( return, "10" )
+}
+
+string current_city_Demon_Build_Unic_Graal_2
+{ 
+	Text( return, "50" )
+}
+
+string current_city_Demon_Build_Unic_2
+{ 
+	Text( return, "2" )
+}
+
+//
+
+string current_city_Unfrozen_Build_Unic_2
+{ 
+	Text( return, "2" )
+}
+
+//
+
+string current_city_Nature_Build_Unic_Graal
+{ 
+	Text( return, "1" )
+}
+
+string current_city_Nature_Build_Unic_2
+{ 
+	Text( return, "2" )
+}
+
+//
+
+string current_city_Human_Build_Unic_Graal_1
+{ 
+	Text( return, "1000" )
+}
+
+string current_city_Human_Build_Unic_Graal_2
+{ 
+	Text( return, "1" )
+}
+
+string current_city_Human_Build_Unic_2
+{ 
+	Text( return, "20" )
+}
+
+//
+
+string current_city_siege_walls_5_param
+{ 
+	Text( return, "150" )
+}
+
+string current_city_siege_walls_6_param
+{ 
+	Text( return, "50" )
+}
+
+string current_city_siege_walls_9_param
+{ 
+	Text( return, "300" )
+}
+
+string current_city_main_building_1_param
+{ 
+	Text( return, "500" )
+}
+
+string current_city_main_building_2_param
+{ 
+	Text( return, "500" )
+}
+
+string current_city_main_building_3_param
+{ 
+	Text( return, "500" )
+}
+
+string current_city_main_building_4_param
+{ 
+	Text( return, "1000" )
+}
+
+string current_city_main_building_5_param
+{ 
+	Text( return, "1000" )
+}
+
+string current_city_main_building_6_param
+{ 
+	Text( return, "1000" )
+}

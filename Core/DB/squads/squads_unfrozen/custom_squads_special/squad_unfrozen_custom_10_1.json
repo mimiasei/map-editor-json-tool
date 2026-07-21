@@ -1,0 +1,40 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_custom_10_1",
+            "squad": [],
+            "useOldSquads": false,
+            "rollChance": 84,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "unfrozen_cultist",
+                        "v": 5003
+                    },
+                    {
+                        "s": "unspeakable",
+                        "v": 3652
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 5003,
+                "units": [
+                    "unfrozen_cultist"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 10001,
+                "units": [
+                    {
+                        "s": "unfrozen_cultist",
+                        "v": 10001
+                    }
+                ]
+            },
+            "tier": 2,
+            "fraction": "unfrozen"
+        }
+    ]
+}

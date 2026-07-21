@@ -1,0 +1,78 @@
+{
+	"array":
+	[
+		{
+			"id": "test_hub",
+			"slides":
+			[
+				{
+					"id": "start",
+					"title": "Peasant:",
+					"text": "HUB First Phase",
+
+					"fon": "icons/dialogue/dialogueFon/d1",
+					"avatars":
+					{
+						"icons":
+						[ 
+						"1","icons/units/hex_portraits/esquire",
+						"3","icons/units/hex_portraits/gorilla",
+						"4","icons/units/hex_portraits/esquire" 
+						]
+					},
+
+					"answers":
+					[
+						{
+							"text": "COUNTER #1 HUB +2",
+							"actions": [ { "a": "Go", "p": [ "testEnd" ] } ]
+						},
+						{
+							"text": "COUNTER #2 HUB +4",
+							"actions": [ { "a": "Go", "p": [ "testEnd" ] } ]
+						},
+						{
+							"text": "COUNTER #3 HUB +4",
+							"actions": [ 
+								{ "a": "StoryCounterPlus", "p": [ "fractionReputation_Dungeon" ,"10"] },
+								{ "a": "StoryCounterMinus", "p": [ "fractionReputation_Human" ,"5"] },
+								{ "a": "StoryCounterSet", "p": [ "fractionReputation_Unfrozen" ,"100"] },
+								{ "a": "Go", "p": [ "testEnd" ] }
+						 ]
+						}
+					]
+				},
+				{
+					"id": "testEnd",
+					"title": "Peasant:",
+					"text": "HUB Final Phase",
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					"end": true
+				},
+				{
+					"id": "final",
+					"title": "Peasant:",
+					"text": "HUB Final Phase",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[ "1","icons/units/hex_portraits/esquire","3","icons/units/hex_portraits/gorilla" ]
+					},
+
+					"answers":
+					[
+						{
+							"text": "COUNTER #3 HUB -8",
+							"actions": [ { "a": "End" } ]
+						}
+					]
+				}
+			]
+		}
+	]
+}

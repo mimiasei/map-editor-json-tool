@@ -1,0 +1,96 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "mech_guard",
+			"mesh": "Neutral/1Prefabs/mech_guard",
+			"mapMesh": "Neutral/1Prefabs/mech_guard_map",
+			"fadeTime": 3.65,
+
+			"scale": 0.525,
+			"modelHeight": 0.68,
+			"moveSpeed": 5.2,
+
+			"attackTimeBefore": [ 0.611, 0.28, 1.092, 0.6, 0.6, 0.6 ],
+			"attackTimeAfter": [ 0.5, 0.787, 1.571, 0.9, 0.9, 0.9 ],
+			"rareIdleTime": 3.0,
+			
+			"switchSoundToFly": true,
+			"flightSoundLoop": "sounds/battle/units/mech_guard/walk",
+
+			"takeDamageTime": 1,
+			"deathTimeOffset": 4.01,
+
+			"bloodEffect": "effects/blood/blood_world_watcher",
+			"bloodHexEffect": "effects/blood/blood_world_watcher_hex",
+
+
+			"defaultAttacks":
+			[
+				{
+					"animationIndex": 0,
+					"projectile": "effects/rays/WorldWatcher_ray_vfx",
+
+					"trajectory": "ray",
+					"projectileSpeed": 100
+				}
+			],
+
+			"counterAttacks":
+			[
+				{
+					"animationIndex": 1
+				}
+			],
+
+			"alternativeAttacks":
+			[
+				{	
+					"name": "common_attack_1_name",
+					"abilityType": "Ability_type_attack_alt",
+					"description": "common_attack_1_description",
+					"additionalDescription": "",
+					"animationIndex": 1,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"abilities":
+			[
+				{
+					"name": "mech_guard_ability_1_name",
+					"abilityType": "Ability_type_attack",
+					"description": "mech_guard_ability_1_description",
+					"animationIndex": 2,
+					"useExpandTooltip": "false"
+				}
+			],
+
+			"baseClass":
+                {
+                    "name": "base_class_construct",
+                    "description": "base_class_construct_description"
+                },
+			
+			"passives":
+			[
+				{
+					"name": "base_passive_ranged_attack_no_range_name",
+					"description": "base_passive_ranged_attack_no_range_description"
+				},
+				{
+					"name": "base_passive_duelist_name",
+					"description": "base_passive_duelist_description"
+				},
+				{
+					"name": "base_passive_sharpshooter_name",
+					"description": "base_passive_sharpshooter_description"
+				},
+				{
+					"name": "base_passive_resistant_3_name",
+					"description": "base_passive_resistant_description"
+				}
+			]
+		}
+	]
+}

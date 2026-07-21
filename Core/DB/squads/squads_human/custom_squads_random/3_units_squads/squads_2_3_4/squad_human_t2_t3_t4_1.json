@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_human_t2_t3_t4_1",
+            "useOldSquads": false,
+            "rollChance": 19,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "crossbowman",
+                        "v": 5184
+                    },
+                    {
+                        "s": "griffin",
+                        "v": 5184
+                    },
+                    {
+                        "s": "lightweaver",
+                        "v": 5184
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 5184,
+                "units": [
+                    "crossbowman",
+                    "griffin",
+                    "lightweaver"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 20014,
+                "units": [
+                    {
+                        "s": "crossbowman",
+                        "v": 8684
+                    },
+                    {
+                        "s": "griffin",
+                        "v": 15684
+                    },
+                    {
+                        "s": "lightweaver",
+                        "v": 20014
+                    }
+                ]
+            },
+            "tier": 4,
+            "fraction": "human"
+        }
+    ]
+}

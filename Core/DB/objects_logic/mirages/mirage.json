@@ -1,0 +1,58 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "mirage",
+			"aiIgnore": true,
+			"extraStat": -3,
+			"extraValue": 25000,
+			"squadMultiply": 0.10,
+			"goodsValue": 50000,
+
+			"bonuses":
+			[
+				{
+					"type": "unitStat",
+					"parameters": [ "initiative", "1" ]
+				},
+								{
+					"type": "unitStat",
+					"parameters": [ "speed", "1" ]
+				}
+			],
+
+			"variants":
+			[
+				{
+					"rollChance": 100,
+					"value": 25000,
+
+					"guardUnits": [],
+					
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "SideResReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": true,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "resReward_notification",
+								
+								"parameters": [ "graal", "1" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

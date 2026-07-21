@@ -1,0 +1,53 @@
+{
+    "array": [
+        {
+            "id": "squad_unfrozen_t2_t4_t5_4",
+            "useOldSquads": false,
+            "rollChance": 11,
+            "canBeMainGuard": false,
+            "baseSquad": {
+                "units": [
+                    {
+                        "s": "unfrozen_cultist",
+                        "v": 4185
+                    },
+                    {
+                        "s": "eldritch_flyer_upg",
+                        "v": 5355
+                    },
+                    {
+                        "s": "succubus",
+                        "v": 8185
+                    }
+                ]
+            },
+            "dynamicSquad": {
+                "requiredValue": 8185,
+                "units": [
+                    "unfrozen_cultist",
+                    "eldritch_flyer_upg",
+                    "succubus"
+                ]
+            },
+            "randomSquad": {
+                "maxValue": 25015,
+                "units": [
+                    {
+                        "s": "unfrozen_cultist",
+                        "v": 9015
+                    },
+                    {
+                        "s": "eldritch_flyer_upg",
+                        "v": 15355
+                    },
+                    {
+                        "s": "succubus",
+                        "v": 25015
+                    }
+                ]
+            },
+            "tier": 5,
+            "fraction": "unfrozen"
+        }
+    ]
+}

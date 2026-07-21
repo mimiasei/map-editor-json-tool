@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "test3",
+			
+			"contentHeight": 100,
+
+			"slides":
+			[
+				{
+					"title": "test_title",
+
+					"content":
+					[
+						{ "type": "text", "value": [ "textSid" ] },
+						{ "type": "image", "value": [ "imageSid" ] }
+					],
+	
+					"mapActions":
+					[
+						{ "a": "CounterPlus", "p": [ "Tutorial_M1_Step_by_Step_Counter", "1" ] }
+					]
+				}
+			]
+		}
+	]
+}

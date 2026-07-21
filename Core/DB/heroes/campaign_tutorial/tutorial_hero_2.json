@@ -1,0 +1,110 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "tutorial_hero_2",
+
+			"name": "human_hero_13",
+			"description": "human_hero_13_description",
+			"motto": "human_hero_13_motto",
+
+			"mesh": "human_mage",
+			"mounts": [ "horse" ],
+			"icon": "hero_human_13_lia_the_untethered",
+			"fraction": "human",
+			"nativeBiome": "Grass",
+			"classType": "magic",
+
+			"skillsRollVariant": "humans_magic_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 1,
+
+			"startSquad" : [
+				{ "sid": "esquire", "min": 13, "max": 18 },
+				{ "sid": "crossbowman", "min": 9, "max": 13 },
+				{ "sid": "griffin", "min": 4, "max": 6 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "esquire", "min": 1, "max": 1 }
+			],
+
+			"specialization": "human_hero_13_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome":true,
+				
+				"offence":      1,
+				"defence":      1,
+				"spellPower":   2,
+				"intelligence": 2,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 10 },
+						{ "v": 1, "c": 20 },
+						{ "v": 2, "c": 35 },
+						{ "v": 3, "c": 35 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_humans",
+					"skillLevel": 1
+				},
+
+				{
+					"sid": "skill_magic_day",
+					"skillLevel": 1
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "primal_1_magic_thunderbolt",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "primal_4_magic_fire_globe",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "space_18_magic_assemble",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

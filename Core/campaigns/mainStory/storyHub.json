@@ -1,0 +1,577 @@
+{
+  "sid": "mainStory",
+  "mainIconSid": "main_icon",
+  "hubIconSid": "save_icon",
+
+  "firstShowActions": 
+  [
+    { "type":       "PlayVideo",
+      "values":     [ "Campaign_Intro" ] },
+    { "type":       "OpenDialog",
+      "values":     [ "M1_pre_mission" ] }
+  ],
+
+  "nodes": 
+  [
+    {
+      "sid": "Campaign_Start_Phase_Node_1",
+      "state": "Activated",
+
+      "posX": -285, "posY": -75, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_1" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_1_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_1", "Mission_Complete", "Vi_Zavershili_1_Missiu" ] },
+
+        { "type":       "PlusCounterValue",
+          "values":     [ "fractionReputation_Dungeon", "5" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_1", "Completed" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_2", "Activated" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_3", "Activated" ] },
+
+        { "type":       "OpenDialog",
+          "values":     [ "M1_post_mission" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Dialog_Node_1",
+      "state": "Hidden",
+
+      "posX": 0, "posY": 0, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenDialog",
+          "values":     [ "M1_post_mission" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Dialog_Node_1", "Mission_Complete", "Vi_Zavershili_1_Missiu" ] },
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Dialog_Node_1", "Completed" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_2",
+      "state": "Hidden",
+
+      "posX": -470, "posY": 55, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_2" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "UnlockHero",
+        "values":       [ "campaign_hero_2" ] },
+
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_1_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_2", "Mission_Complete", "Vi_Zavershili_2_Missiu_i_polychili_lakysa_i_fura" ] },
+
+        { "type":       "PlusCounterValue",
+          "values":     [ "fractionReputation_Dungeon", "5" ] },
+        { "type":       "PlusCounterValue",
+          "values":     [ "fractionReputation_Nature", "5" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_2", "Completed" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_4", "Activated" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_2_Completed", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_6", "Activated" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_2_Completed", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_5", "Activated" ] },
+
+        { "type":       "OpenDialog",
+          "values":     [ "M2_post_mission" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_3",
+      "state": "Hidden",
+
+      "posX": -205, "posY": -130, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_3" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_3_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_3", "Mission_Complete", "Vi_Zavershili_3_Missiu_i_pomogli_ludyam" ] },
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_3", "Mission_Complete", "Vi_Zavershili_3_Missiu_i_pomogli_undedam" ] },
+
+        { "type":       "PlusCounterValue",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+          "values":     [ "fractionReputation_Human", "5" ] },
+
+        { "type":       "PlusCounterValue",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "operation": "==", "value": 1 } ] },
+          "values":     [ "fractionReputation_Undead", "5" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_3", "Completed" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_2_Completed", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_6", "Activated" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_2_Completed", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_5", "Activated" ] },
+
+        { "type":       "OpenDialog",
+        "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+        "values":     [ "M3a_post_mission" ] },
+        { "type":       "OpenDialog",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "operation": "==", "value": 1 } ] },
+          "values":     [ "M3b_post_mission" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_4",
+      "state": "Hidden",
+
+      "posX": -530, "posY":0, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_4" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_4_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_4_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_4", "Mission_Complete", "Vi_Zavershili_4_Missiu_i_pomogli_ludyam" ] },
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_4_Completed_and_help_druid", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_4", "Mission_Complete", "Vi_Zavershili_4_Missiu_i_pomogli_dryidy" ] },
+
+        { "type":       "PlusCounterValue",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_4_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+          "values":     [ "fractionReputation_Human", "5" ] },
+
+        { "type":       "PlusCounterValue",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_4_Completed_and_help_druid", "operation": "==", "value": 1 } ] },
+          "values":     [ "fractionReputation_Nature", "5" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_4", "Completed" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_7", "Activated" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_7_alt", "Activated" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Hidden" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Hidden" ] },
+
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Hidden" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Vremenno_nedostypno", "Proidite_osnovnoe_zadanie_dlya_razblokirovki" ] },
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Hidden" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Vremenno_nedostypno", "Proidite_osnovnoe_zadanie_dlya_razblokirovki" ] },
+
+        { "type":       "OpenDialog",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_4_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+          "values":     [ "M4_post_mission" ] },
+        { "type":       "OpenDialog",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_4_Completed_and_help_druid", "operation": "==", "value": 1 } ] },
+          "values":     [ "M4_post_mission" ] }
+
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_5",
+      "state": "Hidden",
+
+      "posX": -10, "posY": -140, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_5" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "UnlockHero",
+        "values":       [ "campaign_hero_4" ] },
+
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_5_Completed", "1" ] },
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_5_or_6_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_5", "Mission_Complete", "Vi_Zavershili_5_Missiu_i_pilychili_galtrana" ] },
+
+        { "type":       "PlusCounterValue",
+          "values":     [ "fractionReputation_Undead", "10" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_5", "Completed" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_undead", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_7_alt", "Activated" ] },
+
+
+          { "type":       "changeNodeState",
+            "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+            "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Hidden" ] },
+  
+          { "type":       "ChangeCompletedNodeTooltip",
+            "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+            "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Vremenno_nedostypno", "Proidite_osnovnoe_zadanie_dlya_razblokirovki" ] },
+  
+          { "type":       "changeNodeState",
+            "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+            "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Hidden" ] },
+  
+          { "type":       "ChangeCompletedNodeTooltip",
+            "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+            "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Vremenno_nedostypno", "Proidite_osnovnoe_zadanie_dlya_razblokirovki" ] },
+
+          { "type":       "OpenDialog",
+            "values":     [ "M5_post_mission" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_6",
+      "state": "Hidden",
+
+      "posX": -570, "posY": -100, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_6" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "UnlockHero",
+        "values":       [ "campaign_hero_3" ] },
+
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_6_Completed", "1" ] },
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_5_or_6_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_6", "Mission_Complete", "Vi_Zavershili_6_Missiu_i_pilychili_galtrana" ] },
+
+        { "type":       "PlusCounterValue",
+          "values":     [ "fractionReputation_Human", "10" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_6", "Completed" ] },
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_3_Completed_and_help_human", "operation": "==", "value": 1 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_7", "Activated" ] },
+
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Hidden" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Vremenno_nedostypno", "Proidite_osnovnoe_zadanie_dlya_razblokirovki" ] },
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Hidden" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Mission_5_or_6_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Mission_4_Completed", "operation": "==", "value": 1 }, { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Vremenno_nedostypno", "Proidite_osnovnoe_zadanie_dlya_razblokirovki" ] },
+
+        { "type":       "OpenDialog",
+          "values":     [ "M6_post_mission" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_7",
+      "state": "Hidden",
+
+      "posX": -130, "posY": -85, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_7" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "UnlockHero",
+          "values":     [ "campaign_hero_3" ] },
+
+        { "type":       "UnlockHero",
+          "values":     [ "campaign_hero_4" ] },
+
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_7_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_7", "Mission_Complete", "Vi_Zavershili_7_Missiu" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_7", "Completed" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_8", "Activated" ] },
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Hidden" ] },
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Hidden" ] },
+
+        { "type":       "OpenDialog",
+          "values":     [ "M9a_post_mission" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_7_alt",
+      "state": "Hidden",
+
+      "posX": -130, "posY": -85, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_7_alt" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "UnlockHero",
+          "values":     [ "campaign_hero_3" ] },
+
+        { "type":       "UnlockHero",
+          "values":     [ "campaign_hero_4" ] },
+
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_7_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_7_alt", "Mission_Complete", "Vi_Zavershili_7_alt_Missiu" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_7_alt", "Completed" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_8", "Activated" ] },
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Node_Additional_1_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Hidden" ] },
+
+        { "type":       "changeNodeState",
+          "conditions": { "logicOperation": "And", "array": [ { "counterSid": "Campaign_Start_Phase_Node_Additional_2_Completed", "operation": "==", "value": 0 } ] },
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Hidden" ] },
+
+        { "type":       "OpenDialog",
+          "values":     [ "M9b_post_mission" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_8",
+      "state": "Hidden",
+
+      "posX": -175, "posY": 80, "posZ": 0,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_8" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_8_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_8", "Mission_Complete", "Vi_Zavershili_8_Missiu" ] },
+
+        { "type":       "PlusCounterValue",
+          "values":     [ "fractionReputation_Dungeon", "10" ] },
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_8", "Completed" ] },
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_9", "Hidden" ] },
+
+        { "type":       "OpenDialog",
+          "values":     [ "M10_post_mission" ] },
+
+        { "type":       "SetAchievement",
+          "values":     [ "achievement_3" ] },
+              
+        { "type":       "PlayVideo",
+          "values":     [ "Campaign_Outro" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_9",
+      "state": "Hidden",
+
+      "posX": -2.25, "posY": 1.0, "posZ": -0.575,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Mission_9" ] }
+      ],
+
+      "onDoneActions": 
+      [
+
+        { "type":       "UnlockHero",
+          "values":     [ "unfrozen_hero_1" ] },
+
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Mission_9_Completed", "1" ] },
+
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_9", "Mission_Complete", "Vi_Zavershili_9_Missiu" ] },
+
+        { "type":       "PlusCounterValue",
+          "values":     [ "fractionReputation_Dungeon", "10" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_9", "Completed" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_Additional_1",
+      "state": "Hidden",
+
+      "posX": -0.15, "posY": 1.0, "posZ": -2.75,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Additional_Mission_1" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Mission_Complete", "Vi_Zavershili_Dopolnitelnyu_missiu_1" ] },
+
+        { "type":       "MinusCounterValue",
+          "values":     [ "fractionReputation_Dungeon", "5" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_1", "Completed" ] }
+      ]
+    },
+
+    {
+      "sid": "Campaign_Start_Phase_Node_Additional_2",
+      "state": "Hidden",
+
+      "posX": -2.0, "posY": 1.0, "posZ": -1.15,
+
+      "interactionActions": 
+      [
+        { "type":       "OpenMissionsPrologue",
+          "values":     [ "Campaign_Start_Phase_Additional_Mission_2" ] }
+      ],
+
+      "onDoneActions": 
+      [
+        { "type":       "SetCounterValue",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2_Completed", "1" ] },
+
+        { "type":       "ChangeCompletedNodeTooltip",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Mission_Complete", "Vi_Zavershili_Dopolnitelnyu_missiu_2" ] },
+
+
+        { "type":       "changeNodeState",
+          "values":     [ "Campaign_Start_Phase_Node_Additional_2", "Completed" ] }
+      ]
+    }
+  ]
+}

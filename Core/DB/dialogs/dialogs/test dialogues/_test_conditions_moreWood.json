@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "test_conditions_moreWood",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+					
+					"title": "",
+					"text": "У вас больше 20 дерева",
+					
+					"end": true,
+					"resultDialog": "Default"
+				}				
+			]
+		}
+	]
+}

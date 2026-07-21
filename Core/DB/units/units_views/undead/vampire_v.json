@@ -1,0 +1,50 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "vampire",
+			"mesh": "Undead/1Prefabs/vampire",
+			"mapMesh": "Undead/1Prefabs/vampire_map",
+			"fadeTime": 2.75,
+
+			"scale": 1.1,
+			"modelHeight": 0.7,
+			"moveSpeed": 6,
+			
+			"attackTimeBefore": [ 1.067, 0.8, 0.8, 0.8, 0.8, 0.8 ],
+			"attackTimeAfter": [ 1.5, 0.2, 0.2, 0.2, 0.2, 0.2 ],
+			"rareIdleTime": 1.5,
+
+			"takeoffPrepareTime": 0.3,
+			"ascentTime": 0.4,
+			"descentTime": 0.5,
+			"defaultHeight": 2.2,
+
+			"takeDamageTime": 1.33,
+			"deathTimeOffset": 3.51,
+			
+			"baseClass":
+                {
+                    "name": "base_class_undead",
+                    "description": "base_class_undead_description"
+                },
+
+			"passives":
+			[
+				{
+					"name": "base_passive_melee_attack_name",
+					"description": "base_passive_melee_attack_description"
+				},
+				{
+					"name": "base_passive_flyer_name",
+					"description": "base_passive_flyer_description"
+				},
+				{
+					"name": "vampire_passive_1_name",
+					"excaptionInTooltip": "description_effect_undead_embodiment_construct_immunities",
+					"description": "vampire_passive_1_description"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,164 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "point_of_balance",
+
+			"tooltipVisitType": "NoRewardAndScouting",
+			
+			"applyDifficultyModifier": true,
+
+			"variantRerollType": "None",
+			"visitorsResetType": "None",
+			"visitType": "OneTime",
+
+			"variants":
+			[		
+				{
+					"rollChance": 25,
+					"value": 5000,
+					"customGuardValue": 6750,
+
+					"guardUnits":
+					[
+						{ "sid": "mech_guard", "amount": 4 },
+						{ "sid": "mech_guard", "amount": 4 },
+						{ "sid": "mech_guard", "amount": 4 },
+						{ "sid": "mech_guard", "amount": 4 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "sentinel", "1" ]
+							}
+						]
+					}
+				},	
+				{
+					"rollChance": 25,
+					"value": 10000,
+					"customGuardValue": 6750,
+
+					"guardUnits":
+					[						
+						{ "sid": "mech_guard", "amount": 8 },
+						{ "sid": "mech_guard", "amount": 8 },
+						{ "sid": "mech_guard", "amount": 8 },
+						{ "sid": "mech_guard", "amount": 8 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "sentinel", "2" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 25,
+					"value": 15000,
+					"customGuardValue": 6750,
+
+					"guardUnits":
+					[
+						{ "sid": "mech_guard", "amount": 11 },
+						{ "sid": "mech_guard", "amount": 11 },
+						{ "sid": "mech_guard", "amount": 11 },
+						{ "sid": "mech_guard", "amount": 11 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "sentinel", "3" ]
+							}
+						]
+					}
+				},
+				{
+					"rollChance": 15,
+					"value": 20000,
+					"customGuardValue": 6750,
+
+					"guardUnits":
+					[
+						{ "sid": "mech_guard", "amount": 14 },
+						{ "sid": "mech_guard", "amount": 14 },
+						{ "sid": "mech_guard", "amount": 14 },
+						{ "sid": "mech_guard", "amount": 14 }
+					],
+
+					"rewardSet":
+					{
+						"rewardSetShowType": "Invisible",
+						"rewardSetApplyType": "ForAll",
+						"rewardSetCancelType": "CancelAndDelete",
+						
+						"rewards":
+						[
+							{
+								"rewardType": "HeroUnitsReward",
+								"rewardShowType": "InWindow",
+								"applyRewardFloating": false,
+								
+								"rewardIcon": "default",
+								"rewardName": "default",
+								"rewardDesc": "default",
+								"rewardNotificationDesc": "unitReward_notification",
+								
+								"parameters": [ "sentinel", "4" ]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

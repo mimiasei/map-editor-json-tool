@@ -1,0 +1,118 @@
+
+{
+	"array":
+	[
+		{
+			"id": "sub_skill_units_shoot_protection",
+			"name": "Units Protection from Shoot",
+			"desc": "Reduces the damage taken by the hero's army from shoot attacks by 25%",
+			"icon": "sub_skill_units_shoot_protection_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "unitStat",
+					"parameters": [ "modifierSet", "inDmgMods", "shoot_attack", "-0.25" ]
+				}
+			]
+		},
+		{
+			"id": "sub_skill_units_health",
+			"name": "Units Health",
+			"desc": "Increases the health of all units by 5%",
+			"icon": "sub_skill_units_health_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "unitStat",
+					"parameters": [ "hpPerc", "0.05" ]
+				}
+			]
+		},
+		{
+			"id": "sub_skill_units_defence",
+			"name": "Units Defence",
+			"desc": "Increases the Defense of all units by 10%",
+			"icon": "sub_skill_units_defence_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "unitStat",
+					"parameters": [ "defencePerc", "0.1" ]
+				}
+			]
+		},
+		{
+			"id": "sub_skill_units_initiative",
+			"name": "Units Initiative",
+			"desc": "Increases the initiative of all units by 1 point",
+			"icon": "sub_skill_units_initiative_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "unitStat",
+					"parameters": [ "initiative", "1" ]
+				}
+			]
+		},
+		{
+			"id": "sub_skill_units_attackPen",
+			"name": "Units attack penetration",
+			"desc": "Units ignore 25% of the attacker's damage",
+			"icon": "sub_skill_units_attackPen_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "unitStat",
+					"parameters": [ "attackPen", "0.25" ]
+				}
+			]
+		},
+		{
+			"id": "sub_skill_movePoints",
+			"name": "Hero Move Points",
+			"desc": "Increases the hero's world movement points by 10%",
+			"icon": "sub_skill_movePoints_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "heroStat",
+					"parameters": [ "movementPerBonus", "0.10" ]
+				}
+			]
+		},
+		{
+			"id": "sub_skill_marchOfWar",
+			"name": "Hero March of War",
+			"desc": "After each battle won, the hero regains 10% of his maximum movement points",
+			"icon": "sub_skill_marchOfWar_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "heroStat",
+					"parameters": [ "movementAfterBattlePerBonus", "0.10" ]
+				}
+			]
+		},
+		{
+			"id": "sub_skill_roadBonus",
+			"name": "Hero Road Bonus",
+			"desc": "Increases road bonus by 50%",
+			"icon": "sub_skill_roadBonus_icon",
+
+			"bonuses":
+			[
+				{ 
+					"type": "heroStat",
+					"parameters": [ "roadPerBonus", "0.33333334" ]
+				}
+			]
+		}
+	]
+}

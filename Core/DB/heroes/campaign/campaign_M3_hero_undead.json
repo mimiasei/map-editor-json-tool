@@ -1,0 +1,126 @@
+﻿{
+	"array":
+	[
+		{
+			"id": "campaign_M3_hero_undead",
+
+			"description": "necro_hero_11_description",
+			"motto": "necro_hero_11_motto",
+
+			"mesh": "death_warrior",
+			"mounts": [ "death_mount" ],
+			"icon": "hero_necromancer_11_adahn",
+			"fraction": "undead",
+			"nativeBiome": "Deathland",
+			"classType": "might",
+
+			"skillsRollVariant": "necros_might_skills_table",
+
+			"costGold": 2500,
+			"startLevel": 5,
+
+			"startSquad" : [
+				{ "sid": "skeleton", "min": 30, "max": 30 },
+				{ "sid": "flicker", "min": 15, "max": 15 },
+				{ "sid": "pet", "min": 12, "max": 12 }
+			],
+
+			"startSquadAlt": [
+				{ "sid": "skeleton", "min": 30, "max": 30 },
+				{ "sid": "flicker", "min": 15, "max": 15 },
+				{ "sid": "pet", "min": 12, "max": 12 }
+			],
+
+			"specialization": "necro_hero_8_specialization",
+
+			"stats":
+			{
+				"viewRadius":   6,
+				"statsNum":     1,				
+				"magicCastsPerRound":     1,
+
+				"enableTactics": true,
+				"tacticsPlacementSize": 3,
+				"enableHeroNativeBiome": true,
+				
+				"offence":      1,
+				"defence":      2,
+				"spellPower":   1,
+				"intelligence": 2,
+				"luck":         0,
+				"moral":        0
+			},
+
+			"statsRolls":
+			[
+				{
+					"levelFrom": 1,
+					"rollChances":
+					[
+						{ "v": 0, "c": 45 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 15 },
+						{ "v": 3, "c": 15 }
+					]
+				},
+				{
+					"levelFrom": 24,
+					"rollChances":
+					[
+						{ "v": 0, "c": 25 },
+						{ "v": 1, "c": 25 },
+						{ "v": 2, "c": 25 },
+						{ "v": 3, "c": 25 }
+					]
+				}
+			],
+
+			"startSkills":
+			[
+				{
+					"sid": "skill_faction_undead",
+					"skillLevel": 2
+				},
+				{
+					"sid": "skill_protection",
+					"skillLevel": 2
+				},
+				{
+					"sid": "skill_magic_night",
+					"skillLevel": 2
+				}
+			],
+
+			"startMagics":
+			[
+				{
+					"sidConfig": "night_1_magic_unnatural_calm",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_2_magic_web",
+					"level": 1,
+					"isLearned": true
+				},
+				{
+					"sidConfig": "night_4_magic_despair",
+					"level": 1,
+					"isLearned": true
+				},
+				
+				{
+					"sidConfig": "bonus_magic_pure_bolt",
+					"level": 1,
+					"isLearned": true
+				},
+
+				{
+					"sidConfig": "change_use_necromancy",
+					"level": 1,
+					"isLearned": true
+				}
+			]
+		}
+	]
+}

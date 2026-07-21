@@ -1,0 +1,28 @@
+{
+	"array":
+	[
+		{
+			"id": "M9_grave_dial1",
+			"localization": false,
+
+			"slides":
+			[
+				{
+					"id": "start",
+					
+
+					"fon": "",
+					"avatars":
+					{
+						"icons":[]
+					},
+
+					"title": "filler",
+					"text": "this says it is a crypt of some baroness, it has been defiled recently, so there is nothing of interest left (you will need to bring her remnants here if you help temple)",
+
+					"end": true
+				}				
+			]
+		}
+	]
+}

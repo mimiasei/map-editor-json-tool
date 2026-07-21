@@ -1,0 +1,389 @@
+{
+	"array":
+	[
+		{
+			"id": "seal_of_silence_artifact_debuff",
+
+			"maxDuration": 1,
+
+			"vfxList": [ "effects/status/silence_unit" ],
+
+			"icon": "sub_skill_warrior_1_debuff_icon",
+			"name_": "seal_of_silence_artifact_name",
+			"description_": "seal_of_silence_artifact_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "duration",
+
+			"data":
+			{
+				"disablers":
+				[
+					{
+						"ability": "ability",
+						"attack": "all"
+					}
+				]
+			}
+		},
+				
+		{
+			"id": "sub_skill_resistance_5_ability_effect",
+
+			"aiValue": 4700,
+			"aiValuePerDuration": 235,
+		
+			"icon": "magic_decimate_effect_icon",
+			"name_": "sub_skill_resistance_5_name",
+			"description_": "sub_skill_resistance_5_ability_buff_description",
+
+			"infinite": true, "canDispel": false, 
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+			
+			"addition": "data",
+
+			"data": {	"stats": 	{	"inDmgMods":	{	"list":	[	{ "t": "decimate_damage", "v": 1.00 }	]	}	}	}
+		},
+
+		{
+			"id": "sub_skill_warrior_1_debuff",
+
+			"maxDuration": 1,
+
+			"vfxList": [ "effects/status/silence_unit" ],
+
+			"icon": "sub_skill_warrior_1_debuff_icon",
+			"name_": "sub_skill_warrior_1_name",
+			"description_": "sub_skill_warrior_1_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "duration",
+
+			"data":
+			{
+				"disablers":
+				[
+					{
+						"ability": "ability",
+						"attack": "all"
+					}
+				]
+			}
+		},
+
+		{
+			"id": "sub_skill_warrior_2_debuff",
+
+			"maxDuration": 1,
+
+			"icon": "sub_skill_warrior_2_debuff_icon",
+			"name_": "sub_skill_warrior_2_name",
+			"description_": "sub_skill_warrior_2_debuff_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": 
+			{
+				"stats":
+				{
+					"initiative": -1
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_mage_1_debuff",
+
+			"infinite": true,
+
+			"icon": "sub_skill_mage_1_debuff_icon",
+			"name_": "sub_skill_mage_1_name",
+			"description_": "sub_skill_mage_1_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": 
+			{	
+				"stats": 	{	"inDmgMods":	{	"list":		[	{ "t": "magic_damage", "v": 0.10 }		]	}	}	
+			}
+		},
+
+		{
+			"id": "sub_skill_mage_2_debuff",
+
+			"maxDuration": 1,
+
+			"icon": "sub_skill_mage_2_debuff_icon",
+			"name_": "sub_skill_mage_2_name",
+			"description_": "sub_skill_mage_2_debuff_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": 
+			{
+				"stats":
+				{
+					"speed": -1
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_faction_nature_4_ability_effect",
+
+			"hidden": false, "canDispel": false, "dontMimic": true,
+
+			"maxDuration": 1,
+
+			"icon": "sub_skill_faction_nature_4_ability_effect_icon",
+			"name_": "sub_skill_faction_humans_5_name",
+			"description_": "sub_skill_faction_nature_4_ability_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"stats":
+				{
+					"actionPoints": 1,
+					"maxAddedApPerRound": 1
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_faction_nature_4_ability_1_effect",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_skill_faction_nature_4_ability_1_effect_icon",
+			"name_": "sub_skill_faction_nature_4_ability_1_name",
+			"description_": "sub_skill_faction_nature_4_ability_1_effect_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"stats":
+				{
+					"offencePerc": 0.1,
+					"defencePerc": 0.1,
+					"damagePerc": 0.1
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_faction_nature_4_ability_2_effect",
+
+			"infinite": true, "hidden": true, "canDispel": false, "dontMimic": true, "dontTriggerAction": true, "keepOnDeath": true,
+
+			"icon": "sub_skill_faction_nature_4_ability_2_effect_icon",
+			"name_": "sub_skill_faction_nature_4_ability_2_name",
+			"description_": "sub_skill_faction_nature_4_ability_2_effect_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"stats":
+				{
+					"offencePerc": -0.1,
+					"defencePerc": -0.1,
+					"damagePerc": -0.1
+				}
+			}
+		},
+
+		{
+			"id": "sub_skill_sub_skill_faction_humans_5_effect",
+
+			"hidden": false, "canDispel": false,
+
+			"maxDuration": 1,
+
+			"icon": "sub_skill_sub_skill_faction_humans_5_effect_icon",
+			"name_": "sub_skill_faction_humans_5_alt_name",
+			"description_": "sub_skill_faction_humans_5_ability_effect_2_description",
+
+			"tags": [ "positive" ],
+			"isPositive": true,
+
+			"addition": "duration",
+
+			"data": 
+			{
+				"stats":
+				{
+					"heroOffenceModifier": 1,
+					"heroDefenceModifier": 1,
+					"heroSpellPowerModifier": 1,
+					"heroIntelligenceModifier": 1
+				}
+			}
+		},
+
+		{
+			"id": "skill_human_hero_9_debuff",
+
+			"infinite": true, 
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 370,
+
+			"icon": "skill_human_hero_9_debuff_icon",
+			"name_": "skill_hero_attack_ability_name",
+			"description_": "skill_human_hero_9_attack_ability_description",
+
+			"tags": [ "negative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"inAllDmgMod": 0.10
+				}
+			}
+		},
+
+		{
+			"id": "skill_demon_hero_5_debuff",
+
+			"infinite": true, 
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 370,
+
+			"icon": "skill_demon_hero_5_debuff_icon",
+			"name_": "skill_hero_attack_ability_name",
+			"description_": "skill_demon_hero_5_attack_ability_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"initiative": -1
+				}
+			}
+		},
+
+		{
+			"id": "skill_unfrozen_hero_14_debuff",
+
+			"infinite": true, 
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 370,
+
+			"icon": "skill_unfrozen_hero_14_debuff_icon",
+			"name_": "skill_hero_attack_ability_name",
+			"description_": "skill_unfrozen_hero_14_attack_ability_description",
+
+			"tags": [ "negative", "movementNegative" ],
+			"isPositive": false,
+
+			"addition": "data",
+
+			"data": {
+				"stats":
+				{
+					"speed": -1
+				}
+			}
+		},
+
+		{
+			"id": "skill_dungeon_hero_3_debuff",
+
+			"infinite": true, 
+
+			"aiValue": 7400,
+			"aiValuePerDuration": 370,
+
+			"icon": "skill_dungeon_hero_3_debuff_icon",
+			"name_": "skill_hero_attack_ability_name",
+			"description_": "skill_dungeon_hero_3_attack_ability_description",
+
+			"tags": [ "negative", "overTime_effect_poison" ],
+			"isPositive": false,
+
+			"addition": "none",
+
+			"actions":
+			[
+				{
+					"trigger": "start_turn",
+					"triggerConditions": 
+					[
+						{
+							"checkFunction": "allegiance",
+							"values": [ "self" ]
+						}
+					],
+					
+					"damageDealer": 
+					{
+						"tags": [ "passive", "magic_damage", "overTime_effect_poison" ],
+						"triggerCounter": false,
+
+						"attackPatternSid": "attack_single_x100",
+
+						"castTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"affectTargetParams":   
+						{ 
+							"targetTags": [ "unit" ],
+							"castTarget_": "self",
+							"targetCondition_": "alive",
+							"selection": "object"
+						},
+
+						"damageTarget_": "all",
+						"damageType_": "magic_pure",
+						"statDmgMult": 0.0,
+
+						"minBaseDmg": 20,
+						"maxBaseDmg": 20,
+						"damageMultiplerPerHeroLevel": 0.1
+					}
+				}
+			]
+		}
+	]  
+}

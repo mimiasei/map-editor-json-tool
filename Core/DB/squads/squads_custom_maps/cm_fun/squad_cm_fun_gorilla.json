@@ -1,0 +1,47 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_cm_fun_gorilla",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 0,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "gorilla", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 0,
+				"units":
+				[
+					"gorilla"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 90000,
+				"units":
+				[
+					{ "s" : "gorilla", "v": 90000 }
+				]
+			},
+
+			"tier": 3,
+			"fraction": "neutral"
+		}
+	]
+}

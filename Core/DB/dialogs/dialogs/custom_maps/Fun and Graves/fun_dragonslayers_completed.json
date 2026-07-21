@@ -1,0 +1,151 @@
+{
+	"array": [
+		{
+			"id": "fun_dragonslayers_completed",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_completed_0",		
+					"next": "1"
+				},				
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/hero_large_portraits/hero_necromancer_17_funerella_large",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_undead1",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_dragonslayers_completed_1",		
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "true"
+						},
+						{
+							"position": 4,
+							"icon": "icons/dialogue_unit_portraits/Icon_Dragonslayer",
+							"isForeground": "false"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_hero_dragonslayers",
+						"position": 2
+					},
+					"text": "fun_dialogue_text_dragonslayers_completed_2",		
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 2,
+							"icon": "icons/dialogue_unit_portraits/Icon_Lich_Upg_Alt",
+							"isForeground": "true"
+						}
+					],
+					"title": {
+						"sid": "fun_dialogue_title_father",
+						"position": 1
+					},
+					"text": "fun_dialogue_text_dragonslayers_completed_3",
+					"next": "4"
+				},
+				{
+					"id": "4",
+					"fon": "",
+					"text": "fun_dialogue_text_enemy_appears_2",
+					"mapActions": [
+						{
+							"a": "MoveCamera",
+							"p": [
+								"2833"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"snow_hill1"
+							]
+						},
+						{
+							"a": "DeleteEntity",
+							"p": [
+								"snow_hill2"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_neutral_9",
+								"2894",
+								"false",
+								"dragonslayer_dwelling1"
+							]
+						},
+						{
+							"a": "SpawnObject",
+							"p": [
+								"barracks_neutral_9",
+								"2962",
+								"true",
+								"dragonslayer_dwelling2"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"dragonslayer_dwelling1"
+							]
+						},
+						{
+							"a": "CaptureObject",
+							"p": [
+								"dragonslayer_dwelling2"
+							]
+						}
+					],
+					"next": "ending"
+				},
+				{
+					"id": "ending",
+					"fon": "",
+					"text": "",
+					"invokeOnlyActions": true,
+					"end": true
+				}
+			]
+		}
+	]
+}

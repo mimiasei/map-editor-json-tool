@@ -1,0 +1,137 @@
+﻿{
+	"timersSettings":
+	{
+		"basicTimersEnabled": false,
+		"startTimeSide": 60,
+		"extraTimeDay": 60,
+		"incTimeDay": 15,
+		"extraTimeWeek": 60,
+		"incTimeWeek": 60,
+
+		"maxAccumulationTimes": 600,
+
+		"battlePVETimerEnabled": false,
+		"startPVETime": 30,
+
+		"battlePVPTimersEnabled": false,
+		"startTimePvP": 60,
+		"extraTimePvP": 30,
+
+		"arenaPVPTimersEnabled": false,
+		"arenaStartPVPTime": 60,
+		"arenaExtraPVPTime": 30,
+
+		"arenaPreparationTimerEnabled": false,
+		"arenaPreparationTime": 3600,
+
+		"minTimeAfterFight": 5,
+		"extraTimeAfterFight": 5,
+		"minExtraTimeInFight": 5
+	},
+
+	"difficulties": [
+		{
+			"economy": 0,
+			"neutrals": 0,
+			"ai": 1
+		},
+		{
+			"economy": 1,
+			"neutrals": 1,
+			"ai": 2
+		},
+		{
+			"economy": 2,
+			"neutrals": 2,
+			"ai": 3
+		},
+		{
+			"economy": 3,
+			"neutrals": 3,
+			"ai": 3
+		},
+		{
+			"economy": 4,
+			"neutrals": 4,
+			"ai": 4
+		},
+		{
+			"economy": 5,
+			"neutrals": 5,
+			"ai": 5
+		}
+	],
+
+	"classicMaps": [
+		"Yin Yang",
+		"One for All",
+		"Last Stand",
+		"Nuclear",
+		"Hard Place",
+		"Jebus Cross",
+		"Universe",
+		"Last Fortress",
+		"Infinity",
+		"Chosen One",
+		"Shamrock",
+		"Anarchy",
+		"Sand Clover",
+		"Fair'n Square",
+		"Arcade",
+		"Expanse",
+		"Diamond",
+		"Spider",
+		"Mini-Nostalgia",
+		"Symphony",
+		"Hallway",
+		"Kerberos",
+		"King of the Hill",
+		"Showdown",
+		"Ikarus",
+		"Maneuvers",
+		"Overthrow",
+		"Miracle",
+		"Crossroads",
+		"Eye of the Storm",
+		"Wastelands",
+		"Pyramid",
+		"Zookeeper",
+		"Madness",
+		"OctoJebus",
+		"Jebus Cross Classic"
+	],
+
+	"singleHeroMaps": [
+		"Highway",
+		"Sworn",
+		"Junction",
+		"All Around",
+		"Staircase",
+		"Harmony",
+		"Exodus",
+		"Blitz",
+		"Helltide",
+		"Massacre",
+		"Jebus Outcast",
+		"Trinity",
+		"Symmetry",
+		"Christmas Tree",
+		"Vendetta",
+		"Maze",
+		"Full Hire",
+		"Flashback",
+		"Sprint",
+		"Exodus Classic"
+	],
+
+	"scenarios": [
+		"Fun_and_Graves",
+		"Gorges_of_Discord",
+		"Thirst_for_Power",
+		"Glittering_Strait",
+		"all_cats_go_to_heaven",
+		"ascension_to_the_throne",
+		"infinite_frost",
+		"song_of_murmurwood"
+	]
+}

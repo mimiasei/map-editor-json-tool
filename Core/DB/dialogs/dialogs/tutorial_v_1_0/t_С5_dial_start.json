@@ -1,0 +1,21 @@
+{
+	"array": [
+		{
+			"id": "t_C5_dial_start",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": "t_M_title",
+						"position": 3
+					},
+					"text": "t_M_dial_start_C5_1",
+					"end": true
+				}
+			]
+		}
+	]
+}

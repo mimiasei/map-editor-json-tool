@@ -1,0 +1,49 @@
+{
+	"array":
+	[
+		{
+			"id": "squad_dungeon_two_unit_t1_1",
+			
+			"squad" : 
+			[
+
+			],
+
+			"useOldSquads": false,
+
+			"rollChance": 100,
+			"canBeMainGuard": true,
+
+			"baseSquad": 
+			{
+				"units":
+				[
+					{ "s" : "trogl", "v": 1 },
+					{ "s" : "trogl_upg", "v": 1 }
+				]
+			},
+
+			"dynamicSquad": 
+			{
+				"requiredValue": 1,
+				"units":
+				[
+					"trogl", "trogl_upg"
+				]
+			},
+
+			"randomSquad": 
+			{
+				"maxValue": 10001,
+				"units":
+				[
+					{ "s" : "trogl", "v": 10001 },
+					{ "s" : "trogl_upg", "v": 10001 }
+				]
+			},
+
+			"tier": 1,
+			"fraction": "dungeon"
+		}
+	]
+}

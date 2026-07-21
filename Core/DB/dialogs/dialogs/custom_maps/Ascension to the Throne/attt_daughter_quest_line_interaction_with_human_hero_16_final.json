@@ -1,0 +1,91 @@
+{
+	"array":
+	[
+		{
+			"id": "attt_daughter_quest_line_interaction_with_human_hero_16_final",
+			"localization": true,
+			"slides": [
+				{
+					"id": "start",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_final_text_1",
+					"next": "1"
+				},
+				{
+					"id": "1",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_final_text_1_1",
+					"next": "2"
+				},
+				{
+					"id": "2",
+					"fon": "",
+					"avatars": [
+						{
+							"position": 1,
+							"icon": "icons/dialogue/dialog_hero_human_8_lord_edgar_large",
+							"isForeground": "true",
+							"animations": ["zoomIn"]
+						},
+						{
+							"position": 5,
+							"icon": "icons/dialogue/dialog_hero_human_16_anastasia_the_meek_large",
+							"isForeground": "false",
+							"animations": ["zoomOut"]
+						}
+					],
+					"title": {
+						"sid": "human_hero_16",
+						"position": 3
+					},
+					"text": "attt_daughter_quest_line_final_text_2",
+					"next": "3"
+				},
+				{
+					"id": "3",
+					"fon": "",
+					"avatars": [],
+					"title": {
+						"sid": ""
+					},
+					"text": "attt_daughter_quest_line_final_text_2",
+					"mapActions": 
+					[
+						{ "a": "BreakInterruptions" },
+						{ "a": "StepBack", "p": [ ] }
+					],
+					"actions": 
+					[
+						{ "a": "End", "p": [ "break" ] }
+					],
+					"end": true,
+					"resultDialog": "Interrupt"
+				}
+			]
+		}
+	]
+}
