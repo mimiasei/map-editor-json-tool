@@ -4,14 +4,14 @@ A visual editor for the scenario scripting JSON files used in **Heroes of Might 
 
 **Web app:** https://mimiasei.github.io/map-editor-json-tool/
 
-**Desktop downloads (v0.4.5):**
+**Desktop downloads (v0.5.1):**
 
 | Platform | Download |
 |---|---|
-| macOS — Apple Silicon | [HommOE.Scenario.Editor_0.4.5_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.4.5/HommOE.Scenario.Editor_0.4.5_aarch64.dmg) |
-| macOS — Intel | [HommOE.Scenario.Editor_0.4.5_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.4.5/HommOE.Scenario.Editor_0.4.5_x64.dmg) |
-| Windows | [HommOE.Scenario.Editor_0.4.5_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.4.5/HommOE.Scenario.Editor_0.4.5_x64-setup.exe) |
-| Linux | [HommOE.Scenario.Editor_0.4.5_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.4.5/HommOE.Scenario.Editor_0.4.5_amd64.AppImage) |
+| macOS — Apple Silicon | [HommOE.Scenario.Editor_0.5.1_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.1/HommOE.Scenario.Editor_0.5.1_aarch64.dmg) |
+| macOS — Intel | [HommOE.Scenario.Editor_0.5.1_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.1/HommOE.Scenario.Editor_0.5.1_x64.dmg) |
+| Windows | [HommOE.Scenario.Editor_0.5.1_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.1/HommOE.Scenario.Editor_0.5.1_x64-setup.exe) |
+| Linux | [HommOE.Scenario.Editor_0.5.1_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.1/HommOE.Scenario.Editor_0.5.1_amd64.AppImage) |
 
 > **macOS note:** the app is not notarized by Apple. Gatekeeper will block it — especially on Apple Silicon. The reliable workaround is to run this once in Terminal after copying the app to `/Applications`:
 > ```
