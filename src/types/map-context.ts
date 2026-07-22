@@ -24,6 +24,10 @@ export interface MapEntity {
   id: number
   /** Object type string */
   type: string
+  /** Map tile X coordinate (column), derived from objects[].nodes */
+  x?: number
+  /** Map tile Z coordinate (row), derived from objects[].nodes */
+  z?: number
 }
 
 export interface HeroAssignment {

@@ -294,6 +294,17 @@ export default function ScenarioTree() {
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
   }, [entities])
 
+  // Lookup map: SID → coords string, for tooltips
+  const entityCoordsMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const e of entities) {
+      if (e.x !== undefined && e.z !== undefined) {
+        map.set(e.sid, `Map Coords: ${e.x}, ${e.z}`)
+      }
+    }
+    return map
+  }, [entities])
+
   useEffect(() => {
     if (DEBUG.entitySids) {
       console.log('[ScenarioTree] entities from store:', entities)
@@ -660,6 +671,11 @@ export default function ScenarioTree() {
                     {/* SID rows */}
                     {groupOpen && sids.map((sid) => {
                       const usage = entityUsageMap.get(sid)
+                      const coords = entityCoordsMap.get(sid)
+                      const titleText = [
+                        coords,
+                        usage ? `Go to ${usage.type} [${usage.path.join(', ')}]` : undefined,
+                      ].filter(Boolean).join(' · ')
                       return (
                         <div
                           key={sid}
@@ -671,7 +687,7 @@ export default function ScenarioTree() {
                           )}
                           style={{ paddingLeft: '36px' }}
                           onClick={usage ? () => navigateToUsage(usage) : undefined}
-                          title={usage ? `Go to ${usage.type} [${usage.path.join(', ')}]` : undefined}
+                          title={titleText || undefined}
                         >
                           <span
                             className={cn('truncate font-mono flex-1', usage && 'font-bold')}
