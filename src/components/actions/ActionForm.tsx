@@ -1,6 +1,8 @@
 import type { Action } from '@/types/scenario'
 import { ACTION_REGISTRY, ACTION_LIST, ACTION_CATEGORIES } from '@/schema/actions'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useMapContextStore } from '@/store/useMapContextStore'
+import { useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -29,6 +31,14 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const isCustom = !def
   const { openDialogEditor } = useScenarioStore()
+  const entities = useMapContextStore((s) => s.context?.entities)
+  const entityCoordsMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const e of entities ?? []) {
+      if (e.x !== undefined && e.z !== undefined) map.set(e.sid, `Map Coords: ${e.x}, ${e.z}`)
+    }
+    return map
+  }, [entities])
 
   /** True when this action references a dialog key we can open in the editor */
   const isDialogAction = action.a === 'Dialog' || action.a === 'RandomDialog'
@@ -142,11 +152,19 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
                   placeholder={param.hint}
                 />
               ) : param.mapEntity ? (
-                <MapEntityCombobox
-                  value={(action.p ?? [])[i] ?? ''}
-                  onChange={(v) => updateParam(i, v)}
-                  placeholder={param.hint}
-                />
+                <>
+                  <MapEntityCombobox
+                    value={(action.p ?? [])[i] ?? ''}
+                    onChange={(v) => updateParam(i, v)}
+                    placeholder={param.hint}
+                  />
+                  {(() => {
+                    const coords = entityCoordsMap.get((action.p ?? [])[i] ?? '')
+                    return coords ? (
+                      <span className="text-[10px] text-muted-foreground">{coords}</span>
+                    ) : null
+                  })()}
+                </>
               ) : param.entity ? (
                 <EntityCombobox
                   value={(action.p ?? [])[i] ?? ''}

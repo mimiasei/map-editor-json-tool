@@ -53,16 +53,33 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
 
   // ── Entities (propEntities — user-defined named objects) ─────────────────────
   const propEntities = b2.objectsProperties?.propEntities ?? []
-  console.log('[map-extract] block2.objectsProperties keys:', Object.keys(b2.objectsProperties ?? {}))
-  console.log('[map-extract] propEntities raw (first 5):', propEntities.slice(0, 5))
+  const sizeX = b1.sizeX ?? 0
+
+  // Build a lookup: numeric id → tile node index, from objects[].ids / objects[].nodes
+  const idToNode = new Map<number, number>()
+  for (const obj of b2.objects ?? []) {
+    const ids = obj.ids
+    const nodes = obj.nodes
+    if (Array.isArray(ids) && Array.isArray(nodes)) {
+      for (let i = 0; i < ids.length; i++) {
+        if (typeof ids[i] === 'number' && typeof nodes[i] === 'number') {
+          idToNode.set(ids[i] as number, nodes[i] as number)
+        }
+      }
+    }
+  }
+
   const entities: MapEntity[] = propEntities
     .filter((e) => typeof e.sid === 'string' && e.sid.trim() !== '')
-    .map((e) => ({
-      sid: e.sid as string,
-      id: e.id ?? -1,
-      type: e.type ?? '',
-    }))
-  console.log('[map-extract] entities after filter:', entities.length, entities.slice(0, 5))
+    .map((e) => {
+      const entity: MapEntity = { sid: e.sid as string, id: e.id ?? -1, type: e.type ?? '' }
+      const node = idToNode.get(entity.id)
+      if (node !== undefined && sizeX > 0) {
+        entity.x = node % sizeX
+        entity.z = Math.floor(node / sizeX)
+      }
+      return entity
+    })
 
   // ── Hero assignments (propHeroes) ─────────────────────────────────────────────
   const propHeroes = b2.objectsProperties?.propHeroes ?? []

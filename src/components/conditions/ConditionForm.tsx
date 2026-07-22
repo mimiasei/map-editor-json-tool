@@ -1,5 +1,7 @@
 import type { Condition } from '@/types/scenario'
 import { CONDITION_REGISTRY, CONDITION_LIST } from '@/schema/conditions'
+import { useMapContextStore } from '@/store/useMapContextStore'
+import { useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -25,6 +27,14 @@ interface Props {
 export default function ConditionForm({ condition, onChange, onRemove }: Props) {
   const def = CONDITION_REGISTRY[condition.c]
   const isCustom = !def
+  const entities = useMapContextStore((s) => s.context?.entities)
+  const entityCoordsMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const e of entities ?? []) {
+      if (e.x !== undefined && e.z !== undefined) map.set(e.sid, `Map Coords: ${e.x}, ${e.z}`)
+    }
+    return map
+  }, [entities])
 
   const updateType = (type: string) => {
     if (type === '__custom__') {
@@ -126,11 +136,19 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                   placeholder={param.hint}
                 />
               ) : param.mapEntity ? (
-                <MapEntityCombobox
-                  value={(condition.p ?? [])[i] ?? ''}
-                  onChange={(v) => updateParam(i, v)}
-                  placeholder={param.hint}
-                />
+                <>
+                  <MapEntityCombobox
+                    value={(condition.p ?? [])[i] ?? ''}
+                    onChange={(v) => updateParam(i, v)}
+                    placeholder={param.hint}
+                  />
+                  {(() => {
+                    const coords = entityCoordsMap.get((condition.p ?? [])[i] ?? '')
+                    return coords ? (
+                      <span className="text-[10px] text-muted-foreground">{coords}</span>
+                    ) : null
+                  })()}
+                </>
               ) : param.entity ? (
                 <EntityCombobox
                   value={(condition.p ?? [])[i] ?? ''}
