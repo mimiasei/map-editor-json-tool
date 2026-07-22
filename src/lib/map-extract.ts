@@ -8,6 +8,9 @@ import type {
   MapEntity,
   HeroAssignment,
   BanInfo,
+  HeroPlacement,
+  CreaturePlacement,
+  ArtifactPlacement,
 } from '@/types/map-context'
 import type { ScenarioFile } from '@/types/scenario'
 
@@ -53,7 +56,8 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
 
   // ── Entities (propEntities — user-defined named objects) ─────────────────────
   const propEntities = b2.objectsProperties?.propEntities ?? []
-  const sizeX = b1.sizeX ?? 0
+  // sizeX: Block 2 uses sizeX_ key; fall back to Block 1 sizeX
+  const sizeX = (b2 as Record<string, unknown>).sizeX_ as number | undefined ?? b1.sizeX ?? 0
 
   // Build a lookup: numeric id → tile node index, from objects[].ids / objects[].nodes
   const idToNode = new Map<number, number>()
@@ -69,20 +73,63 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     }
   }
 
+  function nodeToCoord(node: number): { x: number; z: number } | undefined {
+    if (sizeX <= 0) return undefined
+    return { x: node % sizeX, z: Math.floor(node / sizeX) }
+  }
+
   const entities: MapEntity[] = propEntities
     .filter((e) => typeof e.sid === 'string' && e.sid.trim() !== '')
     .map((e) => {
       const entity: MapEntity = { sid: e.sid as string, id: e.id ?? -1, type: e.type ?? '' }
       const node = idToNode.get(entity.id)
-      if (node !== undefined && sizeX > 0) {
-        entity.x = node % sizeX
-        entity.z = Math.floor(node / sizeX)
+      if (node !== undefined) {
+        const coord = nodeToCoord(node)
+        if (coord) { entity.x = coord.x; entity.z = coord.z }
       }
       return entity
     })
 
-  // ── Hero assignments (propHeroes) ─────────────────────────────────────────────
+  // ── Hero placements (propHeroes → spawner node coords) ─────────────────────
   const propHeroes = b2.objectsProperties?.propHeroes ?? []
+  const heroPlacements: HeroPlacement[] = propHeroes
+    .filter((h) => typeof h.heroSid === 'string' && h.heroSid.trim() !== '' && h.id !== undefined)
+    .flatMap((h) => {
+      const node = idToNode.get(h.id as number)
+      if (node === undefined) return []
+      const coord = nodeToCoord(node)
+      if (!coord) return []
+      return [{ heroSid: h.heroSid as string, ...coord }]
+    })
+
+  // ── Creature placements (propSquads → objects node coords) ─────────────────
+  const propSquads = b2.objectsProperties?.propSquads ?? []
+  const creaturePlacements: CreaturePlacement[] = propSquads.flatMap((ps) => {
+    if (ps.id === undefined) return []
+    const node = idToNode.get(ps.id)
+    if (node === undefined) return []
+    const coord = nodeToCoord(node)
+    if (!coord) return []
+    return (ps.unitProps ?? [])
+      .filter((up) => typeof up.sid === 'string' && up.sid.trim() !== '')
+      .map((up) => ({ unitSid: up.sid as string, ...coord }))
+  })
+
+  // ── Artifact placements (objects with _artifact suffix) ─────────────────────
+  const artifactPlacements: ArtifactPlacement[] = []
+  for (const obj of b2.objects ?? []) {
+    if (typeof obj.sid !== 'string' || !obj.sid.endsWith('_artifact')) continue
+    const ids = obj.ids
+    const nodes = obj.nodes
+    if (!Array.isArray(ids) || !Array.isArray(nodes)) continue
+    for (let i = 0; i < ids.length; i++) {
+      if (typeof nodes[i] !== 'number') continue
+      const coord = nodeToCoord(nodes[i] as number)
+      if (coord) artifactPlacements.push({ sid: obj.sid, ...coord })
+    }
+  }
+
+  // ── Hero assignments (propHeroes) ─────────────────────────────────────────────
   const heroes: HeroAssignment[] = propHeroes
     .filter((h) => typeof h.heroSid === 'string' && h.heroSid.trim() !== '')
     .map((h) => ({
@@ -115,6 +162,9 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     heroes,
     banInfo,
     objectSids: Array.from(sidSet),
+    heroPlacements,
+    creaturePlacements,
+    artifactPlacements,
   }
 }
 

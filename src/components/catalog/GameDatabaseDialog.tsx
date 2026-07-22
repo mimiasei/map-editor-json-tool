@@ -161,13 +161,22 @@ function DetailPane({
   mapCount,
   scriptCount,
   mapEntities,
+  heroPlacements,
+  creaturePlacements,
+  artifactPlacements,
 }: {
   item: CatalogItem & Record<string, unknown>
   mapCount: number
   scriptCount: number
   mapEntities: { sid: string; type: string; x?: number; z?: number }[]
+  heroPlacements: { heroSid: string; x: number; z: number }[]
+  creaturePlacements: { unitSid: string; x: number; z: number }[]
+  artifactPlacements: { sid: string; x: number; z: number }[]
 }) {
   const instancesOfType = mapEntities.filter((e) => e.type === item.id)
+  const heroCoords = heroPlacements.filter((h) => h.heroSid === item.id)
+  const creatureCoords = creaturePlacements.filter((c) => c.unitSid === item.id)
+  const artifactCoords = artifactPlacements.filter((a) => a.sid === item.id)
   const creatureStats = item.stats as CreatureStats | undefined
   const creatureCost = item.cost as { resource: string; amount: number }[] | undefined
 
@@ -289,7 +298,7 @@ function DetailPane({
           )
         })}
 
-      {/* Named map instances */}
+      {/* Named map instances (map objects with entity SIDs) */}
       {instancesOfType.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -308,6 +317,57 @@ function DetailPane({
           </div>
         </div>
       )}
+
+      {/* Hero map placement */}
+      {heroCoords.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Map placement ({heroCoords.length})
+          </p>
+          <div className="flex flex-col gap-0.5">
+            {heroCoords.map((h, i) => (
+              <div key={i} className="flex items-center gap-1.5 text-xs bg-muted rounded px-2 py-0.5">
+                <span className="text-muted-foreground flex-1">Map Coords</span>
+                <span className="font-semibold tabular-nums">{h.x}, {h.z}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Creature squad placements */}
+      {creatureCoords.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Map placements ({creatureCoords.length})
+          </p>
+          <div className="grid grid-cols-2 gap-0.5">
+            {creatureCoords.map((c, i) => (
+              <div key={i} className="flex justify-between items-center text-xs bg-muted rounded px-2 py-0.5">
+                <span className="text-muted-foreground">Coords</span>
+                <span className="font-semibold tabular-nums">{c.x}, {c.z}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Artifact map placements */}
+      {artifactCoords.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Map placements ({artifactCoords.length})
+          </p>
+          <div className="grid grid-cols-2 gap-0.5">
+            {artifactCoords.map((a, i) => (
+              <div key={i} className="flex justify-between items-center text-xs bg-muted rounded px-2 py-0.5">
+                <span className="text-muted-foreground">Coords</span>
+                <span className="font-semibold tabular-nums">{a.x}, {a.z}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -317,6 +377,9 @@ function DetailPane({
 export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   const rawCatalog = useCatalogStore((s) => s.catalog)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
+  const heroPlacements = useMapContextStore((s) => s.context?.heroPlacements) ?? []
+  const creaturePlacements = useMapContextStore((s) => s.context?.creaturePlacements) ?? []
+  const artifactPlacements = useMapContextStore((s) => s.context?.artifactPlacements) ?? []
   const scenario = useScenarioStore((s) => s.scenario)
 
   // When Core.zip is loaded but a specific entity array is empty (e.g. the zip
@@ -614,6 +677,9 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
                   mapCount={mapCounts[selectedItem.id] ?? 0}
                   scriptCount={scriptCounts[selectedItem.id] ?? 0}
                   mapEntities={mapEntities}
+                  heroPlacements={heroPlacements}
+                  creaturePlacements={creaturePlacements}
+                  artifactPlacements={artifactPlacements}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">

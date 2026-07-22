@@ -43,6 +43,10 @@ export interface RawMapBlock2 {
   objectsProperties?: {
     propEntities?: Array<{ type?: string; id?: number; sid?: string }>
     propHeroes?: Array<{ type?: string; id?: number; isDefined?: boolean; heroSid?: string }>
+    propSquads?: Array<{
+      id?: number
+      unitProps?: Array<{ sid?: string; count?: number }>
+    }>
     [key: string]: unknown
   }
   squads?: unknown[]

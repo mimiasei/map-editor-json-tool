@@ -47,6 +47,27 @@ export interface BanInfo {
   bannedSkills: string[]
 }
 
+/** A placed hero with its map tile coordinates */
+export interface HeroPlacement {
+  heroSid: string
+  x: number
+  z: number
+}
+
+/** A placed creature squad with its map tile coordinates */
+export interface CreaturePlacement {
+  unitSid: string
+  x: number
+  z: number
+}
+
+/** A placed artifact with its map tile coordinates */
+export interface ArtifactPlacement {
+  sid: string
+  x: number
+  z: number
+}
+
 export interface MapContext {
   /** Map name from Block 2 */
   mapName: string
@@ -67,4 +88,10 @@ export interface MapContext {
   banInfo: BanInfo
   /** All object SIDs from Block 2 objects[].sid (flat, deduped) */
   objectSids: string[]
+  /** Placed heroes with their map tile coordinates */
+  heroPlacements: HeroPlacement[]
+  /** Placed creature squads with their map tile coordinates (from propSquads) */
+  creaturePlacements: CreaturePlacement[]
+  /** Placed artifacts with their map tile coordinates (objects with _artifact suffix) */
+  artifactPlacements: ArtifactPlacement[]
 }
