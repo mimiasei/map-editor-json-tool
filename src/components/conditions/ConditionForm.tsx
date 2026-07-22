@@ -142,11 +142,12 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                     onChange={(v) => updateParam(i, v)}
                     placeholder={param.hint}
                   />
-                  {entityCoordsMap.get((condition.p ?? [])[i] ?? '') && (
-                    <span className="text-[10px] text-muted-foreground">
-                      {entityCoordsMap.get((condition.p ?? [])[i] ?? '')}
-                    </span>
-                  )}
+                  {(() => {
+                    const coords = entityCoordsMap.get((condition.p ?? [])[i] ?? '')
+                    return coords ? (
+                      <span className="text-[10px] text-muted-foreground">{coords}</span>
+                    ) : null
+                  })()}
                 </>
               ) : param.entity ? (
                 <EntityCombobox
