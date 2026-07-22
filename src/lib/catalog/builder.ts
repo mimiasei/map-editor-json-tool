@@ -55,9 +55,19 @@ async function loadLocalization(zip: JSZip): Promise<Map<string, string>> {
     try {
       const text = await readZipEntry(zip, path)
       const obj = JSON.parse(text) as Record<string, unknown>
-      for (const [key, val] of Object.entries(obj)) {
-        if (typeof val === 'string') {
-          loc.set(key.toLowerCase(), val)
+      // Format 1: { tokens: [{ sid, text }, ...] }
+      if (Array.isArray(obj.tokens)) {
+        for (const token of obj.tokens as Record<string, unknown>[]) {
+          const sid = typeof token.sid === 'string' ? token.sid : undefined
+          const val = typeof token.text === 'string' ? token.text : undefined
+          if (sid && val) loc.set(sid.toLowerCase(), val)
+        }
+      } else {
+        // Format 2: flat { key: "value", ... }
+        for (const [key, val] of Object.entries(obj)) {
+          if (typeof val === 'string') {
+            loc.set(key.toLowerCase(), val)
+          }
         }
       }
     } catch {
