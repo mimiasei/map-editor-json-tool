@@ -104,19 +104,29 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
 
   // ── Creature placements (propSquads → objects node coords) ─────────────────
   const propSquads = b2.objectsProperties?.propSquads ?? []
-  const creaturePlacements: CreaturePlacement[] = propSquads.flatMap((ps) => {
-    if (ps.id === undefined) return []
+  const creaturePlacementSet = new Set<string>()
+  const creaturePlacements: CreaturePlacement[] = []
+  for (const ps of propSquads) {
+    if (ps.id === undefined) continue
     const node = idToNode.get(ps.id)
-    if (node === undefined) return []
+    if (node === undefined) continue
     const coord = nodeToCoord(node)
-    if (!coord) return []
-    return (ps.unitProps ?? [])
-      .filter((up) => typeof up.sid === 'string' && up.sid.trim() !== '')
-      .map((up) => ({ unitSid: up.sid as string, ...coord }))
-  })
+    if (!coord) continue
+    const seenUnits = new Set<string>()
+    for (const up of ps.unitProps ?? []) {
+      if (typeof up.sid !== 'string' || !up.sid.trim()) continue
+      if (seenUnits.has(up.sid)) continue // skip duplicate slots within same squad
+      seenUnits.add(up.sid)
+      const key = `${up.sid}:${coord.x}:${coord.z}`
+      if (creaturePlacementSet.has(key)) continue
+      creaturePlacementSet.add(key)
+      creaturePlacements.push({ unitSid: up.sid, ...coord })
+    }
+  }
 
   // ── Artifact placements (objects with _artifact suffix) ─────────────────────
   const artifactPlacements: ArtifactPlacement[] = []
+  const artifactPlacementSet = new Set<string>()
   for (const obj of b2.objects ?? []) {
     if (typeof obj.sid !== 'string' || !obj.sid.endsWith('_artifact')) continue
     const ids = obj.ids
@@ -125,7 +135,11 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     for (let i = 0; i < ids.length; i++) {
       if (typeof nodes[i] !== 'number') continue
       const coord = nodeToCoord(nodes[i] as number)
-      if (coord) artifactPlacements.push({ sid: obj.sid, ...coord })
+      if (!coord) continue
+      const key = `${obj.sid}:${coord.x}:${coord.z}`
+      if (artifactPlacementSet.has(key)) continue
+      artifactPlacementSet.add(key)
+      artifactPlacements.push({ sid: obj.sid, ...coord })
     }
   }
 
