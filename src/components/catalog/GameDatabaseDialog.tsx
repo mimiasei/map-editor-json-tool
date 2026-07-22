@@ -165,7 +165,7 @@ function DetailPane({
   item: CatalogItem & Record<string, unknown>
   mapCount: number
   scriptCount: number
-  mapEntities: { sid: string; type: string }[]
+  mapEntities: { sid: string; type: string; x?: number; z?: number }[]
 }) {
   const instancesOfType = mapEntities.filter((e) => e.type === item.id)
   const creatureStats = item.stats as CreatureStats | undefined
@@ -299,6 +299,9 @@ function DetailPane({
             {instancesOfType.map((e) => (
               <div key={e.sid} className="flex items-center gap-1.5 font-mono text-xs bg-muted rounded px-2 py-0.5">
                 <span className="flex-1 break-all">{e.sid}</span>
+                {e.x !== undefined && e.z !== undefined && (
+                  <span className="text-muted-foreground shrink-0">{e.x}, {e.z}</span>
+                )}
                 <CopyButton text={e.sid} />
               </div>
             ))}
