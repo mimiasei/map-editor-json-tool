@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Trash2, ExternalLink } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
@@ -227,6 +228,20 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
           ))}
         </div>
       )}
+
+      {/* Break flag */}
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`break-${action.a}`}
+          checked={action.break ?? false}
+          onCheckedChange={(checked) =>
+            onChange({ ...action, break: checked === true ? true : undefined })
+          }
+        />
+        <Label htmlFor={`break-${action.a}`} className="text-xs cursor-pointer">
+          Break — stop executing subsequent actions if this action runs
+        </Label>
+      </div>
     </div>
   )
 }
