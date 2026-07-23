@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
+import { useApplyThemeSettings } from '@/hooks/useApplyThemeSettings'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -70,6 +71,9 @@ export default function AppShell() {
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
   const [thumbnailBanner, setThumbnailBanner] = useState(false)
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
+
+  // Apply user-customized theme settings (CSS vars + font-size) on light theme.
+  useApplyThemeSettings()
 
   // ── Background catalog load + thumbnail manifest on startup ──────────────────
   useEffect(() => {
@@ -500,7 +504,7 @@ export default function AppShell() {
             if (size.inPixels > 0) setSidebarWidth(Math.round(size.inPixels))
           }}
         >
-          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#e4ffca] dark:bg-card">
+          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[var(--column-left)] dark:bg-card">
             <ScenarioTree />
           </aside>
         </Panel>
@@ -515,7 +519,7 @@ export default function AppShell() {
           minSize="20%"
           collapsible
         >
-          <main className="flex h-full flex-col overflow-hidden rounded-lg bg-[#f6f6b7] dark:bg-background">
+          <main className="flex h-full flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
             <EditorPanel />
           </main>
         </Panel>
@@ -530,7 +534,7 @@ export default function AppShell() {
           minSize="15%"
           collapsible
         >
-          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[#ffe8ca] dark:bg-card">
+          <aside className="flex h-full flex-col overflow-hidden rounded-lg bg-[var(--column-right)] dark:bg-card">
             {isUndocked('preview') ? (
               <UndockedPlaceholder label="JSON Preview" />
             ) : (

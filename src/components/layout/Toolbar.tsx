@@ -57,10 +57,12 @@ import {
   Sun,
   Moon,
   ChevronDown,
+  Palette,
 } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
+import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import { ImageIcon } from 'lucide-react'
 
 interface ToolbarProps {
@@ -118,6 +120,7 @@ export default function Toolbar({
   const [importWarnings,      setImportWarnings]      = useState<string[]>([])
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
+  const [themeEditorOpen,     setThemeEditorOpen]     = useState(false)
 
   const { theme, toggleTheme } = useTheme()
 
@@ -615,6 +618,21 @@ export default function Toolbar({
               {theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             </TooltipContent>
           </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setThemeEditorOpen(true)}
+                aria-label="Open theme editor"
+              >
+                <Palette className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Theme editor</TooltipContent>
+          </Tooltip>
         </div>
       </header>
 
@@ -761,6 +779,12 @@ export default function Toolbar({
           onOpenChange={setThumbnailDialogOpen}
         />
       )}
+
+      {/* Theme editor dialog */}
+      <ThemeEditorDialog
+        open={themeEditorOpen}
+        onOpenChange={setThemeEditorOpen}
+      />
     </>
   )
 }
