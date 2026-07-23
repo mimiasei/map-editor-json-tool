@@ -15,6 +15,10 @@ An interruption has:
 - `p` — parameters (typically a hero entity SID to scope the hook)
 - `actions` — what runs when the event fires (same action types as quest triggers)
 
+## Interruptions fire unlimited times
+
+Unlike quest triggers (which fire once by default), **an interruption will fire every time its event occurs, without limit, until it is explicitly disabled** via `DisableInterruption`. If you only want it to fire once, disable it from within its own action list.
+
 ## Interruption types
 
 | Type | Fires when |
@@ -28,11 +32,16 @@ The `p` array scopes the hook to specific heroes. For example, setting `p` to `[
 
 > **Note:** Unlike quest triggers, interruptions have no conditions to configure. The `interruption` type is the condition. The engine decides when to fire it.
 
-## How they differ from quest triggers
+## How interruptions differ from quest triggers
 
-Quest triggers evaluate conditions on every game tick and fire when those conditions are true. Interruptions are different: the game calls them at specific moments in the battle lifecycle, before or after combat resolution.
+Quest triggers evaluate conditions and fire when those conditions are satisfied. Interruptions are different: the game calls them at specific moments in the battle lifecycle, before or after combat resolution.
 
-This means interruptions are best for things that must happen **at the moment of a specific fight**, not "eventually when some state is reached."
+Crucially, **interruptions are the only way to pause standard game logic** — such as bypassing automatic combat initiation when a hero walks into an enemy. A quest trigger firing at the same moment cannot do this; its actions run but do not interrupt the combat sequence. An interruption with `BeforeIamVsHero` can show a dialog before the battle screen even loads.
+
+This makes interruptions essential for:
+- **Peaceful encounters** — preventing combat from starting and showing a dialog instead
+- **Pre-battle flavor** — a villain's taunt before the fight
+- **Post-battle rewards** — giving items or advancing quests after a specific fight
 
 ## Common use cases
 
@@ -63,6 +72,13 @@ For a full boss fight experience, pair two interruptions on the same hero SID:
 
 - `BeforeIamVsHero` → taunt dialog
 - `AfterIamWinVsHero` → reward + quest advance
+
+**Fire only once**
+
+If you only want the interruption to trigger the first time the player encounters the hero:
+
+1. Set `activeOnStart: true`
+2. As the last action in the interruption, add `DisableInterruption` with the interruption's own SID
 
 **Conditional activation**
 

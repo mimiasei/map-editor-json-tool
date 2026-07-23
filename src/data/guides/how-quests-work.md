@@ -10,7 +10,7 @@ A scenario file contains three top-level arrays: `counters`, `quests`, and `inte
 
 Each **quest** has one or more **subquests**. Each subquest has one or more **triggers**. Each trigger has **conditions** and **actions**.
 
-When all conditions in a trigger are met simultaneously, its actions fire.
+When a trigger's conditions are satisfied, its actions fire.
 
 ## Quests
 
@@ -35,19 +35,43 @@ Three optional flags on a quest change how the game treats it.
 
 > **Note:** `sharing` is required by the game engine — always set it. The editor defaults new quests to `"Clone"`, which is correct for all player-facing quests.
 
+## Quest isolation
+
+The contents of each quest are completely isolated from all other quests. This means that entity SIDs, counter references, and other identifiers can repeat across different quests without conflict.
+
 ## Subquests
 
 Subquests are the stages within a quest. A simple quest may have only one subquest. A multi-stage quest (e.g. 'find three relics') has multiple subquests that activate in sequence.
 
 Use `CurrentSubQuestDone` or `SubQuestDone` actions to complete a subquest and move to the next.
 
+## Subquest-groups — parallel steps
+
+Subquests can be combined into **subquest groups**. This allows the game to treat several parallel steps as a single unit — the next step only unlocks when all of them are done.
+
+**Example:** Subquest-3 "Defeat the final boss" should only enable after the player completes both Subquest-1 "Find the legendary sword" AND Subquest-2 "Find the legendary shield."
+
+Instead of creating auxiliary hidden quests to track this, you can:
+
+1. Define a subquest group (e.g. `subquest_group_relics`)
+2. Assign Subquest-1 and Subquest-2 to it
+3. End both subquests with `NextAfterGroup` instead of `NextSubQuest`, passing the group SID and the target subquest SID as parameters
+
+Subquest-3 will only become active after both subquests in the group have called `NextAfterGroup`.
+
+> **Note:** This is configured via the `NextAfterGroup` or `NextQuestAfterGroup` actions. The group SID is defined in the `subQuestGroups` section of the quest.
+
 ## Triggers
 
-Triggers are the logic units. Each trigger listens for its conditions and fires its actions when they are all met.
+Triggers are the logic units. Each trigger listens for its conditions and fires its actions when they are satisfied.
 
-A trigger fires **once** by default. Set `isRepeating: true` to make it fire every time the conditions become true.
+A trigger fires **once** by default. Set `repeat: true` to make it fire every time the conditions become satisfied.
 
 > **Warning:** Repeating triggers with no conditions (or always-true conditions) fire every game tick. Always guard repeating triggers with at least one counter or state check.
+
+## Trigger execution order
+
+If multiple triggers in the same subquest fire simultaneously, their actions are executed in declaration order: all actions of the first trigger run first, then all actions of the second, and so on. Keep this in mind when one trigger's actions affect the conditions of another trigger in the same subquest.
 
 ## Entity SIDs — linking triggers to map objects
 
