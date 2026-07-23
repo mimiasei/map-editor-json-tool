@@ -33,6 +33,7 @@ interface ThemeEditorDialogProps {
 // ─── Color field definitions ───────────────────────────────────────────────
 
 const COLOR_FIELDS: { key: keyof ThemeColors; label: string; description: string }[] = [
+  { key: 'appBackground',  label: 'App background',     description: 'Outermost app background (behind all panels)' },
   { key: 'background',    label: 'Background',         description: 'Main page background color' },
   { key: 'columnLeft',    label: 'Left column',        description: 'Tree/scenario panel background' },
   { key: 'columnCenter',  label: 'Center column',      description: 'Editor panel background' },

@@ -39,6 +39,7 @@
     --scrollbar-thumb: 215 16% 65%;
 
     /* ── Column panel backgrounds (overridable by theme editor) ── */
+    --app-background: #ccee95;
     --column-left:   #e4ffca;
     --column-center: #f6f6b7;
     --column-right:  #ffe8ca;

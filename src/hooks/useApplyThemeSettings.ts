@@ -25,6 +25,7 @@ function useDarkMode(): boolean {
 // ─── CSS properties we write in light mode ────────────────────────────────
 
 const CUSTOM_PROPS = [
+  '--app-background',
   '--column-left',
   '--column-center',
   '--column-right',
@@ -62,6 +63,7 @@ export function useApplyThemeSettings() {
     const { colors, fontSize } = active
 
     // Column backgrounds — consumed directly via var(--column-*) in AppShell.
+    root.style.setProperty('--app-background', colors.appBackground)
     root.style.setProperty('--column-left',   colors.columnLeft)
     root.style.setProperty('--column-center', colors.columnCenter)
     root.style.setProperty('--column-right',  colors.columnRight)

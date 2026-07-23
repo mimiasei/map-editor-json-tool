@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 // ─── Default factory values ────────────────────────────────────────────────
 
 export const DEFAULT_LIGHT_COLORS: ThemeColors = {
+  appBackground: '#ccee95',   // rgb(204 234 149) — outer app wrapper
   background: '#f3f5f9',    // matches --background: 220 20% 97%
   columnLeft: '#e4ffca',
   columnCenter: '#f6f6b7',
@@ -18,6 +19,7 @@ export const DEFAULT_FONT_SIZE = 13
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface ThemeColors {
+  appBackground: string
   background: string
   columnLeft: string
   columnCenter: string
