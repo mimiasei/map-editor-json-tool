@@ -1,30 +1,57 @@
-import { useLayoutEffect } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { useThemeSettingsStore } from '@/store/useThemeSettingsStore'
-import { useTheme } from '@/hooks/useTheme'
+
+/**
+ * Reads whether dark mode is currently active directly from the DOM class,
+ * and watches for changes via MutationObserver. This avoids depending on the
+ * local-state `useTheme()` hook (which is a separate instance from Toolbar's)
+ * and ensures the effect re-runs whenever the theme toggle fires.
+ */
+function useDarkMode(): boolean {
+  const [isDark, setIsDark] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
+  )
+
+  useLayoutEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'))
+    const observer = new MutationObserver(check)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  return isDark
+}
+
+// ─── CSS properties we write in light mode ────────────────────────────────
+
+const CUSTOM_PROPS = [
+  '--column-left',
+  '--column-center',
+  '--column-right',
+  '--background',
+  '--popover',
+  '--primary',
+  '--secondary',
+] as const
 
 /**
  * Applies the active light-theme customizations as CSS custom properties on
- * <html>. When dark mode is active the overrides are removed so the locked
+ * <html>. When dark mode is active all overrides are removed so the locked
  * dark theme takes over unchanged.
  *
  * Call this once near the root of the app (AppShell).
  */
 export function useApplyThemeSettings() {
-  const { theme } = useTheme()
+  const isDark = useDarkMode()
   const { themes, activeThemeId } = useThemeSettingsStore()
 
   useLayoutEffect(() => {
     const root = document.documentElement
 
-    if (theme === 'dark') {
-      // Remove all custom overrides — dark theme is locked.
-      root.style.removeProperty('--column-left')
-      root.style.removeProperty('--column-center')
-      root.style.removeProperty('--column-right')
-      root.style.removeProperty('--background-custom')
-      root.style.removeProperty('--popover-custom')
-      root.style.removeProperty('--primary-custom')
-      root.style.removeProperty('--secondary-custom')
+    if (isDark) {
+      // Remove every property this hook can set so inline styles don't bleed
+      // through on top of the locked dark theme's class-based variables.
+      for (const prop of CUSTOM_PROPS) root.style.removeProperty(prop)
       root.style.removeProperty('font-size')
       return
     }
@@ -34,15 +61,12 @@ export function useApplyThemeSettings() {
 
     const { colors, fontSize } = active
 
-    // Column backgrounds are set as plain CSS variables (not HSL-format shadcn
-    // vars), consumed directly in AppShell via var(--column-*).
+    // Column backgrounds — consumed directly via var(--column-*) in AppShell.
     root.style.setProperty('--column-left',   colors.columnLeft)
     root.style.setProperty('--column-center', colors.columnCenter)
     root.style.setProperty('--column-right',  colors.columnRight)
 
-    // For shadcn CSS vars the expected format is "H S% L%" (no hsl() wrapper).
-    // We store hex in the store and convert here so the rest of the UI picks
-    // up changes through the existing Tailwind color tokens.
+    // shadcn CSS vars expect "H S% L%" format (no hsl() wrapper).
     root.style.setProperty('--background', hexToHsl(colors.background))
     root.style.setProperty('--popover',    hexToHsl(colors.popover))
     root.style.setProperty('--primary',    hexToHsl(colors.primary))
@@ -50,13 +74,12 @@ export function useApplyThemeSettings() {
 
     // Font size on the root element; all rem-based Tailwind sizes scale with it.
     root.style.setProperty('font-size', `${fontSize}px`)
-  }, [theme, themes, activeThemeId])
+  }, [isDark, themes, activeThemeId])
 }
 
 // ─── Hex → HSL string (shadcn format: "H S% L%") ─────────────────────────
 
 export function hexToHsl(hex: string): string {
-  // Strip leading #
   const clean = hex.replace(/^#/, '')
   const full =
     clean.length === 3
@@ -67,13 +90,14 @@ export function hexToHsl(hex: string): string {
   const g = parseInt(full.slice(2, 4), 16) / 255
   const b = parseInt(full.slice(4, 6), 16) / 255
 
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return '0 0% 100%'
+
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   const l = (max + min) / 2
 
   if (max === min) {
-    const pct = Math.round(l * 100)
-    return `0 0% ${pct}%`
+    return `0 0% ${Math.round(l * 100)}%`
   }
 
   const d = max - min

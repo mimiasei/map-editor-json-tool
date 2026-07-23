@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { HexColorPicker } from 'react-colorful'
 import {
   Dialog,
@@ -57,10 +57,12 @@ function ColorRow({
 }) {
   const [hex, setHex] = useState(value)
 
-  // Keep local state in sync when the theme switches externally
-  if (hex !== value && !hex.startsWith('#')) {
+  // Keep local state in sync when the store value changes externally
+  // (e.g. revert, theme switch). useEffect avoids the render-time setState
+  // anti-pattern and correctly handles all external updates.
+  useEffect(() => {
     setHex(value)
-  }
+  }, [value])
 
   const handleChange = (newHex: string) => {
     setHex(newHex)

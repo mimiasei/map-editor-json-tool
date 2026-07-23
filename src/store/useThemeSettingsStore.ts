@@ -13,7 +13,7 @@ export const DEFAULT_LIGHT_COLORS: ThemeColors = {
   secondary: '#dde1ea',     // matches --secondary: 220 14% 90%
 }
 
-export const DEFAULT_FONT_SIZE = 14
+export const DEFAULT_FONT_SIZE = 13
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
