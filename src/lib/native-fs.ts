@@ -201,7 +201,7 @@ export async function checkFileExists(path: string): Promise<boolean> {
   if (!isTauri()) return false
   try {
     const { exists } = await import('@tauri-apps/plugin-fs')
-    return exists(path)
+    return await exists(path)
   } catch {
     return false
   }

@@ -103,6 +103,11 @@ def extract(
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # On Windows, prefix the output path with the extended-length path marker so
+    # that icon names with long SIDs don't exceed the 260-character MAX_PATH limit.
+    if sys.platform == "win32":
+        output_dir = Path("\\\\?\\" + str(output_dir.resolve()))
+
     # Build lookup tables: lowercase → (original_spelling, prefer_size | None)
     wanted: dict[str, tuple[str, tuple[int, int] | None]] = {}
     for orig in icons:
