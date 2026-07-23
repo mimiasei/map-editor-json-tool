@@ -33,7 +33,7 @@
           "triggers": [
             {
               "conditionsLogic": "And",
-              "isRepeating": false,
+              "repeat": false,
               "conditions": [
                 { "c": "ObjectInteractionBefore", "p": ["npc_quest_giver"] }
               ],
@@ -52,7 +52,7 @@
           "triggers": [
             {
               "conditionsLogic": "And",
-              "isRepeating": false,
+              "repeat": false,
               "conditions": [
                 { "c": "SquadKill", "p": ["E_Squad_QuestTarget"] }
               ],

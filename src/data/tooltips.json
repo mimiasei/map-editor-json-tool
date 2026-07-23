@@ -590,7 +590,6 @@
     "subquest.activeOnStart": "If true, this subquest stage is active when the quest starts. If false, activate it manually via SubQuestActivate.",
     "trigger.conditionsLogic": "'And' requires all conditions to be true before the trigger fires. 'Or' fires as soon as any single condition is true.",
     "trigger.repeat": "If true, this trigger fires every time its conditions are met, not just the first time. Use carefully — unguarded repeating triggers can fire many times per turn.",
-    "trigger.isRepeating": "If true, this trigger fires every time its conditions are met, not just the first time. Use carefully — unguarded repeating triggers can fire many times per turn.",
     "counter.sid": "Unique identifier for this counter. Used in CounterSet, CounterPlus, CounterMinus, and Counter conditions.",
     "counter.value": "Initial value of the counter when the map loads. Usually 0.",
     "interruption.sid": "Unique identifier for this interruption. Used by EnableInterruption and DisableInterruption actions.",

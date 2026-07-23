@@ -31,7 +31,7 @@
           "triggers": [
             {
               "conditionsLogic": "And",
-              "isRepeating": false,
+              "repeat": false,
               "conditions": [
                 { "c": "SquadKill", "p": ["E_Squad_Target1"] }
               ],
@@ -50,7 +50,7 @@
           "triggers": [
             {
               "conditionsLogic": "And",
-              "isRepeating": false,
+              "repeat": false,
               "conditions": [
                 { "c": "SquadKill", "p": ["E_Squad_Target2"] },
                 { "c": "Counter", "p": ["main_quest_stage", "=", "1"] }

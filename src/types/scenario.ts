@@ -56,6 +56,7 @@ export interface Condition {
 export interface Action {
   a: string
   p?: string[]
+  break?: boolean
 }
 
 // ─── Selection state ────────────────────────────────────────────────────────────

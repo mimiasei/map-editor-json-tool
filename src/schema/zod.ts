@@ -11,6 +11,7 @@ export const CounterSchema = z.object({
 export const ActionSchema = z.object({
   a: z.string(),
   p: z.array(z.string()).optional(),
+  break: z.boolean().optional(),
 })
 
 export const ConditionSchema = z.object({

@@ -52,7 +52,7 @@ This ensures stages fire in order and only once.
 To require killing N of something:
 
 1. Add a counter `kills_count` with initial value `0`
-2. Add a `UnitKill` trigger with `CounterPlus kills_count 1` action — set `isRepeating: true`
+2. Add a `UnitKill` trigger with `CounterPlus kills_count 1` action — set `repeat: true`
 3. Add a second trigger: when `Counter: kills_count >= N`, fire the completion
 
 Alternatively, use the `UnitKill` condition's built-in Counter extra field to set the threshold directly without a separate counter.
