@@ -56,7 +56,7 @@ function makeDefaultTheme(): ThemeSettings {
     name: 'Default Light',
     colors: { ...DEFAULT_LIGHT_COLORS },
     fontSize: DEFAULT_FONT_SIZE,
-    use3dButtons: false,
+    use3dButtons: true,
   }
 }
 
