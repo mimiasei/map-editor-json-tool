@@ -54,13 +54,14 @@ export function useApplyThemeSettings() {
       // through on top of the locked dark theme's class-based variables.
       for (const prop of CUSTOM_PROPS) root.style.removeProperty(prop)
       root.style.removeProperty('font-size')
+      root.classList.remove('buttons-3d')
       return
     }
 
     const active = themes.find((t) => t.id === activeThemeId) ?? themes[0]
     if (!active) return
 
-    const { colors, fontSize } = active
+    const { colors, fontSize, use3dButtons } = active
 
     // Column backgrounds — consumed directly via var(--column-*) in AppShell.
     root.style.setProperty('--app-background', colors.appBackground)
@@ -76,6 +77,9 @@ export function useApplyThemeSettings() {
 
     // Font size on the root element; all rem-based Tailwind sizes scale with it.
     root.style.setProperty('font-size', `${fontSize}px`)
+
+    // 3D button style — toggled via a class on <html>.
+    root.classList.toggle('buttons-3d', use3dButtons)
   }, [isDark, themes, activeThemeId])
 }
 

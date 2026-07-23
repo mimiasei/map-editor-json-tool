@@ -34,6 +34,7 @@ export interface ThemeSettings {
   name: string
   colors: ThemeColors
   fontSize: number
+  use3dButtons: boolean
 }
 
 interface ThemeSettingsState {
@@ -41,7 +42,7 @@ interface ThemeSettingsState {
   activeThemeId: string
 
   setActiveTheme(id: string): void
-  updateTheme(id: string, patch: Partial<ThemeColors> & { fontSize?: number; name?: string }): void
+  updateTheme(id: string, patch: Partial<ThemeColors> & { fontSize?: number; name?: string; use3dButtons?: boolean }): void
   createTheme(name: string): ThemeSettings
   deleteTheme(id: string): void
   revertDefault(): void
@@ -55,6 +56,7 @@ function makeDefaultTheme(): ThemeSettings {
     name: 'Default Light',
     colors: { ...DEFAULT_LIGHT_COLORS },
     fontSize: DEFAULT_FONT_SIZE,
+    use3dButtons: false,
   }
 }
 
@@ -76,11 +78,12 @@ export const useThemeSettingsStore = create<ThemeSettingsState>()(
         set((s) => ({
           themes: s.themes.map((t) => {
             if (t.id !== id) return t
-            const { fontSize, name, ...colorPatch } = patch
+            const { fontSize, name, use3dButtons, ...colorPatch } = patch
             return {
               ...t,
               ...(name !== undefined ? { name } : {}),
               ...(fontSize !== undefined ? { fontSize } : {}),
+              ...(use3dButtons !== undefined ? { use3dButtons } : {}),
               colors: { ...t.colors, ...colorPatch },
             }
           }),
@@ -94,6 +97,7 @@ export const useThemeSettingsStore = create<ThemeSettingsState>()(
           name,
           colors: { ...source.colors },
           fontSize: source.fontSize,
+          use3dButtons: source.use3dButtons,
         }
         set((s) => ({ themes: [...s.themes, newTheme], activeThemeId: newTheme.id }))
         return newTheme

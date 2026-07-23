@@ -129,6 +129,47 @@
   background: hsl(var(--foreground) / 0.4);
 }
 
+/* ─── 3D button style ────────────────────────────────────────────────────────
+   Activated by adding the `buttons-3d` class to <html> via the theme editor.
+   Targets the four opaque button variants (default, destructive, outline,
+   secondary) via data-variant, set by the Button component.
+   ─────────────────────────────────────────────────────────────────────────── */
+.buttons-3d button[data-variant="default"]:not(:disabled),
+.buttons-3d button[data-variant="destructive"]:not(:disabled),
+.buttons-3d button[data-variant="outline"]:not(:disabled),
+.buttons-3d button[data-variant="secondary"]:not(:disabled) {
+  background-color: #FCFCFD !important;
+  color: #36395A !important;
+  border-width: 0 !important;
+  border-radius: 4px !important;
+  box-shadow: rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset !important;
+  transition: box-shadow 0.15s, transform 0.15s !important;
+  will-change: box-shadow, transform;
+}
+
+.buttons-3d button[data-variant="default"]:not(:disabled):focus,
+.buttons-3d button[data-variant="destructive"]:not(:disabled):focus,
+.buttons-3d button[data-variant="outline"]:not(:disabled):focus,
+.buttons-3d button[data-variant="secondary"]:not(:disabled):focus {
+  box-shadow: #D6D6E7 0 0 0 1.5px inset, rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset !important;
+}
+
+.buttons-3d button[data-variant="default"]:not(:disabled):hover,
+.buttons-3d button[data-variant="destructive"]:not(:disabled):hover,
+.buttons-3d button[data-variant="outline"]:not(:disabled):hover,
+.buttons-3d button[data-variant="secondary"]:not(:disabled):hover {
+  box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset !important;
+  transform: translateY(-2px) !important;
+}
+
+.buttons-3d button[data-variant="default"]:not(:disabled):active,
+.buttons-3d button[data-variant="destructive"]:not(:disabled):active,
+.buttons-3d button[data-variant="outline"]:not(:disabled):active,
+.buttons-3d button[data-variant="secondary"]:not(:disabled):active {
+  box-shadow: #D6D6E7 0 3px 7px inset !important;
+  transform: translateY(2px) !important;
+}
+
 /* ─── JSON preview syntax highlighting ──────────────────────────────────────
    Light: darker saturated tones for contrast on white.
    Dark:  pastel tones on dark background.

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -285,6 +286,20 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
 
           <Separator />
 
+          {/* ── 3D buttons ── */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium leading-none">3D buttons</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Raised style with shadow and press effect</p>
+            </div>
+            <Switch
+              checked={activeTheme.use3dButtons}
+              onCheckedChange={(checked) => updateTheme(activeTheme.id, { use3dButtons: checked })}
+            />
+          </div>
+
+          <Separator />
+
           {/* ── Actions ── */}
           <div className="flex flex-wrap gap-2 justify-between items-center">
             <Button
@@ -295,6 +310,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
                 updateTheme(activeTheme.id, {
                   ...DEFAULT_LIGHT_COLORS,
                   fontSize: DEFAULT_FONT_SIZE,
+                  use3dButtons: false,
                 })
               }}
             >
