@@ -4,17 +4,17 @@ import { persist } from 'zustand/middleware'
 // ─── Default factory values ────────────────────────────────────────────────
 
 export const DEFAULT_LIGHT_COLORS: ThemeColors = {
-  appBackground: '#ccee95',   // rgb(204 234 149) — outer app wrapper
-  background: '#f3f5f9',    // matches --background: 220 20% 97%
-  columnLeft: '#e4ffca',
-  columnCenter: '#f6f6b7',
-  columnRight: '#ffe8ca',
-  popover: '#ffffff',       // matches --popover: 0 0% 100%
-  primary: '#2d7a5a',       // matches --primary: 160 50% 32%
-  secondary: '#dde1ea',     // matches --secondary: 220 14% 90%
+  appBackground: '#7c919d',
+  background: '#f3f5f9',
+  columnLeft: '#d8eff5',
+  columnCenter: '#bad8e5',
+  columnRight: '#a1c3dc',
+  popover: '#ffffff',
+  primary: '#2d7a5a',
+  secondary: '#dde1ea',
 }
 
-export const DEFAULT_FONT_SIZE = 13
+export const DEFAULT_FONT_SIZE = 14
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
