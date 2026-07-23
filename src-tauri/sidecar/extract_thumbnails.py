@@ -205,14 +205,34 @@ def main() -> None:
         default="",
         help="Comma-separated icon SIDs for map objects (uses 64x64 size preference)",
     )
+    parser.add_argument(
+        "--icons-file",
+        default="",
+        help="Path to a JSON file containing a list of icon SIDs (alternative to --icons)",
+    )
+    parser.add_argument(
+        "--map-object-icons-file",
+        default="",
+        help="Path to a JSON file containing map-object icon SIDs (alternative to --map-object-icons)",
+    )
     args = parser.parse_args()
 
     game_dir = Path(args.game_dir)
     output_dir = Path(args.output_dir)
-    icons = [i.strip() for i in args.icons.split(",") if i.strip()]
-    map_object_icons = [
-        i.strip() for i in args.map_object_icons.split(",") if i.strip()
-    ]
+
+    if args.icons_file:
+        icons = json.loads(Path(args.icons_file).read_text(encoding="utf-8"))
+    else:
+        icons = [i.strip() for i in args.icons.split(",") if i.strip()]
+
+    if args.map_object_icons_file:
+        map_object_icons = json.loads(
+            Path(args.map_object_icons_file).read_text(encoding="utf-8")
+        )
+    else:
+        map_object_icons = [
+            i.strip() for i in args.map_object_icons.split(",") if i.strip()
+        ]
 
     try:
         extract(game_dir, output_dir, icons, map_object_icons)

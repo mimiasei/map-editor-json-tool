@@ -32,9 +32,38 @@ async fn extract_thumbnails(
     map_object_icons: Vec<String>,
 ) -> Result<ThumbnailResult, String> {
     use tauri_plugin_shell::ShellExt;
+    use std::io::Write;
 
-    let icons_arg = icons.join(",");
-    let map_obj_arg = map_object_icons.join(",");
+    // Write icon lists to temp files instead of passing them as CLI arguments.
+    // On Windows the joined comma-separated string easily exceeds the 32 767-char
+    // CreateProcess command-line limit (OS error 206 / ERROR_FILENAME_EXCED_RANGE).
+    let icons_json = serde_json::to_string(&icons)
+        .map_err(|e| format!("failed to serialize icons: {e}"))?;
+    let map_obj_json = serde_json::to_string(&map_object_icons)
+        .map_err(|e| format!("failed to serialize map_object_icons: {e}"))?;
+
+    let mut icons_file = tempfile::Builder::new()
+        .prefix("oe-icons-")
+        .suffix(".json")
+        .tempfile()
+        .map_err(|e| format!("failed to create icons temp file: {e}"))?;
+    icons_file.write_all(icons_json.as_bytes())
+        .map_err(|e| format!("failed to write icons temp file: {e}"))?;
+    icons_file.flush()
+        .map_err(|e| format!("failed to flush icons temp file: {e}"))?;
+
+    let mut map_obj_file = tempfile::Builder::new()
+        .prefix("oe-map-obj-icons-")
+        .suffix(".json")
+        .tempfile()
+        .map_err(|e| format!("failed to create map-object-icons temp file: {e}"))?;
+    map_obj_file.write_all(map_obj_json.as_bytes())
+        .map_err(|e| format!("failed to write map-object-icons temp file: {e}"))?;
+    map_obj_file.flush()
+        .map_err(|e| format!("failed to flush map-object-icons temp file: {e}"))?;
+
+    let icons_path = icons_file.path().to_string_lossy().into_owned();
+    let map_obj_path = map_obj_file.path().to_string_lossy().into_owned();
 
     let (mut rx, _child) = app
         .shell()
@@ -45,13 +74,15 @@ async fn extract_thumbnails(
             &game_dir,
             "--output-dir",
             &output_dir,
-            "--icons",
-            &icons_arg,
-            "--map-object-icons",
-            &map_obj_arg,
+            "--icons-file",
+            &icons_path,
+            "--map-object-icons-file",
+            &map_obj_path,
         ])
         .spawn()
         .map_err(|e| format!("failed to spawn sidecar: {e}"))?;
+
+    // Temp files are kept alive until end of scope (dropped after sidecar finishes).
 
     let mut last_result: Option<ThumbnailResult> = None;
 
