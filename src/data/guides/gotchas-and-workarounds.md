@@ -24,11 +24,11 @@ For example, two `MoveCamera` actions in a row will cause the camera to immediat
 
 > **Note:** If you need sequential timed actions (animate, pause, then animate again), use dialog actions as breaks between them, or redesign the trigger as multiple subquest steps.
 
-## The break parameter
+## The break flag on actions
 
-Any action can have the optional `break: true` field set. When a `break` action executes, all remaining actions in the trigger are skipped. Use this for conditional branching — pair it with dialog actions (`DialogIfHero`, `DialogIfRes`, `DialogIfCounter`) that only run for certain players or states.
+Any action can have the optional `"break": true` field set on it. When an action with `break: true` executes, all remaining actions in the trigger are skipped. Use this for conditional branching — pair it with dialog actions (`DialogIfHero`, `DialogIfRes`, `DialogIfCounter`) that only run for certain players or states, then set `break: true` on those actions to stop execution for that player before the shared actions run.
 
-Example: show a special dialog for Hero A, break, then continue with actions for everyone else.
+Example: show a special dialog for Hero A (with `break: true`), then the actions below it only run for other heroes.
 
 ## AND logic fires on "both have fired once" — not "both true at the same time"
 

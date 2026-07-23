@@ -36,7 +36,7 @@ This measures turns elapsed since the quest began, not absolute turn number.
 To fire something every week:
 
 1. Add a trigger with a `StartWeek` condition
-2. Set `isRepeating: true`
+2. Set `repeat: true`
 3. Add your actions (e.g. `GiveRes gold 200`)
 
 This fires automatically every 7 turns for the duration of the map.

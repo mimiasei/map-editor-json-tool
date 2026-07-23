@@ -230,18 +230,17 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
       )}
 
       {/* Break flag */}
-      <div className="flex items-center gap-2">
+      <label className="flex items-center gap-2 cursor-pointer">
         <Checkbox
-          id={`break-${action.a}`}
           checked={action.break ?? false}
           onCheckedChange={(checked) =>
             onChange({ ...action, break: checked === true ? true : undefined })
           }
         />
-        <Label htmlFor={`break-${action.a}`} className="text-xs cursor-pointer">
+        <span className="text-xs">
           Break — stop executing subsequent actions if this action runs
-        </Label>
-      </div>
+        </span>
+      </label>
     </div>
   )
 }

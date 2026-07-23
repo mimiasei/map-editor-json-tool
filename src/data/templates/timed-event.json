@@ -29,7 +29,7 @@
           "triggers": [
             {
               "conditionsLogic": "And",
-              "isRepeating": true,
+              "repeat": true,
               "conditions": [
                 { "c": "StartTurn", "p": [] }
               ],
@@ -39,7 +39,7 @@
             },
             {
               "conditionsLogic": "And",
-              "isRepeating": false,
+              "repeat": false,
               "conditions": [
                 { "c": "Counter", "p": ["timed_event_turns", ">=", "10"] }
               ],
