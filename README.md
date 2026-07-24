@@ -9,7 +9,6 @@ A visual editor for the scenario scripting JSON files used in **Heroes of Might 
 | Platform | Download |
 |---|---|
 | macOS — Apple Silicon | [HommOE.Scenario.Editor_0.5.7_aarch64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.7/HommOE.Scenario.Editor_0.5.7_aarch64.dmg) |
-| macOS — Intel | [HommOE.Scenario.Editor_0.5.7_x64.dmg](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.7/HommOE.Scenario.Editor_0.5.7_x64.dmg) |
 | Windows | [HommOE.Scenario.Editor_0.5.7_x64-setup.exe](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.7/HommOE.Scenario.Editor_0.5.7_x64-setup.exe) |
 | Linux | [HommOE.Scenario.Editor_0.5.7_amd64.AppImage](https://github.com/mimiasei/map-editor-json-tool/releases/download/v0.5.7/HommOE.Scenario.Editor_0.5.7_amd64.AppImage) |
 
