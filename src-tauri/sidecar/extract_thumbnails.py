@@ -125,23 +125,51 @@ def extract(
 
     # Single-pass scan of all Texture2D objects in the data directory.
     # Bucket by lowercase name; defer image decoding until after picking.
+    # Also build a secondary bucket keyed by the bare name without an "icon_"
+    # prefix, so that creature UI icons (e.g. "Icon_Godslayer") are matched
+    # when the catalog SID is the bare name (e.g. "godslayer").
     candidates: dict[str, list[tuple[int, object]]] = {key: [] for key in wanted}
+    icon_prefixed: dict[str, list[tuple[int, object]]] = {key: [] for key in wanted}
 
+    texture2d_total = 0
     env = UnityPy.load(str(data_dir))
     for obj in env.objects:
         if obj.type.name != "Texture2D":
             continue
+        texture2d_total += 1
         data = obj.read()
         name: str = getattr(data, "m_Name", None) or getattr(data, "name", None) or ""
         key = name.lower()
-        if key not in candidates:
-            continue
         fmt = getattr(data, "m_TextureFormat", -1)
         try:
             fmt_int = int(fmt)
         except (TypeError, ValueError):
             fmt_int = -1
-        candidates[key].append((fmt_int, data))
+
+        if key in candidates:
+            candidates[key].append((fmt_int, data))
+        # Also check for "icon_<wanted_key>" → bucket under the wanted key so
+        # creatures with UI icons named Icon_Godslayer match SID "godslayer".
+        elif key.startswith("icon_"):
+            bare = key[len("icon_") :]
+            if bare in icon_prefixed:
+                icon_prefixed[bare].append((fmt_int, data))
+
+    # Diagnostic: report scan totals so callers can tell whether UnityPy
+    # is loading assets at all (0 = bundling/path issue) vs a matching issue.
+    exact_matches = sum(1 for v in candidates.values() if v)
+    prefixed_matches = sum(
+        1 for k, v in icon_prefixed.items() if v and not candidates[k]
+    )
+    _emit(
+        {
+            "type": "diagnostic",
+            "texture2d_total": texture2d_total,
+            "exact_matches": exact_matches,
+            "prefixed_matches": prefixed_matches,
+            "wanted": total,
+        }
+    )
 
     # Pick best candidate and save PNG for each wanted icon.
     saved = 0
@@ -149,6 +177,12 @@ def extract(
 
     for key, (orig, prefer_size) in sorted(wanted.items()):
         options = candidates.get(key, [])
+        # Fall back to Icon_-prefixed texture if no exact match was found.
+        # Creature UI icons are stored as e.g. "Icon_Godslayer" but the
+        # catalog SID is just "godslayer"; prefer the prefixed version
+        # because it is the actual HUD icon (not a 3-D diffuse texture).
+        if not options:
+            options = icon_prefixed.get(key, [])
         if not options:
             missing.append(orig)
             continue

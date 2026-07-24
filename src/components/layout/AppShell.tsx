@@ -26,10 +26,12 @@ import TemplatePickerDialog from '@/components/guides/TemplatePickerDialog'
 import DialogBrowser from '@/components/catalog/DialogBrowser'
 import GameDatabaseDialog from '@/components/catalog/GameDatabaseDialog'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
+import SetupDialog from '@/components/common/SetupDialog'
 import { SquareArrowOutUpRight, X, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const THUMBNAIL_PROMPTED_KEY = 'oe-thumbnails-prompted'
+const SETUP_SHOWN_KEY = 'oe-setup-shown'
 
 // ─── Placeholder shown where a panel would be when it's undocked ──────────────
 
@@ -71,6 +73,7 @@ export default function AppShell() {
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
   const [thumbnailBanner, setThumbnailBanner] = useState(false)
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
+  const [setupOpen, setSetupOpen] = useState(false)
 
   // Apply user-customized theme settings (CSS vars + font-size) on light theme.
   useApplyThemeSettings()
@@ -87,6 +90,11 @@ export default function AppShell() {
           setThumbnailBanner(true)
         }
       })
+
+      // Show setup dialog on first launch
+      if (!localStorage.getItem(SETUP_SHOWN_KEY)) {
+        setSetupOpen(true)
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -455,6 +463,18 @@ export default function AppShell() {
       <ThumbnailExtractDialog
         open={thumbnailDialogOpen}
         onOpenChange={setThumbnailDialogOpen}
+      />
+      <SetupDialog
+        open={setupOpen}
+        onOpenChange={(v) => {
+          setSetupOpen(v)
+          if (!v) localStorage.setItem(SETUP_SHOWN_KEY, '1')
+        }}
+        onOpenThumbnailExtract={() => {
+          localStorage.setItem(THUMBNAIL_PROMPTED_KEY, '1')
+          setThumbnailBanner(false)
+          setThumbnailDialogOpen(true)
+        }}
       />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <TimelineDialog
