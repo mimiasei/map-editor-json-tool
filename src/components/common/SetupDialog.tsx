@@ -162,7 +162,9 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     for (const s of catalog.spells)     if (s.icon) icons.push(s.icon)
     for (const s of catalog.skills)     if (s.icon) icons.push(s.icon)
     for (const b of catalog.buffs)      if (b.icon) icons.push(b.icon)
-    for (const o of catalog.mapObjects) mapObjectIcons.push(o.icon ?? o.id)
+    for (const o of catalog.mapObjects)
+      if ((o.category === 'interactables' || o.category === 'resources') && o.icon)
+        mapObjectIcons.push(o.icon)
 
     const res = await invoke<{ saved: number; missing: string[] }>('extract_thumbnails', {
       gameDir: dir.trim(),

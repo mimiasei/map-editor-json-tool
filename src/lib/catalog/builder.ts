@@ -303,13 +303,24 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
         category === 'interactables'
           ? entry.isInteractable !== false
           : defaultInteractable
+      // For interactables and resources, derive the icon from the first prefab
+      // path stem (e.g. "interactive/mine_gold" → "mine_gold"). This matches
+      // the Texture2D m_Name in the Unity assets, same as ignis-sec's approach.
+      // environments and spawns don't have usable map icons.
+      let icon: string | undefined = str(entry.icon || '') || undefined
+      if (!icon && (category === 'interactables' || category === 'resources')) {
+        const prefs = Array.isArray(entry.prefs) ? entry.prefs : []
+        const firstPref = typeof prefs[0] === 'string' ? prefs[0] : ''
+        icon = firstPref ? firstPref.split('/').pop() : undefined
+      }
+
       mapObjects.push({
         id,
         name,
         tag: str(entry.tag || entry.objectType || '') || undefined,
         category,
         isInteractable: Boolean(entryInteractable),
-        icon: str(entry.icon || '') || undefined,
+        icon,
       })
     }
   }
