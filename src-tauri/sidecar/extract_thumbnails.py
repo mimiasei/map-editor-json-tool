@@ -23,7 +23,6 @@ Build to sidecar binary with PyInstaller:
         --collect-all texture2ddecoder \\
         --collect-all etcpak \\
         --collect-all astc_encoder_py \\
-        --collect-all astc_encoder \\
         --collect-all archspec \\
         --collect-all fmod_toolkit \\
         --collect-all PIL \\

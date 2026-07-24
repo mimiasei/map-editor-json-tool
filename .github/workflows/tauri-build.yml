@@ -67,9 +67,8 @@ jobs:
       #
       #   texture2ddecoder  BC7/DXT decoders
       #   etcpak            ETC/ETC2 decoders
-      #   astc_encoder_py   ASTC decoder
-      #   astc_encoder      pure-Python ASTC wrapper; pulls in archspec
-      #   archspec          CPU-feature JSON tables read at runtime by astc_encoder
+      #   astc_encoder_py   ASTC decoder (astc_encoder has no Python 3.12 release)
+      #   archspec          CPU-feature JSON tables read at runtime by astc_encoder_py
       #   fmod_toolkit      native fmod lib; UnityPy asset loader touches audio init
       #                     even for Texture2D-only reads — binary must be present
       #   PIL               PNG encoder for image.save()
@@ -94,7 +93,6 @@ jobs:
             --collect-all texture2ddecoder \
             --collect-all etcpak \
             --collect-all astc_encoder_py \
-            --collect-all astc_encoder \
             --collect-all archspec \
             --collect-all fmod_toolkit \
             --collect-all PIL \
