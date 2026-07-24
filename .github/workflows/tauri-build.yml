@@ -16,15 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Use macos-latest (ARM) for Apple Silicon builds.
-          # PyInstaller can only target the host architecture, so the ARM and
-          # Intel macOS builds must run on matching runners.
           - platform: macos-latest
             args: '--target aarch64-apple-darwin'
-          # Use macos-13 (Intel) for x86_64 macOS builds so PyInstaller
-          # produces a native x86_64 binary.
-          - platform: macos-13
-            args: '--target x86_64-apple-darwin'
           - platform: ubuntu-22.04
             args: ''
           - platform: windows-latest
