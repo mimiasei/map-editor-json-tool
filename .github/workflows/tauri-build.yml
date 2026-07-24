@@ -72,11 +72,22 @@ jobs:
           fi
 
           cd src-tauri/sidecar
+          pip install pyinstaller unitypy pillow lz4 brotli texture2ddecoder
           pyinstaller --onefile \
             --collect-all UnityPy \
+            --collect-data UnityPy \
+            --collect-submodules UnityPy \
             --hidden-import=UnityPy \
+            --hidden-import=UnityPy.environment \
+            --hidden-import=UnityPy.files \
+            --hidden-import=UnityPy.helpers \
             --collect-all PIL \
             --hidden-import=PIL \
+            --hidden-import=lz4 \
+            --hidden-import=lz4.frame \
+            --hidden-import=lz4.block \
+            --hidden-import=brotli \
+            --hidden-import=texture2ddecoder \
             --name "extract_thumbnails-${TRIPLE}" \
             extract_thumbnails.py
 

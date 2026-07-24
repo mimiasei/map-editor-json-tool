@@ -131,8 +131,9 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
         for (const s of catalog.skills)    if (s.icon) icons.push(s.icon)
         for (const b of catalog.buffs)     if (b.icon) icons.push(b.icon)
         for (const o of catalog.mapObjects) {
-          // mapObjects have no icon field in the catalog — use their id
-          mapObjectIcons.push(o.id)
+          // Use the icon field (prefab-path stem from Core.zip) when available;
+          // fall back to the object id only if no icon was populated.
+          mapObjectIcons.push(o.icon ?? o.id)
         }
       }
 

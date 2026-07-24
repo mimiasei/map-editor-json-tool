@@ -1,3 +1,6 @@
 pyinstaller
 unitypy
 pillow
+lz4
+brotli
+texture2ddecoder
