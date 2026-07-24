@@ -10,7 +10,7 @@ import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
 import { warmThumbnailDir } from '@/lib/catalog/thumbnails'
-import { loadThumbnailManifest, getThumbnailCount } from '@/hooks/useThumbnailManifest'
+import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -27,10 +27,8 @@ import DialogBrowser from '@/components/catalog/DialogBrowser'
 import GameDatabaseDialog from '@/components/catalog/GameDatabaseDialog'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import SetupDialog from '@/components/common/SetupDialog'
-import { SquareArrowOutUpRight, X, ImageIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { SquareArrowOutUpRight } from 'lucide-react'
 
-const THUMBNAIL_PROMPTED_KEY = 'oe-thumbnails-prompted'
 const SETUP_SHOWN_KEY = 'oe-setup-shown'
 
 // ─── Placeholder shown where a panel would be when it's undocked ──────────────
@@ -71,7 +69,6 @@ export default function AppShell() {
   const [guidesOpen,    setGuidesOpen]    = useState(false)
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
-  const [thumbnailBanner, setThumbnailBanner] = useState(false)
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
   const [setupOpen, setSetupOpen] = useState(false)
 
@@ -83,15 +80,10 @@ export default function AppShell() {
     useCatalogStore.getState().load()
 
     if (isTauri()) {
-      // Pre-warm dir cache and load manifest; show first-run banner if needed
-      Promise.all([warmThumbnailDir(), loadThumbnailManifest()]).then(() => {
-        const alreadyPrompted = localStorage.getItem(THUMBNAIL_PROMPTED_KEY)
-        if (!alreadyPrompted && getThumbnailCount() === 0) {
-          setThumbnailBanner(true)
-        }
-      })
+      // Pre-warm thumbnail dir cache and load manifest
+      Promise.all([warmThumbnailDir(), loadThumbnailManifest()])
 
-      // Show setup dialog on first launch
+      // Show first-run setup wizard if not previously completed
       if (!localStorage.getItem(SETUP_SHOWN_KEY)) {
         setSetupOpen(true)
       }
@@ -429,56 +421,13 @@ export default function AppShell() {
         onOpen={() => window.dispatchEvent(new Event('oe:open'))}
       />
 
-      {/* First-run thumbnail banner (Tauri only, one-time) */}
-      {thumbnailBanner && (
-        <div className="flex items-center gap-2 bg-muted border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
-          <ImageIcon className="h-3.5 w-3.5 shrink-0" />
-          <span className="flex-1">Extract game thumbnails to see icons in dropdowns.</span>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-6 text-xs px-2"
-            onClick={() => {
-              setThumbnailBanner(false)
-              localStorage.setItem(THUMBNAIL_PROMPTED_KEY, '1')
-              setThumbnailDialogOpen(true)
-            }}
-          >
-            Extract now
-          </Button>
-          <button
-            type="button"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              setThumbnailBanner(false)
-              localStorage.setItem(THUMBNAIL_PROMPTED_KEY, '1')
-            }}
-            aria-label="Dismiss"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
-
       <ThumbnailExtractDialog
         open={thumbnailDialogOpen}
         onOpenChange={setThumbnailDialogOpen}
       />
       <SetupDialog
         open={setupOpen}
-        onOpenChange={(v) => {
-          setSetupOpen(v)
-          if (!v) localStorage.setItem(SETUP_SHOWN_KEY, '1')
-        }}
-        onOpenGameDatabase={() => {
-          localStorage.setItem(SETUP_SHOWN_KEY, '1')
-          setGameDatabaseOpen(true)
-        }}
-        onOpenThumbnailExtract={() => {
-          localStorage.setItem(THUMBNAIL_PROMPTED_KEY, '1')
-          setThumbnailBanner(false)
-          setThumbnailDialogOpen(true)
-        }}
+        onOpenChange={setSetupOpen}
       />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <TimelineDialog
