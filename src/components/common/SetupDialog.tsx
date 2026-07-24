@@ -13,16 +13,18 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Database, ImageIcon, ChevronRight } from 'lucide-react'
+import { Database, ImageIcon } from 'lucide-react'
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Called when user wants to open the Game Data (Core.zip) dialog. */
+  onOpenGameDatabase?: () => void
   /** Called when user wants to jump straight to the thumbnail extractor. */
   onOpenThumbnailExtract?: () => void
 }
 
-export default function SetupDialog({ open, onOpenChange, onOpenThumbnailExtract }: Props) {
+export default function SetupDialog({ open, onOpenChange, onOpenGameDatabase, onOpenThumbnailExtract }: Props) {
   const [dontShowAgain, setDontShowAgain] = useState(false)
 
   const handleClose = () => {
@@ -30,6 +32,14 @@ export default function SetupDialog({ open, onOpenChange, onOpenThumbnailExtract
       localStorage.setItem('oe-setup-shown', '1')
     }
     onOpenChange(false)
+  }
+
+  const handleOpenGameDatabase = () => {
+    if (dontShowAgain) {
+      localStorage.setItem('oe-setup-shown', '1')
+    }
+    onOpenChange(false)
+    onOpenGameDatabase?.()
   }
 
   const handleExtractThumbnails = () => {
@@ -63,8 +73,7 @@ export default function SetupDialog({ open, onOpenChange, onOpenThumbnailExtract
                 Load game data (Core.zip)
               </div>
               <p className="text-muted-foreground leading-relaxed">
-                Open <span className="font-medium text-foreground">More → Game Data</span> in the
-                toolbar and select the <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">Core.zip</span> file
+                Select the <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">Core.zip</span> file
                 from your Heroes of Might and Magic: Olden Era installation.
                 This gives the editor access to all heroes, creatures, artifacts,
                 spells, and other game objects.
@@ -72,7 +81,7 @@ export default function SetupDialog({ open, onOpenChange, onOpenThumbnailExtract
               <p className="text-xs text-muted-foreground">
                 Default location on Windows:{' '}
                 <span className="font-mono bg-muted px-1 py-0.5 rounded">
-                  C:\Program Files (x86)\Steam\steamapps\common\Heroes of Might and Magic Olden Era\HeroesOldenEra_Data\StreamingAssets\Core.zip
+                  ...\HeroesOldenEra_Data\StreamingAssets\Core.zip
                 </span>
               </p>
             </div>
@@ -118,10 +127,16 @@ export default function SetupDialog({ open, onOpenChange, onOpenThumbnailExtract
           </div>
 
           <div className="flex gap-2">
+            {onOpenGameDatabase && (
+              <Button variant="secondary" size="sm" onClick={handleOpenGameDatabase}>
+                <Database className="h-3.5 w-3.5 mr-1" />
+                Load Core.zip
+              </Button>
+            )}
             {onOpenThumbnailExtract && (
               <Button variant="secondary" size="sm" onClick={handleExtractThumbnails}>
+                <ImageIcon className="h-3.5 w-3.5 mr-1" />
                 Extract thumbnails
-                <ChevronRight className="h-3.5 w-3.5 ml-1" />
               </Button>
             )}
             <Button onClick={handleClose}>Okay</Button>

@@ -470,6 +470,10 @@ export default function AppShell() {
           setSetupOpen(v)
           if (!v) localStorage.setItem(SETUP_SHOWN_KEY, '1')
         }}
+        onOpenGameDatabase={() => {
+          localStorage.setItem(SETUP_SHOWN_KEY, '1')
+          setGameDatabaseOpen(true)
+        }}
         onOpenThumbnailExtract={() => {
           localStorage.setItem(THUMBNAIL_PROMPTED_KEY, '1')
           setThumbnailBanner(false)
