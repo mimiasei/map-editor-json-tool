@@ -16,8 +16,18 @@ Stdout protocol (one JSON object per line):
 Exit 0 on success, 1 on error.
 
 Build to sidecar binary with PyInstaller:
-    pip install pyinstaller unitypy pillow
-    pyinstaller --onefile --name extract_thumbnails-<target-triple> extract_thumbnails.py
+    pip install -r src-tauri/sidecar/requirements.txt
+    pyinstaller --onefile \\
+        --name extract_thumbnails-<target-triple> \\
+        --collect-all UnityPy \\
+        --collect-all texture2ddecoder \\
+        --collect-all etcpak \\
+        --collect-all astc_encoder_py \\
+        --collect-all astc_encoder \\
+        --collect-all archspec \\
+        --collect-all fmod_toolkit \\
+        --collect-all PIL \\
+        extract_thumbnails.py
 
 Target triple naming follows Tauri sidecar conventions:
     Windows : extract_thumbnails-x86_64-pc-windows-msvc.exe

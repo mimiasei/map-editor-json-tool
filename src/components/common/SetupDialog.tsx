@@ -130,15 +130,16 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
   }, [open, phase])
 
   // ── Phase 1: load Core.zip ───────────────────────────────────────────────────
+  // loadFromPath() catches internally and never throws — check store state afterwards.
   const loadCoreZip = async (zipPath: string): Promise<boolean> => {
     setZipError('')
-    try {
-      await useCatalogStore.getState().loadFromPath(zipPath)
-      return true
-    } catch (e) {
-      setZipError(e instanceof Error ? e.message : String(e))
+    await useCatalogStore.getState().loadFromPath(zipPath)
+    const store = useCatalogStore.getState()
+    if (store.error || !store.catalog) {
+      setZipError(store.error ?? 'Failed to load Core.zip')
       return false
     }
+    return true
   }
 
   // ── Phase 2: extract thumbnails ──────────────────────────────────────────────
@@ -245,11 +246,11 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     setErrorMsg('')
   }
 
-  const isRunning = phase === 'loading-zip' || phase === 'extracting'
+  const isRunning = (phase === 'loading-zip' || phase === 'extracting') && !zipError
   const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v && !isRunning) handleSkip() }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) phase === 'done' ? handleDone() : (!isRunning && handleSkip()) }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-lg">Welcome to the Map Editor</DialogTitle>
