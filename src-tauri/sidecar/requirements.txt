@@ -4,3 +4,8 @@ pillow
 lz4
 brotli
 texture2ddecoder
+etcpak
+astc_encoder_py
+astc_encoder
+archspec
+fmod_toolkit
