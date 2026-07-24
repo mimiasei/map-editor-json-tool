@@ -72,7 +72,13 @@ jobs:
           fi
 
           cd src-tauri/sidecar
-          pyinstaller --onefile --name "extract_thumbnails-${TRIPLE}" extract_thumbnails.py
+          pyinstaller --onefile \
+            --collect-all UnityPy \
+            --hidden-import=UnityPy \
+            --collect-all PIL \
+            --hidden-import=PIL \
+            --name "extract_thumbnails-${TRIPLE}" \
+            extract_thumbnails.py
 
           if [[ "$TRIPLE" == *"windows"* ]]; then
             mv "dist/extract_thumbnails-${TRIPLE}.exe" "extract_thumbnails-${TRIPLE}.exe"
