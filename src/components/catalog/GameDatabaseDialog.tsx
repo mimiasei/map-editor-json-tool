@@ -26,6 +26,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Copy, Check, Filter } from 'lucide-react'
+import GameDatabaseFilter, {
+  loadSavedFilter,
+  type GameDatabaseFilterState,
+} from './GameDatabaseFilter'
 import type {
   CatalogHero,
   CatalogCreature,
@@ -450,6 +454,7 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   const [search, setSearch] = useState('')
   const [onlyUsed, setOnlyUsed] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [filterState, setFilterState] = useState<GameDatabaseFilterState>(loadSavedFilter)
 
   useEffect(() => {
     if (DEBUG.gameDatabase) {
@@ -548,13 +553,47 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
+    const fs = filterState
+
     return items.filter((item) => {
       if (onlyUsed && totalCount(item.id) === 0) return false
-      if (!q) return true
-      return item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q)
+      if (q && !item.name.toLowerCase().includes(q) && !item.id.toLowerCase().includes(q)) return false
+
+      // Tab-specific filter logic
+      if (activeTab === 'heroes' || activeTab === 'creatures') {
+        if (!fs.factions.showAll) {
+          const raw = (item as CatalogItem & { fraction?: string }).fraction ?? ''
+          const faction = normalizeFaction(raw)
+          if (fs.factions.enabled[faction] === false) return false
+        }
+        if (activeTab === 'creatures' && !fs.tiers.showAll) {
+          const tier = String((item as CatalogItem & { tier?: number }).tier ?? '')
+          if (fs.tiers.enabled[tier] === false) return false
+        }
+      }
+      if (activeTab === 'artifacts') {
+        if (!fs.slots.showAll) {
+          const slot = (item as CatalogItem & { slot?: string }).slot ?? ''
+          if (fs.slots.enabled[slot] === false) return false
+        }
+        if (!fs.rarities.showAll) {
+          const rarity = (item as CatalogItem & { rarity?: string }).rarity ?? ''
+          if (fs.rarities.enabled[rarity] === false) return false
+        }
+      }
+      if (activeTab === 'spells' && !fs.schools.showAll) {
+        const school = (item as CatalogItem & { school?: string }).school ?? ''
+        if (fs.schools.enabled[school] === false) return false
+      }
+      if (activeTab === 'mapObjects' && !fs.mapCategories.showAll) {
+        const cat = (item as CatalogItem & { category?: string }).category ?? ''
+        if (fs.mapCategories.enabled[cat] === false) return false
+      }
+
+      return true
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, onlyUsed, mapCounts, scriptCounts])
+  }, [items, search, onlyUsed, filterState, activeTab, mapCounts, scriptCounts])
 
   const selectedItem = useMemo(
     () => (selectedId ? (items.find((i) => i.id === selectedId) ?? null) : null),
@@ -623,6 +662,14 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
                 >
                   <Filter className="h-3.5 w-3.5" />
                 </Button>
+                {activeTab !== 'skills' && (
+                  <GameDatabaseFilter
+                    activeTab={activeTab}
+                    catalog={catalog}
+                    value={filterState}
+                    onChange={setFilterState}
+                  />
+                )}
               </div>
 
               {/* Item list */}
