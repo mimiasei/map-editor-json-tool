@@ -131,9 +131,12 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
         for (const s of catalog.skills)    if (s.icon) icons.push(s.icon)
         for (const b of catalog.buffs)     if (b.icon) icons.push(b.icon)
         for (const o of catalog.mapObjects) {
-          // Use the icon field (prefab-path stem from Core.zip) when available;
-          // fall back to the object id only if no icon was populated.
-          mapObjectIcons.push(o.icon ?? o.id)
+          // Only extract icons for interactables and resources — their icon is
+          // derived from the prefab path stem (e.g. "mine_gold") and matches a
+          // Texture2D m_Name in the Unity assets. environments/spawns have no
+          // usable map icon textures.
+          if ((o.category === 'interactables' || o.category === 'resources') && o.icon)
+            mapObjectIcons.push(o.icon)
         }
       }
 
