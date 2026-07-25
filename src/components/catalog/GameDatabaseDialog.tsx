@@ -155,6 +155,45 @@ function CreatureStatsSection({ stats }: { stats: CreatureStats }) {
   )
 }
 
+// ─── Detail pane icon with full-res hover preview ────────────────────────────
+
+function DetailIcon({ iconId, name, subtitle }: { iconId: string | undefined; name: string; subtitle: string | undefined }) {
+  const src = thumbnailPath(iconId)
+  return (
+    <div className="flex items-center gap-3">
+      <div className="relative group/thumb shrink-0">
+        {src ? (
+          <img
+            src={src}
+            alt={name}
+            width={40}
+            height={40}
+            style={{ objectFit: 'contain', flexShrink: 0 }}
+          />
+        ) : (
+          <CatalogIcon iconId={iconId} name={name} size={40} />
+        )}
+        {src && (
+          <div className="absolute left-0 top-full mt-1.5 z-50 hidden group-hover/thumb:block pointer-events-none">
+            <div className="rounded-md border border-border bg-background shadow-lg p-1">
+              <img
+                src={src}
+                alt={name}
+                className="block"
+                style={{ maxWidth: 192, maxHeight: 192, objectFit: 'contain' }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="font-semibold leading-tight">{name}</p>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      </div>
+    </div>
+  )
+}
+
 // ─── Detail pane ─────────────────────────────────────────────────────────────
 
 // Fields rendered by dedicated sections — excluded from the generic dump.
@@ -187,34 +226,7 @@ function DetailPane({
   return (
     <div className="flex flex-col gap-3 p-4 h-full overflow-y-auto text-sm">
       {/* Icon + name */}
-      <div className="flex items-center gap-3">
-        {(() => {
-          const src = thumbnailPath(item.icon as string | undefined)
-          return (
-            <div className="relative group/thumb shrink-0">
-              <CatalogIcon iconId={item.icon as string | undefined} name={item.name} size={40} />
-              {src && (
-                <div className="absolute left-0 top-full mt-1.5 z-50 hidden group-hover/thumb:block pointer-events-none">
-                  <div className="rounded-md border border-border bg-background shadow-lg p-1">
-                    <img
-                      src={src}
-                      alt={item.name}
-                      className="block"
-                      style={{ maxWidth: 192, maxHeight: 192, objectFit: 'contain' }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          )
-        })()}
-        <div>
-          <p className="font-semibold leading-tight">{item.name}</p>
-          {item.subtitle && (
-            <p className="text-xs text-muted-foreground">{item.subtitle}</p>
-          )}
-        </div>
-      </div>
+      <DetailIcon iconId={item.icon as string | undefined} name={item.name} subtitle={item.subtitle as string | undefined} />
 
       {/* SID */}
       <div className="space-y-0.5">
