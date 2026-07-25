@@ -59,18 +59,27 @@ export const DEFAULT_FILTER: GameDatabaseFilterState = {
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
+function mergeGroup(defaults: FilterGroup, saved: Partial<FilterGroup> | undefined): FilterGroup {
+  if (!saved) return defaults
+  return {
+    showAll: saved.showAll ?? defaults.showAll,
+    // Deep-merge enabled: default keys are preserved; saved values override them
+    enabled: { ...defaults.enabled, ...(saved.enabled ?? {}) },
+  }
+}
+
 export function loadSavedFilter(): GameDatabaseFilterState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameDatabaseFilterState>
       return {
-        factions:      { ...DEFAULT_FILTER.factions,      ...parsed.factions },
-        tiers:         { ...DEFAULT_FILTER.tiers,         ...parsed.tiers },
-        slots:         { ...DEFAULT_FILTER.slots,         ...parsed.slots },
-        rarities:      { ...DEFAULT_FILTER.rarities,      ...parsed.rarities },
-        schools:       { ...DEFAULT_FILTER.schools,       ...parsed.schools },
-        mapCategories: { ...DEFAULT_FILTER.mapCategories, ...parsed.mapCategories },
+        factions:      mergeGroup(DEFAULT_FILTER.factions,      parsed.factions),
+        tiers:         mergeGroup(DEFAULT_FILTER.tiers,         parsed.tiers),
+        slots:         mergeGroup(DEFAULT_FILTER.slots,         parsed.slots),
+        rarities:      mergeGroup(DEFAULT_FILTER.rarities,      parsed.rarities),
+        schools:       mergeGroup(DEFAULT_FILTER.schools,       parsed.schools),
+        mapCategories: mergeGroup(DEFAULT_FILTER.mapCategories, parsed.mapCategories),
       }
     }
   } catch { /* ignore */ }

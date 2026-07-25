@@ -564,30 +564,30 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
         if (!fs.factions.showAll) {
           const raw = (item as CatalogItem & { fraction?: string }).fraction ?? ''
           const faction = normalizeFaction(raw)
-          if (!fs.factions.enabled[faction]) return false
+          if (fs.factions.enabled[faction] === false) return false
         }
         if (activeTab === 'creatures' && !fs.tiers.showAll) {
           const tier = String((item as CatalogItem & { tier?: number }).tier ?? '')
-          if (!fs.tiers.enabled[tier]) return false
+          if (fs.tiers.enabled[tier] === false) return false
         }
       }
       if (activeTab === 'artifacts') {
         if (!fs.slots.showAll) {
           const slot = (item as CatalogItem & { slot?: string }).slot ?? ''
-          if (!fs.slots.enabled[slot]) return false
+          if (fs.slots.enabled[slot] === false) return false
         }
         if (!fs.rarities.showAll) {
           const rarity = (item as CatalogItem & { rarity?: string }).rarity ?? ''
-          if (!fs.rarities.enabled[rarity]) return false
+          if (fs.rarities.enabled[rarity] === false) return false
         }
       }
       if (activeTab === 'spells' && !fs.schools.showAll) {
         const school = (item as CatalogItem & { school?: string }).school ?? ''
-        if (!fs.schools.enabled[school]) return false
+        if (fs.schools.enabled[school] === false) return false
       }
       if (activeTab === 'mapObjects' && !fs.mapCategories.showAll) {
         const cat = (item as CatalogItem & { category?: string }).category ?? ''
-        if (!fs.mapCategories.enabled[cat]) return false
+        if (fs.mapCategories.enabled[cat] === false) return false
       }
 
       return true
