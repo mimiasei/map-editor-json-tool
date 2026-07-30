@@ -52,7 +52,7 @@ export async function exportMapZip(
   zip.file('Lang/english/texts/customMaps.json', locContent)
 
   // ── Download / save ────────────────────────────────────────────────────────
-  const blob = await zip.generateAsync({ type: 'blob' })
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' })
   const safeName = mapName.replace(/\s+/g, '_').toLowerCase()
   const filename = `${safeName}.zip`
 
