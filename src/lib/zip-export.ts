@@ -60,8 +60,23 @@ export async function exportMapZip(
   if ('__TAURI_INTERNALS__' in window) {
     const { save } = await import('@tauri-apps/plugin-dialog')
     const { writeFile } = await import('@tauri-apps/plugin-fs')
+
+    // Derive the StreamingAssets directory from the saved Core.zip path so the
+    // save dialog opens next to Core.zip by default.
+    let defaultPath = filename
+    try {
+      const savedCoreZipPath = localStorage.getItem('oe-catalog-override-path')
+      if (savedCoreZipPath) {
+        const sep = savedCoreZipPath.includes('\\') ? '\\' : '/'
+        const dir = savedCoreZipPath.substring(0, savedCoreZipPath.lastIndexOf(sep))
+        defaultPath = `${dir}${sep}${filename}`
+      }
+    } catch {
+      // localStorage unavailable — fall back to filename only
+    }
+
     const savePath = await save({
-      defaultPath: filename,
+      defaultPath,
       filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
     })
     if (!savePath) return
