@@ -4,12 +4,11 @@ import remarkGfm from 'remark-gfm'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { installUpdate } from '@/lib/updater'
 import type { AvailableUpdate } from '@/lib/updater'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -55,8 +54,16 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
         onOpenChange(next)
       }}
     >
-      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-3 border-b border-border">
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={620}
+        defaultHeight={560}
+        minWidth={460}
+        minHeight={360}
+        storageKey="update"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
           <DialogTitle>Update available</DialogTitle>
           <div className="mt-2 flex items-center gap-2 text-sm">
             <Badge variant="secondary" className="font-mono text-xs">
@@ -68,9 +75,9 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
               <span className="ml-auto text-xs text-muted-foreground">{update.date}</span>
             )}
           </div>
-        </DialogHeader>
+        </DraggableDialogDragHandle>
 
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6">
           <div className="py-4 space-y-3">
             {update.notes ? (
               <div className="prose-sm max-w-none text-sm [&_a]:text-primary [&_code]:font-mono [&_code]:text-xs [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_li]:my-0.5 [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5">
@@ -118,7 +125,7 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
           </div>
         </ScrollArea>
 
-        <div className="px-6 py-3 border-t border-border flex items-center gap-2">
+        <div className="px-6 py-3 border-t border-border flex items-center gap-2 shrink-0">
           <div className="flex-1" />
           <Button
             variant="ghost"
@@ -142,7 +149,7 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
             Install and restart
           </Button>
         </div>
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }

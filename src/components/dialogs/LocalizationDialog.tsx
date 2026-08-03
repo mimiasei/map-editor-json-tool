@@ -7,12 +7,11 @@ import {
   TRANSLATABLE_LANGUAGES,
   languageLabel,
 } from '@/lib/languages'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -253,8 +252,17 @@ export default function LocalizationDialog() {
 
   return (
     <Dialog open={localizationDialogOpen} onOpenChange={setLocalizationDialogOpen}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0" onCloseAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader className="px-6 pt-6 pb-3 border-b border-border">
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={720}
+        defaultHeight={700}
+        minWidth={480}
+        minHeight={400}
+        storageKey="localization"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        {/* Header — the drag handle. pr-10 clears the close button. */}
+        <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
           <div className="flex items-center justify-between gap-3">
             <DialogTitle>Localization — {languageLabel(activeLang)}</DialogTitle>
             {missingCount > 0 && (
@@ -329,9 +337,9 @@ export default function LocalizationDialog() {
               className="pl-7 h-8 text-sm"
             />
           </div>
-        </DialogHeader>
+        </DraggableDialogDragHandle>
 
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6">
           <div className="py-4 space-y-2">
             {!isBase && (
               <p className="rounded border border-border bg-muted/40 px-2 py-1.5 text-xs text-muted-foreground">
@@ -357,7 +365,7 @@ export default function LocalizationDialog() {
           </div>
         </ScrollArea>
 
-        <div className="px-6 py-3 border-t border-border flex items-center gap-2">
+        <div className="px-6 py-3 border-t border-border flex items-center gap-2 shrink-0">
           <Label className="text-xs text-muted-foreground">
             {filteredSids.length} token{filteredSids.length !== 1 ? 's' : ''} shown
           </Label>
@@ -370,7 +378,7 @@ export default function LocalizationDialog() {
             Close
           </Button>
         </div>
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }

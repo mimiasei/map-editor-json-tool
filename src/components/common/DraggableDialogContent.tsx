@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DialogPortal, DialogOverlay } from "@/components/ui/dialog"
+import { readDialogGeometry, writeDialogGeometry } from "@/lib/dialog-geometry"
 
 // ---------------------------------------------------------------------------
 // Context — lets DraggableDialogDragHandle reach the pointer handlers without
@@ -42,6 +43,7 @@ interface ResizeState {
   startPosY: number
 }
 
+
 // ---------------------------------------------------------------------------
 // DraggableDialogContent
 // ---------------------------------------------------------------------------
@@ -52,6 +54,11 @@ export interface DraggableDialogContentProps
   defaultHeight?: number
   minWidth?: number
   minHeight?: number
+  /**
+   * When set, size and position persist across opens under `oe-dialog-<storageKey>`.
+   * Omit to keep the centred-at-default behaviour with no storage at all.
+   */
+  storageKey?: string
 }
 
 export const DraggableDialogContent = React.forwardRef<
@@ -66,6 +73,7 @@ export const DraggableDialogContent = React.forwardRef<
       defaultHeight = 600,
       minWidth = 400,
       minHeight = 300,
+      storageKey,
       ...props
     },
     ref
@@ -74,16 +82,37 @@ export const DraggableDialogContent = React.forwardRef<
     const [pos, setPos] = React.useState<{ x: number; y: number } | null>(null)
     const [size, setSize] = React.useState({ width: defaultWidth, height: defaultHeight })
 
-    // Initialise position to viewport centre the first time we render.
+    // Restore a saved geometry, else centre at the defaults. Runs once per open,
+    // since Radix unmounts the content when the dialog closes.
     const containerRef = React.useRef<HTMLDivElement | null>(null)
     React.useLayoutEffect(() => {
-      if (pos === null) {
-        setPos({
-          x: Math.max(0, window.innerWidth / 2 - defaultWidth / 2),
-          y: Math.max(0, window.innerHeight / 2 - defaultHeight / 2),
-        })
+      if (pos !== null) return
+
+      const saved = storageKey ? readDialogGeometry(storageKey, minWidth, minHeight) : null
+      if (saved) {
+        setSize({ width: saved.width, height: saved.height })
+        setPos({ x: saved.x, y: saved.y })
+        return
       }
-    }, [pos, defaultWidth, defaultHeight])
+
+      setPos({
+        x: Math.max(0, window.innerWidth / 2 - defaultWidth / 2),
+        y: Math.max(0, window.innerHeight / 2 - defaultHeight / 2),
+      })
+    }, [pos, defaultWidth, defaultHeight, minWidth, minHeight, storageKey])
+
+    /** Persist the current box. Called at the end of a drag or resize, never
+     *  during one — writing per pointer-move would hammer localStorage. */
+    const persist = React.useCallback(() => {
+      if (!storageKey) return
+      setPos((curPos) => {
+        setSize((curSize) => {
+          if (curPos) writeDialogGeometry(storageKey, { ...curPos, ...curSize })
+          return curSize
+        })
+        return curPos
+      })
+    }, [storageKey])
 
     // Drag state — stored in a ref so pointer-move handlers never stale-close.
     const dragRef = React.useRef<DragState | null>(null)
@@ -124,8 +153,10 @@ export const DraggableDialogContent = React.forwardRef<
     }, [])
 
     const onDragPointerUp = React.useCallback(() => {
+      if (!dragRef.current) return
       dragRef.current = null
-    }, [])
+      persist()
+    }, [persist])
 
     // ---- Resize (edge / corner handles) -----------------------------------
 
@@ -182,8 +213,10 @@ export const DraggableDialogContent = React.forwardRef<
     }, [minWidth, minHeight])
 
     const onResizePointerUp = React.useCallback(() => {
+      if (!resizeRef.current) return
       resizeRef.current = null
-    }, [])
+      persist()
+    }, [persist])
 
     // Don't render until we have a position (avoids flash in wrong place).
     if (pos === null) return null
@@ -308,10 +341,13 @@ export function DraggableDialogDragHandle({
   ...props
 }: DraggableDialogDragHandleProps) {
   const ctx = React.useContext(DragHandleContext)
+  // No context means this header is not inside a draggable dialog — it is being
+  // rendered in an undocked panel window, where the OS moves the window. Showing a
+  // move cursor there would promise behaviour that does not exist.
   return (
     <div
       {...props}
-      className={cn("cursor-move select-none", className)}
+      className={cn("select-none", ctx && "cursor-move", className)}
       onPointerDown={ctx?.onPointerDown}
       onPointerMove={ctx?.onPointerMove}
       onPointerUp={ctx?.onPointerUp}

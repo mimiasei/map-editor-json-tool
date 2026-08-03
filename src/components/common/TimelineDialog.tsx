@@ -6,11 +6,11 @@ import {
   type TimelineCategory,
   type TimelineEntry,
 } from '@/lib/timeline'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -162,8 +162,10 @@ export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequest
 
   return (
     <>
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b shrink-0">
+      {/* ── Header — doubles as the drag handle when inside a draggable dialog ── */}
+      {/* The toggle group already carries mr-6 to clear the close button, so no
+          extra right padding here. */}
+      <DraggableDialogDragHandle className="flex items-center justify-between gap-4 px-6 py-4 border-b shrink-0">
         <div>
           <p className="text-base font-semibold leading-none">Event Timeline</p>
           <p className="text-xs text-muted-foreground mt-1.5">
@@ -184,7 +186,7 @@ export function TimelineContent({ scenario, onSelect, closeOnNav, onCloseRequest
             </Label>
           </div>
         )}
-      </div>
+      </DraggableDialogDragHandle>
 
       {/* ── Body ── */}
       <div className="flex-1 min-h-0 overflow-y-auto">
@@ -227,12 +229,23 @@ export default function TimelineDialog({ open, onOpenChange, onUndock, undocked 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-w-4xl max-h-[85vh] p-0 overflow-hidden gap-0">
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={900}
+        defaultHeight={600}
+        minWidth={600}
+        minHeight={400}
+        storageKey="timeline"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogTitle className="sr-only">Event Timeline</DialogTitle>
 
-        {/* UndockButton overlaid in the dialog title area */}
+        {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
         {onUndock && (
-          <div className="group absolute top-3 right-10 z-10">
+          <div
+            className="group absolute top-3 right-10 z-40"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <UndockButton panelId="timeline" onUndock={onUndock} disabled={undocked} />
           </div>
         )}
@@ -242,7 +255,7 @@ export default function TimelineDialog({ open, onOpenChange, onUndock, undocked 
           onSelect={(type, path) => setSelection(type, path)}
           onCloseRequested={() => onOpenChange(false)}
         />
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }

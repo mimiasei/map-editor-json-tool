@@ -5,11 +5,11 @@
 
 import { useState, useMemo } from 'react'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
@@ -116,11 +116,19 @@ export default function DialogBrowser({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-w-2xl max-h-[85vh] p-0 overflow-hidden gap-0">
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={700}
+        defaultHeight={640}
+        minWidth={480}
+        minHeight={400}
+        storageKey="dialog-browser"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogTitle className="sr-only">Game Dialog Browser</DialogTitle>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+        {/* Header — the drag handle. pr-10 clears the close button. */}
+        <DraggableDialogDragHandle className="flex items-center justify-between px-4 py-3 pr-10 border-b border-border shrink-0">
           <div>
             <p className="text-sm font-semibold">Game Dialog Browser</p>
             <p className="text-xs text-muted-foreground">
@@ -129,7 +137,7 @@ export default function DialogBrowser({ open, onOpenChange }: Props) {
                 : 'Load Core.zip to browse dialogs'}
             </p>
           </div>
-        </div>
+        </DraggableDialogDragHandle>
 
         {/* Search */}
         <div className="px-4 py-2 border-b border-border shrink-0">
@@ -173,7 +181,7 @@ export default function DialogBrowser({ open, onOpenChange }: Props) {
             )}
           </div>
         </ScrollArea>
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }

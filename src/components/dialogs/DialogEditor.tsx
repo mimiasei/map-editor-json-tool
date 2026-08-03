@@ -4,12 +4,11 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import type { DialogFlow, DialogSlide, DialogAnswer } from '@/types/dialog'
 import { RESULT_DIALOG_VALUES } from '@/types/dialog'
 import type { Action, Condition } from '@/types/scenario'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -852,8 +851,18 @@ export default function DialogEditor() {
 
   return (
     <Dialog open={!!id} onOpenChange={(open) => !open && closeDialogEditor()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-3 border-b border-border">
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={900}
+        defaultHeight={700}
+        minWidth={560}
+        minHeight={400}
+        storageKey="dialog-editor"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        {/* Header — the drag handle. pr-10 keeps the Dialog ID input clear of the
+            close button the draggable content renders at right-4 top-3.5. */}
+        <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex-1 space-y-1">
               <Label className="text-xs text-muted-foreground">Dialog ID</Label>
@@ -878,9 +887,11 @@ export default function DialogEditor() {
           <p className="text-xs text-muted-foreground mt-1">
             File: <code>DB/dialogs/dialogs/custom_maps/&lt;map&gt;/{currentFlow.id}.json</code>
           </p>
-        </DialogHeader>
+        </DraggableDialogDragHandle>
 
-        <ScrollArea className="flex-1 px-6">
+        {/* min-h-0 is what makes the scrollbar appear: without it flex-1 keeps
+            min-height:auto and the area grows past the dialog instead of scrolling. */}
+        <ScrollArea className="flex-1 min-h-0 px-6">
           <div className="py-4 space-y-3">
             {currentFlow.slides.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">
@@ -902,12 +913,12 @@ export default function DialogEditor() {
           </div>
         </ScrollArea>
 
-        <div className="px-6 py-3 border-t border-border">
+        <div className="px-6 py-3 border-t border-border shrink-0">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={addSlide}>
             <Plus className="h-3.5 w-3.5" /> Add Slide
           </Button>
         </div>
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }

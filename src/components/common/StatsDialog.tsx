@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import UndockButton from '@/components/panels/UndockButton'
@@ -426,22 +426,37 @@ export default function StatsDialog({ open, onOpenChange, onUndock, undocked }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl flex flex-col max-h-[85vh]">
-        <DialogTitle>Scenario Statistics</DialogTitle>
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={820}
+        defaultHeight={620}
+        minWidth={560}
+        minHeight={400}
+        storageKey="stats"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        {/* StatsContent has no header of its own, so the title bar is here and
+            doubles as the drag handle. pr-10 clears the close button. */}
+        <DraggableDialogDragHandle className="flex items-center px-6 py-3 pr-10 border-b border-border shrink-0">
+          <DialogTitle className="text-sm font-semibold">Scenario Statistics</DialogTitle>
 
-        {/* UndockButton overlaid in the dialog title area */}
-        {onUndock && (
-          <div className="group absolute top-3 right-10 z-10">
-            <UndockButton panelId="stats" onUndock={onUndock} disabled={undocked} />
-          </div>
-        )}
+          {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
+          {onUndock && (
+            <div
+              className="group ml-auto"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <UndockButton panelId="stats" onUndock={onUndock} disabled={undocked} />
+            </div>
+          )}
+        </DraggableDialogDragHandle>
 
         <StatsContent
           scenario={scenario}
           onNavigate={(type, path) => setSelection(type, path)}
           onCloseRequested={() => onOpenChange(false)}
         />
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }

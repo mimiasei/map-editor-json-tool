@@ -97,7 +97,7 @@ export function GuidesContent() {
         </ScrollArea>
 
         {/* Article body */}
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4">
             {!activeArticleId && (
               <div className="space-y-3">
