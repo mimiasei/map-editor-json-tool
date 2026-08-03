@@ -119,12 +119,32 @@ jobs:
             fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(cfg, null, 2) + '\n');
           "
 
+      # Auto-update covers macOS and Windows only (issue #51). AppImage self-update
+      # needs the AppImage to be writable in place, and deb/rpm installs can never
+      # self-update — a Linux banner would mostly fail. Disabling updater artifacts
+      # on this job alone keeps `linux-x86_64` out of latest.json, so check() simply
+      # returns nothing for Linux clients. No frontend platform guard needed.
+      - name: Disable updater artifacts on Linux
+        if: matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+            cfg.bundle.createUpdaterArtifacts = false;
+            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(cfg, null, 2) + '\n');
+          "
+
       # On a version tag: build AND create a draft GitHub Release
       - name: Build Tauri app (release)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Signs the update artifacts. Without these the build fails once
+          # bundle.createUpdaterArtifacts is enabled.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Scenario Script Editor ${{ github.ref_name }}
@@ -142,6 +162,8 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: ${{ matrix.args }}
 

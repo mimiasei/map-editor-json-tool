@@ -36,6 +36,16 @@ yarn-error.log*
 # Tauri — Rust build artifacts (large, fully reproducible)
 src-tauri/target/
 
+# Tauri updater signing keys — NEVER commit these.
+# The canonical private key lives outside the repo (~/.tauri/oe-editor.key) and is
+# supplied to CI via the TAURI_SIGNING_PRIVATE_KEY secret. These patterns guard
+# against the realistic accident: generating or copying a key into the working
+# tree and then running `git add -A`. Losing the private key means no existing
+# install can ever be updated again.
+*.key
+*.key.pub
+oe-editor.key
+
 # Large game asset archives (local reference only, not for version control)
 *.zip
 

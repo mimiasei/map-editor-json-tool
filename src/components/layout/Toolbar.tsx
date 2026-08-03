@@ -7,6 +7,7 @@ import { importScenario } from '@/lib/import'
 import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
+import { checkForUpdate } from '@/lib/updater'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
 import { openAndLoadMapFile } from '@/lib/map-file'
 import { logInfo, logWarn, logError } from '@/lib/logger'
@@ -58,6 +59,7 @@ import {
   Moon,
   ChevronDown,
   Palette,
+  RefreshCw,
 } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -125,6 +127,40 @@ export default function Toolbar({
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
   const [themeEditorOpen,     setThemeEditorOpen]     = useState(false)
   const [publishOpen,         setPublishOpen]         = useState(false)
+  const [updateChecking,      setUpdateChecking]      = useState(false)
+  const [updateMessage,       setUpdateMessage]       = useState<string | null>(null)
+
+  // ── Manual update check ──────────────────────────────────────────────────────
+  // The startup check is silent by design, so this is the only way to learn that
+  // you're already current — or to re-check after dismissing the banner.
+  const handleCheckForUpdates = async () => {
+    setUpdateChecking(true)
+    setUpdateMessage(null)
+    try {
+      const outcome = await checkForUpdate()
+      switch (outcome.status) {
+        case 'update':
+          // AppShell owns the banner and dialog — hand the result over.
+          window.dispatchEvent(new CustomEvent('oe:update-found', { detail: outcome.update }))
+          break
+        case 'current':
+          setUpdateMessage(`You're on the latest version (${outcome.currentVersion}).`)
+          break
+        case 'unsupported':
+          setUpdateMessage(
+            import.meta.env.DEV
+              ? 'Update checks are disabled in development builds.'
+              : 'Updates are only available in the desktop app.',
+          )
+          break
+        case 'error':
+          setUpdateMessage(`Could not check for updates: ${outcome.message}`)
+          break
+      }
+    } finally {
+      setUpdateChecking(false)
+    }
+  }
 
   const { theme, toggleTheme } = useTheme()
 
@@ -503,6 +539,17 @@ export default function Toolbar({
                 </DropdownMenuItem>
               )}
 
+              {isTauri() && (
+                <DropdownMenuItem onClick={handleCheckForUpdates} disabled={updateChecking}>
+                  {updateChecking ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Check for updates…
+                </DropdownMenuItem>
+              )}
+
               <DropdownMenuSeparator />
 
               <DropdownMenuItem onClick={() => setTimeout(() => onGuidesOpen?.(), 0)}>
@@ -804,6 +851,17 @@ export default function Toolbar({
       {isTauri() && (
         <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} />
       )}
+
+      {/* Manual update check result — only for the no-update / failure cases;
+          a found update is handed to AppShell's banner and dialog instead. */}
+      <Dialog open={!!updateMessage} onOpenChange={(o) => !o && setUpdateMessage(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Check for updates</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{updateMessage}</p>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

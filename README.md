@@ -91,6 +91,7 @@ It is a companion to the map editor, not a replacement for it.
 - **Quest flow diagram** — per-quest DAG visualisation of sub-quest dependencies
 - **Scenario statistics** — at-a-glance counts and breakdown of quests, triggers, conditions, and actions
 - Undockable panels (Tauri desktop) — Event Timeline, Quest Flow Diagram, Scenario Statistics, and Guides can be popped out into separate windows
+- **Auto-update** (macOS and Windows desktop) — checks GitHub for newer releases on startup and shows a dismissible banner; the release notes and a one-click "Install and restart" live behind it, or check on demand from the More menu. Your open file and any unsaved changes are saved before the restart and reopened automatically
 - Native desktop app (macOS, Windows, Linux) via Tauri v2 — native file open/save dialogs, menu bar, keyboard shortcuts
 - No backend — runs entirely in the browser (or as a standalone desktop app)
 
@@ -213,6 +214,41 @@ Conditions use the `"c"` key; actions use the `"a"` key. Parameters are always a
 When saved via this editor, the file also includes editor-only metadata keys (`_mapName`, `_dialogs`, `_localization`). These round-trip correctly on re-import and are silently ignored by the game engine.
 
 ---
+
+## Releasing (maintainers)
+
+Desktop builds are produced by `.github/workflows/tauri-build.yml` on a `v*` tag.
+
+### One-time updater setup
+
+Auto-update artifacts are signed with a minisign keypair. **Until this is done, tagged
+builds will fail** — `bundle.createUpdaterArtifacts` is enabled and
+`plugins.updater.pubkey` in `src-tauri/tauri.conf.json` is still empty.
+
+```bash
+npm run tauri signer generate -- -w ~/.tauri/oe-editor.key
+```
+
+1. Paste the **public** key into `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`.
+2. Add the **private** key as the repository secret `TAURI_SIGNING_PRIVATE_KEY`.
+3. Add its password as `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (create it empty if you set no
+   password).
+
+Keep the private key backed up outside the repo. **If it is lost, no already-installed copy
+of the app can ever be updated again** — every user would have to reinstall by hand.
+`.gitignore` blocks `*.key` so a stray copy in the working tree can't be committed.
+
+### Cutting a release
+
+1. Tag and push: `git tag v0.6.6 && git push origin v0.6.6`.
+2. The workflow builds all three platforms and opens a **draft** release.
+3. Check the draft, then **publish** it. The updater endpoint reads
+   `releases/latest/download/latest.json`, which only resolves for published releases — so
+   nothing reaches users until you publish. That gate is deliberate.
+
+Updates cover **macOS (Apple Silicon) and Windows**. The Linux job deliberately produces no
+updater artifacts: AppImage self-update requires the AppImage to be writable in place, and
+deb/rpm installs can never self-update, so Linux users keep downloading manually.
 
 ## Contributing
 

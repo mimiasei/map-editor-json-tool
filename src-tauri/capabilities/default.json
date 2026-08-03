@@ -25,6 +25,8 @@
     "fs:allow-applocaldata-read-recursive",
     "fs:allow-applocaldata-write-recursive",
     "process:allow-exit",
+    "process:allow-restart",
+    "updater:default",
     "shell:allow-execute",
     "shell:deny-open"
   ]
