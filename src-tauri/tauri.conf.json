@@ -34,7 +34,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE2MEFFNUVFN0I1NzNFREUKUldUZVBsZDc3dVVLcHFraWFBV05kRHBhNndVbUk1MzFZRVJkS2FVK0tqTlo2NmRsTTNybkdpMU8K",
       "endpoints": [
         "https://github.com/mimiasei/map-editor-json-tool/releases/latest/download/latest.json"
       ],
