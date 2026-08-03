@@ -12,14 +12,14 @@ export default function EditorPanel() {
 
   if (!selectedType) {
     return (
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <MapMetaForm />
       </ScrollArea>
     )
   }
 
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="flex-1 min-h-0">
       <div className="p-4">
         {selectedType === 'counter' && (
           <CounterEditor index={selectedPath[0]} counter={scenario.counters[selectedPath[0]]} />

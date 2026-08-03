@@ -692,7 +692,7 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
               </div>
 
               {/* Item list */}
-              <ScrollArea className="flex-1">
+              <ScrollArea className="flex-1 min-h-0">
                 {filtered.length === 0 && (
                   <p className="text-xs text-muted-foreground text-center py-6 px-3">
                     {onlyUsed ? 'No items placed or used on this map.' : 'No matches.'}

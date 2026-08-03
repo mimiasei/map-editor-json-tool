@@ -19,11 +19,11 @@ import {
 import { SubQuestNode } from './quest-flow/SubQuestNode'
 import { QuestGroupNode } from './quest-flow/QuestGroupNode'
 import { EndNode } from './quest-flow/EndNode'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -145,8 +145,8 @@ export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequ
 
   return (
     <>
-      {/* ── Header ── */}
-      <div className="flex items-center gap-4 px-5 py-3 border-b shrink-0">
+      {/* ── Header — doubles as the drag handle when inside a draggable dialog ── */}
+      <DraggableDialogDragHandle className="flex items-center gap-4 px-5 py-3 border-b shrink-0">
         <p className="text-sm font-semibold leading-none">Quest Flow</p>
 
         <div className="flex items-center gap-1.5">
@@ -186,7 +186,7 @@ export function QuestFlowContent({ scenario, onNavigate, alwaysOpen, onCloseRequ
           <Maximize2 className="h-3.5 w-3.5" />
           Fit view
         </Button>
-      </div>
+      </DraggableDialogDragHandle>
 
       {/* ── Canvas ── */}
       <div className="flex-1 min-h-0">
@@ -245,12 +245,23 @@ export default function QuestFlowDialog({ open, onOpenChange, onUndock, undocked
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-w-[92vw] w-[92vw] max-h-[92vh] h-[92vh] p-0 overflow-hidden gap-0">
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={Math.round(window.innerWidth * 0.92)}
+        defaultHeight={Math.round(window.innerHeight * 0.92)}
+        minWidth={700}
+        minHeight={500}
+        storageKey="quest-flow"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogTitle className="sr-only">Quest Flow Diagram</DialogTitle>
 
-        {/* UndockButton overlaid in the dialog title area */}
+        {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
         {onUndock && (
-          <div className="group absolute top-3 right-10 z-10">
+          <div
+            className="group absolute top-3 right-10 z-40"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <UndockButton panelId="flow" onUndock={onUndock} disabled={undocked} />
           </div>
         )}
@@ -260,7 +271,7 @@ export default function QuestFlowDialog({ open, onOpenChange, onUndock, undocked
           onNavigate={(type, path) => setSelection(type, path)}
           onCloseRequested={() => onOpenChange(false)}
         />
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }

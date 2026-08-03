@@ -278,7 +278,7 @@ export function JsonPreviewContent({
           <code className="text-[10px] text-muted-foreground">{doc.pathHint}</code>
         </div>
       )}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <pre
           className="p-3 text-xs font-mono leading-relaxed text-foreground/90 whitespace-pre-wrap break-words"
           dangerouslySetInnerHTML={{ __html: highlight(json) }}

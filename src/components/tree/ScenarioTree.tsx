@@ -373,7 +373,7 @@ export default function ScenarioTree() {
   const labelStyle = { maxWidth: `${Math.round(sidebarWidth * LABEL_WIDTH_RATIO)}px` }
 
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="flex-1 min-h-0">
       <div className="pb-4">
 
         {/* ── Map Settings ── */}

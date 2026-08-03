@@ -9,12 +9,11 @@ import { pickSavePath, saveToPath, writeBinaryFile } from '@/lib/native-fs'
 import { validateScenario } from '@/lib/validate'
 import { languagesWithContent, languageLabel } from '@/lib/languages'
 import { logError, logInfo } from '@/lib/logger'
+import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  DraggableDialogContent,
+  DraggableDialogDragHandle,
+} from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -168,15 +167,23 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-3 border-b border-border">
+      <DraggableDialogContent
+        className="p-0 gap-0 overflow-hidden"
+        defaultWidth={640}
+        defaultHeight={560}
+        minWidth={480}
+        minHeight={360}
+        storageKey="publish"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
           <DialogTitle>Publish map</DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Writes the scenario JSON next to your .map file and the ZIP into StreamingAssets.
           </p>
-        </DialogHeader>
+        </DraggableDialogDragHandle>
 
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6">
           <div className="py-4 space-y-3">
             {phase === 'done' ? (
               <div className="flex items-start gap-2 rounded border border-green-600/40 bg-green-500/10 p-3">
@@ -272,7 +279,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
           </div>
         </ScrollArea>
 
-        <div className="px-6 py-3 border-t border-border flex items-center gap-2">
+        <div className="px-6 py-3 border-t border-border flex items-center gap-2 shrink-0">
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
             {phase === 'done' ? 'Close' : 'Cancel'}
@@ -293,7 +300,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
             </Button>
           )}
         </div>
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   )
 }
