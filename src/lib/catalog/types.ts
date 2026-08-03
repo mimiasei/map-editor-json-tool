@@ -101,6 +101,12 @@ export interface CatalogDialog {
   slides: CatalogDialogSlide[]
 }
 
+/** A speaker title SID with its resolved English display name. */
+export interface CatalogSpeakerTitle {
+  sid: string
+  name: string
+}
+
 export interface GameCatalog {
   /** Schema version — bump on breaking changes */
   version: number
@@ -116,6 +122,12 @@ export interface GameCatalog {
   mapObjects: CatalogMapObject[]
   factions: CatalogFaction[]
   dialogs: CatalogDialog[]
+  /** Avatar icon paths used by shipped dialogs — feeds the avatar strip combobox. */
+  dialogAvatarIcons: string[]
+  /** Non-empty `fon` background paths used by shipped dialogs. */
+  dialogBackgrounds: string[]
+  /** Known `dialogue_title_*` speaker SIDs with resolved English names. */
+  speakerTitles: CatalogSpeakerTitle[]
 }
 
-export const CATALOG_SCHEMA_VERSION = 1
+export const CATALOG_SCHEMA_VERSION = 2

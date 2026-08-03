@@ -350,10 +350,27 @@ async function collectFactions(zip: JSZip, locMap: Map<string, string>): Promise
   return factions.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-async function collectDialogs(zip: JSZip, locMap: Map<string, string>): Promise<CatalogDialog[]> {
+/** Result of the single pass over DB/dialogs/dialogs/. */
+interface DialogCollection {
+  dialogs: CatalogDialog[]
+  /** Distinct avatar icon paths used by shipped dialogs (~123). */
+  avatarIcons: string[]
+  /** Distinct non-empty `fon` background paths. */
+  backgrounds: string[]
+  /** Distinct speaker title SIDs with their resolved English names (~90). */
+  speakerTitles: { sid: string; name: string }[]
+}
+
+async function collectDialogs(
+  zip: JSZip,
+  locMap: Map<string, string>,
+): Promise<DialogCollection> {
   const paths = zipFilesUnder(zip, 'DB/dialogs/dialogs/')
   const dialogs: CatalogDialog[] = []
   const seen = new Set<string>()
+  const avatarIcons = new Set<string>()
+  const backgrounds = new Set<string>()
+  const titleSids = new Set<string>()
 
   for (const path of paths) {
     const entries = await readJsonArray(zip, path)
@@ -370,11 +387,27 @@ async function collectDialogs(zip: JSZip, locMap: Map<string, string>): Promise<
         // Resolve speaker from title.sid
         const titleObj = slide.title as Record<string, unknown> | undefined
         const speakerSid = str(titleObj?.sid || '')
+        if (speakerSid) titleSids.add(speakerSid)
         const speakerName = speakerSid ? (loc(locMap, speakerSid) ?? speakerSid) : undefined
-        // Resolve text from text.sid
-        const textObj = slide.text as Record<string, unknown> | undefined
-        const textSid = str(textObj?.sid || '')
+        // `text` is a plain localization SID string in the game format
+        const textSid = str(slide.text || '')
         const text = textSid ? (loc(locMap, textSid) ?? undefined) : undefined
+
+        const fon = str(slide.fon || '')
+        if (fon) backgrounds.add(fon)
+
+        if (Array.isArray(slide.avatars)) {
+          for (const av of slide.avatars as Record<string, unknown>[]) {
+            const icon = str(av?.icon || '')
+            if (icon) avatarIcons.add(icon)
+            if (Array.isArray(av?.icons)) {
+              for (const extra of av.icons as unknown[]) {
+                const s = str(extra || '')
+                if (s) avatarIcons.add(s)
+              }
+            }
+          }
+        }
 
         slides.push({ id: slideId, text, speakerName })
       }
@@ -388,7 +421,17 @@ async function collectDialogs(zip: JSZip, locMap: Map<string, string>): Promise<
       })
     }
   }
-  return dialogs.sort((a, b) => a.id.localeCompare(b.id))
+
+  const speakerTitles = Array.from(titleSids)
+    .map((sid) => ({ sid, name: loc(locMap, sid) ?? sid }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  return {
+    dialogs: dialogs.sort((a, b) => a.id.localeCompare(b.id)),
+    avatarIcons: Array.from(avatarIcons).sort(),
+    backgrounds: Array.from(backgrounds).sort(),
+    speakerTitles,
+  }
 }
 
 // ─── Main build function ──────────────────────────────────────────────────────
@@ -399,7 +442,7 @@ export async function buildCatalog(
 ): Promise<GameCatalog> {
   const locMap = await loadLocalization(zip)
 
-  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, dialogs] =
+  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, dialogData] =
     await Promise.all([
       collectHeroes(zip, locMap),
       collectCreatures(zip, locMap),
@@ -424,6 +467,9 @@ export async function buildCatalog(
     buffs,
     mapObjects,
     factions,
-    dialogs,
+    dialogs: dialogData.dialogs,
+    dialogAvatarIcons: dialogData.avatarIcons,
+    dialogBackgrounds: dialogData.backgrounds,
+    speakerTitles: dialogData.speakerTitles,
   }
 }

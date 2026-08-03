@@ -1,5 +1,6 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { TranslationMap } from '@/lib/languages'
 
 /**
  * Serialize scenario to a tab-indented JSON string matching the game's format.
@@ -23,12 +24,16 @@ export function exportProjectJson(
   mapName: string,
   dialogs: Record<string, DialogFlow>,
   localization: Record<string, string>,
+  translations: TranslationMap = {},
 ): string {
   const project: Record<string, unknown> = {
     ...scenario,
     ...(mapName ? { _mapName: mapName } : {}),
     ...(Object.keys(dialogs).length > 0 ? { _dialogs: dialogs } : {}),
     ...(Object.keys(localization).length > 0 ? { _localization: localization } : {}),
+    // Omitted entirely when there are no extra languages, so files saved by
+    // English-only projects stay byte-identical to before.
+    ...(Object.keys(translations).length > 0 ? { _translations: translations } : {}),
   }
   return JSON.stringify(project, null, '\t')
 }

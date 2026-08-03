@@ -1,5 +1,6 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import { AVATAR_ANIMATIONS, RESULT_DIALOG_VALUES } from '@/types/dialog'
 
 export interface ValidationMessage {
   path: string
@@ -9,6 +10,147 @@ export interface ValidationMessage {
 export interface ValidationResult {
   errors: ValidationMessage[]
   warnings: ValidationMessage[]
+}
+
+// ─── Dialog flow validation ─────────────────────────────────────────────────────
+
+/**
+ * Validate a single dialog flow. Errors mean the flow is structurally broken and
+ * would misbehave in game — the inline JSON editor refuses to save them. Warnings
+ * are advisory and never block.
+ *
+ * Called both per-flow from validateScenario() and directly by the JSON preview
+ * column when the user hand-edits a dialog file.
+ */
+export function validateDialogFlow(
+  flow: DialogFlow,
+  localization: Record<string, string> = {},
+): ValidationResult {
+  const errors: ValidationMessage[] = []
+  const warnings: ValidationMessage[] = []
+  const flowId = flow?.id || '(no id)'
+
+  if (!flow || !Array.isArray(flow.slides)) {
+    errors.push({ path: `Dialog "${flowId}"`, message: '"slides" must be an array.' })
+    return { errors, warnings }
+  }
+
+  // ── Slide IDs ───────────────────────────────────────────────────────────────
+  const slideIds = new Set<string>()
+  for (const [si, slide] of flow.slides.entries()) {
+    const path = `Dialog "${flowId}" > Slide[${si}] "${slide?.id ?? ''}"`
+    if (!slide || typeof slide !== 'object') {
+      errors.push({ path, message: 'Slide is not an object.' })
+      continue
+    }
+    if (!slide.id) {
+      errors.push({ path, message: 'Slide ID is empty.' })
+    } else if (slideIds.has(slide.id)) {
+      errors.push({ path, message: `Duplicate slide ID: "${slide.id}".` })
+    } else {
+      slideIds.add(slide.id)
+    }
+  }
+
+  // ── Per-slide checks ────────────────────────────────────────────────────────
+  let hasTerminal = false
+
+  for (const [si, slide] of flow.slides.entries()) {
+    if (!slide || typeof slide !== 'object') continue
+    const path = `Dialog "${flowId}" > Slide[${si}] "${slide.id}"`
+    const hasAnswers = Array.isArray(slide.answers) && slide.answers.length > 0
+
+    // Flow targets
+    if (slide.end) hasTerminal = true
+    if (slide.end && slide.next) {
+      errors.push({
+        path,
+        message: `Slide has both "end" and "next" ("${slide.next}") — the game would ignore one. Pick one.`,
+      })
+    }
+    if (slide.next && !slideIds.has(slide.next)) {
+      errors.push({ path, message: `"next" points at unknown slide "${slide.next}".` })
+    }
+    if (!slide.end && !slide.next && !hasAnswers) {
+      warnings.push({
+        path,
+        message: 'Slide has no "next", no "end", and no answers — the dialog stops here.',
+      })
+    }
+
+    // Localization
+    if (slide.text && !localization[slide.text]) {
+      warnings.push({ path, message: `Text SID "${slide.text}" has no localization token.` })
+    }
+
+    // Avatars
+    for (const [ai, avatar] of (slide.avatars ?? []).entries()) {
+      const avPath = `${path} > Avatar[${ai}]`
+      if (avatar.position < 1 || avatar.position > 5) {
+        warnings.push({
+          path: avPath,
+          message: `Position ${avatar.position} is outside the 1–5 range the game renders.`,
+        })
+      }
+      if (avatar.isForeground !== 'true' && avatar.isForeground !== 'false') {
+        warnings.push({
+          path: avPath,
+          message: `"isForeground" should be the string "true" or "false", not ${JSON.stringify(avatar.isForeground)}.`,
+        })
+      }
+      for (const anim of avatar.animations ?? []) {
+        if (!(AVATAR_ANIMATIONS as readonly string[]).includes(anim)) {
+          warnings.push({
+            path: avPath,
+            message: `Unrecognised animation "${anim}". Known: ${AVATAR_ANIMATIONS.join(', ')}.`,
+          })
+        }
+      }
+    }
+
+    // resultDialog
+    if (slide.resultDialog && !(RESULT_DIALOG_VALUES as readonly string[]).includes(slide.resultDialog)) {
+      warnings.push({
+        path,
+        message: `Unrecognised "resultDialog" value "${slide.resultDialog}". Known: ${RESULT_DIALOG_VALUES.join(', ')}.`,
+      })
+    }
+
+    // Answers
+    for (const [ai, answer] of (slide.answers ?? []).entries()) {
+      const aPath = `${path} > Answer[${ai}]`
+      if (answer.text && !localization[answer.text]) {
+        warnings.push({
+          path: aPath,
+          message: `Answer text SID "${answer.text}" has no localization token.`,
+        })
+      }
+      const actions = Array.isArray(answer.actions) ? answer.actions : []
+      if (actions.length === 0) {
+        warnings.push({ path: aPath, message: 'Answer has no flow actions — it leads nowhere.' })
+      }
+      for (const action of actions) {
+        if (action.a === 'End') hasTerminal = true
+        if (action.a === 'Go') {
+          const target = action.p?.[0]
+          if (!target) {
+            errors.push({ path: aPath, message: '"Go" action has no target slide ID.' })
+          } else if (!slideIds.has(target)) {
+            errors.push({ path: aPath, message: `"Go" points at unknown slide "${target}".` })
+          }
+        }
+      }
+    }
+  }
+
+  if (flow.slides.length > 0 && !hasTerminal) {
+    errors.push({
+      path: `Dialog "${flowId}"`,
+      message: 'No slide ends the dialog — mark a slide as "end" or give an answer an "End" action.',
+    })
+  }
+
+  return { errors, warnings }
 }
 
 export function validateScenario(
@@ -149,27 +291,12 @@ export function validateScenario(
       }
     }
 
-    // Check dialog slide text SIDs have localization tokens
-    for (const [flowId, flow] of Object.entries(dialogs)) {
-      for (const [si, slide] of flow.slides.entries()) {
-        const path = `Dialog "${flowId}" > Slide[${si}] "${slide.id}"`
-        if (slide.text && !localization[slide.text]) {
-          warnings.push({
-            path,
-            message: `Text SID "${slide.text}" has no localization token.`,
-          })
-        }
-        if (slide.answers) {
-          for (const [ai, answer] of slide.answers.entries()) {
-            if (answer.text && !localization[answer.text]) {
-              warnings.push({
-                path: `${path} > Answer[${ai}]`,
-                message: `Answer text SID "${answer.text}" has no localization token.`,
-              })
-            }
-          }
-        }
-      }
+    // Per-flow structural + localization checks (same code the inline JSON
+    // editor runs, so both report identically)
+    for (const flow of Object.values(dialogs)) {
+      const flowResult = validateDialogFlow(flow, localization)
+      errors.push(...flowResult.errors)
+      warnings.push(...flowResult.warnings)
     }
 
     // Check quest/subquest name SIDs have localization tokens

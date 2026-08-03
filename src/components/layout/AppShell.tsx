@@ -54,6 +54,7 @@ export default function AppShell() {
     mapName,
     dialogs,
     localization,
+    translations,
     setSidebarWidth,
     resetScenario,
     markClean,
@@ -102,6 +103,7 @@ export default function AppShell() {
   const mapNameRef         = useRef(mapName)
   const dialogsRef         = useRef(dialogs)
   const localizationRef    = useRef(localization)
+  const translationsRef    = useRef(translations)
   const undockedRef        = useRef(undocked)
   useEffect(() => { isDirtyRef.current         = isDirty },         [isDirty])
   useEffect(() => { scenarioRef.current         = scenario },         [scenario])
@@ -110,6 +112,7 @@ export default function AppShell() {
   useEffect(() => { mapNameRef.current          = mapName },          [mapName])
   useEffect(() => { dialogsRef.current          = dialogs },          [dialogs])
   useEffect(() => { localizationRef.current     = localization },     [localization])
+  useEffect(() => { translationsRef.current     = translations },     [translations])
   useEffect(() => { undockedRef.current         = undocked },         [undocked])
 
   // ── Imperative panel handles ─────────────────────────────────────────────────
@@ -144,6 +147,7 @@ export default function AppShell() {
       mapNameRef.current,
       dialogsRef.current,
       localizationRef.current,
+      translationsRef.current,
     )
     if (currentFilePathRef.current) {
       await saveToPath(currentFilePathRef.current, json)

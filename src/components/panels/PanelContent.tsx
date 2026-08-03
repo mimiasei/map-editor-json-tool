@@ -22,7 +22,15 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
 
   switch (panelId) {
     case 'preview':
-      return <JsonPreviewContent scenario={scenario} />
+      // Read-only in undocked windows (no handlers) — the main window owns writes.
+      return (
+        <JsonPreviewContent
+          scenario={scenario}
+          dialogs={state.dialogs}
+          localization={state.localization}
+          mapName={state.mapName}
+        />
+      )
 
     case 'timeline':
       return (

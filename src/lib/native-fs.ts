@@ -223,6 +223,33 @@ export async function readTextFileAt(path: string): Promise<string | null> {
   }
 }
 
+// ─── Pick a save path without writing ─────────────────────────────────────────
+
+/**
+ * Show a native save dialog and return the chosen path WITHOUT writing anything.
+ * Publishing needs this: it resolves both destinations up front, shows them for
+ * confirmation, and only then writes. Returns null in browser or on cancel.
+ */
+export async function pickSavePath(
+  suggestedPath: string,
+  filter: { name: string; extensions: string[] },
+  title?: string,
+): Promise<string | null> {
+  if (!isTauri()) return null
+  const { save } = await import('@tauri-apps/plugin-dialog')
+  const path = await save({ title, defaultPath: suggestedPath, filters: [filter] })
+  return typeof path === 'string' ? path : null
+}
+
+// ─── Write binary data to a path (Tauri only) ────────────────────────────────
+
+/** Write raw bytes to an absolute path. Tauri only. */
+export async function writeBinaryFile(path: string, data: Uint8Array): Promise<void> {
+  const { writeFile } = await import('@tauri-apps/plugin-fs')
+  await writeFile(path, data)
+  logInfo(`Wrote: ${path}`)
+}
+
 // ─── Pick Core.zip ────────────────────────────────────────────────────────────
 
 /**
