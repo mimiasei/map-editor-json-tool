@@ -119,20 +119,44 @@ jobs:
             fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(cfg, null, 2) + '\n');
           "
 
-      # Auto-update covers macOS and Windows only (issue #51). AppImage self-update
-      # needs the AppImage to be writable in place, and deb/rpm installs can never
-      # self-update — a Linux banner would mostly fail. Disabling updater artifacts
-      # on this job alone keeps `linux-x86_64` out of latest.json, so check() simply
-      # returns nothing for Linux clients. No frontend platform guard needed.
-      - name: Disable updater artifacts on Linux
-        if: matrix.platform == 'ubuntu-22.04'
+      # Decide whether this job emits signed updater artifacts.
+      #
+      # Two reasons to turn them off:
+      #
+      #  1. Linux. AppImage self-update needs the AppImage to be writable in place
+      #     and deb/rpm installs can never self-update, so a Linux update banner
+      #     would mostly fail. Omitting the artifacts keeps `linux-x86_64` out of
+      #     latest.json, so check() simply returns nothing for Linux clients —
+      #     no frontend platform guard needed.
+      #
+      #  2. No signing key. Updater artifacts MUST be signed; with the secret unset
+      #     Tauri aborts the whole bundle step, and the error it prints
+      #     ("Missing comment in secret key") does not hint at the real cause. That
+      #     used to take the installers down with it — a release that shipped no
+      #     .dmg and no .exe purely because OTA was not set up yet. Now the release
+      #     still ships, just without auto-update, and a warning says so.
+      - name: Configure updater artifacts
         shell: bash
+        env:
+          HAS_SIGNING_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
         run: |
+          if [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
+            ENABLE=false
+            echo "Linux job — updater artifacts disabled by design."
+          elif [ "$HAS_SIGNING_KEY" != "true" ]; then
+            ENABLE=false
+            echo "::warning title=Auto-update disabled::TAURI_SIGNING_PRIVATE_KEY is not set, so this release ships installers without auto-update support. See the Releasing section of README.md to set up the signing key."
+          else
+            ENABLE=true
+            echo "Signing key present — building signed updater artifacts."
+          fi
+
           node -e "
             const fs = require('fs');
-            const cfg = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
-            cfg.bundle.createUpdaterArtifacts = false;
-            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(cfg, null, 2) + '\n');
+            const path = 'src-tauri/tauri.conf.json';
+            const cfg = JSON.parse(fs.readFileSync(path, 'utf8'));
+            cfg.bundle.createUpdaterArtifacts = ${ENABLE};
+            fs.writeFileSync(path, JSON.stringify(cfg, null, 2) + '\n');
           "
 
       # On a version tag: build AND create a draft GitHub Release
@@ -141,8 +165,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Signs the update artifacts. Without these the build fails once
-          # bundle.createUpdaterArtifacts is enabled.
+          # Signs the update artifacts. When unset, the "Configure updater
+          # artifacts" step above has already disabled them, so the build succeeds
+          # and simply ships no OTA support.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
