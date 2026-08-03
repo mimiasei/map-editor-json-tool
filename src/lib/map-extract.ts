@@ -90,8 +90,42 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
       return entity
     })
 
-  // ── Hero placements (propHeroes → spawner node coords) ─────────────────────
+  // ── Spawner heroes as entities (issue #96) ─────────────────────────────────
+  // A hero placed through a spawner never gets an entity SID, because a hero is
+  // already unique by its own SID — that is what scripts reference. Without this
+  // those heroes are missing from the sidebar and from mapEntity autocomplete.
+  //
+  // A spawner set to a random hero has no fixed SID to reference, so it is
+  // skipped. Shipped maps signal that twice (isDefined:false AND heroSid:"random");
+  // requiring both to pass keeps us safe if a future map version sets only one.
   const propHeroes = b2.objectsProperties?.propHeroes ?? []
+  const namedSids = new Set(entities.map((e) => e.sid))
+
+  for (const h of propHeroes) {
+    const heroSid = typeof h.heroSid === 'string' ? h.heroSid.trim() : ''
+    if (!heroSid) continue
+    if (h.isDefined !== true) continue
+    if (heroSid.toLowerCase() === 'random') continue
+    // Already covered — either the author named this spawner, or a second spawner
+    // uses the same hero.
+    if (namedSids.has(heroSid)) continue
+    namedSids.add(heroSid)
+
+    const entity: MapEntity = {
+      sid: heroSid,
+      id: h.id ?? -1,
+      type: h.type ?? '',
+      source: 'heroSpawner',
+    }
+    const node = idToNode.get(entity.id)
+    if (node !== undefined) {
+      const coord = nodeToCoord(node)
+      if (coord) { entity.x = coord.x; entity.z = coord.z }
+    }
+    entities.push(entity)
+  }
+
+  // ── Hero placements (propHeroes → spawner node coords) ─────────────────────
   const heroPlacements: HeroPlacement[] = propHeroes
     .filter((h) => typeof h.heroSid === 'string' && h.heroSid.trim() !== '' && h.id !== undefined)
     .flatMap((h) => {
