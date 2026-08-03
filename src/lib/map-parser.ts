@@ -43,6 +43,16 @@ export interface RawMapBlock2 {
   objectsProperties?: {
     propEntities?: Array<{ type?: string; id?: number; sid?: string }>
     propHeroes?: Array<{ type?: string; id?: number; isDefined?: boolean; heroSid?: string }>
+    /** City spawners. `spawnHero` is the "also spawn a hero" slot; `isDefined`
+     *  refers to the city's faction, not the hero. */
+    propCities?: Array<{
+      type?: string
+      id?: number
+      isDefined?: boolean
+      spawnHero?: boolean
+      factionSid?: string
+      customCityName?: string
+    }>
     propSquads?: Array<{
       id?: number
       unitProps?: Array<{ sid?: string; count?: number }>

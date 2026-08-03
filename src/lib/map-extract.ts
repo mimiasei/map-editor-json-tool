@@ -95,10 +95,27 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   // already unique by its own SID — that is what scripts reference. Without this
   // those heroes are missing from the sidebar and from mapEntity autocomplete.
   //
-  // A spawner set to a random hero has no fixed SID to reference, so it is
-  // skipped. Shipped maps signal that twice (isDefined:false AND heroSid:"random");
-  // requiring both to pass keeps us safe if a future map version sets only one.
+  // Two kinds of object can spawn a hero, and the game has used at least four
+  // sids for them across map versions (hero-spawner, city-spawner, random-hero,
+  // random-city). The sid names the editor tool, not the behaviour — `random-hero`
+  // objects in shipped maps carry a specific hero — so this keys off propHeroes
+  // and propCities instead of matching any object sid.
+  //
+  // A hero is included only when it will actually spawn with a fixed SID:
+  //   * the hero is specified, not random. Shipped maps signal random twice
+  //     (isDefined:false AND heroSid:"random"); both must pass, so a future map
+  //     version setting only one still behaves.
+  //   * for a city spawner, its hero slot is switched on. A city spawner spawns a
+  //     city and *optionally* a hero alongside it, so an author who configures a
+  //     hero and then unticks the slot can leave a stale propHeroes entry behind
+  //     that never spawns. Objects with no propCities entry are pure hero
+  //     spawners and have no slot to check.
   const propHeroes = b2.objectsProperties?.propHeroes ?? []
+  const propCities = b2.objectsProperties?.propCities ?? []
+  const cityById = new Map<number, { spawnHero?: boolean }>()
+  for (const c of propCities) {
+    if (typeof c?.id === 'number') cityById.set(c.id, c)
+  }
   const namedSids = new Set(entities.map((e) => e.sid))
 
   for (const h of propHeroes) {
@@ -106,6 +123,9 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (!heroSid) continue
     if (h.isDefined !== true) continue
     if (heroSid.toLowerCase() === 'random') continue
+    // City spawner with its hero slot off — the hero never spawns.
+    const city = h.id !== undefined ? cityById.get(h.id) : undefined
+    if (city && city.spawnHero !== true) continue
     // Already covered — either the author named this spawner, or a second spawner
     // uses the same hero.
     if (namedSids.has(heroSid)) continue
