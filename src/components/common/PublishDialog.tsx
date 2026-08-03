@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import { exportProjectJson } from '@/lib/export'
 import { buildMapZipBlob, mapZipFileName } from '@/lib/zip-export'
 import { resolvePublishTargets, targetsReady } from '@/lib/publish'
@@ -104,7 +105,17 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
     resolvePublishTargets({ sidecarPath, currentFilePath, mapName }).then(setTargets)
   }, [open, sidecarPath, currentFilePath, mapName])
 
-  const validation = validateScenario(scenario, { mapName, dialogs, localization })
+  const speakerTitles = useCatalogStore((s) => s.catalog?.speakerTitles)
+  const knownGameSids = useMemo(
+    () => new Set((speakerTitles ?? []).map((t) => t.sid)),
+    [speakerTitles],
+  )
+  const validation = validateScenario(scenario, {
+    mapName,
+    dialogs,
+    localization,
+    knownGameSids,
+  })
   const extraLanguages = languagesWithContent(translations)
 
   const chooseJson = useCallback(async () => {

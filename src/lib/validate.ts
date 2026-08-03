@@ -25,6 +25,13 @@ export interface ValidationResult {
 export function validateDialogFlow(
   flow: DialogFlow,
   localization: Record<string, string> = {},
+  /**
+   * SIDs the base game already defines (from the catalog's speakerTitles). Speaker
+   * labels are checked for missing text only when this is supplied, because a
+   * built-in SID legitimately has no map-supplied token and warning on all 90 of
+   * them would be pure noise.
+   */
+  knownGameSids?: Set<string>,
 ): ValidationResult {
   const errors: ValidationMessage[] = []
   const warnings: ValidationMessage[] = []
@@ -81,6 +88,20 @@ export function validateDialogFlow(
     // Localization
     if (slide.text && !localization[slide.text]) {
       warnings.push({ path, message: `Text SID "${slide.text}" has no localization token.` })
+    }
+
+    // Speaker label. A custom SID with no text renders as the raw SID in game.
+    const titleSid = slide.title?.sid
+    if (
+      titleSid &&
+      knownGameSids &&
+      !knownGameSids.has(titleSid) &&
+      !localization[titleSid]?.trim()
+    ) {
+      warnings.push({
+        path,
+        message: `Speaker SID "${titleSid}" has no localization token — the dialog will show the raw SID.`,
+      })
     }
 
     // Avatars
@@ -159,6 +180,8 @@ export function validateScenario(
     mapName?: string
     dialogs?: Record<string, DialogFlow>
     localization?: Record<string, string>
+    /** Base-game SIDs, so built-in speaker labels aren't reported as missing. */
+    knownGameSids?: Set<string>
   },
 ): ValidationResult {
   const errors: ValidationMessage[] = []
@@ -247,7 +270,7 @@ export function validateScenario(
 
   // ── Dialog / localization checks ──────────────────────────────────────────
   if (extras) {
-    const { mapName = '', dialogs = {}, localization = {} } = extras
+    const { mapName = '', dialogs = {}, localization = {}, knownGameSids } = extras
 
     // mapName required if dialogs exist
     if (Object.keys(dialogs).length > 0 && !mapName.trim()) {
@@ -294,7 +317,7 @@ export function validateScenario(
     // Per-flow structural + localization checks (same code the inline JSON
     // editor runs, so both report identically)
     for (const flow of Object.values(dialogs)) {
-      const flowResult = validateDialogFlow(flow, localization)
+      const flowResult = validateDialogFlow(flow, localization, knownGameSids)
       errors.push(...flowResult.errors)
       warnings.push(...flowResult.warnings)
     }

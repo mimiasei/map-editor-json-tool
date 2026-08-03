@@ -61,7 +61,7 @@ import {
   Palette,
   RefreshCw,
 } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
@@ -329,7 +329,12 @@ export default function Toolbar({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenario, currentFilePath, sidecarPath, currentFileName])
 
-  const validation = validateScenario(scenario, { mapName, dialogs, localization })
+  // Base-game speaker SIDs, so built-in labels aren't flagged as missing text
+  const knownGameSids = useMemo(
+    () => new Set((catalog?.speakerTitles ?? []).map((t) => t.sid)),
+    [catalog],
+  )
+  const validation = validateScenario(scenario, { mapName, dialogs, localization, knownGameSids })
 
   return (
     <>

@@ -29,12 +29,15 @@ import { Search, Upload, Plus, X, Languages } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-/** Collect all SIDs referenced in dialogs */
+/** Collect all SIDs referenced in dialogs, including speaker labels */
 function collectDialogSids(dialogs: Record<string, DialogFlow>): Set<string> {
   const sids = new Set<string>()
   for (const flow of Object.values(dialogs)) {
     for (const slide of flow.slides) {
       if (slide.text) sids.add(slide.text)
+      // Speaker label above the dialog text — editable, and previously not listed
+      // here at all, so there was no way to give it text from this panel.
+      if (slide.title?.sid) sids.add(slide.title.sid)
       if (slide.answers) {
         for (const answer of slide.answers) {
           if (answer.text) sids.add(answer.text)

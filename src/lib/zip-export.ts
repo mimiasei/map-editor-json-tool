@@ -48,6 +48,11 @@ export function mapZipFileName(mapName: string): string {
 /**
  * Every SID that must appear in the shipped localization files: those already in
  * the English map, plus every SID referenced by a dialog slide or answer.
+ *
+ * `title.sid` counts too — it is the speaker label above the dialog text, and
+ * overriding it is the one way to give a portrait a different name from the hero
+ * it depicts. It used to be missed here, so a custom speaker name only shipped by
+ * accident, when the token happened to already sit in the localization map.
  */
 export function collectShippedSids(
   dialogs: Record<string, DialogFlow>,
@@ -57,6 +62,7 @@ export function collectShippedSids(
   for (const flow of Object.values(dialogs)) {
     for (const slide of flow.slides) {
       if (slide.text) sids.add(slide.text)
+      if (slide.title?.sid) sids.add(slide.title.sid)
       if (slide.answers) {
         for (const answer of slide.answers) {
           if (answer.text) sids.add(answer.text)

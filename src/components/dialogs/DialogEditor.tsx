@@ -27,7 +27,7 @@ import ActionList from '@/components/actions/ActionList'
 import ConditionList from '@/components/conditions/ConditionList'
 import AvatarStrip from './AvatarStrip'
 import AssetCombobox from './AssetCombobox'
-import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +46,11 @@ function defaultTextSid(dialogId: string, slideIndex: number): string {
 
 function defaultAnswerTextSid(dialogId: string, slideIndex: number, answerIndex: number): string {
   return `${dialogId}_text_${slideIndex + 1}_answer_${answerIndex + 1}`
+}
+
+/** SID for a custom speaker label, following the same convention as slide text. */
+function defaultTitleSid(dialogId: string, slideIndex: number): string {
+  return `${dialogId}_title_${slideIndex + 1}`
 }
 
 const NEW_CONDITION = (): Condition => ({ c: 'Counter', p: [] })
@@ -226,6 +231,42 @@ function SlideEditor({
 
   // Fields hidden behind "Advanced" that are already set — surfaced in the summary
   // so nothing silently disappears from view.
+  // ── Speaker label ───────────────────────────────────────────────────────────
+  // The name above the dialog text comes from title.sid's localization token, and
+  // is independent of the portrait — so a hero's portrait can speak under any name.
+  // Renaming only works with a SID of your own: the engine ignores map overrides of
+  // its own tokens (tested: redefining "dungeon_hero_5" leaves the hero as Mouaren).
+  const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
+  const titleSid = slide.title?.sid ?? ''
+  const builtInSpeaker = (catalog?.speakerTitles ?? []).find((t) => t.sid === titleSid)
+  const isBuiltInSpeaker = !!builtInSpeaker
+  const builtInSpeakerName = builtInSpeaker?.name
+  const speakerName = isBuiltInSpeaker
+    ? (builtInSpeakerName ?? '')
+    : (localization[titleSid] ?? '')
+
+  /** Position the label should sit at: keep the current one, else the first avatar. */
+  const defaultTitlePosition = () =>
+    slide.title?.position ?? slide.avatars?.[0]?.position ?? 1
+
+  const onSpeakerNameChange = (name: string) => {
+    if (titleSid) {
+      setLocalizationToken(titleSid, name)
+      return
+    }
+    // No SID yet — mint one so typing a name is all the user has to do.
+    const sid = defaultTitleSid(dialogId, slideIndex)
+    onChange({ ...slide, title: { sid, position: defaultTitlePosition() } })
+    setLocalizationToken(sid, name)
+  }
+
+  /** Swap a built-in speaker SID for a custom one, seeded with the built-in name. */
+  const useCustomSpeakerSid = () => {
+    const sid = defaultTitleSid(dialogId, slideIndex)
+    onChange({ ...slide, title: { sid, position: defaultTitlePosition() } })
+    setLocalizationToken(sid, builtInSpeakerName ?? '')
+  }
+
   const advancedInUse = [
     slide.fon ? 'background' : null,
     slide.sound ? 'sound' : null,
@@ -341,36 +382,74 @@ function SlideEditor({
           )}
 
           {/* Title / Speaker */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Speaker SID (title.sid)</Label>
-              <AssetCombobox
-                value={slide.title?.sid ?? ''}
-                onChange={(sid) =>
-                  onChange({
-                    ...slide,
-                    title: sid ? { ...(slide.title ?? {}), sid } : undefined,
-                  })
-                }
-                suggestions={speakerSuggestions}
-                placeholder="dialogue_title_hero_dungeon"
-              />
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Speaker SID (title.sid)</Label>
+                <AssetCombobox
+                  value={titleSid}
+                  onChange={(sid) =>
+                    onChange({
+                      ...slide,
+                      title: sid ? { ...(slide.title ?? {}), sid } : undefined,
+                    })
+                  }
+                  suggestions={speakerSuggestions}
+                  placeholder="dialogue_title_hero_dungeon"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">
+                  Speaker name
+                  <span className="ml-1 text-muted-foreground/70">— shown in game</span>
+                </Label>
+                <Input
+                  value={speakerName}
+                  onChange={(e) => onSpeakerNameChange(e.target.value)}
+                  className="h-7 text-xs"
+                  placeholder={isBuiltInSpeaker ? '(from the base game)' : 'Mouaren'}
+                  disabled={isBuiltInSpeaker}
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Speaker position</Label>
-              <Input
-                type="number"
-                value={slide.title?.position ?? ''}
-                onChange={(e) => {
-                  const pos = e.target.value ? parseInt(e.target.value) : undefined
-                  onChange({
-                    ...slide,
-                    title: slide.title ? { ...slide.title, position: pos } : undefined,
-                  })
-                }}
-                className="h-7 text-xs"
-                placeholder="3"
-              />
+
+            {/* The engine ignores map overrides of base-game tokens — verified by
+                testing. Renaming therefore needs a SID of your own. */}
+            {isBuiltInSpeaker && (
+              <p className="flex items-start gap-1.5 rounded border border-amber-600/40 bg-amber-500/10 p-2 text-xs text-amber-600">
+                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                <span className="flex-1">
+                  <code className="font-mono">{titleSid}</code> is a built-in game name
+                  {builtInSpeakerName ? ` (“${builtInSpeakerName}”)` : ''}. The game ignores map
+                  overrides of its own tokens, so you cannot rename it.
+                </span>
+                <button
+                  type="button"
+                  className="shrink-0 font-medium underline underline-offset-2 hover:no-underline"
+                  onClick={useCustomSpeakerSid}
+                >
+                  Use a custom name
+                </button>
+              </p>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Speaker position</Label>
+                <Input
+                  type="number"
+                  value={slide.title?.position ?? ''}
+                  onChange={(e) => {
+                    const pos = e.target.value ? parseInt(e.target.value) : undefined
+                    onChange({
+                      ...slide,
+                      title: slide.title ? { ...slide.title, position: pos } : undefined,
+                    })
+                  }}
+                  className="h-7 text-xs"
+                  placeholder="3"
+                />
+              </div>
             </div>
           </div>
 
@@ -602,6 +681,13 @@ function SlideEditor({
                     avatars={slide.avatars ?? []}
                     onChange={(avatars) =>
                       onChange({ ...slide, avatars: avatars.length > 0 ? avatars : undefined })
+                    }
+                    speakerPosition={slide.title?.position}
+                    onSpeakerPositionChange={(position) =>
+                      onChange({
+                        ...slide,
+                        title: { sid: titleSid || defaultTitleSid(dialogId, slideIndex), position },
+                      })
                     }
                   />
                 </div>
