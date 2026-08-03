@@ -355,8 +355,6 @@ interface DialogCollection {
   dialogs: CatalogDialog[]
   /** Distinct avatar icon paths used by shipped dialogs (~123). */
   avatarIcons: string[]
-  /** Distinct non-empty `fon` background paths. */
-  backgrounds: string[]
   /** Distinct speaker title SIDs with their resolved English names (~90). */
   speakerTitles: { sid: string; name: string }[]
 }
@@ -369,7 +367,6 @@ async function collectDialogs(
   const dialogs: CatalogDialog[] = []
   const seen = new Set<string>()
   const avatarIcons = new Set<string>()
-  const backgrounds = new Set<string>()
   const titleSids = new Set<string>()
 
   for (const path of paths) {
@@ -392,9 +389,6 @@ async function collectDialogs(
         // `text` is a plain localization SID string in the game format
         const textSid = str(slide.text || '')
         const text = textSid ? (loc(locMap, textSid) ?? undefined) : undefined
-
-        const fon = str(slide.fon || '')
-        if (fon) backgrounds.add(fon)
 
         if (Array.isArray(slide.avatars)) {
           for (const av of slide.avatars as Record<string, unknown>[]) {
@@ -429,7 +423,6 @@ async function collectDialogs(
   return {
     dialogs: dialogs.sort((a, b) => a.id.localeCompare(b.id)),
     avatarIcons: Array.from(avatarIcons).sort(),
-    backgrounds: Array.from(backgrounds).sort(),
     speakerTitles,
   }
 }
@@ -469,7 +462,6 @@ export async function buildCatalog(
     factions,
     dialogs: dialogData.dialogs,
     dialogAvatarIcons: dialogData.avatarIcons,
-    dialogBackgrounds: dialogData.backgrounds,
     speakerTitles: dialogData.speakerTitles,
   }
 }

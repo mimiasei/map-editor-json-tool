@@ -226,7 +226,6 @@ function SlideEditor({
     value: t.sid,
     label: t.name,
   }))
-  const backgroundSuggestions = (catalog?.dialogBackgrounds ?? []).map((v) => ({ value: v }))
 
   // Fields hidden behind "Advanced" that are already set — surfaced in the summary
   // so nothing silently disappears from view.
@@ -267,7 +266,6 @@ function SlideEditor({
   }
 
   const advancedInUse = [
-    slide.fon ? 'background' : null,
     slide.sound ? 'sound' : null,
     slide.notification ? 'notification' : null,
     slide.resultDialog ? 'resultDialog' : null,
@@ -579,18 +577,12 @@ function SlideEditor({
 
             {advancedOpen && (
               <div className="space-y-3 border-t border-border/60 p-2">
-                {/* Presentation */}
-                <div className="space-y-1">
-                  <Label className="text-xs">Background (fon)</Label>
-                  <AssetCombobox
-                    value={slide.fon ?? ''}
-                    onChange={(fon) => onChange({ ...slide, fon: fon || undefined })}
-                    suggestions={backgroundSuggestions}
-                    placeholder="icons/dialogue/dialogueFon/d1"
-                    emptyHint="Shipped dialogs use only one background — free text is accepted"
-                  />
-                </div>
-
+                {/* No background (fon) field: the game ships no usable dialogue
+                    backdrops. Of 5468 shipped slides, 5466 carry "fon" and exactly
+                    one is non-empty — in test dialogues/_test_dialog_hub.json,
+                    pointing at an asset that renders plain grey. The field is still
+                    written as "" by serializeDialogFile in case the engine expects
+                    the key, and any value in an imported file round-trips untouched. */}
                 <div className="space-y-1">
                   <Label className="text-xs">Voice line (sound)</Label>
                   <Input
@@ -831,6 +823,9 @@ export default function DialogEditor() {
     const newId = nextSlideId(currentFlow.slides)
     const newSlide: DialogSlide = {
       id: newId,
+      // Always present but always empty, matching every shipped slide. Not editable
+      // — the game has no usable dialogue backdrops. See serializeDialogFile.
+      fon: '',
       text: defaultTextSid(currentFlow.id, currentFlow.slides.length),
       end: true,
     }

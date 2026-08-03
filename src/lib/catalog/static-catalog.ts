@@ -119,6 +119,5 @@ export const STATIC_CATALOG: GameCatalog = {
   // Dialog asset lists come from Core.zip only — consumers fall back to free-text
   // inputs when these are empty.
   dialogAvatarIcons: [],
-  dialogBackgrounds: [],
   speakerTitles: [],
 }

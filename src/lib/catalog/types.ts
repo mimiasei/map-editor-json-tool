@@ -124,8 +124,6 @@ export interface GameCatalog {
   dialogs: CatalogDialog[]
   /** Avatar icon paths used by shipped dialogs — feeds the avatar strip combobox. */
   dialogAvatarIcons: string[]
-  /** Non-empty `fon` background paths used by shipped dialogs. */
-  dialogBackgrounds: string[]
   /** Known `dialogue_title_*` speaker SIDs with resolved English names. */
   speakerTitles: CatalogSpeakerTitle[]
 }

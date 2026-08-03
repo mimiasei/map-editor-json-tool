@@ -8,9 +8,20 @@
 
 import type { DialogFlow } from '@/types/dialog'
 
-/** Serialize one dialog flow into the game's per-dialog file format. */
+/**
+ * Serialize one dialog flow into the game's per-dialog file format.
+ *
+ * Every slide is written with a `fon` key. The game ships no usable dialogue
+ * backdrops — 5466 of its 5468 slides carry `fon` and only one is non-empty, in a
+ * test file — so the editor has no field for it, but the key is emitted as "" in
+ * case the engine expects it to be present. A value set by hand (in the JSON
+ * column) or inherited from an imported file is preserved as-is.
+ */
 export function serializeDialogFile(flow: DialogFlow): string {
-  return JSON.stringify({ array: [flow] }, null, '\t')
+  // Append rather than prepend: slides that already carry `fon` keep their exact
+  // key order, so existing files round-trip byte-for-byte.
+  const slides = flow.slides.map((slide) => ('fon' in slide ? slide : { ...slide, fon: '' }))
+  return JSON.stringify({ array: [{ ...flow, slides }] }, null, '\t')
 }
 
 export interface ParseDialogFileResult {
