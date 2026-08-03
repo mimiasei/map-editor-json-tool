@@ -20,7 +20,8 @@ interface Props {
 export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
   const templateIndex = useTemplateIndex()
   const { dismissedAnnotations, clearDismissedAnnotations } = useGuideStore()
-  const { setScenario, setMapName, setDialogFlow, setLocalizationBatch } = useScenarioStore()
+  const { setScenario, setMapName, setDialogFlow, setLocalizationBatch, setTranslations } =
+    useScenarioStore()
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -47,6 +48,8 @@ export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
         if (Object.keys(result.localization).length > 0) {
           setLocalizationBatch(result.localization)
         }
+        // Replaces wholesale, so a previous project's languages don't leak in
+        setTranslations(result.translations)
 
         // Store template annotations in guide store
         const rawObj = raw as Record<string, unknown>

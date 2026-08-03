@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import type { DialogFlow, DialogSlide, DialogAnswer } from '@/types/dialog'
-import type { Action } from '@/types/scenario'
+import { RESULT_DIALOG_VALUES } from '@/types/dialog'
+import type { Action, Condition } from '@/types/scenario'
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,17 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import ActionList from '@/components/actions/ActionList'
+import ConditionList from '@/components/conditions/ConditionList'
+import AvatarStrip from './AvatarStrip'
+import AssetCombobox from './AssetCombobox'
 import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -34,6 +46,34 @@ function defaultTextSid(dialogId: string, slideIndex: number): string {
 
 function defaultAnswerTextSid(dialogId: string, slideIndex: number, answerIndex: number): string {
   return `${dialogId}_text_${slideIndex + 1}_answer_${answerIndex + 1}`
+}
+
+const NEW_CONDITION = (): Condition => ({ c: 'Counter', p: [] })
+const NEW_MAP_ACTION = (): Action => ({ a: 'CounterSet', p: [] })
+
+// ─── And/Or selector, shared by slides and answers ──────────────────────────────
+
+function LogicToggle({
+  value,
+  onChange,
+}: {
+  value: 'And' | 'Or' | undefined
+  onChange: (v: 'And' | 'Or' | undefined) => void
+}) {
+  return (
+    <Select
+      value={value ?? 'And'}
+      onValueChange={(v) => onChange(v === 'And' ? undefined : (v as 'Or'))}
+    >
+      <SelectTrigger className="h-7 w-[76px] text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="And" className="text-xs">And</SelectItem>
+        <SelectItem value="Or" className="text-xs">Or</SelectItem>
+      </SelectContent>
+    </Select>
+  )
 }
 
 // ─── Answer editor ───────────────────────────────────────────────────────────────
@@ -100,6 +140,55 @@ function AnswerEditor({
           }
         />
       </div>
+
+      {/* Availability conditions — the game hides the answer when these fail */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Requirements</Label>
+          {(answer.requests?.length ?? 0) > 1 && (
+            <LogicToggle
+              value={answer.conditionsLogic}
+              onChange={(conditionsLogic) => onChange({ ...answer, conditionsLogic })}
+            />
+          )}
+        </div>
+        <ConditionList
+          conditions={answer.requests ?? []}
+          onAdd={() =>
+            onChange({ ...answer, requests: [...(answer.requests ?? []), NEW_CONDITION()] })
+          }
+          onUpdate={(i, condition) => {
+            const requests = [...(answer.requests ?? [])]
+            requests[i] = condition
+            onChange({ ...answer, requests })
+          }}
+          onRemove={(i) =>
+            onChange({ ...answer, requests: (answer.requests ?? []).filter((_, j) => j !== i) })
+          }
+        />
+      </div>
+
+      {/* Map actions fired when this answer is picked */}
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Map actions</Label>
+        <ActionList
+          actions={answer.mapActions ?? []}
+          onAdd={() =>
+            onChange({ ...answer, mapActions: [...(answer.mapActions ?? []), NEW_MAP_ACTION()] })
+          }
+          onUpdate={(i, action) => {
+            const mapActions = [...(answer.mapActions ?? [])]
+            mapActions[i] = action
+            onChange({ ...answer, mapActions })
+          }}
+          onRemove={(i) =>
+            onChange({
+              ...answer,
+              mapActions: (answer.mapActions ?? []).filter((_, j) => j !== i),
+            })
+          }
+        />
+      </div>
     </div>
   )
 }
@@ -124,8 +213,29 @@ function SlideEditor({
   onRemove: () => void
 }) {
   const [open, setOpen] = useState(slideIndex === 0)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const catalog = useCatalogStore((s) => s.catalog)
   const locText = slide.text ? localization[slide.text] : undefined
   const hasIssues = slide.text && !localization[slide.text]
+
+  const speakerSuggestions = (catalog?.speakerTitles ?? []).map((t) => ({
+    value: t.sid,
+    label: t.name,
+  }))
+  const backgroundSuggestions = (catalog?.dialogBackgrounds ?? []).map((v) => ({ value: v }))
+
+  // Fields hidden behind "Advanced" that are already set — surfaced in the summary
+  // so nothing silently disappears from view.
+  const advancedInUse = [
+    slide.fon ? 'background' : null,
+    slide.sound ? 'sound' : null,
+    slide.notification ? 'notification' : null,
+    slide.resultDialog ? 'resultDialog' : null,
+    slide.dialogPlayConditions?.length ? 'play conditions' : null,
+    slide.actions?.length ? 'story actions' : null,
+    slide.closeMapActions?.length ? 'close actions' : null,
+    slide.showAnimationsImmediately ? 'animation timing' : null,
+  ].filter(Boolean) as string[]
 
   const flowMode: 'next' | 'end' | 'answers' =
     Array.isArray(slide.answers) && slide.answers.length > 0
@@ -175,6 +285,11 @@ function SlideEditor({
           </span>
         )}
         {hasIssues && <Badge variant="secondary" className="text-amber-500 text-xs">!</Badge>}
+        {(slide.avatars?.length ?? 0) > 0 && (
+          <Badge variant="secondary" className="text-xs shrink-0">
+            {slide.avatars!.length} avatar{slide.avatars!.length !== 1 ? 's' : ''}
+          </Badge>
+        )}
         {flowMode === 'end' && <Badge variant="secondary" className="text-xs">END</Badge>}
         {flowMode === 'answers' && (
           <Badge variant="secondary" className="text-xs">{slide.answers?.length ?? 0} choices</Badge>
@@ -229,17 +344,15 @@ function SlideEditor({
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs">Speaker SID (title.sid)</Label>
-              <Input
+              <AssetCombobox
                 value={slide.title?.sid ?? ''}
-                onChange={(e) =>
+                onChange={(sid) =>
                   onChange({
                     ...slide,
-                    title: e.target.value
-                      ? { ...(slide.title ?? {}), sid: e.target.value }
-                      : undefined,
+                    title: sid ? { ...(slide.title ?? {}), sid } : undefined,
                   })
                 }
-                className="h-7 text-xs font-mono"
+                suggestions={speakerSuggestions}
                 placeholder="dialogue_title_hero_dungeon"
               />
             </div>
@@ -364,6 +477,233 @@ function SlideEditor({
             <Label htmlFor={`invoke-only-${slide.id}`} className="text-xs">
               Invoke only actions (silent slide — no dialog UI shown)
             </Label>
+          </div>
+
+          {/* ── Advanced ───────────────────────────────────────────────────── */}
+          <div className="rounded border border-border/60">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40"
+              onClick={() => setAdvancedOpen((v) => !v)}
+            >
+              {advancedOpen ? (
+                <ChevronDown className="h-3 w-3 shrink-0" />
+              ) : (
+                <ChevronRight className="h-3 w-3 shrink-0" />
+              )}
+              <span className="text-xs text-muted-foreground">Advanced</span>
+              {!advancedOpen && advancedInUse.length > 0 && (
+                <span className="truncate text-[10px] text-muted-foreground/70">
+                  {advancedInUse.join(', ')}
+                </span>
+              )}
+            </button>
+
+            {advancedOpen && (
+              <div className="space-y-3 border-t border-border/60 p-2">
+                {/* Presentation */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Background (fon)</Label>
+                  <AssetCombobox
+                    value={slide.fon ?? ''}
+                    onChange={(fon) => onChange({ ...slide, fon: fon || undefined })}
+                    suggestions={backgroundSuggestions}
+                    placeholder="icons/dialogue/dialogueFon/d1"
+                    emptyHint="Shipped dialogs use only one background — free text is accepted"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs">Voice line (sound)</Label>
+                  <Input
+                    value={slide.sound ?? ''}
+                    onChange={(e) => onChange({ ...slide, sound: e.target.value || undefined })}
+                    className="h-7 text-xs font-mono"
+                    placeholder="sounds/locale/dialogs/…"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Notification</Label>
+                    <Input
+                      value={slide.notification ?? ''}
+                      onChange={(e) =>
+                        onChange({ ...slide, notification: e.target.value || undefined })
+                      }
+                      className="h-7 text-xs font-mono"
+                      placeholder="start"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Duration (seconds)</Label>
+                    <Input
+                      type="number"
+                      value={slide.notificationDuration ?? ''}
+                      onChange={(e) =>
+                        onChange({
+                          ...slide,
+                          notificationDuration: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      className="h-7 text-xs"
+                      placeholder="10"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Result</Label>
+                    <Select
+                      value={slide.resultDialog ?? 'unset'}
+                      onValueChange={(v) =>
+                        onChange({ ...slide, resultDialog: v === 'unset' ? undefined : v })
+                      }
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unset" className="text-xs">
+                          (not set)
+                        </SelectItem>
+                        {RESULT_DIALOG_VALUES.map((v) => (
+                          <SelectItem key={v} value={v} className="text-xs">
+                            {v}
+                            {v === 'Interrupt' ? ' — halt queued logic' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end pb-1">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`anim-now-${slide.id}`}
+                        checked={slide.showAnimationsImmediately ?? false}
+                        onCheckedChange={(v) =>
+                          onChange({ ...slide, showAnimationsImmediately: !!v || undefined })
+                        }
+                      />
+                      <Label htmlFor={`anim-now-${slide.id}`} className="text-xs">
+                        Play animations immediately
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Avatars */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Avatars</Label>
+                  <AvatarStrip
+                    avatars={slide.avatars ?? []}
+                    onChange={(avatars) =>
+                      onChange({ ...slide, avatars: avatars.length > 0 ? avatars : undefined })
+                    }
+                  />
+                </div>
+
+                {/* Play conditions */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">
+                      Play conditions
+                      <span className="ml-1 text-muted-foreground/70">
+                        — slide is skipped when these fail
+                      </span>
+                    </Label>
+                    {(slide.dialogPlayConditions?.length ?? 0) > 1 && (
+                      <LogicToggle
+                        value={slide.conditionsLogic}
+                        onChange={(conditionsLogic) => onChange({ ...slide, conditionsLogic })}
+                      />
+                    )}
+                  </div>
+                  <ConditionList
+                    conditions={slide.dialogPlayConditions ?? []}
+                    onAdd={() =>
+                      onChange({
+                        ...slide,
+                        dialogPlayConditions: [
+                          ...(slide.dialogPlayConditions ?? []),
+                          NEW_CONDITION(),
+                        ],
+                      })
+                    }
+                    onUpdate={(i, condition) => {
+                      const dialogPlayConditions = [...(slide.dialogPlayConditions ?? [])]
+                      dialogPlayConditions[i] = condition
+                      onChange({ ...slide, dialogPlayConditions })
+                    }}
+                    onRemove={(i) =>
+                      onChange({
+                        ...slide,
+                        dialogPlayConditions: (slide.dialogPlayConditions ?? []).filter(
+                          (_, j) => j !== i,
+                        ),
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Story actions on show */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    Story actions (run when the slide is shown)
+                  </Label>
+                  <ActionList
+                    actions={slide.actions ?? []}
+                    onAdd={() =>
+                      onChange({
+                        ...slide,
+                        actions: [...(slide.actions ?? []), { a: 'StoryCounterPlus', p: [] }],
+                      })
+                    }
+                    onUpdate={(i, action) => {
+                      const actions = [...(slide.actions ?? [])]
+                      actions[i] = action
+                      onChange({ ...slide, actions })
+                    }}
+                    onRemove={(i) =>
+                      onChange({
+                        ...slide,
+                        actions: (slide.actions ?? []).filter((_, j) => j !== i),
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Actions on close */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    Map actions on dialog close
+                  </Label>
+                  <ActionList
+                    actions={slide.closeMapActions ?? []}
+                    onAdd={() =>
+                      onChange({
+                        ...slide,
+                        closeMapActions: [...(slide.closeMapActions ?? []), NEW_MAP_ACTION()],
+                      })
+                    }
+                    onUpdate={(i, action) => {
+                      const closeMapActions = [...(slide.closeMapActions ?? [])]
+                      closeMapActions[i] = action
+                      onChange({ ...slide, closeMapActions })
+                    }}
+                    onRemove={(i) =>
+                      onChange({
+                        ...slide,
+                        closeMapActions: (slide.closeMapActions ?? []).filter((_, j) => j !== i),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

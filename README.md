@@ -63,8 +63,12 @@ It is a companion to the map editor, not a replacement for it.
 - Custom / unknown type fallback — forward-compatible with future game updates
 - Permissive import — never rejects a file for unknown fields or types
 - **Dialog flow editor** — per-dialog-key slide editor with text SIDs, speaker titles, next/end/player-choice flow modes, per-slide map actions, and auto-naming
-- **Localization panel** — edit English text tokens for all dialog slides and quest names; highlights missing tokens; import from an existing `customMaps.json`
-- **Export map ZIP** — one click produces a distributable ZIP (`DB/dialogs/…` + `Lang/english/texts/customMaps.json`) ready to place next to `Core.zip` in `StreamingAssets/`
+- **Full dialog format coverage** — visual five-slot avatar strip matching the game's positions 1–5 (icon, foreground/background layer, `zoomIn`/`zoomOut`/`appear` animations, width), plus background, voice line, notification, play conditions, story actions, close actions, and `resultDialog` on every slide. Player choices support availability conditions and their own map actions
+- **Editable JSON for dialogs** — the JSON column switches between the map scenario and each dialog file, shown exactly as it ships (`{"array":[…]}`). Hand-edits are validated before they apply: duplicate slide IDs, dangling `next`/`Go` targets, and dialogs with no ending are rejected
+- **Localization panel** — edit text tokens for all dialog slides and quest names; highlights missing tokens; import from an existing `customMaps.json`
+- **Multi-language localisation** — English is the base; add any of the game's 16 languages and translate side by side with the English source visible. Untranslated tokens ship with the English text as a fallback
+- **Export map ZIP** — one click produces a distributable ZIP (`DB/dialogs/…` + `Lang/<language>/texts/customMaps.json` for every language you've filled in) ready to place next to `Core.zip` in `StreamingAssets/`
+- **Publish map** (desktop) — writes the scenario JSON next to your `.map` file and the ZIP into `StreamingAssets/` in one step, showing both resolved paths and flagging overwrites before it touches anything
 - **Project save format** — Save / Save As preserves all editor metadata (`_mapName`, `_dialogs`, `_localization`) so everything round-trips; the game ignores these keys
 - **Load .map file** — open the binary `.map` file from your game's map editor to unlock live map context: named entity SIDs are extracted and displayed in the sidebar, entity parameter fields get autocomplete, and the sidecar scenario JSON is loaded automatically if present next to the `.map` file
 - **Entity SIDs sidebar section** — lists all user-named entities from the loaded map grouped by type; hover any SID to see its map coordinates (`Map Coords: x, z`); click a used SID to jump to its first trigger reference; copy any SID with one click

@@ -1,5 +1,6 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { TranslationMap } from '@/lib/languages'
 import { ScenarioFileSchema } from '@/schema/zod'
 
 export interface ImportResult {
@@ -8,6 +9,8 @@ export interface ImportResult {
   mapName: string
   dialogs: Record<string, DialogFlow>
   localization: Record<string, string>
+  /** Non-English tokens from _translations. Empty for files saved before i18n. */
+  translations: TranslationMap
   /** Template metadata extracted from _templateMeta (null if not a template) */
   templateMeta: { id: string; name: string; description: string } | null
   /** Template annotations extracted from _annotations */
@@ -25,6 +28,7 @@ export function importScenario(rawJsonText: string): ImportResult {
     mapName: '',
     dialogs: {} as Record<string, DialogFlow>,
     localization: {} as Record<string, string>,
+    translations: {} as TranslationMap,
     templateMeta: null as { id: string; name: string; description: string } | null,
     annotations: {} as Record<string, string>,
   }
@@ -52,6 +56,19 @@ export function importScenario(rawJsonText: string): ImportResult {
     if (r['_localization'] && typeof r['_localization'] === 'object') {
       extras.localization = r['_localization'] as Record<string, string>
       delete r['_localization']
+    }
+    if (r['_translations'] && typeof r['_translations'] === 'object') {
+      // Keep only well-formed per-language maps; a stray string value would
+      // otherwise crash the token editor.
+      const raw = r['_translations'] as Record<string, unknown>
+      for (const [lang, tokens] of Object.entries(raw)) {
+        if (tokens && typeof tokens === 'object' && !Array.isArray(tokens)) {
+          extras.translations[lang] = tokens as Record<string, string>
+        } else {
+          warnings.push(`_translations.${lang}: expected an object of SID → text, ignored.`)
+        }
+      }
+      delete r['_translations']
     }
     if (r['_templateMeta'] && typeof r['_templateMeta'] === 'object') {
       extras.templateMeta = r['_templateMeta'] as { id: string; name: string; description: string }

@@ -63,6 +63,7 @@ import { useState, useRef } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
+import PublishDialog from '@/components/common/PublishDialog'
 import { ImageIcon } from 'lucide-react'
 
 interface ToolbarProps {
@@ -105,6 +106,7 @@ export default function Toolbar({
     mapName,
     dialogs,
     localization,
+    translations,
     setScenario,
     markClean,
     setCurrentFile,
@@ -113,6 +115,7 @@ export default function Toolbar({
     setMapName,
     setDialogFlow,
     setLocalizationBatch,
+    setTranslations,
   } = useScenarioStore()
 
   const [validateOpen,        setValidateOpen]        = useState(false)
@@ -121,6 +124,7 @@ export default function Toolbar({
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
   const [themeEditorOpen,     setThemeEditorOpen]     = useState(false)
+  const [publishOpen,         setPublishOpen]         = useState(false)
 
   const { theme, toggleTheme } = useTheme()
 
@@ -171,7 +175,7 @@ export default function Toolbar({
     const result = await openFile()
     if (!result) return
 
-    const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc, annotations } = importScenario(result.content)
+    const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc, translations: tr, annotations } = importScenario(result.content)
     if (imported) {
       setScenario(imported)
       setCurrentFile(result.path || null, result.name)
@@ -182,6 +186,8 @@ export default function Toolbar({
       }
       // Hydrate localization
       if (Object.keys(loc).length > 0) setLocalizationBatch(loc)
+      // Hydrate extra languages (absent in files saved before multi-language support)
+      setTranslations(tr)
       // Hydrate template annotations
       if (Object.keys(annotations).length > 0) {
         useGuideStore.setState({ templateAnnotations: annotations })
@@ -221,7 +227,7 @@ export default function Toolbar({
   // ── Save (Ctrl+S) — writes to known path; for anchored .map projects this is
   //   the sidecar JSON. Falls back to Save As when no path is known.
   const handleSave = async () => {
-    const json = exportProjectJson(scenario, mapName, dialogs, localization)
+    const json = exportProjectJson(scenario, mapName, dialogs, localization, translations)
     if (isTauri() && sidecarPath) {
       await saveToPath(sidecarPath, json)
       markClean()
@@ -239,7 +245,7 @@ export default function Toolbar({
   // ── Save As ───────────────────────────────────────────────────────────────────
   // Always shows a file-save dialog, even when a .map/sidecar path is known.
   const handleExport = async () => {
-    const json     = exportProjectJson(scenario, mapName, dialogs, localization)
+    const json     = exportProjectJson(scenario, mapName, dialogs, localization, translations)
     const saveName = currentFileName ?? 'scenario.json'
     const savedPath = await saveFile(json, saveName)
     // In browser saveFile always downloads and returns null — still mark clean
@@ -258,7 +264,7 @@ export default function Toolbar({
 
   const handleExportZip = async () => {
     try {
-      await exportMapZip(mapName, dialogs, localization)
+      await exportMapZip(mapName, dialogs, localization, translations)
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       logError(`Export ZIP failed: ${msg}`)
@@ -488,6 +494,14 @@ export default function Toolbar({
                 <Package className="h-4 w-4 mr-2" />
                 Export ZIP
               </DropdownMenuItem>
+
+              {/* Desktop only — neither destination path exists in the browser */}
+              {isTauri() && (
+                <DropdownMenuItem onClick={() => setTimeout(() => setPublishOpen(true), 0)}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Publish map…
+                </DropdownMenuItem>
+              )}
 
               <DropdownMenuSeparator />
 
@@ -785,6 +799,11 @@ export default function Toolbar({
         open={themeEditorOpen}
         onOpenChange={setThemeEditorOpen}
       />
+
+      {/* Publish dialog (Tauri only) */}
+      {isTauri() && (
+        <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} />
+      )}
     </>
   )
 }

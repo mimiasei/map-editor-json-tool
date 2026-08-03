@@ -13,6 +13,7 @@ import type {
   SelectionType,
 } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { TranslationMap } from '@/lib/languages'
 
 // ─── Empty defaults ─────────────────────────────────────────────────────────────
 
@@ -77,7 +78,11 @@ interface ScenarioStore {
   // Map meta / dialog / localization (editor-only, stored as _* in project JSON)
   mapName: string
   dialogs: Record<string, DialogFlow>       // keyed by dialog ID
-  localization: Record<string, string>      // SID → English text
+  localization: Record<string, string>      // SID → English text (the base language)
+  /** Non-English tokens, keyed by game language id then SID. */
+  translations: TranslationMap
+  /** Non-English languages this map has opted into (may still be empty). */
+  activeLanguages: string[]
 
   // Selection state
   selectedType: SelectionType
@@ -101,6 +106,11 @@ interface ScenarioStore {
   setLocalizationToken: (sid: string, text: string) => void
   removeLocalizationToken: (sid: string) => void
   setLocalizationBatch: (tokens: Record<string, string>) => void
+  setTranslationToken: (lang: string, sid: string, text: string) => void
+  setTranslationBatch: (lang: string, tokens: Record<string, string>) => void
+  setTranslations: (translations: TranslationMap) => void
+  addLanguage: (lang: string) => void
+  removeLanguage: (lang: string) => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -217,6 +227,8 @@ export const useScenarioStore = create<ScenarioStore>()(
   mapName: '',
   dialogs: {},
   localization: {},
+  translations: {},
+  activeLanguages: [],
   dialogEditorOpenId: null,
   localizationDialogOpen: false,
   selectedType: null,
@@ -232,7 +244,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
     useMapContextStore.getState().clearContext()
   },
@@ -269,6 +281,50 @@ export const useScenarioStore = create<ScenarioStore>()(
 
   setLocalizationBatch: (tokens) =>
     set((s) => ({ localization: { ...s.localization, ...tokens }, isDirty: true })),
+
+  setTranslationToken: (lang, sid, text) =>
+    set((s) => ({
+      translations: { ...s.translations, [lang]: { ...(s.translations[lang] ?? {}), [sid]: text } },
+      activeLanguages: s.activeLanguages.includes(lang)
+        ? s.activeLanguages
+        : [...s.activeLanguages, lang],
+      isDirty: true,
+    })),
+
+  setTranslationBatch: (lang, tokens) =>
+    set((s) => ({
+      translations: { ...s.translations, [lang]: { ...(s.translations[lang] ?? {}), ...tokens } },
+      activeLanguages: s.activeLanguages.includes(lang)
+        ? s.activeLanguages
+        : [...s.activeLanguages, lang],
+      isDirty: true,
+    })),
+
+  // Used on import — replaces wholesale and derives the active language list.
+  setTranslations: (translations) =>
+    set({ translations, activeLanguages: Object.keys(translations).sort() }),
+
+  addLanguage: (lang) =>
+    set((s) =>
+      s.activeLanguages.includes(lang)
+        ? s
+        : {
+            activeLanguages: [...s.activeLanguages, lang],
+            translations: { ...s.translations, [lang]: s.translations[lang] ?? {} },
+            isDirty: true,
+          },
+    ),
+
+  removeLanguage: (lang) =>
+    set((s) => {
+      const translations = { ...s.translations }
+      delete translations[lang]
+      return {
+        translations,
+        activeLanguages: s.activeLanguages.filter((l) => l !== lang),
+        isDirty: true,
+      }
+    }),
 
   // ── Counters ───────────────────────────────────────────────────────────────
 

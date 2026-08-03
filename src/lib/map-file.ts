@@ -89,15 +89,31 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   let scenario = extractScenario(raw)   // default: Block 4
   let mapName = context.mapName
   let importedMapName = ''
+  // Editor-only metadata from the sidecar. Without carrying these through, opening
+  // a .map would silently drop every dialog and localization token the project has.
+  let importedDialogs: Record<string, import('@/types/dialog').DialogFlow> = {}
+  let importedLocalization: Record<string, string> = {}
+  let importedTranslations: import('@/lib/languages').TranslationMap = {}
 
   // ── Try sidecar (Tauri only — needs file system access) ──────────────────────
   if (sidecarPath && (await checkFileExists(sidecarPath))) {
     const text = await readTextFileAt(sidecarPath)
     if (text) {
-      const { scenario: imported, errors, warnings: iw, mapName: mn } = importScenario(text)
+      const {
+        scenario: imported,
+        errors,
+        warnings: iw,
+        mapName: mn,
+        dialogs: dl,
+        localization: loc,
+        translations: tr,
+      } = importScenario(text)
       if (imported) {
         scenario = imported
         importedMapName = mn
+        importedDialogs = dl
+        importedLocalization = loc
+        importedTranslations = tr
         sidecarLoaded = true
         logInfo(`Loaded sidecar: ${sidecarPath}`)
       } else {
@@ -134,6 +150,13 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   store.setCurrentFile(sidecarPath ?? null, file.name)
   store.setMapFile(mapPath ?? '', sidecarPath ?? '')
   store.setMapName(mapName)
+  for (const [id, flow] of Object.entries(importedDialogs)) store.setDialogFlow(id, flow)
+  if (Object.keys(importedLocalization).length > 0) {
+    store.setLocalizationBatch(importedLocalization)
+  }
+  store.setTranslations(importedTranslations)
+  // setScenario() cleared the dirty flag; the hydration above must not resurrect it.
+  store.markClean()
 
   return {
     name: file.name,
