@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import { DEBUG } from '@/lib/debug'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -280,11 +281,14 @@ export default function ScenarioTree() {
     return map
   }, [scenario])
 
-  // Group entities by type, sorted by type key then by SID within each group
+  // Group entities by type, sorted by type key then by SID within each group.
+  // Spawner heroes get their own group rather than landing in "Objects", so it
+  // stays obvious which SIDs came from a spawner (issue #96). Alphabetical group
+  // ordering puts Heroes ahead of Objects and Zones.
   const entityGroups = useMemo(() => {
     const map = new Map<string, string[]>()
     for (const e of entities) {
-      const key = entityTypeLabel(e.type)
+      const key = e.source === 'heroSpawner' ? 'Heroes' : entityTypeLabel(e.type)
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(e.sid)
     }
@@ -304,6 +308,22 @@ export default function ScenarioTree() {
     }
     return map
   }, [entities])
+
+  // Lookup map: SID → readable English name. Only spawner heroes resolve today,
+  // via the hero catalog; without Core.zip loaded this stays empty and rows show
+  // the SID alone, matching how every other catalog-backed control degrades.
+  const catalogHeroes = useCatalogStore((s) => s.catalog?.heroes)
+  const entityNameMap = useMemo(() => {
+    const map = new Map<string, string>()
+    if (!catalogHeroes) return map
+    const heroNames = new Map(catalogHeroes.map((h) => [h.id, h.name]))
+    for (const e of entities) {
+      if (e.source !== 'heroSpawner') continue
+      const name = heroNames.get(e.sid)
+      if (name && name !== e.sid) map.set(e.sid, name)
+    }
+    return map
+  }, [entities, catalogHeroes])
 
   useEffect(() => {
     if (DEBUG.entitySids) {
@@ -672,7 +692,9 @@ export default function ScenarioTree() {
                     {groupOpen && sids.map((sid) => {
                       const usage = entityUsageMap.get(sid)
                       const coords = entityCoordsMap.get(sid)
+                      const name = entityNameMap.get(sid)
                       const titleText = [
+                        name,
                         coords,
                         usage ? `Go to ${usage.type} [${usage.path.join(', ')}]` : undefined,
                       ].filter(Boolean).join(' · ')
@@ -690,11 +712,20 @@ export default function ScenarioTree() {
                           title={titleText || undefined}
                         >
                           <span
-                            className={cn('truncate font-mono flex-1', usage && 'font-bold')}
+                            className={cn(
+                              'truncate font-mono',
+                              usage && 'font-bold',
+                              name ? 'shrink-0 max-w-[55%]' : 'flex-1',
+                            )}
                             style={labelStyle}
                           >
                             {sid}
                           </span>
+                          {name && (
+                            <span className="truncate flex-1 text-muted-foreground/70">
+                              {name}
+                            </span>
+                          )}
                           <CopySidButton sid={sid} />
                         </div>
                       )

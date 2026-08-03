@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AssetCombobox from './AssetCombobox'
-import { Plus, Trash2, UserRound } from 'lucide-react'
+import { MessageSquare, Plus, Trash2, UserRound } from 'lucide-react'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,12 +31,15 @@ function Slot({
   position,
   avatar,
   selected,
+  isSpeaker,
   onSelect,
   onAdd,
 }: {
   position: number
   avatar: DialogAvatar | undefined
   selected: boolean
+  /** True when the slide's speaker label is anchored to this position. */
+  isSpeaker: boolean
   onSelect: () => void
   onAdd: () => void
 }) {
@@ -62,7 +65,10 @@ function Slot({
       ) : (
         <Plus className="h-3 w-3 opacity-50" />
       )}
-      <span className="text-[10px] leading-none">{position}</span>
+      <span className="flex items-center gap-0.5 text-[10px] leading-none">
+        {position}
+        {isSpeaker && <MessageSquare className="h-2.5 w-2.5 text-primary" />}
+      </span>
       {occupied && (
         <span className="w-full truncate text-[9px] leading-tight text-muted-foreground">
           {iconName(avatar!.icon) || '(no icon)'}
@@ -77,9 +83,18 @@ function Slot({
 interface Props {
   avatars: DialogAvatar[]
   onChange: (avatars: DialogAvatar[]) => void
+  /** Position the slide's speaker label is anchored to (title.position). */
+  speakerPosition?: number
+  /** Point the speaker label at a position. Omit to hide the control. */
+  onSpeakerPositionChange?: (position: number) => void
 }
 
-export default function AvatarStrip({ avatars, onChange }: Props) {
+export default function AvatarStrip({
+  avatars,
+  onChange,
+  speakerPosition,
+  onSpeakerPositionChange,
+}: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
   const iconSuggestions = (catalog?.dialogAvatarIcons ?? []).map((v) => ({ value: v }))
 
@@ -122,6 +137,7 @@ export default function AvatarStrip({ avatars, onChange }: Props) {
             position={position}
             avatar={byPosition.get(position)}
             selected={selectedPos === position}
+            isSpeaker={speakerPosition === position}
             onSelect={() => setSelectedPos(selectedPos === position ? null : position)}
             onAdd={() => addAt(position)}
           />
@@ -132,6 +148,23 @@ export default function AvatarStrip({ avatars, onChange }: Props) {
         <div className="space-y-2 rounded border border-border bg-background p-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium">Position {selected.position}</span>
+            {speakerPosition === selected.position ? (
+              <span className="flex items-center gap-1 text-[10px] text-primary">
+                <MessageSquare className="h-2.5 w-2.5" /> speaking
+              </span>
+            ) : (
+              onSpeakerPositionChange && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 gap-1 text-xs text-muted-foreground"
+                  onClick={() => onSpeakerPositionChange(selected.position)}
+                  title="Anchor the speaker label to this avatar"
+                >
+                  <MessageSquare className="h-3 w-3" /> Make speaker
+                </Button>
+              )
+            )}
             <Button
               variant="ghost"
               size="sm"

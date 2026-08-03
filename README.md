@@ -221,9 +221,11 @@ Desktop builds are produced by `.github/workflows/tauri-build.yml` on a `v*` tag
 
 ### One-time updater setup
 
-Auto-update artifacts are signed with a minisign keypair. **Until this is done, tagged
-builds will fail** — `bundle.createUpdaterArtifacts` is enabled and
-`plugins.updater.pubkey` in `src-tauri/tauri.conf.json` is still empty.
+Auto-update artifacts are signed with a minisign keypair. **Until this is done, releases
+still build and ship normally — they just carry no auto-update support**, and the workflow
+logs a warning saying so. `plugins.updater.pubkey` in `src-tauri/tauri.conf.json` is empty
+and `bundle.createUpdaterArtifacts` is `false`; the release workflow flips it on
+per-platform once the signing secret exists.
 
 ```bash
 npm run tauri signer generate -- -w ~/.tauri/oe-editor.key

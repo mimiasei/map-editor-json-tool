@@ -28,6 +28,12 @@ export interface MapEntity {
   x?: number
   /** Map tile Z coordinate (row), derived from objects[].nodes */
   z?: number
+  /**
+   * Where this entity came from. Absent means propEntities — an object the map
+   * author explicitly named. 'heroSpawner' means the SID is a hero's own SID,
+   * taken from a spawner that has a specific hero assigned (issue #96).
+   */
+  source?: 'heroSpawner'
 }
 
 export interface HeroAssignment {
