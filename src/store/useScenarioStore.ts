@@ -64,6 +64,25 @@ interface PanelsState {
   preview: boolean
 }
 
+/**
+ * Everything needed to populate the editor with a project. Optional fields are
+ * reset to their empty defaults when omitted, so hydrating never leaves data from
+ * a previously open project behind.
+ */
+export interface ProjectPayload {
+  scenario: ScenarioFile
+  mapName?: string
+  dialogs?: Record<string, DialogFlow>
+  localization?: Record<string, string>
+  translations?: TranslationMap
+  currentFilePath?: string | null
+  currentFileName?: string | null
+  mapFilePath?: string | null
+  sidecarPath?: string | null
+  /** Restored sessions carry their unsaved state; fresh loads start clean. */
+  isDirty?: boolean
+}
+
 interface ScenarioStore {
   // Document state
   scenario: ScenarioFile
@@ -98,6 +117,8 @@ interface ScenarioStore {
   markClean: () => void
   setCurrentFile: (path: string | null, name: string | null) => void
   setMapFile: (mapPath: string, sidecarPath: string) => void
+  /** Load a whole project in one shot (import, template load, session restore). */
+  hydrateProject: (payload: ProjectPayload) => void
 
   // ── Map meta / dialog / localization ────────────────────────────────────
   setMapName: (name: string) => void
@@ -254,6 +275,27 @@ export const useScenarioStore = create<ScenarioStore>()(
   setCurrentFile: (path, name) => set({ currentFilePath: path, currentFileName: name }),
 
   setMapFile: (mapPath, sidecarPath) => set({ mapFilePath: mapPath, sidecarPath }),
+
+  hydrateProject: (payload) => {
+    set({
+      scenario: payload.scenario,
+      mapName: payload.mapName ?? '',
+      dialogs: payload.dialogs ?? {},
+      localization: payload.localization ?? {},
+      translations: payload.translations ?? {},
+      activeLanguages: Object.keys(payload.translations ?? {}).sort(),
+      currentFilePath: payload.currentFilePath ?? null,
+      currentFileName: payload.currentFileName ?? null,
+      mapFilePath: payload.mapFilePath ?? null,
+      sidecarPath: payload.sidecarPath ?? null,
+      isDirty: payload.isDirty ?? false,
+      selectedType: null,
+      selectedPath: [],
+    })
+    // A hydrated project is a new document — undoing into the previous one would
+    // silently mix two projects together.
+    useScenarioStore.temporal.getState().clear()
+  },
 
   // ── Map meta / dialog / localization ────────────────────────────────────────
 

@@ -165,6 +165,12 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![extract_thumbnails])
         .setup(|app| {
+            // ── Auto-update (desktop only) ───────────────────────────────────
+            // The frontend drives the check and install via the JS API; this only
+            // registers the plugin. See src/lib/updater.ts.
+            #[cfg(desktop)]
+            app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
 
             // ── Native menu bar ──────────────────────────────────────────────
             let new_item = MenuItemBuilder::with_id("new", "New")

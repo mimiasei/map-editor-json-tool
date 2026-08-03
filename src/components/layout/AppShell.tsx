@@ -11,6 +11,12 @@ import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
 import { warmThumbnailDir } from '@/lib/catalog/thumbnails'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
+import { checkForUpdate, isUpdaterAvailable } from '@/lib/updater'
+import type { AvailableUpdate } from '@/lib/updater'
+import { restoreSessionHandoff } from '@/lib/session-handoff'
+import type { RestoreResult } from '@/lib/session-handoff'
+import { UpdateBanner, RestoreBanner } from '@/components/common/UpdateBanner'
+import UpdateDialog from '@/components/common/UpdateDialog'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -73,6 +79,14 @@ export default function AppShell() {
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
   const [setupOpen, setSetupOpen] = useState(false)
 
+  // ── Auto-update state ────────────────────────────────────────────────────────
+  // `updateDismissed` is component state on purpose: dismissal lasts for the
+  // session only, so the banner returns on the next launch (issue #51).
+  const [pendingUpdate, setPendingUpdate] = useState<AvailableUpdate | null>(null)
+  const [updateDismissed, setUpdateDismissed] = useState(false)
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
+  const [restoreInfo, setRestoreInfo] = useState<RestoreResult | null>(null)
+
   // Apply user-customized theme settings (CSS vars + font-size) on light theme.
   useApplyThemeSettings()
 
@@ -84,12 +98,52 @@ export default function AppShell() {
       // Pre-warm thumbnail dir cache and load manifest
       Promise.all([warmThumbnailDir(), loadThumbnailManifest()])
 
-      // Show first-run setup wizard if not previously completed
-      if (!localStorage.getItem(SETUP_SHOWN_KEY)) {
-        setSetupOpen(true)
-      }
+      // Restore a session parked by an update before anything else can dirty the
+      // store, then show the first-run wizard only if we did NOT restore — a
+      // returning user with restored work shouldn't be handed a setup prompt.
+      restoreSessionHandoff()
+        .then((result) => {
+          if (result.restored) {
+            setRestoreInfo(result)
+            return
+          }
+          if (!localStorage.getItem(SETUP_SHOWN_KEY)) setSetupOpen(true)
+        })
+        .catch(() => {
+          if (!localStorage.getItem(SETUP_SHOWN_KEY)) setSetupOpen(true)
+        })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Update check on startup (non-blocking, packaged builds only) ─────────────
+  useEffect(() => {
+    if (!isUpdaterAvailable()) return
+    let cancelled = false
+    // Small delay so the check never competes with first paint or the catalog load.
+    const timer = setTimeout(() => {
+      checkForUpdate().then((outcome) => {
+        if (cancelled) return
+        if (outcome.status === 'update') setPendingUpdate(outcome.update)
+      })
+    }, 4000)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [])
+
+  // Let the Toolbar's "Check for updates…" hand a found update back to the banner
+  // and dialog, reusing the same UI as the startup path.
+  useEffect(() => {
+    const onFound = (e: Event) => {
+      const update = (e as CustomEvent<AvailableUpdate>).detail
+      setPendingUpdate(update)
+      setUpdateDismissed(false)
+      setUpdateDialogOpen(true)
+    }
+    window.addEventListener('oe:update-found', onFound)
+    return () => window.removeEventListener('oe:update-found', onFound)
   }, [])
 
   // Track which panels are currently undocked
@@ -423,6 +477,27 @@ export default function AppShell() {
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
         onOpen={() => window.dispatchEvent(new Event('oe:open'))}
+      />
+
+      {/* Non-blocking notices under the toolbar */}
+      {restoreInfo?.restored && (
+        <RestoreBanner
+          fileName={restoreInfo.fileName}
+          wasDirty={restoreInfo.wasDirty}
+          onDismiss={() => setRestoreInfo(null)}
+        />
+      )}
+      {pendingUpdate && !updateDismissed && (
+        <UpdateBanner
+          version={pendingUpdate.version}
+          onOpen={() => setUpdateDialogOpen(true)}
+          onDismiss={() => setUpdateDismissed(true)}
+        />
+      )}
+      <UpdateDialog
+        open={updateDialogOpen}
+        onOpenChange={setUpdateDialogOpen}
+        update={pendingUpdate}
       />
 
       <ThumbnailExtractDialog
