@@ -6,7 +6,7 @@
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { isTauri } from '@/lib/native-fs'
 import { isIconKnown } from '@/hooks/useThumbnailManifest'
-import { heroPortraitIcon } from '@/lib/catalog/icon-requests'
+import { assetLeafName, heroPortraitIcon } from '@/lib/catalog/icon-requests'
 
 // Cached once per session — populated by warmThumbnailDir() at startup.
 let _appLocalDataDir: string | null = null
@@ -35,7 +35,11 @@ export function thumbnailPath(iconId: string | undefined): string | null {
   if (!iconId) return null
   if (!isTauri()) return null
   if (!_appLocalDataDir) return null
-  const lower = iconId.toLowerCase()
+  // Extracted PNGs are named after Unity's Texture2D.m_Name, which is the last path
+  // segment. Catalog entity icons are already bare names (leaf() is a no-op for
+  // them), but dialog avatars are full paths like
+  // "icons/dialogue/dialogue_unit_peasant" — without this they never resolved.
+  const lower = assetLeafName(iconId).toLowerCase()
   if (!isIconKnown(lower)) return null
   const filePath = `${_appLocalDataDir}thumbnails/${lower}.png`
   return convertFileSrc(filePath)

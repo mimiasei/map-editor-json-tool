@@ -25,6 +25,34 @@ export function heroPortraitIcon(icon: string): string {
 }
 
 /**
+ * Last path segment of an asset reference.
+ *
+ * Dialog avatars are stored as full paths ("icons/dialogue/dialogue_unit_peasant"),
+ * but the sidecar matches Unity `Texture2D.m_Name`, which is only the leaf. Both the
+ * extraction request and the later lookup have to use the leaf, or nothing matches.
+ */
+export function assetLeafName(assetPath: string): string {
+  return assetPath.split('/').pop() ?? assetPath
+}
+
+/**
+ * Avatar icon references worth asking the extractor for.
+ *
+ * Shipped dialogs contain a handful of malformed entries — bare numbers from
+ * `avatars.icons` arrays — which would only ever come back as "missing", so they are
+ * dropped rather than reported as failures.
+ */
+export function avatarIconRequests(avatarIcons: string[]): string[] {
+  const out = new Set<string>()
+  for (const ref of avatarIcons) {
+    const leaf = assetLeafName(ref).trim()
+    if (!leaf || /^\d+$/.test(leaf)) continue
+    out.add(leaf)
+  }
+  return [...out]
+}
+
+/**
  * Build the extraction request for a loaded catalog. Names the sidecar cannot match
  * come back in its `missing` list and are otherwise harmless.
  */
@@ -38,6 +66,9 @@ export function buildIconRequests(catalog: GameCatalog | null): IconRequests {
       icons.push(h.icon)
       icons.push(heroPortraitIcon(h.icon))
     }
+    // Dialogue avatar portraits. These were previously never requested, so no PNG
+    // ever existed and the Dialog Editor could not show an avatar however it tried.
+    icons.push(...avatarIconRequests(catalog.dialogAvatarIcons ?? []))
     for (const c of catalog.creatures) if (c.icon) icons.push(c.icon)
     for (const a of catalog.artifacts) if (a.icon) icons.push(a.icon)
     for (const s of catalog.spells) if (s.icon) icons.push(s.icon)
