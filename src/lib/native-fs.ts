@@ -3,7 +3,7 @@
 // Pages) and inside the Tauri desktop wrapper. Import only from this module —
 // never import @tauri-apps/plugin-* directly in UI components.
 
-import { logInfo } from '@/lib/logger'
+import { logInfo, logWarn } from '@/lib/logger'
 
 /** True when running inside the Tauri desktop wrapper. */
 export function isTauri(): boolean {
@@ -220,6 +220,35 @@ export async function readTextFileAt(path: string): Promise<string | null> {
     return await readTextFile(path)
   } catch {
     return null
+  }
+}
+
+// ─── Open a URL outside the app ───────────────────────────────────────────────
+
+/**
+ * Hand a URL to the system browser.
+ *
+ * Never navigate the app's own webview to an external page: the main window has no
+ * chrome, so there is no back button and the editor becomes unreachable. Anything
+ * user-facing that links out must come through here.
+ *
+ * Falls back to window.open in the browser build.
+ */
+export async function openExternal(url: string): Promise<void> {
+  if (!/^https?:\/\//i.test(url)) {
+    logWarn(`Refused to open a non-http URL: ${url}`)
+    return
+  }
+  if (!isTauri()) {
+    window.open(url, '_blank', 'noopener,noreferrer')
+    return
+  }
+  try {
+    const { open } = await import('@tauri-apps/plugin-shell')
+    await open(url)
+    logInfo(`Opened externally: ${url}`)
+  } catch (e) {
+    logWarn(`Could not open ${url}: ${e instanceof Error ? e.message : String(e)}`)
   }
 }
 

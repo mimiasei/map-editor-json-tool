@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import type { Components } from 'react-markdown'
+import ChangelogDialog from '@/components/common/ChangelogDialog'
+import { openExternal } from '@/lib/native-fs'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { installUpdate } from '@/lib/updater'
 import type { AvailableUpdate } from '@/lib/updater'
@@ -12,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { AlertTriangle, ArrowRight, Download, Loader2 } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Download, Loader2, ScrollText } from 'lucide-react'
 
 interface Props {
   open: boolean
@@ -26,6 +29,7 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
   const isDirty = useScenarioStore((s) => s.isDirty)
   const [phase, setPhase] = useState<Phase>('confirm')
   const [progress, setProgress] = useState<number | null>(null)
+  const [changelogOpen, setChangelogOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!update) return null
@@ -44,6 +48,29 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
   }
 
   const pct = progress === null ? null : Math.round(progress * 100)
+
+  // Release notes are authored on GitHub, so they contain absolute links. Rendering them
+  // as plain <a> let a click navigate this webview away from the editor with no way back.
+  // A link to the repo's own commit list becomes the in-app changelog; anything else is
+  // handed to the system browser.
+  const markdownComponents: Components = {
+    a: ({ href, children }) => (
+      <button
+        type="button"
+        className="text-primary underline underline-offset-2"
+        onClick={() => {
+          if (!href) return
+          if (/\/commits?(\/|\?|$)/.test(href) || /\/releases?(\/|\?|$)/.test(href)) {
+            setChangelogOpen(true)
+            return
+          }
+          void openExternal(href)
+        }}
+      >
+        {children}
+      </button>
+    ),
+  }
 
   return (
     <Dialog
@@ -81,7 +108,9 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
           <div className="py-4 space-y-3">
             {update.notes ? (
               <div className="prose-sm max-w-none text-sm [&_a]:text-primary [&_code]:font-mono [&_code]:text-xs [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-sm [&_h2]:font-semibold [&_li]:my-0.5 [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{update.notes}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  {update.notes}
+                </ReactMarkdown>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
@@ -126,6 +155,16 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
         </ScrollArea>
 
         <div className="px-6 py-3 border-t border-border flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={phase === 'working'}
+            onClick={() => setChangelogOpen(true)}
+          >
+            <ScrollText className="h-3.5 w-3.5" />
+            Changelog
+          </Button>
           <div className="flex-1" />
           <Button
             variant="ghost"
@@ -150,6 +189,8 @@ export default function UpdateDialog({ open, onOpenChange, update }: Props) {
           </Button>
         </div>
       </DraggableDialogContent>
+
+      <ChangelogDialog open={changelogOpen} onOpenChange={setChangelogOpen} />
     </Dialog>
   )
 }

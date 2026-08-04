@@ -28,6 +28,6 @@
     "process:allow-restart",
     "updater:default",
     "shell:allow-execute",
-    "shell:deny-open"
+    "shell:allow-open"
   ]
 }

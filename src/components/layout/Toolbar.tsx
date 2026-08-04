@@ -37,6 +37,7 @@ import {
 import {
   FilePlus,
   Upload,
+  Info,
   Download,
   ShieldCheck,
   PanelLeft,
@@ -67,6 +68,7 @@ import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
+import AboutDialog from '@/components/common/AboutDialog'
 import { ImageIcon } from 'lucide-react'
 
 interface ToolbarProps {
@@ -130,6 +132,7 @@ export default function Toolbar({
   const [publishOpen,         setPublishOpen]         = useState(false)
   const [updateChecking,      setUpdateChecking]      = useState(false)
   const [updateMessage,       setUpdateMessage]       = useState<string | null>(null)
+  const [aboutOpen,           setAboutOpen]           = useState(false)
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -332,8 +335,8 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleImport, handleOpenMap, handleSave, handleExport })
-  handlersRef.current = { handleImport, handleOpenMap, handleSave, handleExport }
+  const handlersRef = useRef({ handleImport, handleOpenMap, handleSave, handleExport, handleCheckForUpdates })
+  handlersRef.current = { handleImport, handleOpenMap, handleSave, handleExport, handleCheckForUpdates }
 
   useEffect(() => {
     const onOpen    = () => { handlersRef.current.handleImport() }
@@ -341,11 +344,18 @@ export default function Toolbar({
     const onSave    = () => { handlersRef.current.handleSave() }
     const onSaveAs  = () => { handlersRef.current.handleExport() }
 
+    const onAbout   = () => { setAboutOpen(true) }
+    const onUpdates = () => { void handlersRef.current.handleCheckForUpdates() }
+
+    window.addEventListener('oe:about',         onAbout)
+    window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',     onOpen)
     window.addEventListener('oe:open-map', onOpenMap)
     window.addEventListener('oe:save',     onSave)
     window.addEventListener('oe:save-as',  onSaveAs)
     return () => {
+      window.removeEventListener('oe:about',         onAbout)
+      window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',     onOpen)
       window.removeEventListener('oe:open-map', onOpenMap)
       window.removeEventListener('oe:save',     onSave)
@@ -624,6 +634,13 @@ export default function Toolbar({
                   </DropdownMenuItem>
                 </>
               )}
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={() => setTimeout(() => setAboutOpen(true), 0)}>
+                <Info className="h-4 w-4 mr-2" />
+                About
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -887,6 +904,9 @@ export default function Toolbar({
       {isTauri() && (
         <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} />
       )}
+
+      {/* About works in both builds — the version row just reads "web build" on the web. */}
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
       {/* Manual update check result — only for the no-update / failure cases;
           a found update is handed to AppShell's banner and dialog instead. */}

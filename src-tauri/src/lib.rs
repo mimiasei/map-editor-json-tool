@@ -209,9 +209,23 @@ pub fn run() {
                 .item(&redo_item)
                 .build()?;
 
+            // "About" is handled in the frontend (AboutDialog) rather than by
+            // PredefinedMenuItem::about, so the same dialog appears on every platform
+            // and can show the build date and stack from src/data/about.json.
+            let about_item = MenuItemBuilder::with_id("about", "About").build(app)?;
+            let updates_item =
+                MenuItemBuilder::with_id("check-updates", "Check for Updates...").build(app)?;
+
+            let help_menu = SubmenuBuilder::new(app, "Help")
+                .item(&updates_item)
+                .separator()
+                .item(&about_item)
+                .build()?;
+
             let menu = MenuBuilder::new(app)
                 .item(&file_menu)
                 .item(&edit_menu)
+                .item(&help_menu)
                 .build()?;
 
             app.set_menu(menu)?;
