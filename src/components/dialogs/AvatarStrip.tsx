@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AssetCombobox from './AssetCombobox'
 import { MessageSquare, Plus, Trash2, UserRound } from 'lucide-react'
+import { thumbnailPath } from '@/lib/catalog/thumbnails'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -44,13 +45,14 @@ function Slot({
   onAdd: () => void
 }) {
   const occupied = !!avatar
+  const portraitSrc = thumbnailPath(avatar?.icon)
 
   return (
     <button
       type="button"
       onClick={occupied ? onSelect : onAdd}
       title={occupied ? iconName(avatar!.icon) || `Position ${position}` : `Add avatar at position ${position}`}
-      className={`flex-1 flex flex-col items-center gap-1 rounded border px-1 py-2 transition-colors ${
+      className={`flex-1 flex min-h-[76px] flex-col items-center justify-center gap-1 rounded border px-1 py-2 transition-colors ${
         selected
           ? 'border-primary bg-primary/10'
           : occupied
@@ -59,9 +61,22 @@ function Slot({
       }`}
     >
       {occupied ? (
-        <UserRound
-          className={`h-4 w-4 ${avatar!.isForeground === 'true' ? 'text-primary' : 'text-muted-foreground opacity-60'}`}
-        />
+        // The actual portrait once extracted; the glyph is only a fallback. Dimmed
+        // for background-layer avatars so the strip reflects the layering.
+        portraitSrc ? (
+          <img
+            src={portraitSrc}
+            alt={iconName(avatar!.icon)}
+            className={avatar!.isForeground === 'true' ? '' : 'opacity-60'}
+            width={40}
+            height={40}
+            style={{ objectFit: 'contain' }}
+          />
+        ) : (
+          <UserRound
+            className={`h-4 w-4 ${avatar!.isForeground === 'true' ? 'text-primary' : 'text-muted-foreground opacity-60'}`}
+          />
+        )
       ) : (
         <Plus className="h-3 w-3 opacity-50" />
       )}
@@ -147,6 +162,16 @@ export default function AvatarStrip({
       {selected && (
         <div className="space-y-2 rounded border border-border bg-background p-2">
           <div className="flex items-center gap-2">
+            {thumbnailPath(selected.icon) && (
+              <img
+                src={thumbnailPath(selected.icon)!}
+                alt={iconName(selected.icon)}
+                width={44}
+                height={44}
+                className="rounded border border-border bg-card"
+                style={{ objectFit: 'contain' }}
+              />
+            )}
             <span className="text-xs font-medium">Position {selected.position}</span>
             {speakerPosition === selected.position ? (
               <span className="flex items-center gap-1 text-[10px] text-primary">
@@ -177,12 +202,21 @@ export default function AvatarStrip({
 
           <div className="space-y-1">
             <Label className="text-xs">Icon</Label>
+            {/* A realistic-looking path as placeholder made an empty avatar read as
+                configured — the slot said "(no icon)" while the field appeared filled. */}
             <AssetCombobox
               value={selected.icon}
               onChange={(icon) => patchSelected({ icon })}
               suggestions={iconSuggestions}
-              placeholder="icons/dialogue/dialogue_unit_peasant"
+              placeholder="Pick an avatar portrait…"
+              emptyHint="No avatar icons — load Core.zip via Game Data"
+              thumbnailFor={thumbnailPath}
             />
+            {!selected.icon && (
+              <p className="text-[10px] text-amber-600">
+                No portrait chosen yet — this avatar will not appear in game.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">

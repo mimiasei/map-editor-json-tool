@@ -8,6 +8,7 @@ import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
 import { checkForUpdate } from '@/lib/updater'
+import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
 import { openAndLoadMapFile } from '@/lib/map-file'
 import { logInfo, logWarn, logError } from '@/lib/logger'
@@ -36,6 +37,7 @@ import {
 import {
   FilePlus,
   Upload,
+  Info,
   Download,
   ShieldCheck,
   PanelLeft,
@@ -66,6 +68,7 @@ import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
+import AboutDialog from '@/components/common/AboutDialog'
 import { ImageIcon } from 'lucide-react'
 
 interface ToolbarProps {
@@ -129,6 +132,7 @@ export default function Toolbar({
   const [publishOpen,         setPublishOpen]         = useState(false)
   const [updateChecking,      setUpdateChecking]      = useState(false)
   const [updateMessage,       setUpdateMessage]       = useState<string | null>(null)
+  const [aboutOpen,           setAboutOpen]           = useState(false)
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -168,6 +172,12 @@ export default function Toolbar({
 
   // ── Catalog ──────────────────────────────────────────────────────────────────
   const { catalog, loading: catalogLoading, error: catalogError, load: loadCatalog, loadFromFile: loadCatalogFromFile, loadFromPath: loadCatalogFromPath, clear: clearCatalog } = useCatalogStore()
+
+  // Same source as the artwork banner in AppShell, so the two cannot disagree.
+  const pendingIcons = useMemo(
+    () => (isTauri() && catalog ? newlyRequestedIcons(buildIconRequests(catalog)).length : 0),
+    [catalog],
+  )
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false)
   const catalogFileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -325,8 +335,8 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleImport, handleOpenMap, handleSave, handleExport })
-  handlersRef.current = { handleImport, handleOpenMap, handleSave, handleExport }
+  const handlersRef = useRef({ handleImport, handleOpenMap, handleSave, handleExport, handleCheckForUpdates })
+  handlersRef.current = { handleImport, handleOpenMap, handleSave, handleExport, handleCheckForUpdates }
 
   useEffect(() => {
     const onOpen    = () => { handlersRef.current.handleImport() }
@@ -334,11 +344,18 @@ export default function Toolbar({
     const onSave    = () => { handlersRef.current.handleSave() }
     const onSaveAs  = () => { handlersRef.current.handleExport() }
 
+    const onAbout   = () => { setAboutOpen(true) }
+    const onUpdates = () => { void handlersRef.current.handleCheckForUpdates() }
+
+    window.addEventListener('oe:about',         onAbout)
+    window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',     onOpen)
     window.addEventListener('oe:open-map', onOpenMap)
     window.addEventListener('oe:save',     onSave)
     window.addEventListener('oe:save-as',  onSaveAs)
     return () => {
+      window.removeEventListener('oe:about',         onAbout)
+      window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',     onOpen)
       window.removeEventListener('oe:open-map', onOpenMap)
       window.removeEventListener('oe:save',     onSave)
@@ -607,9 +624,23 @@ export default function Toolbar({
                   <DropdownMenuItem onClick={() => setTimeout(() => setThumbnailDialogOpen(true), 0)}>
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Extract Thumbnails…
+                    {/* Stays visible after the banner is dismissed, so the cue remains
+                        findable without nagging. */}
+                    {pendingIcons > 0 && (
+                      <Badge variant="secondary" className="ml-auto h-4 px-1 text-[10px] text-amber-600">
+                        {pendingIcons}
+                      </Badge>
+                    )}
                   </DropdownMenuItem>
                 </>
               )}
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem onClick={() => setTimeout(() => setAboutOpen(true), 0)}>
+                <Info className="h-4 w-4 mr-2" />
+                About
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -873,6 +904,9 @@ export default function Toolbar({
       {isTauri() && (
         <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} />
       )}
+
+      {/* About works in both builds — the version row just reads "web build" on the web. */}
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
       {/* Manual update check result — only for the no-update / failure cases;
           a found update is handed to AppShell's banner and dialog instead. */}

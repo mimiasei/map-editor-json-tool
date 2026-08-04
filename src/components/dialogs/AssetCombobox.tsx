@@ -32,6 +32,8 @@ interface Props {
   /** Shown when the suggestion list is empty. */
   emptyHint?: string
   className?: string
+  /** Resolve a preview image for a suggestion — lets avatar rows show the portrait. */
+  thumbnailFor?: (value: string) => string | null
 }
 
 /** Show the tail of a long asset path — the leading directories are noise. */
@@ -47,6 +49,7 @@ export default function AssetCombobox({
   placeholder,
   emptyHint = 'No suggestions — load Core.zip via Game Data',
   className = '',
+  thumbnailFor,
 }: Props) {
   const [open, setOpen] = useState(false)
 
@@ -101,7 +104,18 @@ export default function AssetCombobox({
                   }}
                   className="flex justify-between gap-2 text-xs py-1"
                 >
-                  <span className="truncate">{s.label ?? shortenPath(s.value)}</span>
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    {thumbnailFor?.(s.value) && (
+                      <img
+                        src={thumbnailFor(s.value)!}
+                        alt=""
+                        width={22}
+                        height={22}
+                        style={{ objectFit: 'contain', flexShrink: 0 }}
+                      />
+                    )}
+                    <span className="truncate">{s.label ?? shortenPath(s.value)}</span>
+                  </span>
                   {s.label && (
                     <span className="text-xs text-muted-foreground font-mono truncate max-w-[55%]">
                       {s.value}

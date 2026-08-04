@@ -7,6 +7,11 @@ export default defineConfig({
   // desktop bundle, GitHub Pages sub-path for the web deploy.
   base: process.env.TAURI_ENV_PLATFORM ? '/' : '/map-editor-json-tool/',
   plugins: [react()],
+  // Stamped at build time so the About dialog can report when this binary was
+  // produced — the version alone doesn't say that.
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

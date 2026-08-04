@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, FolderOpen, AlertTriangle } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
-import { buildIconRequests } from '@/lib/catalog/icon-requests'
+import { buildIconRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -121,7 +121,8 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
       const outputDir = `${rawDir.replace(/\\/g, '/').replace(/\/?$/, '/')}thumbnails`
 
       // Which icons to extract — shared with the first-run wizard.
-      const { icons, mapObjectIcons } = buildIconRequests(catalog)
+      const requests = buildIconRequests(catalog)
+      const { icons, mapObjectIcons } = requests
 
       const result = await invoke<{ saved: number; missing: string[] }>('extract_thumbnails', {
         gameDir: gameDir.trim(),
@@ -131,6 +132,11 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
       })
 
       // Reload manifest so thumbnailPath() activates immediately
+      // Record what we asked for so the app stops prompting for a re-run, and tell
+      // any open banner it can go away.
+      recordExtractedRequests(requests)
+      window.dispatchEvent(new Event('oe:thumbnails-extracted'))
+
       await loadThumbnailManifest()
 
       setDone({ saved: result.saved, missing: result.missing })

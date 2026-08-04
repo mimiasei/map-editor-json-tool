@@ -20,7 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, FolderOpen, AlertTriangle, CheckCircle2, Database, ImageIcon } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
-import { buildIconRequests } from '@/lib/catalog/icon-requests'
+import { buildIconRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -155,7 +155,8 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     const outputDir = `${rawDir.replace(/\\/g, '/').replace(/\/?$/, '/')}thumbnails`
 
     // Which icons to extract — shared with the manual re-run dialog.
-    const { icons, mapObjectIcons } = buildIconRequests(catalog)
+    const requests = buildIconRequests(catalog)
+    const { icons, mapObjectIcons } = requests
 
     const res = await invoke<{ saved: number; missing: string[] }>('extract_thumbnails', {
       gameDir: dir.trim(),
@@ -163,6 +164,9 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
       icons,
       mapObjectIcons,
     })
+
+    recordExtractedRequests(requests)
+    window.dispatchEvent(new Event('oe:thumbnails-extracted'))
 
     await loadThumbnailManifest()
     setResult({ saved: res.saved, missing: res.missing })
@@ -246,7 +250,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) phase === 'done' ? handleDone() : (!isRunning && handleSkip()) }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-lg">Welcome to the Map Editor</DialogTitle>
+          <DialogTitle className="text-lg">Welcome to the Scenario Editor</DialogTitle>
         </DialogHeader>
 
         {/* ── Idle / phase-1 error ── */}
