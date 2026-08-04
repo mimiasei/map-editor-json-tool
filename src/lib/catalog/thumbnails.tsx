@@ -3,6 +3,7 @@
 // has been extracted by the sidecar (issue #62). Components call this
 // synchronously; the manifest is pre-loaded at app startup.
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { isTauri } from '@/lib/native-fs'
 import { isIconKnown } from '@/hooks/useThumbnailManifest'
@@ -139,6 +140,13 @@ interface PortraitThumbProps {
  * A thumbnail that shows an enlarged copy on hover. Extracted from the Game
  * Database detail pane so the hero picker can reuse it rather than copying the
  * markup a third time.
+ *
+ * The preview is a Radix Tooltip rather than an absolutely-positioned div. It used to be
+ * pinned below-right (`absolute left-0 top-full`), which put a ~280px image partly outside
+ * the dialog and the window for tiles in the last two columns or rows. CSS cannot flip
+ * based on available space, but Tooltip portals to the body and, with the default
+ * `avoidCollisions`, flips to the opposite side when there is no room and shifts along the
+ * align axis to stay on screen.
  */
 export function PortraitThumb({
   iconId,
@@ -150,22 +158,34 @@ export function PortraitThumb({
   className,
 }: PortraitThumbProps) {
   const src = resolve(iconId)
+  const thumb = <CatalogIcon iconId={iconId} name={name} size={size} height={height} src={src} />
+
+  if (!src) return <div className={`shrink-0 ${className ?? ''}`}>{thumb}</div>
 
   return (
-    <div className={`relative group/thumb shrink-0 ${className ?? ''}`}>
-      <CatalogIcon iconId={iconId} name={name} size={size} height={height} src={src} />
-      {src && (
-        <div className="absolute left-0 top-full mt-1.5 z-50 hidden group-hover/thumb:block pointer-events-none">
-          <div className="rounded-md border border-border bg-background shadow-lg p-1">
-            <img
-              src={src}
-              alt={name}
-              className="block"
-              style={{ maxWidth: previewSize, maxHeight: previewSize, objectFit: 'contain' }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className={`shrink-0 ${className ?? ''}`}>{thumb}</div>
+      </TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        align="start"
+        collisionPadding={12}
+        className="p-1 border-border bg-background"
+      >
+        <img
+          src={src}
+          alt={name}
+          className="block"
+          style={{
+            // Capped against the viewport as well as previewSize, so a small window cannot
+            // be handed a preview bigger than itself.
+            maxWidth: `min(${previewSize}px, 90vw)`,
+            maxHeight: `min(${previewSize}px, 80vh)`,
+            objectFit: 'contain',
+          }}
+        />
+      </TooltipContent>
+    </Tooltip>
   )
 }

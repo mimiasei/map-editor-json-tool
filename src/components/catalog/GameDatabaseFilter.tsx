@@ -4,20 +4,20 @@
 // immediately reflected. State is persisted to localStorage.
 
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
-import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { SlidersHorizontal } from 'lucide-react'
 import type { CatalogCreature, CatalogArtifact, CatalogSpell } from '@/lib/catalog/types'
 import { FACTION_ORDER } from '@/lib/factions'
+import FilterRows, {
+  type FilterGroup,
+  makeFilterGroup,
+  mergeFilterGroup,
+  isGroupActive,
+} from './FilterRows'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type TabId = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'mapObjects'
-
-interface FilterGroup {
-  showAll: boolean
-  enabled: Record<string, boolean>
-}
 
 export interface GameDatabaseFilterState {
   factions:      FilterGroup
@@ -44,31 +44,16 @@ const MAP_CATEGORY_LABELS: Record<string, string> = {
   spawns:        'Spawns',
 }
 
-function makeGroup(keys: (string | number)[]): FilterGroup {
-  const enabled: Record<string, boolean> = {}
-  for (const k of keys) enabled[String(k)] = true
-  return { showAll: true, enabled }
-}
-
 export const DEFAULT_FILTER: GameDatabaseFilterState = {
-  factions:      makeGroup(FACTIONS),
-  tiers:         makeGroup(CREATURE_TIERS),
-  slots:         makeGroup([]),  // populated dynamically; default showAll=true covers all
-  rarities:      makeGroup([]),
-  schools:       makeGroup(SCHOOLS),
-  mapCategories: makeGroup(MAP_CATEGORIES),
+  factions:      makeFilterGroup(FACTIONS),
+  tiers:         makeFilterGroup(CREATURE_TIERS),
+  slots:         makeFilterGroup([]),  // populated dynamically; default showAll=true covers all
+  rarities:      makeFilterGroup([]),
+  schools:       makeFilterGroup(SCHOOLS),
+  mapCategories: makeFilterGroup(MAP_CATEGORIES),
 }
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
-
-function mergeGroup(defaults: FilterGroup, saved: Partial<FilterGroup> | undefined): FilterGroup {
-  if (!saved) return defaults
-  return {
-    showAll: saved.showAll ?? defaults.showAll,
-    // Deep-merge enabled: default keys are preserved; saved values override them
-    enabled: { ...defaults.enabled, ...(saved.enabled ?? {}) },
-  }
-}
 
 export function loadSavedFilter(): GameDatabaseFilterState {
   try {
@@ -76,12 +61,12 @@ export function loadSavedFilter(): GameDatabaseFilterState {
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameDatabaseFilterState>
       return {
-        factions:      mergeGroup(DEFAULT_FILTER.factions,      parsed.factions),
-        tiers:         mergeGroup(DEFAULT_FILTER.tiers,         parsed.tiers),
-        slots:         mergeGroup(DEFAULT_FILTER.slots,         parsed.slots),
-        rarities:      mergeGroup(DEFAULT_FILTER.rarities,      parsed.rarities),
-        schools:       mergeGroup(DEFAULT_FILTER.schools,       parsed.schools),
-        mapCategories: mergeGroup(DEFAULT_FILTER.mapCategories, parsed.mapCategories),
+        factions:      mergeFilterGroup(DEFAULT_FILTER.factions,      parsed.factions),
+        tiers:         mergeFilterGroup(DEFAULT_FILTER.tiers,         parsed.tiers),
+        slots:         mergeFilterGroup(DEFAULT_FILTER.slots,         parsed.slots),
+        rarities:      mergeFilterGroup(DEFAULT_FILTER.rarities,      parsed.rarities),
+        schools:       mergeFilterGroup(DEFAULT_FILTER.schools,       parsed.schools),
+        mapCategories: mergeFilterGroup(DEFAULT_FILTER.mapCategories, parsed.mapCategories),
       }
     }
   } catch { /* ignore */ }
@@ -97,8 +82,7 @@ export function saveFilter(f: GameDatabaseFilterState): void {
 export function isFilterActive(state: GameDatabaseFilterState, tab: TabId): boolean {
   if (tab === 'skills') return false
 
-  const check = (group: FilterGroup) =>
-    !group.showAll || Object.values(group.enabled).some((v) => !v)
+  const check = isGroupActive
 
   if (tab === 'heroes')      return check(state.factions)
   if (tab === 'creatures')   return check(state.factions) || check(state.tiers)
@@ -114,59 +98,6 @@ interface CatalogShape {
   artifacts: CatalogArtifact[]
   creatures:  CatalogCreature[]
   spells:     CatalogSpell[]
-}
-
-// ─── Sub-component: FilterGroup UI ───────────────────────────────────────────
-
-function FilterGroupUI({
-  label,
-  group,
-  keys,
-  labelFor,
-  onChange,
-}: {
-  label:     string
-  group:     FilterGroup
-  keys:      string[]
-  labelFor:  (k: string) => string
-  onChange:  (g: FilterGroup) => void
-}) {
-  const toggleShowAll = () => {
-    onChange({ ...group, showAll: !group.showAll })
-  }
-  const toggleKey = (k: string) => {
-    onChange({
-      ...group,
-      enabled: { ...group.enabled, [k]: !group.enabled[k] },
-    })
-  }
-
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-        {label}
-      </p>
-      {/* Show All row */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs">Show all</span>
-        <Switch checked={group.showAll} onCheckedChange={toggleShowAll} />
-      </div>
-      {/* Individual rows */}
-      {keys.map((k) => (
-        <div
-          key={k}
-          className={`flex items-center justify-between gap-2 transition-opacity ${group.showAll ? 'opacity-40' : ''}`}
-        >
-          <span className="text-xs">{labelFor(k)}</span>
-          <Switch
-            checked={group.enabled[k] ?? true}
-            onCheckedChange={() => toggleKey(k)}
-            disabled={group.showAll}
-          />
-        </div>
-      ))}
-    </div>
-  )
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -221,7 +152,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
       <PopoverContent className="w-56 p-3 space-y-4 text-sm" align="end">
         {/* ── Heroes ── */}
         {activeTab === 'heroes' && (
-          <FilterGroupUI
+          <FilterRows
             label="Faction"
             group={value.factions}
             keys={FACTIONS}
@@ -233,14 +164,14 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         {/* ── Creatures ── */}
         {activeTab === 'creatures' && (
           <>
-            <FilterGroupUI
+            <FilterRows
               label="Faction"
               group={value.factions}
               keys={FACTIONS}
               labelFor={(k) => k}
               onChange={update('factions')}
             />
-            <FilterGroupUI
+            <FilterRows
               label="Tier"
               group={value.tiers}
               keys={CREATURE_TIERS.map(String)}
@@ -253,14 +184,14 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
         {/* ── Artifacts ── */}
         {activeTab === 'artifacts' && (
           <>
-            <FilterGroupUI
+            <FilterRows
               label="Slot"
               group={value.slots}
               keys={artifactSlots}
               labelFor={(k) => k}
               onChange={update('slots')}
             />
-            <FilterGroupUI
+            <FilterRows
               label="Rarity"
               group={value.rarities}
               keys={artifactRarities}
@@ -272,7 +203,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
 
         {/* ── Spells ── */}
         {activeTab === 'spells' && (
-          <FilterGroupUI
+          <FilterRows
             label="School"
             group={value.schools}
             keys={SCHOOLS}
@@ -283,7 +214,7 @@ export default function GameDatabaseFilter({ activeTab, catalog, value, onChange
 
         {/* ── Map Objects ── */}
         {activeTab === 'mapObjects' && (
-          <FilterGroupUI
+          <FilterRows
             label="Category"
             group={value.mapCategories}
             keys={MAP_CATEGORIES}
