@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, FolderOpen, AlertTriangle } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
+import { buildIconRequests } from '@/lib/catalog/icon-requests'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,32 +120,14 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
       // sidecar receives a valid output path on all platforms.
       const outputDir = `${rawDir.replace(/\\/g, '/').replace(/\/?$/, '/')}thumbnails`
 
-      // Collect all icon SIDs from the catalog
-      const icons: string[] = []
-      const mapObjectIcons: string[] = []
-
-      if (catalog) {
-        for (const h of catalog.heroes)    if (h.icon) icons.push(h.icon)
-        for (const c of catalog.creatures) if (c.icon) icons.push(c.icon)
-        for (const a of catalog.artifacts) if (a.icon) icons.push(a.icon)
-        for (const s of catalog.spells)    if (s.icon) icons.push(s.icon)
-        for (const s of catalog.skills)    if (s.icon) icons.push(s.icon)
-        for (const b of catalog.buffs)     if (b.icon) icons.push(b.icon)
-        for (const o of catalog.mapObjects) {
-          // Only extract icons for interactables and resources — their icon is
-          // derived from the prefab path stem (e.g. "mine_gold") and matches a
-          // Texture2D m_Name in the Unity assets. environments/spawns have no
-          // usable map icon textures.
-          if ((o.category === 'interactables' || o.category === 'resources') && o.icon)
-            mapObjectIcons.push(o.icon)
-        }
-      }
+      // Which icons to extract — shared with the first-run wizard.
+      const { icons, mapObjectIcons } = buildIconRequests(catalog)
 
       const result = await invoke<{ saved: number; missing: string[] }>('extract_thumbnails', {
         gameDir: gameDir.trim(),
         outputDir,
-        icons: [...new Set(icons)],
-        mapObjectIcons: [...new Set(mapObjectIcons)],
+        icons,
+        mapObjectIcons,
       })
 
       // Reload manifest so thumbnailPath() activates immediately
