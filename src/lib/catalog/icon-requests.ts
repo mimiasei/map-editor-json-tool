@@ -89,3 +89,57 @@ export function buildIconRequests(catalog: GameCatalog | null): IconRequests {
     mapObjectIcons: [...new Set(mapObjectIcons)],
   }
 }
+
+// ─── Knowing when a re-run is needed ──────────────────────────────────────────
+// Every time this module learns to ask for more artwork — hero portraits, dialogue
+// avatars — anyone who already extracted is silently short of it, with nothing in the
+// UI suggesting a remedy. So record what was asked for and compare.
+//
+// Deliberately NOT "is everything in the manifest?": a couple of requested textures do
+// not exist in the game at all (hero_campaign_10_dragonfly_king_large,
+// dialogue_unit_sunlight_cavalry_upg), so that test never reaches zero and would nag
+// forever. Diffing against the last request set means permanently-absent textures are
+// asked for once, recorded, and never mentioned again.
+
+const REQUESTS_KEY = 'oe-thumbnails-requested'
+
+function allNames({ icons, mapObjectIcons }: IconRequests): string[] {
+  return [...new Set([...icons, ...mapObjectIcons])]
+}
+
+/** Remember what this extraction asked for. Call after a successful run. */
+export function recordExtractedRequests(requests: IconRequests): void {
+  try {
+    localStorage.setItem(REQUESTS_KEY, JSON.stringify(allNames(requests).sort()))
+  } catch {
+    // Private mode or quota — the prompt reappearing is a far smaller problem than
+    // failing the extraction that just succeeded.
+  }
+}
+
+function storedRequests(): Set<string> | null {
+  try {
+    const raw = localStorage.getItem(REQUESTS_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return null
+    return new Set(parsed.filter((n): n is string => typeof n === 'string'))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Names the app wants that the last extraction never asked for.
+ *
+ * With nothing recorded — either a first run, or an install that extracted before this
+ * bookkeeping existed — everything counts as new, which is exactly the situation that
+ * needs announcing.
+ */
+export function newlyRequestedIcons(requests: IconRequests): string[] {
+  const current = allNames(requests)
+  if (current.length === 0) return []
+  const previous = storedRequests()
+  if (!previous) return current
+  return current.filter((name) => !previous.has(name))
+}

@@ -1,7 +1,8 @@
-// ─── Update / session-restore banners ─────────────────────────────────────────
-// Non-blocking strips shown under the toolbar. Styling follows AnnotationBanner.
+// ─── Non-blocking notice banners ──────────────────────────────────────────────
+// Strips shown under the toolbar for things the user should know but must not be
+// interrupted by. Styling follows AnnotationBanner.
 
-import { Download, Info, X } from 'lucide-react'
+import { Download, ImageIcon, Info, X } from 'lucide-react'
 
 interface UpdateBannerProps {
   version: string
@@ -65,6 +66,46 @@ export function RestoreBanner({ fileName, wasDirty, onDismiss }: RestoreBannerPr
         onClick={onDismiss}
         className="shrink-0 text-green-600 transition-colors hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
         aria-label="Dismiss restore notice"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  )
+}
+
+interface ThumbnailsBannerProps {
+  /** How many requested icons the last extraction never asked for. */
+  count: number
+  onExtract: () => void
+  onDismiss: () => void
+}
+
+/**
+ * Shown when the app now wants artwork the last extraction did not fetch — which is
+ * what happens whenever a release teaches the extractor about new icons. Without this
+ * the only symptom is silently missing portraits.
+ */
+export function ThumbnailsBanner({ count, onExtract, onDismiss }: ThumbnailsBannerProps) {
+  return (
+    <div className="mx-3 mt-2 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700/30 dark:bg-amber-950/40 dark:text-amber-200">
+      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+      <span className="flex-1">
+        {count} new game {count === 1 ? 'image is' : 'images are'} available — re-run the
+        extractor to see {count === 1 ? 'it' : 'them'} in dropdowns, the hero picker and dialog
+        avatars.
+      </span>
+      <button
+        type="button"
+        onClick={onExtract}
+        className="shrink-0 font-medium underline underline-offset-2 hover:no-underline"
+      >
+        Extract now
+      </button>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="shrink-0 text-amber-600 transition-colors hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+        aria-label="Dismiss artwork notice"
       >
         <X className="h-3 w-3" />
       </button>

@@ -8,6 +8,7 @@ import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
 import { checkForUpdate } from '@/lib/updater'
+import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
 import { openAndLoadMapFile } from '@/lib/map-file'
 import { logInfo, logWarn, logError } from '@/lib/logger'
@@ -168,6 +169,12 @@ export default function Toolbar({
 
   // ── Catalog ──────────────────────────────────────────────────────────────────
   const { catalog, loading: catalogLoading, error: catalogError, load: loadCatalog, loadFromFile: loadCatalogFromFile, loadFromPath: loadCatalogFromPath, clear: clearCatalog } = useCatalogStore()
+
+  // Same source as the artwork banner in AppShell, so the two cannot disagree.
+  const pendingIcons = useMemo(
+    () => (isTauri() && catalog ? newlyRequestedIcons(buildIconRequests(catalog)).length : 0),
+    [catalog],
+  )
   const [catalogDialogOpen, setCatalogDialogOpen] = useState(false)
   const catalogFileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -607,6 +614,13 @@ export default function Toolbar({
                   <DropdownMenuItem onClick={() => setTimeout(() => setThumbnailDialogOpen(true), 0)}>
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Extract Thumbnails…
+                    {/* Stays visible after the banner is dismissed, so the cue remains
+                        findable without nagging. */}
+                    {pendingIcons > 0 && (
+                      <Badge variant="secondary" className="ml-auto h-4 px-1 text-[10px] text-amber-600">
+                        {pendingIcons}
+                      </Badge>
+                    )}
                   </DropdownMenuItem>
                 </>
               )}

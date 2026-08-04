@@ -10,12 +10,13 @@ import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
 import { warmThumbnailDir } from '@/lib/catalog/thumbnails'
-import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
+import { loadThumbnailManifest, getThumbnailCount } from '@/hooks/useThumbnailManifest'
+import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { checkForUpdate, isUpdaterAvailable } from '@/lib/updater'
 import type { AvailableUpdate } from '@/lib/updater'
 import { restoreSessionHandoff } from '@/lib/session-handoff'
 import type { RestoreResult } from '@/lib/session-handoff'
-import { UpdateBanner, RestoreBanner } from '@/components/common/UpdateBanner'
+import { UpdateBanner, RestoreBanner, ThumbnailsBanner } from '@/components/common/UpdateBanner'
 import UpdateDialog from '@/components/common/UpdateDialog'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
@@ -86,6 +87,9 @@ export default function AppShell() {
   const [updateDismissed, setUpdateDismissed] = useState(false)
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const [restoreInfo, setRestoreInfo] = useState<RestoreResult | null>(null)
+  // Count of icons the app now wants that the last extraction never asked for.
+  const [pendingIcons, setPendingIcons] = useState(0)
+  const [iconsDismissed, setIconsDismissed] = useState(false)
 
   // Apply user-customized theme settings (CSS vars + font-size) on light theme.
   useApplyThemeSettings()
@@ -114,6 +118,34 @@ export default function AppShell() {
         })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Pending artwork ──────────────────────────────────────────────────────────
+  // Releases keep teaching the extractor about new icons; without this the only
+  // symptom is silently missing portraits. Needs the catalog, so it runs once that
+  // has loaded, and again whenever an extraction finishes.
+  useEffect(() => {
+    if (!isTauri()) return
+
+    const recount = () => {
+      const catalog = useCatalogStore.getState().catalog
+      if (!catalog) return
+      // Don't compete with the first-run wizard: a fresh install has extracted
+      // nothing and is already being walked through it.
+      const neverExtracted = getThumbnailCount() === 0
+      const pending = neverExtracted ? 0 : newlyRequestedIcons(buildIconRequests(catalog)).length
+      setPendingIcons(pending)
+    }
+
+    const unsubscribe = useCatalogStore.subscribe(recount)
+    const onExtracted = () => { setIconsDismissed(false); recount() }
+    window.addEventListener('oe:thumbnails-extracted', onExtracted)
+    recount()
+
+    return () => {
+      unsubscribe()
+      window.removeEventListener('oe:thumbnails-extracted', onExtracted)
+    }
   }, [])
 
   // ── Update check on startup (non-blocking, packaged builds only) ─────────────
@@ -485,6 +517,13 @@ export default function AppShell() {
           fileName={restoreInfo.fileName}
           wasDirty={restoreInfo.wasDirty}
           onDismiss={() => setRestoreInfo(null)}
+        />
+      )}
+      {pendingIcons > 0 && !iconsDismissed && (
+        <ThumbnailsBanner
+          count={pendingIcons}
+          onExtract={() => { setIconsDismissed(true); setThumbnailDialogOpen(true) }}
+          onDismiss={() => setIconsDismissed(true)}
         />
       )}
       {pendingUpdate && !updateDismissed && (
