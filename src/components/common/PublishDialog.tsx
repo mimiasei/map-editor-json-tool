@@ -7,7 +7,7 @@ import { resolvePublishTargets, targetsReady } from '@/lib/publish'
 import type { PublishTargets } from '@/lib/publish'
 import { pickSavePath, saveToPath, writeBinaryFile } from '@/lib/native-fs'
 import { validateScenario } from '@/lib/validate'
-import { languagesWithContent, languageLabel } from '@/lib/languages'
+import { languagesWithContent, languageLabel, shippedLanguages } from '@/lib/languages'
 import { logError, logInfo } from '@/lib/logger'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
@@ -116,6 +116,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
     knownGameSids,
   })
   const extraLanguages = languagesWithContent(translations)
+  const shipped = shippedLanguages(translations)
 
   const chooseJson = useCallback(async () => {
     const picked = await pickSavePath(
@@ -196,6 +197,12 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
                   <code className="block break-all text-muted-foreground">
                     {targets?.zip.path}
                   </code>
+                  {/* Name the language files that landed — a missing translation
+                      used to fail silently. */}
+                  <p className="text-muted-foreground">
+                    {shipped.length} language file{shipped.length !== 1 ? 's' : ''}:{' '}
+                    {shipped.map(languageLabel).join(', ')}
+                  </p>
                 </div>
               </div>
             ) : (
