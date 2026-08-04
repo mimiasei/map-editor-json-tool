@@ -479,13 +479,29 @@ export default function AppShell() {
   }, [])
 
   // ── Window title (Tauri only) ─────────────────────────────────────────────────
+  // The window opens correctly titled from tauri.conf.json, then this overwrites it.
+  // It used to build `${base} — Map Editor` where base itself fell back to
+  // 'Map Editor', so with no file open the title read "Map Editor — Map Editor".
+  // The name now comes from the app itself, so it cannot drift from productName.
   useEffect(() => {
     if (!isTauri()) return
     ;(async () => {
+      // Name and version both come from tauri.conf.json, so the title tracks the
+      // release automatically — no second copy to keep in step.
+      let appLabel = 'HommOE Scenario Editor'
+      try {
+        const { getName, getVersion } = await import('@tauri-apps/api/app')
+        const [name, version] = await Promise.all([getName(), getVersion()])
+        appLabel = `${name || appLabel}${version ? ` v${version}` : ''}`
+      } catch {
+        // Keep the fallback — a versionless title beats none.
+      }
       const { getCurrentWindow } = await import('@tauri-apps/api/window')
-      const base  = currentFileName ?? 'Map Editor'
       const dirty = isDirty ? '● ' : ''
-      getCurrentWindow().setTitle(`${dirty}${base} — Map Editor`)
+      const title = currentFileName
+        ? `${dirty}${currentFileName} — ${appLabel}`
+        : `${dirty}${appLabel}`
+      getCurrentWindow().setTitle(title)
     })()
   }, [isDirty, currentFileName])
 

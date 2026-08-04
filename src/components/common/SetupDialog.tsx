@@ -250,7 +250,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) phase === 'done' ? handleDone() : (!isRunning && handleSkip()) }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-lg">Welcome to the Map Editor</DialogTitle>
+          <DialogTitle className="text-lg">Welcome to the Scenario Editor</DialogTitle>
         </DialogHeader>
 
         {/* ── Idle / phase-1 error ── */}
