@@ -132,49 +132,37 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
       ? `${filteredByMapFilter.length}/${allEntries.length}`
       : undefined
 
-  // Hero params get a portrait tile beside the field: it shows who is currently
-  // selected and opens the faction-grouped browser. This used to be a 12px icon
-  // tucked inside the input next to the chevron, which read as input chrome and was
-  // missed entirely — hence the visible bordered button.
-  const heroButton = category === 'hero' && (
-    <button
-      type="button"
-      onClick={() => setPickerOpen(true)}
-      title={value ? `${value} — browse heroes by faction` : 'Browse heroes by faction'}
-      aria-label="Browse heroes by faction"
-      className="group/thumb relative flex h-7 w-7 shrink-0 items-center justify-center overflow-visible rounded border border-border bg-card transition-colors hover:border-primary hover:bg-accent"
+  // Portrait of the selected hero, shown only when there is one to show.
+  //
+  // It is deliberately a preview, not a button: an image beside a text field reads as
+  // status, so making it the way into the browser was the same mistake as the 12px icon
+  // before it — an affordance with no name. Opening the browser is the labelled row at
+  // the top of the dropdown instead. Rendering nothing when there is no portrait also
+  // keeps the input full width, which matters in the dense parameter grid.
+  const heroPortrait = category === 'hero' && portraitSrc && (
+    <span
+      className="group/thumb relative flex h-7 w-7 shrink-0 items-center justify-center overflow-visible rounded border border-border bg-card"
+      title={value}
     >
-      {portraitSrc ? (
-        <>
+      <img src={portraitSrc} alt={value} width={26} height={26} style={{ objectFit: 'contain' }} />
+      {/* Enlarge on hover, matching the Game Database and the picker */}
+      <span className="pointer-events-none absolute left-0 top-full z-50 mt-1.5 hidden group-hover/thumb:block">
+        <span className="block rounded-md border border-border bg-background p-1 shadow-lg">
           <img
             src={portraitSrc}
             alt={value}
-            width={26}
-            height={26}
-            style={{ objectFit: 'contain' }}
+            className="block"
+            style={{ maxWidth: 224, maxHeight: 224, objectFit: 'contain' }}
           />
-          {/* Enlarge on hover, matching the Game Database and hero picker */}
-          <span className="pointer-events-none absolute left-0 top-full z-50 mt-1.5 hidden group-hover/thumb:block">
-            <span className="block rounded-md border border-border bg-background p-1 shadow-lg">
-              <img
-                src={portraitSrc}
-                alt={value}
-                className="block"
-                style={{ maxWidth: 224, maxHeight: 224, objectFit: 'contain' }}
-              />
-            </span>
-          </span>
-        </>
-      ) : (
-        <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground group-hover/thumb:text-foreground" />
-      )}
-    </button>
+        </span>
+      </span>
+    </span>
   )
 
   return (
     <>
       <div className="flex items-center gap-1.5">
-        {heroButton}
+        {heroPortrait}
         <Popover open={open} onOpenChange={setOpen}>
           <div className="relative flex-1 min-w-0">
             <PopoverAnchor asChild>
@@ -219,6 +207,27 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
           >
             <Command shouldFilter={false}>
               <CommandList>
+                {/* Named entry point for the picker, pinned above the results.
+                    Clicking a hero field already opens this list, so putting the
+                    browser here costs no screen space and needs no tooltip — the
+                    previous icon-only affordances were simply never found. Outside
+                    the filtered group, so typing cannot hide it. */}
+                {category === 'hero' && (
+                  <CommandGroup className="border-b border-border">
+                    <CommandItem
+                      value="__browse_heroes__"
+                      onSelect={() => {
+                        setOpen(false)
+                        setPickerOpen(true)
+                      }}
+                      className="flex items-center gap-1.5 text-xs py-1.5 font-medium"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      Browse heroes by faction…
+                    </CommandItem>
+                  </CommandGroup>
+                )}
+
                 <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
                   {filtered.length === 0 && allEntries.length > 0
                     ? `No matching ${ENTITY_LABELS[category]}`
