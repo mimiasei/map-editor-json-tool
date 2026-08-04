@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, FolderOpen, AlertTriangle, CheckCircle2, Database, ImageIcon } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
+import { buildIconRequests } from '@/lib/catalog/icon-requests'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -153,24 +154,14 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
     const rawDir = await appLocalDataDir()
     const outputDir = `${rawDir.replace(/\\/g, '/').replace(/\/?$/, '/')}thumbnails`
 
-    const icons: string[] = []
-    const mapObjectIcons: string[] = []
-
-    for (const h of catalog.heroes)     if (h.icon) icons.push(h.icon)
-    for (const c of catalog.creatures)  if (c.icon) icons.push(c.icon)
-    for (const a of catalog.artifacts)  if (a.icon) icons.push(a.icon)
-    for (const s of catalog.spells)     if (s.icon) icons.push(s.icon)
-    for (const s of catalog.skills)     if (s.icon) icons.push(s.icon)
-    for (const b of catalog.buffs)      if (b.icon) icons.push(b.icon)
-    for (const o of catalog.mapObjects)
-      if ((o.category === 'interactables' || o.category === 'resources') && o.icon)
-        mapObjectIcons.push(o.icon)
+    // Which icons to extract — shared with the manual re-run dialog.
+    const { icons, mapObjectIcons } = buildIconRequests(catalog)
 
     const res = await invoke<{ saved: number; missing: string[] }>('extract_thumbnails', {
       gameDir: dir.trim(),
       outputDir,
-      icons: [...new Set(icons)],
-      mapObjectIcons: [...new Set(mapObjectIcons)],
+      icons,
+      mapObjectIcons,
     })
 
     await loadThumbnailManifest()

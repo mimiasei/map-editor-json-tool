@@ -12,9 +12,10 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { ChevronsUpDown, SlidersHorizontal } from 'lucide-react'
+import { ChevronsUpDown, LayoutGrid, SlidersHorizontal } from 'lucide-react'
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -89,6 +90,7 @@ function applyMapObjectFilter(
 export default function EntityCombobox({ value, onChange, category, placeholder }: Props) {
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [filter, setFilter] = useState<MapObjectFilterState>(() => loadSavedFilter())
 
   const allEntries = useCatalogEntries(category)
@@ -135,7 +137,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
               onFocus={() => setOpen(true)}
               onBlur={() => setTimeout(() => setOpen(false), 150)}
               placeholder={placeholder}
-              className={`h-7 text-xs ${category === 'mapObject' ? 'pr-14' : 'pr-7'}`}
+              className={`h-7 text-xs ${category === 'mapObject' || category === 'hero' ? 'pr-14' : 'pr-7'}`}
             />
           </PopoverAnchor>
 
@@ -153,6 +155,19 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
             >
               <SlidersHorizontal className="h-3 w-3" />
               {filterBadge && <span>{filterBadge}</span>}
+            </button>
+          )}
+
+          {/* Hero browse button — opens the faction-grouped portrait picker.
+              The combobox keeps working; this is an additional way in. */}
+          {category === 'hero' && (
+            <button
+              type="button"
+              className="absolute right-7 top-1/2 -translate-y-1/2 h-5 flex items-center px-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+              title="Browse heroes by faction"
+              onClick={(e) => { e.stopPropagation(); setPickerOpen(true) }}
+            >
+              <LayoutGrid className="h-3 w-3" />
             </button>
           )}
 
@@ -199,6 +214,16 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
           </Command>
         </PopoverContent>
       </Popover>
+
+      {/* Hero picker */}
+      {category === 'hero' && (
+        <HeroPickerDialog
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          value={value}
+          onSelect={onChange}
+        />
+      )}
 
       {/* Map object filter dialog */}
       {category === 'mapObject' && (

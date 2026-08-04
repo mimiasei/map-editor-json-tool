@@ -12,7 +12,7 @@ import {
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
-import { CatalogIcon, thumbnailPath } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, PortraitThumb } from '@/lib/catalog/thumbnails'
 import {
   STATIC_HEROES,
   STATIC_CREATURES,
@@ -41,24 +41,14 @@ import type {
 } from '@/lib/catalog/types'
 
 import unitsData from '@/data/units.json'
+import { factionDisplayName, groupByFaction } from '@/lib/factions'
 
 // ─── Faction display name normalizer ─────────────────────────────────────────
-
-const FACTION_DISPLAY: Record<string, string> = {
-  human:    'Temple',
-  humans:   'Temple',
-  nature:   'Grove',
-  undead:   'Necropolis',
-  necros:   'Necropolis',
-  demons:   'Hive',
-  demon:    'Hive',
-  dungeon:  'Dungeon',
-  unfrozen: 'Schism',
-  neutral:  'Neutral',
-}
+// Kept as a thin re-export so existing call sites read unchanged; the table and
+// ordering now live in src/lib/factions.ts, shared with the hero picker and filter.
 
 export function normalizeFaction(raw: string): string {
-  return FACTION_DISPLAY[raw.toLowerCase()] ?? raw
+  return factionDisplayName(raw)
 }
 
 // ─── Unit SID → display name map (from bundled units.json) ───────────────────
@@ -188,26 +178,12 @@ function DetailPane({
     <div className="flex flex-col gap-3 p-4 h-full overflow-y-auto text-sm">
       {/* Icon + name */}
       <div className="flex items-center gap-3">
-        {(() => {
-          const src = thumbnailPath(item.icon as string | undefined)
-          return (
-            <div className="relative group/thumb shrink-0">
-              <CatalogIcon iconId={item.icon as string | undefined} name={item.name} size={40} />
-              {src && (
-                <div className="absolute left-0 top-full mt-1.5 z-50 hidden group-hover/thumb:block pointer-events-none">
-                  <div className="rounded-md border border-border bg-background shadow-lg p-1">
-                    <img
-                      src={src}
-                      alt={item.name}
-                      className="block"
-                      style={{ maxWidth: 192, maxHeight: 192, objectFit: 'contain' }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          )
-        })()}
+        <PortraitThumb
+          iconId={item.icon as string | undefined}
+          name={item.name}
+          size={40}
+          previewSize={192}
+        />
         <div>
           <p className="font-semibold leading-tight">{item.name}</p>
           {item.subtitle && (
@@ -614,6 +590,43 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, search, onlyUsed, filterState, activeTab, mapCounts, scriptCounts])
 
+  // Heroes are shown grouped by faction, in the game's own faction order. Null for
+  // every other tab, which keeps its flat list.
+  const heroGroups = useMemo(() => {
+    if (activeTab !== 'heroes') return null
+    return groupByFaction(filtered, (item) =>
+      factionDisplayName(
+        (item as CatalogItem & { fraction?: string }).fraction ?? '',
+        catalog.factions,
+      ),
+    )
+  }, [activeTab, filtered, catalog.factions])
+
+  /** One list row. Shared by the flat and faction-grouped renderings. */
+  const renderListRow = (item: CatalogItem) => {
+    const count = totalCount(item.id)
+    return (
+      <button
+        key={item.id}
+        onClick={() => setSelectedId(item.id === selectedId ? null : item.id)}
+        className={`flex items-center gap-2 w-full px-2.5 py-1.5 text-left hover:bg-accent transition-colors ${
+          selectedId === item.id ? 'bg-accent' : ''
+        }`}
+      >
+        <CatalogIcon iconId={item.icon} name={item.name} size={20} className="shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium truncate leading-tight">{item.name}</p>
+          <p className="text-[10px] text-muted-foreground truncate font-mono">{item.id}</p>
+        </div>
+        {count > 0 && (
+          <Badge variant="secondary" className="h-4 px-1 text-[10px] shrink-0">
+            {count}
+          </Badge>
+        )}
+      </button>
+    )
+  }
+
   const selectedItem = useMemo(
     () => (selectedId ? (items.find((i) => i.id === selectedId) ?? null) : null),
     [items, selectedId],
@@ -698,29 +711,24 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
                     {onlyUsed ? 'No items placed or used on this map.' : 'No matches.'}
                   </p>
                 )}
-                {filtered.map((item) => {
-                  const count = totalCount(item.id)
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setSelectedId(item.id === selectedId ? null : item.id)}
-                      className={`flex items-center gap-2 w-full px-2.5 py-1.5 text-left hover:bg-accent transition-colors ${
-                        selectedId === item.id ? 'bg-accent' : ''
-                      }`}
-                    >
-                      <CatalogIcon iconId={item.icon} name={item.name} size={20} className="shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate leading-tight">{item.name}</p>
-                        <p className="text-[10px] text-muted-foreground truncate font-mono">{item.id}</p>
+                {/* Heroes are grouped by faction; every other tab stays flat. The
+                    groups are built from `filtered`, so search, the faction filter and
+                    "only used" all still apply — empty factions simply drop out. */}
+                {heroGroups
+                  ? heroGroups.map(({ faction, items: groupItems }) => (
+                      <div key={faction}>
+                        <div className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-border/60 bg-card px-2.5 py-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {faction}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground/60">
+                            ({groupItems.length})
+                          </span>
+                        </div>
+                        {groupItems.map(renderListRow)}
                       </div>
-                      {count > 0 && (
-                        <Badge variant="secondary" className="h-4 px-1 text-[10px] shrink-0">
-                          {count}
-                        </Badge>
-                      )}
-                    </button>
-                  )
-                })}
+                    ))
+                  : filtered.map(renderListRow)}
               </ScrollArea>
 
               {/* Footer: item count + Core.zip hint when using built-in data */}

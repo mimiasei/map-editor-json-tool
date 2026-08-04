@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { SlidersHorizontal } from 'lucide-react'
 import type { CatalogCreature, CatalogArtifact, CatalogSpell } from '@/lib/catalog/types'
+import { FACTION_ORDER } from '@/lib/factions'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,7 +32,8 @@ export interface GameDatabaseFilterState {
 
 const STORAGE_KEY = 'oe-game-database-filter'
 
-const FACTIONS      = ['Temple', 'Grove', 'Hive', 'Necropolis', 'Schism', 'Dungeon', 'Neutral']
+// Shared with the hero picker and the Game Database grouping.
+const FACTIONS      = FACTION_ORDER
 const CREATURE_TIERS = [1, 2, 3, 4, 5, 6, 7]
 const SCHOOLS       = ['Arcane', 'Daylight', 'Neutral', 'Nightshade', 'Primal']
 const MAP_CATEGORIES = ['interactables', 'resources', 'environments', 'spawns']
