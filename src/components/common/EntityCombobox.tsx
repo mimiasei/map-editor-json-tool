@@ -4,6 +4,7 @@ import type { EntityCategory, EntityEntry } from '@/schema/entities'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
   Command,
@@ -136,8 +137,8 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
   //
   // It is deliberately a preview, not a button: an image beside a text field reads as
   // status, so making it the way into the browser was the same mistake as the 12px icon
-  // before it — an affordance with no name. Opening the browser is the labelled row at
-  // the top of the dropdown instead. Rendering nothing when there is no portrait also
+  // before it — an affordance with no name. The browser is opened by the labelled
+  // "Browse" button after the input. Rendering nothing when there is no portrait also
   // keeps the input full width, which matters in the dense parameter grid.
   const heroPortrait = category === 'hero' && portraitSrc && (
     <span
@@ -198,6 +199,23 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
 
             <ChevronsUpDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none opacity-60" />
           </div>
+
+          {/* A named button outside the input, because two rounds of subtler
+              affordances (a 12px glyph, then the portrait itself) both went unnoticed,
+              and the row inside the dropdown only helps once the dropdown is open. */}
+          {category === 'hero' && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 shrink-0 gap-1 px-2 text-xs"
+              onClick={() => setPickerOpen(true)}
+              title="Browse heroes grouped by faction"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Browse
+            </Button>
+          )}
 
           <PopoverContent
             className="p-0"

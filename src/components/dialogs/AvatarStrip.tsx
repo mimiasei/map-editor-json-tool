@@ -12,8 +12,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AssetCombobox from './AssetCombobox'
-import { MessageSquare, Plus, Trash2, UserRound } from 'lucide-react'
+import { LayoutGrid, MessageSquare, Plus, Trash2, UserRound } from 'lucide-react'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
+import { heroAvatarIcon } from '@/lib/catalog/icon-requests'
+import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -113,7 +115,14 @@ export default function AvatarStrip({
   const catalog = useCatalogStore((s) => s.catalog)
   const iconSuggestions = (catalog?.dialogAvatarIcons ?? []).map((v) => ({ value: v }))
 
+  // The avatar path is built from the hero's `icon`, and only the real catalog has it:
+  // STATIC_HEROES fills `icon` with the SID as a stand-in, and no SID is a real icon
+  // name, so picking from the fallback list would write a path that resolves to nothing.
+  // Better to say why the button is unavailable than to write a broken portrait.
+  const heroesLoaded = (catalog?.heroes?.length ?? 0) > 0
+
   const [selectedPos, setSelectedPos] = useState<number | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const byPosition = new Map<number, DialogAvatar>()
   for (const a of avatars) byPosition.set(a.position, a)
@@ -204,14 +213,38 @@ export default function AvatarStrip({
             <Label className="text-xs">Icon</Label>
             {/* A realistic-looking path as placeholder made an empty avatar read as
                 configured — the slot said "(no icon)" while the field appeared filled. */}
-            <AssetCombobox
-              value={selected.icon}
-              onChange={(icon) => patchSelected({ icon })}
-              suggestions={iconSuggestions}
-              placeholder="Pick an avatar portrait…"
-              emptyHint="No avatar icons — load Core.zip via Game Data"
-              thumbnailFor={thumbnailPath}
-            />
+            <div className="flex items-center gap-1.5">
+              <div className="flex-1 min-w-0">
+                <AssetCombobox
+                  value={selected.icon}
+                  onChange={(icon) => patchSelected({ icon })}
+                  suggestions={iconSuggestions}
+                  placeholder="Pick an avatar portrait…"
+                  emptyHint="No avatar icons — load Core.zip via Game Data"
+                  thumbnailFor={thumbnailPath}
+                />
+              </div>
+              {/* Named, always-visible, and outside the input. The hero browser used to
+                  be reachable only from a row inside a *different* combobox, which this
+                  panel never renders — so from the Dialog Editor there was no way in at
+                  all. The dropdown above still covers unit and NPC portraits, which the
+                  hero browser does not list. */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 shrink-0 gap-1 px-2 text-xs"
+                onClick={() => setPickerOpen(true)}
+                disabled={!heroesLoaded}
+                title={
+                  heroesLoaded
+                    ? 'Browse hero portraits grouped by faction'
+                    : 'Load Core.zip via Game Data to browse hero portraits'
+                }
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                Heroes…
+              </Button>
+            </div>
             {!selected.icon && (
               <p className="text-[10px] text-amber-600">
                 No portrait chosen yet — this avatar will not appear in game.
@@ -265,6 +298,13 @@ export default function AvatarStrip({
           </div>
         </div>
       )}
+
+      <HeroPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        title="Choose a hero portrait"
+        onSelect={(_id, hero) => patchSelected({ icon: heroAvatarIcon(hero.icon) })}
+      />
     </div>
   )
 }

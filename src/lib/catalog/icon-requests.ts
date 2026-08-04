@@ -24,6 +24,25 @@ export function heroPortraitIcon(icon: string): string {
   return `${icon}${LARGE_PORTRAIT_SUFFIX}`
 }
 
+/** Directory the shipped dialogs use when an avatar is a hero rather than a unit. */
+export const HERO_AVATAR_DIR = 'icons/hero_large_portraits'
+
+/**
+ * The avatar `icon` value to write when an avatar should be a given hero.
+ *
+ * Verified against Core.zip: of the 123 distinct avatar icon references in the shipped
+ * dialogs, 13 sit under `icons/hero_large_portraits/`, and every one of them is exactly
+ * `<hero.icon>_large` for a real hero record. So this is the game's own convention, not
+ * a guess — e.g. hero `mouaren` (icon `hero_dungeon_5_Mouaren`) becomes
+ * `icons/hero_large_portraits/hero_dungeon_5_Mouaren_large`.
+ *
+ * Note the argument is the hero's `icon`, not its SID: those differ (SID `mouaren` vs
+ * icon `hero_dungeon_5_Mouaren`), and only the icon appears in the path.
+ */
+export function heroAvatarIcon(heroIcon: string): string {
+  return `${HERO_AVATAR_DIR}/${heroPortraitIcon(heroIcon)}`
+}
+
 /**
  * Last path segment of an asset reference.
  *

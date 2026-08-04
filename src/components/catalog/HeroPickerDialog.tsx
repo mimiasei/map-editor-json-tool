@@ -24,10 +24,22 @@ interface Props {
   onOpenChange: (open: boolean) => void
   /** Currently selected hero SID, highlighted in the grid. */
   value?: string
-  onSelect: (heroId: string) => void
+  /**
+   * Receives the SID and the full record. Callers that need the portrait path want
+   * `hero.icon` — the avatar path is built from the icon, not the SID.
+   */
+  onSelect: (heroId: string, hero: CatalogHero) => void
+  /** Overrides the header, e.g. when picking a portrait rather than a hero. */
+  title?: string
 }
 
-export default function HeroPickerDialog({ open, onOpenChange, value, onSelect }: Props) {
+export default function HeroPickerDialog({
+  open,
+  onOpenChange,
+  value,
+  onSelect,
+  title = 'Choose a hero',
+}: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
   const [search, setSearch] = useState('')
 
@@ -49,8 +61,8 @@ export default function HeroPickerDialog({ open, onOpenChange, value, onSelect }
 
   const total = groups.reduce((n, g) => n + g.items.length, 0)
 
-  const handlePick = (id: string) => {
-    onSelect(id)
+  const handlePick = (hero: CatalogHero) => {
+    onSelect(hero.id, hero)
     onOpenChange(false)
   }
 
@@ -65,10 +77,10 @@ export default function HeroPickerDialog({ open, onOpenChange, value, onSelect }
         storageKey="hero-picker"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Choose a hero</DialogTitle>
+        <DialogTitle className="sr-only">{title}</DialogTitle>
 
         <DraggableDialogDragHandle className="flex items-center gap-3 px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <span className="text-sm font-semibold shrink-0">Choose a hero</span>
+          <span className="text-sm font-semibold shrink-0">{title}</span>
           <div className="relative flex-1 min-w-0" data-nodrag>
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -106,7 +118,7 @@ export default function HeroPickerDialog({ open, onOpenChange, value, onSelect }
                       <button
                         key={hero.id}
                         type="button"
-                        onClick={() => handlePick(hero.id)}
+                        onClick={() => handlePick(hero)}
                         title={hero.id}
                         className={`flex flex-col items-center gap-1 rounded border p-2 text-center transition-colors ${
                           selected
