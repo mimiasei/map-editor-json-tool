@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/command'
 import { ChevronsUpDown, LayoutGrid, SlidersHorizontal } from 'lucide-react'
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
-import { CatalogIcon, heroPortraitPath } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -101,11 +101,12 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
 
   // Speaker portrait of the currently selected hero, if one is set and its PNG has
   // been extracted. Resolved from the hero record so a typed SID also shows art.
-  const portraitSrc = useMemo(() => {
-    if (category !== 'hero' || !value) return null
+  const portraitIcon = useMemo(() => {
+    if (category !== 'hero' || !value) return undefined
     const hero = catalog?.heroes?.find((h) => h.id === value)
-    return heroPortraitPath(hero?.icon ?? value)
+    return hero?.icon ?? value
   }, [category, value, catalog])
+  const portraitSrc = portraitIcon ? heroPortraitPath(portraitIcon) : null
 
   const filteredByMapFilter = useMemo(
     () =>
@@ -141,23 +142,14 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
   // "Browse" button after the input. Rendering nothing when there is no portrait also
   // keeps the input full width, which matters in the dense parameter grid.
   const heroPortrait = category === 'hero' && portraitSrc && (
-    <span
-      className="group/thumb relative flex h-7 w-7 shrink-0 items-center justify-center overflow-visible rounded border border-border bg-card"
-      title={value}
-    >
-      <img src={portraitSrc} alt={value} width={26} height={26} style={{ objectFit: 'contain' }} />
-      {/* Enlarge on hover, matching the Game Database and the picker */}
-      <span className="pointer-events-none absolute left-0 top-full z-50 mt-1.5 hidden group-hover/thumb:block">
-        <span className="block rounded-md border border-border bg-background p-1 shadow-lg">
-          <img
-            src={portraitSrc}
-            alt={value}
-            className="block"
-            style={{ maxWidth: 224, maxHeight: 224, objectFit: 'contain' }}
-          />
-        </span>
-      </span>
-    </span>
+    <PortraitThumb
+      iconId={portraitIcon}
+      name={value}
+      size={26}
+      previewSize={224}
+      resolve={heroPortraitPath}
+      className="flex h-7 w-7 items-center justify-center rounded border border-border bg-card"
+    />
   )
 
   return (
@@ -280,13 +272,14 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
         </Popover>
       </div>
 
-      {/* Hero picker */}
+      {/* Hero picker. Hero mode (the default) lists only primary hero tiles, so heroId is
+          always set; the fallback keeps this honest rather than writing `undefined`. */}
       {category === 'hero' && (
         <HeroPickerDialog
           open={pickerOpen}
           onOpenChange={setPickerOpen}
           value={value}
-          onSelect={onChange}
+          onSelect={(entry) => onChange(entry.heroId ?? entry.sublabel)}
         />
       )}
 

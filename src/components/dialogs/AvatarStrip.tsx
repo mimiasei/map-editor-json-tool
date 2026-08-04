@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label'
 import AssetCombobox from './AssetCombobox'
 import { LayoutGrid, MessageSquare, Plus, Trash2, UserRound } from 'lucide-react'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
-import { heroAvatarIcon } from '@/lib/catalog/icon-requests'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -302,8 +301,9 @@ export default function AvatarStrip({
       <HeroPickerDialog
         open={pickerOpen}
         onOpenChange={setPickerOpen}
-        title="Choose a hero portrait"
-        onSelect={(_id, hero) => patchSelected({ icon: heroAvatarIcon(hero.icon) })}
+        mode="portrait"
+        value={selected?.icon}
+        onSelect={(entry) => patchSelected({ icon: entry.icon })}
       />
     </div>
   )
