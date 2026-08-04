@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/command'
 import { ChevronsUpDown, LayoutGrid, SlidersHorizontal } from 'lucide-react'
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
-import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -91,11 +91,20 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+
   const [filter, setFilter] = useState<MapObjectFilterState>(() => loadSavedFilter())
 
   const allEntries = useCatalogEntries(category)
   const catalog = useCatalogStore((s) => s.catalog)
   const rawMapObjects = category === 'mapObject' ? catalog?.mapObjects : undefined
+
+  // Speaker portrait of the currently selected hero, if one is set and its PNG has
+  // been extracted. Resolved from the hero record so a typed SID also shows art.
+  const portraitSrc = useMemo(() => {
+    if (category !== 'hero' || !value) return null
+    const hero = catalog?.heroes?.find((h) => h.id === value)
+    return heroPortraitPath(hero?.icon ?? value)
+  }, [category, value, catalog])
 
   const filteredByMapFilter = useMemo(
     () =>
@@ -123,97 +132,135 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
       ? `${filteredByMapFilter.length}/${allEntries.length}`
       : undefined
 
+  // Portrait of the selected hero, shown only when there is one to show.
+  //
+  // It is deliberately a preview, not a button: an image beside a text field reads as
+  // status, so making it the way into the browser was the same mistake as the 12px icon
+  // before it — an affordance with no name. Opening the browser is the labelled row at
+  // the top of the dropdown instead. Rendering nothing when there is no portrait also
+  // keeps the input full width, which matters in the dense parameter grid.
+  const heroPortrait = category === 'hero' && portraitSrc && (
+    <span
+      className="group/thumb relative flex h-7 w-7 shrink-0 items-center justify-center overflow-visible rounded border border-border bg-card"
+      title={value}
+    >
+      <img src={portraitSrc} alt={value} width={26} height={26} style={{ objectFit: 'contain' }} />
+      {/* Enlarge on hover, matching the Game Database and the picker */}
+      <span className="pointer-events-none absolute left-0 top-full z-50 mt-1.5 hidden group-hover/thumb:block">
+        <span className="block rounded-md border border-border bg-background p-1 shadow-lg">
+          <img
+            src={portraitSrc}
+            alt={value}
+            className="block"
+            style={{ maxWidth: 224, maxHeight: 224, objectFit: 'contain' }}
+          />
+        </span>
+      </span>
+    </span>
+  )
+
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
-        <div className="relative">
-          <PopoverAnchor asChild>
-            <Input
-              value={value}
-              onChange={(e) => {
-                onChange(e.target.value)
-                setOpen(true)
-              }}
-              onFocus={() => setOpen(true)}
-              onBlur={() => setTimeout(() => setOpen(false), 150)}
-              placeholder={placeholder}
-              className={`h-7 text-xs ${category === 'mapObject' || category === 'hero' ? 'pr-14' : 'pr-7'}`}
-            />
-          </PopoverAnchor>
+      <div className="flex items-center gap-1.5">
+        {heroPortrait}
+        <Popover open={open} onOpenChange={setOpen}>
+          <div className="relative flex-1 min-w-0">
+            <PopoverAnchor asChild>
+              <Input
+                value={value}
+                onChange={(e) => {
+                  onChange(e.target.value)
+                  setOpen(true)
+                }}
+                onFocus={() => setOpen(true)}
+                onBlur={() => setTimeout(() => setOpen(false), 150)}
+                placeholder={placeholder}
+                className={`h-7 text-xs ${category === 'mapObject' ? 'pr-14' : 'pr-7'}`}
+              />
+            </PopoverAnchor>
 
-          {/* Map object filter button */}
-          {category === 'mapObject' && (
-            <button
-              type="button"
-              className={`absolute right-7 top-1/2 -translate-y-1/2 h-5 flex items-center gap-0.5 px-1 rounded text-[10px] font-medium transition-colors ${
-                isFiltered
-                  ? 'text-primary hover:text-primary/80'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              title={`Filter map objects${filterBadge ? ` (${filterBadge})` : ''}`}
-              onClick={(e) => { e.stopPropagation(); setFilterOpen(true) }}
-            >
-              <SlidersHorizontal className="h-3 w-3" />
-              {filterBadge && <span>{filterBadge}</span>}
-            </button>
-          )}
+            {/* Map object filter button */}
+            {category === 'mapObject' && (
+              <button
+                type="button"
+                className={`absolute right-7 top-1/2 -translate-y-1/2 h-5 flex items-center gap-0.5 px-1 rounded text-[10px] font-medium transition-colors ${
+                  isFiltered
+                    ? 'text-primary hover:text-primary/80'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title={`Filter map objects${filterBadge ? ` (${filterBadge})` : ''}`}
+                onClick={(e) => { e.stopPropagation(); setFilterOpen(true) }}
+              >
+                <SlidersHorizontal className="h-3 w-3" />
+                {filterBadge && <span>{filterBadge}</span>}
+              </button>
+            )}
 
-          {/* Hero browse button — opens the faction-grouped portrait picker.
-              The combobox keeps working; this is an additional way in. */}
-          {category === 'hero' && (
-            <button
-              type="button"
-              className="absolute right-7 top-1/2 -translate-y-1/2 h-5 flex items-center px-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-              title="Browse heroes by faction"
-              onClick={(e) => { e.stopPropagation(); setPickerOpen(true) }}
-            >
-              <LayoutGrid className="h-3 w-3" />
-            </button>
-          )}
+            <ChevronsUpDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none opacity-60" />
+          </div>
 
-          <ChevronsUpDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none opacity-60" />
-        </div>
+          <PopoverContent
+            className="p-0"
+            style={{ width: 'var(--radix-popover-anchor-width)' }}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            <Command shouldFilter={false}>
+              <CommandList>
+                {/* Named entry point for the picker, pinned above the results.
+                    Clicking a hero field already opens this list, so putting the
+                    browser here costs no screen space and needs no tooltip — the
+                    previous icon-only affordances were simply never found. Outside
+                    the filtered group, so typing cannot hide it. */}
+                {category === 'hero' && (
+                  <CommandGroup className="border-b border-border">
+                    <CommandItem
+                      value="__browse_heroes__"
+                      onSelect={() => {
+                        setOpen(false)
+                        setPickerOpen(true)
+                      }}
+                      className="flex items-center gap-1.5 text-xs py-1.5 font-medium"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      Browse heroes by faction…
+                    </CommandItem>
+                  </CommandGroup>
+                )}
 
-        <PopoverContent
-          className="p-0"
-          style={{ width: 'var(--radix-popover-anchor-width)' }}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-        >
-          <Command shouldFilter={false}>
-            <CommandList>
-              <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
-                {filtered.length === 0 && allEntries.length > 0
-                  ? `No matching ${ENTITY_LABELS[category]}`
-                  : `No ${ENTITY_LABELS[category]} — load Core.zip via Game Data`}
-              </CommandEmpty>
-              <CommandGroup>
-                {filtered.map((entry) => (
-                  <CommandItem
-                    key={entry.id}
-                    value={entry.id}
-                    onSelect={() => {
-                      onChange(entry.id)
-                      setOpen(false)
-                    }}
-                    className="flex justify-between gap-2 text-xs py-1"
-                  >
-                    <span className="flex items-center gap-1.5 min-w-0">
-                      {entry.icon && (
-                        <CatalogIcon size={16} iconId={entry.icon} name={entry.label} />
-                      )}
-                      <span className="truncate">{entry.label}</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground font-mono truncate max-w-[45%]">
-                      {entry.id}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">
+                  {filtered.length === 0 && allEntries.length > 0
+                    ? `No matching ${ENTITY_LABELS[category]}`
+                    : `No ${ENTITY_LABELS[category]} — load Core.zip via Game Data`}
+                </CommandEmpty>
+                <CommandGroup>
+                  {filtered.map((entry) => (
+                    <CommandItem
+                      key={entry.id}
+                      value={entry.id}
+                      onSelect={() => {
+                        onChange(entry.id)
+                        setOpen(false)
+                      }}
+                      className="flex justify-between gap-2 text-xs py-1"
+                    >
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        {entry.icon && (
+                          <CatalogIcon size={16} iconId={entry.icon} name={entry.label} />
+                        )}
+                        <span className="truncate">{entry.label}</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono truncate max-w-[45%]">
+                        {entry.id}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       {/* Hero picker */}
       {category === 'hero' && (
