@@ -67,3 +67,13 @@ export function languagesWithContent(translations: TranslationMap): string[] {
     .filter((lang) => Object.values(translations[lang] ?? {}).some((t) => t.trim()))
     .sort()
 }
+
+/**
+ * Every language a map ZIP will contain: English always, plus each translated one.
+ *
+ * The ZIP builder and the UI that reports what was written both go through here, so a
+ * "wrote english, french" message can never disagree with the archive.
+ */
+export function shippedLanguages(translations: TranslationMap): string[] {
+  return [BASE_LANGUAGE, ...languagesWithContent(translations)]
+}

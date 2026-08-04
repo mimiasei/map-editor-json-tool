@@ -2,9 +2,8 @@ import JSZip from 'jszip'
 import type { DialogFlow } from '@/types/dialog'
 import { serializeDialogFile } from '@/lib/dialog-file'
 import {
-  BASE_LANGUAGE,
-  languagesWithContent,
   resolveToken,
+  shippedLanguages,
   type TranslationMap,
 } from '@/lib/languages'
 
@@ -106,7 +105,7 @@ export async function buildMapZipBlob(
   // ── Localization files ─────────────────────────────────────────────────────
   const sids = collectShippedSids(dialogs, localization)
   // English always ships; extra languages only when they carry real content.
-  const langs = [BASE_LANGUAGE, ...languagesWithContent(translations)]
+  const langs = shippedLanguages(translations)
 
   for (const lang of langs) {
     const tokens = sids.map((sid) => ({
@@ -128,13 +127,16 @@ export async function buildMapZipBlob(
 /**
  * Build the map ZIP and hand it to the user: a native save dialog under Tauri
  * (defaulting next to Core.zip), a browser download otherwise.
+ *
+ * Returns the languages written, or null if the user cancelled the save dialog, so the
+ * caller can report what actually landed. A missing language file used to be invisible.
  */
 export async function exportMapZip(
   mapName: string,
   dialogs: Record<string, DialogFlow>,
   localization: Record<string, string>,
   translations: TranslationMap = {},
-): Promise<void> {
+): Promise<string[] | null> {
   const blob = await buildMapZipBlob(mapName, dialogs, localization, translations)
   const filename = mapZipFileName(mapName)
 
@@ -150,7 +152,7 @@ export async function exportMapZip(
       defaultPath,
       filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
     })
-    if (!savePath) return
+    if (!savePath) return null
     const arrayBuffer = await blob.arrayBuffer()
     await writeFile(savePath, new Uint8Array(arrayBuffer))
   } else {
@@ -163,4 +165,6 @@ export async function exportMapZip(
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
+
+  return shippedLanguages(translations)
 }

@@ -300,7 +300,11 @@ export default function Toolbar({
 
   const handleExportZip = async () => {
     try {
-      await exportMapZip(mapName, dialogs, localization, translations)
+      const langs = await exportMapZip(mapName, dialogs, localization, translations)
+      // Name the language files that landed — a missing translation used to be silent.
+      if (langs) {
+        logInfo(`Exported ZIP: ${langs.length} language file(s) — ${langs.join(', ')}`)
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       logError(`Export ZIP failed: ${msg}`)
@@ -310,24 +314,37 @@ export default function Toolbar({
   }
 
   // ── Listen for actions dispatched by AppShell (native menu / keyboard) ───────
-  useEffect(() => {
-    const handleOpen_    = () => { handleImport() }
-    const handleOpenMap_ = () => { handleOpenMap() }
-    const handleSave_    = () => { handleSave() }
-    const handleSaveAs_  = () => { handleExport() }
+  //
+  // These handlers read translations, dialogs, localization and mapName, and used to be
+  // captured by an effect keyed on [scenario, currentFilePath, sidecarPath,
+  // currentFileName]. Anything changed without also touching one of those — adding a
+  // language, editing a dialog, renaming the map — left the registered listener holding
+  // an older render's values, so Save As silently wrote stale data. That is how a French
+  // translation could vanish from a saved project.
+  //
+  // Dispatching through a ref that is refreshed on every render removes the dependency
+  // array as a correctness requirement, rather than listing four more names that the next
+  // new field would miss again.
+  const handlersRef = useRef({ handleImport, handleOpenMap, handleSave, handleExport })
+  handlersRef.current = { handleImport, handleOpenMap, handleSave, handleExport }
 
-    window.addEventListener('oe:open',      handleOpen_)
-    window.addEventListener('oe:open-map',  handleOpenMap_)
-    window.addEventListener('oe:save',      handleSave_)
-    window.addEventListener('oe:save-as',   handleSaveAs_)
+  useEffect(() => {
+    const onOpen    = () => { handlersRef.current.handleImport() }
+    const onOpenMap = () => { handlersRef.current.handleOpenMap() }
+    const onSave    = () => { handlersRef.current.handleSave() }
+    const onSaveAs  = () => { handlersRef.current.handleExport() }
+
+    window.addEventListener('oe:open',     onOpen)
+    window.addEventListener('oe:open-map', onOpenMap)
+    window.addEventListener('oe:save',     onSave)
+    window.addEventListener('oe:save-as',  onSaveAs)
     return () => {
-      window.removeEventListener('oe:open',      handleOpen_)
-      window.removeEventListener('oe:open-map',  handleOpenMap_)
-      window.removeEventListener('oe:save',      handleSave_)
-      window.removeEventListener('oe:save-as',   handleSaveAs_)
+      window.removeEventListener('oe:open',     onOpen)
+      window.removeEventListener('oe:open-map', onOpenMap)
+      window.removeEventListener('oe:save',     onSave)
+      window.removeEventListener('oe:save-as',  onSaveAs)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenario, currentFilePath, sidecarPath, currentFileName])
+  }, [])
 
   // Base-game speaker SIDs, so built-in labels aren't flagged as missing text
   const knownGameSids = useMemo(
