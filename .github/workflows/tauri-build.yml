@@ -11,7 +11,74 @@ permissions:
   contents: write
 
 jobs:
+  # ── One release, created once, before any platform builds ────────────────────
+  #
+  # Previously each of the three matrix jobs called tauri-action with `tagName`
+  # and no `releaseId`, so each independently created the release for the tag.
+  # GitHub permits several *draft* releases sharing one tag name, and because the
+  # jobs start in the same second they raced: v0.6.11 produced two releases with
+  # created_at 14:23:26, one holding only the macOS bundles and one holding only
+  # the Windows and Linux bundles. Each got its own latest.json listing only its
+  # own platforms, so publishing the macOS one left latest.json with nothing but
+  # `darwin-aarch64` — and every Windows client asking for an update got
+  # "None of the fallback platforms [windows-x86_64-nsis, windows-x86_64] were
+  # found in the response platforms object".
+  #
+  # Creating the release here and passing its id to every build job means there
+  # is exactly one release and exactly one latest.json to merge into.
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release.outputs.result }}
+    steps:
+      - name: Create or reuse the draft release
+        id: release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const tag = context.ref.replace('refs/tags/', '')
+
+            // Re-running the workflow for a tag must not add a second release.
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            })
+            const existing = releases.filter((r) => r.tag_name === tag)
+            if (existing.length > 1) {
+              core.setFailed(
+                `${existing.length} releases already exist for ${tag} (ids: ${existing
+                  .map((r) => r.id)
+                  .join(', ')}). Delete the extras before re-running — otherwise the ` +
+                  'platforms get split across them and auto-update breaks.',
+              )
+              return ''
+            }
+            if (existing.length === 1) {
+              core.info(`Reusing existing release ${existing[0].id} for ${tag}`)
+              return String(existing[0].id)
+            }
+
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: `Scenario Script Editor ${tag}`,
+              body: [
+                'Desktop release for macOS (Apple Silicon), Windows, and Linux.',
+                '',
+                `See [CHANGELOG](https://github.com/${context.repo.owner}/${context.repo.repo}/commits/main) for what changed.`,
+              ].join('\n'),
+              draft: true,
+              prerelease: false,
+            })
+            core.info(`Created release ${data.id} for ${tag}`)
+            return String(data.id)
+
   build:
+    needs: create-release
     strategy:
       fail-fast: false
       matrix:
@@ -159,7 +226,9 @@ jobs:
             fs.writeFileSync(path, JSON.stringify(cfg, null, 2) + '\n');
           "
 
-      # On a version tag: build AND create a draft GitHub Release
+      # On a version tag: build and upload into the single release created above.
+      # Passing releaseId (never tagName) is what keeps this from creating a
+      # second release for the tag — see the create-release job.
       - name: Build Tauri app (release)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: tauri-apps/tauri-action@v0
@@ -171,14 +240,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: Scenario Script Editor ${{ github.ref_name }}
-          releaseBody: |
-            Desktop release for macOS (Apple Silicon), Windows, and Linux.
-
-            See [CHANGELOG](https://github.com/${{ github.repository }}/commits/main) for what changed.
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.args }}
 
       # On manual dispatch or branch push: build only, no release
@@ -192,9 +254,74 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
+  # ── Gate: refuse to let a half-updatable release look finished ────────────────
+  #
+  # Even with one shared release, tauri-action assembles latest.json by reading
+  # the existing asset, merging its own platforms in, deleting it and re-uploading
+  # (src/upload-version-json.ts). That read-modify-write is not atomic, so if the
+  # macOS and Windows jobs ever finish uploading at the same moment one can clobber
+  # the other's platforms. It has not happened in practice — the two builds finish
+  # minutes apart — but the failure is silent and only shows up as a broken update
+  # check on whichever platform lost, which is exactly the bug this release hit.
+  #
+  # So verify the assembled latest.json before the release is published, and fail
+  # loudly while it is still a draft.
+  verify-updater-json:
+    needs: [create-release, build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Check latest.json covers every updatable platform
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const release_id = Number('${{ needs.create-release.outputs.release_id }}')
+            const { data: assets } = await github.rest.repos.listReleaseAssets({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id,
+              per_page: 100,
+            })
+
+            const asset = assets.find((a) => a.name === 'latest.json')
+            if (!asset) {
+              // Documented degraded mode: no signing key, so no OTA artifacts at all.
+              // The installers are still fine, so this is a warning, not a failure.
+              core.warning(
+                'No latest.json on the release — this build shipped installers without ' +
+                  'auto-update support. See the Releasing section of README.md.',
+              )
+              return
+            }
+
+            const raw = await github.request(
+              'GET /repos/{owner}/{repo}/releases/assets/{asset_id}',
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                asset_id: asset.id,
+                headers: { accept: 'application/octet-stream' },
+              },
+            )
+            const platforms = JSON.parse(Buffer.from(raw.data).toString()).platforms ?? {}
+            const found = Object.keys(platforms)
+            core.info(`latest.json platforms: ${found.join(', ') || '(none)'}`)
+
+            // Linux is intentionally absent — see "Configure updater artifacts".
+            const required = ['darwin-aarch64', 'windows-x86_64']
+            const missing = required.filter((k) => !(k in platforms))
+            if (missing.length) {
+              core.setFailed(
+                `latest.json is missing ${missing.join(', ')} — clients on those platforms ` +
+                  'would fail their update check. The release is still a draft; inspect the ' +
+                  'build jobs and re-run before publishing.',
+              )
+            }
+
   # After all platform builds succeed, update README and tauri.conf.json on main
   update-readme:
-    needs: build
+    needs: [build, verify-updater-json]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
 
