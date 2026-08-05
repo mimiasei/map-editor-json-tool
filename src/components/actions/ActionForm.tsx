@@ -16,11 +16,13 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Trash2, ExternalLink } from 'lucide-react'
+import { Trash2, ExternalLink, ClipboardCopy } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
+import { isTauri } from '@/lib/native-fs'
+import { copyToClipboard } from '@/lib/clipboard'
 
 interface Props {
   action: Action
@@ -110,6 +112,17 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
             <p className="text-xs text-muted-foreground">{def.description}</p>
           )}
         </div>
+        {isTauri() && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 mt-4 text-muted-foreground hover:text-primary"
+            onClick={() => copyToClipboard('action', action)}
+            title="Copy action to clipboard"
+          >
+            <ClipboardCopy className="h-3.5 w-3.5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"

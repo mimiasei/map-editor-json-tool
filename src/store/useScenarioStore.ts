@@ -143,7 +143,7 @@ interface ScenarioStore {
   addInterruption: () => void
   updateInterruption: (index: number, interruption: Interruption) => void
   removeInterruption: (index: number) => void
-  addInterruptionAction: (interruptionIndex: number) => void
+  addInterruptionAction: (interruptionIndex: number, action?: Action) => void
   updateInterruptionAction: (interruptionIndex: number, actionIndex: number, action: Action) => void
   removeInterruptionAction: (interruptionIndex: number, actionIndex: number) => void
   duplicateInterruption: (index: number) => void
@@ -155,13 +155,13 @@ interface ScenarioStore {
   duplicateQuest: (questIndex: number) => void
 
   // ── SubQuest operations ──────────────────────────────────────────────────
-  addSubQuest: (questIndex: number) => void
+  addSubQuest: (questIndex: number, subQuest?: SubQuest) => void
   updateSubQuest: (questIndex: number, subQuestIndex: number, subQuest: Partial<SubQuest>) => void
   removeSubQuest: (questIndex: number, subQuestIndex: number) => void
   duplicateSubQuest: (questIndex: number, subQuestIndex: number) => void
 
   // ── Trigger operations ───────────────────────────────────────────────────
-  addTrigger: (questIndex: number, subQuestIndex: number) => void
+  addTrigger: (questIndex: number, subQuestIndex: number, trigger?: Trigger) => void
   updateTrigger: (
     questIndex: number,
     subQuestIndex: number,
@@ -188,7 +188,7 @@ interface ScenarioStore {
   ) => void
 
   // ── Action operations (triggers) ─────────────────────────────────────────
-  addAction: (questIndex: number, subQuestIndex: number, triggerIndex: number) => void
+  addAction: (questIndex: number, subQuestIndex: number, triggerIndex: number, action?: Action) => void
   updateAction: (
     questIndex: number,
     subQuestIndex: number,
@@ -460,11 +460,11 @@ export const useScenarioStore = create<ScenarioStore>()(
       return { scenario: { ...s.scenario, interruptions }, isDirty: true, selectedPath: newSelectedPath }
     }),
 
-  addInterruptionAction: (interruptionIndex) =>
+  addInterruptionAction: (interruptionIndex, action) =>
     set((s) => {
       const interruptions = [...s.scenario.interruptions]
       const interruption = { ...interruptions[interruptionIndex] }
-      interruption.actions = [...interruption.actions, DEFAULT_ACTION()]
+      interruption.actions = [...interruption.actions, action ?? DEFAULT_ACTION()]
       interruptions[interruptionIndex] = interruption
       return { scenario: { ...s.scenario, interruptions }, isDirty: true }
     }),
@@ -542,11 +542,11 @@ export const useScenarioStore = create<ScenarioStore>()(
 
   // ── SubQuests ──────────────────────────────────────────────────────────────
 
-  addSubQuest: (questIndex) =>
+  addSubQuest: (questIndex, subQuest) =>
     set((s) => {
       const quests = [...s.scenario.quests]
       const quest = { ...quests[questIndex] }
-      quest.subQuests = [...quest.subQuests, DEFAULT_SUBQUEST()]
+      quest.subQuests = [...quest.subQuests, subQuest ?? DEFAULT_SUBQUEST()]
       quests[questIndex] = quest
       return { scenario: { ...s.scenario, quests }, isDirty: true }
     }),
@@ -610,13 +610,13 @@ export const useScenarioStore = create<ScenarioStore>()(
 
   // ── Triggers ───────────────────────────────────────────────────────────────
 
-  addTrigger: (questIndex, subQuestIndex) =>
+  addTrigger: (questIndex, subQuestIndex, trigger) =>
     set((s) => {
       const quests = [...s.scenario.quests]
       const quest = { ...quests[questIndex] }
       const subQuests = [...quest.subQuests]
       const subQuest = { ...subQuests[subQuestIndex] }
-      subQuest.triggers = [...subQuest.triggers, DEFAULT_TRIGGER()]
+      subQuest.triggers = [...subQuest.triggers, trigger ?? DEFAULT_TRIGGER()]
       subQuests[subQuestIndex] = subQuest
       quest.subQuests = subQuests
       quests[questIndex] = quest
@@ -748,7 +748,7 @@ export const useScenarioStore = create<ScenarioStore>()(
 
   // ── Actions (triggers) ─────────────────────────────────────────────────────
 
-  addAction: (questIndex, subQuestIndex, triggerIndex) =>
+  addAction: (questIndex, subQuestIndex, triggerIndex, action) =>
     set((s) => {
       const quests = [...s.scenario.quests]
       const quest = { ...quests[questIndex] }
@@ -756,7 +756,7 @@ export const useScenarioStore = create<ScenarioStore>()(
       const subQuest = { ...subQuests[subQuestIndex] }
       const triggers = [...subQuest.triggers]
       const trigger = { ...triggers[triggerIndex] }
-      trigger.actions = [...trigger.actions, DEFAULT_ACTION()]
+      trigger.actions = [...trigger.actions, action ?? DEFAULT_ACTION()]
       triggers[triggerIndex] = trigger
       subQuest.triggers = triggers
       subQuests[subQuestIndex] = subQuest

@@ -109,7 +109,7 @@ export default function TriggerEditor({
         </Label>
         <ActionList
           actions={trigger.actions}
-          onAdd={() => addAction(questIndex, subQuestIndex, triggerIndex)}
+          onAdd={(action) => addAction(questIndex, subQuestIndex, triggerIndex, action)}
           onUpdate={(ai, action) =>
             updateAction(questIndex, subQuestIndex, triggerIndex, ai, action)
           }

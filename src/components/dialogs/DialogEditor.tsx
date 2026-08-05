@@ -143,8 +143,8 @@ function AnswerEditor({
         <Label className="text-xs text-muted-foreground">Flow actions</Label>
         <ActionList
           actions={answer.actions}
-          onAdd={() =>
-            onChange({ ...answer, actions: [...answer.actions, { a: 'Go', p: [''] }] })
+          onAdd={(pasted) =>
+            onChange({ ...answer, actions: [...answer.actions, pasted ?? { a: 'Go', p: [''] }] })
           }
           onUpdate={(i, action) => {
             const actions = [...answer.actions]
@@ -189,8 +189,8 @@ function AnswerEditor({
         <Label className="text-xs text-muted-foreground">Map actions</Label>
         <ActionList
           actions={answer.mapActions ?? []}
-          onAdd={() =>
-            onChange({ ...answer, mapActions: [...(answer.mapActions ?? []), NEW_MAP_ACTION()] })
+          onAdd={(pasted) =>
+            onChange({ ...answer, mapActions: [...(answer.mapActions ?? []), pasted ?? NEW_MAP_ACTION()] })
           }
           onUpdate={(i, action) => {
             const mapActions = [...(answer.mapActions ?? [])]
@@ -557,7 +557,7 @@ function SlideEditor({
             <Label className="text-xs text-muted-foreground">Map actions (this slide)</Label>
             <ActionList
               actions={slide.mapActions ?? []}
-              onAdd={() => onChange({ ...slide, mapActions: [...(slide.mapActions ?? []), { a: 'Dialog', p: [''] }] })}
+              onAdd={(pasted) => onChange({ ...slide, mapActions: [...(slide.mapActions ?? []), pasted ?? { a: 'Dialog', p: [''] }] })}
               onUpdate={(i, action) => updateMapAction(i, action)}
               onRemove={(i) => onChange({ ...slide, mapActions: (slide.mapActions ?? []).filter((_, j) => j !== i) })}
             />
@@ -755,10 +755,10 @@ function SlideEditor({
                   </Label>
                   <ActionList
                     actions={slide.actions ?? []}
-                    onAdd={() =>
+                    onAdd={(pasted) =>
                       onChange({
                         ...slide,
-                        actions: [...(slide.actions ?? []), { a: 'StoryCounterPlus', p: [] }],
+                        actions: [...(slide.actions ?? []), pasted ?? { a: 'StoryCounterPlus', p: [] }],
                       })
                     }
                     onUpdate={(i, action) => {
@@ -782,10 +782,10 @@ function SlideEditor({
                   </Label>
                   <ActionList
                     actions={slide.closeMapActions ?? []}
-                    onAdd={() =>
+                    onAdd={(pasted) =>
                       onChange({
                         ...slide,
-                        closeMapActions: [...(slide.closeMapActions ?? []), NEW_MAP_ACTION()],
+                        closeMapActions: [...(slide.closeMapActions ?? []), pasted ?? NEW_MAP_ACTION()],
                       })
                     }
                     onUpdate={(i, action) => {
