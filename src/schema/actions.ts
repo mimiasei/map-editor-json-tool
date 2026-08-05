@@ -279,7 +279,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'Calls the dialog with the specified SID. Add "break" as the last param to interrupt all further game logic after the dialog ends.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. som_main_quest_line_start', required: true },
+      { label: 'Dialog SID', hint: 'e.g. som_main_quest_line_start', required: true, ref: 'dialog' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },
     ],
   },
@@ -289,7 +289,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'If the currently selected hero has the specified SID, calls the dialog. Precondition action.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. hero_dialog', required: true },
+      { label: 'Dialog SID', hint: 'e.g. hero_dialog', required: true, ref: 'dialog' },
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },
     ],
@@ -300,7 +300,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'If the player\'s resource satisfies the inequality, calls the dialog. Precondition action.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. gold_dialog', required: true },
+      { label: 'Dialog SID', hint: 'e.g. gold_dialog', required: true, ref: 'dialog' },
       {
         label: 'Resource',
         hint: 'gold',
@@ -319,7 +319,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'If the local counter satisfies the inequality, calls the dialog. Precondition action. Works only with local counters.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. stage_dialog', required: true },
+      { label: 'Dialog SID', hint: 'e.g. stage_dialog', required: true, ref: 'dialog' },
       { label: 'Counter SID', hint: 'e.g. main_quest_stage', required: true, ref: 'counter' },
       { label: 'Operator', hint: '>', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<='] },
       { label: 'Value', hint: 'e.g. 1', required: true, type: 'number' },
@@ -332,7 +332,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'If the currently selected hero has the item in their inventory/backpack, calls the dialog. Precondition action.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. artifact_dialog', required: true },
+      { label: 'Dialog SID', hint: 'e.g. artifact_dialog', required: true, ref: 'dialog' },
       { label: 'Item SID', hint: 'e.g. fallen_angel_wings_artifact', required: true, entity: 'artifact' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },
     ],
@@ -343,11 +343,11 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'Calls one random dialog from the specified list. NOTE: "break" cannot be added to RandomDialog.',
     params: [
-      { label: 'Dialog SID 1', hint: 'e.g. god_fog_fight1', required: true },
-      { label: 'Dialog SID 2', hint: 'optional', required: false },
-      { label: 'Dialog SID 3', hint: 'optional', required: false },
-      { label: 'Dialog SID 4', hint: 'optional', required: false },
-      { label: 'Dialog SID 5', hint: 'optional', required: false },
+      { label: 'Dialog SID 1', hint: 'e.g. god_fog_fight1', required: true, ref: 'dialog' },
+      { label: 'Dialog SID 2', hint: 'optional', required: false, ref: 'dialog' },
+      { label: 'Dialog SID 3', hint: 'optional', required: false, ref: 'dialog' },
+      { label: 'Dialog SID 4', hint: 'optional', required: false, ref: 'dialog' },
+      { label: 'Dialog SID 5', hint: 'optional', required: false, ref: 'dialog' },
     ],
   },
 
@@ -359,7 +359,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'A Dialog action that triggers only once for the rest of the match.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. som_main_quest_line_start', required: true },
+      { label: 'Dialog SID', hint: 'e.g. som_main_quest_line_start', required: true, ref: 'dialog' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },
     ],
   },
@@ -369,7 +369,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'A DialogIfHero action that triggers only once for the rest of the match.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. hero_dialog', required: true },
+      { label: 'Dialog SID', hint: 'e.g. hero_dialog', required: true, ref: 'dialog' },
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },
     ],
@@ -380,7 +380,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'A DialogIfRes action that triggers only once for the rest of the match.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. gold_dialog', required: true },
+      { label: 'Dialog SID', hint: 'e.g. gold_dialog', required: true, ref: 'dialog' },
       {
         label: 'Resource',
         hint: 'gold',
@@ -399,7 +399,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Dialogs',
     description: 'A DialogIfCounter action that triggers only once for the rest of the match.',
     params: [
-      { label: 'Dialog SID', hint: 'e.g. stage_dialog', required: true },
+      { label: 'Dialog SID', hint: 'e.g. stage_dialog', required: true, ref: 'dialog' },
       { label: 'Counter SID', hint: 'e.g. main_quest_stage', required: true, ref: 'counter' },
       { label: 'Operator', hint: '>', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<='] },
       { label: 'Value', hint: 'e.g. 1', required: true, type: 'number' },
@@ -1133,6 +1133,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Node index 1', hint: 'e.g. 47', required: true },
       { label: 'Node index 2', hint: 'optional', required: false },
       { label: 'Node index 3', hint: 'optional', required: false },
+      { label: 'Node index 4', hint: 'optional', required: false },
+      { label: 'Node index 5', hint: 'optional', required: false },
     ],
   },
   InitiateInteract: {

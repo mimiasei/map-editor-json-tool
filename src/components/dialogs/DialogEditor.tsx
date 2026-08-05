@@ -3,7 +3,8 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import type { DialogFlow, DialogSlide, DialogAnswer } from '@/types/dialog'
 import { RESULT_DIALOG_VALUES } from '@/types/dialog'
-import type { Action, Condition } from '@/types/scenario'
+import type { Action } from '@/types/scenario'
+import type { DialogCondition } from '@/types/dialog'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
   DraggableDialogContent,
@@ -23,10 +24,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import ActionList from '@/components/actions/ActionList'
-import ConditionList from '@/components/conditions/ConditionList'
+import DialogConditionList from './DialogConditionList'
 import AvatarStrip from './AvatarStrip'
 import AssetCombobox from './AssetCombobox'
-import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ function defaultTitleSid(dialogId: string, slideIndex: number): string {
   return `${dialogId}_title_${slideIndex + 1}`
 }
 
-const NEW_CONDITION = (): Condition => ({ c: 'Counter', p: [] })
+const NEW_DIALOG_CONDITION = (): DialogCondition => ({ c: 'Counter', p: [] })
 const NEW_MAP_ACTION = (): Action => ({ a: 'CounterSet', p: [] })
 
 // ─── And/Or selector, shared by slides and answers ──────────────────────────────
@@ -100,6 +101,7 @@ function AnswerEditor({
   onRemove: () => void
 }) {
   const locText = answer.text ? localization[answer.text] : undefined
+  const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
 
   return (
     <div className="rounded border border-border bg-background p-2 space-y-2">
@@ -112,8 +114,18 @@ function AnswerEditor({
             placeholder={defaultAnswerTextSid(dialogId, slideIndex, answerIndex)}
             className="h-7 text-xs font-mono"
           />
-          {locText && (
-            <p className="text-xs text-muted-foreground italic truncate">{locText}</p>
+          {answer.text && (
+            <button
+              type="button"
+              onClick={() => openLocalizationFor(answer.text)}
+              className="flex w-full items-center gap-1 text-left text-xs text-muted-foreground italic hover:text-foreground hover:not-italic"
+              title="Edit this text in Localization"
+            >
+              <PenLine className="h-3 w-3 shrink-0 not-italic" />
+              <span className="truncate">
+                {locText || <span className="text-amber-500">missing translation — click to add</span>}
+              </span>
+            </button>
           )}
         </div>
         <Button
@@ -156,10 +168,10 @@ function AnswerEditor({
             />
           )}
         </div>
-        <ConditionList
+        <DialogConditionList
           conditions={answer.requests ?? []}
           onAdd={() =>
-            onChange({ ...answer, requests: [...(answer.requests ?? []), NEW_CONDITION()] })
+            onChange({ ...answer, requests: [...(answer.requests ?? []), NEW_DIALOG_CONDITION()] })
           }
           onUpdate={(i, condition) => {
             const requests = [...(answer.requests ?? [])]
@@ -235,6 +247,7 @@ function SlideEditor({
   // Renaming only works with a SID of your own: the engine ignores map overrides of
   // its own tokens (tested: redefining "dungeon_hero_5" leaves the hero as Mouaren).
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
+  const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
   const titleSid = slide.title?.sid ?? ''
   const builtInSpeaker = (catalog?.speakerTitles ?? []).find((t) => t.sid === titleSid)
   const isBuiltInSpeaker = !!builtInSpeaker
@@ -371,11 +384,20 @@ function SlideEditor({
             </div>
           </div>
 
-          {/* Loc preview */}
-          {locText && (
-            <p className="text-xs text-muted-foreground italic border-l-2 border-border pl-2">
-              {locText}
-            </p>
+          {/* Loc preview — clickable straight into Localization instead of requiring
+              More menu -> Localization and a manual search for the SID. */}
+          {slide.text && (
+            <button
+              type="button"
+              onClick={() => openLocalizationFor(slide.text!)}
+              className="flex w-full items-center gap-1.5 rounded border-l-2 border-border pl-2 py-0.5 text-left text-xs text-muted-foreground italic hover:border-primary hover:text-foreground hover:not-italic"
+              title="Edit this text in Localization"
+            >
+              <PenLine className="h-3 w-3 shrink-0 not-italic" />
+              <span className="truncate">
+                {locText || <span className="text-amber-500">missing translation — click to add</span>}
+              </span>
+            </button>
           )}
 
           {/* Title / Speaker */}
@@ -699,14 +721,14 @@ function SlideEditor({
                       />
                     )}
                   </div>
-                  <ConditionList
+                  <DialogConditionList
                     conditions={slide.dialogPlayConditions ?? []}
                     onAdd={() =>
                       onChange({
                         ...slide,
                         dialogPlayConditions: [
                           ...(slide.dialogPlayConditions ?? []),
-                          NEW_CONDITION(),
+                          NEW_DIALOG_CONDITION(),
                         ],
                       })
                     }

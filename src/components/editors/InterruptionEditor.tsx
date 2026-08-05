@@ -14,7 +14,14 @@ import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
 import ActionList from '@/components/actions/ActionList'
 
-const KNOWN_INTERRUPTION_TYPES = ['BeforeIamVsHero', 'AfterIamWinVsHero', 'BeforeHeroVsHero', 'AfterHeroWinVsHero']
+// Matches the 5 interruption types the official guide documents.
+const KNOWN_INTERRUPTION_TYPES = [
+  'BeforeIamVsHero',
+  'BeforeHeroVsHero',
+  'AfterIamWinVsHero',
+  'AfterIamLoseVsHero',
+  'AfterHeroWinVsHero',
+]
 
 interface Props {
   index: number
