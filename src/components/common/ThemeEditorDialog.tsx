@@ -14,7 +14,9 @@ import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -23,7 +25,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { useThemeSettingsStore, DEFAULT_LIGHT_COLORS, DEFAULT_FONT_SIZE, type ThemeColors } from '@/store/useThemeSettingsStore'
+import { useThemeSettingsStore, DEFAULT_LIGHT_COLORS, DEFAULT_FONT_SIZE, type ThemeColors, type ThemeSettings } from '@/store/useThemeSettingsStore'
+import { PRESET_CATEGORY_ORDER } from '@/lib/theme-presets'
 import { isTauri, openFile, saveFile } from '@/lib/native-fs'
 
 interface ThemeEditorDialogProps {
@@ -43,6 +46,23 @@ const COLOR_FIELDS: { key: keyof ThemeColors; label: string; description: string
   { key: 'primary',       label: 'Primary button',     description: 'Accent color for primary actions' },
   { key: 'secondary',     label: 'Secondary button',   description: 'Background for secondary actions' },
 ]
+
+// ─── Group themes for the selector (Default, preset categories, Custom) ───
+
+function groupThemesByCategory(themes: ThemeSettings[]): { label: string; themes: ThemeSettings[] }[] {
+  const groupLabels = ['Default', ...PRESET_CATEGORY_ORDER, 'Custom']
+  const byLabel = new Map<string, ThemeSettings[]>()
+
+  for (const theme of themes) {
+    const label = theme.id === 'default-light' ? 'Default' : theme.category ?? 'Custom'
+    if (!byLabel.has(label)) byLabel.set(label, [])
+    byLabel.get(label)!.push(theme)
+  }
+
+  return groupLabels
+    .map((label) => ({ label, themes: byLabel.get(label) ?? [] }))
+    .filter((group) => group.themes.length > 0)
+}
 
 // ─── Single color row with swatch + picker popover ────────────────────────
 
@@ -126,6 +146,7 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
   const activeTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
   const isDesktop = isTauri()
   const isDefault = activeTheme.id === 'default-light'
+  const themeGroups = groupThemesByCategory(themes)
 
   const handleColorChange = useCallback(
     (key: keyof ThemeColors, hex: string) => {
@@ -184,62 +205,63 @@ export default function ThemeEditorDialog({ open, onOpenChange }: ThemeEditorDia
 
         <div className="space-y-4">
 
-          {/* ── Theme selector (desktop: multiple themes; web: single light) ── */}
-          {isDesktop ? (
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground uppercase tracking-wide">Active theme</Label>
-              <div className="flex gap-2">
-                <Select value={activeThemeId} onValueChange={setActiveTheme}>
-                  <SelectTrigger className="flex-1 h-8 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {themes.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {!isDefault && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 text-xs text-destructive hover:text-destructive"
-                    onClick={() => deleteTheme(activeTheme.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </div>
-
-              {/* New theme */}
-              {showNewThemeInput ? (
-                <div className="flex gap-2">
-                  <Input
-                    className="h-8 text-sm flex-1"
-                    placeholder="Theme name"
-                    value={newThemeName}
-                    onChange={(e) => setNewThemeName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTheme() }}
-                    autoFocus
-                  />
-                  <Button size="sm" className="h-8 text-xs" onClick={handleCreateTheme}>
-                    Create
-                  </Button>
-                  <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowNewThemeInput(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <Button size="sm" variant="outline" className="h-7 text-xs w-full" onClick={() => setShowNewThemeInput(true)}>
-                  + New theme
+          {/* ── Theme selector ── */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Active theme</Label>
+            <div className="flex gap-2">
+              <Select value={activeThemeId} onValueChange={setActiveTheme}>
+                <SelectTrigger className="flex-1 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {themeGroups.map((group) => (
+                    <SelectGroup key={group.label}>
+                      <SelectLabel>{group.label}</SelectLabel>
+                      {group.themes.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!isDefault && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs text-destructive hover:text-destructive"
+                  onClick={() => deleteTheme(activeTheme.id)}
+                >
+                  Delete
                 </Button>
               )}
             </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">Editing light theme</p>
-          )}
+
+            {/* New theme */}
+            {showNewThemeInput ? (
+              <div className="flex gap-2">
+                <Input
+                  className="h-8 text-sm flex-1"
+                  placeholder="Theme name"
+                  value={newThemeName}
+                  onChange={(e) => setNewThemeName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTheme() }}
+                  autoFocus
+                />
+                <Button size="sm" className="h-8 text-xs" onClick={handleCreateTheme}>
+                  Create
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setShowNewThemeInput(false)}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button size="sm" variant="outline" className="h-7 text-xs w-full" onClick={() => setShowNewThemeInput(true)}>
+                + New theme
+              </Button>
+            )}
+          </div>
 
           <Separator />
 

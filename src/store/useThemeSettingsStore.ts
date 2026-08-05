@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { PRESET_THEMES } from '@/lib/theme-presets'
 
 // ─── Default factory values ────────────────────────────────────────────────
 
@@ -32,6 +33,8 @@ export interface ThemeColors {
 export interface ThemeSettings {
   id: string
   name: string
+  /** Set on built-in presets for grouping in the theme picker; absent on custom themes. */
+  category?: string
   colors: ThemeColors
   fontSize: number
   use3dButtons: boolean
@@ -65,7 +68,7 @@ function makeDefaultTheme(): ThemeSettings {
 export const useThemeSettingsStore = create<ThemeSettingsState>()(
   persist(
     (set, get) => ({
-      themes: [makeDefaultTheme()],
+      themes: [makeDefaultTheme(), ...PRESET_THEMES],
       activeThemeId: 'default-light',
 
       setActiveTheme(id) {
@@ -122,6 +125,19 @@ export const useThemeSettingsStore = create<ThemeSettingsState>()(
     }),
     {
       name: 'oe-theme-settings',
+      version: 1,
+      // v0 -> v1: backfill the 15 built-in presets for existing users. Runs
+      // once per browser profile; deleting a preset afterwards is permanent
+      // since migrate() only fires when the stored version is stale.
+      migrate: (persisted, version) => {
+        const state = persisted as ThemeSettingsState
+        if (version < 1) {
+          const existingIds = new Set(state.themes.map((t) => t.id))
+          const missingPresets = PRESET_THEMES.filter((t) => !existingIds.has(t.id))
+          state.themes = [...state.themes, ...missingPresets]
+        }
+        return state
+      },
     },
   ),
 )
