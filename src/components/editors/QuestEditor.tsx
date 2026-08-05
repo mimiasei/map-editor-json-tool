@@ -1,8 +1,9 @@
 import { useScenarioStore } from '@/store/useScenarioStore'
-import type { Quest } from '@/types/scenario'
+import type { Quest, SubQuestGroup } from '@/types/scenario'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import SubQuestGroupList from './SubQuestGroupList'
 
 interface Props {
   index: number
@@ -39,6 +40,18 @@ export default function QuestEditor({ index, quest }: Props) {
           placeholder="e.g. my_quest_name"
         />
         <p className="text-xs text-muted-foreground">Shown in the in-game quest log.</p>
+      </div>
+
+      <div className="space-y-1">
+        <Label>Description (localization key)</Label>
+        <Input
+          value={quest.desc ?? ''}
+          onChange={(e) => update({ desc: e.target.value || undefined })}
+          placeholder="e.g. my_quest_description"
+        />
+        <p className="text-xs text-muted-foreground">
+          Additional narrative/gameplay text shown in the quest log, separate from the name.
+        </p>
       </div>
 
       <div className="space-y-1">
@@ -84,6 +97,21 @@ export default function QuestEditor({ index, quest }: Props) {
           />
           <Label htmlFor="quest-hidden">Hidden from quest log</Label>
         </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label>Subquest Groups</Label>
+        <p className="text-xs text-muted-foreground">
+          Gate a subquest (or another group) on several subquests finishing together, via
+          NextAfterGroup / NextQuestAfterGroup / NextSubGroupAfterGroup.
+        </p>
+        <SubQuestGroupList
+          subQuests={quest.subQuests}
+          groups={quest.subQuestGroups ?? []}
+          onChange={(groups: SubQuestGroup[]) =>
+            update({ subQuestGroups: groups.length ? groups : undefined })
+          }
+        />
       </div>
     </div>
   )
