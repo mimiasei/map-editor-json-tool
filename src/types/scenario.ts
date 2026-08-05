@@ -9,6 +9,10 @@ export interface ScenarioFile {
 export interface Counter {
   sid: string
   value: number
+  comment?: string
+  sharing?: string
+  minValue?: number
+  maxValue?: number
 }
 
 export type InterruptionType = 'BeforeIamVsHero' | 'AfterIamWinVsHero'
@@ -28,8 +32,20 @@ export interface Quest {
   comment?: string
   activeOnStart: boolean
   name?: string
+  /** In-log description text, distinct from `name` (the quest's title). */
+  desc?: string
   sharing?: string
   subQuests: SubQuest[]
+  /**
+   * Gates a subquest (or another group) on several subquests finishing together, via
+   * the NextAfterGroup / NextQuestAfterGroup / NextSubGroupAfterGroup actions.
+   */
+  subQuestGroups?: SubQuestGroup[]
+}
+
+export interface SubQuestGroup {
+  sid: string
+  subQuests: string[]
 }
 
 export interface SubQuest {

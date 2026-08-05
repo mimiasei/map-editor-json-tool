@@ -45,6 +45,59 @@ export default function CounterEditor({ index, counter }: Props) {
           className="w-32"
         />
       </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label htmlFor="counter-min">Min value</Label>
+          <Input
+            id="counter-min"
+            type="number"
+            value={counter.minValue ?? ''}
+            onChange={(e) =>
+              update({ minValue: e.target.value === '' ? undefined : Number(e.target.value) })
+            }
+            placeholder="No lower bound"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="counter-max">Max value</Label>
+          <Input
+            id="counter-max"
+            type="number"
+            value={counter.maxValue ?? ''}
+            onChange={(e) =>
+              update({ maxValue: e.target.value === '' ? undefined : Number(e.target.value) })
+            }
+            placeholder="No upper bound"
+          />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Assigning a value outside this range clamps it to the bound instead.
+      </p>
+
+      <div className="space-y-1">
+        <Label htmlFor="counter-sharing">Sharing</Label>
+        <Input
+          id="counter-sharing"
+          value={counter.sharing ?? ''}
+          onChange={(e) => update({ sharing: e.target.value || undefined })}
+          placeholder="e.g. Clone"
+        />
+        <p className="text-xs text-muted-foreground">
+          Visibility scope — makes the counter accessible to all quests with the same sharing value.
+        </p>
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="counter-comment">Developer comment</Label>
+        <Input
+          id="counter-comment"
+          value={counter.comment ?? ''}
+          onChange={(e) => update({ comment: e.target.value || undefined })}
+          placeholder="Optional note (not used by game engine)"
+        />
+      </div>
     </div>
   )
 }

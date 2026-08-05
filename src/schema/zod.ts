@@ -6,6 +6,10 @@ import { z } from 'zod'
 export const CounterSchema = z.object({
   sid: z.string(),
   value: z.number(),
+  comment: z.string().optional(),
+  sharing: z.string().optional(),
+  minValue: z.number().optional(),
+  maxValue: z.number().optional(),
 })
 
 export const ActionSchema = z.object({
@@ -35,6 +39,11 @@ export const SubQuestSchema = z.object({
   triggers: z.array(TriggerSchema),
 })
 
+export const SubQuestGroupSchema = z.object({
+  sid: z.string(),
+  subQuests: z.array(z.string()),
+})
+
 export const QuestSchema = z.object({
   sid: z.string(),
   main: z.boolean().optional(),
@@ -42,8 +51,10 @@ export const QuestSchema = z.object({
   comment: z.string().optional(),
   activeOnStart: z.boolean(),
   name: z.string().optional(),
+  desc: z.string().optional(),
   sharing: z.string().optional(),
   subQuests: z.array(SubQuestSchema),
+  subQuestGroups: z.array(SubQuestGroupSchema).optional(),
 })
 
 export const InterruptionSchema = z.object({
