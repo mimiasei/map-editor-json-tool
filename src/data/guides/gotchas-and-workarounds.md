@@ -81,11 +81,9 @@ Both actions advance subquests, but they work differently:
 - `NextSubQuest` activates the next subquest in sequence (by index or SID) — use for linear progression
 - `SubQuestActivate` activates any named subquest on any quest — use for branching or cross-quest interactions
 
-## DeleteHero does not trigger HeroKill
+## DeleteHero does trigger HeroKill
 
-`DeleteHero` removes a hero from the map immediately without triggering the `HeroKill` condition. If you have defeat logic tied to `HeroKill`, do not use `DeleteHero` to simulate the hero dying.
-
-> **Warning:** If your defeat condition depends on HeroKill, ensure the hero can actually die in combat — do not remove them via DeleteHero.
+`DeleteHero` removes a hero from the map, and — like defeat, retreat, or surrender in combat — this does trigger the `HeroKill` condition. `DeleteHero` is a valid way to simulate a hero's death for quest logic that depends on `HeroKill`.
 
 ## RemoveRes doesn't check availability
 

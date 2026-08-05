@@ -1182,11 +1182,17 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'ResurrectHero',
     label: 'Resurrect Hero',
     category: 'Heroes',
-    description: 'Resurrects a defeated hero at a map node.',
+    // Not documented anywhere in the official guide — every other Heroes/AI action is.
+    // Confirmed real (not a mistaken addition) via 4 real call sites in the bundled example
+    // map maps/all_cats_go_to_heaven.json, all as ["<heroSid>", "<nodeIndex>", "0"] — a
+    // "nine lives" mechanic that resurrects the hero at a node on each death. That confirms
+    // the SID + node-index shape, but the third param is "0" in every occurrence found, so
+    // what a different Flag value would do remains unverified.
+    description: 'Resurrects a defeated hero at a map node. Undocumented in the official guide — verified real via example-map usage, but the Flag parameter\'s effect is unconfirmed (always "0" in the only usage found).',
     params: [
       { label: 'Hero SID', hint: 'e.g. nature_hero_6', required: true, entity: 'hero' },
       { label: 'Node index', hint: 'e.g. 234', required: true },
-      { label: 'Flag', hint: '0', required: false },
+      { label: 'Flag', hint: 'e.g. 0 — meaning unconfirmed', required: false },
     ],
   },
 
