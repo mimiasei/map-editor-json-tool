@@ -3,7 +3,29 @@ import type { Quest, SubQuestGroup } from '@/types/scenario'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import SubQuestGroupList from './SubQuestGroupList'
+
+// The official guide documents a closed set of `sharing` values with real behavioral
+// differences: Clone/Shared/Ai/All apply per-scope, and Side0-Side7 pin the quest to one
+// specific player index. Kept as a dropdown-with-custom-fallback (same pattern as
+// InterruptionEditor's type field) so existing free-text values still display correctly.
+const SHARING_OPTIONS: { value: string; hint: string }[] = [
+  { value: 'Clone', hint: 'Cloned for every human player' },
+  { value: 'Shared', hint: 'One shared quest for all human players' },
+  { value: 'Ai', hint: 'Works for the first AI player in turn after the human player' },
+  { value: 'All', hint: 'Shared for all players' },
+]
+const SHARING_SIDE_OPTIONS = Array.from({ length: 8 }, (_, i) => `Side${i}`)
+const KNOWN_SHARING_VALUES = [...SHARING_OPTIONS.map((o) => o.value), ...SHARING_SIDE_OPTIONS]
 
 interface Props {
   index: number
@@ -56,11 +78,51 @@ export default function QuestEditor({ index, quest }: Props) {
 
       <div className="space-y-1">
         <Label>Sharing</Label>
-        <Input
-          value={quest.sharing ?? ''}
-          onChange={(e) => update({ sharing: e.target.value || undefined })}
-          placeholder="e.g. Clone"
-        />
+        {(() => {
+          const isCustom = !!quest.sharing && !KNOWN_SHARING_VALUES.includes(quest.sharing)
+          return (
+            <div className="flex gap-2">
+              <Select
+                value={isCustom ? '__custom__' : (quest.sharing ?? '')}
+                onValueChange={(v) => {
+                  if (v !== '__custom__') update({ sharing: v || undefined })
+                }}
+              >
+                <SelectTrigger className="w-56">
+                  <SelectValue placeholder="Not set" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {SHARING_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.value} — {o.hint}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Specific player index</SelectLabel>
+                    {SHARING_SIDE_OPTIONS.map((v, i) => (
+                      <SelectItem key={v} value={v}>
+                        {v} — Only Player {i + 1}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectItem value="__custom__">Custom…</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              {isCustom && (
+                <Input
+                  value={quest.sharing ?? ''}
+                  onChange={(e) => update({ sharing: e.target.value || undefined })}
+                  placeholder="Custom sharing value"
+                  className="flex-1"
+                />
+              )}
+            </div>
+          )
+        })()}
       </div>
 
       <div className="space-y-1">

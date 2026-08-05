@@ -21,6 +21,7 @@ const REF_LABELS: Record<RefType, string> = {
   quest: 'quests',
   subquest: 'subquests',
   interruption: 'interruptions',
+  dialog: 'dialogs',
 }
 
 interface Props {
@@ -35,6 +36,9 @@ interface Props {
 export default function SidCombobox({ value, onChange, refType, placeholder }: Props) {
   const [open, setOpen] = useState(false)
   const scenario = useScenarioStore((s) => s.scenario)
+  // Dialogs live as a sibling of `scenario` in the store, keyed by dialog SID — not part
+  // of the scenario JSON itself, since they're a separate flow file per dialog.
+  const dialogs = useScenarioStore((s) => s.dialogs)
 
   // Collect all SIDs for the given ref type from the live scenario
   const sids = useMemo(() => {
@@ -47,8 +51,12 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
         return scenario.quests.flatMap((q) => q.subQuests.map((sq) => sq.sid))
       case 'interruption':
         return scenario.interruptions.map((i) => i.sid)
+      case 'dialog':
+        // Only dialogs created so far in this file — not the full Core.zip dialog set —
+        // so this only ever offers something that actually exists to link to.
+        return Object.keys(dialogs)
     }
-  }, [scenario, refType])
+  }, [scenario, dialogs, refType])
 
   const filtered = value
     ? sids.filter((s) => s.toLowerCase().includes(value.toLowerCase()))

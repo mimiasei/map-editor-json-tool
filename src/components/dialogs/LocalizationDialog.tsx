@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import type { DialogFlow } from '@/types/dialog'
 import type { Quest } from '@/types/scenario'
@@ -111,6 +111,8 @@ export default function LocalizationDialog() {
   const {
     localizationDialogOpen,
     setLocalizationDialogOpen,
+    localizationFocusSid,
+    clearLocalizationFocus,
     localization,
     translations,
     activeLanguages,
@@ -127,6 +129,18 @@ export default function LocalizationDialog() {
   const [tab, setTab] = useState<Tab>('dialogs')
   const [search, setSearch] = useState('')
   const [lang, setLang] = useState<string>(BASE_LANGUAGE)
+
+  // Opened via openLocalizationFor() (e.g. clicking a slide's text in the Dialog Editor) —
+  // land on the token directly instead of requiring a manual search. "All tokens" is used
+  // rather than "Dialogs" so this also works for quest name/desc SIDs. Cleared immediately
+  // so a later manual open of this same dialog isn't still filtered to one token.
+  useEffect(() => {
+    if (!localizationDialogOpen || !localizationFocusSid) return
+    setTab('all')
+    setSearch(localizationFocusSid)
+    clearLocalizationFocus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localizationDialogOpen, localizationFocusSid])
 
   // A language removed elsewhere must not leave us on a dead tab
   const activeLang = lang !== BASE_LANGUAGE && !activeLanguages.includes(lang) ? BASE_LANGUAGE : lang

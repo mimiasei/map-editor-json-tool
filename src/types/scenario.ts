@@ -15,7 +15,12 @@ export interface Counter {
   maxValue?: number
 }
 
-export type InterruptionType = 'BeforeIamVsHero' | 'AfterIamWinVsHero'
+export type InterruptionType =
+  | 'BeforeIamVsHero'
+  | 'BeforeHeroVsHero'
+  | 'AfterIamWinVsHero'
+  | 'AfterIamLoseVsHero'
+  | 'AfterHeroWinVsHero'
 
 export interface Interruption {
   sid: string

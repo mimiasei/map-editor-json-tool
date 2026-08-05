@@ -11,7 +11,7 @@ export interface ParamDef {
   required: boolean
   type?: 'string' | 'number' | 'enum'
   options?: string[] // For enum type
-  ref?: 'counter' | 'quest' | 'subquest' | 'interruption' // SID cross-reference: show autocomplete from this pool
+  ref?: 'counter' | 'quest' | 'subquest' | 'interruption' | 'dialog' // SID cross-reference: show autocomplete from this pool
   entity?: EntityCategory // Entity registry: show searchable combobox from static list
   mapEntity?: true // Map entity SID: show autocomplete from user-placed entities in the loaded .map file
 }

@@ -210,9 +210,17 @@ interface ScenarioStore {
   // ── UI modal state ───────────────────────────────────────────────────────────
   dialogEditorOpenId: string | null
   localizationDialogOpen: boolean
+  /** Set by openLocalizationFor(); LocalizationDialog reads this once on open to
+   *  pre-filter to a specific token, then clears it so a later manual open isn't
+   *  still filtered. */
+  localizationFocusSid: string | null
   openDialogEditor: (id: string) => void
   closeDialogEditor: () => void
   setLocalizationDialogOpen: (open: boolean) => void
+  /** Open the Localization panel already filtered to a single token — used by the
+   *  Dialog Editor so editing a slide's text doesn't require a manual search. */
+  openLocalizationFor: (sid: string) => void
+  clearLocalizationFocus: () => void
 
   // ── Panel toggles ─────────────────────────────────────────────────────────
   togglePanel: (panel: keyof PanelsState) => void
@@ -252,6 +260,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   activeLanguages: [],
   dialogEditorOpenId: null,
   localizationDialogOpen: false,
+  localizationFocusSid: null,
   selectedType: null,
   selectedPath: [],
   panels: { sidebar: true, editor: true, preview: true },
@@ -801,6 +810,11 @@ export const useScenarioStore = create<ScenarioStore>()(
   openDialogEditor: (id) => set({ dialogEditorOpenId: id }),
   closeDialogEditor: () => set({ dialogEditorOpenId: null }),
   setLocalizationDialogOpen: (open) => set({ localizationDialogOpen: open }),
+
+  openLocalizationFor: (sid) =>
+    set({ localizationDialogOpen: true, localizationFocusSid: sid }),
+
+  clearLocalizationFocus: () => set({ localizationFocusSid: null }),
 
   // ── Panel toggles ──────────────────────────────────────────────────────────
 

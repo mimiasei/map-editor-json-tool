@@ -25,11 +25,24 @@ export interface DialogAvatar {
   icons?: string[]
 }
 
+/**
+ * A dialog condition — a separate, smaller vocabulary from the main script conditions
+ * (see src/schema/dialog-conditions.ts). `reqStatus: "false"` inverts the check: a
+ * condition that IS met with reqStatus "false" fails the gate instead of passing it.
+ * The game only ever writes the literal string "false" here (never "true") — an absent
+ * field is the non-inverted case.
+ */
+export interface DialogCondition {
+  c: string
+  p?: string[]
+  reqStatus?: 'false'
+}
+
 export interface DialogAnswer {
   text: string                                      // localization SID
   actions: Array<{ a: string; p?: string[] }>       // dialog flow actions (Go, End)
   mapActions?: Array<{ a: string; p?: string[] }>   // map actions (RemoveRes, etc.)
-  requests?: Array<{ c: string; p?: string[] }>     // conditions for answer availability
+  requests?: DialogCondition[]                      // conditions for answer availability
   /** How `requests` combine. Default "And". */
   conditionsLogic?: 'And' | 'Or'
 }
@@ -47,7 +60,7 @@ export interface DialogSlide {
   /** Map actions run when the dialog closes on this slide — 9 slides. */
   closeMapActions?: Array<{ a: string; p?: string[] }>
   /** Conditions gating whether this slide plays at all — 1544 slides. */
-  dialogPlayConditions?: Array<{ c: string; p?: string[] }>
+  dialogPlayConditions?: DialogCondition[]
   /** How `dialogPlayConditions` combine. Default "And". */
   conditionsLogic?: 'And' | 'Or'
   /** "Interrupt" halts queued game logic after the dialog; "Default" does not. */
