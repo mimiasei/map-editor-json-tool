@@ -163,6 +163,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![extract_thumbnails])
         .setup(|app| {
             // ── Auto-update (desktop only) ───────────────────────────────────

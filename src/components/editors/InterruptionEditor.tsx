@@ -145,7 +145,7 @@ export default function InterruptionEditor({ index, interruption }: Props) {
         <Label>Actions</Label>
         <ActionList
           actions={interruption.actions}
-          onAdd={() => addInterruptionAction(index)}
+          onAdd={(action) => addInterruptionAction(index, action)}
           onUpdate={(ai, action) => updateInterruptionAction(index, ai, action)}
           onRemove={(ai) => removeInterruptionAction(index, ai)}
         />

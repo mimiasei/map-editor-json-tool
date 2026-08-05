@@ -22,22 +22,45 @@ import {
   MapPin,
   Check,
   Map as MapIcon,
+  ClipboardCopy,
+  ClipboardPaste,
 } from 'lucide-react'
+import { isTauri } from '@/lib/native-fs'
+import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
+import type { SubQuest, Trigger } from '@/types/scenario'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
 const LABEL_WIDTH_RATIO = 175 / 280
 
 // ─── Shared action buttons (absolute right-0, revealed on group hover) ─────────
 function RowActions({
+  onCopy,
   onDuplicate,
   onDelete,
 }: {
+  /** Copies the item to the system clipboard as JSON — distinct from onDuplicate, which
+   *  inserts an in-app copy immediately. Tauri only. */
+  onCopy?: () => void
   onDuplicate?: () => void
   onDelete?: () => void
 }) {
-  if (!onDuplicate && !onDelete) return null
+  if (!onCopy && !onDuplicate && !onDelete) return null
   return (
     <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
+      {onCopy && isTauri() && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 text-muted-foreground hover:text-primary"
+          onClick={(e) => {
+            e.stopPropagation()
+            onCopy()
+          }}
+          title="Copy to clipboard"
+        >
+          <ClipboardCopy className="h-3 w-3" />
+        </Button>
+      )}
       {onDuplicate && (
         <Button
           variant="ghost"
@@ -47,6 +70,7 @@ function RowActions({
             e.stopPropagation()
             onDuplicate()
           }}
+          title="Duplicate"
         >
           <Copy className="h-3 w-3" />
         </Button>
@@ -75,6 +99,7 @@ function TreeItem({
   depth = 0,
   selected = false,
   onClick,
+  onCopy,
   onDuplicate,
   onDelete,
   icon,
@@ -85,6 +110,7 @@ function TreeItem({
   depth?: number
   selected?: boolean
   onClick?: () => void
+  onCopy?: () => void
   onDuplicate?: () => void
   onDelete?: () => void
   icon?: React.ReactNode
@@ -104,7 +130,7 @@ function TreeItem({
     >
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
       <span className="truncate" style={labelStyle}>{label || '(unnamed)'}</span>
-      <RowActions onDuplicate={onDuplicate} onDelete={onDelete} />
+      <RowActions onCopy={onCopy} onDuplicate={onDuplicate} onDelete={onDelete} />
     </div>
   )
 }
@@ -253,6 +279,11 @@ export default function ScenarioTree() {
 
   const entities = useMapContextStore((s) => s.context?.entities) ?? []
   const mapLoaded = useMapContextStore((s) => s.context !== null)
+
+  // One check each, not one per row — the same clipboard content applies no matter which
+  // quest/subquest is showing "Add Trigger"/"Add SubQuest" at any given moment.
+  const pasteableTrigger = useClipboardHasPayload<Trigger>('trigger')
+  const pasteableSubQuest = useClipboardHasPayload<SubQuest>('subquest')
 
   // Build a map of entitySid → first usage location in the scenario so we
   // can make entity SID rows bold and navigable.
@@ -552,6 +583,7 @@ export default function ScenarioTree() {
                               sq: {subQuest.sid || '(unnamed)'}
                             </span>
                             <RowActions
+                              onCopy={() => copyToClipboard('subquest', subQuest)}
                               onDuplicate={() => duplicateSubQuest(qi, sqi)}
                               onDelete={() => removeSubQuest(qi, sqi)}
                             />
@@ -560,7 +592,7 @@ export default function ScenarioTree() {
                           {/* Triggers */}
                           {subOpen && (
                             <>
-                              {subQuest.triggers.map((_trigger, ti) => (
+                              {subQuest.triggers.map((trigger, ti) => (
                                 <TreeItem
                                   key={ti}
                                   label={`Trigger ${ti + 1}`}
@@ -568,6 +600,7 @@ export default function ScenarioTree() {
                                   depth={4}
                                   selected={isSelected('trigger', qi, sqi, ti)}
                                   onClick={() => setSelection('trigger', [qi, sqi, ti])}
+                                  onCopy={() => copyToClipboard('trigger', trigger)}
                                   onDuplicate={() => duplicateTrigger(qi, sqi, ti)}
                                   onDelete={() => removeTrigger(qi, sqi, ti)}
                                   icon={<Layers className="h-3 w-3" />}
@@ -581,6 +614,17 @@ export default function ScenarioTree() {
                                 <Plus className="h-3 w-3" />
                                 Add Trigger
                               </div>
+                              {pasteableTrigger && (
+                                <div
+                                  className="flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground cursor-pointer transition-all duration-150 hover:text-primary hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+                                  style={{ paddingLeft: '64px' }}
+                                  onClick={() => addTrigger(qi, sqi, pasteableTrigger)}
+                                  title="Paste the copied trigger"
+                                >
+                                  <ClipboardPaste className="h-3 w-3" />
+                                  Paste Trigger
+                                </div>
+                              )}
                             </>
                           )}
                         </div>
@@ -600,6 +644,21 @@ export default function ScenarioTree() {
                     >
                       <Plus className="h-3 w-3" />
                       Add SubQuest
+                    </div>
+                  )}
+                  {questOpen && pasteableSubQuest && (
+                    <div
+                      className="flex items-center gap-1 rounded py-0.5 text-xs text-muted-foreground cursor-pointer transition-all duration-150 hover:text-primary hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+                      style={{ paddingLeft: '50px' }}
+                      onClick={() => {
+                        const newSqi = quest.subQuests.length
+                        addSubQuest(qi, pasteableSubQuest)
+                        setOpenSubQuests((s) => ({ ...s, [`${qi}-${newSqi}`]: true }))
+                      }}
+                      title="Paste the copied subquest"
+                    >
+                      <ClipboardPaste className="h-3 w-3" />
+                      Paste SubQuest
                     </div>
                   )}
                 </div>
