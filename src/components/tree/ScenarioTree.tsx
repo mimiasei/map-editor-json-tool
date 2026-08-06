@@ -24,10 +24,13 @@ import {
   Map as MapIcon,
   ClipboardCopy,
   ClipboardPaste,
+  PenLine,
 } from 'lucide-react'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
 import type { SubQuest, Trigger } from '@/types/scenario'
+import type { MapEntity } from '@/types/map-context'
+import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
 const LABEL_WIDTH_RATIO = 175 / 280
@@ -258,6 +261,7 @@ export default function ScenarioTree() {
     dialogs,
     mapName,
     setMapName,
+    mapFilePath,
     addCounter,
     removeCounter,
     duplicateCounter,
@@ -285,12 +289,16 @@ export default function ScenarioTree() {
   const pasteableTrigger = useClipboardHasPayload<Trigger>('trigger')
   const pasteableSubQuest = useClipboardHasPayload<SubQuest>('subquest')
 
-  // Build a map of entitySid → first usage location in the scenario so we
-  // can make entity SID rows bold and navigable.
+  // Build a map of entitySid → every usage location in the scenario. Used
+  // both for the existing "bold + navigate to first usage" behaviour and
+  // (entityUsageListMap) for the rename dialog's full reference warning.
   type EntityUsage = { type: 'trigger'; path: [number, number, number] } | { type: 'interruption'; path: [number] }
-  const entityUsageMap = useMemo<Map<string, EntityUsage>>(() => {
-    const map = new Map<string, EntityUsage>()
-    const register = (sid: string, usage: EntityUsage) => { if (!map.has(sid)) map.set(sid, usage) }
+  const entityUsageListMap = useMemo<Map<string, EntityUsage[]>>(() => {
+    const map = new Map<string, EntityUsage[]>()
+    const register = (sid: string, usage: EntityUsage) => {
+      if (!map.has(sid)) map.set(sid, [])
+      map.get(sid)!.push(usage)
+    }
     for (const [qi, quest] of scenario.quests.entries()) {
       for (const [sqi, sq] of quest.subQuests.entries()) {
         for (const [ti, trigger] of sq.triggers.entries()) {
@@ -312,20 +320,28 @@ export default function ScenarioTree() {
     return map
   }, [scenario])
 
+  const entityUsageMap = useMemo<Map<string, EntityUsage>>(() => {
+    const map = new Map<string, EntityUsage>()
+    for (const [sid, usages] of entityUsageListMap) map.set(sid, usages[0])
+    return map
+  }, [entityUsageListMap])
+
   // Group entities by type, sorted by type key then by SID within each group.
   // Spawner heroes get their own group rather than landing in "Objects", so it
   // stays obvious which SIDs came from a spawner (issue #96). Alphabetical group
   // ordering puts Heroes ahead of Objects and Zones.
+  //
+  // Carries the full MapEntity (not just the SID) so the rename affordance
+  // has access to `id`/`source` — `source === 'heroSpawner'` must stay
+  // unrenameable, see map-context.ts:36.
   const entityGroups = useMemo(() => {
-    const map = new Map<string, string[]>()
+    const map = new Map<string, MapEntity[]>()
     for (const e of entities) {
       const key = e.source === 'heroSpawner' ? 'Heroes' : entityTypeLabel(e.type)
       if (!map.has(key)) map.set(key, [])
-      map.get(key)!.push(e.sid)
+      map.get(key)!.push(e)
     }
-    // Sort SIDs within each group
-    for (const sids of map.values()) sids.sort()
-    // Return sorted by group name
+    for (const es of map.values()) es.sort((a, b) => a.sid.localeCompare(b.sid))
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
   }, [entities])
 
@@ -388,6 +404,7 @@ export default function ScenarioTree() {
   }
 
   const [openEntityGroups, setOpenEntityGroups] = useState<Record<string, boolean>>({})
+  const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((s) => ({ ...s, [key]: !s[key] }))
@@ -729,7 +746,7 @@ export default function ScenarioTree() {
                   No named entities found in this map.
                 </p>
               )}
-              {entityGroups.map(([groupLabel, sids]) => {
+              {entityGroups.map(([groupLabel, groupEntities]) => {
                 const groupOpen = openEntityGroups[groupLabel] ?? true
                 return (
                   <div key={groupLabel}>
@@ -745,10 +762,11 @@ export default function ScenarioTree() {
                         ? <ChevronDown className="h-3 w-3 shrink-0" />
                         : <ChevronRight className="h-3 w-3 shrink-0" />}
                       <span className="ml-1 font-medium">{groupLabel}</span>
-                      <span className="ml-1 text-muted-foreground/60">({sids.length})</span>
+                      <span className="ml-1 text-muted-foreground/60">({groupEntities.length})</span>
                     </div>
                     {/* SID rows */}
-                    {groupOpen && sids.map((sid) => {
+                    {groupOpen && groupEntities.map((entity) => {
+                      const sid = entity.sid
                       const usage = entityUsageMap.get(sid)
                       const coords = entityCoordsMap.get(sid)
                       const name = entityNameMap.get(sid)
@@ -757,6 +775,9 @@ export default function ScenarioTree() {
                         coords,
                         usage ? `Go to ${usage.type} [${usage.path.join(', ')}]` : undefined,
                       ].filter(Boolean).join(' · ')
+                      // Hero-spawner SIDs are hero catalog IDs, not authored
+                      // entity names — renaming them is out of scope (map-context.ts:36).
+                      const renameable = isTauri() && entity.source !== 'heroSpawner' && !!mapFilePath
                       return (
                         <div
                           key={sid}
@@ -785,6 +806,15 @@ export default function ScenarioTree() {
                               {name}
                             </span>
                           )}
+                          {renameable && (
+                            <button
+                              className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
+                              title={`Rename "${sid}"`}
+                              onClick={(e) => { e.stopPropagation(); setRenameTarget(entity) }}
+                            >
+                              <PenLine className="h-3 w-3" />
+                            </button>
+                          )}
                           <CopySidButton sid={sid} />
                         </div>
                       )
@@ -797,6 +827,19 @@ export default function ScenarioTree() {
         </>
 
       </div>
+
+      <RenameEntitySidDialog
+        open={renameTarget !== null}
+        onOpenChange={(open) => { if (!open) setRenameTarget(null) }}
+        entity={renameTarget}
+        existingSids={entities.map((e) => e.sid)}
+        usageDescriptions={
+          renameTarget
+            ? (entityUsageListMap.get(renameTarget.sid) ?? []).map((u) => `${u.type} [${u.path.join(', ')}]`)
+            : []
+        }
+        mapFilePath={mapFilePath}
+      />
     </ScrollArea>
   )
 }
