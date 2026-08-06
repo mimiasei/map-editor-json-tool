@@ -3,6 +3,7 @@ import { useStore } from 'zustand'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useGuideStore } from '@/store/useGuideStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import { importScenario } from '@/lib/import'
 import { exportProjectJson } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
@@ -64,6 +65,7 @@ import {
   Palette,
   RefreshCw,
   Save,
+  LayoutGrid,
 } from 'lucide-react'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -82,6 +84,7 @@ interface ToolbarProps {
   onGuidesOpen?: () => void
   onDialogBrowserOpen?: () => void
   onGameDatabaseOpen?: () => void
+  onMapGridOpen?: () => void
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -101,6 +104,7 @@ export default function Toolbar({
   onGuidesOpen,
   onDialogBrowserOpen,
   onGameDatabaseOpen,
+  onMapGridOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -125,6 +129,8 @@ export default function Toolbar({
     setLocalizationBatch,
     setTranslations,
   } = useScenarioStore()
+
+  const mapLoaded = useMapContextStore((s) => s.context !== null)
 
   const [validateOpen,        setValidateOpen]        = useState(false)
   const [importErrors,        setImportErrors]        = useState<string[]>([])
@@ -642,6 +648,14 @@ export default function Toolbar({
                 <Database className="h-4 w-4 mr-2" />
                 Game Database
               </DropdownMenuItem>
+
+              {/* Needs a loaded .map for anything to show (issue #122) */}
+              {mapLoaded && (
+                <DropdownMenuItem onClick={() => setTimeout(() => onMapGridOpen?.(), 0)}>
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Map Grid
+                </DropdownMenuItem>
+              )}
 
               <DropdownMenuSeparator />
 
