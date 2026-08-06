@@ -1,7 +1,7 @@
 // ─── Map data extraction ──────────────────────────────────────────────────────
 // Derives editor-friendly data structures from raw parsed .map blocks.
 
-import type { RawMapBlocks } from '@/lib/map-parser'
+import type { RawMapBlocks, RawMapBlock2 } from '@/lib/map-parser'
 import type {
   MapContext,
   PlayerSpawn,
@@ -11,8 +11,82 @@ import type {
   HeroPlacement,
   CreaturePlacement,
   ArtifactPlacement,
+  PlacedObject,
 } from '@/types/map-context'
 import type { ScenarioFile } from '@/types/scenario'
+
+// ─── buildPlacedObjects ───────────────────────────────────────────────────────
+// `objects[]`, `squads[]` and `markers[]` are three SEPARATE id-namespaces
+// that can (and do, in real maps) collide on the same numeric id — e.g. id 8
+// meaning "city-spawner" in objects[] and "squad_c_angel" in squads[] on the
+// same map (issue #122). Every objectsProperties table that references one of
+// these by id also carries a `type` discriminator (0=objects, 1=markers,
+// 2=squads) for exactly this reason — that pair, never id alone, is this
+// module's join key. This is the single place placement + coordinates are
+// resolved; every per-category list below (entities, heroPlacements,
+// creaturePlacements, artifactPlacements) derives from its output rather than
+// re-deriving its own id→node lookup.
+
+/**
+ * Every placed object/squad/marker instance on the map, enriched with its
+ * propEntities SID and propsName display name where set. Never throws — an
+ * instance with unresolvable coordinates (sizeX unknown, or a node/id pair
+ * malformed) is simply skipped.
+ */
+export function buildPlacedObjects(
+  b2: RawMapBlock2,
+  nodeToCoord: (node: number) => { x: number; z: number } | undefined,
+  entitySidByKey: Map<string, string>,
+  displayNameByKey: Map<string, string>,
+): PlacedObject[] {
+  const placed: PlacedObject[] = []
+
+  const push = (type: 0 | 1 | 2, id: number, sid: string, node: number, rotation?: number, level?: number) => {
+    const coord = nodeToCoord(node)
+    if (!coord) return
+    const key = `${type}:${id}`
+    placed.push({
+      key, type, id, sid, node, ...coord,
+      rotation, level,
+      entitySid: entitySidByKey.get(key),
+      displayName: displayNameByKey.get(key),
+    })
+  }
+
+  // type 0 — objects[]
+  for (const obj of b2.objects ?? []) {
+    if (typeof obj.sid !== 'string') continue // string[] sid form never observed in real maps; skip defensively
+    const { ids, nodes, rotations, levels } = obj
+    if (!Array.isArray(ids) || !Array.isArray(nodes)) continue
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i]
+      const node = nodes[i]
+      if (typeof id !== 'number' || typeof node !== 'number') continue
+      push(0, id, obj.sid, node, rotations?.[i], levels?.[i])
+    }
+  }
+
+  // type 2 — squads[] (fixed/scripted unit placements, separate from objects[])
+  for (const sq of b2.squads ?? []) {
+    if (typeof sq.sid !== 'string') continue
+    const { ids, nodes } = sq
+    if (!Array.isArray(ids) || !Array.isArray(nodes)) continue
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i]
+      const node = nodes[i]
+      if (typeof id !== 'number' || typeof node !== 'number') continue
+      push(2, id, sq.sid, node)
+    }
+  }
+
+  // type 1 — markers[] (editor-only zone-shape annotations)
+  for (const m of b2.markers ?? []) {
+    if (typeof m.sid !== 'string' || typeof m.id !== 'number' || typeof m.node !== 'number') continue
+    push(1, m.id, m.sid, m.node)
+  }
+
+  return placed
+}
 
 // ─── extractMapContext ────────────────────────────────────────────────────────
 
@@ -59,23 +133,17 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   // sizeX: Block 2 uses sizeX_ key; fall back to Block 1 sizeX
   const sizeX = (b2 as Record<string, unknown>).sizeX_ as number | undefined ?? b1.sizeX ?? 0
 
-  // Build a lookup: numeric id → tile node index, from objects[].ids / objects[].nodes
-  const idToNode = new Map<number, number>()
-  for (const obj of b2.objects ?? []) {
-    const ids = obj.ids
-    const nodes = obj.nodes
-    if (Array.isArray(ids) && Array.isArray(nodes)) {
-      for (let i = 0; i < ids.length; i++) {
-        if (typeof ids[i] === 'number' && typeof nodes[i] === 'number') {
-          idToNode.set(ids[i] as number, nodes[i] as number)
-        }
-      }
-    }
-  }
-
   function nodeToCoord(node: number): { x: number; z: number } | undefined {
     if (sizeX <= 0) return undefined
     return { x: node % sizeX, z: Math.floor(node / sizeX) }
+  }
+
+  // propEntities SID by (type, id) — the same join key used everywhere below.
+  const entitySidByKey = new Map<string, string>()
+  for (const e of propEntities) {
+    if (typeof e.sid !== 'string' || !e.sid.trim() || e.id === undefined) continue
+    const key = `${e.type ?? ''}:${e.id}`
+    if (!entitySidByKey.has(key)) entitySidByKey.set(key, e.sid)
   }
 
   // Custom display names (objectsProperties.propsName, issue #120) — keyed by
@@ -90,17 +158,23 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (!displayNameByKey.has(key)) displayNameByKey.set(key, p.nameTitle)
   }
 
+  // Every placed object/squad/marker, correctly disambiguated by (type, id) —
+  // see buildPlacedObjects() above for why this replaces a plain id→node map.
+  const placedObjects = buildPlacedObjects(b2, nodeToCoord, entitySidByKey, displayNameByKey)
+  const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))
+
   const entities: MapEntity[] = propEntities
     .filter((e) => typeof e.sid === 'string' && e.sid.trim() !== '')
     .map((e) => {
-      const entity: MapEntity = { sid: e.sid as string, id: e.id ?? -1, type: e.type ?? '' }
-      const node = idToNode.get(entity.id)
-      if (node !== undefined) {
-        const coord = nodeToCoord(node)
-        if (coord) { entity.x = coord.x; entity.z = coord.z }
+      const type = e.type ?? ''
+      const id = e.id ?? -1
+      const entity: MapEntity = { sid: e.sid as string, id, type }
+      const placedEntry = placedByKey.get(`${type}:${id}`)
+      if (placedEntry) {
+        entity.x = placedEntry.x
+        entity.z = placedEntry.z
+        if (placedEntry.displayName) entity.displayName = placedEntry.displayName
       }
-      const displayName = displayNameByKey.get(`${entity.type}:${entity.id}`)
-      if (displayName) entity.displayName = displayName
       return entity
     })
 
@@ -151,11 +225,11 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
       type: h.type ?? '',
       source: 'heroSpawner',
     }
-    const node = idToNode.get(entity.id)
-    if (node !== undefined) {
-      const coord = nodeToCoord(node)
-      if (coord) { entity.x = coord.x; entity.z = coord.z }
-    }
+    // Spawners are always plain objects (type 0) in every real map observed,
+    // but resolve via placedByKey rather than a bare id lookup regardless —
+    // consistent with everything else here, and safe if that ever changes.
+    const placedEntry = placedByKey.get(`${h.type ?? 0}:${entity.id}`)
+    if (placedEntry) { entity.x = placedEntry.x; entity.z = placedEntry.z }
     entities.push(entity)
   }
 
@@ -163,23 +237,24 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   const heroPlacements: HeroPlacement[] = propHeroes
     .filter((h) => typeof h.heroSid === 'string' && h.heroSid.trim() !== '' && h.id !== undefined)
     .flatMap((h) => {
-      const node = idToNode.get(h.id as number)
-      if (node === undefined) return []
-      const coord = nodeToCoord(node)
-      if (!coord) return []
-      return [{ heroSid: h.heroSid as string, ...coord }]
+      const placedEntry = placedByKey.get(`${h.type ?? 0}:${h.id}`)
+      if (!placedEntry) return []
+      return [{ heroSid: h.heroSid as string, x: placedEntry.x, z: placedEntry.z }]
     })
 
-  // ── Creature placements (propSquads → objects node coords) ─────────────────
+  // ── Creature placements (propSquads → guard-object or squads[] node coords) ─
+  // propSquads' own `type` says which namespace `id` belongs to: a guard squad
+  // co-located with a regular object (0) or a fixed placement in the separate
+  // squads[] array (2) — both occur in real maps (issue #122), so this cannot
+  // default to one or the other.
   const propSquads = b2.objectsProperties?.propSquads ?? []
   const creaturePlacementSet = new Set<string>()
   const creaturePlacements: CreaturePlacement[] = []
   for (const ps of propSquads) {
     if (ps.id === undefined) continue
-    const node = idToNode.get(ps.id)
-    if (node === undefined) continue
-    const coord = nodeToCoord(node)
-    if (!coord) continue
+    const placedEntry = placedByKey.get(`${ps.type ?? 0}:${ps.id}`)
+    if (!placedEntry) continue
+    const coord = { x: placedEntry.x, z: placedEntry.z }
     const seenUnits = new Set<string>()
     for (const up of ps.unitProps ?? []) {
       if (typeof up.sid !== 'string' || !up.sid.trim()) continue
@@ -195,20 +270,12 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   // ── Artifact placements (objects with _artifact suffix) ─────────────────────
   const artifactPlacements: ArtifactPlacement[] = []
   const artifactPlacementSet = new Set<string>()
-  for (const obj of b2.objects ?? []) {
-    if (typeof obj.sid !== 'string' || !obj.sid.endsWith('_artifact')) continue
-    const ids = obj.ids
-    const nodes = obj.nodes
-    if (!Array.isArray(ids) || !Array.isArray(nodes)) continue
-    for (let i = 0; i < ids.length; i++) {
-      if (typeof nodes[i] !== 'number') continue
-      const coord = nodeToCoord(nodes[i] as number)
-      if (!coord) continue
-      const key = `${obj.sid}:${coord.x}:${coord.z}`
-      if (artifactPlacementSet.has(key)) continue
-      artifactPlacementSet.add(key)
-      artifactPlacements.push({ sid: obj.sid, ...coord })
-    }
+  for (const p of placedObjects) {
+    if (p.type !== 0 || !p.sid.endsWith('_artifact')) continue
+    const key = `${p.sid}:${p.x}:${p.z}`
+    if (artifactPlacementSet.has(key)) continue
+    artifactPlacementSet.add(key)
+    artifactPlacements.push({ sid: p.sid, x: p.x, z: p.z })
   }
 
   // ── Hero assignments (propHeroes) ─────────────────────────────────────────────
@@ -247,6 +314,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     heroPlacements,
     creaturePlacements,
     artifactPlacements,
+    placedObjects,
   }
 }
 

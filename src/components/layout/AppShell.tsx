@@ -32,6 +32,7 @@ import GuidesDialog from '@/components/guides/GuidesDialog'
 import TemplatePickerDialog from '@/components/guides/TemplatePickerDialog'
 import DialogBrowser from '@/components/catalog/DialogBrowser'
 import GameDatabaseDialog from '@/components/catalog/GameDatabaseDialog'
+import MapGridDialog from '@/components/map-grid/MapGridDialog'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import SetupDialog from '@/components/common/SetupDialog'
 import { SquareArrowOutUpRight } from 'lucide-react'
@@ -77,6 +78,7 @@ export default function AppShell() {
   const [guidesOpen,    setGuidesOpen]    = useState(false)
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
+  const [mapGridOpen, setMapGridOpen] = useState(false)
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
   const [setupOpen, setSetupOpen] = useState(false)
 
@@ -524,6 +526,7 @@ export default function AppShell() {
         onGuidesOpen={() => setGuidesOpen(true)}
         onDialogBrowserOpen={() => setDialogBrowserOpen(true)}
         onGameDatabaseOpen={() => setGameDatabaseOpen(true)}
+        onMapGridOpen={() => setMapGridOpen(true)}
         onNew={handleNew}
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
@@ -596,6 +599,7 @@ export default function AppShell() {
       />
       <DialogBrowser open={dialogBrowserOpen} onOpenChange={setDialogBrowserOpen} />
       <GameDatabaseDialog open={gameDatabaseOpen} onOpenChange={setGameDatabaseOpen} />
+      <MapGridDialog open={mapGridOpen} onOpenChange={setMapGridOpen} />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}

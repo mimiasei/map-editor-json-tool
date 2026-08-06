@@ -32,6 +32,13 @@ export const DEFAULT_FILTER: MapObjectFilterState = {
     resources: true,
     environments: true,
     spawns: true,
+    animals: true,
+    fxs: true,
+    artifacts: true,
+    blocks: true,
+    // "test" is the game's internal debug/dev object bucket (tag: "TEST") —
+    // hidden by default so it doesn't clutter pickers; still toggleable here.
+    test: false,
   },
 }
 
@@ -56,6 +63,11 @@ const CATEGORY_LABELS: Record<MapObjectCategory, string> = {
   resources: 'Resources',
   environments: 'Environments',
   spawns: 'Spawns',
+  animals: 'Animals',
+  fxs: 'FX',
+  artifacts: 'Artifact pickups',
+  blocks: 'Blocks',
+  test: 'Test (debug objects)',
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
