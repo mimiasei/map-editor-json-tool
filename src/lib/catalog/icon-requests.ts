@@ -93,13 +93,14 @@ export function buildIconRequests(catalog: GameCatalog | null): IconRequests {
     for (const s of catalog.spells) if (s.icon) icons.push(s.icon)
     for (const s of catalog.skills) if (s.icon) icons.push(s.icon)
     for (const b of catalog.buffs) if (b.icon) icons.push(b.icon)
+    // Every map-object category derives its icon from the prefab path stem
+    // (e.g. "tree_dirt_1"), same convention as interactables/resources — the
+    // old restriction to just those two categories predates full 9-category
+    // coverage (issue #122 Phase 0) and meant environments/spawns/animals/
+    // fxs/artifacts/blocks/test never had their PNGs requested at all,
+    // regardless of how well the catalog itself resolved them.
     for (const o of catalog.mapObjects) {
-      // Only interactables and resources have a usable icon: theirs is derived from
-      // the prefab path stem (e.g. "mine_gold") and matches a Texture2D m_Name.
-      // environments/spawns have no map icon textures.
-      if ((o.category === 'interactables' || o.category === 'resources') && o.icon) {
-        mapObjectIcons.push(o.icon)
-      }
+      if (o.icon) mapObjectIcons.push(o.icon)
     }
   }
 

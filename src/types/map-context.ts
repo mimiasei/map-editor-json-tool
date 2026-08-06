@@ -137,4 +137,9 @@ export interface MapContext {
   artifactPlacements: ArtifactPlacement[]
   /** Every placed object/squad/marker instance on the map (issue #122). */
   placedObjects: PlacedObject[]
+  /** Terrain biome ID per tile (DB/map/tiles/tiles.json, 1-7), row-major
+   *  by node like everything else. Empty when the map has no known size. */
+  tilesMap: number[]
+  /** Water material ID per tile (DB/map/waters/waters.json, 1-7), 0 = no water. */
+  waterMap: number[]
 }

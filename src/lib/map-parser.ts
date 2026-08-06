@@ -35,6 +35,13 @@ export interface RawMapBlock1 {
 
 export interface RawMapBlock2 {
   mapName?: string
+  /** Terrain type ID per tile, one of DB/map/tiles/tiles.json's 7 biome rows
+   *  (1=Grass..7=Dirt). Flat array, length sizeX_*sizeZ_, same row-major
+   *  indexing as everything else keyed by `node` (issue #122 grid terrain fill). */
+  tilesMap?: number[]
+  /** Water material ID per tile (DB/map/waters/waters.json, 1-7), 0 = no water.
+   *  Same flat indexing as tilesMap. */
+  waterMap?: number[]
   objects?: Array<{
     sid?: string | string[]
     ids?: number[]
