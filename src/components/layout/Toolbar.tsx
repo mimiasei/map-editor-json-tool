@@ -11,6 +11,7 @@ import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
 import { openAndLoadMapFile } from '@/lib/map-file'
+import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
 import {
@@ -62,6 +63,7 @@ import {
   ChevronDown,
   Palette,
   RefreshCw,
+  Save,
 } from 'lucide-react'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -108,6 +110,7 @@ export default function Toolbar({
     currentFileName,
     currentFilePath,
     sidecarPath,
+    mapFilePath,
     mapName,
     dialogs,
     localization,
@@ -320,6 +323,31 @@ export default function Toolbar({
       logError(`Export ZIP failed: ${msg}`)
       setZipError(msg)
       setZipErrorOpen(true)
+    }
+  }
+
+  // ── Re-save map (no changes) — desktop test feature, issue #120 ─────────────
+  // The control experiment for whether the game rejects a map this tool has
+  // repacked: same write path as an entity SID rename, zero semantic edits.
+  const [mapResaving, setMapResaving] = useState(false)
+  const [mapResaveResult, setMapResaveResult] = useState<{ ok: boolean; message: string } | null>(null)
+
+  const handleResaveMap = async () => {
+    if (!mapFilePath) return
+    setMapResaving(true)
+    try {
+      const result = await saveMapFile(mapFilePath)
+      logInfo(`Re-saved .map unchanged: ${mapFilePath} (backup ${result.backupCreated ? 'created' : 'already existed'} at ${result.backupPath})`)
+      setMapResaveResult({
+        ok: true,
+        message: `Re-saved ${result.bytesWritten.toLocaleString()} bytes.\nBackup: ${result.backupPath}${result.backupCreated ? '' : ' (already existed — not overwritten)'}`,
+      })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      logError(`Re-save .map failed: ${msg}`)
+      setMapResaveResult({ ok: false, message: msg })
+    } finally {
+      setMapResaving(false)
     }
   }
 
@@ -578,6 +606,18 @@ export default function Toolbar({
                 </DropdownMenuItem>
               )}
 
+              {/* Desktop only test feature (issue #120) — needs a .map file loaded */}
+              {isTauri() && mapFilePath && (
+                <DropdownMenuItem onClick={handleResaveMap} disabled={mapResaving}>
+                  {mapResaving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Re-save map (no changes)
+                </DropdownMenuItem>
+              )}
+
               {isTauri() && (
                 <DropdownMenuItem onClick={handleCheckForUpdates} disabled={updateChecking}>
                   {updateChecking ? (
@@ -817,6 +857,23 @@ export default function Toolbar({
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="ml-2">{zipError}</AlertDescription>
+          </Alert>
+        </DialogContent>
+      </Dialog>
+
+      {/* Re-save map result dialog (issue #120 test feature) */}
+      <Dialog open={mapResaveResult !== null} onOpenChange={(o) => { if (!o) setMapResaveResult(null) }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{mapResaveResult?.ok ? 'Map Re-saved' : 'Re-save Failed'}</DialogTitle>
+          </DialogHeader>
+          <Alert variant={mapResaveResult?.ok ? undefined : 'destructive'} className={mapResaveResult?.ok ? 'border-green-600/50 bg-green-50 dark:bg-green-950/30' : undefined}>
+            {mapResaveResult?.ok ? (
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500" />
+            ) : (
+              <AlertTriangle className="h-4 w-4" />
+            )}
+            <AlertDescription className="ml-2 whitespace-pre-line">{mapResaveResult?.message}</AlertDescription>
           </Alert>
         </DialogContent>
       </Dialog>

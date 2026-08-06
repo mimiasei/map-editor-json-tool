@@ -34,6 +34,13 @@ export interface MapEntity {
    * taken from a spawner that has a specific hero assigned (issue #96).
    */
   source?: 'heroSpawner'
+  /**
+   * Custom display name from objectsProperties.propsName, if the map author
+   * set one (issue #120). Shown as-is — a "LOC:<sid>" value means the real
+   * text lives in a localization token this tool doesn't resolve, not that
+   * the literal string "LOC:..." is what the player sees.
+   */
+  displayName?: string
 }
 
 export interface HeroAssignment {

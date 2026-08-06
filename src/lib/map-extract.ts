@@ -78,6 +78,18 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     return { x: node % sizeX, z: Math.floor(node / sizeX) }
   }
 
+  // Custom display names (objectsProperties.propsName, issue #120) — keyed by
+  // the same (type, id) pair propEntities uses to join into objects[]. The
+  // game itself doesn't dedupe this table (observed in a real sample map with
+  // 3 literal duplicate entries for one id) — first match wins, matching the
+  // write side's policy in map-write.ts.
+  const displayNameByKey = new Map<string, string>()
+  for (const p of b2.objectsProperties?.propsName ?? []) {
+    if (typeof p.nameTitle !== 'string' || !p.nameTitle.trim() || p.id === undefined) continue
+    const key = `${p.type ?? ''}:${p.id}`
+    if (!displayNameByKey.has(key)) displayNameByKey.set(key, p.nameTitle)
+  }
+
   const entities: MapEntity[] = propEntities
     .filter((e) => typeof e.sid === 'string' && e.sid.trim() !== '')
     .map((e) => {
@@ -87,6 +99,8 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
         const coord = nodeToCoord(node)
         if (coord) { entity.x = coord.x; entity.z = coord.z }
       }
+      const displayName = displayNameByKey.get(`${entity.type}:${entity.id}`)
+      if (displayName) entity.displayName = displayName
       return entity
     })
 
