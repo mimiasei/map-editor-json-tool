@@ -71,7 +71,7 @@ export default function RenameEntitySidDialog({
     setSaving(true)
     setError(null)
     try {
-      await saveMapFile(mapFilePath, { oldSid: entity.sid, newSid: trimmed })
+      await saveMapFile(mapFilePath, { kind: 'renameSid', oldSid: entity.sid, newSid: trimmed })
       onOpenChange(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))

@@ -13,6 +13,7 @@ import {
   gzipBytes,
   gunzipBytes,
   renameEntitySid,
+  upsertPropsName,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -20,10 +21,9 @@ import { parseMapFile } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
 
-export interface MapSaveEdit {
-  oldSid: string
-  newSid: string
-}
+export type MapSaveEdit =
+  | { kind: 'renameSid'; oldSid: string; newSid: string }
+  | { kind: 'setDisplayName'; entityType: number; entityId: number; nameTitle: string }
 
 export interface MapSaveResult {
   backupPath: string
@@ -48,10 +48,11 @@ function assertAllChunksAreJson(container: MapContainer) {
 }
 
 /**
- * Re-read the .map at `mapFilePath`, optionally rename one propEntities SID
- * (block 2), verify the rebuilt bytes before writing anything, back up the
- * original (once — never overwrites an existing .bak), write the result, then
- * re-parse what actually landed on disk back into the map-context store.
+ * Re-read the .map at `mapFilePath`, optionally apply one edit to block 2
+ * (rename a propEntities SID, or set a propsName display name), verify the
+ * rebuilt bytes before writing anything, back up the original (once — never
+ * overwrites an existing .bak), write the result, then re-parse what actually
+ * landed on disk back into the map-context store.
  *
  * Called with no `edit` this is the no-op "re-save unchanged" control action —
  * same write path, zero semantic changes, used to isolate whether re-packing
@@ -65,15 +66,17 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   const decompressed = await gunzipBytes(originalBytes)
   const container = readMapContainer(decompressed)
 
-  // propEntities lives in block 2 (chunks[1]) — anything with fewer chunks
-  // than that has nothing for a SID edit to target.
+  // Both edit kinds target block 2 (chunks[1]) — anything with fewer chunks
+  // than that has nothing for either to target.
   if (container.chunks.length < 2) {
     throw new Error(`Expected at least 2 blocks, found ${container.chunks.length} — refusing to write`)
   }
 
   const newChunks = container.chunks.slice()
-  if (edit) {
+  if (edit?.kind === 'renameSid') {
     newChunks[1] = renameEntitySid(newChunks[1], edit.oldSid, edit.newSid)
+  } else if (edit?.kind === 'setDisplayName') {
+    newChunks[1] = upsertPropsName(newChunks[1], edit.entityType, edit.entityId, edit.nameTitle)
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -95,13 +98,22 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   }
   assertAllChunksAreJson(reparsed)
 
-  if (edit) {
+  if (edit?.kind === 'renameSid') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: { propEntities?: Array<{ sid?: string }> }
     }
     const sids = block2.objectsProperties?.propEntities?.map((e) => e.sid) ?? []
     if (sids.includes(edit.oldSid) || !sids.includes(edit.newSid)) {
       throw new Error('Verification failed: rename not reflected in the rebuilt propEntities table')
+    }
+  } else if (edit?.kind === 'setDisplayName') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propsName?: Array<{ type?: number | string; id?: number; nameTitle?: string }> }
+    }
+    const entries = block2.objectsProperties?.propsName ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.nameTitle !== edit.nameTitle) {
+      throw new Error('Verification failed: display name not reflected in the rebuilt propsName table')
     }
   }
 

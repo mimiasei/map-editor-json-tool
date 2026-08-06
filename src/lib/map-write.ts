@@ -6,7 +6,10 @@
 // (float formatting, key order, escaping), and if a re-saved map is rejected
 // by the game we need to know that's from an intentional edit, not from
 // reformatting noise. So this module re-reads the container from scratch and
-// only ever touches the bytes it's explicitly asked to change.
+// only ever touches the bytes it's explicitly asked to change — with one
+// deliberate, narrower exception: upsertPropsName() below JSON.parses just
+// that one small array (never the whole chunk) because inserting a brand-new
+// entry isn't expressible as a substring splice. See its doc comment.
 //
 // See issue #120 for the investigation this is based on: the file is a single
 // gzip stream; decompressed layout is
@@ -137,21 +140,16 @@ export async function gunzipBytes(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(buf)
 }
 
-// ─── Entity SID rename ───────────────────────────────────────────────────────
+// ─── JSON array span lookup ──────────────────────────────────────────────────
+// Shared by every objectsProperties.<key> editor below. Locates `"<key>":[`
+// and walks bracket depth to find the matching close — the same technique for
+// every table, since entries are flat objects with no nested arrays/objects
+// of their own (verified against every real propsName/propEntities entry).
 
-/**
- * Rename a `propEntities[].sid` value inside a decompressed Block 2 chunk, by
- * exact byte substring match scoped to the `propEntities` array span — never
- * touching an identically-spelled string anywhere else in the block (e.g. an
- * object-type SID or a hero SID). Requires the old SID to appear exactly once
- * inside that span; throws on 0 or >1 matches rather than guess.
- */
-export function renameEntitySid(chunk: Uint8Array, oldSid: string, newSid: string): Uint8Array {
-  const text = new TextDecoder('utf-8').decode(chunk)
-
-  const marker = '"propEntities":['
+function findJsonArraySpan(text: string, key: string): { arrayOpen: number; arrayClose: number; span: string } {
+  const marker = `"${key}":[`
   const markerIdx = text.indexOf(marker)
-  if (markerIdx === -1) throw new Error('propEntities array not found in this block')
+  if (markerIdx === -1) throw new Error(`"${key}" array not found in this block`)
 
   const arrayOpen = markerIdx + marker.length - 1 // index of the "["
   let depth = 0
@@ -163,9 +161,24 @@ export function renameEntitySid(chunk: Uint8Array, oldSid: string, newSid: strin
       if (depth === 0) { arrayClose = i; break }
     }
   }
-  if (arrayClose === -1) throw new Error('propEntities array is not properly closed')
+  if (arrayClose === -1) throw new Error(`"${key}" array is not properly closed`)
 
-  const span = text.slice(arrayOpen, arrayClose + 1)
+  return { arrayOpen, arrayClose, span: text.slice(arrayOpen, arrayClose + 1) }
+}
+
+// ─── Entity SID rename ───────────────────────────────────────────────────────
+
+/**
+ * Rename a `propEntities[].sid` value inside a decompressed Block 2 chunk, by
+ * exact byte substring match scoped to the `propEntities` array span — never
+ * touching an identically-spelled string anywhere else in the block (e.g. an
+ * object-type SID or a hero SID). Requires the old SID to appear exactly once
+ * inside that span; throws on 0 or >1 matches rather than guess.
+ */
+export function renameEntitySid(chunk: Uint8Array, oldSid: string, newSid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propEntities')
+
   const oldNeedle = `"sid":${JSON.stringify(oldSid)}`
   const occurrences = span.split(oldNeedle).length - 1
   if (occurrences === 0) throw new Error(`SID "${oldSid}" not found in propEntities`)
@@ -174,6 +187,54 @@ export function renameEntitySid(chunk: Uint8Array, oldSid: string, newSid: strin
   }
 
   const patchedSpan = span.replace(oldNeedle, `"sid":${JSON.stringify(newSid)}`)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
+// ─── Custom display name (objectsProperties.propsName) ──────────────────────
+// Unlike propEntities' single sid string, an entry here has 3 optional text
+// fields (nameTitle/tagTitle/description) and, per real sample maps, may not
+// exist for a given (type, id) at all yet — this can both update an existing
+// entry and insert a brand-new one. That needs real JSON manipulation, not a
+// substring splice, so — deliberately narrower than "never JSON.stringify"
+// elsewhere in this module — this parses and re-serializes *only* the
+// propsName array itself (typically a handful of entries), leaving every
+// other byte in the block untouched. Verified byte-identical for untouched
+// entries against both real sample maps that have non-empty propsName data,
+// including one with Cyrillic text and literal duplicate entries.
+//
+// New entries write tagTitle/description as "" rather than omitting the keys
+// — the doc's own notes describe those fields as "(empty in sample)", i.e.
+// present-but-blank, not absent, in every observed empty case. Unverified
+// whether the game truly requires them; flagged for the in-game test.
+interface PropsNameEntry {
+  type?: number | string
+  id?: number
+  nameTitle?: string
+  tagTitle?: string
+  description?: string
+}
+
+/**
+ * Set (or insert) the custom display name for one map object, identified by
+ * its `(type, id)` pair from propEntities — the same pair used to cross-
+ * reference `objects[]`. If multiple entries already exist for that pair
+ * (observed in one real sample map — the game itself does not dedupe this
+ * table), only the first is updated; the rest are left as-is.
+ */
+export function upsertPropsName(chunk: Uint8Array, entityType: number, entityId: number, nameTitle: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propsName')
+
+  const entries = JSON.parse(span) as PropsNameEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) {
+    existing.nameTitle = nameTitle
+  } else {
+    entries.push({ type: entityType, id: entityId, nameTitle, tagTitle: '', description: '' })
+  }
+
+  const patchedSpan = JSON.stringify(entries)
   const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
   return new TextEncoder().encode(patchedText)
 }

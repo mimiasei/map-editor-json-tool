@@ -25,12 +25,14 @@ import {
   ClipboardCopy,
   ClipboardPaste,
   PenLine,
+  Tag,
 } from 'lucide-react'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
 import type { SubQuest, Trigger } from '@/types/scenario'
 import type { MapEntity } from '@/types/map-context'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
+import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
 const LABEL_WIDTH_RATIO = 175 / 280
@@ -356,18 +358,21 @@ export default function ScenarioTree() {
     return map
   }, [entities])
 
-  // Lookup map: SID → readable English name. Only spawner heroes resolve today,
-  // via the hero catalog; without Core.zip loaded this stays empty and rows show
-  // the SID alone, matching how every other catalog-backed control degrades.
+  // Lookup map: SID → readable name. Spawner heroes resolve via the hero
+  // catalog (without Core.zip loaded this half stays empty, matching how every
+  // other catalog-backed control degrades); other entities show their
+  // propsName-derived displayName, if the map author set one (issue #120).
   const catalogHeroes = useCatalogStore((s) => s.catalog?.heroes)
   const entityNameMap = useMemo(() => {
     const map = new Map<string, string>()
-    if (!catalogHeroes) return map
-    const heroNames = new Map(catalogHeroes.map((h) => [h.id, h.name]))
+    const heroNames = catalogHeroes ? new Map(catalogHeroes.map((h) => [h.id, h.name])) : null
     for (const e of entities) {
-      if (e.source !== 'heroSpawner') continue
-      const name = heroNames.get(e.sid)
-      if (name && name !== e.sid) map.set(e.sid, name)
+      if (e.source === 'heroSpawner') {
+        const name = heroNames?.get(e.sid)
+        if (name && name !== e.sid) map.set(e.sid, name)
+      } else if (e.displayName && e.displayName !== e.sid) {
+        map.set(e.sid, e.displayName)
+      }
     }
     return map
   }, [entities, catalogHeroes])
@@ -405,6 +410,7 @@ export default function ScenarioTree() {
 
   const [openEntityGroups, setOpenEntityGroups] = useState<Record<string, boolean>>({})
   const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
+  const [displayNameTarget, setDisplayNameTarget] = useState<MapEntity | null>(null)
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((s) => ({ ...s, [key]: !s[key] }))
@@ -815,6 +821,15 @@ export default function ScenarioTree() {
                               <PenLine className="h-3 w-3" />
                             </button>
                           )}
+                          {renameable && (
+                            <button
+                              className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
+                              title={`Set display name for "${sid}"`}
+                              onClick={(e) => { e.stopPropagation(); setDisplayNameTarget(entity) }}
+                            >
+                              <Tag className="h-3 w-3" />
+                            </button>
+                          )}
                           <CopySidButton sid={sid} />
                         </div>
                       )
@@ -838,6 +853,13 @@ export default function ScenarioTree() {
             ? (entityUsageListMap.get(renameTarget.sid) ?? []).map((u) => `${u.type} [${u.path.join(', ')}]`)
             : []
         }
+        mapFilePath={mapFilePath}
+      />
+
+      <SetDisplayNameDialog
+        open={displayNameTarget !== null}
+        onOpenChange={(open) => { if (!open) setDisplayNameTarget(null) }}
+        entity={displayNameTarget}
         mapFilePath={mapFilePath}
       />
     </ScrollArea>

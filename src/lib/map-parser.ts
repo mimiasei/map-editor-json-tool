@@ -42,6 +42,8 @@ export interface RawMapBlock2 {
   }>
   objectsProperties?: {
     propEntities?: Array<{ type?: string; id?: number; sid?: string }>
+    /** Custom per-instance display name/tag/description set in the official map editor. */
+    propsName?: Array<{ type?: string; id?: number; nameTitle?: string; tagTitle?: string; description?: string }>
     propHeroes?: Array<{ type?: string; id?: number; isDefined?: boolean; heroSid?: string }>
     /** City spawners. `spawnHero` is the "also spawn a hero" slot; `isDefined`
      *  refers to the city's faction, not the hero. */
