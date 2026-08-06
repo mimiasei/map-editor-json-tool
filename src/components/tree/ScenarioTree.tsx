@@ -31,6 +31,7 @@ import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
 import type { SubQuest, Trigger } from '@/types/scenario'
 import type { MapEntity } from '@/types/map-context'
+import { buildEntityUsageMap, describeEntityUsage, type EntityUsage } from '@/lib/entity-usage'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 
@@ -291,36 +292,14 @@ export default function ScenarioTree() {
   const pasteableTrigger = useClipboardHasPayload<Trigger>('trigger')
   const pasteableSubQuest = useClipboardHasPayload<SubQuest>('subquest')
 
-  // Build a map of entitySid → every usage location in the scenario. Used
-  // both for the existing "bold + navigate to first usage" behaviour and
+  // Map of entitySid → every usage location in the scenario. Used both for
+  // the existing "bold + navigate to first usage" behaviour and
   // (entityUsageListMap) for the rename dialog's full reference warning.
-  type EntityUsage = { type: 'trigger'; path: [number, number, number] } | { type: 'interruption'; path: [number] }
-  const entityUsageListMap = useMemo<Map<string, EntityUsage[]>>(() => {
-    const map = new Map<string, EntityUsage[]>()
-    const register = (sid: string, usage: EntityUsage) => {
-      if (!map.has(sid)) map.set(sid, [])
-      map.get(sid)!.push(usage)
-    }
-    for (const [qi, quest] of scenario.quests.entries()) {
-      for (const [sqi, sq] of quest.subQuests.entries()) {
-        for (const [ti, trigger] of sq.triggers.entries()) {
-          const params = [
-            ...trigger.actions.flatMap(a => a.p ?? []),
-            ...trigger.conditions.flatMap(c => c.p ?? []),
-          ]
-          for (const p of params) {
-            if (typeof p === 'string' && p) register(p, { type: 'trigger', path: [qi, sqi, ti] })
-          }
-        }
-      }
-    }
-    for (const [ii, intr] of scenario.interruptions.entries()) {
-      for (const p of intr.actions.flatMap(a => a.p ?? [])) {
-        if (typeof p === 'string' && p) register(p, { type: 'interruption', path: [ii] })
-      }
-    }
-    return map
-  }, [scenario])
+  // Shared with the Map Grid's tile editor (issue #122) via entity-usage.ts.
+  const entityUsageListMap = useMemo<Map<string, EntityUsage[]>>(
+    () => buildEntityUsageMap(scenario),
+    [scenario],
+  )
 
   const entityUsageMap = useMemo<Map<string, EntityUsage>>(() => {
     const map = new Map<string, EntityUsage>()
@@ -850,7 +829,7 @@ export default function ScenarioTree() {
         existingSids={entities.map((e) => e.sid)}
         usageDescriptions={
           renameTarget
-            ? (entityUsageListMap.get(renameTarget.sid) ?? []).map((u) => `${u.type} [${u.path.join(', ')}]`)
+            ? (entityUsageListMap.get(renameTarget.sid) ?? []).map(describeEntityUsage)
             : []
         }
         mapFilePath={mapFilePath}

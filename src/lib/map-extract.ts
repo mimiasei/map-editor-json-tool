@@ -315,6 +315,8 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     creaturePlacements,
     artifactPlacements,
     placedObjects,
+    tilesMap: Array.isArray(b2.tilesMap) ? b2.tilesMap : [],
+    waterMap: Array.isArray(b2.waterMap) ? b2.waterMap : [],
   }
 }
 

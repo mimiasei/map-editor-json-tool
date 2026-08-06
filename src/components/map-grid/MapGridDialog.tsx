@@ -19,6 +19,8 @@ import {
   DraggableDialogDragHandle,
 } from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
@@ -31,7 +33,9 @@ import {
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
 import type { PlacedObject } from '@/types/map-context'
-import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { terrainFillColor } from '@/lib/map-grid/terrain-colors'
+import TileEditorDialog from '@/components/map-grid/TileEditorDialog'
+import { ZoomIn, ZoomOut, Maximize2, Percent } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -71,6 +75,16 @@ function saveGridFilter(f: GridFilterState): void {
   try { localStorage.setItem(GRID_FILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
 }
 
+const GRID_LINES_STORAGE_KEY = 'oe-map-grid-lines'
+
+function loadShowGridLines(): boolean {
+  try { return localStorage.getItem(GRID_LINES_STORAGE_KEY) === '1' } catch { return false }
+}
+
+function saveShowGridLines(v: boolean): void {
+  try { localStorage.setItem(GRID_LINES_STORAGE_KEY, v ? '1' : '0') } catch { /* ignore */ }
+}
+
 // ─── Transform ────────────────────────────────────────────────────────────────
 
 interface Transform { x: number; y: number; scale: number }
@@ -91,6 +105,8 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
   const sizeX = context?.sizeX ?? 0
   const sizeZ = context?.sizeZ ?? 0
   const placedObjects = context?.placedObjects ?? []
+  const tilesMap = context?.tilesMap ?? []
+  const waterMap = context?.waterMap ?? []
 
   const [filter, setFilter] = useState<GridFilterState>(loadGridFilter)
   const toggleGroup = (g: GridGroup) => {
@@ -99,6 +115,12 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
       saveGridFilter(next)
       return next
     })
+  }
+
+  const [showGridLines, setShowGridLines] = useState<boolean>(loadShowGridLines)
+  const toggleGridLines = (checked: boolean) => {
+    setShowGridLines(checked)
+    saveShowGridLines(checked)
   }
 
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
@@ -216,6 +238,14 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
+  const zoomTo100 = useCallback(() => {
+    setTransform((prev) => {
+      const worldX = (containerSize.width / 2 - prev.x) / prev.scale
+      const worldY = (containerSize.height / 2 - prev.y) / prev.scale
+      return { scale: 1, x: containerSize.width / 2 - worldX, y: containerSize.height / 2 - worldY }
+    })
+  }, [containerSize])
+
   // ── Canvas overview layer — redrawn whenever the occupied set / filter /
   // catalog changes, or whenever the canvas element itself (re)mounts. Same
   // callback-ref reasoning as viewportEl above.
@@ -228,13 +258,25 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     ctx.clearRect(0, 0, sizeX, sizeZ)
+    // Base pass: every tile gets its light terrain/water fill, occupied or
+    // not — this is what makes the grid readable even with all filters off.
+    const tileCount = sizeX * sizeZ
+    if (tilesMap.length === tileCount) {
+      for (let node = 0; node < tileCount; node++) {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node])
+        ctx.fillRect(x, z, 1, 1)
+      }
+    }
+    // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       ctx.fillStyle = GROUP_COLORS[pick.group]
       ctx.fillRect(x, z, 1, 1)
     }
-  }, [canvasEl, primaryByNode, sizeX, sizeZ])
+  }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -264,15 +306,18 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
     return cells
   }, [showIcons, visibleRange, sizeX, sizeZ, primaryByNode])
 
-  // ── Hover / pin info panel ──────────────────────────────────────────────────
+  // ── Hover info panel + click-to-edit ────────────────────────────────────────
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
-  const [pinnedNode, setPinnedNode] = useState<number | null>(null)
-  const infoNode = pinnedNode ?? hoveredNode
+  const infoNode = hoveredNode
   const infoItems = infoNode !== null ? tileIndex.get(infoNode) ?? [] : []
+
+  const [editorNode, setEditorNode] = useState<number | null>(null)
+  const editorItems = editorNode !== null ? tileIndex.get(editorNode) ?? [] : []
 
   if (!open) return null
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DraggableDialogContent
         className="p-0 gap-0 overflow-hidden"
@@ -301,10 +346,26 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
                 onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 1.25)}>
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6" title="Zoom to 100%"
+                onClick={zoomTo100}>
+                <Percent className="h-3.5 w-3.5" />
+              </Button>
               <Button variant="ghost" size="icon" className="h-6 w-6" title="Fit to window"
                 onClick={fitToViewport}>
                 <Maximize2 className="h-3.5 w-3.5" />
               </Button>
+              <div className="w-px h-4 bg-border mx-1" />
+              <div className="flex items-center gap-1.5">
+                <Switch
+                  id="grid-show-lines"
+                  checked={showGridLines}
+                  onCheckedChange={toggleGridLines}
+                  className="scale-90"
+                />
+                <Label htmlFor="grid-show-lines" className="text-xs text-muted-foreground cursor-pointer">
+                  Grid lines
+                </Label>
+              </div>
             </div>
           </div>
 
@@ -352,7 +413,6 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
               onWheel={onWheel}
-              onClick={() => setPinnedNode(null)}
             >
               <div
                 className="absolute top-0 left-0"
@@ -384,7 +444,7 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
                       style={{ left: x * BASE_CELL_PX, top: z * BASE_CELL_PX, width: BASE_CELL_PX, height: BASE_CELL_PX }}
                       onPointerEnter={() => setHoveredNode(node)}
                       onPointerLeave={() => setHoveredNode((cur) => (cur === node ? null : cur))}
-                      onClick={(e) => { e.stopPropagation(); setPinnedNode((cur) => (cur === node ? null : node)) }}
+                      onClick={(e) => { e.stopPropagation(); setEditorNode(node) }}
                     >
                       <CatalogIcon iconId={pick.primary.sid} name={name} size={Math.min(BASE_CELL_PX - 4, 24)} />
                       {pick.count > 1 && (
@@ -396,10 +456,40 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
                   )
                 })}
               </div>
+
+              {/* Grid-line + map-edge overlays live in screen space (outside the
+                  scaled content div above), so line/border thickness stays a
+                  constant number of physical pixels regardless of zoom instead
+                  of scaling with the content. Their extent (map width/height in
+                  screen px) is still derived from the transform, so they track
+                  pan/zoom exactly. */}
+              {showGridLines && (
+                <div
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * effectiveCellPx,
+                    height: sizeZ * effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    backgroundImage:
+                      'linear-gradient(to right, rgba(0,0,0,0.18) 0 1px, transparent 1px 100%),' +
+                      'linear-gradient(to bottom, rgba(0,0,0,0.18) 0 1px, transparent 1px 100%)',
+                    backgroundSize: `${effectiveCellPx}px ${effectiveCellPx}px`,
+                  }}
+                />
+              )}
+              <div
+                className="absolute top-0 left-0 pointer-events-none border-2 border-foreground/50"
+                style={{
+                  width: sizeX * effectiveCellPx,
+                  height: sizeZ * effectiveCellPx,
+                  transform: `translate(${transform.x}px, ${transform.y}px)`,
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
           )}
 
-          {/* Single shared hover/pin info panel — not one per cell */}
+          {/* Single shared hover info panel — not one per cell */}
           {infoNode !== null && infoItems.length > 0 && (
             <div className="absolute bottom-2 left-2 max-w-xs bg-popover border border-border rounded-md shadow-md p-2 text-xs space-y-1 pointer-events-none">
               <p className="font-semibold">
@@ -417,5 +507,14 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
         </div>
       </DraggableDialogContent>
     </Dialog>
+
+    <TileEditorDialog
+      open={editorNode !== null}
+      onOpenChange={(o) => { if (!o) setEditorNode(null) }}
+      items={editorItems}
+      x={editorNode !== null ? editorNode % sizeX : 0}
+      z={editorNode !== null ? Math.floor(editorNode / sizeX) : 0}
+    />
+    </>
   )
 }
