@@ -313,7 +313,7 @@ export default function LocalizationDialog() {
                   {availableLanguages.map((l) => (
                     <DropdownMenuItem
                       key={l.id}
-                      onClick={() => {
+                      onSelect={() => {
                         addLanguage(l.id)
                         setLang(l.id)
                       }}

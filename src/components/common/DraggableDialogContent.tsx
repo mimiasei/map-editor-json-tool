@@ -125,8 +125,13 @@ export const DraggableDialogContent = React.forwardRef<
         if (e.button !== 0) return
         // Don't initiate drag when the click lands on an interactive element
         // (buttons, inputs, links, etc.) inside the drag handle — those need
-        // their own click/focus events to work normally.
-        if ((e.target as HTMLElement).closest('button, input, a, select, textarea, [role="button"], [data-nodrag]')) return
+        // their own click/focus events to work normally. This also covers
+        // Radix menu/listbox items: even though their content portals
+        // elsewhere in the DOM, React bubbles synthetic events along the
+        // component tree, so a menu nested in the drag handle's JSX still
+        // reaches this handler — and setPointerCapture()'ing the drag handle
+        // out from under it breaks the item's own click handling entirely.
+        if ((e.target as HTMLElement).closest('button, input, a, select, textarea, [role="button"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], [data-nodrag]')) return
         e.preventDefault()
         e.currentTarget.setPointerCapture(e.pointerId)
         setPos((cur) => {
