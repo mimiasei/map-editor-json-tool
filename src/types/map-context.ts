@@ -81,6 +81,34 @@ export interface ArtifactPlacement {
   z: number
 }
 
+/**
+ * One placed instance of anything on the map — an object, a fixed squad, or
+ * a zone marker (issue #122). The single source of truth every other
+ * per-category placement list derives from, because `objects[]`/`squads[]`/
+ * `markers[]` are three separate id-namespaces that can (and do) collide on
+ * the same numeric id — `key` (`${type}:${id}`) is the only safe identity.
+ */
+export interface PlacedObject {
+  /** `${type}:${id}` — stable identity, matches how objectsProperties tables join. */
+  key: string
+  /** 0 = objects[], 1 = markers[], 2 = squads[]. */
+  type: 0 | 1 | 2
+  /** Numeric id, unique only within its own `type` namespace. */
+  id: number
+  /** Object/squad/marker type SID (not a user-authored name). */
+  sid: string
+  x: number
+  z: number
+  /** Raw tile index (`z * sizeX + x`) — kept for O(1) tile-index keying. */
+  node: number
+  rotation?: number
+  level?: number
+  /** Enrichment: this instance's propEntities SID, if the map author named it. */
+  entitySid?: string
+  /** Enrichment: this instance's propsName display name, if one is set. */
+  displayName?: string
+}
+
 export interface MapContext {
   /** Map name from Block 2 */
   mapName: string
@@ -107,4 +135,6 @@ export interface MapContext {
   creaturePlacements: CreaturePlacement[]
   /** Placed artifacts with their map tile coordinates (objects with _artifact suffix) */
   artifactPlacements: ArtifactPlacement[]
+  /** Every placed object/squad/marker instance on the map (issue #122). */
+  placedObjects: PlacedObject[]
 }

@@ -78,6 +78,7 @@ export interface CatalogMapObject {
   name: string
   tag?: string
   category: 'interactables' | 'resources' | 'environments' | 'spawns'
+    | 'animals' | 'fxs' | 'artifacts' | 'test' | 'blocks'
   isInteractable: boolean
   icon?: string
 }
@@ -128,4 +129,7 @@ export interface GameCatalog {
   speakerTitles: CatalogSpeakerTitle[]
 }
 
-export const CATALOG_SCHEMA_VERSION = 2
+// v3: mapObjects now covers all 9 DB/map/objects/*.json category files
+// (previously only 4), and derives icons for every category, not just
+// interactables/resources (issue #122).
+export const CATALOG_SCHEMA_VERSION = 3

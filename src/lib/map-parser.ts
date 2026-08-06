@@ -39,6 +39,24 @@ export interface RawMapBlock2 {
     sid?: string | string[]
     ids?: number[]
     nodes?: unknown[]
+    rotations?: number[]
+    levels?: number[]
+  }>
+  /** Fixed/scripted squad placements — a SEPARATE id-namespace from `objects[]`
+   *  (issue #122: ids collide across the two arrays, so any lookup keyed on
+   *  `objects[]`'s id alone can silently resolve to the wrong instance). */
+  squads?: Array<{
+    sid?: string
+    ids?: number[]
+    nodes?: unknown[]
+  }>
+  /** Editor-only zone-shape annotations, not gameplay objects. A third,
+   *  separate id-namespace (`type: 1` in objectsProperties). */
+  markers?: Array<{
+    node?: number
+    id?: number
+    sid?: string
+    v?: string
   }>
   objectsProperties?: {
     propEntities?: Array<{ type?: string; id?: number; sid?: string }>
@@ -55,14 +73,17 @@ export interface RawMapBlock2 {
       factionSid?: string
       customCityName?: string
     }>
+    /** Fixed (non-random) squad composition. `type` distinguishes a guard
+     *  squad co-located with a regular object (`0`) from an entry in the
+     *  separate `squads[]` array (`2`) — both occur in real maps, so `id`
+     *  alone is never enough to resolve which one this is (issue #122). */
     propSquads?: Array<{
+      type?: string
       id?: number
       unitProps?: Array<{ sid?: string; count?: number }>
     }>
     [key: string]: unknown
   }
-  squads?: unknown[]
-  markers?: unknown[]
   [key: string]: unknown
 }
 

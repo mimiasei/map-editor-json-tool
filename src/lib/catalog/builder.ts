@@ -275,16 +275,31 @@ async function collectBuffs(zip: JSZip, locMap: Map<string, string>): Promise<Ca
   return buffs.sort((a, b) => a.name.localeCompare(b.name))
 }
 
+// All 9 DB/map/objects/*.json category files (issue #122) — every one carries
+// the same `prefs[]` field the icon-derivation logic below reads, so none are
+// skipped for icons the way they used to be.
 const MAP_OBJECT_FILES: Array<{
   file: string
   category: CatalogMapObject['category']
   isInteractable: boolean
 }> = [
-  { file: 'DB/map/objects/4_interactables.json', category: 'interactables', isInteractable: true },
-  { file: 'DB/map/objects/3_resources.json',     category: 'resources',     isInteractable: false },
   { file: 'DB/map/objects/1_environments.json',  category: 'environments',  isInteractable: false },
+  { file: 'DB/map/objects/2_animals.json',       category: 'animals',       isInteractable: false },
+  { file: 'DB/map/objects/3_resources.json',     category: 'resources',     isInteractable: false },
+  { file: 'DB/map/objects/4_interactables.json', category: 'interactables', isInteractable: true },
+  { file: 'DB/map/objects/5_fxs.json',           category: 'fxs',           isInteractable: false },
+  { file: 'DB/map/objects/6_artifacts.json',     category: 'artifacts',     isInteractable: true },
   { file: 'DB/map/objects/7_spawns.json',        category: 'spawns',        isInteractable: false },
+  { file: 'DB/map/objects/8_test.json',          category: 'test',          isInteractable: false },
+  { file: 'DB/map/objects/9_blocks.json',        category: 'blocks',        isInteractable: false },
 ]
+
+// Categories whose entries carry their own per-entry isInteractable override
+// (e.g. some artifact containers are interactable, some aren't) rather than
+// a fixed default for the whole category.
+const PER_ENTRY_INTERACTABLE_CATEGORIES = new Set<CatalogMapObject['category']>([
+  'interactables', 'artifacts',
+])
 
 async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promise<CatalogMapObject[]> {
   const mapObjects: CatalogMapObject[] = []
@@ -298,17 +313,17 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
       seen.add(id)
       // Name pattern: {id}_name in mapObjects.json
       const name = loc(locMap, `${id}_name`) ?? loc(locMap, id) ?? id
-      // interactables.json entries may have their own isInteractable flag
-      const entryInteractable =
-        category === 'interactables'
-          ? entry.isInteractable !== false
-          : defaultInteractable
-      // For interactables and resources, derive the icon from the first prefab
-      // path stem (e.g. "interactive/mine_gold" → "mine_gold"). This matches
-      // the Texture2D m_Name in the Unity assets, same as ignis-sec's approach.
-      // environments and spawns don't have usable map icons.
+      const entryInteractable = PER_ENTRY_INTERACTABLE_CATEGORIES.has(category)
+        ? entry.isInteractable !== false
+        : defaultInteractable
+      // Derive the icon from the first prefab path stem (e.g.
+      // "interactive/mine_gold" → "mine_gold") when no explicit icon field is
+      // set. This matches the Texture2D m_Name in the Unity assets, same as
+      // ignis-sec's approach — every category file carries this same
+      // `prefs[]` shape, so this applies uniformly now rather than being
+      // limited to interactables/resources.
       let icon: string | undefined = str(entry.icon || '') || undefined
-      if (!icon && (category === 'interactables' || category === 'resources')) {
+      if (!icon) {
         const prefs = Array.isArray(entry.prefs) ? entry.prefs : []
         const firstPref = typeof prefs[0] === 'string' ? prefs[0] : ''
         icon = firstPref ? firstPref.split('/').pop() : undefined
