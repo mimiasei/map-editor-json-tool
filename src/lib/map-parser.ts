@@ -16,13 +16,30 @@ export interface RawMapBlock1 {
   desc?: string
   sizeX?: number
   sizeZ?: number
-  spawns?: Array<{
-    owner?: string
-    factionSid?: string
-    heroSid?: string
-    colorId?: number
-    isLocked?: boolean
-  }>
+  /** Real shape is `{playersCount, spawns: [...], takenHeroes}`, one entry per
+   *  spawner object on the map — NOT one per player slot. Duplicated in Block 2's
+   *  objectsProperties.propSpawns (matched by `owner`), verified 1:1 identical
+   *  across all 12 sample maps (issue #125): both must be patched together on write. */
+  spawns?: {
+    playersCount?: number
+    spawns?: Array<{
+      owner?: number
+      /** "Player type" in the official editor: 0=Player (human), 1=Bot (AI), 2=Unknown (open slot, undocumented in real samples). */
+      spawnType?: number
+      playerId?: string
+      /** "Spawner type": 0=City, 1=Hero. */
+      spawnPointType?: number
+      isCityDefined?: boolean
+      factionSid?: string
+      isHeroDefined?: boolean
+      heroSid?: string
+      colorId?: number
+      isAlive?: boolean
+      /** "Lock player type" in the official editor. */
+      isLocked?: boolean
+    }>
+    takenHeroes?: unknown
+  }
   banInfoData?: {
     bannedHeroes?: string[]
     bannedUnits?: string[]
@@ -88,6 +105,20 @@ export interface RawMapBlock2 {
       type?: string
       id?: number
       unitProps?: Array<{ sid?: string; count?: number }>
+    }>
+    /** "No Combine Geometry" checkbox in the official editor (issue #125) —
+     *  lets a normally-non-interactable decoration carry an entity SID. */
+    propNoCombineGeometries?: Array<{ type?: string; id?: number; isNoCombineGeometry?: boolean }>
+    /** Per-instance duplicate of Block 1's `spawns.spawns[]` (matched by `owner`),
+     *  keyed here by `(type, id)` like every other objectsProperties table
+     *  (issue #125) — verified 1:1 identical with Block 1 across all 12 sample maps. */
+    propSpawns?: Array<{
+      type?: string
+      id?: number
+      owner?: number
+      spawnType?: number
+      spawnPointType?: number
+      isLocked?: boolean
     }>
     [key: string]: unknown
   }

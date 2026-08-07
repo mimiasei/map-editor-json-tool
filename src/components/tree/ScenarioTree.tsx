@@ -265,6 +265,7 @@ export default function ScenarioTree() {
     mapName,
     setMapName,
     mapFilePath,
+    localization,
     addCounter,
     removeCounter,
     duplicateCounter,
@@ -839,6 +840,7 @@ export default function ScenarioTree() {
         open={displayNameTarget !== null}
         onOpenChange={(open) => { if (!open) setDisplayNameTarget(null) }}
         entity={displayNameTarget}
+        existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
         mapFilePath={mapFilePath}
       />
     </ScrollArea>

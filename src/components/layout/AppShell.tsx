@@ -4,6 +4,8 @@ import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panel
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useMapContextStore } from '@/store/useMapContextStore'
+import { useMapGridStore } from '@/store/useMapGridStore'
 import { exportProjectJson } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { logInfo, logError } from '@/lib/logger'
@@ -48,6 +50,24 @@ function UndockedPlaceholder({ label }: { label: string }) {
       {label} is open in a separate window
     </div>
   )
+}
+
+// ─── Panel state snapshot ─────────────────────────────────────────────────────
+// Shared by the debounced broadcast effect and the "just undocked" initial
+// broadcast so both stay in sync without duplicating the field list.
+
+function buildPanelState(): PanelState {
+  const s = useScenarioStore.getState()
+  return {
+    scenario:     s.scenario,
+    mapName:      s.mapName,
+    dialogs:      s.dialogs,
+    localization: s.localization,
+    selectedType: s.selectedType,
+    selectedPath: s.selectedPath,
+    mapContext:       useMapContextStore.getState().context,
+    selectedGridNode: useMapGridStore.getState().selectedNode,
+  }
 }
 
 // ─── AppShell ─────────────────────────────────────────────────────────────────
@@ -318,21 +338,15 @@ export default function AppShell() {
     const broadcast = () => {
       if (debounceTimer) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
-        const s = useScenarioStore.getState()
-        const state: PanelState = {
-          scenario:     s.scenario,
-          mapName:      s.mapName,
-          dialogs:      s.dialogs,
-          localization: s.localization,
-          selectedType: s.selectedType,
-          selectedPath: s.selectedPath,
-        }
-        channel.broadcastState(state)
+        channel.broadcastState(buildPanelState())
       }, 100)
     }
 
-    // Subscribe to store changes and broadcast
+    // Subscribe to store changes and broadcast. Map context/grid-selection are
+    // separate stores from the scenario one (issue #125's mapGridCell panel).
     const unsubscribe = useScenarioStore.subscribe(broadcast)
+    const unsubscribeMapContext = useMapContextStore.subscribe(broadcast)
+    const unsubscribeMapGrid = useMapGridStore.subscribe(broadcast)
 
     // Also forward actions from undocked windows back to the store
     const unlistenAction = channel.onAction((action) => {
@@ -344,6 +358,8 @@ export default function AppShell() {
 
     return () => {
       unsubscribe()
+      unsubscribeMapContext()
+      unsubscribeMapGrid()
       unlistenAction()
       if (debounceTimer) clearTimeout(debounceTimer)
       channel.destroy()
@@ -389,18 +405,9 @@ export default function AppShell() {
 
     // Broadcast initial state once the panel window has loaded so it can receive it
     win.once('tauri://created', () => {
-      const s = useScenarioStore.getState()
-      const state: PanelState = {
-        scenario:     s.scenario,
-        mapName:      s.mapName,
-        dialogs:      s.dialogs,
-        localization: s.localization,
-        selectedType: s.selectedType,
-        selectedPath: s.selectedPath,
-      }
       const ch = createPanelSyncChannel('main-immediate')
       // Delay slightly to allow the panel's BroadcastChannel listener to mount
-      setTimeout(() => { ch.broadcastState(state); ch.destroy() }, 300)
+      setTimeout(() => { ch.broadcastState(buildPanelState()); ch.destroy() }, 300)
     })
 
     // When the panel window is closed (by user or re-dock button), re-dock it
@@ -599,7 +606,12 @@ export default function AppShell() {
       />
       <DialogBrowser open={dialogBrowserOpen} onOpenChange={setDialogBrowserOpen} />
       <GameDatabaseDialog open={gameDatabaseOpen} onOpenChange={setGameDatabaseOpen} />
-      <MapGridDialog open={mapGridOpen} onOpenChange={setMapGridOpen} />
+      <MapGridDialog
+        open={mapGridOpen}
+        onOpenChange={setMapGridOpen}
+        onUndock={() => handleUndock('mapGridCell')}
+        undocked={isUndocked('mapGridCell')}
+      />
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}

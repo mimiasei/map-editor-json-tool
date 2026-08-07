@@ -6,15 +6,17 @@
 
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { MapContext } from '@/types/map-context'
 
 // ─── Panel metadata ───────────────────────────────────────────────────────────
 
 export const PANEL_META: Record<string, { title: string; width: number; height: number }> = {
-  preview:  { title: 'JSON Preview',        width: 600,  height: 800 },
-  timeline: { title: 'Event Timeline',      width: 900,  height: 600 },
-  flow:     { title: 'Quest Flow Diagram',  width: 1000, height: 700 },
-  stats:    { title: 'Scenario Statistics', width: 800,  height: 600 },
-  guides:   { title: 'Guides',              width: 700,  height: 600 },
+  preview:     { title: 'JSON Preview',        width: 600,  height: 800 },
+  timeline:    { title: 'Event Timeline',      width: 900,  height: 600 },
+  flow:        { title: 'Quest Flow Diagram',  width: 1000, height: 700 },
+  stats:       { title: 'Scenario Statistics', width: 800,  height: 600 },
+  guides:      { title: 'Guides',              width: 700,  height: 600 },
+  mapGridCell: { title: 'Map Grid — Tile Info', width: 380, height: 700 },
 }
 
 // ─── Message types ────────────────────────────────────────────────────────────
@@ -27,6 +29,9 @@ export interface PanelState {
   localization: Record<string, string>
   selectedType: SelectionType
   selectedPath: number[]
+  /** For the mapGridCell panel — the rest of the panels don't touch map state. */
+  mapContext: MapContext | null
+  selectedGridNode: number | null
 }
 
 /** Actions an undocked panel can send back to the main window. */

@@ -4,9 +4,12 @@
 // this editor's job is scripting, not full map authoring, so it only reaches
 // objects it already surfaces elsewhere (the Entity SIDs sidebar).
 //
-// Unlike renaming a SID, a display name isn't referenced anywhere in the
-// scripting layer, so there's no reference warning here — just the LOC:
-// caveat below.
+// issue #125 item 6: the game always treats nameTitle as a localization SID
+// lookup, never literal text — writing the typed text straight into it (the
+// original behavior) rendered in-game as "LOC:<text>" whenever no matching
+// token existed, which was always, since nothing ever registered one. Fixed
+// by generating a real SID from the text (see slugify.ts) and registering
+// the text as that SID's English localization token instead.
 
 import { useEffect, useState } from 'react'
 import {
@@ -23,6 +26,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import type { MapEntity } from '@/types/map-context'
 import { saveMapFile } from '@/lib/map-save'
+import { generateDisplayNameSid } from '@/lib/slugify'
+import { useScenarioStore } from '@/store/useScenarioStore'
 
 interface SetDisplayNameDialogProps {
   open: boolean
@@ -30,6 +35,10 @@ interface SetDisplayNameDialogProps {
   /** The entity whose object gets the display name. Dialog renders nothing when null. */
   entity: MapEntity | null
   mapFilePath: string | null
+  /** Every known entity SID and localization SID — used both to avoid a
+   *  generated SID colliding with anything, and to detect a legacy literal
+   *  value (see isLegacyValue below). */
+  existingSids: string[]
 }
 
 export default function SetDisplayNameDialog({
@@ -37,6 +46,7 @@ export default function SetDisplayNameDialog({
   onOpenChange,
   entity,
   mapFilePath,
+  existingSids,
 }: SetDisplayNameDialogProps) {
   const [value, setValue] = useState('')
   const [saving, setSaving] = useState(false)
@@ -54,7 +64,11 @@ export default function SetDisplayNameDialog({
   const trimmed = value.trim()
   const isUnchanged = trimmed === (entity.displayName ?? '')
   const isEmpty = trimmed === ''
-  const isLocReference = (entity.displayName ?? '').startsWith('LOC:')
+  // A pre-existing value that isn't one of this editor's own generated SIDs —
+  // i.e. literal text written before this fix existed, still rendering as
+  // "LOC:<text>" in-game. Saving (with an actual edit) replaces it with a
+  // proper SID+token pair.
+  const isLegacyValue = !!entity.displayName && !entity.displayName.endsWith('_sid')
   const canSave = !isEmpty && !isUnchanged && !!mapFilePath
 
   const handleSave = async () => {
@@ -66,12 +80,14 @@ export default function SetDisplayNameDialog({
       if (!Number.isFinite(entityType)) {
         throw new Error(`Entity has a non-numeric type ("${entity.type}") — cannot target it in propsName`)
       }
+      const sid = generateDisplayNameSid(trimmed, existingSids)
       await saveMapFile(mapFilePath, {
         kind: 'setDisplayName',
         entityType,
         entityId: entity.id,
-        nameTitle: trimmed,
+        nameTitle: sid,
       })
+      useScenarioStore.getState().setLocalizationToken(sid, trimmed)
       onOpenChange(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -100,13 +116,14 @@ export default function SetDisplayNameDialog({
             />
           </div>
 
-          {isLocReference && (
+          {isLegacyValue && (
             <Alert className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30">
               <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500 shrink-0" />
               <AlertDescription className="ml-2">
-                The current name (<span className="font-mono">{entity.displayName}</span>) is a
-                localization token reference, not literal text. Saving replaces it with the plain
-                text above — the localization token itself is left as-is, just no longer used here.
+                The current value (<span className="font-mono">{entity.displayName}</span>) is literal
+                text written before this was fixed — the game shows it in-game as{' '}
+                <span className="font-mono">LOC:{entity.displayName}</span>. Saving generates a real
+                localization SID and registers this text as its translation, fixing it.
               </AlertDescription>
             </Alert>
           )}

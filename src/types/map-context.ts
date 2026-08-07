@@ -107,6 +107,24 @@ export interface PlacedObject {
   entitySid?: string
   /** Enrichment: this instance's propsName display name, if one is set. */
   displayName?: string
+  /** Enrichment: objectsProperties.propNoCombineGeometries — "No Combine Geometry"
+   *  in the official editor. Lets an otherwise-non-interactable decoration carry
+   *  an entity SID once true (issue #125). */
+  noCombineGeometry?: boolean
+  /** Enrichment: city/hero spawner info joined from propSpawns + propCities/propHeroes
+   *  (issue #125). Present only for objects with a matching propSpawns entry. */
+  spawnerInfo?: {
+    /** Player slot this spawner is attached to (1..N) — read-only in this editor. */
+    owner: number
+    /** "Player type": 0=Player (human), 1=Bot (AI), 2=Unknown (open slot). */
+    spawnType: 0 | 1 | 2
+    /** "Spawner type": 0=City, 1=Hero. */
+    spawnPointType: 0 | 1
+    /** Set for city spawners with a defined faction; absent/undefined means random or unset. */
+    factionSid?: string
+    /** Set for hero spawners with a defined hero; absent/undefined means random or unset. */
+    heroSid?: string
+  }
 }
 
 export interface MapContext {

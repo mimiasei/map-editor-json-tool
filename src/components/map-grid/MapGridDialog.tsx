@@ -13,16 +13,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from 'react'
+import { Group, Panel, Separator } from 'react-resizable-panels'
+import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import {
   DraggableDialogContent,
   DraggableDialogDragHandle,
 } from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useScenarioStore } from '@/store/useScenarioStore'
+import { useMapGridStore } from '@/store/useMapGridStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import {
   buildTileIndex,
@@ -32,10 +34,21 @@ import {
   GRID_GROUP_LABELS,
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
-import type { PlacedObject } from '@/types/map-context'
-import { terrainFillColor } from '@/lib/map-grid/terrain-colors'
-import TileEditorDialog from '@/components/map-grid/TileEditorDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent } from 'lucide-react'
+import type { PlacedObject, MapEntity } from '@/types/map-context'
+import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
+import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
+import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
+import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
+import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
+import { isTauri } from '@/lib/native-fs'
+import { saveMapFile } from '@/lib/map-save'
+import { logError } from '@/lib/logger'
+import UndockButton from '@/components/panels/UndockButton'
+import MapGridSettingsDialog, {
+  loadMapGridSettings,
+  saveMapGridSettings,
+} from '@/components/map-grid/MapGridSettingsDialog'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -75,16 +88,6 @@ function saveGridFilter(f: GridFilterState): void {
   try { localStorage.setItem(GRID_FILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
 }
 
-const GRID_LINES_STORAGE_KEY = 'oe-map-grid-lines'
-
-function loadShowGridLines(): boolean {
-  try { return localStorage.getItem(GRID_LINES_STORAGE_KEY) === '1' } catch { return false }
-}
-
-function saveShowGridLines(v: boolean): void {
-  try { localStorage.setItem(GRID_LINES_STORAGE_KEY, v ? '1' : '0') } catch { /* ignore */ }
-}
-
 // ─── Transform ────────────────────────────────────────────────────────────────
 
 interface Transform { x: number; y: number; scale: number }
@@ -96,11 +99,19 @@ function clampScale(scale: number): number {
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Pop the cell-info column into its own Tauri window (issue #125). No-op/absent on web. */
+  onUndock?: () => void
+  /** True while the cell-info column is already undocked — shows a placeholder instead. */
+  undocked?: boolean
 }
 
-export default function MapGridDialog({ open, onOpenChange }: Props) {
+export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }: Props) {
   const context = useMapContextStore((s) => s.context)
   const catalog = useCatalogStore((s) => s.catalog)
+  const scenario = useScenarioStore((s) => s.scenario)
+  const mapFilePath = useScenarioStore((s) => s.mapFilePath)
+  const localization = useScenarioStore((s) => s.localization)
+  const entities = context?.entities ?? []
 
   const sizeX = context?.sizeX ?? 0
   const sizeZ = context?.sizeZ ?? 0
@@ -117,10 +128,10 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
     })
   }
 
-  const [showGridLines, setShowGridLines] = useState<boolean>(loadShowGridLines)
-  const toggleGridLines = (checked: boolean) => {
-    setShowGridLines(checked)
-    saveShowGridLines(checked)
+  const [settings, setSettings] = useState(loadMapGridSettings)
+  const updateSettings = (next: typeof settings) => {
+    setSettings(next)
+    saveMapGridSettings(next)
   }
 
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
@@ -205,22 +216,44 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
     if (e.button !== 0) return
     dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false }
   }
+
+  // Screen (client) coordinates → world tile node, via the same inverse-
+  // transform math zoomAt() uses. Works for every tile in map bounds
+  // regardless of occupancy or the icon LOD tier (issue #125) — hover/click
+  // no longer depend on a DOM node existing for that specific cell.
+  const screenToNode = useCallback((clientX: number, clientY: number, rect: DOMRect): number | null => {
+    const worldX = (clientX - rect.left - transform.x) / transform.scale
+    const worldY = (clientY - rect.top - transform.y) / transform.scale
+    const x = Math.floor(worldX / BASE_CELL_PX)
+    const z = Math.floor(worldY / BASE_CELL_PX)
+    if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return null
+    return z * sizeX + x
+  }, [transform, sizeX, sizeZ])
+
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current
-    if (!drag) return
-    const dx = e.clientX - drag.startX
-    const dy = e.clientY - drag.startY
-    if (!drag.moved) {
-      if (Math.hypot(dx, dy) <= CLICK_DRAG_THRESHOLD_PX) return
-      drag.moved = true
-      e.currentTarget.setPointerCapture(e.pointerId)
+    if (drag) {
+      const dx = e.clientX - drag.startX
+      const dy = e.clientY - drag.startY
+      if (!drag.moved) {
+        if (Math.hypot(dx, dy) <= CLICK_DRAG_THRESHOLD_PX) {
+          setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+          return
+        }
+        drag.moved = true
+        e.currentTarget.setPointerCapture(e.pointerId)
+      }
+      setTransform((prev) => ({ ...prev, x: drag.startTx + dx, y: drag.startTy + dy }))
+      setHoveredNode(null) // suppress hover info while actively panning
+      return
     }
-    setTransform((prev) => ({ ...prev, x: drag.startTx + dx, y: drag.startTy + dy }))
+    setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (dragRef.current?.moved) e.currentTarget.releasePointerCapture(e.pointerId)
     dragRef.current = null
   }
+  const onPointerLeaveViewport = () => setHoveredNode(null)
 
   const zoomAt = useCallback((cursorX: number, cursorY: number, factor: number) => {
     setTransform((prev) => {
@@ -265,7 +298,7 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
       for (let node = 0; node < tileCount; node++) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
-        ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node])
+        ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node], settings.terrainOpacity)
         ctx.fillRect(x, z, 1, 1)
       }
     }
@@ -276,7 +309,7 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
       ctx.fillStyle = GROUP_COLORS[pick.group]
       ctx.fillRect(x, z, 1, 1)
     }
-  }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ])
+  }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -311,8 +344,62 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
   const infoNode = hoveredNode
   const infoItems = infoNode !== null ? tileIndex.get(infoNode) ?? [] : []
 
-  const [editorNode, setEditorNode] = useState<number | null>(null)
-  const editorItems = editorNode !== null ? tileIndex.get(editorNode) ?? [] : []
+
+  // Selection lives in a shared store (not local state) so AppShell's
+  // panel-sync broadcast can see it for the undocked cross-window mirror.
+  const selectedNode = useMapGridStore((s) => s.selectedNode)
+  const columnClosed = useMapGridStore((s) => s.columnClosed)
+  const selectNode = useMapGridStore((s) => s.selectNode)
+  const closeColumn = useMapGridStore((s) => s.closeColumn)
+  const selectedItems = selectedNode !== null ? tileIndex.get(selectedNode) ?? [] : []
+  const columnOpen = selectedNode !== null && !columnClosed
+
+  // Imperatively resized rather than conditionally mounted (same convention
+  // as AppShell's sidebar/editor/preview panels) so the Group/Panel tree
+  // stays stable across opens/closes.
+  const cellColumnPanelRef = useRef<PanelImperativeHandle | null>(null)
+  useEffect(() => {
+    cellColumnPanelRef.current?.resize(columnOpen ? '30%' : '0%')
+  }, [columnOpen])
+
+  // Rename/set-display-name are docked-only (issue #125 scope decision) —
+  // the undocked mirror renders MapGridCellContent without these callbacks.
+  const entityUsageListMap = useMemo(() => buildEntityUsageMap(scenario), [scenario])
+  const existingSids = useMemo(() => entities.map((e) => e.sid), [entities])
+  const existingSidsAndLocTokens = useMemo(
+    () => [...existingSids, ...Object.keys(localization)],
+    [existingSids, localization],
+  )
+  const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
+  const [displayNameTarget, setDisplayNameTarget] = useState<MapEntity | null>(null)
+  const canEditEntities = isTauri() && !!mapFilePath
+
+  const handleSetNoCombineGeometry = async (item: PlacedObject, value: boolean) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setNoCombineGeometry', entityType: item.type, entityId: item.id, value })
+    } catch (e) {
+      logError(`Failed to set No Combine Geometry: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  const handleAssignEntitySid = async (item: PlacedObject, sid: string) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid })
+    } catch (e) {
+      logError(`Failed to assign entity SID: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  const handleSetSpawnerPlayerType = async (item: PlacedObject, spawnType: 0 | 1 | 2) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setSpawnerPlayerType', entityType: item.type, entityId: item.id, spawnType })
+    } catch (e) {
+      logError(`Failed to set spawner Player type: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
 
   if (!open) return null
 
@@ -355,17 +442,7 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
                 <Maximize2 className="h-3.5 w-3.5" />
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
-              <div className="flex items-center gap-1.5">
-                <Switch
-                  id="grid-show-lines"
-                  checked={showGridLines}
-                  onCheckedChange={toggleGridLines}
-                  className="scale-90"
-                />
-                <Label htmlFor="grid-show-lines" className="text-xs text-muted-foreground cursor-pointer">
-                  Grid lines
-                </Label>
-              </div>
+              <MapGridSettingsDialog settings={settings} onChange={updateSettings} />
             </div>
           </div>
 
@@ -391,7 +468,9 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
           </div>
         </DraggableDialogDragHandle>
 
-        <div className="flex-1 min-h-0 relative overflow-hidden bg-muted/30">
+        <Group orientation="horizontal" className="flex-1 min-h-0">
+        <Panel id="map-grid-viewport" defaultSize="100%" minSize="40%">
+        <div className="relative h-full overflow-hidden bg-muted/30">
           {!context && (
             <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
               Load a .map file to see the grid.
@@ -412,6 +491,7 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
+              onPointerLeave={onPointerLeaveViewport}
               onWheel={onWheel}
             >
               <div
@@ -442,11 +522,14 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
                       key={node}
                       className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer"
                       style={{ left: x * BASE_CELL_PX, top: z * BASE_CELL_PX, width: BASE_CELL_PX, height: BASE_CELL_PX }}
-                      onPointerEnter={() => setHoveredNode(node)}
-                      onPointerLeave={() => setHoveredNode((cur) => (cur === node ? null : cur))}
-                      onClick={(e) => { e.stopPropagation(); setEditorNode(node) }}
+                      onClick={(e) => { e.stopPropagation(); selectNode(node) }}
                     >
-                      <CatalogIcon iconId={pick.primary.sid} name={name} size={Math.min(BASE_CELL_PX - 4, 24)} />
+                      <CatalogIcon
+                        iconId={pick.primary.sid}
+                        name={name}
+                        size={Math.min(BASE_CELL_PX - 4, 24)}
+                        src={settings.iconImagesEnabled ? undefined : null}
+                      />
                       {pick.count > 1 && (
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
                           {pick.count}
@@ -463,7 +546,7 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
                   of scaling with the content. Their extent (map width/height in
                   screen px) is still derived from the transform, so they track
                   pan/zoom exactly. */}
-              {showGridLines && (
+              {settings.gridLineThickness > 0 && (
                 <div
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
@@ -471,8 +554,8 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
                     height: sizeZ * effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
                     backgroundImage:
-                      'linear-gradient(to right, rgba(0,0,0,0.18) 0 1px, transparent 1px 100%),' +
-                      'linear-gradient(to bottom, rgba(0,0,0,0.18) 0 1px, transparent 1px 100%)',
+                      `linear-gradient(to right, rgba(0,0,0,0.18) 0 ${settings.gridLineThickness}px, transparent ${settings.gridLineThickness}px 100%),` +
+                      `linear-gradient(to bottom, rgba(0,0,0,0.18) 0 ${settings.gridLineThickness}px, transparent ${settings.gridLineThickness}px 100%)`,
                     backgroundSize: `${effectiveCellPx}px ${effectiveCellPx}px`,
                   }}
                 />
@@ -489,11 +572,14 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
             </div>
           )}
 
-          {/* Single shared hover info panel — not one per cell */}
-          {infoNode !== null && infoItems.length > 0 && (
+          {/* Single shared hover info panel — not one per cell. Shown for every
+              tile in bounds, occupied or not (issue #125), prefixed with the
+              tile's terrain so an empty tile is still informative. */}
+          {infoNode !== null && (
             <div className="absolute bottom-2 left-2 max-w-xs bg-popover border border-border rounded-md shadow-md p-2 text-xs space-y-1 pointer-events-none">
               <p className="font-semibold">
-                Tile ({infoNode % sizeX}, {Math.floor(infoNode / sizeX)}) — {infoItems.length} item{infoItems.length > 1 ? 's' : ''}
+                {terrainLabel(tilesMap, waterMap, infoNode, sizeX)}
+                {infoItems.length > 0 && ` — ${infoItems.length} item${infoItems.length > 1 ? 's' : ''}`}
               </p>
               {infoItems.map((it, i) => (
                 <p key={i} className="text-muted-foreground truncate">
@@ -505,15 +591,72 @@ export default function MapGridDialog({ open, onOpenChange }: Props) {
             </div>
           )}
         </div>
+        </Panel>
+
+        <Separator className="w-3 cursor-col-resize rounded-lg bg-transparent hover:bg-black/20 transition-colors duration-150 border-0 focus-visible:outline-none" />
+
+        <Panel
+          panelRef={cellColumnPanelRef}
+          id="map-grid-cell-column"
+          defaultSize="0%"
+          minSize="20%"
+          maxSize="50%"
+          collapsedSize="0%"
+          collapsible
+        >
+          <div className="group flex h-full flex-col overflow-hidden border-l border-border bg-card">
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-border shrink-0">
+              <span className="text-xs font-semibold text-muted-foreground pl-1">Tile Info</span>
+              <div className="flex items-center gap-0.5">
+                <UndockButton panelId="mapGridCell" onUndock={() => onUndock?.()} disabled={undocked} />
+                <Button variant="ghost" size="icon" className="h-6 w-6" title="Close" onClick={closeColumn}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0">
+              {undocked ? (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground gap-2 p-4 text-center">
+                  <SquareArrowOutUpRight className="h-4 w-4 opacity-40 shrink-0" />
+                  Open in a separate window
+                </div>
+              ) : selectedNode !== null ? (
+                <MapGridCellContent
+                  items={selectedItems}
+                  terrainLabel={terrainLabel(tilesMap, waterMap, selectedNode, sizeX)}
+                  catalog={catalog}
+                  existingSids={existingSids}
+                  onRename={canEditEntities ? setRenameTarget : undefined}
+                  onSetDisplayName={canEditEntities ? setDisplayNameTarget : undefined}
+                  onSetNoCombineGeometry={canEditEntities ? handleSetNoCombineGeometry : undefined}
+                  onAssignEntitySid={canEditEntities ? handleAssignEntitySid : undefined}
+                  onSetSpawnerPlayerType={canEditEntities ? handleSetSpawnerPlayerType : undefined}
+                />
+              ) : null}
+            </div>
+          </div>
+        </Panel>
+        </Group>
       </DraggableDialogContent>
     </Dialog>
 
-    <TileEditorDialog
-      open={editorNode !== null}
-      onOpenChange={(o) => { if (!o) setEditorNode(null) }}
-      items={editorItems}
-      x={editorNode !== null ? editorNode % sizeX : 0}
-      z={editorNode !== null ? Math.floor(editorNode / sizeX) : 0}
+    <RenameEntitySidDialog
+      open={renameTarget !== null}
+      onOpenChange={(o) => { if (!o) setRenameTarget(null) }}
+      entity={renameTarget}
+      existingSids={existingSids}
+      usageDescriptions={
+        renameTarget ? (entityUsageListMap.get(renameTarget.sid) ?? []).map(describeEntityUsage) : []
+      }
+      mapFilePath={mapFilePath}
+    />
+
+    <SetDisplayNameDialog
+      open={displayNameTarget !== null}
+      onOpenChange={(o) => { if (!o) setDisplayNameTarget(null) }}
+      entity={displayNameTarget}
+      existingSids={existingSidsAndLocTokens}
+      mapFilePath={mapFilePath}
     />
     </>
   )
