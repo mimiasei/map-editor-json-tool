@@ -144,6 +144,11 @@ export interface PlacedObject {
      *  'unlinked' when targetIdx is absent/-1. */
     linkKind: 'two-way' | 'one-way' | 'unlinked'
   }
+  /** Enrichment: the first unit's sid in this squad, from
+   *  objectsProperties.propSquads[].unitProps[0].sid (issue #130) — lets the
+   *  grid show the unit's real icon instead of the squad's own (non-creature)
+   *  sid. Present only for type-2 (squad) placed objects with resolvable unitProps. */
+  firstUnitSid?: string
 }
 
 export interface MapContext {

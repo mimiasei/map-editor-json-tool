@@ -7,15 +7,17 @@ import type { PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 
 // ─── User-facing groups ───────────────────────────────────────────────────────
-// Collapses the 9 raw CatalogMapObject categories + squads into the 6 groups
-// requested for filtering, in stacking-priority order (index 0 wins ties
-// against every group after it). `markers` (type 1) never participate — they
-// are editor-only zone annotations, not gameplay objects.
+// Collapses the 9 raw CatalogMapObject categories + squads + markers into the
+// 7 groups requested for filtering, in stacking-priority order (index 0 wins
+// ties against every group after it). `markers` (type 1) are "trigger
+// zones" per the official guide — a real, uniform, functional concept (see
+// issue #130's investigation), not decorative — so they get their own
+// lowest-priority group rather than being excluded outright.
 
-export type GridGroup = 'units' | 'artifacts' | 'spawners' | 'interactables' | 'resources' | 'decorations'
+export type GridGroup = 'units' | 'artifacts' | 'spawners' | 'interactables' | 'resources' | 'decorations' | 'zones'
 
 export const GRID_GROUP_ORDER: GridGroup[] = [
-  'units', 'artifacts', 'spawners', 'interactables', 'resources', 'decorations',
+  'units', 'artifacts', 'spawners', 'interactables', 'resources', 'decorations', 'zones',
 ]
 
 export const GRID_GROUP_LABELS: Record<GridGroup, string> = {
@@ -25,6 +27,7 @@ export const GRID_GROUP_LABELS: Record<GridGroup, string> = {
   interactables: 'Interactables',
   resources: 'Resource piles',
   decorations: 'Decorations',
+  zones: 'Zones',
 }
 
 const CATEGORY_TO_GROUP: Record<CatalogMapObject['category'], GridGroup> = {
@@ -40,12 +43,11 @@ const CATEGORY_TO_GROUP: Record<CatalogMapObject['category'], GridGroup> = {
 }
 
 /**
- * Resolve a placed instance's user-facing group. Returns undefined for
- * markers (excluded from the grid stack entirely) — callers should filter
- * those out before grouping/priority logic sees them.
+ * Resolve a placed instance's user-facing group. Every placed object now
+ * resolves to a real group (issue #130) — markers are 'zones', not excluded.
  */
 export function groupOf(placed: PlacedObject, catalog: GameCatalog | null): GridGroup | undefined {
-  if (placed.type === 1) return undefined // markers — not a gameplay object
+  if (placed.type === 1) return 'zones' // markers[] — trigger zones
   if (placed.type === 2) return 'units' // squads[] — always a unit placement
   const category = catalog?.mapObjects.find((o) => o.id === placed.sid)?.category
   // Unresolved (no catalog match — Core.zip not loaded, or a sid missing from
@@ -79,8 +81,8 @@ export interface PrimaryPick {
 /**
  * Pick which item "wins" a tile's icon when multiple objects are stacked —
  * highest-priority group first (GRID_GROUP_ORDER), first-encountered within a
- * tier as the deterministic tiebreak. Returns undefined only when every item
- * on the tile is a marker (nothing groupable to show).
+ * tier as the deterministic tiebreak. Returns undefined only for an empty
+ * `items` list — every placed object now resolves to a real group (issue #130).
  */
 export function pickPrimary(items: PlacedObject[], catalog: GameCatalog | null): PrimaryPick | undefined {
   let best: { placed: PlacedObject; group: GridGroup; rank: number } | undefined

@@ -109,6 +109,11 @@ export default function MapGridCellContent({
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
+  // issue #130 item 9: Player type used to save on every click — now staged
+  // locally and only written on an explicit Save, matching the entity-SID/
+  // display-name convention (both of those already require a deliberate
+  // action, not a click-and-forget one).
+  const [pendingSpawnType, setPendingSpawnType] = useState<0 | 1 | 2 | null>(null)
 
   // A newly-clicked tile arrives as a new `items` array — default back to
   // the first row rather than keeping a stale selection from the old tile.
@@ -121,6 +126,7 @@ export default function MapGridCellContent({
   const renameEntity = selected ? toEntity(selected) : null
 
   useEffect(() => { setNewSidInput('') }, [selected?.key])
+  useEffect(() => { setPendingSpawnType(null) }, [selected?.key])
 
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === selected?.sid)
   const isCatalogInteractable = !!catalogEntry?.isInteractable
@@ -128,7 +134,10 @@ export default function MapGridCellContent({
   // issue #127 item 4: entity SID + display name are "standard" for every
   // interactable item, not just ones a map author already happened to name —
   // non-interactables still reach the same fields via No Combine Geometry first.
-  const canAssignSid = isCatalogInteractable || selected?.noCombineGeometry === true
+  // issue #130: markers ("trigger zones") have no catalog match and no
+  // No-Combine-Geometry concept, but are always nameable per the official
+  // guide's own design (zones exist specifically to be referenced by scripts).
+  const canAssignSid = isCatalogInteractable || selected?.noCombineGeometry === true || selected?.type === 1
   const canManageEntity = !!selected && (canAssignSid || !!selected.entitySid)
   const trimmedSid = newSidInput.trim()
   const sidTaken = trimmedSid !== '' && existingSids.includes(trimmedSid)
@@ -169,12 +178,13 @@ export default function MapGridCellContent({
                 const visual = resolveGridCellVisual(item, catalog)
                 if (visual.kind === 'icon') return <visual.Icon size={24} className="shrink-0" />
                 if (visual.kind === 'text') return <span className="text-[10px] font-semibold shrink-0 w-6 text-center">{visual.text}</span>
+                if (visual.kind === 'catalogOverride') return <CatalogIcon iconId={visual.iconId} name={visual.name} size={24} />
                 return <CatalogIcon iconId={item.sid} name={name} size={24} />
               })()}
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{name}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {group ? GRID_GROUP_LABELS[group] : item.type === 1 ? 'Zone marker' : item.sid}
+                  {group ? GRID_GROUP_LABELS[group] : item.sid}
                 </p>
               </div>
             </button>
@@ -276,8 +286,14 @@ export default function MapGridCellContent({
                   {selected.spawnerInfo.spawnPointType === 0 ? 'Faction' : 'Hero'}
                 </p>
                 <p className="text-xs">
-                  {(selected.spawnerInfo.spawnPointType === 0 ? selected.spawnerInfo.factionSid : selected.spawnerInfo.heroSid)
-                    || 'Random'}
+                  {selected.spawnerInfo.spawnPointType === 0
+                    ? (selected.spawnerInfo.factionSid
+                        ? (() => {
+                            const factionName = catalog?.factions.find((f) => f.id === selected.spawnerInfo!.factionSid)?.name
+                            return factionName ? `${factionName} (${selected.spawnerInfo!.factionSid})` : selected.spawnerInfo!.factionSid
+                          })()
+                        : 'Random')
+                    : (selected.spawnerInfo.heroSid || 'Random')}
                 </p>
               </div>
               <div>
@@ -295,10 +311,10 @@ export default function MapGridCellContent({
                     {PLAYER_TYPE_LABELS.map((label, idx) => (
                       <button
                         key={label}
-                        onClick={() => onSetSpawnerPlayerType(selected, idx as 0 | 1 | 2)}
+                        onClick={() => setPendingSpawnType(idx as 0 | 1 | 2)}
                         className={cn(
                           'h-6 px-2 text-xs rounded border transition-colors',
-                          selected.spawnerInfo!.spawnType === idx
+                          (pendingSpawnType ?? selected.spawnerInfo!.spawnType) === idx
                             ? 'bg-background text-foreground border-border'
                             : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground',
                         )}
@@ -309,6 +325,18 @@ export default function MapGridCellContent({
                   </div>
                 ) : (
                   <p className="text-xs">{PLAYER_TYPE_LABELS[selected.spawnerInfo.spawnType] ?? 'Unknown'}</p>
+                )}
+                {onSetSpawnerPlayerType && pendingSpawnType !== null && pendingSpawnType !== selected.spawnerInfo.spawnType && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <p className="text-xs text-amber-600">Unsaved change</p>
+                    <Button
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={() => { onSetSpawnerPlayerType(selected, pendingSpawnType); setPendingSpawnType(null) }}
+                    >
+                      Save to .map
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
