@@ -125,6 +125,25 @@ export interface PlacedObject {
     /** Set for hero spawners with a defined hero; absent/undefined means random or unset. */
     heroSid?: string
   }
+  /** Enrichment: portal linkage from objectsProperties.propPortals (issue #127).
+   *  Present only for objects with a propPortals entry (i.e. actual portal objects). */
+  portalInfo?: {
+    /** This portal's own instance id (same as PlacedObject.id, kept here for convenience). */
+    id: number
+    /** Linked portal's instance id, or undefined when unlinked (raw targetIdx was -1). */
+    targetIdx?: number
+    /** Linked portal's tile coordinates, resolved via targetIdx — undefined when unlinked
+     *  or the target instance couldn't be found. */
+    targetNode?: number
+    /** Whether this endpoint currently works. An inactive portal is receive-only
+     *  (the official guide's "exit portal"). */
+    isActive: boolean
+    /** Derived from both ends' propPortals entries: 'two-way' when the target
+     *  portal points back at this one and both ends are active; 'one-way' when
+     *  linked but not reciprocal (or this/the target end is inactive);
+     *  'unlinked' when targetIdx is absent/-1. */
+    linkKind: 'two-way' | 'one-way' | 'unlinked'
+  }
 }
 
 export interface MapContext {

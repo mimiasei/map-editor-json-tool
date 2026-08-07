@@ -17,6 +17,7 @@ import {
   upsertPropEntities,
   setNoCombineGeometry,
   setSpawnerPlayerType,
+  upsertPropPortals,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -30,6 +31,7 @@ export type MapSaveEdit =
   | { kind: 'assignEntitySid'; entityType: number; entityId: number; sid: string }
   | { kind: 'setNoCombineGeometry'; entityType: number; entityId: number; value: boolean }
   | { kind: 'setSpawnerPlayerType'; entityType: number; entityId: number; spawnType: 0 | 1 | 2 }
+  | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
  *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
@@ -99,6 +101,11 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const patched = setSpawnerPlayerType(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnType)
     newChunks[0] = patched.block1Chunk
     newChunks[1] = patched.block2Chunk
+  } else if (edit?.kind === 'setPortalTarget') {
+    newChunks[1] = upsertPropPortals(newChunks[1], edit.entityType, edit.entityId, {
+      targetIdx: edit.targetIdx,
+      isActive: edit.isActive,
+    })
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -170,6 +177,17 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === entry2.owner)
     if (!entry1 || entry1.spawnType !== edit.spawnType) {
       throw new Error('Verification failed: Player type not reflected in the rebuilt Block 1 spawns table')
+    }
+  } else if (edit?.kind === 'setPortalTarget') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propPortals?: Array<{ type?: number | string; id?: number; targetIdx?: number; isActive?: boolean }> }
+    }
+    const match = (block2.objectsProperties?.propPortals ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    const targetOk = edit.targetIdx === undefined || match?.targetIdx === edit.targetIdx
+    const activeOk = edit.isActive === undefined || match?.isActive === edit.isActive
+    if (!match || !targetOk || !activeOk) {
+      throw new Error('Verification failed: portal target not reflected in the rebuilt propPortals table')
     }
   }
 

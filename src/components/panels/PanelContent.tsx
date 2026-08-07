@@ -31,8 +31,10 @@ function MapGridCellPanel({ state }: { state: PanelState }) {
 
   const items = mapContext.placedObjects.filter((p) => p.node === selectedGridNode)
   const label = terrainLabel(mapContext.tilesMap, mapContext.waterMap, selectedGridNode, mapContext.sizeX)
-  // Read-only mirror — no onRename/onSetDisplayName (issue #125 scope decision).
-  return <MapGridCellContent items={items} terrainLabel={label} catalog={catalog} />
+  const allPortals = mapContext.placedObjects.filter((p) => p.portalInfo)
+  // Read-only mirror — no onRename/onSetDisplayName/onSetPortalTarget/onSetHighlightedNode
+  // (issue #125 scope decision — edits and the grid-highlight overlay stay docked-only).
+  return <MapGridCellContent items={items} terrainLabel={label} catalog={catalog} allPortals={allPortals} />
 }
 
 interface Props {

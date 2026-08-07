@@ -11,19 +11,37 @@
 import { useEffect, useState } from 'react'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { groupOf, GRID_GROUP_LABELS } from '@/lib/map-grid/tile-index'
+import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { PenLine, Tag } from 'lucide-react'
 
+/** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
   if (!item.entitySid) return null
   return {
     sid: item.entitySid,
+    id: item.id,
+    type: String(item.type),
+    x: item.x,
+    z: item.z,
+    displayName: item.displayName,
+  }
+}
+
+/** Display-name setting never actually needs an entity SID — the write is
+ *  keyed by (type, id), same as propEntities. Falls back to the object's own
+ *  sid as a label so "Set display name" can work even before one is assigned
+ *  (issue #127 item 4: standard for every interactable, not just named ones). */
+function toDisplayNameEntity(item: PlacedObject): MapEntity {
+  return {
+    sid: item.entitySid || item.sid,
     id: item.id,
     type: String(item.type),
     x: item.x,
@@ -50,6 +68,26 @@ export interface MapGridCellContentProps {
    *  to this spawner" has no setter here by design (Unfrozen's own guide flags
    *  reassigning it as bug-prone; this editor only changes the type, not the slot). */
   onSetSpawnerPlayerType?: (item: PlacedObject, spawnType: 0 | 1 | 2) => void
+  /** Every portal instance on the map, for the target picker (issue #127 item 8). */
+  allPortals?: PlacedObject[]
+  /** Change which portal this one connects to, and/or its active state — docked-only. */
+  onSetPortalTarget?: (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) => void
+  /** The tile currently highlighted on the grid (from "Highlight on grid" below), or null. */
+  highlightedNode?: number | null
+  /** Docked-only — the undocked mirror can't drive the main window's grid overlay. */
+  onSetHighlightedNode?: (node: number | null) => void
+}
+
+const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
+  'two-way': 'Two-way',
+  'one-way': 'One-way (exit only on the other end)',
+  unlinked: 'Not connected',
+}
+
+const LINK_KIND_EXPLANATIONS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
+  'two-way': 'Stepping on either portal sends you to the other.',
+  'one-way': "This portal sends you to the other one, but stepping on that one won't send you back — it only receives (the official editor calls a disabled portal like this an \"exit portal\").",
+  unlinked: "This portal isn't connected to another one, so stepping on it does nothing.",
 }
 
 const PLAYER_TYPE_LABELS = ['Player', 'Bot', 'Unknown'] as const
@@ -64,6 +102,10 @@ export default function MapGridCellContent({
   onAssignEntitySid,
   existingSids = [],
   onSetSpawnerPlayerType,
+  allPortals = [],
+  onSetPortalTarget,
+  highlightedNode = null,
+  onSetHighlightedNode,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
@@ -76,14 +118,26 @@ export default function MapGridCellContent({
   }, [items])
 
   const selected = items.find((i) => i.key === selectedKey) ?? items[0] ?? null
-  const selectedEntity = selected ? toEntity(selected) : null
+  const renameEntity = selected ? toEntity(selected) : null
 
   useEffect(() => { setNewSidInput('') }, [selected?.key])
 
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === selected?.sid)
-  const canToggleNoCombine = !!selected && !!catalogEntry && !catalogEntry.isInteractable
+  const isCatalogInteractable = !!catalogEntry?.isInteractable
+  const canToggleNoCombine = !!selected && !!catalogEntry && !isCatalogInteractable
+  // issue #127 item 4: entity SID + display name are "standard" for every
+  // interactable item, not just ones a map author already happened to name —
+  // non-interactables still reach the same fields via No Combine Geometry first.
+  const canAssignSid = isCatalogInteractable || selected?.noCombineGeometry === true
+  const canManageEntity = !!selected && (canAssignSid || !!selected.entitySid)
   const trimmedSid = newSidInput.trim()
   const sidTaken = trimmedSid !== '' && existingSids.includes(trimmedSid)
+
+  const portalInfo = selected?.portalInfo
+  const connectedPortal = portalInfo?.targetNode !== undefined
+    ? allPortals.find((p) => p.node === portalInfo.targetNode)
+    : undefined
+  const isHighlightingConnected = portalInfo?.targetNode !== undefined && highlightedNode === portalInfo.targetNode
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -111,7 +165,12 @@ export default function MapGridCellContent({
                 isSelected ? 'bg-accent' : 'hover:bg-accent/50',
               )}
             >
-              <CatalogIcon iconId={item.sid} name={name} size={24} />
+              {(() => {
+                const visual = resolveGridCellVisual(item, catalog)
+                if (visual.kind === 'icon') return <visual.Icon size={24} className="shrink-0" />
+                if (visual.kind === 'text') return <span className="text-[10px] font-semibold shrink-0 w-6 text-center">{visual.text}</span>
+                return <CatalogIcon iconId={item.sid} name={name} size={24} />
+              })()}
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{name}</p>
                 <p className="text-xs text-muted-foreground truncate">
@@ -141,16 +200,47 @@ export default function MapGridCellContent({
               <p className="text-xs truncate">{selected.displayName}</p>
             </div>
           )}
-          {selectedEntity && (onRename || onSetDisplayName) && (
+          {selected && canManageEntity && renameEntity && onRename && (
             <div className="flex items-center gap-2 pt-1">
-              {onRename && (
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onRename(selectedEntity)}>
-                  <PenLine className="h-3 w-3" />
-                  Rename SID
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onRename(renameEntity)}>
+                <PenLine className="h-3 w-3" />
+                Rename SID
+              </Button>
+              {onSetDisplayName && (
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
+                  <Tag className="h-3 w-3" />
+                  Set display name
                 </Button>
               )}
+            </div>
+          )}
+
+          {selected && canManageEntity && !selected.entitySid && (
+            <div className="space-y-2 pt-1">
+              {onAssignEntitySid && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Assign entity SID</p>
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      value={newSidInput}
+                      onChange={(e) => setNewSidInput(e.target.value)}
+                      className="h-7 text-xs font-mono"
+                      placeholder="entity_sid"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs shrink-0"
+                      disabled={!trimmedSid || sidTaken}
+                      onClick={() => { onAssignEntitySid(selected, trimmedSid); setNewSidInput('') }}
+                    >
+                      Assign
+                    </Button>
+                  </div>
+                  {sidTaken && <p className="text-xs text-destructive">Another entity already uses this SID.</p>}
+                </div>
+              )}
               {onSetDisplayName && (
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(selectedEntity)}>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
                   Set display name
                 </Button>
@@ -159,38 +249,22 @@ export default function MapGridCellContent({
           )}
 
           {selected && canToggleNoCombine && onSetNoCombineGeometry && (
-            <div className="flex items-center gap-2 pt-1">
-              <Checkbox
-                id="mgc-no-combine"
-                checked={selected.noCombineGeometry ?? false}
-                onCheckedChange={(c) => onSetNoCombineGeometry(selected, c === true)}
-              />
-              <Label htmlFor="mgc-no-combine" className="text-xs cursor-pointer">
-                No Combine Geometry
-              </Label>
-            </div>
-          )}
-
-          {selected && selected.noCombineGeometry && !selected.entitySid && onAssignEntitySid && (
             <div className="space-y-1 pt-1">
-              <p className="text-xs text-muted-foreground">Assign entity SID</p>
-              <div className="flex items-center gap-1.5">
-                <Input
-                  value={newSidInput}
-                  onChange={(e) => setNewSidInput(e.target.value)}
-                  className="h-7 text-xs font-mono"
-                  placeholder="entity_sid"
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="mgc-no-combine"
+                  checked={selected.noCombineGeometry ?? false}
+                  onCheckedChange={(c) => onSetNoCombineGeometry(selected, c === true)}
                 />
-                <Button
-                  size="sm"
-                  className="h-7 text-xs shrink-0"
-                  disabled={!trimmedSid || sidTaken}
-                  onClick={() => { onAssignEntitySid(selected, trimmedSid); setNewSidInput('') }}
-                >
-                  Assign
-                </Button>
+                <Label htmlFor="mgc-no-combine" className="text-xs cursor-pointer">
+                  No Combine Geometry
+                </Label>
               </div>
-              {sidTaken && <p className="text-xs text-destructive">Another entity already uses this SID.</p>}
+              <p className="text-xs text-muted-foreground">
+                Lets this decoration carry an entity SID so it can be referenced in quest
+                scripting, the same as an interactable object — off by default since most
+                decorations aren't meant to be scripted.
+              </p>
             </div>
           )}
 
@@ -237,6 +311,75 @@ export default function MapGridCellContent({
                   <p className="text-xs">{PLAYER_TYPE_LABELS[selected.spawnerInfo.spawnType] ?? 'Unknown'}</p>
                 )}
               </div>
+            </div>
+          )}
+
+          {selected && portalInfo && (
+            <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+              <p className="text-xs font-semibold text-muted-foreground">Portal</p>
+
+              <div>
+                <p className="text-xs text-muted-foreground">Connected to</p>
+                {onSetPortalTarget ? (
+                  <Select
+                    value={portalInfo.targetIdx !== undefined ? String(portalInfo.targetIdx) : 'none'}
+                    onValueChange={(v) => onSetPortalTarget(selected, { targetIdx: v === 'none' ? -1 : Number(v) })}
+                  >
+                    <SelectTrigger className="h-7 text-xs mt-0.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not connected</SelectItem>
+                      {allPortals.filter((p) => p.key !== selected.key).map((p) => (
+                        <SelectItem key={p.key} value={String(p.id)}>
+                          {p.sid} ({p.x}, {p.z})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-xs">
+                    {connectedPortal ? `${connectedPortal.sid} (${connectedPortal.x}, ${connectedPortal.z})` : 'Not connected'}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Changing this only affects this portal — edit the other one too if you want a two-way link.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {onSetPortalTarget ? (
+                  <Checkbox
+                    id="mgc-portal-active"
+                    checked={portalInfo.isActive}
+                    onCheckedChange={(c) => onSetPortalTarget(selected, { isActive: c === true })}
+                  />
+                ) : (
+                  <Checkbox id="mgc-portal-active" checked={portalInfo.isActive} disabled />
+                )}
+                <Label htmlFor="mgc-portal-active" className="text-xs cursor-pointer">Active</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                An inactive portal only receives — stepping on it won't send you anywhere (an "exit portal").
+              </p>
+
+              <div>
+                <p className="text-xs font-medium">{LINK_KIND_LABELS[portalInfo.linkKind]}</p>
+                <p className="text-xs text-muted-foreground">{LINK_KIND_EXPLANATIONS[portalInfo.linkKind]}</p>
+              </div>
+
+              {portalInfo.targetNode !== undefined && onSetHighlightedNode && (
+                <div className="flex items-center gap-2 pt-1">
+                  <Checkbox
+                    id="mgc-portal-highlight"
+                    checked={isHighlightingConnected}
+                    onCheckedChange={(c) => onSetHighlightedNode(c === true ? portalInfo.targetNode! : null)}
+                  />
+                  <Label htmlFor="mgc-portal-highlight" className="text-xs cursor-pointer">
+                    Highlight connected portal on grid
+                  </Label>
+                </div>
+              )}
             </div>
           )}
         </div>
