@@ -120,6 +120,18 @@ export interface RawMapBlock2 {
       spawnPointType?: number
       isLocked?: boolean
     }>
+    /** Portal linkage (issue #127) — `id` is this portal instance's own id,
+     *  `targetIdx` is the LINKED portal's instance id (-1 = unlinked), `isActive`
+     *  gates whether this endpoint currently works (an inactive portal only
+     *  receives — the official guide calls it an "exit portal"). Confirmed real
+     *  shapes across sample maps: symmetric two-way pairs, asymmetric one-way
+     *  pairs, and many-to-one hubs (several entrances sharing one exit). */
+    propPortals?: Array<{
+      type?: string
+      id?: number
+      targetIdx?: number
+      isActive?: boolean
+    }>
     [key: string]: unknown
   }
   [key: string]: unknown

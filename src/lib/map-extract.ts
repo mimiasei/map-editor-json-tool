@@ -205,6 +205,41 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   )
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))
 
+  // Portal linkage (issue #127) — a genuine two-pass enrichment, unlike the
+  // single-key lookups above: resolving a target's coordinates and deriving
+  // two-way/one-way needs the OTHER portal's own data, only available once
+  // every instance already has a resolved node (buildPlacedObjects() has
+  // already run). Mutates the just-built PlacedObject entries in place —
+  // placedByKey holds the same object references as placedObjects.
+  const portalRawByKey = new Map<string, { targetIdx?: number; isActive: boolean }>()
+  for (const p of b2.objectsProperties?.propPortals ?? []) {
+    if (p.id === undefined) continue
+    portalRawByKey.set(`${p.type ?? ''}:${p.id}`, { targetIdx: p.targetIdx, isActive: p.isActive ?? false })
+  }
+  for (const placed of placedObjects) {
+    const raw = portalRawByKey.get(placed.key)
+    if (!raw) continue
+    const hasTarget = raw.targetIdx !== undefined && raw.targetIdx !== -1
+    let targetNode: number | undefined
+    let linkKind: 'two-way' | 'one-way' | 'unlinked' = 'unlinked'
+    if (hasTarget) {
+      // Every real sample places portal linkage between type-0 (objects[])
+      // instances only — the target join assumes the same namespace as `placed`.
+      const targetKey = `${placed.type}:${raw.targetIdx}`
+      targetNode = placedByKey.get(targetKey)?.node
+      const targetRaw = portalRawByKey.get(targetKey)
+      const reciprocal = targetRaw?.targetIdx === placed.id
+      linkKind = reciprocal && raw.isActive && targetRaw?.isActive ? 'two-way' : 'one-way'
+    }
+    placed.portalInfo = {
+      id: placed.id,
+      targetIdx: hasTarget ? raw.targetIdx : undefined,
+      targetNode,
+      isActive: raw.isActive,
+      linkKind,
+    }
+  }
+
   const entities: MapEntity[] = propEntities
     .filter((e) => typeof e.sid === 'string' && e.sid.trim() !== '')
     .map((e) => {

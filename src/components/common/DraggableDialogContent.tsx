@@ -74,10 +74,36 @@ export const DraggableDialogContent = React.forwardRef<
       minWidth = 400,
       minHeight = 300,
       storageKey,
+      onPointerDownOutside,
       ...props
     },
     ref
   ) => {
+    // A react-resizable-panels `Separator` (e.g. Map Grid's cell-info column
+    // resize handle) sitting inside this dialog's own content is still a real
+    // DOM descendant, but Radix's outside-pointerdown detection wrongly treats
+    // it as "outside" and closes the dialog on the very first click on it —
+    // confirmed via a live repro (issue #127): react-resizable-panels
+    // registers its own raw `document`-level pointerdown listener (capture
+    // phase, for its drag logic) the moment a Group first mounts, and that
+    // listener sits higher in the DOM (on `document` itself) than React's own
+    // root container, so it runs before React's synthetic event dispatch ever
+    // reaches Radix's DismissableLayer — meaning Radix's
+    // `isPointerInsideReactTreeRef` (set via a React onPointerDownCapture
+    // handler) is never marked true for this click, and Radix's own
+    // "was this inside the layer" check comes back negative. Fixed the
+    // supported way: Radix calls the caller's `onPointerDownOutside` first and
+    // skips its own dismiss when that handler calls preventDefault().
+    const handlePointerDownOutside = React.useCallback(
+      (e: Parameters<NonNullable<typeof onPointerDownOutside>>[0]) => {
+        const target = e.target as HTMLElement | null
+        if (target?.closest('[role="separator"]')) {
+          e.preventDefault()
+        }
+        onPointerDownOutside?.(e)
+      },
+      [onPointerDownOutside]
+    )
     // Position and size are stored as plain numbers (px from viewport top-left).
     const [pos, setPos] = React.useState<{ x: number; y: number } | null>(null)
     const [size, setSize] = React.useState({ width: defaultWidth, height: defaultHeight })
@@ -261,6 +287,7 @@ export const DraggableDialogContent = React.forwardRef<
               "sm:rounded-lg",
               className
             )}
+            onPointerDownOutside={handlePointerDownOutside}
             {...props}
           >
             {/* ---- Resize handles ---- */}

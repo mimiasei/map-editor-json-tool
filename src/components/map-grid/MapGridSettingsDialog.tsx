@@ -1,7 +1,12 @@
-// ─── Map Grid — display settings popover (issue #125) ───────────────────────
-// Consolidates the tunable display knobs (terrain opacity, icon images,
-// grid-line thickness) that previously would have needed one toolbar control
-// each. Persisted as one object rather than one localStorage key per setting.
+// ─── Map Grid — display settings popover (issue #125, revised in #127) ──────
+// Consolidates the tunable display knobs that previously would have needed
+// one toolbar control each. Persisted as one object rather than one
+// localStorage key per setting.
+//
+// issue #127: the "grid line thickness" slider from #125 was a misreading —
+// the user actually wanted a slider for the thick, category-colored border
+// around each occupied cell (new: cellBorderThickness), and the 1px lines
+// *between* every cell to just be a plain on/off switch (showGridLines).
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -16,14 +21,18 @@ export interface MapGridSettings {
   terrainOpacity: number
   /** When false, every cell forces its letter-badge fallback instead of a real icon. */
   iconImagesEnabled: boolean
-  /** 0 = grid lines off; otherwise the on-screen line thickness in px. */
-  gridLineThickness: number
+  /** 1px lines between every cell, on/off — always the same fixed thickness. */
+  showGridLines: boolean
+  /** 0 = off; otherwise the on-screen thickness (px) of the category-colored
+   *  border drawn around each occupied cell. */
+  cellBorderThickness: number
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainOpacity: DEFAULT_TERRAIN_BLEND,
   iconImagesEnabled: true,
-  gridLineThickness: 0,
+  showGridLines: false,
+  cellBorderThickness: 0,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -77,17 +86,26 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
           />
         </div>
 
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-lines" className="text-xs cursor-pointer">Grid lines</Label>
+          <Switch
+            id="grid-show-lines"
+            checked={settings.showGridLines}
+            onCheckedChange={(v) => update({ showGridLines: v })}
+          />
+        </div>
+
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Grid line thickness</Label>
+            <Label className="text-xs">Cell border thickness</Label>
             <span className="text-xs text-muted-foreground">
-              {settings.gridLineThickness === 0 ? 'Off' : `${settings.gridLineThickness}px`}
+              {settings.cellBorderThickness === 0 ? 'Off' : `${settings.cellBorderThickness}px`}
             </span>
           </div>
           <Slider
             min={0} max={4} step={1}
-            value={[settings.gridLineThickness]}
-            onValueChange={([v]) => update({ gridLineThickness: v })}
+            value={[settings.cellBorderThickness]}
+            onValueChange={([v]) => update({ cellBorderThickness: v })}
           />
         </div>
       </PopoverContent>

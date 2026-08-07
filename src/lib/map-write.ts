@@ -309,6 +309,54 @@ export function setNoCombineGeometry(chunk: Uint8Array, entityType: number, enti
   return new TextEncoder().encode(patchedText)
 }
 
+// ─── Portal linkage (objectsProperties.propPortals) ─────────────────────────
+// Same upsert technique as setNoCombineGeometry — confirmed present (as an
+// empty array when unused) in every one of the 12 real sample maps. Only
+// ever touches the ONE portal instance being edited, same "surgical, no
+// cascading" philosophy as renameEntitySid: setting portal A's target to B
+// does not also set B's target to A — a true two-way link needs both
+// portals edited (issue #127's UI says so explicitly, rather than silently
+// half-doing it).
+interface PropPortalEntry {
+  type?: number | string
+  id?: number
+  targetIdx?: number
+  isActive?: boolean
+}
+
+/**
+ * Set (or insert) a portal's target and/or active state. Fields omitted from
+ * `patch` are left as-is on an existing entry; a brand-new entry defaults to
+ * `targetIdx: -1` (unlinked) / `isActive: true` for whichever field isn't given.
+ */
+export function upsertPropPortals(
+  chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  patch: { targetIdx?: number; isActive?: boolean },
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propPortals')
+
+  const entries = JSON.parse(span) as PropPortalEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) {
+    if (patch.targetIdx !== undefined) existing.targetIdx = patch.targetIdx
+    if (patch.isActive !== undefined) existing.isActive = patch.isActive
+  } else {
+    entries.push({
+      type: entityType,
+      id: entityId,
+      targetIdx: patch.targetIdx ?? -1,
+      isActive: patch.isActive ?? true,
+    })
+  }
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
 // ─── Spawner "Player type" (Block 1 spawns.spawns[] + Block 2 propSpawns) ───
 // The one edit in this module that spans two chunks: this data is duplicated
 // in Block 1 (spawns.spawns[], one entry per spawner, matched by `owner`) and

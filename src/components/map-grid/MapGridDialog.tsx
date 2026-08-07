@@ -34,6 +34,7 @@ import {
   GRID_GROUP_LABELS,
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
+import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
@@ -356,11 +357,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Imperatively resized rather than conditionally mounted (same convention
   // as AppShell's sidebar/editor/preview panels) so the Group/Panel tree
-  // stays stable across opens/closes.
-  const cellColumnPanelRef = useRef<PanelImperativeHandle | null>(null)
+  // stays stable across opens/closes within one mount. State-backed (not a
+  // plain useRef): closing the Map Grid dialog unmounts this Panel entirely
+  // (MapGridDialog itself never unmounts — AppShell always renders it — but
+  // it returns null while closed, which does unmount its children), so on
+  // reopen a fresh Panel instance mounts with a fresh imperative handle. If
+  // `columnOpen` was already true before the close and stays true after, its
+  // value never "changes" from React's point of view, so a plain
+  // `useEffect(..., [columnOpen])` keyed only on that boolean would never
+  // re-fire against the new handle — the same class of stale-effect-on-
+  // deferred-mount bug this file has already hit twice for viewportEl/canvasEl
+  // (issue #122). Keying the effect on the ref value itself fixes it the same way.
+  const [cellColumnPanel, setCellColumnPanel] = useState<PanelImperativeHandle | null>(null)
   useEffect(() => {
-    cellColumnPanelRef.current?.resize(columnOpen ? '30%' : '0%')
-  }, [columnOpen])
+    cellColumnPanel?.resize(columnOpen ? '30%' : '0%')
+  }, [columnOpen, cellColumnPanel])
 
   // Rename/set-display-name are docked-only (issue #125 scope decision) —
   // the undocked mirror renders MapGridCellContent without these callbacks.
@@ -401,6 +412,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
 
+  const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
+  const handleSetPortalTarget = async (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch })
+    } catch (e) {
+      logError(`Failed to set portal target: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
+
   if (!open) return null
 
   return (
@@ -422,9 +444,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             wrapped content here can sit underneath and silently eat clicks. */}
         <DraggableDialogDragHandle className="flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold shrink-0">Map Grid</span>
+            <span className="text-sm font-semibold shrink-0">
+              Map Grid{sizeX > 0 && sizeZ > 0 ? ` — ${sizeX} x ${sizeZ}` : ''}
+            </span>
             <div className="flex-1" />
             <div className="flex items-center gap-1 shrink-0" data-nodrag>
+              <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
+                {Math.round(transform.scale * 100)}%
+              </span>
               <Button variant="ghost" size="icon" className="h-6 w-6" title="Zoom out"
                 onClick={() => zoomAt(containerSize.width / 2, containerSize.height / 2, 0.8)}>
                 <ZoomOut className="h-3.5 w-3.5" />
@@ -517,19 +544,36 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 {/* Interactive icon layer — windowed to the visible range, only above the LOD threshold */}
                 {showIcons && visibleCells.map(({ x, z, node, pick }) => {
                   const name = pick.primary.displayName || pick.primary.entitySid || pick.primary.sid
+                  const visual = resolveGridCellVisual(pick.primary, catalog)
+                  const iconSize = Math.min(BASE_CELL_PX - 4, 24)
                   return (
                     <div
                       key={node}
                       className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer"
-                      style={{ left: x * BASE_CELL_PX, top: z * BASE_CELL_PX, width: BASE_CELL_PX, height: BASE_CELL_PX }}
+                      style={{
+                        left: x * BASE_CELL_PX,
+                        top: z * BASE_CELL_PX,
+                        width: BASE_CELL_PX,
+                        height: BASE_CELL_PX,
+                        boxSizing: 'border-box',
+                        border: settings.cellBorderThickness > 0
+                          ? `${settings.cellBorderThickness}px solid ${GROUP_COLORS[pick.group]}`
+                          : undefined,
+                      }}
                       onClick={(e) => { e.stopPropagation(); selectNode(node) }}
                     >
-                      <CatalogIcon
-                        iconId={pick.primary.sid}
-                        name={name}
-                        size={Math.min(BASE_CELL_PX - 4, 24)}
-                        src={settings.iconImagesEnabled ? undefined : null}
-                      />
+                      {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
+                      {visual.kind === 'text' && (
+                        <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
+                      )}
+                      {visual.kind === 'catalog' && (
+                        <CatalogIcon
+                          iconId={pick.primary.sid}
+                          name={name}
+                          size={iconSize}
+                          src={settings.iconImagesEnabled ? undefined : null}
+                        />
+                      )}
                       {pick.count > 1 && (
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
                           {pick.count}
@@ -546,7 +590,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   of scaling with the content. Their extent (map width/height in
                   screen px) is still derived from the transform, so they track
                   pan/zoom exactly. */}
-              {settings.gridLineThickness > 0 && (
+              {settings.showGridLines && (
                 <div
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
@@ -554,8 +598,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     height: sizeZ * effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
                     backgroundImage:
-                      `linear-gradient(to right, rgba(0,0,0,0.18) 0 ${settings.gridLineThickness}px, transparent ${settings.gridLineThickness}px 100%),` +
-                      `linear-gradient(to bottom, rgba(0,0,0,0.18) 0 ${settings.gridLineThickness}px, transparent ${settings.gridLineThickness}px 100%)`,
+                      'linear-gradient(to right, rgba(0,0,0,0.18) 0 1px, transparent 1px 100%),' +
+                      'linear-gradient(to bottom, rgba(0,0,0,0.18) 0 1px, transparent 1px 100%)',
                     backgroundSize: `${effectiveCellPx}px ${effectiveCellPx}px`,
                   }}
                 />
@@ -569,6 +613,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   boxSizing: 'border-box',
                 }}
               />
+
+              {/* Connected-portal highlight (issue #127 item 8) — same screen-space
+                  technique as the overlays above, so its border stays a constant
+                  physical size instead of scaling with zoom. */}
+              {highlightedNode !== null && (
+                <div
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-yellow-400 animate-pulse"
+                  style={{
+                    left: (highlightedNode % sizeX) * effectiveCellPx,
+                    top: Math.floor(highlightedNode / sizeX) * effectiveCellPx,
+                    width: effectiveCellPx,
+                    height: effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -596,7 +657,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         <Separator className="w-3 cursor-col-resize rounded-lg bg-transparent hover:bg-black/20 transition-colors duration-150 border-0 focus-visible:outline-none" />
 
         <Panel
-          panelRef={cellColumnPanelRef}
+          panelRef={setCellColumnPanel}
           id="map-grid-cell-column"
           defaultSize="0%"
           minSize="20%"
@@ -631,6 +692,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetNoCombineGeometry={canEditEntities ? handleSetNoCombineGeometry : undefined}
                   onAssignEntitySid={canEditEntities ? handleAssignEntitySid : undefined}
                   onSetSpawnerPlayerType={canEditEntities ? handleSetSpawnerPlayerType : undefined}
+                  allPortals={allPortals}
+                  onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
+                  highlightedNode={highlightedNode}
+                  onSetHighlightedNode={setHighlightedNode}
                 />
               ) : null}
             </div>
