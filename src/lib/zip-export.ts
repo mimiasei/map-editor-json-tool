@@ -42,6 +42,17 @@ export function mapZipFileName(mapName: string): string {
   return `${mapName.replace(/\s+/g, '_').toLowerCase()}.zip`
 }
 
+/**
+ * snake_case of a map name, used for the shipped localization file name.
+ * Anything that isn't a letter/digit becomes an underscore (collapsed and
+ * trimmed), so e.g. "Tom's Map!" becomes "tom_s_map". Falls back to
+ * "custom_map" for a name with no alphanumeric characters at all.
+ */
+export function mapNameSnakeCase(mapName: string): string {
+  const snake = mapName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+  return snake || 'custom_map'
+}
+
 // ─── Token collection ─────────────────────────────────────────────────────────
 
 /**
@@ -79,10 +90,14 @@ export function collectShippedSids(
  *
  * ZIP structure:
  *   DB/dialogs/dialogs/custom_maps/{mapName}/{dialogId}.json  (one per dialog)
- *   Lang/english/texts/customMaps.json                        (always)
- *   Lang/{lang}/texts/customMaps.json                         (per translated language)
+ *   Lang/english/texts/{mapName-snake_case}.json              (always)
+ *   Lang/{lang}/texts/{mapName-snake_case}.json               (per translated language)
  *
- * STORE compression is deliberate — the engine failed to read deflated entries.
+ * The localization file is named after the map, not "customMaps.json" — every
+ * custom map used to ship a file with that exact name, which collides with
+ * (and overwrites) the same path inside the game's own Core.zip once
+ * installed. STORE compression is deliberate — the engine failed to read
+ * deflated entries.
  */
 export async function buildMapZipBlob(
   mapName: string,
@@ -106,6 +121,7 @@ export async function buildMapZipBlob(
   const sids = collectShippedSids(dialogs, localization)
   // English always ships; extra languages only when they carry real content.
   const langs = shippedLanguages(translations)
+  const locFileName = `${mapNameSnakeCase(mapName)}.json`
 
   for (const lang of langs) {
     const tokens = sids.map((sid) => ({
@@ -114,7 +130,7 @@ export async function buildMapZipBlob(
       text: resolveToken(sid, lang, localization, translations),
     }))
     zip.file(
-      `Lang/${lang}/texts/customMaps.json`,
+      `Lang/${lang}/texts/${locFileName}`,
       BOM + JSON.stringify({ tokens }, null, '\t'),
     )
   }

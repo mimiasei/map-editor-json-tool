@@ -578,6 +578,23 @@ export default function Toolbar({
             <TooltipContent>Scenario Statistics</TooltipContent>
           </Tooltip>
 
+          {/* Needs a loaded .map for anything to show (issue #122) */}
+          {mapLoaded && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={onMapGridOpen}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Map Grid</TooltipContent>
+            </Tooltip>
+          )}
+
           <DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -648,14 +665,6 @@ export default function Toolbar({
                 <Database className="h-4 w-4 mr-2" />
                 Game Database
               </DropdownMenuItem>
-
-              {/* Needs a loaded .map for anything to show (issue #122) */}
-              {mapLoaded && (
-                <DropdownMenuItem onClick={() => setTimeout(() => onMapGridOpen?.(), 0)}>
-                  <LayoutGrid className="h-4 w-4 mr-2" />
-                  Map Grid
-                </DropdownMenuItem>
-              )}
 
               <DropdownMenuSeparator />
 

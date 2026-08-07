@@ -38,6 +38,8 @@ export function buildPlacedObjects(
   nodeToCoord: (node: number) => { x: number; z: number } | undefined,
   entitySidByKey: Map<string, string>,
   displayNameByKey: Map<string, string>,
+  noCombineGeometryByKey: Map<string, boolean>,
+  spawnerInfoByKey: Map<string, PlacedObject['spawnerInfo']>,
 ): PlacedObject[] {
   const placed: PlacedObject[] = []
 
@@ -50,6 +52,8 @@ export function buildPlacedObjects(
       rotation, level,
       entitySid: entitySidByKey.get(key),
       displayName: displayNameByKey.get(key),
+      noCombineGeometry: noCombineGeometryByKey.get(key),
+      spawnerInfo: spawnerInfoByKey.get(key),
     })
   }
 
@@ -158,9 +162,47 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (!displayNameByKey.has(key)) displayNameByKey.set(key, p.nameTitle)
   }
 
+  // "No Combine Geometry" (objectsProperties.propNoCombineGeometries, issue #125) —
+  // same (type, id) join key as everything else.
+  const noCombineGeometryByKey = new Map<string, boolean>()
+  for (const g of b2.objectsProperties?.propNoCombineGeometries ?? []) {
+    if (g.id === undefined || typeof g.isNoCombineGeometry !== 'boolean') continue
+    const key = `${g.type ?? ''}:${g.id}`
+    if (!noCombineGeometryByKey.has(key)) noCombineGeometryByKey.set(key, g.isNoCombineGeometry)
+  }
+
+  // Spawner enrichment (issue #125): propSpawns gives owner/spawnType/spawnPointType;
+  // propCities/propHeroes (read here, ahead of their other use below) give faction/hero.
+  const propCities = b2.objectsProperties?.propCities ?? []
+  const propHeroes = b2.objectsProperties?.propHeroes ?? []
+  const factionByKey = new Map<string, string>()
+  for (const c of propCities) {
+    if (c.id === undefined || typeof c.factionSid !== 'string' || !c.factionSid.trim()) continue
+    factionByKey.set(`${c.type ?? ''}:${c.id}`, c.factionSid)
+  }
+  const heroSidByKey = new Map<string, string>()
+  for (const h of propHeroes) {
+    if (h.id === undefined || typeof h.heroSid !== 'string' || !h.heroSid.trim()) continue
+    heroSidByKey.set(`${h.type ?? ''}:${h.id}`, h.heroSid)
+  }
+  const spawnerInfoByKey = new Map<string, PlacedObject['spawnerInfo']>()
+  for (const s of b2.objectsProperties?.propSpawns ?? []) {
+    if (s.id === undefined || s.owner === undefined || s.spawnType === undefined || s.spawnPointType === undefined) continue
+    const key = `${s.type ?? ''}:${s.id}`
+    spawnerInfoByKey.set(key, {
+      owner: s.owner,
+      spawnType: s.spawnType as 0 | 1 | 2,
+      spawnPointType: s.spawnPointType as 0 | 1,
+      factionSid: factionByKey.get(key),
+      heroSid: heroSidByKey.get(key),
+    })
+  }
+
   // Every placed object/squad/marker, correctly disambiguated by (type, id) —
   // see buildPlacedObjects() above for why this replaces a plain id→node map.
-  const placedObjects = buildPlacedObjects(b2, nodeToCoord, entitySidByKey, displayNameByKey)
+  const placedObjects = buildPlacedObjects(
+    b2, nodeToCoord, entitySidByKey, displayNameByKey, noCombineGeometryByKey, spawnerInfoByKey,
+  )
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))
 
   const entities: MapEntity[] = propEntities
@@ -198,8 +240,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   //     hero and then unticks the slot can leave a stale propHeroes entry behind
   //     that never spawns. Objects with no propCities entry are pure hero
   //     spawners and have no slot to check.
-  const propHeroes = b2.objectsProperties?.propHeroes ?? []
-  const propCities = b2.objectsProperties?.propCities ?? []
+  // (propHeroes/propCities declared earlier, ahead of the spawner-enrichment block above.)
   const cityById = new Map<number, { spawnHero?: boolean }>()
   for (const c of propCities) {
     if (typeof c?.id === 'number') cityById.set(c.id, c)

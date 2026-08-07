@@ -1,9 +1,39 @@
+import { useEffect } from 'react'
 import type { PanelState, PanelAction } from '@/lib/panel-sync'
 import { JsonPreviewContent } from '@/components/common/JsonPreview'
 import { TimelineContent } from '@/components/common/TimelineDialog'
 import { QuestFlowContent } from '@/components/common/QuestFlowDialog'
 import { StatsContent } from '@/components/common/StatsDialog'
 import { GuidesContent } from '@/components/guides/GuidesPanel'
+import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
+import { terrainLabel } from '@/lib/map-grid/terrain-colors'
+import { useCatalogStore } from '@/store/useCatalogStore'
+
+// The mapGridCell panel is the one case here that needs the game catalog
+// (for icons/category labels) — unlike scenario/dialogs/localization, the
+// catalog is disk-backed reference data, not user-session state, so this
+// window loads its own copy instead of receiving it over the broadcast
+// channel (which every other field here does go through). Extracted into its
+// own component, not inlined into the switch below, so its hooks are never
+// conditionally called depending on panelId.
+function MapGridCellPanel({ state }: { state: PanelState }) {
+  const catalog = useCatalogStore((s) => s.catalog)
+  useEffect(() => { useCatalogStore.getState().load() }, [])
+
+  const { mapContext, selectedGridNode } = state
+  if (!mapContext || selectedGridNode === null) {
+    return (
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground p-4 text-center">
+        Click a tile in the Map Grid window to see its info here.
+      </div>
+    )
+  }
+
+  const items = mapContext.placedObjects.filter((p) => p.node === selectedGridNode)
+  const label = terrainLabel(mapContext.tilesMap, mapContext.waterMap, selectedGridNode, mapContext.sizeX)
+  // Read-only mirror — no onRename/onSetDisplayName (issue #125 scope decision).
+  return <MapGridCellContent items={items} terrainLabel={label} catalog={catalog} />
+}
 
 interface Props {
   panelId: string
@@ -61,6 +91,9 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
 
     case 'guides':
       return <GuidesContent />
+
+    case 'mapGridCell':
+      return <MapGridCellPanel state={state} />
 
     default:
       return (

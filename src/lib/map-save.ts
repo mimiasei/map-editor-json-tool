@@ -14,6 +14,9 @@ import {
   gunzipBytes,
   renameEntitySid,
   upsertPropsName,
+  upsertPropEntities,
+  setNoCombineGeometry,
+  setSpawnerPlayerType,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -24,6 +27,17 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 export type MapSaveEdit =
   | { kind: 'renameSid'; oldSid: string; newSid: string }
   | { kind: 'setDisplayName'; entityType: number; entityId: number; nameTitle: string }
+  | { kind: 'assignEntitySid'; entityType: number; entityId: number; sid: string }
+  | { kind: 'setNoCombineGeometry'; entityType: number; entityId: number; value: boolean }
+  | { kind: 'setSpawnerPlayerType'; entityType: number; entityId: number; spawnType: 0 | 1 | 2 }
+
+/** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
+ *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
+ *  since the Player type is duplicated across both (see setSpawnerPlayerType's doc comment). */
+function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
+  if (!edit) return new Set()
+  return edit.kind === 'setSpawnerPlayerType' ? new Set([0, 1]) : new Set([1])
+}
 
 export interface MapSaveResult {
   backupPath: string
@@ -77,6 +91,14 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = renameEntitySid(newChunks[1], edit.oldSid, edit.newSid)
   } else if (edit?.kind === 'setDisplayName') {
     newChunks[1] = upsertPropsName(newChunks[1], edit.entityType, edit.entityId, edit.nameTitle)
+  } else if (edit?.kind === 'assignEntitySid') {
+    newChunks[1] = upsertPropEntities(newChunks[1], edit.entityType, edit.entityId, edit.sid)
+  } else if (edit?.kind === 'setNoCombineGeometry') {
+    newChunks[1] = setNoCombineGeometry(newChunks[1], edit.entityType, edit.entityId, edit.value)
+  } else if (edit?.kind === 'setSpawnerPlayerType') {
+    const patched = setSpawnerPlayerType(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnType)
+    newChunks[0] = patched.block1Chunk
+    newChunks[1] = patched.block2Chunk
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -90,9 +112,9 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   if (!bytesEqual(reparsed.hash, container.hash) || !bytesEqual(reparsed.version, container.version)) {
     throw new Error('Verification failed: header changed unexpectedly')
   }
+  const editedIndices = editedChunkIndices(edit)
   for (let i = 0; i < reparsed.chunks.length; i++) {
-    const isEditedChunk = edit && i === 1
-    if (!isEditedChunk && !bytesEqual(reparsed.chunks[i], container.chunks[i])) {
+    if (!editedIndices.has(i) && !bytesEqual(reparsed.chunks[i], container.chunks[i])) {
       throw new Error(`Verification failed: block ${i} changed unexpectedly`)
     }
   }
@@ -114,6 +136,40 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.nameTitle !== edit.nameTitle) {
       throw new Error('Verification failed: display name not reflected in the rebuilt propsName table')
+    }
+  } else if (edit?.kind === 'assignEntitySid') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propEntities?: Array<{ type?: number | string; id?: number; sid?: string }> }
+    }
+    const entries = block2.objectsProperties?.propEntities ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.sid !== edit.sid) {
+      throw new Error('Verification failed: entity SID not reflected in the rebuilt propEntities table')
+    }
+  } else if (edit?.kind === 'setNoCombineGeometry') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propNoCombineGeometries?: Array<{ type?: number | string; id?: number; isNoCombineGeometry?: boolean }> }
+    }
+    const entries = block2.objectsProperties?.propNoCombineGeometries ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.isNoCombineGeometry !== edit.value) {
+      throw new Error('Verification failed: No Combine Geometry not reflected in the rebuilt table')
+    }
+  } else if (edit?.kind === 'setSpawnerPlayerType') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propSpawns?: Array<{ type?: number | string; id?: number; owner?: number; spawnType?: number }> }
+    }
+    const entry2 = (block2.objectsProperties?.propSpawns ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!entry2 || entry2.spawnType !== edit.spawnType) {
+      throw new Error('Verification failed: Player type not reflected in the rebuilt propSpawns table')
+    }
+    const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
+      spawns?: { spawns?: Array<{ owner?: number; spawnType?: number }> }
+    }
+    const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === entry2.owner)
+    if (!entry1 || entry1.spawnType !== edit.spawnType) {
+      throw new Error('Verification failed: Player type not reflected in the rebuilt Block 1 spawns table')
     }
   }
 

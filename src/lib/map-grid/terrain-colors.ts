@@ -36,8 +36,9 @@ const WATER_BASE_COLOR = '#3d85c6'
  *  tilesMap values were verified to fall in 1-7, but a malformed map could differ). */
 const UNKNOWN_BASE_COLOR = '#9a9a9a'
 
-/** Blend amount for the light grid fill: how much of the base color survives against white. */
-const LIGHT_BLEND = 0.16
+/** Default blend amount for the light grid fill: how much of the base color
+ *  survives against white. Adjustable at runtime (issue #125 settings dialog). */
+export const DEFAULT_TERRAIN_BLEND = 0.16
 
 function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16)
@@ -54,22 +55,36 @@ function isBiomeId(id: number): id is BiomeId {
   return id >= 1 && id <= 7
 }
 
-const LIGHT_BIOME_COLORS: Record<BiomeId, string> = Object.fromEntries(
-  (Object.keys(BIOME_BASE_COLORS) as unknown as BiomeId[]).map((id) => [
-    id,
-    mixWithWhite(BIOME_BASE_COLORS[id], LIGHT_BLEND),
-  ]),
-) as Record<BiomeId, string>
-
-const LIGHT_WATER_COLOR = mixWithWhite(WATER_BASE_COLOR, LIGHT_BLEND)
-const LIGHT_UNKNOWN_COLOR = mixWithWhite(UNKNOWN_BASE_COLOR, LIGHT_BLEND)
-
 /**
  * Light fill color for one tile — water (if present) wins over the base
- * biome, matching how water visually covers terrain in-game.
+ * biome, matching how water visually covers terrain in-game. `blendAmount`
+ * (0-1) is user-adjustable via the Map Grid settings dialog; defaults to
+ * DEFAULT_TERRAIN_BLEND.
  */
-export function terrainFillColor(tileId: number | undefined, waterId: number | undefined): string {
-  if (waterId) return LIGHT_WATER_COLOR
-  if (tileId === undefined) return LIGHT_UNKNOWN_COLOR
-  return isBiomeId(tileId) ? LIGHT_BIOME_COLORS[tileId] : LIGHT_UNKNOWN_COLOR
+export function terrainFillColor(
+  tileId: number | undefined,
+  waterId: number | undefined,
+  blendAmount: number = DEFAULT_TERRAIN_BLEND,
+): string {
+  if (waterId) return mixWithWhite(WATER_BASE_COLOR, blendAmount)
+  if (tileId === undefined || !isBiomeId(tileId)) return mixWithWhite(UNKNOWN_BASE_COLOR, blendAmount)
+  return mixWithWhite(BIOME_BASE_COLORS[tileId], blendAmount)
+}
+
+/**
+ * "Dirt - Tile (6, 8)"-style label for a tile (issue #125) — shared by the
+ * docked hover panel and the (docked/undocked) cell-info column so both
+ * derive it identically instead of duplicating the lookup.
+ */
+export function terrainLabel(
+  tilesMap: number[],
+  waterMap: number[],
+  node: number,
+  sizeX: number,
+): string {
+  const tileId = tilesMap[node]
+  const waterId = waterMap[node]
+  const biome = tileId !== undefined && isBiomeId(tileId) ? BIOME_NAMES[tileId] : 'Unknown'
+  const suffix = waterId ? ' (Water)' : ''
+  return `${biome}${suffix} - Tile (${node % sizeX}, ${Math.floor(node / sizeX)})`
 }

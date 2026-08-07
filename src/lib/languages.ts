@@ -1,7 +1,9 @@
 // ─── Game languages ───────────────────────────────────────────────────────────
 // The IDs are the directory names the game uses under Lang/ inside Core.zip —
 // they are not BCP 47 tags, and the spelling of "BRportugese" is the game's, not
-// a typo. A map ZIP places its tokens at Lang/<id>/texts/customMaps.json.
+// a typo. A map ZIP places its tokens at Lang/<id>/texts/<map name>.json (not
+// customMaps.json — see zip-export.ts's mapNameSnakeCase, which avoids
+// colliding with the game's own Core.zip file of that exact name).
 //
 // English is the base language: it is always present, is what the editor's
 // previews and validation read, and is the fallback for untranslated SIDs.

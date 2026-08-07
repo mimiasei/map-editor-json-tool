@@ -239,6 +239,150 @@ export function upsertPropsName(chunk: Uint8Array, entityType: number, entityId:
   return new TextEncoder().encode(patchedText)
 }
 
+// ─── Assign a brand-new entity SID (objectsProperties.propEntities) ─────────
+// renameEntitySid() above requires the SID to already exist — it's a rename,
+// not an assignment. Issue #125's "No Combine Geometry" flow needs the other
+// case: giving a SID to an object that has never had one (e.g. a decoration
+// with no propEntities entry at all), which is an insert, not a substring
+// replace — same upsert technique as upsertPropsName() below.
+interface PropEntitiesEntry {
+  type?: number | string
+  id?: number
+  sid?: string
+}
+
+/**
+ * Set (or insert) the entity SID for a map object identified by its
+ * `(type, id)` pair. Throws if `sid` already belongs to a *different*
+ * `(type, id)` — callers are expected to have already checked uniqueness
+ * against every known entity SID (same convention as RenameEntitySidDialog).
+ */
+export function upsertPropEntities(chunk: Uint8Array, entityType: number, entityId: number, sid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propEntities')
+
+  const entries = JSON.parse(span) as PropEntitiesEntry[]
+  const conflict = entries.find((e) => e.sid === sid && !(String(e.type) === String(entityType) && e.id === entityId))
+  if (conflict) throw new Error(`SID "${sid}" is already used by another entity`)
+
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) {
+    existing.sid = sid
+  } else {
+    entries.push({ type: entityType, id: entityId, sid })
+  }
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
+// ─── "No Combine Geometry" (objectsProperties.propNoCombineGeometries) ──────
+// Same upsert technique as upsertPropsName() — confirmed present (as an
+// empty array when unused) in every one of the 12 real sample maps, so this
+// never hits the "table doesn't exist at all" case findJsonArraySpan would throw on.
+interface PropNoCombineGeometryEntry {
+  type?: number | string
+  id?: number
+  isNoCombineGeometry?: boolean
+}
+
+/**
+ * Set (or insert) the "No Combine Geometry" flag for a map object. Per the
+ * official editor's guide, enabling this is what allows an otherwise-non-
+ * interactable decoration to carry a working entity SID (issue #125 item 4).
+ */
+export function setNoCombineGeometry(chunk: Uint8Array, entityType: number, entityId: number, value: boolean): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propNoCombineGeometries')
+
+  const entries = JSON.parse(span) as PropNoCombineGeometryEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) {
+    existing.isNoCombineGeometry = value
+  } else {
+    entries.push({ type: entityType, id: entityId, isNoCombineGeometry: value })
+  }
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
+// ─── Spawner "Player type" (Block 1 spawns.spawns[] + Block 2 propSpawns) ───
+// The one edit in this module that spans two chunks: this data is duplicated
+// in Block 1 (spawns.spawns[], one entry per spawner, matched by `owner`) and
+// Block 2 (objectsProperties.propSpawns[], matched by (type,id) like every
+// other table here, also carrying `owner`) — verified byte-identical between
+// the two across all 12 real sample maps (issue #125). Patching only one
+// would leave them disagreeing, so both are rewritten together. Block 1's
+// top-level `spawns` key holds an OBJECT ({playersCount, spawns:[...],
+// takenHeroes}), not the array itself — findJsonArraySpan's `"spawns":[`
+// marker still lands correctly on the nested array because the outer key
+// serializes as `"spawns":{`, never `"spawns":[` (verified: exactly one
+// occurrence of the literal `"spawns":[` substring in every real Block 1).
+//
+// Deliberately NOT implemented: reassigning `owner` itself (a different
+// spawner "Player attached to this spawner" field) — Unfrozen's own guide
+// flags that one specifically as "EXTREMELY bug-prone," so this editor only
+// ever changes spawnType (Player/Bot/Unknown) for the owner a spawner
+// already has.
+interface PropSpawnEntry {
+  type?: number | string
+  id?: number
+  owner?: number
+  spawnType?: number
+  spawnPointType?: number
+  isLocked?: boolean
+}
+
+interface Block1SpawnEntry {
+  owner?: number
+  spawnType?: number
+  [key: string]: unknown
+}
+
+/**
+ * Set the "Player type" (0=Player, 1=Bot, 2=Unknown) for the spawner
+ * identified by `(entityType, entityId)`, patching both Block 1's
+ * spawns.spawns[] and Block 2's propSpawns[] entries for that spawner's
+ * `owner`. Throws if either representation can't be found — a partial patch
+ * would be worse than refusing outright.
+ */
+export function setSpawnerPlayerType(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  spawnType: 0 | 1 | 2,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  const text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  const span2 = findJsonArraySpan(text2, 'propSpawns')
+  const propSpawns = JSON.parse(span2.span) as PropSpawnEntry[]
+  const entry2 = propSpawns.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!entry2 || entry2.owner === undefined) {
+    throw new Error(`No propSpawns entry found for (type=${entityType}, id=${entityId})`)
+  }
+  const owner = entry2.owner
+  entry2.spawnType = spawnType
+  const patchedText2 = text2.slice(0, span2.arrayOpen) + JSON.stringify(propSpawns) + text2.slice(span2.arrayClose + 1)
+
+  const text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  const span1 = findJsonArraySpan(text1, 'spawns')
+  const block1Spawns = JSON.parse(span1.span) as Block1SpawnEntry[]
+  const entry1 = block1Spawns.find((e) => e.owner === owner)
+  if (!entry1) {
+    throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
+  }
+  entry1.spawnType = spawnType
+  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+
+  return {
+    block1Chunk: new TextEncoder().encode(patchedText1),
+    block2Chunk: new TextEncoder().encode(patchedText2),
+  }
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
