@@ -330,6 +330,13 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (ps.id === undefined) continue
     const placedEntry = placedByKey.get(`${ps.type ?? 0}:${ps.id}`)
     if (!placedEntry) continue
+    // First unit's sid (issue #130) — only meaningful for actual squads[]
+    // placements (type 2); harmless to set unconditionally since only the
+    // Map Grid's squad-icon resolution ever reads it, gated on type === 2.
+    if (!placedEntry.firstUnitSid) {
+      const firstUnit = ps.unitProps?.find((u) => typeof u.sid === 'string' && u.sid.trim())
+      if (firstUnit?.sid) placedEntry.firstUnitSid = firstUnit.sid
+    }
     const coord = { x: placedEntry.x, z: placedEntry.z }
     const seenUnits = new Set<string>()
     for (const up of ps.unitProps ?? []) {

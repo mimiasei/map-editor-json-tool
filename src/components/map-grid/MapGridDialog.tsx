@@ -21,6 +21,10 @@ import {
   DraggableDialogDragHandle,
 } from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -35,6 +39,12 @@ import {
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
+import {
+  INTERACTABLE_SUBCATEGORY_ORDER,
+  INTERACTABLE_SUBCATEGORY_LABELS,
+  resolveInteractableSubcategory,
+  type InteractableSubcategory,
+} from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
@@ -49,7 +59,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -68,6 +78,7 @@ const GROUP_COLORS: Record<GridGroup, string> = {
   interactables: '#5fae5a',
   resources: '#c97fe0',
   decorations: '#8a8a8a',
+  zones: '#3fb8af',
 }
 
 // ─── Filter state (persisted) ────────────────────────────────────────────────
@@ -87,6 +98,41 @@ function loadGridFilter(): GridFilterState {
 
 function saveGridFilter(f: GridFilterState): void {
   try { localStorage.setItem(GRID_FILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
+}
+
+// issue #130: a cross-cutting filter (not a category), so it's separate from
+// GridFilterState rather than another GridGroup entry.
+const ENTITY_SIDS_ONLY_STORAGE_KEY = 'oe-map-grid-entity-sids-only'
+
+function loadEntitySidsOnly(): boolean {
+  try { return localStorage.getItem(ENTITY_SIDS_ONLY_STORAGE_KEY) === '1' } catch { return false }
+}
+
+function saveEntitySidsOnly(v: boolean): void {
+  try { localStorage.setItem(ENTITY_SIDS_ONLY_STORAGE_KEY, v ? '1' : '0') } catch { /* ignore */ }
+}
+
+// issue #130: Interactables has no natural single toggle — a persisted
+// sub-category selection, checked only when the item's group is
+// 'interactables' (the main Interactables toggle above still gates the
+// whole group first).
+type InteractableSubFilterState = Record<InteractableSubcategory, boolean>
+
+const INTERACTABLE_SUBFILTER_STORAGE_KEY = 'oe-map-grid-interactable-subfilter'
+
+function loadInteractableSubFilter(): InteractableSubFilterState {
+  const fallback = Object.fromEntries(
+    INTERACTABLE_SUBCATEGORY_ORDER.map((c) => [c, true]),
+  ) as InteractableSubFilterState
+  try {
+    const raw = localStorage.getItem(INTERACTABLE_SUBFILTER_STORAGE_KEY)
+    if (raw) return { ...fallback, ...JSON.parse(raw) }
+  } catch { /* ignore */ }
+  return fallback
+}
+
+function saveInteractableSubFilter(f: InteractableSubFilterState): void {
+  try { localStorage.setItem(INTERACTABLE_SUBFILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
 }
 
 // ─── Transform ────────────────────────────────────────────────────────────────
@@ -129,6 +175,51 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     })
   }
 
+  const [entitySidsOnly, setEntitySidsOnly] = useState<boolean>(loadEntitySidsOnly)
+  const toggleEntitySidsOnly = () => {
+    setEntitySidsOnly((prev) => {
+      const next = !prev
+      saveEntitySidsOnly(next)
+      return next
+    })
+  }
+
+  const [interactableSubFilter, setInteractableSubFilter] = useState<InteractableSubFilterState>(
+    loadInteractableSubFilter,
+  )
+  const toggleInteractableSubcategory = (c: InteractableSubcategory) => {
+    setInteractableSubFilter((prev) => {
+      const next = { ...prev, [c]: !prev[c] }
+      saveInteractableSubFilter(next)
+      return next
+    })
+  }
+  const setAllInteractableSubcategories = (value: boolean) => {
+    const next = Object.fromEntries(
+      INTERACTABLE_SUBCATEGORY_ORDER.map((c) => [c, value]),
+    ) as InteractableSubFilterState
+    setInteractableSubFilter(next)
+    saveInteractableSubFilter(next)
+  }
+
+  // ── Search (issue #130) — matches sid/entitySid/displayName, highlights
+  // every matching tile. Deliberately separate from `highlightedNode` (the
+  // single pulsing portal-connection marker): one is exactly one node with
+  // a "look here" pulse, the other can be many nodes and needs to stay
+  // legible as a set, not pulse in unison.
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchMatchedNodes = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return new Set<number>()
+    const nodes = new Set<number>()
+    for (const item of placedObjects) {
+      if ([item.sid, item.entitySid, item.displayName].some((v) => v?.toLowerCase().includes(q))) {
+        nodes.add(item.node)
+      }
+    }
+    return nodes
+  }, [placedObjects, searchQuery])
+
   const [settings, setSettings] = useState(loadMapGridSettings)
   const updateSettings = (next: typeof settings) => {
     setSettings(next)
@@ -142,16 +233,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const primaryByNode = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
     for (const [node, items] of tileIndex) {
-      const filtered = items.filter((item) => {
-        if (item.type === 1) return false // markers never shown
-        return true
-      })
-      const pick = pickPrimary(filtered, catalog)
+      // issue #130: markers ("zones") are real, filterable items now — no
+      // hard exclusion here anymore, just the per-group filter[] toggle below.
+      // "Entity SIDs only" is cross-cutting: untagged items are dropped
+      // before picking a primary, so they neither render nor count.
+      const candidates = entitySidsOnly ? items.filter((item) => item.entitySid?.trim()) : items
+      const pick = pickPrimary(candidates, catalog)
       if (!pick || !filter[pick.group]) continue
+      // issue #130: interactables additionally need their sub-category selected.
+      if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) continue
       map.set(node, pick)
     }
     return map
-  }, [tileIndex, catalog, filter])
+  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter])
 
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
@@ -222,11 +316,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // transform math zoomAt() uses. Works for every tile in map bounds
   // regardless of occupancy or the icon LOD tier (issue #125) — hover/click
   // no longer depend on a DOM node existing for that specific cell.
+  //
+  // The .map format's own row-major node numbering (node = z*sizeX+x, per
+  // olden_era_map_format.md) puts z=0 at the map's south edge, but this
+  // dialog draws screen row 0 at the top — so every conversion between a
+  // tile's data z and its on-screen row goes through `sizeZ - 1 - z` (a
+  // self-inverse flip, used identically in both directions here and at
+  // every z→pixel site below). Without it the grid rendered vertically
+  // mirrored versus the real game/map editor (issue #130).
   const screenToNode = useCallback((clientX: number, clientY: number, rect: DOMRect): number | null => {
     const worldX = (clientX - rect.left - transform.x) / transform.scale
     const worldY = (clientY - rect.top - transform.y) / transform.scale
     const x = Math.floor(worldX / BASE_CELL_PX)
-    const z = Math.floor(worldY / BASE_CELL_PX)
+    const screenRow = Math.floor(worldY / BASE_CELL_PX)
+    const z = sizeZ - 1 - screenRow
     if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return null
     return z * sizeX + x
   }, [transform, sizeX, sizeZ])
@@ -300,7 +403,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
         ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node], settings.terrainOpacity)
-        ctx.fillRect(x, z, 1, 1)
+        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
     // Occupied-tile pass: opaque group-color swatch on top, as before.
@@ -308,7 +411,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       ctx.fillStyle = GROUP_COLORS[pick.group]
-      ctx.fillRect(x, z, 1, 1)
+      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
   }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity])
 
@@ -330,7 +433,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const visibleCells = useMemo(() => {
     if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
     const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
-    for (let z = visibleRange.zMin; z <= visibleRange.zMax; z++) {
+    // visibleRange.zMin/zMax are screen rows (top-down pixel space); convert
+    // each to its data z via the same sizeZ-1-z flip used everywhere else.
+    for (let screenRow = visibleRange.zMin; screenRow <= visibleRange.zMax; screenRow++) {
+      const z = sizeZ - 1 - screenRow
       for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
         const node = z * sizeX + x
         const pick = primaryByNode.get(node)
@@ -448,6 +554,26 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               Map Grid{sizeX > 0 && sizeZ > 0 ? ` — ${sizeX} x ${sizeZ}` : ''}
             </span>
             <div className="flex-1" />
+            <div className="relative w-64 shrink-0" data-nodrag>
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search sid / entity SID / name"
+                className="h-6 pl-7 pr-6 text-xs"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6"
+                  title="Clear search"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-1 shrink-0" data-nodrag>
               <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
                 {Math.round(transform.scale * 100)}%
@@ -475,23 +601,91 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
           <div className="flex gap-1 flex-wrap" data-nodrag>
             {GRID_GROUP_ORDER.map((g) => (
-              <button
-                key={g}
-                onClick={() => toggleGroup(g)}
-                className={`h-6 px-2 text-xs rounded shrink-0 border transition-colors ${
-                  filter[g]
-                    ? 'bg-background text-foreground border-border'
-                    : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
-                }`}
-                title={`Toggle ${GRID_GROUP_LABELS[g]}`}
-              >
-                <span
-                  className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
-                  style={{ backgroundColor: GROUP_COLORS[g], opacity: filter[g] ? 1 : 0.35 }}
-                />
-                {GRID_GROUP_LABELS[g]}
-              </button>
+              <div key={g} className="flex items-stretch">
+                <button
+                  onClick={() => toggleGroup(g)}
+                  className={`h-6 px-2 text-xs rounded shrink-0 border transition-colors ${
+                    g === 'interactables' ? 'rounded-r-none border-r-0' : ''
+                  } ${
+                    filter[g]
+                      ? 'bg-background text-foreground border-border'
+                      : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
+                  }`}
+                  title={`Toggle ${GRID_GROUP_LABELS[g]}`}
+                >
+                  <span
+                    className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                    style={{ backgroundColor: GROUP_COLORS[g], opacity: filter[g] ? 1 : 0.35 }}
+                  />
+                  {GRID_GROUP_LABELS[g]}
+                </button>
+                {g === 'interactables' && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={`h-6 w-5 flex items-center justify-center rounded-r border transition-colors ${
+                          filter[g]
+                            ? 'bg-background text-foreground border-border'
+                            : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
+                        }`}
+                        title="Interactables sub-categories"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 space-y-2" data-nodrag>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Sub-categories
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="interactable-subcat-all"
+                          checked={INTERACTABLE_SUBCATEGORY_ORDER.every((c) => interactableSubFilter[c])}
+                          onCheckedChange={(v) => setAllInteractableSubcategories(Boolean(v))}
+                        />
+                        <Label htmlFor="interactable-subcat-all" className="text-xs cursor-pointer font-medium">
+                          All
+                        </Label>
+                      </div>
+                      <div className="border-t border-border pt-2 space-y-2">
+                        {INTERACTABLE_SUBCATEGORY_ORDER.map((c) => (
+                          <div key={c} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`interactable-subcat-${c}`}
+                              checked={interactableSubFilter[c]}
+                              onCheckedChange={() => toggleInteractableSubcategory(c)}
+                            />
+                            <Label htmlFor={`interactable-subcat-${c}`} className="text-xs cursor-pointer">
+                              {INTERACTABLE_SUBCATEGORY_LABELS[c]}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs w-full"
+                        onClick={() => setAllInteractableSubcategories(true)}
+                      >
+                        Reset
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
             ))}
+            <div className="w-px h-4 bg-border mx-1 self-center" />
+            <button
+              onClick={toggleEntitySidsOnly}
+              className={`h-6 px-2 text-xs rounded shrink-0 border transition-colors ${
+                entitySidsOnly
+                  ? 'bg-background text-foreground border-border'
+                  : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
+              }`}
+              title="Show only items with a user-defined entity SID"
+            >
+              Entity SIDs only
+            </button>
           </div>
         </DraggableDialogDragHandle>
 
@@ -513,7 +707,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           {context && sizeX > 0 && sizeZ > 0 && (
             <div
               ref={setViewportEl}
-              className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
+              className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none select-none"
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -549,10 +743,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   return (
                     <div
                       key={node}
-                      className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer"
+                      className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer select-none"
                       style={{
                         left: x * BASE_CELL_PX,
-                        top: z * BASE_CELL_PX,
+                        top: (sizeZ - 1 - z) * BASE_CELL_PX,
                         width: BASE_CELL_PX,
                         height: BASE_CELL_PX,
                         boxSizing: 'border-box',
@@ -570,6 +764,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <CatalogIcon
                           iconId={pick.primary.sid}
                           name={name}
+                          size={iconSize}
+                          src={settings.iconImagesEnabled ? undefined : null}
+                        />
+                      )}
+                      {visual.kind === 'catalogOverride' && (
+                        <CatalogIcon
+                          iconId={visual.iconId}
+                          name={visual.name}
                           size={iconSize}
                           src={settings.iconImagesEnabled ? undefined : null}
                         />
@@ -622,7 +824,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   className="absolute pointer-events-none rounded-sm border-[3px] border-yellow-400 animate-pulse"
                   style={{
                     left: (highlightedNode % sizeX) * effectiveCellPx,
-                    top: Math.floor(highlightedNode / sizeX) * effectiveCellPx,
+                    top: (sizeZ - 1 - Math.floor(highlightedNode / sizeX)) * effectiveCellPx,
                     width: effectiveCellPx,
                     height: effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
@@ -630,6 +832,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
+
+              {/* Search-match highlight (issue #130) — one static (non-pulsing)
+                  outline per matched node, deliberately distinct from the single
+                  pulsing portal-highlight above so a multi-result set stays
+                  legible as a set instead of all pulsing in unison. */}
+              {Array.from(searchMatchedNodes).map((node) => (
+                <div
+                  key={node}
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-cyan-400"
+                  style={{
+                    left: (node % sizeX) * effectiveCellPx,
+                    top: (sizeZ - 1 - Math.floor(node / sizeX)) * effectiveCellPx,
+                    width: effectiveCellPx,
+                    height: effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              ))}
             </div>
           )}
 
