@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, Upload, Plus, X, Languages } from 'lucide-react'
+import { Search, Upload, Plus, X, Languages, Trash2 } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -66,17 +66,20 @@ function TokenRow({
   text,
   sourceText,
   onChange,
+  onDelete,
 }: {
   sid: string
   text: string
   /** English text, shown as the translation source. Undefined on the English tab. */
   sourceText?: string
   onChange: (text: string) => void
+  /** Deletes the token everywhere (English + every language) — issue #133. */
+  onDelete: () => void
 }) {
   const missing = !text.trim()
 
   return (
-    <div className="space-y-1 rounded border border-border p-2 bg-card">
+    <div className="group space-y-1 rounded border border-border p-2 bg-card">
       <div className="flex items-center gap-2">
         <code className="text-xs font-mono text-muted-foreground flex-1 truncate">{sid}</code>
         {missing && (
@@ -84,6 +87,13 @@ function TokenRow({
             missing
           </Badge>
         )}
+        <button
+          className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-colors"
+          title={`Delete token "${sid}"`}
+          onClick={onDelete}
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
       </div>
       {sourceText !== undefined && (
         <p className="border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
@@ -119,6 +129,7 @@ export default function LocalizationDialog() {
     dialogs,
     scenario,
     setLocalizationToken,
+    removeLocalizationToken,
     setLocalizationBatch,
     setTranslationToken,
     setTranslationBatch,
@@ -206,6 +217,11 @@ export default function LocalizationDialog() {
     } catch {
       alert('Invalid JSON.')
     }
+  }
+
+  const handleDeleteToken = (sid: string) => {
+    if (!window.confirm(`Delete token "${sid}"? This removes its text in every language.`)) return
+    removeLocalizationToken(sid)
   }
 
   const handleRemoveLanguage = () => {
@@ -374,6 +390,7 @@ export default function LocalizationDialog() {
                 text={currentTokens[sid] ?? ''}
                 sourceText={isBase ? undefined : (localization[sid] ?? '')}
                 onChange={(text) => setToken(sid, text)}
+                onDelete={() => handleDeleteToken(sid)}
               />
             ))}
           </div>

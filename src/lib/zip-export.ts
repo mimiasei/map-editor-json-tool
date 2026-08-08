@@ -2,6 +2,7 @@ import JSZip from 'jszip'
 import type { DialogFlow } from '@/types/dialog'
 import { serializeDialogFile } from '@/lib/dialog-file'
 import {
+  BASE_LANGUAGE,
   resolveToken,
   shippedLanguages,
   type TranslationMap,
@@ -89,15 +90,19 @@ export function collectShippedSids(
  * Build the distributable map ZIP as a Blob.
  *
  * ZIP structure:
- *   DB/dialogs/dialogs/custom_maps/{mapName}/{dialogId}.json  (one per dialog)
- *   Lang/english/texts/{mapName-snake_case}.json              (always)
- *   Lang/{lang}/texts/{mapName-snake_case}.json               (per translated language)
+ *   DB/dialogs/dialogs/custom_maps/{mapName}/{dialogId}.json     (one per dialog)
+ *   Lang/english/texts/{mapName-snake_case}.json                 (always)
+ *   Lang/{lang}/texts/{mapName-snake_case}_{lang}.json           (per translated language)
  *
  * The localization file is named after the map, not "customMaps.json" — every
  * custom map used to ship a file with that exact name, which collides with
  * (and overwrites) the same path inside the game's own Core.zip once
- * installed. STORE compression is deliberate — the engine failed to read
- * deflated entries.
+ * installed. Every non-English language additionally gets its own `_{lang}`
+ * suffix (issue #133) — without it, every language directory shipped the
+ * exact same file name, so loading one language's file in memory would
+ * overwrite another's. English keeps the bare name for backward
+ * compatibility with maps already relying on it. STORE compression is
+ * deliberate — the engine failed to read deflated entries.
  */
 export async function buildMapZipBlob(
   mapName: string,
@@ -121,7 +126,7 @@ export async function buildMapZipBlob(
   const sids = collectShippedSids(dialogs, localization)
   // English always ships; extra languages only when they carry real content.
   const langs = shippedLanguages(translations)
-  const locFileName = `${mapNameSnakeCase(mapName)}.json`
+  const mapNameBase = mapNameSnakeCase(mapName)
 
   for (const lang of langs) {
     const tokens = sids.map((sid) => ({
@@ -129,6 +134,10 @@ export async function buildMapZipBlob(
       // Untranslated SIDs fall back to English rather than shipping blanks.
       text: resolveToken(sid, lang, localization, translations),
     }))
+    // Every language directory used to get the exact same file name, so
+    // loading a second language into the game overwrote the first one in
+    // memory (issue #133) — suffix every non-English file with its language.
+    const locFileName = lang === BASE_LANGUAGE ? `${mapNameBase}.json` : `${mapNameBase}_${lang}.json`
     zip.file(
       `Lang/${lang}/texts/${locFileName}`,
       BOM + JSON.stringify({ tokens }, null, '\t'),

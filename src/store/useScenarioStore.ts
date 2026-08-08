@@ -126,6 +126,11 @@ interface ScenarioStore {
   removeDialogFlow: (id: string) => void
   setLocalizationToken: (sid: string, text: string) => void
   removeLocalizationToken: (sid: string) => void
+  /** Move a token's text (and every language's translation of it) from
+   *  oldSid to newSid in one step — used when editing an entity's naming SID
+   *  so it updates the existing token instead of leaving it orphaned behind
+   *  a freshly-created one (issue #133). No-ops the move when oldSid === newSid. */
+  renameLocalizationToken: (oldSid: string, newSid: string, newText: string) => void
   setLocalizationBatch: (tokens: Record<string, string>) => void
   setTranslationToken: (lang: string, sid: string, text: string) => void
   setTranslationBatch: (lang: string, tokens: Record<string, string>) => void
@@ -327,7 +332,35 @@ export const useScenarioStore = create<ScenarioStore>()(
     set((s) => {
       const localization = { ...s.localization }
       delete localization[sid]
-      return { localization, isDirty: true }
+      // Also strip every language's translation of this SID — previously
+      // left orphaned forever, since only the English map was ever touched.
+      const translations: TranslationMap = {}
+      for (const [lang, tokens] of Object.entries(s.translations)) {
+        const t = { ...tokens }
+        delete t[sid]
+        translations[lang] = t
+      }
+      return { localization, translations, isDirty: true }
+    }),
+
+  renameLocalizationToken: (oldSid, newSid, newText) =>
+    set((s) => {
+      if (oldSid === newSid) {
+        return { localization: { ...s.localization, [newSid]: newText }, isDirty: true }
+      }
+      const localization = { ...s.localization }
+      delete localization[oldSid]
+      localization[newSid] = newText
+
+      const translations: TranslationMap = {}
+      for (const [lang, tokens] of Object.entries(s.translations)) {
+        const t = { ...tokens }
+        const oldValue = t[oldSid]
+        delete t[oldSid]
+        if (oldValue !== undefined) t[newSid] = oldValue
+        translations[lang] = t
+      }
+      return { localization, translations, isDirty: true }
     }),
 
   setLocalizationBatch: (tokens) =>

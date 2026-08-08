@@ -338,18 +338,23 @@ export default function ScenarioTree() {
     return map
   }, [entities])
 
-  // Lookup map: SID → readable name. Spawner heroes resolve via the hero
-  // catalog (without Core.zip loaded this half stays empty, matching how every
-  // other catalog-backed control degrades); other entities show their
-  // propsName-derived displayName, if the map author set one (issue #120).
+  // Lookup map: SID → readable name. Spawner heroes prefer a custom display
+  // name once the map author sets one (issue #133 — same propsName field
+  // every other object uses, since heroes have no dedicated name table),
+  // falling back to the hero catalog's own name (without Core.zip loaded
+  // this half stays empty, matching how every other catalog-backed control
+  // degrades); other entities show their propsName-derived displayName, if
+  // the map author set one (issue #120).
   const catalogHeroes = useCatalogStore((s) => s.catalog?.heroes)
   const entityNameMap = useMemo(() => {
     const map = new Map<string, string>()
     const heroNames = catalogHeroes ? new Map(catalogHeroes.map((h) => [h.id, h.name])) : null
     for (const e of entities) {
       if (e.source === 'heroSpawner') {
-        const name = heroNames?.get(e.sid)
-        if (name && name !== e.sid) map.set(e.sid, name)
+        const custom = e.displayName && e.displayName !== e.sid ? e.displayName : undefined
+        const catalogName = heroNames?.get(e.sid)
+        const name = custom ?? (catalogName && catalogName !== e.sid ? catalogName : undefined)
+        if (name) map.set(e.sid, name)
       } else if (e.displayName && e.displayName !== e.sid) {
         map.set(e.sid, e.displayName)
       }
@@ -763,7 +768,11 @@ export default function ScenarioTree() {
                       ].filter(Boolean).join(' · ')
                       // Hero-spawner SIDs are hero catalog IDs, not authored
                       // entity names — renaming them is out of scope (map-context.ts:36).
-                      const renameable = isTauri() && entity.source !== 'heroSpawner' && !!mapFilePath
+                      // Their display name is a separate, safe-to-edit field though
+                      // (propsName, same as any other object — issue #133), so only
+                      // the rename-SID button stays gated off for heroes.
+                      const canRenameSid = isTauri() && entity.source !== 'heroSpawner' && !!mapFilePath
+                      const canSetDisplayName = isTauri() && !!mapFilePath
                       return (
                         <div
                           key={sid}
@@ -792,7 +801,7 @@ export default function ScenarioTree() {
                               {name}
                             </span>
                           )}
-                          {renameable && (
+                          {canRenameSid && (
                             <button
                               className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
                               title={`Rename "${sid}"`}
@@ -801,7 +810,7 @@ export default function ScenarioTree() {
                               <PenLine className="h-3 w-3" />
                             </button>
                           )}
-                          {renameable && (
+                          {canSetDisplayName && (
                             <button
                               className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
                               title={`Set display name for "${sid}"`}

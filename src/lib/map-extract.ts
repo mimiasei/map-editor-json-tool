@@ -315,7 +315,14 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     // but resolve via placedByKey rather than a bare id lookup regardless —
     // consistent with everything else here, and safe if that ever changes.
     const placedEntry = placedByKey.get(`${h.type ?? 0}:${entity.id}`)
-    if (placedEntry) { entity.x = placedEntry.x; entity.z = placedEntry.z }
+    if (placedEntry) {
+      entity.x = placedEntry.x
+      entity.z = placedEntry.z
+      // A hero spawner's display name (issue #133) — same generic propsName
+      // table as any other object, since the .map format has no dedicated
+      // per-hero name field the way propCities has customCityName for cities.
+      if (placedEntry.displayName) entity.displayName = placedEntry.displayName
+    }
     entities.push(entity)
   }
 
