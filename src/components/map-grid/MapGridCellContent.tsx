@@ -38,7 +38,9 @@ function toEntity(item: PlacedObject): MapEntity | null {
 /** Display-name setting never actually needs an entity SID — the write is
  *  keyed by (type, id), same as propEntities. Falls back to the object's own
  *  sid as a label so "Set display name" can work even before one is assigned
- *  (issue #127 item 4: standard for every interactable, not just named ones). */
+ *  (issue #127 item 4: standard for every interactable, not just named ones).
+ *  A city spawner's name lives in a different table entirely (issue #132) —
+ *  isCitySpawner tells SetDisplayNameDialog which one to write to. */
 function toDisplayNameEntity(item: PlacedObject): MapEntity {
   return {
     sid: item.entitySid || item.sid,
@@ -47,6 +49,7 @@ function toDisplayNameEntity(item: PlacedObject): MapEntity {
     x: item.x,
     z: item.z,
     displayName: item.displayName,
+    isCitySpawner: item.spawnerInfo?.spawnPointType === 0,
   }
 }
 
@@ -139,6 +142,10 @@ export default function MapGridCellContent({
   // guide's own design (zones exist specifically to be referenced by scripts).
   const canAssignSid = isCatalogInteractable || selected?.noCombineGeometry === true || selected?.type === 1
   const canManageEntity = !!selected && (canAssignSid || !!selected.entitySid)
+  // issue #132: a city spawner's name is stored in a different table
+  // (propCities.customCityName), not propsName — labeled distinctly here so
+  // it's not confused with the generic per-object display name.
+  const isCitySpawner = selected?.spawnerInfo?.spawnPointType === 0
   const trimmedSid = newSidInput.trim()
   const sidTaken = trimmedSid !== '' && existingSids.includes(trimmedSid)
 
@@ -206,7 +213,9 @@ export default function MapGridCellContent({
           )}
           {selected.displayName && (
             <div>
-              <p className="text-xs text-muted-foreground">Display name</p>
+              <p className="text-xs text-muted-foreground">
+                {isCitySpawner ? 'City name' : 'Display name'}
+              </p>
               <p className="text-xs truncate">{selected.displayName}</p>
             </div>
           )}
@@ -219,7 +228,7 @@ export default function MapGridCellContent({
               {onSetDisplayName && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
-                  Set display name
+                  {isCitySpawner ? 'Set city name' : 'Set display name'}
                 </Button>
               )}
             </div>
@@ -252,7 +261,7 @@ export default function MapGridCellContent({
               {onSetDisplayName && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
-                  Set display name
+                  {isCitySpawner ? 'Set city name' : 'Set display name'}
                 </Button>
               )}
             </div>
