@@ -10,6 +10,12 @@
 // token existed, which was always, since nothing ever registered one. Fixed
 // by generating a real SID from the text (see slugify.ts) and registering
 // the text as that SID's English localization token instead.
+//
+// issue #132: a city spawner's name doesn't live in propsName at all — the
+// game reads objectsProperties.propCities.customCityName instead, which
+// follows the exact same "always a SID, never literal text" rule. entity.isCitySpawner
+// (set by the caller) routes the write to the right table transparently —
+// this dialog's UI and SID-generation logic are otherwise identical either way.
 
 import { useEffect, useState } from 'react'
 import {
@@ -81,12 +87,21 @@ export default function SetDisplayNameDialog({
         throw new Error(`Entity has a non-numeric type ("${entity.type}") — cannot target it in propsName`)
       }
       const sid = generateDisplayNameSid(trimmed, existingSids)
-      await saveMapFile(mapFilePath, {
-        kind: 'setDisplayName',
-        entityType,
-        entityId: entity.id,
-        nameTitle: sid,
-      })
+      if (entity.isCitySpawner) {
+        await saveMapFile(mapFilePath, {
+          kind: 'setCityName',
+          entityType,
+          entityId: entity.id,
+          customCityName: sid,
+        })
+      } else {
+        await saveMapFile(mapFilePath, {
+          kind: 'setDisplayName',
+          entityType,
+          entityId: entity.id,
+          nameTitle: sid,
+        })
+      }
       useScenarioStore.getState().setLocalizationToken(sid, trimmed)
       onOpenChange(false)
     } catch (e) {
@@ -100,13 +115,14 @@ export default function SetDisplayNameDialog({
     <Dialog open={open} onOpenChange={(o) => { if (!saving) onOpenChange(o) }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Set display name</DialogTitle>
+          <DialogTitle>{entity.isCitySpawner ? 'Set city name' : 'Set display name'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="set-display-name">
-              Display name for <span className="font-mono">{entity.sid}</span>
+              {entity.isCitySpawner ? 'City name' : 'Display name'} for{' '}
+              <span className="font-mono">{entity.sid}</span>
             </Label>
             <Input
               id="set-display-name"

@@ -150,6 +150,16 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (!entitySidByKey.has(key)) entitySidByKey.set(key, e.sid)
   }
 
+  // Spawner enrichment (issue #125): propSpawns gives owner/spawnType/spawnPointType;
+  // propCities/propHeroes (read here, ahead of their other use below) give faction/hero.
+  const propCities = b2.objectsProperties?.propCities ?? []
+  const propHeroes = b2.objectsProperties?.propHeroes ?? []
+  const factionByKey = new Map<string, string>()
+  for (const c of propCities) {
+    if (c.id === undefined || typeof c.factionSid !== 'string' || !c.factionSid.trim()) continue
+    factionByKey.set(`${c.type ?? ''}:${c.id}`, c.factionSid)
+  }
+
   // Custom display names (objectsProperties.propsName, issue #120) — keyed by
   // the same (type, id) pair propEntities uses to join into objects[]. The
   // game itself doesn't dedupe this table (observed in a real sample map with
@@ -161,6 +171,15 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     const key = `${p.type ?? ''}:${p.id}`
     if (!displayNameByKey.has(key)) displayNameByKey.set(key, p.nameTitle)
   }
+  // A city spawner's display name lives in propCities.customCityName instead
+  // — propsName has no effect on a city's actual in-game name at all
+  // (confirmed directly with an Unfrozen developer, issue #132). Overrides
+  // any propsName entry for the same key, since customCityName is the field
+  // that's actually functional for these objects.
+  for (const c of propCities) {
+    if (typeof c.customCityName !== 'string' || !c.customCityName.trim() || c.id === undefined) continue
+    displayNameByKey.set(`${c.type ?? ''}:${c.id}`, c.customCityName)
+  }
 
   // "No Combine Geometry" (objectsProperties.propNoCombineGeometries, issue #125) —
   // same (type, id) join key as everything else.
@@ -169,16 +188,6 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (g.id === undefined || typeof g.isNoCombineGeometry !== 'boolean') continue
     const key = `${g.type ?? ''}:${g.id}`
     if (!noCombineGeometryByKey.has(key)) noCombineGeometryByKey.set(key, g.isNoCombineGeometry)
-  }
-
-  // Spawner enrichment (issue #125): propSpawns gives owner/spawnType/spawnPointType;
-  // propCities/propHeroes (read here, ahead of their other use below) give faction/hero.
-  const propCities = b2.objectsProperties?.propCities ?? []
-  const propHeroes = b2.objectsProperties?.propHeroes ?? []
-  const factionByKey = new Map<string, string>()
-  for (const c of propCities) {
-    if (c.id === undefined || typeof c.factionSid !== 'string' || !c.factionSid.trim()) continue
-    factionByKey.set(`${c.type ?? ''}:${c.id}`, c.factionSid)
   }
   const heroSidByKey = new Map<string, string>()
   for (const h of propHeroes) {
@@ -251,6 +260,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
         entity.x = placedEntry.x
         entity.z = placedEntry.z
         if (placedEntry.displayName) entity.displayName = placedEntry.displayName
+        if (placedEntry.spawnerInfo?.spawnPointType === 0) entity.isCitySpawner = true
       }
       return entity
     })

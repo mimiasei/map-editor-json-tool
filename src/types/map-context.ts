@@ -41,6 +41,11 @@ export interface MapEntity {
    * the literal string "LOC:..." is what the player sees.
    */
   displayName?: string
+  /** True when this entity is a city spawner — its display name is stored in
+   *  a different table (objectsProperties.propCities.customCityName), not
+   *  propsName.nameTitle like every other object (issue #132). Lets the
+   *  "Set display name" flow route the write to the right place. */
+  isCitySpawner?: boolean
 }
 
 export interface HeroAssignment {

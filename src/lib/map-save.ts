@@ -18,6 +18,7 @@ import {
   setNoCombineGeometry,
   setSpawnerPlayerType,
   upsertPropPortals,
+  setCustomCityName,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -32,6 +33,7 @@ export type MapSaveEdit =
   | { kind: 'setNoCombineGeometry'; entityType: number; entityId: number; value: boolean }
   | { kind: 'setSpawnerPlayerType'; entityType: number; entityId: number; spawnType: 0 | 1 | 2 }
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
+  | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
  *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
@@ -106,6 +108,8 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
       targetIdx: edit.targetIdx,
       isActive: edit.isActive,
     })
+  } else if (edit?.kind === 'setCityName') {
+    newChunks[1] = setCustomCityName(newChunks[1], edit.entityType, edit.entityId, edit.customCityName)
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -188,6 +192,15 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const activeOk = edit.isActive === undefined || match?.isActive === edit.isActive
     if (!match || !targetOk || !activeOk) {
       throw new Error('Verification failed: portal target not reflected in the rebuilt propPortals table')
+    }
+  } else if (edit?.kind === 'setCityName') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propCities?: Array<{ type?: number | string; id?: number; customCityName?: string }> }
+    }
+    const entries = block2.objectsProperties?.propCities ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.customCityName !== edit.customCityName) {
+      throw new Error('Verification failed: city name not reflected in the rebuilt propCities table')
     }
   }
 

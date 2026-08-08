@@ -431,6 +431,47 @@ export function setSpawnerPlayerType(
   }
 }
 
+// ─── City name (objectsProperties.propCities.customCityName) ───────────────
+// A separate field from propsName, confirmed two ways: a real Unfrozen
+// sample map (Gorges_of_Discord.map) has "undead_city_name_12" here — a real
+// SID, not literal text — while propsName's nameTitle for that same object
+// is unset entirely; and directly from an Unfrozen developer, who confirmed
+// the game reads THIS field for a city's displayed name, resolved as a
+// localization SID lookup exactly like propsName — nameTitle has no effect
+// on a city's actual in-game name at all. A real map (Stormlight.map) was
+// found with literal text ("Kholinar") written directly here — the same
+// "LOC:<text>" failure mode issue #125 item 6 already fixed for propsName,
+// just on a different table nobody had connected the display-name feature
+// to yet (issue #132).
+interface PropCitiesNameEntry {
+  type?: number | string
+  id?: number
+  customCityName?: string
+}
+
+/**
+ * Set a city spawner's display-name SID. Requires an existing propCities
+ * entry for (entityType, entityId) — a real city spawner always has one
+ * (it's how this editor knows it's a city at all, via the faction/spawner
+ * enrichment in map-extract.ts); refuses to fabricate a new entry that would
+ * be missing every other required field (faction, buildings, etc.).
+ */
+export function setCustomCityName(chunk: Uint8Array, entityType: number, entityId: number, customCityName: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propCities')
+
+  const entries = JSON.parse(span) as PropCitiesNameEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propCities entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured city spawner`)
+  }
+  existing.customCityName = customCityName
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
