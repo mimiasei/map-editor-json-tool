@@ -165,12 +165,20 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   // game itself doesn't dedupe this table (observed in a real sample map with
   // 3 literal duplicate entries for one id) — first match wins, matching the
   // write side's policy in map-write.ts.
-  const displayNameByKey = new Map<string, string>()
+  //
+  // Kept separate from the city-overriding merge below (issue #135) — a hero
+  // spawner shares the exact same (type, id) as its co-located city spawner,
+  // so if the hero-entity loop read the merged map, its own propsName entry
+  // would be invisibly masked by the city's customCityName every time. This
+  // raw map is what a hero's OWN display name is read from; the merged one
+  // below remains correct for the underlying object/city's own identity.
+  const rawPropsNameByKey = new Map<string, string>()
   for (const p of b2.objectsProperties?.propsName ?? []) {
     if (typeof p.nameTitle !== 'string' || !p.nameTitle.trim() || p.id === undefined) continue
     const key = `${p.type ?? ''}:${p.id}`
-    if (!displayNameByKey.has(key)) displayNameByKey.set(key, p.nameTitle)
+    if (!rawPropsNameByKey.has(key)) rawPropsNameByKey.set(key, p.nameTitle)
   }
+  const displayNameByKey = new Map(rawPropsNameByKey)
   // A city spawner's display name lives in propCities.customCityName instead
   // — propsName has no effect on a city's actual in-game name at all
   // (confirmed directly with an Unfrozen developer, issue #132). Overrides
@@ -321,7 +329,12 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
       // A hero spawner's display name (issue #133) — same generic propsName
       // table as any other object, since the .map format has no dedicated
       // per-hero name field the way propCities has customCityName for cities.
-      if (placedEntry.displayName) entity.displayName = placedEntry.displayName
+      // Reads the RAW propsName-only map, not placedEntry.displayName — that
+      // one's city-overridden for this exact (type, id), which used to mask
+      // the hero's own name with its co-located city's customCityName
+      // (issue #135).
+      const heroOwnName = rawPropsNameByKey.get(`${h.type ?? 0}:${entity.id}`)
+      if (heroOwnName) entity.displayName = heroOwnName
     }
     entities.push(entity)
   }

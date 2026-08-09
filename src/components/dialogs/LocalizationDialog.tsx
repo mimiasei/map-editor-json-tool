@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import type { DialogFlow } from '@/types/dialog'
 import type { Quest } from '@/types/scenario'
 import {
@@ -65,6 +66,9 @@ function TokenRow({
   sid,
   text,
   sourceText,
+  isDialogSid,
+  isQuestSid,
+  ownerSid,
   onChange,
   onDelete,
 }: {
@@ -72,6 +76,13 @@ function TokenRow({
   text: string
   /** English text, shown as the translation source. Undefined on the English tab. */
   sourceText?: string
+  /** Referenced by a dialog slide/answer/speaker title — issue #135 item 2. */
+  isDialogSid?: boolean
+  /** A quest or sub-quest's own "name" field — issue #135 item 2. */
+  isQuestSid?: boolean
+  /** This is a naming SID (a display name set on a map entity) — present
+   *  when known, giving the SID of the entity it names (issue #135 item 3). */
+  ownerSid?: string
   onChange: (text: string) => void
   /** Deletes the token everywhere (English + every language) — issue #133. */
   onDelete: () => void
@@ -80,8 +91,23 @@ function TokenRow({
 
   return (
     <div className="group space-y-1 rounded border border-border p-2 bg-card">
-      <div className="flex items-center gap-2">
-        <code className="text-xs font-mono text-muted-foreground flex-1 truncate">{sid}</code>
+      <div className="flex items-center gap-2 flex-wrap">
+        <code className="text-xs font-mono text-muted-foreground flex-1 min-w-0 truncate">{sid}</code>
+        {isDialogSid && (
+          <Badge variant="outline" className="text-xs shrink-0 text-blue-500 border-blue-500/40">
+            Dialog
+          </Badge>
+        )}
+        {isQuestSid && (
+          <Badge variant="outline" className="text-xs shrink-0 text-purple-500 border-purple-500/40">
+            Quest
+          </Badge>
+        )}
+        {ownerSid !== undefined && (
+          <Badge variant="outline" className="text-xs shrink-0 text-emerald-500 border-emerald-500/40">
+            Naming SID → <span className="font-mono ml-1">{ownerSid}</span>
+          </Badge>
+        )}
         {missing && (
           <Badge variant="secondary" className="text-amber-500 text-xs shrink-0">
             missing
@@ -167,6 +193,20 @@ export default function LocalizationDialog() {
 
   const dialogSids = useMemo(() => collectDialogSids(dialogs), [dialogs])
   const questSids = useMemo(() => collectQuestNameSids(scenario.quests), [scenario.quests])
+
+  // Naming SID → the entity it names (issue #135 item 3) — every entity's
+  // displayName is itself a naming SID once one is set, so this is just an
+  // inverted lookup over the already-extracted entity list. Correctly
+  // distinguishes cities/heroes/objects since issue #135 item 1 fixed a
+  // hero's own name from being masked by its co-located city's.
+  const mapEntities = useMapContextStore((s) => s.context?.entities)
+  const nsidToOwnerSid = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const e of mapEntities ?? []) {
+      if (e.displayName) map.set(e.displayName, e.sid)
+    }
+    return map
+  }, [mapEntities])
 
   // All known SIDs (union of dialog + quest + existing English keys). The English
   // map defines the token set — translations never introduce new SIDs.
@@ -389,6 +429,9 @@ export default function LocalizationDialog() {
                 sid={sid}
                 text={currentTokens[sid] ?? ''}
                 sourceText={isBase ? undefined : (localization[sid] ?? '')}
+                isDialogSid={dialogSids.has(sid)}
+                isQuestSid={questSids.has(sid)}
+                ownerSid={nsidToOwnerSid.get(sid)}
                 onChange={(text) => setToken(sid, text)}
                 onDelete={() => handleDeleteToken(sid)}
               />

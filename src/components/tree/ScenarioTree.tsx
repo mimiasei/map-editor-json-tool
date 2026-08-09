@@ -786,18 +786,27 @@ export default function ScenarioTree() {
                           onClick={usage ? () => navigateToUsage(usage) : undefined}
                           title={titleText || undefined}
                         >
+                          {/* issue #135 item 4: neither span grows to fill unused
+                              row width — this lets the icons that follow sit right
+                              next to the actual end of the text instead of pinned
+                              to the row's far edge with a gap. min-w-0 is what lets
+                              `name` (the one that gives way first) actually shrink
+                              below its own content width when the row is too
+                              narrow for everything — without it flexbox's default
+                              min-width:auto blocks truncate from ever kicking in,
+                              and the icons get pushed off the visible edge instead. */}
                           <span
                             className={cn(
-                              'truncate font-mono',
+                              'truncate min-w-0 font-mono',
                               usage && 'font-bold',
-                              name ? 'shrink-0 max-w-[55%]' : 'flex-1',
+                              name ? 'shrink-0 max-w-[55%]' : 'shrink',
                             )}
                             style={labelStyle}
                           >
                             {sid}
                           </span>
                           {name && (
-                            <span className="truncate flex-1 text-muted-foreground/70">
+                            <span className="truncate min-w-0 text-muted-foreground/70">
                               {name}
                             </span>
                           )}
