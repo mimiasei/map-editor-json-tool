@@ -27,6 +27,22 @@ import type { ScenarioFile } from '@/types/scenario'
 // creaturePlacements, artifactPlacements) derives from its output rather than
 // re-deriving its own id→node lookup.
 
+/** Every (type,id)-keyed lookup buildPlacedObjects() applies to each instance
+ *  it builds — bundled into one object since positional params kept growing
+ *  one per new objectsProperties table discovered (up to 6 before this). */
+export interface PlacedObjectEnrichment {
+  entitySidByKey: Map<string, string>
+  displayNameByKey: Map<string, string>
+  noCombineGeometryByKey: Map<string, boolean>
+  spawnerInfoByKey: Map<string, PlacedObject['spawnerInfo']>
+  descriptionByKey: Map<string, string>
+  rewardParamsByKey: Map<string, string[]>
+  activeByKey: Map<string, boolean>
+  ownerByKey: Map<string, number>
+  markerActiveByKey: Map<string, boolean>
+  markerDeleteAfterTriggerByKey: Map<string, boolean>
+}
+
 /**
  * Every placed object/squad/marker instance on the map, enriched with its
  * propEntities SID and propsName display name where set. Never throws — an
@@ -36,11 +52,7 @@ import type { ScenarioFile } from '@/types/scenario'
 export function buildPlacedObjects(
   b2: RawMapBlock2,
   nodeToCoord: (node: number) => { x: number; z: number } | undefined,
-  entitySidByKey: Map<string, string>,
-  displayNameByKey: Map<string, string>,
-  noCombineGeometryByKey: Map<string, boolean>,
-  spawnerInfoByKey: Map<string, PlacedObject['spawnerInfo']>,
-  descriptionByKey: Map<string, string>,
+  enrichment: PlacedObjectEnrichment,
 ): PlacedObject[] {
   const placed: PlacedObject[] = []
 
@@ -51,11 +63,16 @@ export function buildPlacedObjects(
     placed.push({
       key, type, id, sid, node, ...coord,
       rotation, level,
-      entitySid: entitySidByKey.get(key),
-      displayName: displayNameByKey.get(key),
-      noCombineGeometry: noCombineGeometryByKey.get(key),
-      spawnerInfo: spawnerInfoByKey.get(key),
-      description: descriptionByKey.get(key),
+      entitySid: enrichment.entitySidByKey.get(key),
+      displayName: enrichment.displayNameByKey.get(key),
+      noCombineGeometry: enrichment.noCombineGeometryByKey.get(key),
+      spawnerInfo: enrichment.spawnerInfoByKey.get(key),
+      description: enrichment.descriptionByKey.get(key),
+      rewardParams: enrichment.rewardParamsByKey.get(key),
+      isActive: enrichment.activeByKey.get(key),
+      owner: enrichment.ownerByKey.get(key),
+      markerActive: enrichment.markerActiveByKey.get(key),
+      markerDeleteAfterTrigger: enrichment.markerDeleteAfterTriggerByKey.get(key),
     })
   }
 
@@ -209,6 +226,36 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     const key = `${g.type ?? ''}:${g.id}`
     if (!noCombineGeometryByKey.has(key)) noCombineGeometryByKey.set(key, g.isNoCombineGeometry)
   }
+
+  // Reward-slot config, generic activation, ownership, and zone state — all
+  // read-only in the Map Grid for now (no write path), confirmed against
+  // real maps in plans/testItems-props-reference.md.
+  const rewardParamsByKey = new Map<string, string[]>()
+  for (const r of b2.objectsProperties?.propRewardParams ?? []) {
+    if (r.id === undefined || !Array.isArray(r.parameters)) continue
+    const key = `${r.type ?? ''}:${r.id}`
+    if (!rewardParamsByKey.has(key)) rewardParamsByKey.set(key, r.parameters)
+  }
+  const activeByKey = new Map<string, boolean>()
+  for (const a of b2.objectsProperties?.propActivations ?? []) {
+    if (a.id === undefined || typeof a.isActive !== 'boolean') continue
+    const key = `${a.type ?? ''}:${a.id}`
+    if (!activeByKey.has(key)) activeByKey.set(key, a.isActive)
+  }
+  const ownerByKey = new Map<string, number>()
+  for (const o of b2.objectsProperties?.propOwners ?? []) {
+    if (o.id === undefined || typeof o.owner !== 'number') continue
+    const key = `${o.type ?? ''}:${o.id}`
+    if (!ownerByKey.has(key)) ownerByKey.set(key, o.owner)
+  }
+  const markerActiveByKey = new Map<string, boolean>()
+  const markerDeleteAfterTriggerByKey = new Map<string, boolean>()
+  for (const m of b2.objectsProperties?.propMarkers ?? []) {
+    if (m.id === undefined) continue
+    const key = `${m.type ?? ''}:${m.id}`
+    if (typeof m.isActivate === 'boolean' && !markerActiveByKey.has(key)) markerActiveByKey.set(key, m.isActivate)
+    if (typeof m.isDelete === 'boolean' && !markerDeleteAfterTriggerByKey.has(key)) markerDeleteAfterTriggerByKey.set(key, m.isDelete)
+  }
   const heroSidByKey = new Map<string, string>()
   for (const h of propHeroes) {
     if (h.id === undefined || typeof h.heroSid !== 'string' || !h.heroSid.trim()) continue
@@ -229,9 +276,18 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
 
   // Every placed object/squad/marker, correctly disambiguated by (type, id) —
   // see buildPlacedObjects() above for why this replaces a plain id→node map.
-  const placedObjects = buildPlacedObjects(
-    b2, nodeToCoord, entitySidByKey, displayNameByKey, noCombineGeometryByKey, spawnerInfoByKey, descriptionByKey,
-  )
+  const placedObjects = buildPlacedObjects(b2, nodeToCoord, {
+    entitySidByKey,
+    displayNameByKey,
+    noCombineGeometryByKey,
+    spawnerInfoByKey,
+    descriptionByKey,
+    rewardParamsByKey,
+    activeByKey,
+    ownerByKey,
+    markerActiveByKey,
+    markerDeleteAfterTriggerByKey,
+  })
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))
 
   // Portal linkage (issue #127) — a genuine two-pass enrichment, unlike the

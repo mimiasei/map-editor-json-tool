@@ -23,8 +23,13 @@ export interface MapGridSettings {
   iconImagesEnabled: boolean
   /** 1px lines between every cell, on/off — always the same fixed thickness. */
   showGridLines: boolean
-  /** 0 = off; otherwise the on-screen thickness (px) of the category-colored
-   *  border drawn around each occupied cell. */
+  /** 0 = off (icon fills the whole tile); otherwise the number of screen
+   *  pixels the icon is inset by on each side, revealing that much of the
+   *  always-on canvas swatch underneath — which is already drawn in the
+   *  tile's category color, so shrinking the icon is what creates a
+   *  colored "border" effect, not an actual CSS border (a previous version
+   *  of this drew one directly, but it never controlled what actually
+   *  reads as a border — the icon's own fixed size did). */
   cellBorderThickness: number
 }
 
