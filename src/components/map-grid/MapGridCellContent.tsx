@@ -12,13 +12,16 @@ import { useEffect, useState } from 'react'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { groupOf, GRID_GROUP_LABELS } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
+import { formatRewardParam } from '@/lib/map-grid/reward-params'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { PenLine, Tag } from 'lucide-react'
 
@@ -210,6 +213,17 @@ export default function MapGridCellContent({
             <p className="text-xs text-muted-foreground">Object SID</p>
             <p className="font-mono text-xs truncate">{selected.sid}</p>
           </div>
+          {selected.isActive === false && (
+            <Badge variant="secondary" className="text-amber-500 text-xs">
+              Inactive at start
+            </Badge>
+          )}
+          {selected.owner !== undefined && (
+            <div>
+              <p className="text-xs text-muted-foreground">Owner</p>
+              <p className="text-xs">{selected.owner === -1 ? 'Neutral' : `Player ${selected.owner}`}</p>
+            </div>
+          )}
           {selected.entitySid && (
             <div>
               <p className="text-xs text-muted-foreground">Entity SID</p>
@@ -420,6 +434,48 @@ export default function MapGridCellContent({
                   <Label htmlFor="mgc-portal-highlight" className="text-xs cursor-pointer">
                     Highlight connected portal on grid
                   </Label>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selected.rewardParams && selected.rewardParams.length > 0 && (
+            <div className="space-y-1 pt-2 mt-1 border-t border-border/50">
+              <p className="text-xs font-semibold text-muted-foreground">Rewards</p>
+              <ul className="text-xs list-disc list-inside space-y-0.5">
+                {selected.rewardParams.map((p, i) => (
+                  <li key={i}>{formatRewardParam(p, catalog)}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {selected.type === 1 && (selected.markerActive !== undefined || selected.markerDeleteAfterTrigger !== undefined) && (
+            <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+              <p className="text-xs font-semibold text-muted-foreground">Zone</p>
+              {selected.markerActive !== undefined && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Switch id="mgc-marker-active" checked={selected.markerActive} disabled />
+                    <Label htmlFor="mgc-marker-active" className="text-xs">Active</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    The official editor's own "Activate" checkbox. When off, this zone
+                    doesn't interrupt hero movement or fire its actions at all — it can be
+                    turned back on later via the SetActiveMarker script action.
+                  </p>
+                </div>
+              )}
+              {selected.markerDeleteAfterTrigger !== undefined && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Switch id="mgc-marker-delete" checked={selected.markerDeleteAfterTrigger} disabled />
+                    <Label htmlFor="mgc-marker-delete" className="text-xs">Delete after trigger</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Whether this zone removes itself automatically the first time it
+                    fires. When off, the zone remains on the map and can fire again.
+                  </p>
                 </div>
               )}
             </div>

@@ -161,6 +161,27 @@ export interface PlacedObject {
    *  grid show the unit's real icon instead of the squad's own (non-creature)
    *  sid. Present only for type-2 (squad) placed objects with resolvable unitProps. */
   firstUnitSid?: string
+  /** Enrichment: raw objectsProperties.propRewardParams.parameters for this
+   *  instance, undecoded — each entry is "-" (unfilled slot),
+   *  "resourceSid:amount", or a bare artifact/skill sid. Decoding needs
+   *  catalog access this module doesn't have; see
+   *  src/lib/map-grid/reward-params.ts. */
+  rewardParams?: string[]
+  /** Enrichment: objectsProperties.propActivations.isActive — whether this
+   *  instance starts active. Absent (not just true) is the common case;
+   *  only meaningfully worth surfacing when explicitly false. */
+  isActive?: boolean
+  /** Enrichment: objectsProperties.propOwners.owner — explicit player-index
+   *  ownership override, when set. -1 observed meaning neutral/unowned. */
+  owner?: number
+  /** Enrichment: objectsProperties.propMarkers, only ever present for
+   *  type === 1 (zones) — the official editor's own "Activate" checkbox.
+   *  See markerDeleteAfterTrigger's comment for the paired field. */
+  markerActive?: boolean
+  /** Enrichment: objectsProperties.propMarkers.isDelete — the official
+   *  editor's "Delete after trigger" checkbox: whether this zone removes
+   *  itself automatically the first time it fires. */
+  markerDeleteAfterTrigger?: boolean
 }
 
 export interface MapContext {

@@ -132,6 +132,26 @@ export interface RawMapBlock2 {
       targetIdx?: number
       isActive?: boolean
     }>
+    /** Reward-slot configuration, found on "custom_*" objects and some
+     *  others. Each string in `parameters` is "-" (unfilled slot),
+     *  "resourceSid:amount" (e.g. "gold:3000"), or a bare artifact/skill sid
+     *  — indistinguishable from each other without a catalog lookup, see
+     *  src/lib/map-grid/reward-params.ts. Confirmed against real maps in
+     *  plans/testItems-props-reference.md. */
+    propRewardParams?: Array<{ type?: string; id?: number; parameters?: string[] }>
+    /** Generic per-instance active/inactive toggle — unrelated to
+     *  propPortals' own isActive or propMarkers' isActivate below; a
+     *  separate table, seen on plain objects (up to 208 uses in one map). */
+    propActivations?: Array<{ type?: string; id?: number; isActive?: boolean }>
+    /** Explicit player-index ownership override. -1 observed meaning
+     *  neutral/unowned. */
+    propOwners?: Array<{ type?: string; id?: number; owner?: number }>
+    /** Trigger-zone (type===1 marker) state — the official editor's own
+     *  "Activate" and "Delete after trigger" checkboxes. See the official
+     *  guide: an inactive zone ("Activate" off) doesn't interrupt hero
+     *  movement or fire its actions at all; "Delete after trigger" removes
+     *  the zone automatically the first time it fires. */
+    propMarkers?: Array<{ type?: string; id?: number; isActivate?: boolean; isDelete?: boolean }>
     [key: string]: unknown
   }
   [key: string]: unknown
