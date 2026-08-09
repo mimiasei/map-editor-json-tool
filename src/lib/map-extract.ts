@@ -40,6 +40,7 @@ export function buildPlacedObjects(
   displayNameByKey: Map<string, string>,
   noCombineGeometryByKey: Map<string, boolean>,
   spawnerInfoByKey: Map<string, PlacedObject['spawnerInfo']>,
+  descriptionByKey: Map<string, string>,
 ): PlacedObject[] {
   const placed: PlacedObject[] = []
 
@@ -54,6 +55,7 @@ export function buildPlacedObjects(
       displayName: displayNameByKey.get(key),
       noCombineGeometry: noCombineGeometryByKey.get(key),
       spawnerInfo: spawnerInfoByKey.get(key),
+      description: descriptionByKey.get(key),
     })
   }
 
@@ -160,25 +162,35 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     factionByKey.set(`${c.type ?? ''}:${c.id}`, c.factionSid)
   }
 
-  // Custom display names (objectsProperties.propsName, issue #120) — keyed by
-  // the same (type, id) pair propEntities uses to join into objects[]. The
-  // game itself doesn't dedupe this table (observed in a real sample map with
-  // 3 literal duplicate entries for one id) — first match wins, matching the
-  // write side's policy in map-write.ts.
+  // Custom display names + descriptions (objectsProperties.propsName, issue
+  // #120) — keyed by the same (type, id) pair propEntities uses to join into
+  // objects[]. The game itself doesn't dedupe this table (observed in a real
+  // sample map with 3 literal duplicate entries for one id) — first match
+  // wins, matching the write side's policy in map-write.ts.
   //
   // Kept separate from the city-overriding merge below (issue #135) — a hero
   // spawner shares the exact same (type, id) as its co-located city spawner,
   // so if the hero-entity loop read the merged map, its own propsName entry
   // would be invisibly masked by the city's customCityName every time. This
-  // raw map is what a hero's OWN display name is read from; the merged one
-  // below remains correct for the underlying object/city's own identity.
-  const rawPropsNameByKey = new Map<string, string>()
+  // raw map is what a hero's OWN name/description are read from; the merged
+  // one below remains correct for the underlying object/city's own identity
+  // (there's no per-city override for description, so descriptionByKey below
+  // is used as-is everywhere, never merged/overridden).
+  const rawPropsNameByKey = new Map<string, { nameTitle?: string; description?: string }>()
   for (const p of b2.objectsProperties?.propsName ?? []) {
-    if (typeof p.nameTitle !== 'string' || !p.nameTitle.trim() || p.id === undefined) continue
+    if (p.id === undefined) continue
     const key = `${p.type ?? ''}:${p.id}`
-    if (!rawPropsNameByKey.has(key)) rawPropsNameByKey.set(key, p.nameTitle)
+    if (rawPropsNameByKey.has(key)) continue
+    const nameTitle = typeof p.nameTitle === 'string' && p.nameTitle.trim() ? p.nameTitle : undefined
+    const description = typeof p.description === 'string' && p.description.trim() ? p.description : undefined
+    if (nameTitle || description) rawPropsNameByKey.set(key, { nameTitle, description })
   }
-  const displayNameByKey = new Map(rawPropsNameByKey)
+  const displayNameByKey = new Map<string, string>()
+  const descriptionByKey = new Map<string, string>()
+  for (const [key, v] of rawPropsNameByKey) {
+    if (v.nameTitle) displayNameByKey.set(key, v.nameTitle)
+    if (v.description) descriptionByKey.set(key, v.description)
+  }
   // A city spawner's display name lives in propCities.customCityName instead
   // — propsName has no effect on a city's actual in-game name at all
   // (confirmed directly with an Unfrozen developer, issue #132). Overrides
@@ -218,7 +230,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   // Every placed object/squad/marker, correctly disambiguated by (type, id) —
   // see buildPlacedObjects() above for why this replaces a plain id→node map.
   const placedObjects = buildPlacedObjects(
-    b2, nodeToCoord, entitySidByKey, displayNameByKey, noCombineGeometryByKey, spawnerInfoByKey,
+    b2, nodeToCoord, entitySidByKey, displayNameByKey, noCombineGeometryByKey, spawnerInfoByKey, descriptionByKey,
   )
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))
 
@@ -268,6 +280,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
         entity.x = placedEntry.x
         entity.z = placedEntry.z
         if (placedEntry.displayName) entity.displayName = placedEntry.displayName
+        if (placedEntry.description) entity.description = placedEntry.description
         if (placedEntry.spawnerInfo?.spawnPointType === 0) entity.isCitySpawner = true
       }
       return entity
@@ -326,15 +339,29 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (placedEntry) {
       entity.x = placedEntry.x
       entity.z = placedEntry.z
-      // A hero spawner's display name (issue #133) — same generic propsName
-      // table as any other object, since the .map format has no dedicated
-      // per-hero name field the way propCities has customCityName for cities.
-      // Reads the RAW propsName-only map, not placedEntry.displayName — that
-      // one's city-overridden for this exact (type, id), which used to mask
-      // the hero's own name with its co-located city's customCityName
-      // (issue #135).
-      const heroOwnName = rawPropsNameByKey.get(`${h.type ?? 0}:${entity.id}`)
-      if (heroOwnName) entity.displayName = heroOwnName
+      // A hero spawner's name/description read the RAW propsName-only map,
+      // not placedEntry.displayName/.description — those are city-overridden
+      // for this exact (type, id), which used to mask a hero's own name with
+      // its co-located city's customCityName (issue #135).
+      //
+      // Whether the game actually reads propsName for a hero-spawner AT ALL
+      // is unconfirmed and, per real data, doubtful: checked 25 real hero
+      // placements across 15 shipped/campaign maps (including the official
+      // story campaign in maps/Story_maps/) and NONE ever has a propsName
+      // entry. The mechanism the campaign actually uses for a custom-named
+      // hero is a wholly separate hero *definition*
+      // (Core/DB/heroes/campaign/*.json, its own unique heroSid — e.g.
+      // "campaign_M4_hero_preacher") plus a matching entry in
+      // Core/Lang/*/texts/heroInfo.json keyed by that heroSid — never a
+      // per-placement propsName override. This app still writes/reads
+      // propsName here because it's the only per-instance field that exists
+      // for it to use, not because it's confirmed to work in-game — the
+      // dialog surfaces this caveat directly to the user (see
+      // SetDisplayNameDialog.tsx). See plans/testItems-props-reference.md
+      // for the full investigation.
+      const heroOwnProps = rawPropsNameByKey.get(`${h.type ?? 0}:${entity.id}`)
+      if (heroOwnProps?.nameTitle) entity.displayName = heroOwnProps.nameTitle
+      if (heroOwnProps?.description) entity.description = heroOwnProps.description
     }
     entities.push(entity)
   }

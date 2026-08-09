@@ -216,22 +216,37 @@ interface PropsNameEntry {
 }
 
 /**
- * Set (or insert) the custom display name for one map object, identified by
- * its `(type, id)` pair from propEntities — the same pair used to cross-
- * reference `objects[]`. If multiple entries already exist for that pair
- * (observed in one real sample map — the game itself does not dedupe this
- * table), only the first is updated; the rest are left as-is.
+ * Set (or insert) the custom display name and/or description for one map
+ * object, identified by its `(type, id)` pair from propEntities — the same
+ * pair used to cross-reference `objects[]`. If multiple entries already
+ * exist for that pair (observed in one real sample map — the game itself
+ * does not dedupe this table), only the first is updated; the rest are left
+ * as-is. A field omitted from `patch` is left untouched on an existing
+ * entry (so a name-only save never clobbers an existing description, and
+ * vice versa) — a brand-new entry defaults any omitted field to `""`.
  */
-export function upsertPropsName(chunk: Uint8Array, entityType: number, entityId: number, nameTitle: string): Uint8Array {
+export function upsertPropsName(
+  chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  patch: { nameTitle?: string; description?: string },
+): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propsName')
 
   const entries = JSON.parse(span) as PropsNameEntry[]
   const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
   if (existing) {
-    existing.nameTitle = nameTitle
+    if (patch.nameTitle !== undefined) existing.nameTitle = patch.nameTitle
+    if (patch.description !== undefined) existing.description = patch.description
   } else {
-    entries.push({ type: entityType, id: entityId, nameTitle, tagTitle: '', description: '' })
+    entries.push({
+      type: entityType,
+      id: entityId,
+      nameTitle: patch.nameTitle ?? '',
+      tagTitle: '',
+      description: patch.description ?? '',
+    })
   }
 
   const patchedSpan = JSON.stringify(entries)
