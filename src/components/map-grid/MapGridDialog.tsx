@@ -419,6 +419,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const effectiveCellPx = BASE_CELL_PX * transform.scale
   const showIcons = effectiveCellPx >= ICON_LOD_THRESHOLD_PX
 
+  // "Cell border thickness" was previously a CSS border drawn on the icon
+  // cell — but the icon <img> itself was always a fixed 24px regardless of
+  // cell size, so what actually reads as a colored border around each icon
+  // (the always-on canvas swatch behind it, in the tile's category color,
+  // showing through the gap) was never controlled by that setting at all.
+  // Fixed by sizing the icon itself relative to the current on-screen cell
+  // size instead: 0 thickness now genuinely means "icon fills the entire
+  // tile," and shrinking it by `cellBorderThickness` screen pixels per side
+  // reveals exactly that much of the swatch color as a frame. Divided by
+  // transform.scale because this size is itself a child of the pan/zoom
+  // CSS transform — expressing it in these pre-scale units is what keeps
+  // the frame a constant physical size on screen at any zoom level, same
+  // as the grid-line/map-edge overlays below.
+  const iconSize = Math.max(4, BASE_CELL_PX - (2 * settings.cellBorderThickness) / transform.scale)
+
   const visibleRange = useMemo(
     () => getVisibleRange(
       { translateX: transform.x, translateY: transform.y, scale: transform.scale },
@@ -739,7 +754,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 {showIcons && visibleCells.map(({ x, z, node, pick }) => {
                   const name = pick.primary.displayName || pick.primary.entitySid || pick.primary.sid
                   const visual = resolveGridCellVisual(pick.primary, catalog)
-                  const iconSize = Math.min(BASE_CELL_PX - 4, 24)
                   return (
                     <div
                       key={node}
@@ -750,9 +764,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         width: BASE_CELL_PX,
                         height: BASE_CELL_PX,
                         boxSizing: 'border-box',
-                        border: settings.cellBorderThickness > 0
-                          ? `${settings.cellBorderThickness}px solid ${GROUP_COLORS[pick.group]}`
-                          : undefined,
                       }}
                       onClick={(e) => { e.stopPropagation(); selectNode(node) }}
                     >
