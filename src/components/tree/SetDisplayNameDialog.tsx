@@ -29,6 +29,20 @@
 // which false-fired on any auto-generated SID with a collision suffix like
 // `_name_sid_2`) is gone, replaced by a plain first-time note gated on
 // genuine first-time state (no prior nameTitle/customCityName at all).
+//
+// Later investigation (plans/testItems-props-reference.md) found propsName
+// has a third meaningful field, `description`, following the exact same
+// "literal text or LOC:<sid> reference" rule as nameTitle — and, separately,
+// checked 25 real hero placements across 15 shipped/campaign maps and found
+// NONE ever use propsName at all for a hero-spawner. The real mechanism the
+// official campaign uses for a custom-named hero is a wholly separate hero
+// *definition* (a new Core/DB/heroes/campaign/*.json + a matching
+// Core/Lang/*/texts/heroInfo.json entry), not a per-placement override —
+// this app has no way to author that, so this dialog now: (a) exposes
+// `description` too, but only for heroes, since that's the only place a
+// second block of freeform text is actually meaningful here, and (b) says
+// so plainly whenever the entity being edited is a hero, rather than
+// implying this is a confirmed, working mechanism.
 
 import { useEffect, useState } from 'react'
 import {
@@ -69,6 +83,7 @@ export default function SetDisplayNameDialog({
 }: SetDisplayNameDialogProps) {
   const localization = useScenarioStore((s) => s.localization)
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
+  const removeLocalizationToken = useScenarioStore((s) => s.removeLocalizationToken)
   const renameLocalizationToken = useScenarioStore((s) => s.renameLocalizationToken)
 
   const [sidValue, setSidValue] = useState('')
@@ -78,9 +93,15 @@ export default function SetDisplayNameDialog({
   // same pattern as a URL slug field), so the user sees a live suggestion
   // without it silently overwriting a SID they've already customized.
   const [sidTouched, setSidTouched] = useState(false)
+  // Same pair, for a hero's description — independent state, same mechanics.
+  const [descSidValue, setDescSidValue] = useState('')
+  const [descTextValue, setDescTextValue] = useState('')
+  const [descSidTouched, setDescSidTouched] = useState(false)
   const [autoManageLoc, setAutoManageLoc] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const isHero = entity?.source === 'heroSpawner'
 
   useEffect(() => {
     if (open && entity) {
@@ -90,6 +111,12 @@ export default function SetDisplayNameDialog({
       // An existing SID is never auto-reflowed; only a genuinely blank,
       // first-time field starts in "follow the text" mode.
       setSidTouched(!!currentSid)
+
+      const currentDescSid = entity.description ?? ''
+      setDescSidValue(currentDescSid)
+      setDescTextValue(currentDescSid ? (localization[currentDescSid] ?? '') : '')
+      setDescSidTouched(!!currentDescSid)
+
       // Default matches what's already true of the current value: no prior
       // value, or a prior value already backed by a real token, means this
       // dialog should keep managing it. A prior value with NO token (raw
@@ -105,9 +132,12 @@ export default function SetDisplayNameDialog({
   if (!entity) return null
 
   const previousSid = entity.displayName ?? ''
+  const previousDescSid = entity.description ?? ''
   const isFirstTime = !previousSid
   const trimmedSid = sidValue.trim()
   const trimmedText = textValue.trim()
+  const trimmedDescSid = descSidValue.trim()
+  const trimmedDescText = descTextValue.trim()
 
   const handleTextChange = (text: string) => {
     setTextValue(text)
@@ -124,23 +154,44 @@ export default function SetDisplayNameDialog({
     setSidTouched(true)
   }
 
+  const handleDescTextChange = (text: string) => {
+    setDescTextValue(text)
+    if (!descSidTouched && autoManageLoc) {
+      const collisionSids = existingSids.filter((s) => s !== previousDescSid)
+      setDescSidValue(text.trim() ? generateDisplayNameSid(text, collisionSids, 'desc_sid') : '')
+    }
+  }
+
+  const handleDescSidChange = (v: string) => {
+    setDescSidValue(v)
+    setDescSidTouched(true)
+  }
+
   const handleAutoManageChange = (checked: boolean) => {
     setAutoManageLoc(checked)
-    if (checked && !textValue.trim()) {
-      setTextValue(localization[sidValue] ?? '')
+    if (checked) {
+      if (!textValue.trim()) setTextValue(localization[sidValue] ?? '')
+      if (!descTextValue.trim()) setDescTextValue(localization[descSidValue] ?? '')
     }
   }
 
   const isDuplicateSid =
     trimmedSid !== previousSid && trimmedSid !== '' && existingSids.includes(trimmedSid)
+  const isDuplicateDescSid =
+    isHero && trimmedDescSid !== previousDescSid && trimmedDescSid !== '' && existingSids.includes(trimmedDescSid)
 
   const currentText = previousSid ? (localization[previousSid] ?? '') : ''
-  const isUnchanged = autoManageLoc
+  const currentDescText = previousDescSid ? (localization[previousDescSid] ?? '') : ''
+  const nameUnchanged = autoManageLoc
     ? trimmedSid === previousSid && trimmedText === currentText
     : trimmedSid === previousSid
+  const descUnchanged = !isHero || (autoManageLoc
+    ? trimmedDescSid === previousDescSid && trimmedDescText === currentDescText
+    : trimmedDescSid === previousDescSid)
+  const isUnchanged = nameUnchanged && descUnchanged
 
   const isEmpty = trimmedSid === ''
-  const canSave = !isEmpty && !isUnchanged && !isDuplicateSid && !!mapFilePath
+  const canSave = !isEmpty && !isUnchanged && !isDuplicateSid && !isDuplicateDescSid && !!mapFilePath
 
   const handleSave = async () => {
     if (!mapFilePath || !canSave) return
@@ -164,6 +215,7 @@ export default function SetDisplayNameDialog({
           entityType,
           entityId: entity.id,
           nameTitle: trimmedSid,
+          description: isHero ? trimmedDescSid : undefined,
         })
       }
       if (autoManageLoc) {
@@ -171,6 +223,17 @@ export default function SetDisplayNameDialog({
           renameLocalizationToken(previousSid, trimmedSid, trimmedText)
         } else {
           setLocalizationToken(trimmedSid, trimmedText)
+        }
+        if (isHero) {
+          if (trimmedDescSid) {
+            if (previousDescSid && previousDescSid !== trimmedDescSid) {
+              renameLocalizationToken(previousDescSid, trimmedDescSid, trimmedDescText)
+            } else {
+              setLocalizationToken(trimmedDescSid, trimmedDescText)
+            }
+          } else if (previousDescSid) {
+            removeLocalizationToken(previousDescSid)
+          }
         }
       }
       onOpenChange(false)
@@ -191,6 +254,20 @@ export default function SetDisplayNameDialog({
         </DialogHeader>
 
         <div className="space-y-3">
+          {isHero && (
+            <Alert className="border-amber-600/50 bg-amber-50 dark:bg-amber-950/30">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500 shrink-0" />
+              <AlertDescription className="ml-2">
+                Not confirmed to work in-game. Every real hero placement checked across 15
+                shipped/campaign maps (25 heroes) never uses this field at all — the official
+                campaign gives a hero a custom name by defining an entirely new hero (its own
+                stats file plus a name registered elsewhere), not by overriding an existing one
+                like this. This is still the only per-placement field available to set from
+                here, but treat it as experimental until confirmed otherwise.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex items-center gap-2">
             <Checkbox
               id="set-display-name-auto-loc"
@@ -198,7 +275,7 @@ export default function SetDisplayNameDialog({
               onCheckedChange={(c) => handleAutoManageChange(c === true)}
             />
             <Label htmlFor="set-display-name-auto-loc" className="cursor-pointer text-sm">
-              Automatically manage this SID's localization text
+              Automatically manage {isHero ? "these SIDs'" : "this SID's"} localization text
             </Label>
           </div>
 
@@ -241,6 +318,43 @@ export default function SetDisplayNameDialog({
                 "{trimmedSid}" is already used by another entity or token.
               </AlertDescription>
             </Alert>
+          )}
+
+          {isHero && (
+            <>
+              <div className="border-t border-border pt-3 space-y-1.5">
+                <Label htmlFor="set-display-name-desc-sid">
+                  {autoManageLoc ? 'Description SID' : 'Description (written directly, no localization)'}{' '}
+                  <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <Input
+                  id="set-display-name-desc-sid"
+                  value={descSidValue}
+                  onChange={(e) => handleDescSidChange(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+
+              {autoManageLoc && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="set-display-name-desc-text">Description text</Label>
+                  <Input
+                    id="set-display-name-desc-text"
+                    value={descTextValue}
+                    onChange={(e) => handleDescTextChange(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {isDuplicateDescSid && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="ml-2">
+                    "{trimmedDescSid}" is already used by another entity or token.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
           )}
 
           {error && (

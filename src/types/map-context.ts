@@ -46,6 +46,9 @@ export interface MapEntity {
    *  propsName.nameTitle like every other object (issue #132). Lets the
    *  "Set display name" flow route the write to the right place. */
   isCitySpawner?: boolean
+  /** Custom description from objectsProperties.propsName.description, if set.
+   *  Same "literal text or LOC:<sid> reference" convention as displayName. */
+  description?: string
 }
 
 export interface HeroAssignment {
@@ -112,6 +115,10 @@ export interface PlacedObject {
   entitySid?: string
   /** Enrichment: this instance's propsName display name, if one is set. */
   displayName?: string
+  /** Enrichment: this instance's propsName description, if one is set. Read
+   *  directly from propsName, never city-overridden — there's no dedicated
+   *  per-city description field the way customCityName exists for names. */
+  description?: string
   /** Enrichment: objectsProperties.propNoCombineGeometries — "No Combine Geometry"
    *  in the official editor. Lets an otherwise-non-interactable decoration carry
    *  an entity SID once true (issue #125). */

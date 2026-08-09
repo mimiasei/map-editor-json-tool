@@ -5,12 +5,15 @@
 // name text straight into nameTitle (the previous, buggy behavior), generate
 // a real SID from it and register the text as that SID's localization token.
 
-/** snake_case of up to the first 3 words, suffixed "_name_sid" (issue #130 —
- *  distinguishes an auto-generated display-name SID from other kinds of
- *  generated/authored SIDs at a glance). Collisions get a numeric suffix
+/** snake_case of up to the first 3 words, suffixed "_name_sid" by default
+ *  (issue #130 — distinguishes an auto-generated display-name SID from other
+ *  kinds of generated/authored SIDs at a glance). Pass `suffix` to generate a
+ *  differently-labeled SID for a different field on the same entity — e.g.
+ *  a hero's description gets "_desc_sid" instead, so the two don't read as
+ *  the same kind of SID at a glance. Collisions get a numeric suffix
  *  (_2, _3, ...) — no existing convention for this in the codebase to reuse
  *  (RenameEntitySidDialog just rejects duplicates outright). */
-export function generateDisplayNameSid(text: string, existingSids: string[]): string {
+export function generateDisplayNameSid(text: string, existingSids: string[], suffix = 'name_sid'): string {
   const words = text
     .trim()
     .split(/\s+/)
@@ -18,7 +21,7 @@ export function generateDisplayNameSid(text: string, existingSids: string[]): st
     .filter((w) => w.length > 0)
     .slice(0, 3)
 
-  const base = `${words.length > 0 ? words.join('_') : 'name'}_name_sid`
+  const base = `${words.length > 0 ? words.join('_') : 'name'}_${suffix}`
   if (!existingSids.includes(base)) return base
 
   let n = 2

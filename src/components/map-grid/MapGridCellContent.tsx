@@ -40,7 +40,10 @@ function toEntity(item: PlacedObject): MapEntity | null {
  *  sid as a label so "Set display name" can work even before one is assigned
  *  (issue #127 item 4: standard for every interactable, not just named ones).
  *  A city spawner's name lives in a different table entirely (issue #132) —
- *  isCitySpawner tells SetDisplayNameDialog which one to write to. */
+ *  isCitySpawner tells SetDisplayNameDialog which one to write to. source:
+ *  'heroSpawner' tells it to also show the description fields and the
+ *  hero-specific caveat, matching how the Entity SIDs sidebar's hero rows
+ *  already flag themselves the same way. */
 function toDisplayNameEntity(item: PlacedObject): MapEntity {
   return {
     sid: item.entitySid || item.sid,
@@ -49,7 +52,9 @@ function toDisplayNameEntity(item: PlacedObject): MapEntity {
     x: item.x,
     z: item.z,
     displayName: item.displayName,
+    description: item.description,
     isCitySpawner: item.spawnerInfo?.spawnPointType === 0,
+    source: item.spawnerInfo?.spawnPointType === 1 ? 'heroSpawner' : undefined,
   }
 }
 

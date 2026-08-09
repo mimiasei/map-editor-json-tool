@@ -28,7 +28,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 
 export type MapSaveEdit =
   | { kind: 'renameSid'; oldSid: string; newSid: string }
-  | { kind: 'setDisplayName'; entityType: number; entityId: number; nameTitle: string }
+  | { kind: 'setDisplayName'; entityType: number; entityId: number; nameTitle: string; description?: string }
   | { kind: 'assignEntitySid'; entityType: number; entityId: number; sid: string }
   | { kind: 'setNoCombineGeometry'; entityType: number; entityId: number; value: boolean }
   | { kind: 'setSpawnerPlayerType'; entityType: number; entityId: number; spawnType: 0 | 1 | 2 }
@@ -94,7 +94,10 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   if (edit?.kind === 'renameSid') {
     newChunks[1] = renameEntitySid(newChunks[1], edit.oldSid, edit.newSid)
   } else if (edit?.kind === 'setDisplayName') {
-    newChunks[1] = upsertPropsName(newChunks[1], edit.entityType, edit.entityId, edit.nameTitle)
+    newChunks[1] = upsertPropsName(newChunks[1], edit.entityType, edit.entityId, {
+      nameTitle: edit.nameTitle,
+      description: edit.description,
+    })
   } else if (edit?.kind === 'assignEntitySid') {
     newChunks[1] = upsertPropEntities(newChunks[1], edit.entityType, edit.entityId, edit.sid)
   } else if (edit?.kind === 'setNoCombineGeometry') {
@@ -141,11 +144,12 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     }
   } else if (edit?.kind === 'setDisplayName') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
-      objectsProperties?: { propsName?: Array<{ type?: number | string; id?: number; nameTitle?: string }> }
+      objectsProperties?: { propsName?: Array<{ type?: number | string; id?: number; nameTitle?: string; description?: string }> }
     }
     const entries = block2.objectsProperties?.propsName ?? []
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
-    if (!match || match.nameTitle !== edit.nameTitle) {
+    const descriptionOk = edit.description === undefined || match?.description === edit.description
+    if (!match || match.nameTitle !== edit.nameTitle || !descriptionOk) {
       throw new Error('Verification failed: display name not reflected in the rebuilt propsName table')
     }
   } else if (edit?.kind === 'assignEntitySid') {
