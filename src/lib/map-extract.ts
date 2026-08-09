@@ -387,6 +387,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
       id: h.id ?? -1,
       type: h.type ?? '',
       source: 'heroSpawner',
+      heroSid,
     }
     // Spawners are always plain objects (type 0) in every real map observed,
     // but resolve via placedByKey rather than a bare id lookup regardless —

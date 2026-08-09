@@ -13,6 +13,7 @@
 
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { CustomHeroDefinition } from '@/types/hero'
 import type { TranslationMap } from '@/lib/languages'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { isTauri } from '@/lib/native-fs'
@@ -41,6 +42,7 @@ export interface SessionHandoff {
     dialogs: Record<string, DialogFlow>
     localization: Record<string, string>
     translations: TranslationMap
+    customHeroes: Record<string, CustomHeroDefinition>
   }
   /** Whether the snapshot had unsaved changes, so the restore can say so. */
   wasDirty: boolean
@@ -85,6 +87,7 @@ export async function writeSessionHandoff(
       dialogs: s.dialogs,
       localization: s.localization,
       translations: s.translations,
+      customHeroes: s.customHeroes,
     },
     wasDirty: s.isDirty,
   }

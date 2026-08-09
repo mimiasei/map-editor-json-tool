@@ -58,6 +58,10 @@ function toDisplayNameEntity(item: PlacedObject): MapEntity {
     description: item.description,
     isCitySpawner: item.spawnerInfo?.spawnPointType === 0,
     source: item.spawnerInfo?.spawnPointType === 1 ? 'heroSpawner' : undefined,
+    // The placed object's own sid (above) is a generic spawner type sid, not
+    // the hero it currently holds — issue #139's hero-identity editing needs
+    // the real heroSid, which only spawnerInfo carries.
+    heroSid: item.spawnerInfo?.spawnPointType === 1 ? item.spawnerInfo?.heroSid : undefined,
   }
 }
 

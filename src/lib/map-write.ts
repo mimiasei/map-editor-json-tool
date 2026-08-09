@@ -487,6 +487,46 @@ export function setCustomCityName(chunk: Uint8Array, entityType: number, entityI
   return new TextEncoder().encode(patchedText)
 }
 
+// ─── Hero assignment (objectsProperties.propHeroes.heroSid) ─────────────────
+// A real shipped map (Fun_and_Graves.map) proves this table is also the join
+// point for a fully custom hero: its propHeroes entry for id 0 points
+// heroSid at "cm_fun_hero_1", which resolves to a hero definition file at
+// Core/DB/heroes/custom_maps/cm_fun_hero_1.json rather than one of the
+// per-faction roster folders — same table, same field, just a different
+// folder the game also checks (issue #139). Repointing this is therefore
+// all that's needed to swap which hero definition a spawner uses; the
+// definition file itself is a separate, editor-only concern (see
+// src/types/hero.ts and zip-export.ts, which ship it into the export ZIP).
+interface PropHeroEntry {
+  type?: number | string
+  id?: number
+  isDefined?: boolean
+  heroSid?: string
+}
+
+/**
+ * Set a hero spawner's heroSid. Requires an existing propHeroes entry for
+ * (entityType, entityId) — same "refuse to fabricate a new entry" reasoning
+ * as setCustomCityName: a real hero spawner always has one already (it's how
+ * this editor knows the object is a hero spawner at all).
+ */
+export function upsertPropHero(chunk: Uint8Array, entityType: number, entityId: number, heroSid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propHeroes')
+
+  const entries = JSON.parse(span) as PropHeroEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propHeroes entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured hero spawner`)
+  }
+  existing.heroSid = heroSid
+  existing.isDefined = true
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {

@@ -19,6 +19,7 @@ import {
   setSpawnerPlayerType,
   upsertPropPortals,
   setCustomCityName,
+  upsertPropHero,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -34,6 +35,7 @@ export type MapSaveEdit =
   | { kind: 'setSpawnerPlayerType'; entityType: number; entityId: number; spawnType: 0 | 1 | 2 }
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
   | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
+  | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
  *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
@@ -113,6 +115,8 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     })
   } else if (edit?.kind === 'setCityName') {
     newChunks[1] = setCustomCityName(newChunks[1], edit.entityType, edit.entityId, edit.customCityName)
+  } else if (edit?.kind === 'setHeroSid') {
+    newChunks[1] = upsertPropHero(newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -205,6 +209,15 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.customCityName !== edit.customCityName) {
       throw new Error('Verification failed: city name not reflected in the rebuilt propCities table')
+    }
+  } else if (edit?.kind === 'setHeroSid') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propHeroes?: Array<{ type?: number | string; id?: number; heroSid?: string }> }
+    }
+    const entries = block2.objectsProperties?.propHeroes ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.heroSid !== edit.heroSid) {
+      throw new Error('Verification failed: heroSid not reflected in the rebuilt propHeroes table')
     }
   }
 

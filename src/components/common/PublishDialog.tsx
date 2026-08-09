@@ -88,7 +88,7 @@ function TargetRow({
 // ─── Dialog ───────────────────────────────────────────────────────────────────
 
 export default function PublishDialog({ open, onOpenChange }: Props) {
-  const { scenario, mapName, dialogs, localization, translations, sidecarPath, currentFilePath, markClean } =
+  const { scenario, mapName, dialogs, localization, translations, customHeroes, sidecarPath, currentFilePath, markClean } =
     useScenarioStore()
 
   const [targets, setTargets] = useState<PublishTargets | null>(null)
@@ -146,10 +146,10 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
     setError(null)
     try {
       // Scenario JSON first — it is the file the game needs to load the map at all.
-      const json = exportProjectJson(scenario, mapName, dialogs, localization, translations)
+      const json = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes)
       await saveToPath(targets.json.path!, json)
 
-      const blob = await buildMapZipBlob(mapName, dialogs, localization, translations)
+      const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes)
       await writeBinaryFile(targets.zip.path!, new Uint8Array(await blob.arrayBuffer()))
 
       markClean()

@@ -111,6 +111,7 @@ async function collectHeroes(zip: JSZip, locMap: Map<string, string>): Promise<C
         fraction: str(entry.fraction || entry.fractionId || ''),
         icon: str(entry.icon || entry.id),
         classType: str(entry.classType || entry.class || '') || undefined,
+        raw: entry,
       })
     }
   }

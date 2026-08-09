@@ -94,6 +94,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   let importedDialogs: Record<string, import('@/types/dialog').DialogFlow> = {}
   let importedLocalization: Record<string, string> = {}
   let importedTranslations: import('@/lib/languages').TranslationMap = {}
+  let importedCustomHeroes: Record<string, import('@/types/hero').CustomHeroDefinition> = {}
 
   // ── Try sidecar (Tauri only — needs file system access) ──────────────────────
   if (sidecarPath && (await checkFileExists(sidecarPath))) {
@@ -107,6 +108,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
         dialogs: dl,
         localization: loc,
         translations: tr,
+        customHeroes: ch,
       } = importScenario(text)
       if (imported) {
         scenario = imported
@@ -114,6 +116,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
         importedDialogs = dl
         importedLocalization = loc
         importedTranslations = tr
+        importedCustomHeroes = ch
         sidecarLoaded = true
         logInfo(`Loaded sidecar: ${sidecarPath}`)
       } else {
@@ -155,6 +158,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
     store.setLocalizationBatch(importedLocalization)
   }
   store.setTranslations(importedTranslations)
+  for (const [heroSid, def] of Object.entries(importedCustomHeroes)) store.setCustomHero(heroSid, def)
   // setScenario() cleared the dirty flag; the hydration above must not resurrect it.
   store.markClean()
 
