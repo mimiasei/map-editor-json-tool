@@ -46,6 +46,13 @@
 // stronger basis than the old propsName guess: it replicates a real shipped
 // file 1:1 rather than writing to a field nothing seems to read, though it's
 // still not verified against the actual running game from here.
+//
+// issue #141: the SID+text auto-management mechanics (three near-identical
+// copies of it below, for name/description/motto) moved into
+// useLocalizedTextField/LocalizedTextField once a second dialog
+// (HeroEditorDialog) needed the exact same behavior for its own
+// name/description/motto fields — same mechanics, same visible copy, just
+// no longer duplicated.
 
 import { useEffect, useState } from 'react'
 import {
@@ -56,17 +63,17 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, Info, Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import type { MapEntity } from '@/types/map-context'
 import { saveMapFile } from '@/lib/map-save'
-import { generateDisplayNameSid } from '@/lib/slugify'
 import { mintCustomHeroSid } from '@/lib/zip-export'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useLocalizedTextField } from '@/hooks/useLocalizedTextField'
+import LocalizedTextField from '@/components/common/LocalizedTextField'
 
 interface SetDisplayNameDialogProps {
   open: boolean
@@ -100,21 +107,6 @@ export default function SetDisplayNameDialog({
   const mapName = useScenarioStore((s) => s.mapName)
   const catalog = useCatalogStore((s) => s.catalog)
 
-  const [sidValue, setSidValue] = useState('')
-  const [textValue, setTextValue] = useState('')
-  // Tracks whether the user has directly typed into the SID field — while
-  // false, the SID field auto-follows the text field (slug-follows-title,
-  // same pattern as a URL slug field), so the user sees a live suggestion
-  // without it silently overwriting a SID they've already customized.
-  const [sidTouched, setSidTouched] = useState(false)
-  // Same pair, for a hero's description — independent state, same mechanics.
-  const [descSidValue, setDescSidValue] = useState('')
-  const [descTextValue, setDescTextValue] = useState('')
-  const [descSidTouched, setDescSidTouched] = useState(false)
-  // Same pair again, for a hero's motto.
-  const [mottoSidValue, setMottoSidValue] = useState('')
-  const [mottoTextValue, setMottoTextValue] = useState('')
-  const [mottoSidTouched, setMottoSidTouched] = useState(false)
   const [autoManageLoc, setAutoManageLoc] = useState(true)
   const [saving, setSaving] = useState(false)
   const [reverting, setReverting] = useState(false)
@@ -138,43 +130,44 @@ export default function SetDisplayNameDialog({
   const heroCatalogMissing = isHero && !!currentHeroSid && !heroBaseDefinition
   const heroDisplayName = (sid: string) => catalog?.heroes.find((h) => h.id === sid)?.name ?? sid
 
+  const previousSid = isHero ? str(heroBaseDefinition?.name) : (entity?.displayName ?? '')
+  const previousDescSid = isHero ? str(heroBaseDefinition?.description) : (entity?.description ?? '')
+  const previousMottoSid = isHero ? str(heroBaseDefinition?.motto) : ''
+
+  // Hooks must run unconditionally (before the `if (!entity) return null`
+  // below), so previousSid/previousDescSid/previousMottoSid above use
+  // optional chaining rather than assuming `entity` is set yet.
+  const nameField = useLocalizedTextField({
+    autoManageLoc,
+    existingSids: existingSids.filter((s) => s !== previousSid),
+  })
+  const descField = useLocalizedTextField({
+    autoManageLoc,
+    existingSids: existingSids.filter((s) => s !== previousDescSid),
+    suffix: 'desc_sid',
+    optional: true,
+  })
+  const mottoField = useLocalizedTextField({
+    autoManageLoc,
+    existingSids: existingSids.filter((s) => s !== previousMottoSid),
+    suffix: 'motto_sid',
+    optional: true,
+  })
+
   useEffect(() => {
     if (open && entity) {
-      if (isHero) {
-        const nameSid = str(heroBaseDefinition?.name)
-        const descSid = str(heroBaseDefinition?.description)
-        const mottoSid = str(heroBaseDefinition?.motto)
-        setSidValue(nameSid)
-        setTextValue(nameSid ? (localization[nameSid] ?? '') : '')
-        setSidTouched(!!nameSid)
-        setDescSidValue(descSid)
-        setDescTextValue(descSid ? (localization[descSid] ?? '') : '')
-        setDescSidTouched(!!descSid)
-        setMottoSidValue(mottoSid)
-        setMottoTextValue(mottoSid ? (localization[mottoSid] ?? '') : '')
-        setMottoSidTouched(!!mottoSid)
-        setAutoManageLoc(true)
-      } else {
-        const currentSid = entity.displayName ?? ''
-        setSidValue(currentSid)
-        setTextValue(currentSid ? (localization[currentSid] ?? '') : '')
-        // An existing SID is never auto-reflowed; only a genuinely blank,
-        // first-time field starts in "follow the text" mode.
-        setSidTouched(!!currentSid)
-        setDescSidValue('')
-        setDescTextValue('')
-        setDescSidTouched(false)
-        setMottoSidValue('')
-        setMottoTextValue('')
-        setMottoSidTouched(false)
-        // Default matches what's already true of the current value: no prior
-        // value, or a prior value already backed by a real token, means this
-        // dialog should keep managing it. A prior value with NO token (raw
-        // literal text, e.g. written before issue #132's fix, or previously
-        // saved with this box unchecked) stays unmanaged until the user opts
-        // back in — reopening the dialog must never silently upgrade it.
-        setAutoManageLoc(!currentSid || currentSid in localization)
-      }
+      nameField.reset(previousSid, previousSid ? (localization[previousSid] ?? '') : '')
+      descField.reset(previousDescSid, previousDescSid ? (localization[previousDescSid] ?? '') : '')
+      mottoField.reset(previousMottoSid, previousMottoSid ? (localization[previousMottoSid] ?? '') : '')
+      // Default matches what's already true of the current value: no prior
+      // value, or a prior value already backed by a real token, means this
+      // dialog should keep managing it. A prior value with NO token (raw
+      // literal text, e.g. written before issue #132's fix, or previously
+      // saved with this box unchecked) stays unmanaged until the user opts
+      // back in — reopening the dialog must never silently upgrade it.
+      // Heroes always start auto-managed (issue #139: nothing to "unmanage"
+      // yet the first time a hero is customized).
+      setAutoManageLoc(isHero || !previousSid || previousSid in localization)
       setError(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,89 +175,39 @@ export default function SetDisplayNameDialog({
 
   if (!entity) return null
 
-  const previousSid = isHero ? str(heroBaseDefinition?.name) : (entity.displayName ?? '')
-  const previousDescSid = isHero ? str(heroBaseDefinition?.description) : (entity.description ?? '')
-  const previousMottoSid = isHero ? str(heroBaseDefinition?.motto) : ''
   const isFirstTime = !previousSid
-  const trimmedSid = sidValue.trim()
-  const trimmedText = textValue.trim()
-  const trimmedDescSid = descSidValue.trim()
-  const trimmedDescText = descTextValue.trim()
-  const trimmedMottoSid = mottoSidValue.trim()
-  const trimmedMottoText = mottoTextValue.trim()
-
-  const handleTextChange = (text: string) => {
-    setTextValue(text)
-    if (!sidTouched && autoManageLoc) {
-      // Exclude this entity's own current SID from the collision set — an
-      // unedited name shouldn't get bumped to a "_2" suffix against itself.
-      const collisionSids = existingSids.filter((s) => s !== previousSid)
-      setSidValue(generateDisplayNameSid(text, collisionSids))
-    }
-  }
-
-  const handleSidChange = (v: string) => {
-    setSidValue(v)
-    setSidTouched(true)
-  }
-
-  const handleDescTextChange = (text: string) => {
-    setDescTextValue(text)
-    if (!descSidTouched && autoManageLoc) {
-      const collisionSids = existingSids.filter((s) => s !== previousDescSid)
-      setDescSidValue(text.trim() ? generateDisplayNameSid(text, collisionSids, 'desc_sid') : '')
-    }
-  }
-
-  const handleDescSidChange = (v: string) => {
-    setDescSidValue(v)
-    setDescSidTouched(true)
-  }
-
-  const handleMottoTextChange = (text: string) => {
-    setMottoTextValue(text)
-    if (!mottoSidTouched && autoManageLoc) {
-      const collisionSids = existingSids.filter((s) => s !== previousMottoSid)
-      setMottoSidValue(text.trim() ? generateDisplayNameSid(text, collisionSids, 'motto_sid') : '')
-    }
-  }
-
-  const handleMottoSidChange = (v: string) => {
-    setMottoSidValue(v)
-    setMottoSidTouched(true)
-  }
 
   const handleAutoManageChange = (checked: boolean) => {
     setAutoManageLoc(checked)
     if (checked) {
-      if (!textValue.trim()) setTextValue(localization[sidValue] ?? '')
-      if (!descTextValue.trim()) setDescTextValue(localization[descSidValue] ?? '')
-      if (!mottoTextValue.trim()) setMottoTextValue(localization[mottoSidValue] ?? '')
+      nameField.setTextIfEmpty(localization[nameField.sidValue] ?? '')
+      descField.setTextIfEmpty(localization[descField.sidValue] ?? '')
+      mottoField.setTextIfEmpty(localization[mottoField.sidValue] ?? '')
     }
   }
 
   const isDuplicateSid =
-    trimmedSid !== previousSid && trimmedSid !== '' && existingSids.includes(trimmedSid)
+    nameField.trimmedSid !== previousSid && nameField.trimmedSid !== '' && existingSids.includes(nameField.trimmedSid)
   const isDuplicateDescSid =
-    isHero && trimmedDescSid !== previousDescSid && trimmedDescSid !== '' && existingSids.includes(trimmedDescSid)
+    isHero && descField.trimmedSid !== previousDescSid && descField.trimmedSid !== '' && existingSids.includes(descField.trimmedSid)
   const isDuplicateMottoSid =
-    isHero && trimmedMottoSid !== previousMottoSid && trimmedMottoSid !== '' && existingSids.includes(trimmedMottoSid)
+    isHero && mottoField.trimmedSid !== previousMottoSid && mottoField.trimmedSid !== '' && existingSids.includes(mottoField.trimmedSid)
 
   const currentText = previousSid ? (localization[previousSid] ?? '') : ''
   const currentDescText = previousDescSid ? (localization[previousDescSid] ?? '') : ''
   const currentMottoText = previousMottoSid ? (localization[previousMottoSid] ?? '') : ''
   const nameUnchanged = autoManageLoc
-    ? trimmedSid === previousSid && trimmedText === currentText
-    : trimmedSid === previousSid
+    ? nameField.trimmedSid === previousSid && nameField.trimmedText === currentText
+    : nameField.trimmedSid === previousSid
   const descUnchanged = !isHero || (autoManageLoc
-    ? trimmedDescSid === previousDescSid && trimmedDescText === currentDescText
-    : trimmedDescSid === previousDescSid)
+    ? descField.trimmedSid === previousDescSid && descField.trimmedText === currentDescText
+    : descField.trimmedSid === previousDescSid)
   const mottoUnchanged = !isHero || (autoManageLoc
-    ? trimmedMottoSid === previousMottoSid && trimmedMottoText === currentMottoText
-    : trimmedMottoSid === previousMottoSid)
+    ? mottoField.trimmedSid === previousMottoSid && mottoField.trimmedText === currentMottoText
+    : mottoField.trimmedSid === previousMottoSid)
   const isUnchanged = nameUnchanged && descUnchanged && mottoUnchanged
 
-  const isEmpty = trimmedSid === ''
+  const isEmpty = nameField.trimmedSid === ''
   const canSave =
     !isEmpty &&
     !isUnchanged &&
@@ -306,9 +249,9 @@ export default function SetDisplayNameDialog({
         const definition: Record<string, unknown> = {
           ...heroBaseDefinition,
           id: heroSidForClone,
-          name: trimmedSid,
-          description: trimmedDescSid,
-          motto: trimmedMottoSid,
+          name: nameField.trimmedSid,
+          description: descField.trimmedSid,
+          motto: mottoField.trimmedSid,
         }
 
         await saveMapFile(mapFilePath, {
@@ -325,26 +268,26 @@ export default function SetDisplayNameDialog({
         })
 
         if (autoManageLoc) {
-          manageToken(previousSid, trimmedSid, trimmedText)
-          manageToken(previousDescSid, trimmedDescSid, trimmedDescText)
-          manageToken(previousMottoSid, trimmedMottoSid, trimmedMottoText)
+          manageToken(previousSid, nameField.trimmedSid, nameField.trimmedText)
+          manageToken(previousDescSid, descField.trimmedSid, descField.trimmedText)
+          manageToken(previousMottoSid, mottoField.trimmedSid, mottoField.trimmedText)
         }
       } else if (entity.isCitySpawner) {
         await saveMapFile(mapFilePath, {
           kind: 'setCityName',
           entityType,
           entityId: entity.id,
-          customCityName: trimmedSid,
+          customCityName: nameField.trimmedSid,
         })
-        if (autoManageLoc) manageToken(previousSid, trimmedSid, trimmedText)
+        if (autoManageLoc) manageToken(previousSid, nameField.trimmedSid, nameField.trimmedText)
       } else {
         await saveMapFile(mapFilePath, {
           kind: 'setDisplayName',
           entityType,
           entityId: entity.id,
-          nameTitle: trimmedSid,
+          nameTitle: nameField.trimmedSid,
         })
-        if (autoManageLoc) manageToken(previousSid, trimmedSid, trimmedText)
+        if (autoManageLoc) manageToken(previousSid, nameField.trimmedSid, nameField.trimmedText)
       }
       onOpenChange(false)
     } catch (e) {
@@ -431,114 +374,53 @@ export default function SetDisplayNameDialog({
                 </Label>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="set-display-name-sid">
-                  {autoManageLoc ? 'Naming SID' : `${nameLabel} (written directly, no localization)`} for{' '}
-                  <span className="font-mono">{entity.sid}</span>
-                </Label>
-                <Input
-                  id="set-display-name-sid"
-                  value={sidValue}
-                  onChange={(e) => handleSidChange(e.target.value)}
-                  className="font-mono"
-                  autoFocus
-                />
-              </div>
-
-              {autoManageLoc && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="set-display-name-text">{nameLabel} text</Label>
-                  <Input
-                    id="set-display-name-text"
-                    value={textValue}
-                    onChange={(e) => handleTextChange(e.target.value)}
-                  />
-                </div>
-              )}
-
-              {isFirstTime && autoManageLoc && (
-                <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  A localization token will be created automatically using the SID above.
-                </p>
-              )}
-
-              {isDuplicateSid && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="ml-2">
-                    "{trimmedSid}" is already used by another entity or token.
-                  </AlertDescription>
-                </Alert>
-              )}
+              <LocalizedTextField
+                idPrefix="set-display-name"
+                managedSidLabel="Naming SID"
+                unmanagedLabel={`${nameLabel} (written directly, no localization)`}
+                sidLabelSuffix={<> for <span className="font-mono">{entity.sid}</span></>}
+                textLabel={`${nameLabel} text`}
+                sidValue={nameField.sidValue}
+                textValue={nameField.textValue}
+                autoManageLoc={autoManageLoc}
+                onSidChange={nameField.handleSidChange}
+                onTextChange={nameField.handleTextChange}
+                isDuplicate={isDuplicateSid}
+                showFirstTimeNote={isFirstTime}
+                autoFocus
+              />
 
               {isHero && (
                 <>
-                  <div className="border-t border-border pt-3 space-y-1.5">
-                    <Label htmlFor="set-display-name-desc-sid">
-                      {autoManageLoc ? 'Description SID' : 'Description (written directly, no localization)'}{' '}
-                      <span className="text-muted-foreground font-normal">(optional)</span>
-                    </Label>
-                    <Input
-                      id="set-display-name-desc-sid"
-                      value={descSidValue}
-                      onChange={(e) => handleDescSidChange(e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
+                  <LocalizedTextField
+                    idPrefix="set-display-name-desc"
+                    managedSidLabel="Description SID"
+                    unmanagedLabel="Description (written directly, no localization)"
+                    textLabel="Description text"
+                    sidValue={descField.sidValue}
+                    textValue={descField.textValue}
+                    autoManageLoc={autoManageLoc}
+                    onSidChange={descField.handleSidChange}
+                    onTextChange={descField.handleTextChange}
+                    isDuplicate={isDuplicateDescSid}
+                    optional
+                    bordered
+                  />
 
-                  {autoManageLoc && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="set-display-name-desc-text">Description text</Label>
-                      <Input
-                        id="set-display-name-desc-text"
-                        value={descTextValue}
-                        onChange={(e) => handleDescTextChange(e.target.value)}
-                      />
-                    </div>
-                  )}
-
-                  {isDuplicateDescSid && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription className="ml-2">
-                        "{trimmedDescSid}" is already used by another entity or token.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="border-t border-border pt-3 space-y-1.5">
-                    <Label htmlFor="set-display-name-motto-sid">
-                      {autoManageLoc ? 'Motto SID' : 'Motto (written directly, no localization)'}{' '}
-                      <span className="text-muted-foreground font-normal">(optional)</span>
-                    </Label>
-                    <Input
-                      id="set-display-name-motto-sid"
-                      value={mottoSidValue}
-                      onChange={(e) => handleMottoSidChange(e.target.value)}
-                      className="font-mono"
-                    />
-                  </div>
-
-                  {autoManageLoc && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="set-display-name-motto-text">Motto text</Label>
-                      <Input
-                        id="set-display-name-motto-text"
-                        value={mottoTextValue}
-                        onChange={(e) => handleMottoTextChange(e.target.value)}
-                      />
-                    </div>
-                  )}
-
-                  {isDuplicateMottoSid && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription className="ml-2">
-                        "{trimmedMottoSid}" is already used by another entity or token.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <LocalizedTextField
+                    idPrefix="set-display-name-motto"
+                    managedSidLabel="Motto SID"
+                    unmanagedLabel="Motto (written directly, no localization)"
+                    textLabel="Motto text"
+                    sidValue={mottoField.sidValue}
+                    textValue={mottoField.textValue}
+                    autoManageLoc={autoManageLoc}
+                    onSidChange={mottoField.handleSidChange}
+                    onTextChange={mottoField.handleTextChange}
+                    isDuplicate={isDuplicateMottoSid}
+                    optional
+                    bordered
+                  />
                 </>
               )}
             </>

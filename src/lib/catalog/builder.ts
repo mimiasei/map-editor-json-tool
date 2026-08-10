@@ -15,6 +15,7 @@ import type {
   CatalogBuff,
   CatalogMapObject,
   CatalogFaction,
+  CatalogSpecialization,
   CatalogDialog,
   CatalogDialogSlide,
 } from './types'
@@ -276,6 +277,30 @@ async function collectBuffs(zip: JSZip, locMap: Map<string, string>): Promise<Ca
   return buffs.sort((a, b) => a.name.localeCompare(b.name))
 }
 
+/**
+ * Hero specializations (issue #141) — one file per faction under
+ * DB/heroes_specializations/, plus campaign/tutorial/test variants; all read
+ * uniformly here rather than filtering by filename (fragile), since a
+ * specialization that doesn't resolve to a known hero just falls back to
+ * showing its raw sid at the UI layer instead of being hidden.
+ */
+async function collectSpecializations(zip: JSZip): Promise<CatalogSpecialization[]> {
+  const paths = zipFilesUnder(zip, 'DB/heroes_specializations/')
+  const specializations: CatalogSpecialization[] = []
+  const seen = new Set<string>()
+
+  for (const path of paths) {
+    const entries = await readJsonArray(zip, path)
+    for (const entry of entries) {
+      const id = str(entry.id)
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      specializations.push({ id, forHeroSid: id.replace(/_specialization$/, '') })
+    }
+  }
+  return specializations.sort((a, b) => a.id.localeCompare(b.id))
+}
+
 // All 9 DB/map/objects/*.json category files (issue #122) — every one carries
 // the same `prefs[]` field the icon-derivation logic below reads, so none are
 // skipped for icons the way they used to be.
@@ -451,7 +476,7 @@ export async function buildCatalog(
 ): Promise<GameCatalog> {
   const locMap = await loadLocalization(zip)
 
-  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, dialogData] =
+  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, dialogData] =
     await Promise.all([
       collectHeroes(zip, locMap),
       collectCreatures(zip, locMap),
@@ -461,6 +486,7 @@ export async function buildCatalog(
       collectBuffs(zip, locMap),
       collectMapObjects(zip, locMap),
       collectFactions(zip, locMap),
+      collectSpecializations(zip),
       collectDialogs(zip, locMap),
     ])
 
@@ -476,6 +502,7 @@ export async function buildCatalog(
     buffs,
     mapObjects,
     factions,
+    specializations,
     dialogs: dialogData.dialogs,
     dialogAvatarIcons: dialogData.avatarIcons,
     speakerTitles: dialogData.speakerTitles,

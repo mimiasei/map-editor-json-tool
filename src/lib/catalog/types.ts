@@ -96,6 +96,20 @@ export interface CatalogFaction {
   icon?: string
 }
 
+/** A hero specialization (Core/DB/heroes_specializations/*.json), issue #141.
+ *  No display name of its own worth resolving here — `name`/`desc` on the raw
+ *  entry are just more loc sids for the specialization's own text, not a
+ *  hero's identity. `forHeroSid` (the hero id embedded in this sid's own
+ *  prefix, e.g. "human_hero_1_specialization" -> "human_hero_1") is what
+ *  lets a consumer show "the actual hero display name" the sid was written
+ *  for, by looking it up in `GameCatalog.heroes` — done at the UI layer
+ *  rather than here, same "raw here, resolved where it's shown" split used
+ *  elsewhere (e.g. src/lib/map-grid/reward-params.ts). */
+export interface CatalogSpecialization {
+  id: string
+  forHeroSid: string
+}
+
 export interface CatalogDialogSlide {
   id: string
   text?: string        // resolved English text
@@ -129,6 +143,7 @@ export interface GameCatalog {
   buffs: CatalogBuff[]
   mapObjects: CatalogMapObject[]
   factions: CatalogFaction[]
+  specializations: CatalogSpecialization[]
   dialogs: CatalogDialog[]
   /** Avatar icon paths used by shipped dialogs — feeds the avatar strip combobox. */
   dialogAvatarIcons: string[]
@@ -139,4 +154,6 @@ export interface GameCatalog {
 // v3: mapObjects now covers all 9 DB/map/objects/*.json category files
 // (previously only 4), and derives icons for every category, not just
 // interactables/resources (issue #122).
-export const CATALOG_SCHEMA_VERSION = 3
+// v4: added specializations (issue #141) — nothing persists/caches a built
+// catalog across sessions, so this bump is hygiene only, not a migration.
+export const CATALOG_SCHEMA_VERSION = 4

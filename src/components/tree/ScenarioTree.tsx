@@ -26,6 +26,7 @@ import {
   ClipboardPaste,
   PenLine,
   Tag,
+  UserCog,
 } from 'lucide-react'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
@@ -34,6 +35,7 @@ import type { MapEntity } from '@/types/map-context'
 import { buildEntityUsageMap, describeEntityUsage, type EntityUsage } from '@/lib/entity-usage'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
+import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
 const LABEL_WIDTH_RATIO = 175 / 280
@@ -396,6 +398,7 @@ export default function ScenarioTree() {
   const [openEntityGroups, setOpenEntityGroups] = useState<Record<string, boolean>>({})
   const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
   const [displayNameTarget, setDisplayNameTarget] = useState<MapEntity | null>(null)
+  const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((s) => ({ ...s, [key]: !s[key] }))
@@ -773,6 +776,12 @@ export default function ScenarioTree() {
                       // the rename-SID button stays gated off for heroes.
                       const canRenameSid = isTauri() && entity.source !== 'heroSpawner' && !!mapFilePath
                       const canSetDisplayName = isTauri() && !!mapFilePath
+                      // issue #141: a second, larger dialog covering every real
+                      // hero JSON field, alongside (not replacing) the quick
+                      // name/description/motto one above — both write into the
+                      // same customHeroes[heroSid].definition, so using either
+                      // (or both, in any order) composes fine.
+                      const canEditFullHero = canSetDisplayName && entity.source === 'heroSpawner'
                       return (
                         <div
                           key={sid}
@@ -828,6 +837,15 @@ export default function ScenarioTree() {
                               <Tag className="h-3 w-3" />
                             </button>
                           )}
+                          {canEditFullHero && (
+                            <button
+                              className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-colors"
+                              title={`Edit full hero for "${sid}"`}
+                              onClick={(e) => { e.stopPropagation(); setHeroEditorTarget(entity) }}
+                            >
+                              <UserCog className="h-3 w-3" />
+                            </button>
+                          )}
                           <CopySidButton sid={sid} />
                         </div>
                       )
@@ -858,6 +876,14 @@ export default function ScenarioTree() {
         open={displayNameTarget !== null}
         onOpenChange={(open) => { if (!open) setDisplayNameTarget(null) }}
         entity={displayNameTarget}
+        existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
+        mapFilePath={mapFilePath}
+      />
+
+      <HeroEditorDialog
+        open={heroEditorTarget !== null}
+        onOpenChange={(open) => { if (!open) setHeroEditorTarget(null) }}
+        entity={heroEditorTarget}
         existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
         mapFilePath={mapFilePath}
       />

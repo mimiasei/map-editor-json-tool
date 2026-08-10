@@ -50,6 +50,7 @@ import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
+import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
 import { isTauri } from '@/lib/native-fs'
 import { saveMapFile } from '@/lib/map-save'
@@ -507,6 +508,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   )
   const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
   const [displayNameTarget, setDisplayNameTarget] = useState<MapEntity | null>(null)
+  const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
   const canEditEntities = isTauri() && !!mapFilePath
 
   const handleSetNoCombineGeometry = async (item: PlacedObject, value: boolean) => {
@@ -980,6 +982,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   existingSids={existingSids}
                   onRename={canEditEntities ? setRenameTarget : undefined}
                   onSetDisplayName={canEditEntities ? setDisplayNameTarget : undefined}
+                  onEditFullHero={canEditEntities ? setHeroEditorTarget : undefined}
                   onSetNoCombineGeometry={canEditEntities ? handleSetNoCombineGeometry : undefined}
                   onAssignEntitySid={canEditEntities ? handleAssignEntitySid : undefined}
                   onSetSpawnerPlayerType={canEditEntities ? handleSetSpawnerPlayerType : undefined}
@@ -1011,6 +1014,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       open={displayNameTarget !== null}
       onOpenChange={(o) => { if (!o) setDisplayNameTarget(null) }}
       entity={displayNameTarget}
+      existingSids={existingSidsAndLocTokens}
+      mapFilePath={mapFilePath}
+    />
+
+    <HeroEditorDialog
+      open={heroEditorTarget !== null}
+      onOpenChange={(o) => { if (!o) setHeroEditorTarget(null) }}
+      entity={heroEditorTarget}
       existingSids={existingSidsAndLocTokens}
       mapFilePath={mapFilePath}
     />
