@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { PenLine, Tag } from 'lucide-react'
+import { PenLine, Tag, UserCog } from 'lucide-react'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
@@ -73,6 +73,10 @@ export interface MapGridCellContentProps {
   /** Present only in the docked (interactive) instance — omit for the read-only undocked mirror. */
   onRename?: (entity: MapEntity) => void
   onSetDisplayName?: (entity: MapEntity) => void
+  /** issue #141 — opens the full hero-authoring dialog, alongside (not
+   *  replacing) onSetDisplayName's quick name/description/motto edit.
+   *  Docked-only, like the above. */
+  onEditFullHero?: (entity: MapEntity) => void
   /** "No Combine Geometry" toggle (issue #125 item 4) — docked-only, like the above. */
   onSetNoCombineGeometry?: (item: PlacedObject, value: boolean) => void
   /** Give a brand-new entity SID to an item that has none yet (requires No Combine Geometry on first, for non-interactables). */
@@ -113,6 +117,7 @@ export default function MapGridCellContent({
   catalog,
   onRename,
   onSetDisplayName,
+  onEditFullHero,
   onSetNoCombineGeometry,
   onAssignEntitySid,
   existingSids = [],
@@ -158,6 +163,7 @@ export default function MapGridCellContent({
   // (propCities.customCityName), not propsName — labeled distinctly here so
   // it's not confused with the generic per-object display name.
   const isCitySpawner = selected?.spawnerInfo?.spawnPointType === 0
+  const isHeroSpawner = selected?.spawnerInfo?.spawnPointType === 1
   const trimmedSid = newSidInput.trim()
   const sidTaken = trimmedSid !== '' && existingSids.includes(trimmedSid)
 
@@ -254,6 +260,12 @@ export default function MapGridCellContent({
                   {isCitySpawner ? 'Set city name' : 'Set display name'}
                 </Button>
               )}
+              {isHeroSpawner && onEditFullHero && (
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onEditFullHero(toDisplayNameEntity(selected))}>
+                  <UserCog className="h-3 w-3" />
+                  Edit full hero
+                </Button>
+              )}
             </div>
           )}
 
@@ -285,6 +297,12 @@ export default function MapGridCellContent({
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
                   {isCitySpawner ? 'Set city name' : 'Set display name'}
+                </Button>
+              )}
+              {isHeroSpawner && onEditFullHero && (
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onEditFullHero(toDisplayNameEntity(selected))}>
+                  <UserCog className="h-3 w-3" />
+                  Edit full hero
                 </Button>
               )}
             </div>
