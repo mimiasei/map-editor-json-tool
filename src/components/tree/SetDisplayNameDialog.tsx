@@ -408,10 +408,7 @@ export default function SetDisplayNameDialog({
                 <AlertDescription className="ml-2">
                   This clones {heroDisplayName(baseHeroSid)}'s hero definition under a new hero SID and
                   edits only name/description/motto on the clone — mesh, mounts, icon, stats, squad, skills,
-                  and magics stay exactly as {heroDisplayName(baseHeroSid)}'s. This mirrors a real mechanism
-                  found in a shipped map (Fun_and_Graves.map's custom hero), not a guess like the old
-                  propsName-based approach — but it hasn't been verified against the actual running game
-                  from here.
+                  and magics stay exactly as {heroDisplayName(baseHeroSid)}'s.
                 </AlertDescription>
               </Alert>
               <p className="text-xs text-muted-foreground">
