@@ -49,6 +49,11 @@ export interface MapEntity {
   /** Custom description from objectsProperties.propsName.description, if set.
    *  Same "literal text or LOC:<sid> reference" convention as displayName. */
   description?: string
+  /** Set only when source === 'heroSpawner': the heroSid currently assigned
+   *  to this spawner (objectsProperties.propHeroes.heroSid) — the join key
+   *  for cloning/customizing this hero's identity (issue #139). Absent when
+   *  the spawner has no hero defined (random or empty slot). */
+  heroSid?: string
 }
 
 export interface HeroAssignment {

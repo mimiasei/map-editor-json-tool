@@ -1,5 +1,6 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { CustomHeroDefinition } from '@/types/hero'
 import type { TranslationMap } from '@/lib/languages'
 
 /**
@@ -25,6 +26,7 @@ export function exportProjectJson(
   dialogs: Record<string, DialogFlow>,
   localization: Record<string, string>,
   translations: TranslationMap = {},
+  customHeroes: Record<string, CustomHeroDefinition> = {},
 ): string {
   const project: Record<string, unknown> = {
     ...scenario,
@@ -34,6 +36,7 @@ export function exportProjectJson(
     // Omitted entirely when there are no extra languages, so files saved by
     // English-only projects stay byte-identical to before.
     ...(Object.keys(translations).length > 0 ? { _translations: translations } : {}),
+    ...(Object.keys(customHeroes).length > 0 ? { _customHeroes: customHeroes } : {}),
   }
   return JSON.stringify(project, null, '\t')
 }

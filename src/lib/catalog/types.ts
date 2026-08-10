@@ -9,6 +9,13 @@ export interface CatalogHero {
   fraction: string   // e.g. "human", "undead"
   icon: string       // icon SID — used by thumbnailPath() in issue #62
   classType?: string
+  /** The untouched hero definition JSON entry (Core/DB/heroes/**\/*.json),
+   *  kept as a clone template for custom hero identities (issue #139) — a
+   *  real map-authored hero, e.g. Core/DB/heroes/custom_maps/cm_fun_hero_1.json,
+   *  is just this same shape with different name/description/motto sids.
+   *  Only present when built from a real Core.zip — absent from the static
+   *  fallback catalog (src/lib/catalog/static-catalog.ts). */
+  raw?: Record<string, unknown>
 }
 
 export interface CreatureStats {

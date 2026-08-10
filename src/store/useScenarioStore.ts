@@ -13,6 +13,7 @@ import type {
   SelectionType,
 } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { CustomHeroDefinition } from '@/types/hero'
 import type { TranslationMap } from '@/lib/languages'
 
 // ─── Empty defaults ─────────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ export interface ProjectPayload {
   dialogs?: Record<string, DialogFlow>
   localization?: Record<string, string>
   translations?: TranslationMap
+  customHeroes?: Record<string, CustomHeroDefinition>
   currentFilePath?: string | null
   currentFileName?: string | null
   mapFilePath?: string | null
@@ -102,6 +104,9 @@ interface ScenarioStore {
   translations: TranslationMap
   /** Non-English languages this map has opted into (may still be empty). */
   activeLanguages: string[]
+  /** Custom hero identities (issue #139), keyed by the new heroSid each one
+   *  ships under. Editor-only, stored as _customHeroes in project JSON. */
+  customHeroes: Record<string, CustomHeroDefinition>
 
   // Selection state
   selectedType: SelectionType
@@ -137,6 +142,10 @@ interface ScenarioStore {
   setTranslations: (translations: TranslationMap) => void
   addLanguage: (lang: string) => void
   removeLanguage: (lang: string) => void
+
+  // ── Custom hero identities (issue #139) ──────────────────────────────────
+  setCustomHero: (heroSid: string, definition: CustomHeroDefinition) => void
+  removeCustomHero: (heroSid: string) => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -263,6 +272,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   localization: {},
   translations: {},
   activeLanguages: [],
+  customHeroes: {},
   dialogEditorOpenId: null,
   localizationDialogOpen: false,
   localizationFocusSid: null,
@@ -279,7 +289,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
     useMapContextStore.getState().clearContext()
   },
@@ -298,6 +308,7 @@ export const useScenarioStore = create<ScenarioStore>()(
       localization: payload.localization ?? {},
       translations: payload.translations ?? {},
       activeLanguages: Object.keys(payload.translations ?? {}).sort(),
+      customHeroes: payload.customHeroes ?? {},
       currentFilePath: payload.currentFilePath ?? null,
       currentFileName: payload.currentFileName ?? null,
       mapFilePath: payload.mapFilePath ?? null,
@@ -408,6 +419,18 @@ export const useScenarioStore = create<ScenarioStore>()(
         activeLanguages: s.activeLanguages.filter((l) => l !== lang),
         isDirty: true,
       }
+    }),
+
+  // ── Custom hero identities ───────────────────────────────────────────────────
+
+  setCustomHero: (heroSid, definition) =>
+    set((s) => ({ customHeroes: { ...s.customHeroes, [heroSid]: definition }, isDirty: true })),
+
+  removeCustomHero: (heroSid) =>
+    set((s) => {
+      const customHeroes = { ...s.customHeroes }
+      delete customHeroes[heroSid]
+      return { customHeroes, isDirty: true }
     }),
 
   // ── Counters ───────────────────────────────────────────────────────────────

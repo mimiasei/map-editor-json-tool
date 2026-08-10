@@ -1,5 +1,6 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { CustomHeroDefinition } from '@/types/hero'
 import type { TranslationMap } from '@/lib/languages'
 import { ScenarioFileSchema } from '@/schema/zod'
 
@@ -11,6 +12,8 @@ export interface ImportResult {
   localization: Record<string, string>
   /** Non-English tokens from _translations. Empty for files saved before i18n. */
   translations: TranslationMap
+  /** Custom hero identities from _customHeroes. Empty for files saved before issue #139. */
+  customHeroes: Record<string, CustomHeroDefinition>
   /** Template metadata extracted from _templateMeta (null if not a template) */
   templateMeta: { id: string; name: string; description: string } | null
   /** Template annotations extracted from _annotations */
@@ -29,6 +32,7 @@ export function importScenario(rawJsonText: string): ImportResult {
     dialogs: {} as Record<string, DialogFlow>,
     localization: {} as Record<string, string>,
     translations: {} as TranslationMap,
+    customHeroes: {} as Record<string, CustomHeroDefinition>,
     templateMeta: null as { id: string; name: string; description: string } | null,
     annotations: {} as Record<string, string>,
   }
@@ -69,6 +73,10 @@ export function importScenario(rawJsonText: string): ImportResult {
         }
       }
       delete r['_translations']
+    }
+    if (r['_customHeroes'] && typeof r['_customHeroes'] === 'object') {
+      extras.customHeroes = r['_customHeroes'] as Record<string, CustomHeroDefinition>
+      delete r['_customHeroes']
     }
     if (r['_templateMeta'] && typeof r['_templateMeta'] === 'object') {
       extras.templateMeta = r['_templateMeta'] as { id: string; name: string; description: string }
