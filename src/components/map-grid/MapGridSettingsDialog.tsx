@@ -31,6 +31,10 @@ export interface MapGridSettings {
    *  of this drew one directly, but it never controlled what actually
    *  reads as a border — the icon's own fixed size did). */
   cellBorderThickness: number
+    /** Turns on/off the tile row and column number next to the map itself */
+  showGridNumbers: boolean
+    /** Turns on/off the tile hover border */
+  showGridHover: boolean
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
@@ -38,6 +42,8 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   iconImagesEnabled: true,
   showGridLines: false,
   cellBorderThickness: 0,
+  showGridNumbers: false,
+  showGridHover: true,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -97,6 +103,24 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
             id="grid-show-lines"
             checked={settings.showGridLines}
             onCheckedChange={(v) => update({ showGridLines: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-numbers" className="text-xs cursor-pointer">Grid numbers</Label>
+          <Switch
+              id="grid-show-numbers"
+              checked={settings.showGridNumbers}
+              onCheckedChange={(v) => update({ showGridNumbers: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-hover" className="text-xs cursor-pointer">Grid hover border</Label>
+          <Switch
+              id="grid-show-hover"
+              checked={settings.showGridHover}
+              onCheckedChange={(v) => update({ showGridHover: v })}
           />
         </div>
 

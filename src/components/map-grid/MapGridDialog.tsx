@@ -69,6 +69,9 @@ const MAX_SCALE = 4
 /** Below this on-screen cell size, icons/letters aren't legible — canvas swatches only. */
 const ICON_LOD_THRESHOLD_PX = 16
 const OVERDRAW_CELLS = 3
+/** Shared styling for both row and column tile-number gutters — everything
+ *  except color, which depends on whether this label's row/column is hovered. */
+const TILE_NUMBER_CLASS = 'text-[10px] bg-background/80'
 
 // One flat color per group, for the canvas swatch layer.
 const GROUP_COLORS: Record<GridGroup, string> = {
@@ -544,6 +547,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
   const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
 
+  const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
+  const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
+
   if (!open) return null
 
   return (
@@ -730,6 +736,46 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               onPointerLeave={onPointerLeaveViewport}
               onWheel={onWheel}
             >
+              <div className="absolute left-0">
+                  {settings.showGridNumbers && Array.from(
+                      { length: visibleRange.zMax - visibleRange.zMin + 1 },
+                      (_, i) => visibleRange.zMin + i,
+                  ).map((screenRow) => (
+                      <div
+                          key={screenRow}
+                          className={`absolute left-0 flex items-center justify-end pr-1 pointer-events-none ${TILE_NUMBER_CLASS} ${
+                              screenRow === hoveredScreenRow ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                          }`}
+                          style={{
+                              top: transform.y + screenRow * effectiveCellPx,
+                              height: effectiveCellPx,
+                              width: 24,
+                          }}
+                      >
+                          {sizeZ - 1 - screenRow}
+                      </div>
+                  ))}
+              </div>
+              <div className="absolute top-0">
+                {settings.showGridNumbers && Array.from(
+                    { length: visibleRange.xMax - visibleRange.xMin + 1 },
+                    (_, i) => visibleRange.xMin + i,
+                ).map((x) => (
+                    <div
+                        key={x}
+                        className={`absolute top-0 flex items-center justify-center pointer-events-none ${TILE_NUMBER_CLASS} ${
+                            x === hoveredX ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                        }`}
+                        style={{
+                            left: transform.x + x * effectiveCellPx,
+                            width: effectiveCellPx,
+                            height: 16,
+                        }}
+                    >
+                        {x}
+                    </div>
+                ))}
+              </div>
               <div
                 className="absolute top-0 left-0"
                 style={{
@@ -841,6 +887,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
                     boxSizing: 'border-box',
                   }}
+                />
+              )}
+              {settings.showGridHover && hoveredNode !== null && (
+                <div
+                    className="absolute pointer-events-none rounded-sm border-[2px] border-orange-500/50"
+                    style={{
+                        left: (hoveredNode % sizeX) * effectiveCellPx,
+                        top: (sizeZ - 1 - Math.floor(hoveredNode / sizeX)) * effectiveCellPx,
+                        width: effectiveCellPx,
+                        height: effectiveCellPx,
+                        transform: `translate(${transform.x}px, ${transform.y}px)`,
+                        boxSizing: 'border-box',
+                    }}
                 />
               )}
 
