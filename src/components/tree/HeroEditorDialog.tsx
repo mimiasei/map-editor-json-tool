@@ -66,6 +66,7 @@ import FieldInfo from '@/components/common/FieldInfo'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import { PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
+import {assetLeafName, LARGE_PORTRAIT_SUFFIX} from '@/lib/catalog/icon-requests.ts';
 
 interface HeroEditorDialogProps {
   open: boolean
@@ -744,7 +745,7 @@ export default function HeroEditorDialog({
         onOpenChange={setPortraitPickerOpen}
         mode="portrait"
         value={icon}
-        onSelect={(entry) => setIcon(entry.icon)}
+        onSelect={(entry) => setIcon(assetLeafName(entry.icon).replace(new RegExp(`${LARGE_PORTRAIT_SUFFIX}$`), ''))}
       />
     </Dialog>
   )
