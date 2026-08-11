@@ -4,6 +4,7 @@
 // The tool supports custom/unknown types — users can type any string as the type.
 
 import type { EntityCategory } from './entities'
+import { BASIC_RESOURCE_IDS } from '@/lib/resources'
 
 export interface ParamDef {
   label: string
@@ -192,7 +193,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
         hint: 'gold',
         required: true,
         type: 'enum',
-        options: ['gold', 'dust', 'wood', 'ore', 'crystals', 'mercury', 'gemstones'],
+        options: BASIC_RESOURCE_IDS,
       },
       { label: 'Operator', hint: '>=', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<='] },
       { label: 'Value', hint: 'e.g. 20', required: true, type: 'number' },
@@ -464,7 +465,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
         hint: 'gold',
         required: true,
         type: 'enum',
-        options: ['gold', 'dust', 'wood', 'ore', 'crystals', 'mercury', 'gemstones'],
+        options: BASIC_RESOURCE_IDS,
       },
     ],
   },

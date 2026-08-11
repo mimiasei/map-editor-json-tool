@@ -527,6 +527,130 @@ export function upsertPropHero(chunk: Uint8Array, entityType: number, entityId: 
   return new TextEncoder().encode(patchedText)
 }
 
+// ─── Guard squad (objectsProperties.propSquads) ──────────────────────────────
+// A fixed (non-random) creature squad guarding an interactable object,
+// confirmed on custom_* objects across multiple real maps (e.g.
+// custom_black_tower: unitProps [{sid:"black_dragon_upg",count:1},
+// {sid:"black_dragon",count:1}]) — see plans/testItems-props-reference.md
+// (issue #143). Never confirmed on a mine in any of the 217 real mine
+// instances checked across every shipped map — nothing in the schema
+// restricts it by object type, so writing one is plausible by construction,
+// but treat that combination as unverified against the actual game.
+//
+// Unlike propCities/propHeroes, most guardable objects have NO existing
+// propSquads row at all (it's only present when a map author assigned a
+// guard) — so this finds-or-inserts, defaulting the fields every real
+// example shares, same convention as setNoCombineGeometry/upsertPropPortals.
+interface PropSquadUnitProp {
+  sid?: string
+  count?: number
+}
+
+interface PropSquadEntry {
+  type?: number | string
+  id?: number
+  isMainGuard?: boolean
+  isStartBattleImmediately?: boolean
+  reactionType?: number
+  weeklyIncrementBonus?: number
+  unitProps?: PropSquadUnitProp[]
+}
+
+export function upsertPropSquads(
+  chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  unitProps: { sid: string; count: number }[],
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propSquads')
+
+  const entries = JSON.parse(span) as PropSquadEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) {
+    existing.unitProps = unitProps
+  } else {
+    entries.push({
+      type: entityType,
+      id: entityId,
+      isMainGuard: false,
+      isStartBattleImmediately: false,
+      reactionType: 2,
+      weeklyIncrementBonus: 0,
+      unitProps,
+    })
+  }
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
+// ─── City/portal garrison (objectsProperties.propRandomSquads.sids) ─────────
+// A city or portal's starting garrison, keyed to its own (type, id) —
+// confirmed against 4 real shipped maps (e.g. Thirst_for_Power.map's
+// random-city id 5881: sids ["squad_m5_mega_guard_3"]). Each string in
+// `sids` references a pre-built SQUAD TEMPLATE file
+// (Core/DB/squads/**/*.json), not a raw creature sid — see
+// src/lib/catalog/builder.ts's collectSquadTemplates() (issue #143).
+//
+// A city/portal object always has a propRandomSquads placeholder already
+// (confirmed structurally even when unconfigured, sids:[]) — same
+// "refuse to fabricate" reasoning as setCustomCityName/upsertPropHero.
+interface PropRandomSquadEntry {
+  type?: number | string
+  id?: number
+  sids?: string[]
+}
+
+export function upsertPropRandomSquads(chunk: Uint8Array, entityType: number, entityId: number, sids: string[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')
+
+  const entries = JSON.parse(span) as PropRandomSquadEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propRandomSquads entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured city/portal`)
+  }
+  existing.sids = sids
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
+// ─── Reward slots (objectsProperties.propRewardParams.parameters) ──────────
+// Each slot is "-" (unfilled), "resourceSid:amount", or a bare artifact/
+// skill sid — see src/lib/map-grid/reward-params.ts for the shared encode/
+// decode rules (issue #143, building on the read-only display added in
+// issue #138). Slot COUNT is fixed per object (e.g. custom_windmill always
+// has exactly 1, custom_prismatic_lair always exactly 3) — this replaces
+// the whole array in one write rather than editing a single index, since
+// the editor stages every slot locally before saving. Only objects the read
+// layer already shows a Rewards section for have this table at all, so —
+// same as propRandomSquads — refuses to fabricate a new entry.
+interface PropRewardParamsEntry {
+  type?: number | string
+  id?: number
+  parameters?: string[]
+}
+
+export function upsertPropRewardParams(chunk: Uint8Array, entityType: number, entityId: number, parameters: string[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRewardParams')
+
+  const entries = JSON.parse(span) as PropRewardParamsEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propRewardParams entry found for (type=${entityType}, id=${entityId}) — this object has no reward slots`)
+  }
+  existing.parameters = parameters
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {

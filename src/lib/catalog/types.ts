@@ -110,6 +110,20 @@ export interface CatalogSpecialization {
   forHeroSid: string
 }
 
+/** A pre-built squad template (Core/DB/squads/**\/*.json), issue #143 — what
+ *  objectsProperties.propRandomSquads.sids on a city/portal actually
+ *  references for its garrison, NOT a raw creature sid. Has no display name
+ *  of its own; `unitSids` (from randomSquad.units[].s) lets a consumer
+ *  compose one by resolving real unit names via GameCatalog.creatures at
+ *  render time, same "raw here, resolved where shown" split as
+ *  CatalogSpecialization/reward-params.ts. */
+export interface CatalogSquadTemplate {
+  id: string
+  fraction: string
+  tier: number
+  unitSids: string[]
+}
+
 export interface CatalogDialogSlide {
   id: string
   text?: string        // resolved English text
@@ -144,6 +158,7 @@ export interface GameCatalog {
   mapObjects: CatalogMapObject[]
   factions: CatalogFaction[]
   specializations: CatalogSpecialization[]
+  squadTemplates: CatalogSquadTemplate[]
   dialogs: CatalogDialog[]
   /** Avatar icon paths used by shipped dialogs — feeds the avatar strip combobox. */
   dialogAvatarIcons: string[]
@@ -156,4 +171,5 @@ export interface GameCatalog {
 // interactables/resources (issue #122).
 // v4: added specializations (issue #141) — nothing persists/caches a built
 // catalog across sessions, so this bump is hygiene only, not a migration.
-export const CATALOG_SCHEMA_VERSION = 4
+// v5: added squadTemplates (issue #143), same hygiene-only reasoning.
+export const CATALOG_SCHEMA_VERSION = 5

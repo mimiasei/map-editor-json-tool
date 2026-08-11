@@ -139,6 +139,14 @@ export interface RawMapBlock2 {
      *  src/lib/map-grid/reward-params.ts. Confirmed against real maps in
      *  plans/testItems-props-reference.md. */
     propRewardParams?: Array<{ type?: string; id?: number; parameters?: string[] }>
+    /** A city/portal's starting garrison, keyed to its own (type, id) —
+     *  `sids` references pre-built SQUAD TEMPLATE files
+     *  (Core/DB/squads/**\/*.json), not raw creature sids (issue #143).
+     *  Confirmed against 4 real shipped maps, e.g. Thirst_for_Power.map's
+     *  random-city: `sids: ["squad_m5_mega_guard_3"]`. Also carries several
+     *  other roll-config fields (requestedValue, fraction, tier, ...) this
+     *  editor doesn't touch, left untouched on write. */
+    propRandomSquads?: Array<{ type?: string; id?: number; sids?: string[] }>
     /** Generic per-instance active/inactive toggle — unrelated to
      *  propPortals' own isActive or propMarkers' isActivate below; a
      *  separate table, seen on plain objects (up to 208 uses in one map). */

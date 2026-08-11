@@ -16,6 +16,7 @@ import type {
   CatalogMapObject,
   CatalogFaction,
   CatalogSpecialization,
+  CatalogSquadTemplate,
   CatalogDialog,
   CatalogDialogSlide,
 } from './types'
@@ -301,6 +302,42 @@ async function collectSpecializations(zip: JSZip): Promise<CatalogSpecialization
   return specializations.sort((a, b) => a.id.localeCompare(b.id))
 }
 
+/**
+ * Squad templates (issue #143) — Core/DB/squads/**\/*.json, ~4200 files
+ * across every faction plus neutral, campaign, and custom_maps variants.
+ * This is what objectsProperties.propRandomSquads.sids on a city/portal
+ * actually references for its garrison (confirmed against real shipped
+ * maps, e.g. Thirst_for_Power.map's random-city references
+ * "squad_m5_mega_guard_3") — NOT a raw creature sid. Read uniformly, same
+ * "don't filter by filename" reasoning as collectSpecializations — a
+ * template only meant for one campaign map is still a real, resolvable
+ * pick, just one the searchable combobox will rank low unless typed for.
+ */
+async function collectSquadTemplates(zip: JSZip): Promise<CatalogSquadTemplate[]> {
+  const paths = zipFilesUnder(zip, 'DB/squads/')
+  const templates: CatalogSquadTemplate[] = []
+  const seen = new Set<string>()
+
+  for (const path of paths) {
+    const entries = await readJsonArray(zip, path)
+    for (const entry of entries) {
+      const id = str(entry.id)
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      const randomSquad = entry.randomSquad as Record<string, unknown> | undefined
+      const units = Array.isArray(randomSquad?.units) ? randomSquad.units as Record<string, unknown>[] : []
+      const unitSids = units.map((u) => str(u.s)).filter(Boolean)
+      templates.push({
+        id,
+        fraction: str(entry.fraction),
+        tier: num(entry.tier),
+        unitSids,
+      })
+    }
+  }
+  return templates.sort((a, b) => a.id.localeCompare(b.id))
+}
+
 // All 9 DB/map/objects/*.json category files (issue #122) — every one carries
 // the same `prefs[]` field the icon-derivation logic below reads, so none are
 // skipped for icons the way they used to be.
@@ -476,7 +513,7 @@ export async function buildCatalog(
 ): Promise<GameCatalog> {
   const locMap = await loadLocalization(zip)
 
-  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, dialogData] =
+  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, dialogData] =
     await Promise.all([
       collectHeroes(zip, locMap),
       collectCreatures(zip, locMap),
@@ -487,6 +524,7 @@ export async function buildCatalog(
       collectMapObjects(zip, locMap),
       collectFactions(zip, locMap),
       collectSpecializations(zip),
+      collectSquadTemplates(zip),
       collectDialogs(zip, locMap),
     ])
 
@@ -503,6 +541,7 @@ export async function buildCatalog(
     mapObjects,
     factions,
     specializations,
+    squadTemplates,
     dialogs: dialogData.dialogs,
     dialogAvatarIcons: dialogData.avatarIcons,
     speakerTitles: dialogData.speakerTitles,

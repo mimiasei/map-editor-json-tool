@@ -187,6 +187,26 @@ export interface PlacedObject {
    *  editor's "Delete after trigger" checkbox: whether this zone removes
    *  itself automatically the first time it fires. */
   markerDeleteAfterTrigger?: boolean
+  /** Enrichment: the full objectsProperties.propSquads[].unitProps for this
+   *  instance — a fixed guard squad on an interactable object (issue #143).
+   *  `firstUnitSid` above only ever kept the first entry (for icon display);
+   *  this is the complete list, needed to actually edit the guard. Confirmed
+   *  only ever populated on custom_* interactables across every real map
+   *  checked — never on a mine, though nothing in the schema forbids it. */
+  guardUnitProps?: { sid: string; count: number }[]
+  /** Enrichment: objectsProperties.propRandomSquads.sids for this instance —
+   *  a city or portal's starting garrison (issue #143). Each string
+   *  references a pre-built SQUAD TEMPLATE (Core/DB/squads/**\/*.json), not
+   *  a raw creature sid. Extracted generically for any (type,id) that has
+   *  this table (cities AND portals share it), even though only the city
+   *  case has edit UI so far. */
+  citySquadSids?: string[]
+  /** Enrichment: whether this instance has a propCities entry at all (issue
+   *  #143) — true, deliberately, even for a "random-city" (a procedurally-
+   *  placed neutral/monster city with no propSpawns entry at all, so
+   *  spawnerInfo?.spawnPointType === 0 alone would miss it). Use this, not
+   *  spawnerInfo, to decide whether to show city-only UI. */
+  isCity?: boolean
 }
 
 export interface MapContext {

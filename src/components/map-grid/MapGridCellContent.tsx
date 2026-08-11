@@ -24,6 +24,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { PenLine, Tag, UserCog } from 'lucide-react'
+import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
+import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
@@ -95,6 +97,15 @@ export interface MapGridCellContentProps {
   highlightedNode?: number | null
   /** Docked-only — the undocked mirror can't drive the main window's grid overlay. */
   onSetHighlightedNode?: (node: number | null) => void
+  /** Set a guard squad's units on a plain object (issue #143) — docked-only,
+   *  like the above. Confirmed on interactables in real shipped maps; never
+   *  observed on a mine specifically, though nothing in the schema prevents it. */
+  onSetGuardSquad?: (item: PlacedObject, unitProps: { sid: string; count: number }[]) => void
+  /** Set a city's starting garrison (squad template sids, not creature sids —
+   *  issue #143) — docked-only, like the above. */
+  onSetCityGarrison?: (item: PlacedObject, sids: string[]) => void
+  /** Set every reward slot's value at once (issue #143) — docked-only, like the above. */
+  onSetRewardParams?: (item: PlacedObject, parameters: string[]) => void
 }
 
 const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
@@ -126,6 +137,9 @@ export default function MapGridCellContent({
   onSetPortalTarget,
   highlightedNode = null,
   onSetHighlightedNode,
+  onSetGuardSquad,
+  onSetCityGarrison,
+  onSetRewardParams,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
@@ -134,6 +148,10 @@ export default function MapGridCellContent({
   // display-name convention (both of those already require a deliberate
   // action, not a click-and-forget one).
   const [pendingSpawnType, setPendingSpawnType] = useState<0 | 1 | 2 | null>(null)
+  // issue #143 — same staged-then-saved convention as Player type above.
+  const [pendingGuardUnitProps, setPendingGuardUnitProps] = useState<{ sid: string; count: number }[] | null>(null)
+  const [pendingCitySquadSids, setPendingCitySquadSids] = useState<string[] | null>(null)
+  const [pendingRewardParams, setPendingRewardParams] = useState<string[] | null>(null)
 
   // A newly-clicked tile arrives as a new `items` array — default back to
   // the first row rather than keeping a stale selection from the old tile.
@@ -147,6 +165,9 @@ export default function MapGridCellContent({
 
   useEffect(() => { setNewSidInput('') }, [selected?.key])
   useEffect(() => { setPendingSpawnType(null) }, [selected?.key])
+  useEffect(() => { setPendingGuardUnitProps(null) }, [selected?.key])
+  useEffect(() => { setPendingCitySquadSids(null) }, [selected?.key])
+  useEffect(() => { setPendingRewardParams(null) }, [selected?.key])
 
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === selected?.sid)
   const isCatalogInteractable = !!catalogEntry?.isInteractable
@@ -328,6 +349,60 @@ export default function MapGridCellContent({
             </div>
           )}
 
+          {selected && selected.type === 0 && !selected.isCity && !isHeroSpawner
+            && (selected.guardUnitProps !== undefined || onSetGuardSquad) && (() => {
+              const guardRows = pendingGuardUnitProps ?? selected.guardUnitProps ?? []
+              const guardDirty = pendingGuardUnitProps !== null
+                && JSON.stringify(pendingGuardUnitProps) !== JSON.stringify(selected.guardUnitProps ?? [])
+              return (
+                <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                  <p className="text-xs font-semibold text-muted-foreground">Guard</p>
+                  {onSetGuardSquad ? (
+                    <HeroCatalogListEditor
+                      category="creature"
+                      rows={guardRows}
+                      onChange={setPendingGuardUnitProps}
+                      maxRows={12}
+                      refField="sid"
+                      emptyRow={{ sid: '', count: 1 }}
+                      addLabel="Add unit"
+                      renderExtraFields={(row, _i, update) => (
+                        <Input
+                          type="number"
+                          value={row.count}
+                          onChange={(e) => update({ count: Number(e.target.value) || 1 })}
+                          className="h-8 w-16 text-xs"
+                          title="Count"
+                        />
+                      )}
+                    />
+                  ) : (
+                    <ul className="text-xs list-disc list-inside space-y-0.5">
+                      {guardRows.map((u, i) => (
+                        <li key={i}>{catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid} x{u.count}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Confirmed on interactable objects in real shipped maps; never observed
+                    on a mine specifically, though nothing here prevents setting one.
+                  </p>
+                  {onSetGuardSquad && guardDirty && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <p className="text-xs text-amber-600">Unsaved change</p>
+                      <Button
+                        size="sm"
+                        className="h-6 text-xs"
+                        onClick={() => { onSetGuardSquad(selected, pendingGuardUnitProps!); setPendingGuardUnitProps(null) }}
+                      >
+                        Save to .map
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
           {selected.spawnerInfo && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground">Spawner</p>
@@ -391,6 +466,52 @@ export default function MapGridCellContent({
               </div>
             </div>
           )}
+
+          {selected && selected.isCity && (selected.citySquadSids !== undefined || onSetCityGarrison) && (() => {
+            const garrisonSids = pendingCitySquadSids ?? selected.citySquadSids ?? []
+            const garrisonRows = garrisonSids.map((sid) => ({ sid }))
+            const garrisonDirty = pendingCitySquadSids !== null
+              && JSON.stringify(pendingCitySquadSids) !== JSON.stringify(selected.citySquadSids ?? [])
+            return (
+              <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground">Garrison</p>
+                <p className="text-xs text-muted-foreground">
+                  Squad templates this city starts with — each references a pre-built
+                  squad (Core/DB/squads), not an individual unit.
+                </p>
+                {onSetCityGarrison ? (
+                  <HeroCatalogListEditor
+                    category="squadTemplate"
+                    rows={garrisonRows}
+                    onChange={(rows) => setPendingCitySquadSids(rows.map((r) => r.sid))}
+                    maxRows={5}
+                    refField="sid"
+                    emptyRow={{ sid: '' }}
+                    addLabel="Add squad"
+                    renderExtraFields={() => null}
+                  />
+                ) : (
+                  <ul className="text-xs list-disc list-inside space-y-0.5">
+                    {garrisonSids.map((sid, i) => (
+                      <li key={i} className="font-mono">{sid}</li>
+                    ))}
+                  </ul>
+                )}
+                {onSetCityGarrison && garrisonDirty && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <p className="text-xs text-amber-600">Unsaved change</p>
+                    <Button
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={() => { onSetCityGarrison(selected, pendingCitySquadSids!); setPendingCitySquadSids(null) }}
+                    >
+                      Save to .map
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {selected && portalInfo && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
@@ -461,16 +582,37 @@ export default function MapGridCellContent({
             </div>
           )}
 
-          {selected.rewardParams && selected.rewardParams.length > 0 && (
-            <div className="space-y-1 pt-2 mt-1 border-t border-border/50">
-              <p className="text-xs font-semibold text-muted-foreground">Rewards</p>
-              <ul className="text-xs list-disc list-inside space-y-0.5">
-                {selected.rewardParams.map((p, i) => (
-                  <li key={i}>{formatRewardParam(p, catalog)}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {selected.rewardParams && selected.rewardParams.length > 0 && (() => {
+            const rewardValues = pendingRewardParams ?? selected.rewardParams!
+            const rewardDirty = pendingRewardParams !== null
+              && JSON.stringify(pendingRewardParams) !== JSON.stringify(selected.rewardParams)
+            return (
+              <div className="space-y-1 pt-2 mt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground">Rewards</p>
+                {onSetRewardParams ? (
+                  <RewardSlotEditor parameters={rewardValues} onChange={setPendingRewardParams} catalog={catalog} />
+                ) : (
+                  <ul className="text-xs list-disc list-inside space-y-0.5">
+                    {rewardValues.map((p, i) => (
+                      <li key={i}>{formatRewardParam(p, catalog)}</li>
+                    ))}
+                  </ul>
+                )}
+                {onSetRewardParams && rewardDirty && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <p className="text-xs text-amber-600">Unsaved change</p>
+                    <Button
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={() => { onSetRewardParams(selected, pendingRewardParams!); setPendingRewardParams(null) }}
+                    >
+                      Save to .map
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {selected.type === 1 && (selected.markerActive !== undefined || selected.markerDeleteAfterTrigger !== undefined) && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">

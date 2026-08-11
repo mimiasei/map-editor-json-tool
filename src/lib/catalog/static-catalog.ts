@@ -116,6 +116,7 @@ export const STATIC_CATALOG: GameCatalog = {
   mapObjects: STATIC_MAP_OBJECTS,
   factions: [],
   specializations: [],
+  squadTemplates: [],
   dialogs: [],
   // Dialog asset lists come from Core.zip only — consumers fall back to free-text
   // inputs when these are empty.

@@ -9,6 +9,9 @@
 // Add/remove scaffolding mirrors ConditionForm.tsx's free-param editor
 // (src/components/conditions/ConditionForm.tsx) — same pattern, applied to
 // richer row objects instead of plain strings.
+//
+// issue #143: also reused for a guard squad's unitProps (unit + count) and a
+// city's garrison (squadTemplate sids, no extra fields at all).
 
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
@@ -16,7 +19,7 @@ import EntityCombobox from '@/components/common/EntityCombobox'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface HeroCatalogListEditorProps<T extends Record<string, unknown>> {
-  category: 'creature' | 'skill' | 'spell'
+  category: 'creature' | 'skill' | 'spell' | 'squadTemplate'
   rows: T[]
   onChange: (rows: T[]) => void
   maxRows: number

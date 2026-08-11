@@ -549,6 +549,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
   const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
 
+  const handleSetGuardSquad = async (item: PlacedObject, unitProps: { sid: string; count: number }[]) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setGuardSquad', entityType: item.type, entityId: item.id, unitProps })
+    } catch (e) {
+      logError(`Failed to set guard squad: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  const handleSetCityGarrison = async (item: PlacedObject, sids: string[]) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids })
+    } catch (e) {
+      logError(`Failed to set city garrison: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  const handleSetRewardParams = async (item: PlacedObject, parameters: string[]) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setRewardParams', entityType: item.type, entityId: item.id, parameters })
+    } catch (e) {
+      logError(`Failed to set reward params: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
 
@@ -990,6 +1015,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}
                   onSetHighlightedNode={setHighlightedNode}
+                  onSetGuardSquad={canEditEntities ? handleSetGuardSquad : undefined}
+                  onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
+                  onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                 />
               ) : null}
             </div>
