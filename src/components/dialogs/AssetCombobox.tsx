@@ -5,7 +5,7 @@
 // control degrades to a plain input — which is what happens when Core.zip is not
 // loaded.
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import {
@@ -52,6 +52,7 @@ export default function AssetCombobox({
   thumbnailFor,
 }: Props) {
   const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const filtered = useMemo(() => {
     if (!value) return suggestions.slice(0, 200)
@@ -66,13 +67,13 @@ export default function AssetCombobox({
       <div className="relative">
         <PopoverAnchor asChild>
           <Input
+            ref={inputRef}
             value={value}
             onChange={(e) => {
               onChange(e.target.value)
               setOpen(true)
             }}
             onFocus={() => setOpen(true)}
-            onBlur={() => setTimeout(() => setOpen(false), 150)}
             placeholder={placeholder}
             className={`h-7 text-xs font-mono pr-7 ${className}`}
           />
@@ -86,7 +87,15 @@ export default function AssetCombobox({
         className="p-0"
         style={{ width: 'var(--radix-popover-anchor-width)' }}
         onOpenAutoFocus={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
+        // See EntityCombobox.tsx's identical handler for the full reasoning
+        // — only the anchor input itself needs excluding from Radix's own
+        // outside-interaction dismissal; scrolling this list (scrollbar or
+        // wheel) never reaches this handler at all, so it can't close the
+        // popover either way, unlike the onBlur-timeout approach this
+        // replaced.
+        onInteractOutside={(e) => {
+          if (e.target === inputRef.current) e.preventDefault()
+        }}
       >
         <Command shouldFilter={false}>
           <CommandList>

@@ -395,7 +395,14 @@ export default function HeroEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!saving) onOpenChange(o) }}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-2xl max-h-[85vh] overflow-y-auto"
+        // This dialog holds a large local draft (up to 18 fields, several of
+        // them multi-row list editors) that only commits on "Save to .map" —
+        // an accidental click just outside the dialog would otherwise
+        // silently discard all of it. Escape and Cancel still close normally.
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Edit full hero</DialogTitle>
         </DialogHeader>

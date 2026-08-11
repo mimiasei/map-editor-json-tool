@@ -327,7 +327,13 @@ export default function SetDisplayNameDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!busy) onOpenChange(o) }}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-w-md"
+        // Local draft (up to 3 SID+text pairs for a hero) only commits on
+        // "Save to .map" — an accidental click just outside would otherwise
+        // silently discard it. Escape and Cancel still close normally.
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>

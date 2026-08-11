@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import type { ParamDef } from '@/schema/conditions'
 import { Input } from '@/components/ui/input'
@@ -35,6 +35,7 @@ interface Props {
 
 export default function SidCombobox({ value, onChange, refType, placeholder }: Props) {
   const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const scenario = useScenarioStore((s) => s.scenario)
   // Dialogs live as a sibling of `scenario` in the store, keyed by dialog SID — not part
   // of the scenario JSON itself, since they're a separate flow file per dialog.
@@ -71,13 +72,13 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
       <div className="relative">
         <PopoverAnchor asChild>
           <Input
+            ref={inputRef}
             value={value}
             onChange={(e) => {
               onChange(e.target.value)
               setOpen(true)
             }}
             onFocus={() => setOpen(true)}
-            onBlur={() => setTimeout(() => setOpen(false), 150)}
             placeholder={placeholder}
             className="pr-7"
           />
@@ -90,9 +91,19 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
         style={{ width: 'var(--radix-popover-anchor-width)' }}
         // Don't steal focus from the input when the popover opens
         onOpenAutoFocus={(e) => e.preventDefault()}
-        // Prevent Radix from closing the popover when interacting with the
-        // input (the anchor). Actual closing is handled by the input's onBlur.
-        onInteractOutside={(e) => e.preventDefault()}
+        // Only exclude the anchor input itself from Radix's own outside-
+        // interaction dismissal (without it, re-focusing/clicking the input
+        // while open registers as "outside" and immediately re-closes the
+        // popover Radix just opened, since the anchor is a sibling of
+        // PopoverContent, not inside it) — everything else closes/doesn't
+        // close exactly as Radix already decides. Previously this blanket-
+        // prevented all outside interaction and relied solely on the
+        // input's onBlur (with a setTimeout) to close instead; that also
+        // fired on any focus loss, including dragging this list's own
+        // scrollbar, closing the dropdown mid-scroll.
+        onInteractOutside={(e) => {
+          if (e.target === inputRef.current) e.preventDefault()
+        }}
       >
         <Command shouldFilter={false}>
           <CommandList>

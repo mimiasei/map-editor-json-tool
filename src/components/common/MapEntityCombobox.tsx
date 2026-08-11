@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
@@ -23,6 +23,7 @@ interface Props {
 
 export default function MapEntityCombobox({ value, onChange, placeholder }: Props) {
   const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const entities = useMapContextStore((s) => s.context?.entities) ?? []
 
   const sids = useMemo(() => entities.map((e) => e.sid), [entities])
@@ -40,13 +41,13 @@ export default function MapEntityCombobox({ value, onChange, placeholder }: Prop
       <div className="relative">
         <PopoverAnchor asChild>
           <Input
+            ref={inputRef}
             value={value}
             onChange={(e) => {
               onChange(e.target.value)
               setOpen(true)
             }}
             onFocus={() => setOpen(true)}
-            onBlur={() => setTimeout(() => setOpen(false), 150)}
             placeholder={placeholder}
             className="pr-7"
           />
@@ -58,7 +59,14 @@ export default function MapEntityCombobox({ value, onChange, placeholder }: Prop
         className="p-0"
         style={{ width: 'var(--radix-popover-anchor-width)' }}
         onOpenAutoFocus={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
+        // See EntityCombobox.tsx's identical handler for the full reasoning —
+        // only the anchor input itself needs excluding from Radix's own
+        // outside-interaction dismissal; everything else (including
+        // scrolling this list) should close/not-close exactly as Radix
+        // already decides.
+        onInteractOutside={(e) => {
+          if (e.target === inputRef.current) e.preventDefault()
+        }}
       >
         <Command shouldFilter={false}>
           <CommandList>

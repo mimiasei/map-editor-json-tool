@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { ENTITY_REGISTRIES, ENTITY_LABELS } from '@/schema/entities'
 import type { EntityCategory, EntityEntry } from '@/schema/entities'
 import { useCatalogStore } from '@/store/useCatalogStore'
@@ -104,6 +104,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const [filter, setFilter] = useState<MapObjectFilterState>(() => loadSavedFilter())
 
@@ -172,13 +173,13 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
           <div className="relative flex-1 min-w-0">
             <PopoverAnchor asChild>
               <Input
+                ref={inputRef}
                 value={value}
                 onChange={(e) => {
                   onChange(e.target.value)
                   setOpen(true)
                 }}
                 onFocus={() => setOpen(true)}
-                onBlur={() => setTimeout(() => setOpen(false), 150)}
                 placeholder={placeholder}
                 className={`h-7 text-xs ${category === 'mapObject' ? 'pr-14' : 'pr-7'}`}
               />
@@ -225,7 +226,25 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
             className="p-0"
             style={{ width: 'var(--radix-popover-anchor-width)' }}
             onOpenAutoFocus={(e) => e.preventDefault()}
-            onInteractOutside={(e) => e.preventDefault()}
+            // Radix's own outside-interaction detection is what actually
+            // closes this now — a click on the input itself needs to stay
+            // excluded (without it, focusing/re-clicking the input while
+            // open registers as "outside" and immediately re-closes the
+            // popover Radix just opened, since the anchor is a sibling of
+            // PopoverContent, not inside it). Everything else — a genuine
+            // outside click, Escape, tabbing away — closes normally.
+            // Previously this blanket-prevented ALL outside interaction and
+            // relied on the input's onBlur (with a setTimeout) as the only
+            // close path instead; that also fired on any focus loss,
+            // including dragging the list's own scrollbar or, in some
+            // browsers, mouse-wheel scrolling over it, closing the dropdown
+            // mid-scroll — the only way left to browse it was to type a
+            // search term. Scrolling never reaches this handler at all
+            // (it's an interaction inside PopoverContent), so it can no
+            // longer close the popover either way.
+            onInteractOutside={(e) => {
+              if (e.target === inputRef.current) e.preventDefault()
+            }}
           >
             <Command shouldFilter={false}>
               <CommandList>
