@@ -27,6 +27,7 @@ import {
   PenLine,
   Tag,
   UserCog,
+  Box,
 } from 'lucide-react'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
@@ -36,6 +37,7 @@ import { buildEntityUsageMap, describeEntityUsage, type EntityUsage } from '@/li
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
+import CustomObjectEditorDialog from '@/components/tree/CustomObjectEditorDialog'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
 const LABEL_WIDTH_RATIO = 175 / 280
@@ -285,6 +287,8 @@ export default function ScenarioTree() {
     duplicateTrigger,
     openDialogEditor,
     removeDialogFlow,
+    customMapObjects,
+    removeCustomMapObject,
   } = useScenarioStore()
 
   const entities = useMapContextStore((s) => s.context?.entities) ?? []
@@ -376,6 +380,7 @@ export default function ScenarioTree() {
     interruptions: true,
     quests: true,
     dialogs: true,
+    customObjects: true,
     entitySids: true,
   })
   const [openQuests, setOpenQuests] = useState<Record<number, boolean>>({})
@@ -399,6 +404,8 @@ export default function ScenarioTree() {
   const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
   const [displayNameTarget, setDisplayNameTarget] = useState<MapEntity | null>(null)
   const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
+  const [objectEditorOpen, setObjectEditorOpen] = useState(false)
+  const [objectEditorId, setObjectEditorId] = useState<string | null>(null)
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((s) => ({ ...s, [key]: !s[key] }))
@@ -719,6 +726,47 @@ export default function ScenarioTree() {
           </div>
         )}
 
+        {/* ── Custom Objects (issue #146) ── */}
+        <SectionHeader
+          label="Custom Objects"
+          count={Object.keys(customMapObjects).length}
+          open={openSections.customObjects}
+          onToggle={() => toggleSection('customObjects')}
+          onAdd={() => { setObjectEditorId(null); setObjectEditorOpen(true) }}
+          icon={<Box className="h-3 w-3" />}
+        />
+        {openSections.customObjects && (
+          <div className="px-1 py-1">
+            {Object.entries(customMapObjects).map(([id, def]) => (
+              <div
+                key={id}
+                className="group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none transition-shadow duration-150 hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+                style={{ paddingLeft: '22px' }}
+                onClick={() => { setObjectEditorId(id); setObjectEditorOpen(true) }}
+              >
+                <Box className="h-3 w-3 shrink-0 text-muted-foreground" />
+                <span className="ml-1 truncate font-mono text-xs" style={labelStyle}>{id}</span>
+                <span className="text-xs text-muted-foreground shrink-0 truncate max-w-[35%]">
+                  {def.sourceObjectId}
+                </span>
+                <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeCustomMapObject(id)
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── Entity SIDs (from loaded .map file) ── */}
         <>
           <ReadOnlySectionHeader
@@ -886,6 +934,13 @@ export default function ScenarioTree() {
         entity={heroEditorTarget}
         existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
         mapFilePath={mapFilePath}
+      />
+
+      <CustomObjectEditorDialog
+        open={objectEditorOpen}
+        onOpenChange={setObjectEditorOpen}
+        editingId={objectEditorId}
+        existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
       />
     </ScrollArea>
   )

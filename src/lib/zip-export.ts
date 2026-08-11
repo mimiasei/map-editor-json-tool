@@ -1,6 +1,7 @@
 import JSZip from 'jszip'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import { serializeDialogFile } from '@/lib/dialog-file'
 import {
   BASE_LANGUAGE,
@@ -56,20 +57,26 @@ export function mapNameSnakeCase(mapName: string): string {
 }
 
 /**
- * A heroSid for a newly-cloned custom hero identity (issue #139) that won't
- * collide with anything this map already ships or any hero already known
- * to the catalog. Namespaced off the map name because
- * Core/DB/heroes/custom_maps/ is a single flat folder shared by every custom
+ * A `{mapName}_{prefix}_{n}` id for a newly-cloned custom identity that won't
+ * collide with anything already in `existingIds`. Namespaced off the map name
+ * because the shipped destination folders for these clones (e.g.
+ * Core/DB/heroes/custom_maps/) are single flat folders shared by every custom
  * map installed in the game — unlike dialogs, which are foldered per map
- * name, two different maps' custom heroes would otherwise overwrite each
- * other on install if they ever picked the same sid.
+ * name, two different maps' clones would otherwise overwrite each other on
+ * install if they ever picked the same sid.
  */
-export function mintCustomHeroSid(mapName: string, existingHeroSids: string[]): string {
+export function mintCustomSid(mapName: string, prefix: string, existingIds: string[]): string {
   const base = mapNameSnakeCase(mapName)
-  const taken = new Set(existingHeroSids)
+  const taken = new Set(existingIds)
   let n = 1
-  while (taken.has(`${base}_hero_${n}`)) n++
-  return `${base}_hero_${n}`
+  while (taken.has(`${base}_${prefix}_${n}`)) n++
+  return `${base}_${prefix}_${n}`
+}
+
+/** A heroSid for a newly-cloned custom hero identity (issue #139) — see
+ *  mintCustomSid. */
+export function mintCustomHeroSid(mapName: string, existingHeroSids: string[]): string {
+  return mintCustomSid(mapName, 'hero', existingHeroSids)
 }
 
 // ─── Token collection ─────────────────────────────────────────────────────────
@@ -87,6 +94,7 @@ export function collectShippedSids(
   dialogs: Record<string, DialogFlow>,
   localization: Record<string, string>,
   customHeroes: Record<string, CustomHeroDefinition> = {},
+  customMapObjects: Record<string, CustomMapObjectDefinition> = {},
 ): string[] {
   const sids = new Set<string>(Object.keys(localization))
   for (const flow of Object.values(dialogs)) {
@@ -108,6 +116,14 @@ export function collectShippedSids(
     if (typeof name === 'string' && name) sids.add(name)
     if (typeof description === 'string' && description) sids.add(description)
     if (typeof motto === 'string' && motto) sids.add(motto)
+  }
+  // A custom map object's name/description/narrativeDescription (issue #146)
+  // — same reasoning as the custom hero case above.
+  for (const obj of Object.values(customMapObjects)) {
+    const { name, description, narrativeDescription } = obj.template
+    if (typeof name === 'string' && name) sids.add(name)
+    if (typeof description === 'string' && description) sids.add(description)
+    if (typeof narrativeDescription === 'string' && narrativeDescription) sids.add(narrativeDescription)
   }
   return Array.from(sids)
 }
@@ -139,6 +155,17 @@ export function collectShippedSids(
  * (a shipped map already using this exact mechanism). mintCustomHeroSid()
  * namespaces new heroSids off the map name specifically so two different
  * maps' custom heroes can't collide there.
+ *
+ * DB/map/objects/custom_maps/{mapName}_objects.json (issue #146) — one file
+ * per map holding every custom map object's template in a single `array`
+ * (real base-game template files already routinely hold hundreds of entries,
+ * so this is well within format norms), plus one
+ * DB/objects_logic/{logicSourcePath}/{id}.json per custom object that has a
+ * logic clone. Unlike the hero/dialog cases, the logic destination is NOT a
+ * single shared folder — confirmed by live in-game testing (issue #146) that
+ * a clone must land in the *exact* family subfolder its source logic lives
+ * in (e.g. event_banks), or the object stops working; a shared/generic
+ * subfolder silently breaks it.
  */
 export async function buildMapZipBlob(
   mapName: string,
@@ -146,6 +173,7 @@ export async function buildMapZipBlob(
   localization: Record<string, string>,
   translations: TranslationMap = {},
   customHeroes: Record<string, CustomHeroDefinition> = {},
+  customMapObjects: Record<string, CustomMapObjectDefinition> = {},
 ): Promise<Blob> {
   if (!mapName.trim()) {
     throw new Error('Map name is required to export a ZIP.')
@@ -167,8 +195,24 @@ export async function buildMapZipBlob(
     )
   }
 
+  // ── Custom map object files (issue #146) ─────────────────────────────────────
+  const customObjectTemplates = Object.values(customMapObjects).map((o) => o.template)
+  if (customObjectTemplates.length > 0) {
+    zip.file(
+      `DB/map/objects/custom_maps/${mapNameSnakeCase(mapName)}_objects.json`,
+      JSON.stringify({ array: customObjectTemplates }, null, '\t'),
+    )
+  }
+  for (const obj of Object.values(customMapObjects)) {
+    if (!obj.logic || !obj.logicSourcePath) continue
+    zip.file(
+      `DB/objects_logic/${obj.logicSourcePath}/${obj.id}.json`,
+      JSON.stringify({ array: [obj.logic] }, null, '\t'),
+    )
+  }
+
   // ── Localization files ─────────────────────────────────────────────────────
-  const sids = collectShippedSids(dialogs, localization, customHeroes)
+  const sids = collectShippedSids(dialogs, localization, customHeroes, customMapObjects)
   // English always ships; extra languages only when they carry real content.
   const langs = shippedLanguages(translations)
   const mapNameBase = mapNameSnakeCase(mapName)
@@ -207,8 +251,9 @@ export async function exportMapZip(
   localization: Record<string, string>,
   translations: TranslationMap = {},
   customHeroes: Record<string, CustomHeroDefinition> = {},
+  customMapObjects: Record<string, CustomMapObjectDefinition> = {},
 ): Promise<string[] | null> {
-  const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes)
+  const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes, customMapObjects)
   const filename = mapZipFileName(mapName)
 
   // Check for Tauri at runtime — dynamic import avoids bundling issues

@@ -14,6 +14,7 @@ import type {
 } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { TranslationMap } from '@/lib/languages'
 
 // ─── Empty defaults ─────────────────────────────────────────────────────────────
@@ -77,6 +78,7 @@ export interface ProjectPayload {
   localization?: Record<string, string>
   translations?: TranslationMap
   customHeroes?: Record<string, CustomHeroDefinition>
+  customMapObjects?: Record<string, CustomMapObjectDefinition>
   currentFilePath?: string | null
   currentFileName?: string | null
   mapFilePath?: string | null
@@ -107,6 +109,10 @@ interface ScenarioStore {
   /** Custom hero identities (issue #139), keyed by the new heroSid each one
    *  ships under. Editor-only, stored as _customHeroes in project JSON. */
   customHeroes: Record<string, CustomHeroDefinition>
+  /** Custom map object identities (issue #146), keyed by the new object id
+   *  each one ships under. Editor-only, stored as _customMapObjects in
+   *  project JSON. */
+  customMapObjects: Record<string, CustomMapObjectDefinition>
 
   // Selection state
   selectedType: SelectionType
@@ -146,6 +152,10 @@ interface ScenarioStore {
   // ── Custom hero identities (issue #139) ──────────────────────────────────
   setCustomHero: (heroSid: string, definition: CustomHeroDefinition) => void
   removeCustomHero: (heroSid: string) => void
+
+  // ── Custom map object identities (issue #146) ────────────────────────────
+  setCustomMapObject: (id: string, definition: CustomMapObjectDefinition) => void
+  removeCustomMapObject: (id: string) => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -273,6 +283,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   translations: {},
   activeLanguages: [],
   customHeroes: {},
+  customMapObjects: {},
   dialogEditorOpenId: null,
   localizationDialogOpen: false,
   localizationFocusSid: null,
@@ -289,7 +300,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, customMapObjects: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
     useMapContextStore.getState().clearContext()
   },
@@ -309,6 +320,7 @@ export const useScenarioStore = create<ScenarioStore>()(
       translations: payload.translations ?? {},
       activeLanguages: Object.keys(payload.translations ?? {}).sort(),
       customHeroes: payload.customHeroes ?? {},
+      customMapObjects: payload.customMapObjects ?? {},
       currentFilePath: payload.currentFilePath ?? null,
       currentFileName: payload.currentFileName ?? null,
       mapFilePath: payload.mapFilePath ?? null,
@@ -431,6 +443,18 @@ export const useScenarioStore = create<ScenarioStore>()(
       const customHeroes = { ...s.customHeroes }
       delete customHeroes[heroSid]
       return { customHeroes, isDirty: true }
+    }),
+
+  // ── Custom map object identities ─────────────────────────────────────────────
+
+  setCustomMapObject: (id, definition) =>
+    set((s) => ({ customMapObjects: { ...s.customMapObjects, [id]: definition }, isDirty: true })),
+
+  removeCustomMapObject: (id) =>
+    set((s) => {
+      const customMapObjects = { ...s.customMapObjects }
+      delete customMapObjects[id]
+      return { customMapObjects, isDirty: true }
     }),
 
   // ── Counters ───────────────────────────────────────────────────────────────

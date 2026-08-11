@@ -1,6 +1,7 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { TranslationMap } from '@/lib/languages'
 
 /**
@@ -27,6 +28,7 @@ export function exportProjectJson(
   localization: Record<string, string>,
   translations: TranslationMap = {},
   customHeroes: Record<string, CustomHeroDefinition> = {},
+  customMapObjects: Record<string, CustomMapObjectDefinition> = {},
 ): string {
   const project: Record<string, unknown> = {
     ...scenario,
@@ -37,6 +39,7 @@ export function exportProjectJson(
     // English-only projects stay byte-identical to before.
     ...(Object.keys(translations).length > 0 ? { _translations: translations } : {}),
     ...(Object.keys(customHeroes).length > 0 ? { _customHeroes: customHeroes } : {}),
+    ...(Object.keys(customMapObjects).length > 0 ? { _customMapObjects: customMapObjects } : {}),
   }
   return JSON.stringify(project, null, '\t')
 }
