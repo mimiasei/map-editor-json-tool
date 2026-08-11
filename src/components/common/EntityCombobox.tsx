@@ -50,6 +50,18 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         return catalog.skills.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
       case 'buff':
         return catalog.buffs.map((b) => ({ id: b.id, label: b.name, icon: b.icon }))
+      case 'squadTemplate': {
+        // Squad templates have no display name of their own — compose one
+        // from fraction/tier plus the real unit names inside it (issue #143),
+        // resolved via a Map rather than a per-template .find() since there
+        // are ~4200 templates.
+        const creatureNameById = new Map(catalog.creatures.map((c) => [c.id, c.name]))
+        return catalog.squadTemplates.map((t) => {
+          const units = t.unitSids.map((sid) => creatureNameById.get(sid) ?? sid).join(', ')
+          const fraction = t.fraction ? t.fraction.charAt(0).toUpperCase() + t.fraction.slice(1) : 'Unknown'
+          return { id: t.id, label: `${fraction} T${t.tier} — ${units || t.id}` }
+        })
+      }
       default:
         return ENTITY_REGISTRIES[category] ?? []
     }

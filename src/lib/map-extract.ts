@@ -41,6 +41,9 @@ export interface PlacedObjectEnrichment {
   ownerByKey: Map<string, number>
   markerActiveByKey: Map<string, boolean>
   markerDeleteAfterTriggerByKey: Map<string, boolean>
+  guardUnitPropsByKey: Map<string, { sid: string; count: number }[]>
+  citySquadSidsByKey: Map<string, string[]>
+  isCityByKey: Set<string>
 }
 
 /**
@@ -73,6 +76,9 @@ export function buildPlacedObjects(
       owner: enrichment.ownerByKey.get(key),
       markerActive: enrichment.markerActiveByKey.get(key),
       markerDeleteAfterTrigger: enrichment.markerDeleteAfterTriggerByKey.get(key),
+      guardUnitProps: enrichment.guardUnitPropsByKey.get(key),
+      citySquadSids: enrichment.citySquadSidsByKey.get(key),
+      isCity: enrichment.isCityByKey.has(key) || undefined,
     })
   }
 
@@ -178,6 +184,18 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (c.id === undefined || typeof c.factionSid !== 'string' || !c.factionSid.trim()) continue
     factionByKey.set(`${c.type ?? ''}:${c.id}`, c.factionSid)
   }
+  // A generic "this instance is a city" flag from propCities' mere presence
+  // (issue #143) — deliberately independent of spawnerInfo/propSpawns, which
+  // only exist for actual player start positions. A "random-city" (a
+  // procedurally-placed neutral/monster city, confirmed real in
+  // Thirst_for_Power.map id 5881) has a full propCities + propRandomSquads
+  // entry but no propSpawns entry at all (no player owns it), so
+  // isCitySpawner (spawnerInfo?.spawnPointType === 0) alone would miss it.
+  const isCityByKey = new Set<string>()
+  for (const c of propCities) {
+    if (c.id === undefined) continue
+    isCityByKey.add(`${c.type ?? ''}:${c.id}`)
+  }
 
   // Custom display names + descriptions (objectsProperties.propsName, issue
   // #120) — keyed by the same (type, id) pair propEntities uses to join into
@@ -256,6 +274,26 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (typeof m.isActivate === 'boolean' && !markerActiveByKey.has(key)) markerActiveByKey.set(key, m.isActivate)
     if (typeof m.isDelete === 'boolean' && !markerDeleteAfterTriggerByKey.has(key)) markerDeleteAfterTriggerByKey.set(key, m.isDelete)
   }
+  // Full guard unitProps and city/portal garrison sids (issue #143) — same
+  // key-map pattern as the enrichment fields above; unlike firstUnitSid
+  // (kept for icon display only), guardUnitProps carries every stack so
+  // the editor can round-trip the whole list, not just the first entry.
+  const guardUnitPropsByKey = new Map<string, { sid: string; count: number }[]>()
+  for (const ps of b2.objectsProperties?.propSquads ?? []) {
+    if (ps.id === undefined || !Array.isArray(ps.unitProps)) continue
+    const key = `${ps.type ?? ''}:${ps.id}`
+    if (guardUnitPropsByKey.has(key)) continue
+    const unitProps = ps.unitProps
+      .filter((u): u is { sid: string; count?: number } => typeof u.sid === 'string' && u.sid.trim() !== '')
+      .map((u) => ({ sid: u.sid, count: typeof u.count === 'number' ? u.count : 1 }))
+    if (unitProps.length > 0) guardUnitPropsByKey.set(key, unitProps)
+  }
+  const citySquadSidsByKey = new Map<string, string[]>()
+  for (const rs of b2.objectsProperties?.propRandomSquads ?? []) {
+    if (rs.id === undefined || !Array.isArray(rs.sids)) continue
+    const key = `${rs.type ?? ''}:${rs.id}`
+    if (!citySquadSidsByKey.has(key)) citySquadSidsByKey.set(key, rs.sids)
+  }
   const heroSidByKey = new Map<string, string>()
   for (const h of propHeroes) {
     if (h.id === undefined || typeof h.heroSid !== 'string' || !h.heroSid.trim()) continue
@@ -287,6 +325,9 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     ownerByKey,
     markerActiveByKey,
     markerDeleteAfterTriggerByKey,
+    guardUnitPropsByKey,
+    citySquadSidsByKey,
+    isCityByKey,
   })
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))
 

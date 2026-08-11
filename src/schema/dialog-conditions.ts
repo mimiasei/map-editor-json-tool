@@ -18,6 +18,7 @@
 // The tool supports custom/unknown types — users can type any string as the type.
 
 import type { ParamDef, ConditionDef } from './conditions'
+import { BASIC_RESOURCE_IDS } from '@/lib/resources'
 
 export const DIALOG_CONDITION_REGISTRY: Record<string, ConditionDef> = {
 
@@ -119,7 +120,7 @@ export const DIALOG_CONDITION_REGISTRY: Record<string, ConditionDef> = {
         hint: 'gold',
         required: true,
         type: 'enum',
-        options: ['gold', 'dust', 'wood', 'ore', 'crystals', 'mercury', 'gemstones'],
+        options: BASIC_RESOURCE_IDS,
       },
       { label: 'Operator', hint: '>=', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<='] },
       { label: 'Value', hint: 'e.g. 20', required: true, type: 'number' },

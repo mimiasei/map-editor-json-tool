@@ -20,6 +20,9 @@ import {
   upsertPropPortals,
   setCustomCityName,
   upsertPropHero,
+  upsertPropSquads,
+  upsertPropRandomSquads,
+  upsertPropRewardParams,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -36,6 +39,9 @@ export type MapSaveEdit =
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
   | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
+  | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
+  | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
+  | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
  *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
@@ -117,6 +123,12 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = setCustomCityName(newChunks[1], edit.entityType, edit.entityId, edit.customCityName)
   } else if (edit?.kind === 'setHeroSid') {
     newChunks[1] = upsertPropHero(newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
+  } else if (edit?.kind === 'setGuardSquad') {
+    newChunks[1] = upsertPropSquads(newChunks[1], edit.entityType, edit.entityId, edit.unitProps)
+  } else if (edit?.kind === 'setCityGarrison') {
+    newChunks[1] = upsertPropRandomSquads(newChunks[1], edit.entityType, edit.entityId, edit.sids)
+  } else if (edit?.kind === 'setRewardParams') {
+    newChunks[1] = upsertPropRewardParams(newChunks[1], edit.entityType, edit.entityId, edit.parameters)
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -218,6 +230,33 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.heroSid !== edit.heroSid) {
       throw new Error('Verification failed: heroSid not reflected in the rebuilt propHeroes table')
+    }
+  } else if (edit?.kind === 'setGuardSquad') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propSquads?: Array<{ type?: number | string; id?: number; unitProps?: Array<{ sid?: string; count?: number }> }> }
+    }
+    const entries = block2.objectsProperties?.propSquads ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || JSON.stringify(match.unitProps) !== JSON.stringify(edit.unitProps)) {
+      throw new Error('Verification failed: guard squad not reflected in the rebuilt propSquads table')
+    }
+  } else if (edit?.kind === 'setCityGarrison') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propRandomSquads?: Array<{ type?: number | string; id?: number; sids?: string[] }> }
+    }
+    const entries = block2.objectsProperties?.propRandomSquads ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || JSON.stringify(match.sids) !== JSON.stringify(edit.sids)) {
+      throw new Error('Verification failed: garrison not reflected in the rebuilt propRandomSquads table')
+    }
+  } else if (edit?.kind === 'setRewardParams') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propRewardParams?: Array<{ type?: number | string; id?: number; parameters?: string[] }> }
+    }
+    const entries = block2.objectsProperties?.propRewardParams ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || JSON.stringify(match.parameters) !== JSON.stringify(edit.parameters)) {
+      throw new Error('Verification failed: reward params not reflected in the rebuilt propRewardParams table')
     }
   }
 

@@ -8,6 +8,7 @@
 // logic in the queue is interrupted. See param definitions on each dialog action.
 
 import type { ParamDef } from './conditions'
+import { BASIC_RESOURCE_IDS } from '@/lib/resources'
 
 export interface ActionDef {
   type: string
@@ -306,7 +307,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
         hint: 'gold',
         required: true,
         type: 'enum',
-        options: ['gold', 'dust', 'wood', 'ore', 'crystals', 'mercury', 'gemstones'],
+        options: BASIC_RESOURCE_IDS,
       },
       { label: 'Operator', hint: '>', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<='] },
       { label: 'Value', hint: 'e.g. 100', required: true, type: 'number' },
@@ -386,7 +387,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
         hint: 'gold',
         required: true,
         type: 'enum',
-        options: ['gold', 'dust', 'wood', 'ore', 'crystals', 'mercury', 'gemstones'],
+        options: BASIC_RESOURCE_IDS,
       },
       { label: 'Operator', hint: '>', required: true, type: 'enum', options: ['=', '>', '<', '>=', '<='] },
       { label: 'Value', hint: 'e.g. 100', required: true, type: 'number' },
@@ -563,7 +564,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
         hint: 'gold',
         required: true,
         type: 'enum',
-        options: ['gold', 'dust', 'wood', 'ore', 'crystals', 'mercury', 'gemstones'],
+        options: BASIC_RESOURCE_IDS,
       },
       { label: 'Amount', hint: 'e.g. 500', required: true, type: 'number' },
     ],
@@ -579,7 +580,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
         hint: 'gold',
         required: true,
         type: 'enum',
-        options: ['gold', 'dust', 'wood', 'ore', 'crystals', 'mercury', 'gemstones'],
+        options: BASIC_RESOURCE_IDS,
       },
       { label: 'Amount', hint: 'e.g. 50', required: true, type: 'number' },
     ],
