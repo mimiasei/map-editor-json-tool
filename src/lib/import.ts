@@ -1,6 +1,7 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { TranslationMap } from '@/lib/languages'
 import { ScenarioFileSchema } from '@/schema/zod'
 
@@ -14,6 +15,8 @@ export interface ImportResult {
   translations: TranslationMap
   /** Custom hero identities from _customHeroes. Empty for files saved before issue #139. */
   customHeroes: Record<string, CustomHeroDefinition>
+  /** Custom map object identities from _customMapObjects. Empty for files saved before issue #146. */
+  customMapObjects: Record<string, CustomMapObjectDefinition>
   /** Template metadata extracted from _templateMeta (null if not a template) */
   templateMeta: { id: string; name: string; description: string } | null
   /** Template annotations extracted from _annotations */
@@ -33,6 +36,7 @@ export function importScenario(rawJsonText: string): ImportResult {
     localization: {} as Record<string, string>,
     translations: {} as TranslationMap,
     customHeroes: {} as Record<string, CustomHeroDefinition>,
+    customMapObjects: {} as Record<string, CustomMapObjectDefinition>,
     templateMeta: null as { id: string; name: string; description: string } | null,
     annotations: {} as Record<string, string>,
   }
@@ -77,6 +81,10 @@ export function importScenario(rawJsonText: string): ImportResult {
     if (r['_customHeroes'] && typeof r['_customHeroes'] === 'object') {
       extras.customHeroes = r['_customHeroes'] as Record<string, CustomHeroDefinition>
       delete r['_customHeroes']
+    }
+    if (r['_customMapObjects'] && typeof r['_customMapObjects'] === 'object') {
+      extras.customMapObjects = r['_customMapObjects'] as Record<string, CustomMapObjectDefinition>
+      delete r['_customMapObjects']
     }
     if (r['_templateMeta'] && typeof r['_templateMeta'] === 'object') {
       extras.templateMeta = r['_templateMeta'] as { id: string; name: string; description: string }

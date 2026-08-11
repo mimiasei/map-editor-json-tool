@@ -17,6 +17,7 @@ import type {
   CatalogFaction,
   CatalogSpecialization,
   CatalogSquadTemplate,
+  CatalogObjectLogic,
   CatalogDialog,
   CatalogDialogSlide,
 } from './types'
@@ -338,6 +339,41 @@ async function collectSquadTemplates(zip: JSZip): Promise<CatalogSquadTemplate[]
   return templates.sort((a, b) => a.id.localeCompare(b.id))
 }
 
+/**
+ * Object behavior/logic definitions (Core/DB/objects_logic/**\/*.json), issue
+ * #146 — read uniformly across every family subfolder (chests, event_banks,
+ * res_mines, cities, ~26 others; field shapes vary wildly between them), same
+ * "don't filter by folder name, read everything" reasoning as
+ * collectSquadTemplates. `sourcePath` captures which subfolder a given
+ * entry's own file lives directly in — confirmed required by live in-game
+ * testing: shipping a cloned logic file back to any subfolder other than the
+ * exact one its source lives in (even a plausible-looking shared "custom"
+ * one) silently breaks the object. Every real file here sits exactly one
+ * subfolder deep — nothing sits directly at DB/objects_logic/'s own top level.
+ */
+async function collectObjectLogics(zip: JSZip): Promise<CatalogObjectLogic[]> {
+  const prefix = 'DB/objects_logic/'
+  const paths = zipFilesUnder(zip, prefix)
+  const logics: CatalogObjectLogic[] = []
+  const seen = new Set<string>()
+
+  for (const path of paths) {
+    const rest = path.slice(prefix.length)
+    const slash = rest.indexOf('/')
+    if (slash === -1) continue
+    const sourcePath = rest.slice(0, slash)
+
+    const entries = await readJsonArray(zip, path)
+    for (const entry of entries) {
+      const id = str(entry.id)
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      logics.push({ id, sourcePath, raw: entry })
+    }
+  }
+  return logics.sort((a, b) => a.id.localeCompare(b.id))
+}
+
 // All 9 DB/map/objects/*.json category files (issue #122) — every one carries
 // the same `prefs[]` field the icon-derivation logic below reads, so none are
 // skipped for icons the way they used to be.
@@ -374,8 +410,17 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
       const id = str(entry.id)
       if (!id || seen.has(id)) continue
       seen.add(id)
-      // Name pattern: {id}_name in mapObjects.json
-      const name = loc(locMap, `${id}_name`) ?? loc(locMap, id) ?? id
+      // Most entries have no explicit `name` field at all — their in-game name
+      // comes purely from the `{id}_name` convention (e.g. mine_gold ->
+      // mine_gold_name). But ~105 custom_*/campaign_* entries in
+      // 4_interactables.json alone DO set an explicit `name` sid that doesn't
+      // follow that convention (e.g. custom_alvars_eye -> "alvars_eye_name") —
+      // check that first, matching how collectHeroes/collectSpells/etc.
+      // already do it. Previously only the `{id}_name` convention was checked,
+      // so every one of those ~105 objects displayed its raw id everywhere
+      // this app lists map objects instead of its real name (issue #146).
+      const nameSid = str(entry.name) || `${id}_name`
+      const name = loc(locMap, nameSid) ?? loc(locMap, id) ?? id
       const entryInteractable = PER_ENTRY_INTERACTABLE_CATEGORIES.has(category)
         ? entry.isInteractable !== false
         : defaultInteractable
@@ -399,6 +444,7 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
         category,
         isInteractable: Boolean(entryInteractable),
         icon,
+        raw: entry,
       })
     }
   }
@@ -513,7 +559,7 @@ export async function buildCatalog(
 ): Promise<GameCatalog> {
   const locMap = await loadLocalization(zip)
 
-  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, dialogData] =
+  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, objectLogics, dialogData] =
     await Promise.all([
       collectHeroes(zip, locMap),
       collectCreatures(zip, locMap),
@@ -525,6 +571,7 @@ export async function buildCatalog(
       collectFactions(zip, locMap),
       collectSpecializations(zip),
       collectSquadTemplates(zip),
+      collectObjectLogics(zip),
       collectDialogs(zip, locMap),
     ])
 
@@ -542,6 +589,7 @@ export async function buildCatalog(
     factions,
     specializations,
     squadTemplates,
+    objectLogics,
     dialogs: dialogData.dialogs,
     dialogAvatarIcons: dialogData.avatarIcons,
     speakerTitles: dialogData.speakerTitles,

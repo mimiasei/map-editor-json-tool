@@ -88,6 +88,11 @@ export interface CatalogMapObject {
     | 'animals' | 'fxs' | 'artifacts' | 'test' | 'blocks'
   isInteractable: boolean
   icon?: string
+  /** The untouched Core/DB/map/objects/*.json entry, kept as a clone template
+   *  for custom map object identities (issue #146) — same "raw here, resolved
+   *  where shown" split as CatalogHero.raw. Only present when built from a
+   *  real Core.zip — absent from the static fallback catalog. */
+  raw?: Record<string, unknown>
 }
 
 export interface CatalogFaction {
@@ -122,6 +127,24 @@ export interface CatalogSquadTemplate {
   fraction: string
   tier: number
   unitSids: string[]
+}
+
+/** An object behavior/logic definition (Core/DB/objects_logic/**\/*.json),
+ *  issue #146 — the matching half of a CatalogMapObject template, read from a
+ *  wildly non-uniform set of ~29 family subfolders (chests, event_banks,
+ *  res_mines, cities, etc. — field shapes barely overlap between them, e.g.
+ *  chests has `variants`, res_mines has `guardUnits`/`resValue`). Kept as an
+ *  opaque raw bag here, same as CatalogHero.raw/CatalogMapObject.raw — a
+ *  custom object clone only repoints `id` and ships the rest verbatim.
+ *  `sourcePath` is the family subfolder the source file itself lives in
+ *  (e.g. "event_banks") — confirmed required for a clone to actually work
+ *  in-game: shipping it to a different/shared subfolder breaks the object
+ *  (see issue #146 plan). Not every map object has a matching logic entry
+ *  (pure decorations/environment objects may not); consumers handle absence. */
+export interface CatalogObjectLogic {
+  id: string
+  sourcePath: string
+  raw: Record<string, unknown>
 }
 
 export interface CatalogDialogSlide {
@@ -159,6 +182,7 @@ export interface GameCatalog {
   factions: CatalogFaction[]
   specializations: CatalogSpecialization[]
   squadTemplates: CatalogSquadTemplate[]
+  objectLogics: CatalogObjectLogic[]
   dialogs: CatalogDialog[]
   /** Avatar icon paths used by shipped dialogs — feeds the avatar strip combobox. */
   dialogAvatarIcons: string[]
@@ -172,4 +196,7 @@ export interface GameCatalog {
 // v4: added specializations (issue #141) — nothing persists/caches a built
 // catalog across sessions, so this bump is hygiene only, not a migration.
 // v5: added squadTemplates (issue #143), same hygiene-only reasoning.
-export const CATALOG_SCHEMA_VERSION = 5
+// v6: added objectLogics + CatalogMapObject.raw, and fixed collectMapObjects
+// to read an entry's own explicit `name` field before falling back to the
+// `${id}_name` convention (issue #146) — hygiene-only bump, same reasoning.
+export const CATALOG_SCHEMA_VERSION = 6
