@@ -42,13 +42,49 @@ CommandInput.displayName = CommandPrimitive.Input.displayName
 const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, ...props }, ref) => (
-  <CommandPrimitive.List
-    ref={ref}
-    className={cn("max-h-[200px] overflow-y-auto overflow-x-hidden", className)}
-    {...props}
-  />
-))
+>(({ className, onWheel, ...props }, ref) => {
+  const innerRef = React.useRef<HTMLDivElement | null>(null)
+
+  return (
+    <CommandPrimitive.List
+      ref={(node) => {
+        innerRef.current = node
+        if (typeof ref === "function") ref(node)
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node
+      }}
+      className={cn("max-h-[200px] overflow-y-auto overflow-x-hidden", className)}
+      // Every one of this app's search dropdowns (EntityCombobox,
+      // MapEntityCombobox, SidCombobox, AssetCombobox, CommandPalette) opens
+      // this list inside a Radix Popover, which is portaled to document.body
+      // as a SIBLING of whatever Radix Dialog it's visually nested in — not a
+      // DOM descendant of the dialog's own content element. A modal Radix
+      // Dialog's scroll lock (react-remove-scroll, applied via
+      // react-remove-scroll-bar) only exempts scroll gestures whose target is
+      // inside that content element, so it silently swallows the browser's
+      // native wheel-scroll here even though nothing calls preventDefault()
+      // and the list is otherwise perfectly scrollable (drag-the-scrollbar
+      // still works, since that never goes through a 'wheel' event at all).
+      //
+      // `data-scroll-locked` is the exact attribute that library stamps onto
+      // <body> for as long as any modal dialog is holding the lock — check it
+      // directly rather than guessing from timing (an earlier rAF-based
+      // "did the native scroll already happen" heuristic looked right in a
+      // bare test page but proved unreliable once real React render/commit
+      // overhead was in the mix, so don't reintroduce that). Only take over
+      // scrolling manually while the lock is active: doing it unconditionally
+      // would double the scroll speed everywhere a dialog isn't blocking it,
+      // since native scrolling already works fine there.
+      onWheel={(e) => {
+        const el = innerRef.current
+        if (el && document.body.hasAttribute('data-scroll-locked')) {
+          el.scrollTop += e.deltaY
+        }
+        onWheel?.(e)
+      }}
+      {...props}
+    />
+  )
+})
 CommandList.displayName = CommandPrimitive.List.displayName
 
 const CommandEmpty = React.forwardRef<

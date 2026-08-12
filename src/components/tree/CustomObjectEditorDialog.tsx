@@ -40,6 +40,8 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import EntityCombobox from '@/components/common/EntityCombobox'
+import { ENTITY_REGISTRIES } from '@/schema/entities'
+import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useLocalizedTextField } from '@/hooks/useLocalizedTextField'
@@ -165,9 +167,21 @@ export default function CustomObjectEditorDialog({
 
   const handlePickSource = (value: string) => {
     setSourcePickerValue(value)
-    // Only lock in a pick that actually resolves to a real catalog object —
-    // free text the combobox always accepts otherwise leaves nothing to clone.
-    if (catalog?.mapObjects.some((o) => o.id === value)) {
+    // Only lock in a pick that actually resolves to a real object id — free
+    // text the combobox always accepts on every keystroke otherwise "locks
+    // in" (and hides the picker) after the very first character typed.
+    // EntityCombobox itself falls back to the bundled static registry when
+    // no Core.zip is loaded (a different, smaller id list than
+    // catalog.mapObjects), so check whichever one it's actually offering —
+    // not just catalog.mapObjects, or a pick made from the fallback list
+    // would silently never lock in at all. The static registry carries no
+    // raw JSON to clone from either way; picking from it still correctly
+    // falls through to the "Load the Core.zip catalog…" message below via
+    // catalogMissing, same as the hero editor's equivalent case.
+    const knownIds = catalog
+      ? catalog.mapObjects.map((o) => o.id)
+      : ENTITY_REGISTRIES.mapObject.map((o) => o.id)
+    if (knownIds.includes(value)) {
       setSourceObjectId(value)
     }
   }
@@ -282,13 +296,20 @@ export default function CustomObjectEditorDialog({
 
           {templateBase && (
             <>
-              <p className="text-xs text-muted-foreground">
-                Based on: <span className="font-medium text-foreground">{baseDisplayName}</span>
-                {existingDefinition && ' (already customized)'}{' — '}
-                <button type="button" className="underline hover:text-foreground" onClick={handleChangeBase}>
-                  Change base
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Based on: <span className="font-medium text-foreground">{baseDisplayName}</span>
+                  {existingDefinition && ' (already customized)'}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleChangeBase}
+                  className="shrink-0 rounded border border-transparent p-0.5 hover:border-border hover:bg-accent"
+                  title="Click to change the base object"
+                >
+                  <CatalogIcon iconId={baseCatalogObject?.icon} name={baseDisplayName} size={24} />
                 </button>
-              </p>
+              </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
