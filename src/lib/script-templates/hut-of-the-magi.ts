@@ -54,9 +54,13 @@ function validate(input: ScriptTemplateInput, mapContext: MapContext | null): st
 
 function generate(
   input: ScriptTemplateInput,
-  mapContext: MapContext,
+  mapContext: MapContext | null,
   existingSids: { quests: string[]; counters: string[] },
 ) {
+  // validate() already guarantees mapContext is non-null whenever huts/eyes are
+  // non-empty — this guard just keeps the type honest for the shared interface.
+  if (!mapContext) throw new Error('Hut of the Magi requires a loaded .map file.')
+
   const huts = input.slots.huts ?? []
   const eyes = input.slots.eyes ?? []
   const radius = input.params.radius ?? DEFAULT_RADIUS

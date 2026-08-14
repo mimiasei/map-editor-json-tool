@@ -37,12 +37,13 @@ function emptyInput(template: ScriptTemplateDef): ScriptTemplateInput {
   return {
     slots: Object.fromEntries(template.slots.map((s) => [s.id, ['']])),
     params: Object.fromEntries((template.params ?? []).map((p) => [p.id, p.defaultValue])),
+    fields: {},
   }
 }
 
 export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [input, setInput] = useState<ScriptTemplateInput>({ slots: {}, params: {} })
+  const [input, setInput] = useState<ScriptTemplateInput>({ slots: {}, params: {}, fields: {} })
 
   const mapContext = useMapContextStore((s) => s.context)
   const quests = useScenarioStore((s) => s.scenario.quests)
@@ -58,7 +59,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
   const handleBack = () => {
     setSelectedId(null)
-    setInput({ slots: {}, params: {} })
+    setInput({ slots: {}, params: {}, fields: {} })
   }
 
   const handleClose = (o: boolean) => {
@@ -75,6 +76,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
         Object.entries(input.slots).map(([k, v]) => [k, v.filter((s) => s.trim() !== '')]),
       ),
       params: input.params,
+      fields: input.fields,
     }),
     [input],
   )
@@ -90,7 +92,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
   )
 
   const previewResult = useMemo(() => {
-    if (!selectedTemplate || !mapContext || errors.length > 0) return null
+    if (!selectedTemplate || errors.length > 0) return null
     return selectedTemplate.generate(cleanedInput, mapContext, existingSids)
   }, [selectedTemplate, mapContext, errors.length, cleanedInput, existingSids])
 
@@ -146,51 +148,48 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
 
-            {!mapContext && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="ml-2">
-                  Load a .map file first — object positions can't be resolved without one.
-                </AlertDescription>
-              </Alert>
+            {selectedTemplate.renderFields ? (
+              selectedTemplate.renderFields({ input, setInput, mapContext })
+            ) : (
+              <>
+                {selectedTemplate.slots.map((slot) => (
+                  <div key={slot.id} className="space-y-1.5">
+                    <Label>{slot.label}</Label>
+                    {slot.description && (
+                      <p className="text-xs text-muted-foreground">{slot.description}</p>
+                    )}
+                    <EntityPickerList
+                      values={input.slots[slot.id] ?? ['']}
+                      onChange={(values) =>
+                        setInput((s) => ({ ...s, slots: { ...s.slots, [slot.id]: values } }))
+                      }
+                      addLabel={`+ Add ${slot.label.toLowerCase()}`}
+                      placeholder="Search placed objects…"
+                    />
+                  </div>
+                ))}
+
+                {(selectedTemplate.params ?? []).map((param) => (
+                  <div key={param.id} className="space-y-1.5">
+                    <Label htmlFor={`script-template-param-${param.id}`}>{param.label}</Label>
+                    <Input
+                      id={`script-template-param-${param.id}`}
+                      type="number"
+                      min={param.min}
+                      max={param.max}
+                      value={input.params[param.id] ?? param.defaultValue}
+                      onChange={(e) =>
+                        setInput((s) => ({
+                          ...s,
+                          params: { ...s.params, [param.id]: Number(e.target.value) },
+                        }))
+                      }
+                      className="w-32"
+                    />
+                  </div>
+                ))}
+              </>
             )}
-
-            {selectedTemplate.slots.map((slot) => (
-              <div key={slot.id} className="space-y-1.5">
-                <Label>{slot.label}</Label>
-                {slot.description && (
-                  <p className="text-xs text-muted-foreground">{slot.description}</p>
-                )}
-                <EntityPickerList
-                  values={input.slots[slot.id] ?? ['']}
-                  onChange={(values) =>
-                    setInput((s) => ({ ...s, slots: { ...s.slots, [slot.id]: values } }))
-                  }
-                  addLabel={`+ Add ${slot.label.toLowerCase()}`}
-                  placeholder="Search placed objects…"
-                />
-              </div>
-            ))}
-
-            {(selectedTemplate.params ?? []).map((param) => (
-              <div key={param.id} className="space-y-1.5">
-                <Label htmlFor={`script-template-param-${param.id}`}>{param.label}</Label>
-                <Input
-                  id={`script-template-param-${param.id}`}
-                  type="number"
-                  min={param.min}
-                  max={param.max}
-                  value={input.params[param.id] ?? param.defaultValue}
-                  onChange={(e) =>
-                    setInput((s) => ({
-                      ...s,
-                      params: { ...s.params, [param.id]: Number(e.target.value) },
-                    }))
-                  }
-                  className="w-32"
-                />
-              </div>
-            ))}
 
             {errors.map((err) => (
               <Alert key={err} variant="destructive">

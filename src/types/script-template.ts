@@ -11,6 +11,7 @@
 // Magi, src/lib/script-templates/hut-of-the-magi.ts) purely through existing
 // scripting vocabulary — no new native object types involved.
 
+import type { ReactNode } from 'react'
 import type { Quest, Counter } from './scenario'
 import type { MapContext } from './map-context'
 
@@ -35,10 +36,18 @@ export interface ScriptTemplateNumberParam {
 }
 
 export interface ScriptTemplateInput {
-  /** slot id -> picked map-entity SIDs, in pick order */
+  /** slot id -> picked map-entity SIDs, in pick order (generic 'many'/'one' pickers) */
   slots: Record<string, string[]>
-  /** param id -> numeric value */
+  /** param id -> numeric value (generic number inputs) */
   params: Record<string, number>
+  /**
+   * Free-form string values, for templates whose inputs don't fit the generic
+   * slots/params shape (e.g. an enum-selected quest/reward TYPE that changes
+   * which further fields apply — see seers-hut.ts). Only used by templates
+   * that provide their own renderFields. Numbers are still stored as strings
+   * here, matching how Condition/Action's own `p: string[]` already works.
+   */
+  fields: Record<string, string>
 }
 
 export interface ScriptTemplateGenerateResult {
@@ -46,19 +55,37 @@ export interface ScriptTemplateGenerateResult {
   counters?: Counter[]
 }
 
+export interface ScriptTemplateFieldsProps {
+  input: ScriptTemplateInput
+  setInput: (updater: (prev: ScriptTemplateInput) => ScriptTemplateInput) => void
+  mapContext: MapContext | null
+}
+
 export interface ScriptTemplateDef {
   id: string
   name: string
   description: string
   category: string
+  /** Generic slot pickers (mapEntity lists), rendered automatically by ScriptTemplateDialog.
+   *  Leave empty ([]) for templates that render everything via renderFields instead. */
   slots: ScriptTemplateSlot[]
   params?: ScriptTemplateNumberParam[]
+  /**
+   * Optional custom step-2 form. When provided, the dialog renders this
+   * INSTEAD of the generic slots/params UI — for templates with type-dependent
+   * dynamic fields (e.g. "quest type" changing which further inputs show)
+   * that don't fit the generic renderer. Simple templates (fixed set of
+   * object-list slots + plain numbers, e.g. hut-of-the-magi.ts) don't need
+   * this at all.
+   */
+  renderFields?: (props: ScriptTemplateFieldsProps) => ReactNode
   /** Returns user-facing error strings; empty array = ready to generate. */
   validate: (input: ScriptTemplateInput, mapContext: MapContext | null) => string[]
-  /** Only ever called after validate() returns no errors, so mapContext is non-null here. */
+  /** Only ever called after validate() returns no errors. mapContext may still be
+   *  null for templates (like seers-hut.ts) that never need map positions. */
   generate: (
     input: ScriptTemplateInput,
-    mapContext: MapContext,
+    mapContext: MapContext | null,
     existingSids: { quests: string[]; counters: string[] },
   ) => ScriptTemplateGenerateResult
 }

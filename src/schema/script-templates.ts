@@ -6,9 +6,11 @@
 
 import type { ScriptTemplateDef } from '@/types/script-template'
 import { hutOfTheMagiTemplate } from '@/lib/script-templates/hut-of-the-magi'
+import { seersHutTemplate } from '@/lib/script-templates/seers-hut'
 
 export const SCRIPT_TEMPLATE_REGISTRY: Record<string, ScriptTemplateDef> = {
   [hutOfTheMagiTemplate.id]: hutOfTheMagiTemplate,
+  [seersHutTemplate.id]: seersHutTemplate,
 }
 
 export const SCRIPT_TEMPLATE_LIST: ScriptTemplateDef[] = Object.values(SCRIPT_TEMPLATE_REGISTRY)
