@@ -66,6 +66,7 @@ import {
   RefreshCw,
   Save,
   LayoutGrid,
+  Wand2,
 } from 'lucide-react'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -81,6 +82,7 @@ interface ToolbarProps {
   onDiagramOpen?: () => void
   onStatsOpen?: () => void
   onTemplateOpen?: () => void
+  onScriptTemplatesOpen?: () => void
   onGuidesOpen?: () => void
   onDialogBrowserOpen?: () => void
   onGameDatabaseOpen?: () => void
@@ -101,6 +103,7 @@ export default function Toolbar({
   onDiagramOpen,
   onStatsOpen,
   onTemplateOpen,
+  onScriptTemplatesOpen,
   onGuidesOpen,
   onDialogBrowserOpen,
   onGameDatabaseOpen,
@@ -440,6 +443,16 @@ export default function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>New from template</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={onScriptTemplatesOpen} className="gap-1.5 text-muted-foreground">
+                <Wand2 className="h-4 w-4" />
+                Script Templates
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Generate scripting for classic HoMM3 objects Olden Era is missing</TooltipContent>
           </Tooltip>
 
           <Tooltip>
