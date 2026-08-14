@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import { ENTITY_REGISTRIES, ENTITY_LABELS } from '@/schema/entities'
 import type { EntityCategory, EntityEntry } from '@/schema/entities'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useScenarioStore } from '@/store/useScenarioStore'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,11 @@ interface Props {
 
 function useCatalogEntries(category: EntityCategory): EntityEntry[] {
   const catalog = useCatalogStore((s) => s.catalog)
+  // Custom artifacts (issue #150) aren't part of the Core.zip-built catalog —
+  // they're scenario-local, so their display name resolves against this
+  // project's own localization map, not the catalog's (game-wide) one.
+  const customArtifacts = useScenarioStore((s) => s.customArtifacts)
+  const localization = useScenarioStore((s) => s.localization)
 
   return useMemo(() => {
     if (!catalog) return ENTITY_REGISTRIES[category]
@@ -40,8 +46,15 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         return catalog.heroes.map((h) => ({ id: h.id, label: `${h.name}`, icon: h.icon }))
       case 'creature':
         return catalog.creatures.map((c) => ({ id: c.id, label: c.name, icon: c.icon }))
-      case 'artifact':
-        return catalog.artifacts.map((a) => ({ id: a.id, label: a.name, icon: a.icon }))
+      case 'artifact': {
+        const real = catalog.artifacts.map((a) => ({ id: a.id, label: a.name, icon: a.icon }))
+        const custom = Object.values(customArtifacts).map((def) => {
+          const nameSid = typeof def.template.name === 'string' ? def.template.name : def.id
+          const icon = typeof def.template.icon === 'string' ? def.template.icon : undefined
+          return { id: def.id, label: localization[nameSid] ?? nameSid, icon }
+        })
+        return [...real, ...custom]
+      }
       case 'mapObject':
         return catalog.mapObjects.map((o) => ({ id: o.id, label: o.name }))
       case 'spell':
@@ -65,7 +78,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
       default:
         return ENTITY_REGISTRIES[category] ?? []
     }
-  }, [catalog, category])
+  }, [catalog, category, customArtifacts, localization])
 }
 
 // ─── Map object filter helpers ────────────────────────────────────────────────

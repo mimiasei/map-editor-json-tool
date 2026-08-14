@@ -57,6 +57,12 @@ export interface CatalogArtifact {
   slot?: string
   rarity?: string
   description?: string
+  /** The untouched Core/DB/items/items/*.json array entry, kept as a clone
+   *  template for custom artifact identities (issue #150) — same "raw here,
+   *  resolved where shown" split as CatalogHero.raw/CatalogMapObject.raw.
+   *  Only present when built from a real Core.zip — absent from the static
+   *  fallback catalog. */
+  raw?: Record<string, unknown>
 }
 
 export interface CatalogSpell {
@@ -199,4 +205,6 @@ export interface GameCatalog {
 // v6: added objectLogics + CatalogMapObject.raw, and fixed collectMapObjects
 // to read an entry's own explicit `name` field before falling back to the
 // `${id}_name` convention (issue #146) — hygiene-only bump, same reasoning.
-export const CATALOG_SCHEMA_VERSION = 6
+// v7: added CatalogArtifact.raw, kept as a clone template for custom
+// artifact identities (issue #150) — same hygiene-only reasoning.
+export const CATALOG_SCHEMA_VERSION = 7

@@ -2,6 +2,7 @@ import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
+import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { TranslationMap } from '@/lib/languages'
 import { ScenarioFileSchema } from '@/schema/zod'
 
@@ -17,6 +18,8 @@ export interface ImportResult {
   customHeroes: Record<string, CustomHeroDefinition>
   /** Custom map object identities from _customMapObjects. Empty for files saved before issue #146. */
   customMapObjects: Record<string, CustomMapObjectDefinition>
+  /** Custom artifact identities from _customArtifacts. Empty for files saved before issue #150. */
+  customArtifacts: Record<string, CustomArtifactDefinition>
   /** Template metadata extracted from _templateMeta (null if not a template) */
   templateMeta: { id: string; name: string; description: string } | null
   /** Template annotations extracted from _annotations */
@@ -37,6 +40,7 @@ export function importScenario(rawJsonText: string): ImportResult {
     translations: {} as TranslationMap,
     customHeroes: {} as Record<string, CustomHeroDefinition>,
     customMapObjects: {} as Record<string, CustomMapObjectDefinition>,
+    customArtifacts: {} as Record<string, CustomArtifactDefinition>,
     templateMeta: null as { id: string; name: string; description: string } | null,
     annotations: {} as Record<string, string>,
   }
@@ -85,6 +89,10 @@ export function importScenario(rawJsonText: string): ImportResult {
     if (r['_customMapObjects'] && typeof r['_customMapObjects'] === 'object') {
       extras.customMapObjects = r['_customMapObjects'] as Record<string, CustomMapObjectDefinition>
       delete r['_customMapObjects']
+    }
+    if (r['_customArtifacts'] && typeof r['_customArtifacts'] === 'object') {
+      extras.customArtifacts = r['_customArtifacts'] as Record<string, CustomArtifactDefinition>
+      delete r['_customArtifacts']
     }
     if (r['_templateMeta'] && typeof r['_templateMeta'] === 'object') {
       extras.templateMeta = r['_templateMeta'] as { id: string; name: string; description: string }

@@ -200,8 +200,11 @@ async function collectArtifacts(zip: JSZip, locMap: Map<string, string>): Promis
         id,
         name,
         icon: str(entry.icon || entry.id),
-        slot: str(entry.slot || '') || undefined,
+        // Real field is "slot_" (trailing underscore) — was reading the
+        // wrong key (issue #150 audit); fixed alongside adding `raw` below.
+        slot: str(entry.slot_ || '') || undefined,
         rarity: str(entry.rarity || '') || undefined,
+        raw: entry,
       })
     }
   }

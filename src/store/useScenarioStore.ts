@@ -15,6 +15,7 @@ import type {
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
+import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { TranslationMap } from '@/lib/languages'
 
 // ─── Empty defaults ─────────────────────────────────────────────────────────────
@@ -79,6 +80,7 @@ export interface ProjectPayload {
   translations?: TranslationMap
   customHeroes?: Record<string, CustomHeroDefinition>
   customMapObjects?: Record<string, CustomMapObjectDefinition>
+  customArtifacts?: Record<string, CustomArtifactDefinition>
   currentFilePath?: string | null
   currentFileName?: string | null
   mapFilePath?: string | null
@@ -113,6 +115,10 @@ interface ScenarioStore {
    *  each one ships under. Editor-only, stored as _customMapObjects in
    *  project JSON. */
   customMapObjects: Record<string, CustomMapObjectDefinition>
+  /** Custom artifact identities (issue #150), keyed by the new artifact id
+   *  each one ships under. Editor-only, stored as _customArtifacts in
+   *  project JSON. */
+  customArtifacts: Record<string, CustomArtifactDefinition>
 
   // Selection state
   selectedType: SelectionType
@@ -156,6 +162,10 @@ interface ScenarioStore {
   // ── Custom map object identities (issue #146) ────────────────────────────
   setCustomMapObject: (id: string, definition: CustomMapObjectDefinition) => void
   removeCustomMapObject: (id: string) => void
+
+  // ── Custom artifact identities (issue #150) ──────────────────────────────
+  setCustomArtifact: (id: string, definition: CustomArtifactDefinition) => void
+  removeCustomArtifact: (id: string) => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -287,6 +297,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   activeLanguages: [],
   customHeroes: {},
   customMapObjects: {},
+  customArtifacts: {},
   dialogEditorOpenId: null,
   localizationDialogOpen: false,
   localizationFocusSid: null,
@@ -303,7 +314,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, customMapObjects: {}, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, customMapObjects: {}, customArtifacts: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
     useMapContextStore.getState().clearContext()
   },
@@ -324,6 +335,7 @@ export const useScenarioStore = create<ScenarioStore>()(
       activeLanguages: Object.keys(payload.translations ?? {}).sort(),
       customHeroes: payload.customHeroes ?? {},
       customMapObjects: payload.customMapObjects ?? {},
+      customArtifacts: payload.customArtifacts ?? {},
       currentFilePath: payload.currentFilePath ?? null,
       currentFileName: payload.currentFileName ?? null,
       mapFilePath: payload.mapFilePath ?? null,
@@ -458,6 +470,18 @@ export const useScenarioStore = create<ScenarioStore>()(
       const customMapObjects = { ...s.customMapObjects }
       delete customMapObjects[id]
       return { customMapObjects, isDirty: true }
+    }),
+
+  // ── Custom artifact identities ───────────────────────────────────────────────
+
+  setCustomArtifact: (id, definition) =>
+    set((s) => ({ customArtifacts: { ...s.customArtifacts, [id]: definition }, isDirty: true })),
+
+  removeCustomArtifact: (id) =>
+    set((s) => {
+      const customArtifacts = { ...s.customArtifacts }
+      delete customArtifacts[id]
+      return { customArtifacts, isDirty: true }
     }),
 
   // ── Counters ───────────────────────────────────────────────────────────────

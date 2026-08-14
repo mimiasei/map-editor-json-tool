@@ -2,6 +2,7 @@ import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
+import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { TranslationMap } from '@/lib/languages'
 
 /**
@@ -29,6 +30,7 @@ export function exportProjectJson(
   translations: TranslationMap = {},
   customHeroes: Record<string, CustomHeroDefinition> = {},
   customMapObjects: Record<string, CustomMapObjectDefinition> = {},
+  customArtifacts: Record<string, CustomArtifactDefinition> = {},
 ): string {
   const project: Record<string, unknown> = {
     ...scenario,
@@ -40,6 +42,7 @@ export function exportProjectJson(
     ...(Object.keys(translations).length > 0 ? { _translations: translations } : {}),
     ...(Object.keys(customHeroes).length > 0 ? { _customHeroes: customHeroes } : {}),
     ...(Object.keys(customMapObjects).length > 0 ? { _customMapObjects: customMapObjects } : {}),
+    ...(Object.keys(customArtifacts).length > 0 ? { _customArtifacts: customArtifacts } : {}),
   }
   return JSON.stringify(project, null, '\t')
 }

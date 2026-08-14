@@ -28,6 +28,7 @@ import {
   Tag,
   UserCog,
   Box,
+  Gem,
 } from 'lucide-react'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
@@ -38,6 +39,7 @@ import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import CustomObjectEditorDialog from '@/components/tree/CustomObjectEditorDialog'
+import CustomArtifactEditorDialog from '@/components/tree/CustomArtifactEditorDialog'
 
 // ─── Label width ────────────────────────────────────────────────────────────────
 const LABEL_WIDTH_RATIO = 175 / 280
@@ -289,6 +291,8 @@ export default function ScenarioTree() {
     removeDialogFlow,
     customMapObjects,
     removeCustomMapObject,
+    customArtifacts,
+    removeCustomArtifact,
   } = useScenarioStore()
 
   const entities = useMapContextStore((s) => s.context?.entities) ?? []
@@ -381,6 +385,7 @@ export default function ScenarioTree() {
     quests: true,
     dialogs: true,
     customObjects: true,
+    customArtifacts: true,
     entitySids: true,
   })
   const [openQuests, setOpenQuests] = useState<Record<number, boolean>>({})
@@ -406,6 +411,8 @@ export default function ScenarioTree() {
   const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
   const [objectEditorOpen, setObjectEditorOpen] = useState(false)
   const [objectEditorId, setObjectEditorId] = useState<string | null>(null)
+  const [artifactEditorOpen, setArtifactEditorOpen] = useState(false)
+  const [artifactEditorId, setArtifactEditorId] = useState<string | null>(null)
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((s) => ({ ...s, [key]: !s[key] }))
@@ -767,6 +774,47 @@ export default function ScenarioTree() {
           </div>
         )}
 
+        {/* ── Custom Artifacts (issue #150) ── */}
+        <SectionHeader
+          label="Custom Artifacts"
+          count={Object.keys(customArtifacts).length}
+          open={openSections.customArtifacts}
+          onToggle={() => toggleSection('customArtifacts')}
+          onAdd={() => { setArtifactEditorId(null); setArtifactEditorOpen(true) }}
+          icon={<Gem className="h-3 w-3" />}
+        />
+        {openSections.customArtifacts && (
+          <div className="px-1 py-1">
+            {Object.entries(customArtifacts).map(([id, def]) => (
+              <div
+                key={id}
+                className="group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none transition-shadow duration-150 hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+                style={{ paddingLeft: '22px' }}
+                onClick={() => { setArtifactEditorId(id); setArtifactEditorOpen(true) }}
+              >
+                <Gem className="h-3 w-3 shrink-0 text-muted-foreground" />
+                <span className="ml-1 truncate font-mono text-xs" style={labelStyle}>{id}</span>
+                <span className="text-xs text-muted-foreground shrink-0 truncate max-w-[35%]">
+                  {def.sourceArtifactId}
+                </span>
+                <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeCustomArtifact(id)
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── Entity SIDs (from loaded .map file) ── */}
         <>
           <ReadOnlySectionHeader
@@ -940,6 +988,13 @@ export default function ScenarioTree() {
         open={objectEditorOpen}
         onOpenChange={setObjectEditorOpen}
         editingId={objectEditorId}
+        existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
+      />
+
+      <CustomArtifactEditorDialog
+        open={artifactEditorOpen}
+        onOpenChange={setArtifactEditorOpen}
+        editingId={artifactEditorId}
         existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
       />
     </ScrollArea>
