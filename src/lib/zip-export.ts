@@ -2,6 +2,7 @@ import JSZip from 'jszip'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
+import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import { serializeDialogFile } from '@/lib/dialog-file'
 import {
   BASE_LANGUAGE,
@@ -95,6 +96,7 @@ export function collectShippedSids(
   localization: Record<string, string>,
   customHeroes: Record<string, CustomHeroDefinition> = {},
   customMapObjects: Record<string, CustomMapObjectDefinition> = {},
+  customArtifacts: Record<string, CustomArtifactDefinition> = {},
 ): string[] {
   const sids = new Set<string>(Object.keys(localization))
   for (const flow of Object.values(dialogs)) {
@@ -121,6 +123,14 @@ export function collectShippedSids(
   // — same reasoning as the custom hero case above.
   for (const obj of Object.values(customMapObjects)) {
     const { name, description, narrativeDescription } = obj.template
+    if (typeof name === 'string' && name) sids.add(name)
+    if (typeof description === 'string' && description) sids.add(description)
+    if (typeof narrativeDescription === 'string' && narrativeDescription) sids.add(narrativeDescription)
+  }
+  // A custom artifact's name/description/narrativeDescription (issue #150) —
+  // same reasoning as the custom hero/object cases above.
+  for (const artifact of Object.values(customArtifacts)) {
+    const { name, description, narrativeDescription } = artifact.template
     if (typeof name === 'string' && name) sids.add(name)
     if (typeof description === 'string' && description) sids.add(description)
     if (typeof narrativeDescription === 'string' && narrativeDescription) sids.add(narrativeDescription)
@@ -166,6 +176,16 @@ export function collectShippedSids(
  * a clone must land in the *exact* family subfolder its source logic lives
  * in (e.g. event_banks), or the object stops working; a shared/generic
  * subfolder silently breaks it.
+ *
+ * DB/items/items/custom_maps/{mapName}_artifacts.json (issue #150) — one file
+ * per map holding every custom artifact's template in a single `array`,
+ * mirroring the custom map object convention above (the real game's own 13
+ * DB/items/items/*.json files are likewise flat multi-entry arrays, not
+ * one-file-per-item). Optionally paired with one
+ * DB/map/objects/custom_maps/{mapName}_artifact_objects.json batching every
+ * custom artifact's ground-placement clone (only present for artifacts whose
+ * source had a matching Core/DB/map/objects/6_artifacts.json entry — magic
+ * scroll items, for example, have none).
  */
 export async function buildMapZipBlob(
   mapName: string,
@@ -174,6 +194,7 @@ export async function buildMapZipBlob(
   translations: TranslationMap = {},
   customHeroes: Record<string, CustomHeroDefinition> = {},
   customMapObjects: Record<string, CustomMapObjectDefinition> = {},
+  customArtifacts: Record<string, CustomArtifactDefinition> = {},
 ): Promise<Blob> {
   if (!mapName.trim()) {
     throw new Error('Map name is required to export a ZIP.')
@@ -211,8 +232,26 @@ export async function buildMapZipBlob(
     )
   }
 
+  // ── Custom artifact files (issue #150) ───────────────────────────────────────
+  const customArtifactTemplates = Object.values(customArtifacts).map((a) => a.template)
+  if (customArtifactTemplates.length > 0) {
+    zip.file(
+      `DB/items/items/custom_maps/${mapNameSnakeCase(mapName)}_artifacts.json`,
+      JSON.stringify({ array: customArtifactTemplates }, null, '\t'),
+    )
+  }
+  const customArtifactMapObjects = Object.values(customArtifacts)
+    .map((a) => a.mapObjectTemplate)
+    .filter((t): t is Record<string, unknown> => t !== undefined)
+  if (customArtifactMapObjects.length > 0) {
+    zip.file(
+      `DB/map/objects/custom_maps/${mapNameSnakeCase(mapName)}_artifact_objects.json`,
+      JSON.stringify({ array: customArtifactMapObjects }, null, '\t'),
+    )
+  }
+
   // ── Localization files ─────────────────────────────────────────────────────
-  const sids = collectShippedSids(dialogs, localization, customHeroes, customMapObjects)
+  const sids = collectShippedSids(dialogs, localization, customHeroes, customMapObjects, customArtifacts)
   // English always ships; extra languages only when they carry real content.
   const langs = shippedLanguages(translations)
   const mapNameBase = mapNameSnakeCase(mapName)
@@ -252,8 +291,9 @@ export async function exportMapZip(
   translations: TranslationMap = {},
   customHeroes: Record<string, CustomHeroDefinition> = {},
   customMapObjects: Record<string, CustomMapObjectDefinition> = {},
+  customArtifacts: Record<string, CustomArtifactDefinition> = {},
 ): Promise<string[] | null> {
-  const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes, customMapObjects)
+  const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts)
   const filename = mapZipFileName(mapName)
 
   // Check for Tauri at runtime — dynamic import avoids bundling issues

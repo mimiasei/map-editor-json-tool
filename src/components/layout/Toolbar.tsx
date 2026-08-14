@@ -124,6 +124,7 @@ export default function Toolbar({
     translations,
     customHeroes,
     customMapObjects,
+    customArtifacts,
     setScenario,
     markClean,
     setCurrentFile,
@@ -135,6 +136,7 @@ export default function Toolbar({
     setTranslations,
     setCustomHero,
     setCustomMapObject,
+    setCustomArtifact,
   } = useScenarioStore()
 
   const mapLoaded = useMapContextStore((s) => s.context !== null)
@@ -237,7 +239,7 @@ export default function Toolbar({
     const result = await openFile()
     if (!result) return
 
-    const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc, translations: tr, customHeroes: ch, customMapObjects: cmo, annotations } = importScenario(result.content)
+    const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc, translations: tr, customHeroes: ch, customMapObjects: cmo, customArtifacts: ca, annotations } = importScenario(result.content)
     if (imported) {
       setScenario(imported)
       setCurrentFile(result.path || null, result.name)
@@ -254,6 +256,8 @@ export default function Toolbar({
       for (const [heroSid, def] of Object.entries(ch)) setCustomHero(heroSid, def)
       // Hydrate custom map object identities (absent in files saved before issue #146)
       for (const [id, def] of Object.entries(cmo)) setCustomMapObject(id, def)
+      // Hydrate custom artifact identities (absent in files saved before issue #150)
+      for (const [id, def] of Object.entries(ca)) setCustomArtifact(id, def)
       // Hydrate template annotations
       if (Object.keys(annotations).length > 0) {
         useGuideStore.setState({ templateAnnotations: annotations })
@@ -293,7 +297,7 @@ export default function Toolbar({
   // ── Save (Ctrl+S) — writes to known path; for anchored .map projects this is
   //   the sidecar JSON. Falls back to Save As when no path is known.
   const handleSave = async () => {
-    const json = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects)
+    const json = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts)
     if (isTauri() && sidecarPath) {
       await saveToPath(sidecarPath, json)
       markClean()
@@ -311,7 +315,7 @@ export default function Toolbar({
   // ── Save As ───────────────────────────────────────────────────────────────────
   // Always shows a file-save dialog, even when a .map/sidecar path is known.
   const handleExport = async () => {
-    const json     = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects)
+    const json     = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts)
     const saveName = currentFileName ?? 'scenario.json'
     const savedPath = await saveFile(json, saveName)
     // In browser saveFile always downloads and returns null — still mark clean
@@ -330,7 +334,7 @@ export default function Toolbar({
 
   const handleExportZip = async () => {
     try {
-      const langs = await exportMapZip(mapName, dialogs, localization, translations, customHeroes, customMapObjects)
+      const langs = await exportMapZip(mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts)
       // Name the language files that landed — a missing translation used to be silent.
       if (langs) {
         logInfo(`Exported ZIP: ${langs.length} language file(s) — ${langs.join(', ')}`)

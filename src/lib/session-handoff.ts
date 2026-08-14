@@ -15,6 +15,7 @@ import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
+import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { TranslationMap } from '@/lib/languages'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { isTauri } from '@/lib/native-fs'
@@ -23,7 +24,7 @@ import { logInfo, logWarn } from '@/lib/logger'
 const HANDOFF_FILE = 'pending-session.json'
 
 /** Bump when the envelope shape changes — older files are then ignored, not misread. */
-const HANDOFF_VERSION = 1
+const HANDOFF_VERSION = 2
 
 export interface SessionHandoff {
   v: number
@@ -45,6 +46,7 @@ export interface SessionHandoff {
     translations: TranslationMap
     customHeroes: Record<string, CustomHeroDefinition>
     customMapObjects: Record<string, CustomMapObjectDefinition>
+    customArtifacts: Record<string, CustomArtifactDefinition>
   }
   /** Whether the snapshot had unsaved changes, so the restore can say so. */
   wasDirty: boolean
@@ -91,6 +93,7 @@ export async function writeSessionHandoff(
       translations: s.translations,
       customHeroes: s.customHeroes,
       customMapObjects: s.customMapObjects,
+      customArtifacts: s.customArtifacts,
     },
     wasDirty: s.isDirty,
   }
