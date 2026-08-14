@@ -87,8 +87,8 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
   )
 
   const errors = useMemo(
-    () => (selectedTemplate ? selectedTemplate.validate(cleanedInput, mapContext) : []),
-    [selectedTemplate, cleanedInput, mapContext],
+    () => (selectedTemplate ? selectedTemplate.validate(cleanedInput, mapContext, existingSids) : []),
+    [selectedTemplate, cleanedInput, mapContext, existingSids],
   )
 
   const previewResult = useMemo(() => {
@@ -185,6 +185,23 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
                         }))
                       }
                       className="w-32"
+                    />
+                  </div>
+                ))}
+
+                {(selectedTemplate.stringParams ?? []).map((param) => (
+                  <div key={param.id} className="space-y-1.5">
+                    <Label htmlFor={`script-template-field-${param.id}`}>{param.label}</Label>
+                    <Input
+                      id={`script-template-field-${param.id}`}
+                      value={input.fields[param.id] ?? ''}
+                      placeholder={param.placeholder}
+                      onChange={(e) =>
+                        setInput((s) => ({
+                          ...s,
+                          fields: { ...s.fields, [param.id]: e.target.value },
+                        }))
+                      }
                     />
                   </div>
                 ))}

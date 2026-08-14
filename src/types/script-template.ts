@@ -35,17 +35,27 @@ export interface ScriptTemplateNumberParam {
   max?: number
 }
 
+export interface ScriptTemplateStringParam {
+  /** Key into ScriptTemplateInput.fields, e.g. 'keyCounterSid' */
+  id: string
+  label: string
+  placeholder?: string
+  /** Default false — the common case is an optional dialog/VFX sid. */
+  required?: boolean
+}
+
 export interface ScriptTemplateInput {
   /** slot id -> picked map-entity SIDs, in pick order (generic 'many'/'one' pickers) */
   slots: Record<string, string[]>
   /** param id -> numeric value (generic number inputs) */
   params: Record<string, number>
   /**
-   * Free-form string values, for templates whose inputs don't fit the generic
-   * slots/params shape (e.g. an enum-selected quest/reward TYPE that changes
-   * which further fields apply — see seers-hut.ts). Only used by templates
-   * that provide their own renderFields. Numbers are still stored as strings
-   * here, matching how Condition/Action's own `p: string[]` already works.
+   * Free-form string values. Rendered automatically as plain text inputs for
+   * any `stringParams` entries (the generic case — e.g. an optional dialog
+   * sid). Also used as backing storage for templates with type-dependent
+   * dynamic fields that provide their own renderFields instead (e.g. an
+   * enum-selected quest/reward TYPE that changes which further fields
+   * apply — see seers-hut.ts).
    */
   fields: Record<string, string>
 }
@@ -70,6 +80,10 @@ export interface ScriptTemplateDef {
    *  Leave empty ([]) for templates that render everything via renderFields instead. */
   slots: ScriptTemplateSlot[]
   params?: ScriptTemplateNumberParam[]
+  /** Generic plain-text inputs (e.g. an optional dialog/VFX sid), rendered
+   *  automatically alongside slots/params. Ignored by templates that
+   *  provide renderFields instead. */
+  stringParams?: ScriptTemplateStringParam[]
   /**
    * Optional custom step-2 form. When provided, the dialog renders this
    * INSTEAD of the generic slots/params UI — for templates with type-dependent
@@ -80,7 +94,11 @@ export interface ScriptTemplateDef {
    */
   renderFields?: (props: ScriptTemplateFieldsProps) => ReactNode
   /** Returns user-facing error strings; empty array = ready to generate. */
-  validate: (input: ScriptTemplateInput, mapContext: MapContext | null) => string[]
+  validate: (
+    input: ScriptTemplateInput,
+    mapContext: MapContext | null,
+    existingSids: { quests: string[]; counters: string[] },
+  ) => string[]
   /** Only ever called after validate() returns no errors. mapContext may still be
    *  null for templates (like seers-hut.ts) that never need map positions. */
   generate: (
