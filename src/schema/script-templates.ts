@@ -8,11 +8,13 @@ import type { ScriptTemplateDef } from '@/types/script-template'
 import { hutOfTheMagiTemplate } from '@/lib/script-templates/hut-of-the-magi'
 import { seersHutTemplate } from '@/lib/script-templates/seers-hut'
 import { keyLockTemplate } from '@/lib/script-templates/key-lock'
+import { sphinxTemplate } from '@/lib/script-templates/sphinx'
 
 export const SCRIPT_TEMPLATE_REGISTRY: Record<string, ScriptTemplateDef> = {
   [hutOfTheMagiTemplate.id]: hutOfTheMagiTemplate,
   [seersHutTemplate.id]: seersHutTemplate,
   [keyLockTemplate.id]: keyLockTemplate,
+  [sphinxTemplate.id]: sphinxTemplate,
 }
 
 export const SCRIPT_TEMPLATE_LIST: ScriptTemplateDef[] = Object.values(SCRIPT_TEMPLATE_REGISTRY)

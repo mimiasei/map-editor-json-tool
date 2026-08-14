@@ -14,6 +14,13 @@
 import type { ReactNode } from 'react'
 import type { Quest, Counter } from './scenario'
 import type { MapContext } from './map-context'
+import type { DialogFlow } from './dialog'
+
+export interface ScriptTemplateExistingSids {
+  quests: string[]
+  counters: string[]
+  dialogs: string[]
+}
 
 export type SlotCardinality = 'one' | 'many'
 
@@ -63,6 +70,13 @@ export interface ScriptTemplateInput {
 export interface ScriptTemplateGenerateResult {
   quest: Quest
   counters?: Counter[]
+  /** New DialogFlow to merge in, for templates that need one (e.g. sphinx.tsx's
+   *  multiple-choice riddle) — merged via setDialogFlow, same as any other dialog. */
+  dialogFlow?: DialogFlow
+  /** sid -> text, merged via setLocalizationBatch. For any new loc tokens the
+   *  generated content references (e.g. riddle/answer text) that don't already
+   *  exist elsewhere in the project. */
+  localizationTokens?: Record<string, string>
 }
 
 export interface ScriptTemplateFieldsProps {
@@ -97,13 +111,13 @@ export interface ScriptTemplateDef {
   validate: (
     input: ScriptTemplateInput,
     mapContext: MapContext | null,
-    existingSids: { quests: string[]; counters: string[] },
+    existingSids: ScriptTemplateExistingSids,
   ) => string[]
   /** Only ever called after validate() returns no errors. mapContext may still be
    *  null for templates (like seers-hut.ts) that never need map positions. */
   generate: (
     input: ScriptTemplateInput,
     mapContext: MapContext | null,
-    existingSids: { quests: string[]; counters: string[] },
+    existingSids: ScriptTemplateExistingSids,
   ) => ScriptTemplateGenerateResult
 }

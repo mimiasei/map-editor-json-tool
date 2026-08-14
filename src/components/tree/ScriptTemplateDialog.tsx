@@ -48,7 +48,10 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
   const mapContext = useMapContextStore((s) => s.context)
   const quests = useScenarioStore((s) => s.scenario.quests)
   const counters = useScenarioStore((s) => s.scenario.counters)
+  const dialogs = useScenarioStore((s) => s.dialogs)
   const appendGeneratedContent = useScenarioStore((s) => s.appendGeneratedContent)
+  const setDialogFlow = useScenarioStore((s) => s.setDialogFlow)
+  const setLocalizationBatch = useScenarioStore((s) => s.setLocalizationBatch)
 
   const selectedTemplate = SCRIPT_TEMPLATE_LIST.find((t) => t.id === selectedId) ?? null
 
@@ -82,8 +85,12 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
   )
 
   const existingSids = useMemo(
-    () => ({ quests: quests.map((q) => q.sid), counters: counters.map((c) => c.sid) }),
-    [quests, counters],
+    () => ({
+      quests: quests.map((q) => q.sid),
+      counters: counters.map((c) => c.sid),
+      dialogs: Object.keys(dialogs),
+    }),
+    [quests, counters, dialogs],
   )
 
   const errors = useMemo(
@@ -106,6 +113,12 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
   const handleGenerate = () => {
     if (!previewResult) return
+    if (previewResult.localizationTokens && Object.keys(previewResult.localizationTokens).length > 0) {
+      setLocalizationBatch(previewResult.localizationTokens)
+    }
+    if (previewResult.dialogFlow) {
+      setDialogFlow(previewResult.dialogFlow.id, previewResult.dialogFlow)
+    }
     appendGeneratedContent(previewResult.quest, previewResult.counters ?? [])
     handleClose(false)
   }
