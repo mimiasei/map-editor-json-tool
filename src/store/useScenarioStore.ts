@@ -177,6 +177,9 @@ interface ScenarioStore {
   updateQuest: (questIndex: number, quest: Partial<Quest>) => void
   removeQuest: (questIndex: number) => void
   duplicateQuest: (questIndex: number) => void
+  /** Merges a script-template-generated Quest (and any Counters it needs) into
+   *  the current project in one set() call, so undo removes it in one step. */
+  appendGeneratedContent: (quest: Quest, counters: Counter[]) => void
 
   // ── SubQuest operations ──────────────────────────────────────────────────
   addSubQuest: (questIndex: number, subQuest?: SubQuest) => void
@@ -256,7 +259,7 @@ interface ScenarioStore {
 /** Return a SID that doesn't collide with existingSids.
  *  Strips any trailing _copy / _copy2 / _copy3 … suffix first so cloning
  *  a clone never accumulates _copy_copy. */
-function uniqueSid(sid: string, existingSids: string[]): string {
+export function uniqueSid(sid: string, existingSids: string[]): string {
   const base = sid.replace(/_copy\d*$/, '')
   const taken = new Set(existingSids)
   let candidate = base + '_copy'
@@ -574,6 +577,16 @@ export const useScenarioStore = create<ScenarioStore>()(
   addQuest: () =>
     set((s) => ({
       scenario: { ...s.scenario, quests: [...s.scenario.quests, DEFAULT_QUEST()] },
+      isDirty: true,
+    })),
+
+  appendGeneratedContent: (quest, counters) =>
+    set((s) => ({
+      scenario: {
+        ...s.scenario,
+        quests: [...s.scenario.quests, quest],
+        counters: [...s.scenario.counters, ...counters],
+      },
       isDirty: true,
     })),
 
