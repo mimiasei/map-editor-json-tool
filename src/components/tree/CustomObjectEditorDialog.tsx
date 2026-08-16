@@ -12,6 +12,17 @@
 // its own id) is cloned verbatim — see the issue #146 plan's field-scope
 // section for why.
 //
+// Icon (added after issue #146 shipped): real map objects have NO genuine
+// "icon" field in their own JSON at all — what this app shows is always
+// derived from the object's 3D prefab path stem (collectMapObjects()), so
+// there's nothing real to "swap" in the shipped data the way a custom
+// artifact's real icon field can be repointed. What this dialog offers
+// instead is a purely editor-side display preference
+// (CustomMapObjectDefinition.displayIcon) — pick any known object's icon to
+// make this custom object easier to tell apart in this app's own sidebar/
+// pickers. It is never written into `template` and never shipped; the
+// exported clone's JSON is unaffected by it.
+//
 // Unlike HeroEditorDialog, there is no placed instance driving this dialog —
 // a custom object is authored standalone, before it exists anywhere on the
 // map. This app never writes a new objects[] entry (out of scope, see the
@@ -42,6 +53,7 @@ import { AlertTriangle, Loader2 } from 'lucide-react'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import { ENTITY_REGISTRIES } from '@/schema/entities'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import IconBrowserDialog from '@/components/common/IconBrowserDialog'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useLocalizedTextField } from '@/hooks/useLocalizedTextField'
@@ -83,6 +95,8 @@ export default function CustomObjectEditorDialog({
   const [sourceObjectId, setSourceObjectId] = useState('')
   const [sourcePickerValue, setSourcePickerValue] = useState('')
   const [id, setId] = useState('')
+  const [icon, setIcon] = useState('')
+  const [iconBrowserOpen, setIconBrowserOpen] = useState(false)
   const [initialized, setInitialized] = useState(false)
   // Tracks whether this open has already pulled sourceObjectId from
   // existingDefinition once — without it, "Change base" (which clears
@@ -133,6 +147,7 @@ export default function CustomObjectEditorDialog({
     nameField.reset(previousNameSid, previousNameSid ? (localization[previousNameSid] ?? '') : '')
     descField.reset(previousDescSid, previousDescSid ? (localization[previousDescSid] ?? '') : '')
     narrativeField.reset(previousNarrativeSid, previousNarrativeSid ? (localization[previousNarrativeSid] ?? '') : '')
+    setIcon(existingDefinition?.displayIcon ?? baseCatalogObject?.icon ?? '')
     setId(
       existingDefinition?.id ??
         mintCustomSid(mapName, 'object', [
@@ -157,6 +172,8 @@ export default function CustomObjectEditorDialog({
     setSourceObjectId('')
     setSourcePickerValue('')
     setSynced(false)
+    setIcon('')
+    setIconBrowserOpen(false)
   }
 
   const handleChangeBase = () => {
@@ -195,7 +212,8 @@ export default function CustomObjectEditorDialog({
     !catalogMissing &&
     trimmedId !== '' &&
     !idTaken &&
-    nameField.trimmedSid !== ''
+    nameField.trimmedSid !== '' &&
+    !!icon
 
   const manageToken = (previous: string, next: string, text: string) => {
     if (!next) {
@@ -235,6 +253,7 @@ export default function CustomObjectEditorDialog({
         template,
         logic,
         logicSourcePath,
+        displayIcon: icon,
       })
 
       manageToken(previousNameSid, nameField.trimmedSid, nameField.trimmedText)
@@ -248,6 +267,10 @@ export default function CustomObjectEditorDialog({
       setSaving(false)
     }
   }
+
+  const iconBrowserOptions = (catalog?.mapObjects ?? [])
+    .filter((o): o is typeof o & { icon: string } => !!o.icon)
+    .map((o) => ({ id: o.icon, label: o.name }))
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!saving) onOpenChange(o) }}>
@@ -308,6 +331,21 @@ export default function CustomObjectEditorDialog({
                   title="Click to change the base object"
                 >
                   <CatalogIcon iconId={baseCatalogObject?.icon} name={baseDisplayName} size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1">
+                  <Label>Icon</Label>
+                  <FieldInfo text="Real map objects have no icon field of their own — the game always uses the object's 3D model, unaffected by this. This only changes how the custom object displays in this app's own sidebar/pickers, to help tell similar objects apart." />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIconBrowserOpen(true)}
+                  className="flex items-center gap-2 rounded-md border border-border p-2 hover:bg-accent/50"
+                >
+                  <CatalogIcon iconId={icon} name={baseDisplayName} size={32} />
+                  <span className="text-xs text-muted-foreground">Click to change…</span>
                 </button>
               </div>
 
@@ -399,6 +437,15 @@ export default function CustomObjectEditorDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <IconBrowserDialog
+        open={iconBrowserOpen}
+        onOpenChange={setIconBrowserOpen}
+        title="Choose a display icon"
+        options={iconBrowserOptions}
+        currentIconId={icon}
+        onPick={setIcon}
+      />
     </Dialog>
   )
 }

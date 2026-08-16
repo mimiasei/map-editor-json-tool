@@ -3,6 +3,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { DEBUG } from '@/lib/debug'
+import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -751,7 +752,7 @@ export default function ScenarioTree() {
                 style={{ paddingLeft: '22px' }}
                 onClick={() => { setObjectEditorId(id); setObjectEditorOpen(true) }}
               >
-                <Box className="h-3 w-3 shrink-0 text-muted-foreground" />
+                <CatalogIcon iconId={def.displayIcon} name={id} size={14} />
                 <span className="ml-1 truncate font-mono text-xs" style={labelStyle}>{id}</span>
                 <span className="text-xs text-muted-foreground shrink-0 truncate max-w-[35%]">
                   {def.sourceObjectId}

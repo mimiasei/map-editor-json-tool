@@ -33,4 +33,19 @@ export interface CustomMapObjectDefinition {
    *  source lives in; a shared/generic subfolder breaks the object. Absent
    *  iff `logic` is absent. */
   logicSourcePath?: string
+  /**
+   * Editor-only display icon (an icon id from any known map object's own
+   * derived icon — see `collectMapObjects()`'s `prefs[0]`-stem fallback).
+   * Real map objects have no genuine "icon" field in their own JSON at all
+   * (confirmed: every Core/DB/map/objects/*.json entry lacks one) — what
+   * this app shows is always synthesized from the object's 3D prefab
+   * reference, not read from game data. So unlike custom artifacts'
+   * `template.icon` (a real field the game reads), this is purely a display
+   * preference for this app's own sidebar/pickers and is NEVER written into
+   * `template` or shipped — the exported clone stays byte-for-byte
+   * consistent with "clone everything except identity" (issue #146's
+   * original scope). Absent means "use the base object's own derived icon,"
+   * the pre-existing default behavior.
+   */
+  displayIcon?: string
 }
