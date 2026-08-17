@@ -148,9 +148,16 @@ function addInteractionRing(
     },
   }
   // Same local node-grid coordinate space as `nodes` per the confirmed
-  // evidence above, so shifted by the same +1 ring offset when present.
-  if (typeof pivotX === 'number') patch.pivotX = pivotX + 1
-  if (typeof pivotZ === 'number') patch.pivotZ = pivotZ + 1
+  // evidence above, so shifted by the same +1 ring offset — always emitted,
+  // not just when the source already had one: every real multi-tile
+  // environment object has an explicit pivot (confirmed by scanning
+  // 1_environments.json), so the only sources that omit it are 1x1, whose
+  // implicit pivot is unambiguously (0,0). Leaving pivot unset here (the
+  // previous behavior) silently defaulted to (0,0) in the *new, padded*
+  // grid — anchoring the object's corner instead of its center, which is
+  // exactly the "-1,-1" visual/interaction-ring offset a user hit in-game.
+  patch.pivotX = (pivotX ?? 0) + 1
+  patch.pivotZ = (pivotZ ?? 0) + 1
   return patch
 }
 
