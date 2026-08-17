@@ -36,6 +36,28 @@
 // (mirrors HeroEditorDialog, where the base hero is fixed by the entity) —
 // "Change base" clears it and re-seeds from a fresh pick, rather than trying
 // to reconcile edited fields against a different source's shape.
+//
+// "Build from scratch" mode (added after `block`/`block_2` — previously
+// recommended as a "no native function" base object — turned out to render
+// as a smoke/particle effect in-game, not static geometry as its `prefs`
+// path name implied): decouples "what it looks like" from "what it does."
+// The visual source still clones verbatim (same mechanism as "Clone one
+// object" — there's no independent 3D-asset browser possible here; the only
+// known-valid `prefs` values are whatever some existing map object already
+// references, confirmed by this app's own catalog covering literally every
+// Core/DB/map/objects/*.json entry), but its `tag`/`isInteractable` are
+// forced to a real interactable regardless of the source's own values, and
+// native behavior is a fully independent, opt-in choice (default: none) via
+// `logicSourceObjectId`/`noNativeLogic` on CustomMapObjectDefinition — see
+// that file for the field semantics.
+//
+// Attached behavior is editable, not just clonable, when it's shaped like
+// Core/DB/objects_logic/event_banks/**/*.json (`isEventBankLogic` —
+// visitType + variants[]) — the one family internally consistent enough for
+// a generic form (see EventBankLogicEditor.tsx for the full scope/rationale).
+// `logicEdits` holds the live draft (seeded from the picked source, or from
+// an already-saved definition's `logic` on re-edit); every other family
+// still ships as an exact, unedited clone.
 
 import { useState } from 'react'
 import {
@@ -61,6 +83,7 @@ import LocalizedTextField from '@/components/common/LocalizedTextField'
 import FieldInfo from '@/components/common/FieldInfo'
 import { mintCustomSid } from '@/lib/zip-export'
 import { isMapObjectIdTaken } from '@/lib/custom-map-object-authoring'
+import EventBankLogicEditor, { isEventBankLogic } from './EventBankLogicEditor'
 
 interface CustomObjectEditorDialogProps {
   open: boolean
@@ -94,6 +117,11 @@ export default function CustomObjectEditorDialog({
 
   const [sourceObjectId, setSourceObjectId] = useState('')
   const [sourcePickerValue, setSourcePickerValue] = useState('')
+  const [mode, setMode] = useState<'clone' | 'scratch'>('clone')
+  const [noNativeLogic, setNoNativeLogic] = useState(false)
+  const [logicSourceObjectId, setLogicSourceObjectId] = useState('')
+  const [logicPickerValue, setLogicPickerValue] = useState('')
+  const [logicEdits, setLogicEdits] = useState<Record<string, unknown> | null>(null)
   const [id, setId] = useState('')
   const [icon, setIcon] = useState('')
   const [iconBrowserOpen, setIconBrowserOpen] = useState(false)
@@ -112,12 +140,29 @@ export default function CustomObjectEditorDialog({
 
   const templateBase: Record<string, unknown> | null =
     existingDefinition?.template ?? baseCatalogObject?.raw ?? null
+  // "Clone one object" mode's own logic resolution — unchanged from before
+  // "build from scratch" mode existed. Only used when mode === 'clone'.
   const logicBase: Record<string, unknown> | undefined =
     existingDefinition?.logic ?? baseCatalogLogic?.raw
   const logicSourcePathBase: string | undefined =
     existingDefinition?.logicSourcePath ?? baseCatalogLogic?.sourcePath
   const baseDisplayName = catalog?.mapObjects.find((o) => o.id === sourceObjectId)?.name ?? sourceObjectId
   const catalogMissing = !!sourceObjectId && !templateBase
+
+  // "Build from scratch" mode's own, fully independent logic resolution —
+  // deliberately never falls back to the visual source's own logic (that
+  // coupling is exactly what this mode exists to break). "None" (the
+  // default) means no logic at all, full stop.
+  const logicBearingIds = new Set((catalog?.objectLogics ?? []).map((l) => l.id))
+  const scratchLogicSource = catalog?.objectLogics.find((l) => l.id === logicSourceObjectId)
+  const scratchLogicDisplayName =
+    catalog?.mapObjects.find((o) => o.id === logicSourceObjectId)?.name ?? logicSourceObjectId
+  const effectiveLogicBase = mode === 'scratch'
+    ? (noNativeLogic ? undefined : (logicEdits ?? undefined))
+    : logicBase
+  const effectiveLogicSourcePath = mode === 'scratch'
+    ? (noNativeLogic ? undefined : (scratchLogicSource?.sourcePath ?? existingDefinition?.logicSourcePath))
+    : logicSourcePathBase
 
   const previousNameSid = str(templateBase?.name)
   const previousDescSid = str(templateBase?.description)
@@ -165,6 +210,16 @@ export default function CustomObjectEditorDialog({
   if (open && existingDefinition && !synced) {
     setSourceObjectId(existingDefinition.sourceObjectId)
     setSourcePickerValue(existingDefinition.sourceObjectId)
+    const wasScratch = !!existingDefinition.noNativeLogic || !!existingDefinition.logicSourceObjectId
+    setMode(wasScratch ? 'scratch' : 'clone')
+    setNoNativeLogic(!!existingDefinition.noNativeLogic)
+    setLogicSourceObjectId(existingDefinition.logicSourceObjectId ?? '')
+    setLogicPickerValue(existingDefinition.logicSourceObjectId ?? '')
+    setLogicEdits(
+      wasScratch && existingDefinition.logicSourceObjectId && existingDefinition.logic
+        ? (JSON.parse(JSON.stringify(existingDefinition.logic)) as Record<string, unknown>)
+        : null,
+    )
     setSynced(true)
   }
   if (!open && (initialized || sourceObjectId || synced)) {
@@ -174,12 +229,32 @@ export default function CustomObjectEditorDialog({
     setSynced(false)
     setIcon('')
     setIconBrowserOpen(false)
+    setMode('clone')
+    setNoNativeLogic(false)
+    setLogicSourceObjectId('')
+    setLogicPickerValue('')
+    setLogicEdits(null)
   }
 
   const handleChangeBase = () => {
     setSourceObjectId('')
     setSourcePickerValue('')
     setInitialized(false)
+  }
+
+  const handlePickLogicSource = (value: string) => {
+    setLogicPickerValue(value)
+    if (logicBearingIds.has(value)) {
+      setLogicSourceObjectId(value)
+      const source = catalog?.objectLogics.find((l) => l.id === value)
+      setLogicEdits(source?.raw ? (JSON.parse(JSON.stringify(source.raw)) as Record<string, unknown>) : null)
+    }
+  }
+
+  const handleClearLogicSource = () => {
+    setLogicSourceObjectId('')
+    setLogicPickerValue('')
+    setLogicEdits(null)
   }
 
   const handlePickSource = (value: string) => {
@@ -232,15 +307,29 @@ export default function CustomObjectEditorDialog({
     setSaving(true)
     setError(null)
     try {
-      const template: Record<string, unknown> = {
-        ...templateBase,
-        id: trimmedId,
-        name: nameField.trimmedSid,
-        description: descField.trimmedSid,
-        narrativeDescription: narrativeField.trimmedSid,
-      }
-      const logic = logicBase ? { ...logicBase, id: trimmedId } : undefined
-      const logicSourcePath = logicBase ? logicSourcePathBase : undefined
+      const template: Record<string, unknown> = mode === 'scratch'
+        ? {
+            ...templateBase,
+            // Forced regardless of the visual source's own values — it may be
+            // a decoration/environment/animal object (tag: "Environment" or
+            // no isInteractable field at all), but this is always meant to be
+            // a real interactable so Script Template triggers can fire on it.
+            tag: 'Interact',
+            isInteractable: true,
+            id: trimmedId,
+            name: nameField.trimmedSid,
+            description: descField.trimmedSid,
+            narrativeDescription: narrativeField.trimmedSid,
+          }
+        : {
+            ...templateBase,
+            id: trimmedId,
+            name: nameField.trimmedSid,
+            description: descField.trimmedSid,
+            narrativeDescription: narrativeField.trimmedSid,
+          }
+      const logic = effectiveLogicBase ? { ...effectiveLogicBase, id: trimmedId } : undefined
+      const logicSourcePath = effectiveLogicBase ? effectiveLogicSourcePath : undefined
 
       // Renaming an already-customized object's id — drop the stale entry so
       // it doesn't linger as an orphaned, unreferenced customMapObjects key.
@@ -254,6 +343,8 @@ export default function CustomObjectEditorDialog({
         logic,
         logicSourcePath,
         displayIcon: icon,
+        logicSourceObjectId: mode === 'scratch' && logicSourceObjectId ? logicSourceObjectId : undefined,
+        noNativeLogic: mode === 'scratch' ? noNativeLogic : undefined,
       })
 
       manageToken(previousNameSid, nameField.trimmedSid, nameField.trimmedText)
@@ -294,18 +385,58 @@ export default function CustomObjectEditorDialog({
           </p>
 
           {!sourceObjectId && (
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1">
-                <Label>Base object</Label>
-                <FieldInfo text="The real map object whose definition this custom object clones. Everything except id/name/description/narrative description is copied verbatim, including its 3D asset and footprint." />
+            <>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1">
+                  <Label>Mode</Label>
+                  <FieldInfo text="Clone one object: the visual and any native behavior both come from a single existing object, same as before. Build from scratch: pick the visual and native behavior independently — e.g. pick any object purely for its looks, with no native behavior at all, so a Script Template's own scripting is the only thing that happens when a hero interacts with it." />
+                </div>
+                <div className="flex gap-1.5">
+                  <Button
+                    type="button"
+                    variant={mode === 'clone' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setMode('clone')}
+                  >
+                    Clone one object
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={mode === 'scratch' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setMode('scratch')
+                      setNoNativeLogic(true)
+                      setLogicSourceObjectId('')
+                      setLogicPickerValue('')
+                    }}
+                  >
+                    Build from scratch
+                  </Button>
+                </div>
               </div>
-              <EntityCombobox
-                value={sourcePickerValue}
-                onChange={handlePickSource}
-                category="mapObject"
-                placeholder="Search for an object to clone…"
-              />
-            </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1">
+                  <Label>{mode === 'scratch' ? 'Visual' : 'Base object'}</Label>
+                  <FieldInfo
+                    text={
+                      mode === 'scratch'
+                        ? 'The real map object supplying this custom object\'s 3D model and footprint only — its own native behavior (if any) is not included. Pick freely for looks; attach native behavior separately below.'
+                        : 'The real map object whose definition this custom object clones. Everything except id/name/description/narrative description is copied verbatim, including its 3D asset and footprint.'
+                    }
+                  />
+                </div>
+                <EntityCombobox
+                  value={sourcePickerValue}
+                  onChange={handlePickSource}
+                  category="mapObject"
+                  placeholder={mode === 'scratch' ? 'Search for any object to use its visual…' : 'Search for an object to clone…'}
+                />
+              </div>
+            </>
           )}
 
           {catalogMissing && (
@@ -321,7 +452,8 @@ export default function CustomObjectEditorDialog({
             <>
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
-                  Based on: <span className="font-medium text-foreground">{baseDisplayName}</span>
+                  {mode === 'scratch' ? 'Visual: ' : 'Based on: '}
+                  <span className="font-medium text-foreground">{baseDisplayName}</span>
                   {existingDefinition && ' (already customized)'}
                 </p>
                 <button
@@ -333,6 +465,73 @@ export default function CustomObjectEditorDialog({
                   <CatalogIcon iconId={baseCatalogObject?.icon} name={baseDisplayName} size={24} />
                 </button>
               </div>
+
+              {mode === 'scratch' && (
+                <div className="space-y-1.5 border-t border-border pt-3">
+                  <div className="flex items-center gap-1">
+                    <Label>Native behavior</Label>
+                    <FieldInfo text="What happens natively (independent of any Script Template) when a hero interacts with this object. Defaults to none, so a Script Template's own scripting is the only thing that happens — pick an existing object's behavior to attach here only if you actually want native reward/guard/shop logic on top." />
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button
+                      type="button"
+                      variant={noNativeLogic ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        setNoNativeLogic(true)
+                        handleClearLogicSource()
+                      }}
+                    >
+                      None
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={!noNativeLogic ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setNoNativeLogic(false)}
+                    >
+                      Attach from another object…
+                    </Button>
+                  </div>
+                  {!noNativeLogic && !logicSourceObjectId && (
+                    <EntityCombobox
+                      value={logicPickerValue}
+                      onChange={handlePickLogicSource}
+                      category="mapObject"
+                      placeholder="Search for an object with behavior to attach…"
+                      restrictToIds={logicBearingIds}
+                    />
+                  )}
+                  {!noNativeLogic && logicSourceObjectId && (
+                    <>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">
+                          Attaching: <span className="font-medium text-foreground">{scratchLogicDisplayName}</span>'s behavior
+                          {scratchLogicSource && ` (${scratchLogicSource.sourcePath})`}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleClearLogicSource}
+                          className="shrink-0 text-xs text-muted-foreground underline hover:text-foreground"
+                        >
+                          Change
+                        </button>
+                      </div>
+                      <div className="rounded-md border border-border p-2">
+                        {logicEdits && isEventBankLogic(logicEdits) ? (
+                          <EventBankLogicEditor raw={logicEdits} onChange={setLogicEdits} />
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            This behavior's settings can't be edited here — shipped as a verbatim clone, same as before.
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1">
@@ -410,7 +609,7 @@ export default function CustomObjectEditorDialog({
                 bordered
               />
 
-              {!logicBase && (
+              {mode === 'clone' && !logicBase && (
                 <p className="text-xs text-muted-foreground border-t border-border pt-3">
                   This base object has no behavior logic entry — the clone will ship as a template
                   only, same as it.

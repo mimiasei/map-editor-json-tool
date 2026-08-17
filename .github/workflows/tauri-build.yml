@@ -254,6 +254,28 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
+      # A CI-check build (no tag) never attaches anywhere — tauri-action only
+      # uploads to a GitHub Release when given a releaseId, which only the
+      # tagged-release path above has. Without this, testing a WIP branch on
+      # an actual OS meant cutting a real version tag/release just to get an
+      # installer. These are ad-hoc, unsigned test builds (no auto-update) —
+      # not release artifacts — hence the separate "test-build-" name prefix.
+      - name: Upload installer for ad-hoc branch testing
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-build-${{ matrix.platform }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            src-tauri/target/**/bundle/**/*.msi
+            src-tauri/target/**/bundle/**/*.exe
+            src-tauri/target/**/bundle/**/*.dmg
+            src-tauri/target/**/bundle/**/*.app
+            src-tauri/target/**/bundle/**/*.AppImage
+            src-tauri/target/**/bundle/**/*.deb
+            src-tauri/target/**/bundle/**/*.rpm
+
   # ── Gate: refuse to let a half-updatable release look finished ────────────────
   #
   # Even with one shared release, tauri-action assembles latest.json by reading

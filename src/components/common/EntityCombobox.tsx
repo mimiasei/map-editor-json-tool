@@ -26,6 +26,11 @@ interface Props {
   onChange: (value: string) => void
   category: EntityCategory
   placeholder?: string
+  /** Optional: restrict results to ids in this set, applied after the
+   *  built-in map object category/interactable filter (e.g. "only map
+   *  objects that have a matching objects_logic entry" — CustomObjectEditorDialog's
+   *  from-scratch native-behavior picker). Undefined means no restriction. */
+  restrictToIds?: Set<string>
 }
 
 // ─── Hook: build the entry list from catalog or static fallback ───────────────
@@ -56,7 +61,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         return [...real, ...custom]
       }
       case 'mapObject':
-        return catalog.mapObjects.map((o) => ({ id: o.id, label: o.name }))
+        return catalog.mapObjects.map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
       case 'spell':
         return catalog.spells.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
       case 'skill':
@@ -113,7 +118,7 @@ function applyMapObjectFilter(
  * Display format: "Entity Name" visible, ID written to JSON.
  * Free-text entry is always accepted for forward-compatibility.
  */
-export default function EntityCombobox({ value, onChange, category, placeholder }: Props) {
+export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds }: Props) {
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -142,13 +147,18 @@ export default function EntityCombobox({ value, onChange, category, placeholder 
     [allEntries, rawMapObjects, filter, category],
   )
 
+  const restricted = useMemo(
+    () => (restrictToIds ? filteredByMapFilter.filter((e) => restrictToIds.has(e.id)) : filteredByMapFilter),
+    [filteredByMapFilter, restrictToIds],
+  )
+
   const filtered = useMemo(() => {
-    if (!value) return filteredByMapFilter
+    if (!value) return restricted
     const q = value.toLowerCase()
-    return filteredByMapFilter.filter(
+    return restricted.filter(
       (e) => e.id.toLowerCase().includes(q) || e.label.toLowerCase().includes(q),
     )
-  }, [filteredByMapFilter, value])
+  }, [restricted, value])
 
   const isFiltered =
     category === 'mapObject' &&
