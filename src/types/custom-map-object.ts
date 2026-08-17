@@ -48,4 +48,22 @@ export interface CustomMapObjectDefinition {
    * the pre-existing default behavior.
    */
   displayIcon?: string
+  /**
+   * "Build from scratch" mode only (issue #146 follow-up, prompted by
+   * `block`/`block_2` turning out to be a smoke/particle mesh in-game, not
+   * static geometry as its `prefs` path name implied): clone native logic
+   * from a *different* object than the one supplying the visual
+   * (`sourceObjectId`), decoupling "what it looks like" from "what it does."
+   * Absent + `noNativeLogic` absent means today's default: logic tied to
+   * `sourceObjectId` itself, if it has any (unchanged "clone one object"
+   * behavior). Ignored when `noNativeLogic` is true.
+   */
+  logicSourceObjectId?: string
+  /**
+   * "Build from scratch" mode's default: ship with zero native logic, even
+   * if `sourceObjectId`'s own object has some — the point being that a
+   * Script Template's own scripting is the *only* thing that happens when a
+   * hero interacts with it. Takes precedence over `logicSourceObjectId`.
+   */
+  noNativeLogic?: boolean
 }
