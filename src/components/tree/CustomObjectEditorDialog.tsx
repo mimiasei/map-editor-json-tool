@@ -161,6 +161,13 @@ function addInteractionRing(
   return patch
 }
 
+function parseDebugNodes(text: string): number[] {
+  return text
+    .split(',')
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isFinite(n))
+}
+
 export default function CustomObjectEditorDialog({
   open,
   onOpenChange,
@@ -186,6 +193,32 @@ export default function CustomObjectEditorDialog({
   const [logicSourceObjectId, setLogicSourceObjectId] = useState('')
   const [logicPickerValue, setLogicPickerValue] = useState('')
   const [logicEdits, setLogicEdits] = useState<Record<string, unknown> | null>(null)
+  // "Build from scratch" debug panel — raw geometry override, added after
+  // two in-game rounds of wrong pivot guesses. Placement anchoring is
+  // runtime engine behavior with no documentation or discoverable rule in
+  // the game's own data files, so rather than guess a third time, this lets
+  // the user iterate on sizeX/sizeZ/nodes/pivot/generatorConfig directly and
+  // re-export without needing a new app build each time. Seeded from the
+  // computed (padded, if applicable) geometry whenever a fresh visual is
+  // picked; overrides it at save time when in scratch mode.
+  const [debugOpen, setDebugOpen] = useState(false)
+  const [debugSizeX, setDebugSizeX] = useState(1)
+  const [debugSizeZ, setDebugSizeZ] = useState(1)
+  const [debugPivotX, setDebugPivotX] = useState(0)
+  const [debugPivotZ, setDebugPivotZ] = useState(0)
+  const [debugBuildingSizeX, setDebugBuildingSizeX] = useState(1)
+  const [debugBuildingSizeZ, setDebugBuildingSizeZ] = useState(1)
+  const [debugBuildingLeftBottomX, setDebugBuildingLeftBottomX] = useState(0)
+  const [debugBuildingLeftBottomZ, setDebugBuildingLeftBottomZ] = useState(0)
+  const [debugBuildingInteractionLayout, setDebugBuildingInteractionLayout] = useState(3)
+  const [debugNodesText, setDebugNodesText] = useState('')
+  // Separate from `initialized` — `mode` may still read 'clone' on the same
+  // render `initialized` first flips true (existingDefinition's `mode` sync
+  // below runs later, and setMode doesn't take effect until a subsequent
+  // render), so seeding debug fields inside that same block could seed the
+  // wrong (unpadded) geometry. This flag waits for a render where `mode` has
+  // actually settled to 'scratch' before seeding, whichever render that is.
+  const [debugSeeded, setDebugSeeded] = useState(false)
   const [id, setId] = useState('')
   const [icon, setIcon] = useState('')
   const [iconBrowserOpen, setIconBrowserOpen] = useState(false)
@@ -295,6 +328,33 @@ export default function CustomObjectEditorDialog({
     )
     setSynced(true)
   }
+
+  // Debug panel seeding — see the debugSeeded declaration for why this is a
+  // separate block rather than folded into the "seed once per pick" one.
+  if (open && templateBase && mode === 'scratch' && !debugSeeded) {
+    const padded = needsInteractionRing
+      ? addInteractionRing(
+          templateSizeX,
+          templateSizeZ,
+          templateNodes,
+          typeof templateBase.pivotX === 'number' ? templateBase.pivotX : undefined,
+          typeof templateBase.pivotZ === 'number' ? templateBase.pivotZ : undefined,
+        )
+      : null
+    const gc = (padded?.generatorConfig ?? templateBase.generatorConfig ?? {}) as Record<string, unknown>
+    setDebugSizeX(typeof padded?.sizeX === 'number' ? padded.sizeX : templateSizeX)
+    setDebugSizeZ(typeof padded?.sizeZ === 'number' ? padded.sizeZ : templateSizeZ)
+    setDebugNodesText((Array.isArray(padded?.nodes) ? (padded.nodes as number[]) : templateNodes).join(','))
+    setDebugPivotX(typeof padded?.pivotX === 'number' ? padded.pivotX : (typeof templateBase.pivotX === 'number' ? templateBase.pivotX : 0))
+    setDebugPivotZ(typeof padded?.pivotZ === 'number' ? padded.pivotZ : (typeof templateBase.pivotZ === 'number' ? templateBase.pivotZ : 0))
+    setDebugBuildingSizeX(typeof gc.buildingSizeX === 'number' ? gc.buildingSizeX : templateSizeX)
+    setDebugBuildingSizeZ(typeof gc.buildingSizeZ === 'number' ? gc.buildingSizeZ : templateSizeZ)
+    setDebugBuildingLeftBottomX(typeof gc.buildingLeftBottomX === 'number' ? gc.buildingLeftBottomX : 0)
+    setDebugBuildingLeftBottomZ(typeof gc.buildingLeftBottomZ === 'number' ? gc.buildingLeftBottomZ : 0)
+    setDebugBuildingInteractionLayout(typeof gc.buildingInteractionLayout === 'number' ? gc.buildingInteractionLayout : 3)
+    setDebugSeeded(true)
+  }
+
   if (!open && (initialized || sourceObjectId || synced)) {
     setInitialized(false)
     setSourceObjectId('')
@@ -307,12 +367,15 @@ export default function CustomObjectEditorDialog({
     setLogicSourceObjectId('')
     setLogicPickerValue('')
     setLogicEdits(null)
+    setDebugOpen(false)
+    setDebugSeeded(false)
   }
 
   const handleChangeBase = () => {
     setSourceObjectId('')
     setSourcePickerValue('')
     setInitialized(false)
+    setDebugSeeded(false)
   }
 
   const handlePickLogicSource = (value: string) => {
@@ -404,6 +467,24 @@ export default function CustomObjectEditorDialog({
             // a real interactable so Script Template triggers can fire on it.
             tag: 'Interact',
             isInteractable: true,
+            // Advanced (debug) override — replaces whatever addInteractionRing
+            // computed above with the directly-edited values from the debug
+            // panel, so pivot/footprint placement can be iterated on without
+            // a new app build. Always applied in scratch mode (debug fields
+            // are seeded to match the computed geometry, so this is a no-op
+            // until the user actually edits something).
+            sizeX: debugSizeX,
+            sizeZ: debugSizeZ,
+            nodes: parseDebugNodes(debugNodesText),
+            pivotX: debugPivotX,
+            pivotZ: debugPivotZ,
+            generatorConfig: {
+              buildingSizeX: debugBuildingSizeX,
+              buildingSizeZ: debugBuildingSizeZ,
+              buildingLeftBottomX: debugBuildingLeftBottomX,
+              buildingLeftBottomZ: debugBuildingLeftBottomZ,
+              buildingInteractionLayout: debugBuildingInteractionLayout,
+            },
             id: trimmedId,
             name: nameField.trimmedSid,
             description: descField.trimmedSid,
@@ -561,6 +642,73 @@ export default function CustomObjectEditorDialog({
                   around it so it's actually triggerable (footprint becomes {templateSizeX + 2}×
                   {templateSizeZ + 2}, was {templateSizeX}×{templateSizeZ}).
                 </p>
+              )}
+
+              {mode === 'scratch' && (
+                <div className="space-y-1.5 border-t border-border pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setDebugOpen((o) => !o)}
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    {debugOpen ? '▾' : '▸'} Advanced (debug): footprint &amp; pivot
+                  </button>
+                  {debugOpen && (
+                    <div className="space-y-2 rounded-md border border-border p-2">
+                      <p className="text-xs text-muted-foreground">
+                        Directly edits this object's shipped sizeX/sizeZ/nodes/pivot/generatorConfig
+                        — placement anchoring is runtime engine behavior with no documented rule, so
+                        this is for iterating on it directly instead of guessing.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Size X</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugSizeX} onChange={(e) => setDebugSizeX(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Size Z</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugSizeZ} onChange={(e) => setDebugSizeZ(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Pivot X</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugPivotX} onChange={(e) => setDebugPivotX(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Pivot Z</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugPivotZ} onChange={(e) => setDebugPivotZ(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Building size X</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugBuildingSizeX} onChange={(e) => setDebugBuildingSizeX(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Building size Z</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugBuildingSizeZ} onChange={(e) => setDebugBuildingSizeZ(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Building left-bottom X</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugBuildingLeftBottomX} onChange={(e) => setDebugBuildingLeftBottomX(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Building left-bottom Z</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugBuildingLeftBottomZ} onChange={(e) => setDebugBuildingLeftBottomZ(Number(e.target.value) || 0)} />
+                        </div>
+                        <div className="space-y-1 col-span-2">
+                          <Label className="text-xs">Building interaction layout</Label>
+                          <Input type="number" className="h-7 text-xs" value={debugBuildingInteractionLayout} onChange={(e) => setDebugBuildingInteractionLayout(Number(e.target.value) || 0)} />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Nodes (comma-separated, {debugSizeX * debugSizeZ} expected)</Label>
+                        <Input
+                          className="h-7 text-xs font-mono"
+                          value={debugNodesText}
+                          onChange={(e) => setDebugNodesText(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
               {mode === 'scratch' && (
