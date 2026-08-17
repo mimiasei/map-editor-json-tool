@@ -31,6 +31,28 @@ interface Props {
    *  objects that have a matching objects_logic entry" — CustomObjectEditorDialog's
    *  from-scratch native-behavior picker). Undefined means no restriction. */
   restrictToIds?: Set<string>
+  /** Group results by each entry's `group` label (map objects: their
+   *  catalog category, e.g. "Decoration"/"Interactive"/"Artifact" — see
+   *  MAP_OBJECT_CATEGORY_GROUP_LABELS) and sort both the groups and the
+   *  entries within each group alphabetically descending. Opt-in per call
+   *  site (CustomObjectEditorDialog's Visual/Native-behavior pickers) —
+   *  every other EntityCombobox usage keeps today's unsorted catalog order. */
+  groupByCategory?: boolean
+}
+
+// Friendly labels for CatalogMapObject.category, used only when a caller
+// opts into `groupByCategory` — confirmed exhaustive against
+// CatalogMapObject['category'] in src/lib/catalog/types.ts.
+const MAP_OBJECT_CATEGORY_GROUP_LABELS: Record<CatalogMapObject['category'], string> = {
+  interactables: 'Interactive',
+  environments: 'Decoration',
+  resources: 'Resource',
+  spawns: 'Spawn',
+  animals: 'Animal',
+  fxs: 'Effect',
+  artifacts: 'Artifact',
+  test: 'Test',
+  blocks: 'Block',
 }
 
 // ─── Hook: build the entry list from catalog or static fallback ───────────────
@@ -61,7 +83,12 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         return [...real, ...custom]
       }
       case 'mapObject':
-        return catalog.mapObjects.map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
+        return catalog.mapObjects.map((o) => ({
+          id: o.id,
+          label: o.name,
+          icon: o.icon,
+          group: MAP_OBJECT_CATEGORY_GROUP_LABELS[o.category],
+        }))
       case 'spell':
         return catalog.spells.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
       case 'skill':
@@ -108,6 +135,30 @@ function applyMapObjectFilter(
   return entries.filter((e) => allowed.has(e.id))
 }
 
+function renderEntityItem(entry: EntityEntry, onChange: (value: string) => void, setOpen: (open: boolean) => void) {
+  return (
+    <CommandItem
+      key={entry.id}
+      value={entry.id}
+      onSelect={() => {
+        onChange(entry.id)
+        setOpen(false)
+      }}
+      className="flex justify-between gap-2 text-xs py-1"
+    >
+      <span className="flex items-center gap-1.5 min-w-0">
+        {entry.icon && (
+          <CatalogIcon size={16} iconId={entry.icon} name={entry.label} />
+        )}
+        <span className="truncate">{entry.label}</span>
+      </span>
+      <span className="text-xs text-muted-foreground font-mono truncate max-w-[45%]">
+        {entry.id}
+      </span>
+    </CommandItem>
+  )
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 /**
@@ -118,7 +169,7 @@ function applyMapObjectFilter(
  * Display format: "Entity Name" visible, ID written to JSON.
  * Free-text entry is always accepted for forward-compatibility.
  */
-export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds }: Props) {
+export default function EntityCombobox({ value, onChange, category, placeholder, restrictToIds, groupByCategory }: Props) {
   const [open, setOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -159,6 +210,24 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
       (e) => e.id.toLowerCase().includes(q) || e.label.toLowerCase().includes(q),
     )
   }, [restricted, value])
+
+  // Grouped view for callers that opt in (groupByCategory) — buckets by
+  // each entry's `group` label and sorts both the bucket order and the
+  // entries within each bucket alphabetically descending. `null` when not
+  // requested, so the render below falls back to today's flat list.
+  const groupedEntries = useMemo(() => {
+    if (!groupByCategory) return null
+    const byGroup = new Map<string, EntityEntry[]>()
+    for (const entry of filtered) {
+      const group = entry.group ?? 'Other'
+      const bucket = byGroup.get(group)
+      if (bucket) bucket.push(entry)
+      else byGroup.set(group, [entry])
+    }
+    return Array.from(byGroup.entries())
+      .map(([group, entries]) => [group, entries.slice().sort((a, b) => b.label.localeCompare(a.label))] as const)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+  }, [filtered, groupByCategory])
 
   const isFiltered =
     category === 'mapObject' &&
@@ -297,29 +366,17 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                     ? `No matching ${ENTITY_LABELS[category]}`
                     : `No ${ENTITY_LABELS[category]} — load Core.zip via Game Data`}
                 </CommandEmpty>
-                <CommandGroup>
-                  {filtered.map((entry) => (
-                    <CommandItem
-                      key={entry.id}
-                      value={entry.id}
-                      onSelect={() => {
-                        onChange(entry.id)
-                        setOpen(false)
-                      }}
-                      className="flex justify-between gap-2 text-xs py-1"
-                    >
-                      <span className="flex items-center gap-1.5 min-w-0">
-                        {entry.icon && (
-                          <CatalogIcon size={16} iconId={entry.icon} name={entry.label} />
-                        )}
-                        <span className="truncate">{entry.label}</span>
-                      </span>
-                      <span className="text-xs text-muted-foreground font-mono truncate max-w-[45%]">
-                        {entry.id}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                {groupedEntries ? (
+                  groupedEntries.map(([group, entries]) => (
+                    <CommandGroup key={group} heading={group}>
+                      {entries.map((entry) => renderEntityItem(entry, onChange, setOpen))}
+                    </CommandGroup>
+                  ))
+                ) : (
+                  <CommandGroup>
+                    {filtered.map((entry) => renderEntityItem(entry, onChange, setOpen))}
+                  </CommandGroup>
+                )}
               </CommandList>
             </Command>
           </PopoverContent>

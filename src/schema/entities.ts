@@ -16,6 +16,10 @@ export interface EntityEntry {
   label: string
   /** Icon SID — used by CatalogIcon for thumbnail support (issue #62) */
   icon?: string
+  /** Optional group label (e.g. a map object's catalog category, human-
+   *  readable) — only consumed when a caller opts into EntityCombobox's
+   *  `groupByCategory` prop; otherwise ignored. */
+  group?: string
 }
 
 /** Convert a snake_case ID to Title Case for display. */
