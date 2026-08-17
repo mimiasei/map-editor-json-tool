@@ -97,6 +97,63 @@ function str(v: unknown, fallback = ''): string {
   return typeof v === 'string' ? v : fallback
 }
 
+// Confirmed via the official map editor guide's glossary ("Interaction
+// cells" — a specific per-object set of bordering cells; a hero can only
+// interact by standing on one) plus a direct data comparison across
+// Core/DB/map/objects/*.json: every Environment-tagged object's `nodes`
+// array only ever uses {0, 1} (no cell flagged as interactable); every real
+// Interact-tagged object has at least one `2`, and Unfrozen ships those as a
+// deliberately padded template — a real footprint centered in a larger
+// grid, with a ring of `2`-flagged border cells and a matching
+// generatorConfig. "Build from scratch" mode's visual source is often an
+// Environment/decoration/animal/fx object with none of that, so a from-
+// scratch object needs the same ring added, or nothing can ever trigger it
+// (this is what a user hit in-game: a 1x1 environment visual with no
+// interaction cell was simply unwalkable-to-in-a-triggering-way).
+function hasInteractionCell(nodes: unknown): boolean {
+  return Array.isArray(nodes) && nodes.some((n) => n === 2)
+}
+
+function addInteractionRing(
+  sizeX: number,
+  sizeZ: number,
+  nodes: number[],
+  pivotX: number | undefined,
+  pivotZ: number | undefined,
+): Record<string, unknown> {
+  const newSizeX = sizeX + 2
+  const newSizeZ = sizeZ + 2
+  const newNodes = new Array(newSizeX * newSizeZ).fill(2)
+  for (let z = 0; z < sizeZ; z++) {
+    for (let x = 0; x < sizeX; x++) {
+      newNodes[(z + 1) * newSizeX + (x + 1)] = nodes[z * sizeX + x] ?? 1
+    }
+  }
+  const patch: Record<string, unknown> = {
+    sizeX: newSizeX,
+    sizeZ: newSizeZ,
+    nodes: newNodes,
+    // Matches watchtower/block_campaign_mountain_dirt's real shape — every
+    // real interactable has *some* generatorConfig, so this stays
+    // structurally consistent either way. Whether buildingInteractionLayout
+    // itself is load-bearing at runtime (vs. map-generator-only metadata)
+    // is unconfirmed — not verifiable from data alone, flagged for the
+    // in-game test this whole feature already needs.
+    generatorConfig: {
+      buildingSizeX: sizeX,
+      buildingSizeZ: sizeZ,
+      buildingLeftBottomX: 1,
+      buildingLeftBottomZ: 1,
+      buildingInteractionLayout: 3,
+    },
+  }
+  // Same local node-grid coordinate space as `nodes` per the confirmed
+  // evidence above, so shifted by the same +1 ring offset when present.
+  if (typeof pivotX === 'number') patch.pivotX = pivotX + 1
+  if (typeof pivotZ === 'number') patch.pivotZ = pivotZ + 1
+  return patch
+}
+
 export default function CustomObjectEditorDialog({
   open,
   onOpenChange,
@@ -148,6 +205,15 @@ export default function CustomObjectEditorDialog({
     existingDefinition?.logicSourcePath ?? baseCatalogLogic?.sourcePath
   const baseDisplayName = catalog?.mapObjects.find((o) => o.id === sourceObjectId)?.name ?? sourceObjectId
   const catalogMissing = !!sourceObjectId && !templateBase
+
+  // "Build from scratch" mode: does the visual source need an interaction
+  // ring added (see addInteractionRing above)? Naturally idempotent on
+  // re-edit — an already-padded existingDefinition.template already has a
+  // `2` in its nodes, so this correctly evaluates false and isn't re-padded.
+  const templateSizeX = typeof templateBase?.sizeX === 'number' ? templateBase.sizeX : 1
+  const templateSizeZ = typeof templateBase?.sizeZ === 'number' ? templateBase.sizeZ : 1
+  const templateNodes = Array.isArray(templateBase?.nodes) ? (templateBase.nodes as number[]) : []
+  const needsInteractionRing = mode === 'scratch' && !!templateBase && !hasInteractionCell(templateNodes)
 
   // "Build from scratch" mode's own, fully independent logic resolution —
   // deliberately never falls back to the visual source's own logic (that
@@ -310,6 +376,21 @@ export default function CustomObjectEditorDialog({
       const template: Record<string, unknown> = mode === 'scratch'
         ? {
             ...templateBase,
+            // A visual source with no interaction cell of its own (every
+            // Environment/decoration/animal/fx source) gets a ring added —
+            // see addInteractionRing's own comment. Spread before the forced
+            // tag/isInteractable/identity fields below so it can't override
+            // them; spread after ...templateBase so it overrides the
+            // source's own (too-small, cell-less) sizeX/sizeZ/nodes.
+            ...(needsInteractionRing
+              ? addInteractionRing(
+                  templateSizeX,
+                  templateSizeZ,
+                  templateNodes,
+                  typeof templateBase?.pivotX === 'number' ? templateBase.pivotX : undefined,
+                  typeof templateBase?.pivotZ === 'number' ? templateBase.pivotZ : undefined,
+                )
+              : {}),
             // Forced regardless of the visual source's own values — it may be
             // a decoration/environment/animal object (tag: "Environment" or
             // no isInteractable field at all), but this is always meant to be
@@ -434,6 +515,7 @@ export default function CustomObjectEditorDialog({
                   onChange={handlePickSource}
                   category="mapObject"
                   placeholder={mode === 'scratch' ? 'Search for any object to use its visual…' : 'Search for an object to clone…'}
+                  groupByCategory
                 />
               </div>
             </>
@@ -465,6 +547,14 @@ export default function CustomObjectEditorDialog({
                   <CatalogIcon iconId={baseCatalogObject?.icon} name={baseDisplayName} size={24} />
                 </button>
               </div>
+
+              {needsInteractionRing && (
+                <p className="text-xs text-muted-foreground">
+                  This visual has no interaction cells of its own — a 1-tile ring will be added
+                  around it so it's actually triggerable (footprint becomes {templateSizeX + 2}×
+                  {templateSizeZ + 2}, was {templateSizeX}×{templateSizeZ}).
+                </p>
+              )}
 
               {mode === 'scratch' && (
                 <div className="space-y-1.5 border-t border-border pt-3">
@@ -502,6 +592,7 @@ export default function CustomObjectEditorDialog({
                       category="mapObject"
                       placeholder="Search for an object with behavior to attach…"
                       restrictToIds={logicBearingIds}
+                      groupByCategory
                     />
                   )}
                   {!noNativeLogic && logicSourceObjectId && (
