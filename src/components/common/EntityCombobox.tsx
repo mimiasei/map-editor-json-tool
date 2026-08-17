@@ -34,7 +34,7 @@ interface Props {
   /** Group results by each entry's `group` label (map objects: their
    *  catalog category, e.g. "Decoration"/"Interactive"/"Artifact" — see
    *  MAP_OBJECT_CATEGORY_GROUP_LABELS) and sort both the groups and the
-   *  entries within each group alphabetically descending. Opt-in per call
+   *  entries within each group alphabetically ascending. Opt-in per call
    *  site (CustomObjectEditorDialog's Visual/Native-behavior pickers) —
    *  every other EntityCombobox usage keeps today's unsorted catalog order. */
   groupByCategory?: boolean
@@ -213,7 +213,7 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
 
   // Grouped view for callers that opt in (groupByCategory) — buckets by
   // each entry's `group` label and sorts both the bucket order and the
-  // entries within each bucket alphabetically descending. `null` when not
+  // entries within each bucket alphabetically ascending. `null` when not
   // requested, so the render below falls back to today's flat list.
   const groupedEntries = useMemo(() => {
     if (!groupByCategory) return null
@@ -225,8 +225,8 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
       else byGroup.set(group, [entry])
     }
     return Array.from(byGroup.entries())
-      .map(([group, entries]) => [group, entries.slice().sort((a, b) => b.label.localeCompare(a.label))] as const)
-      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([group, entries]) => [group, entries.slice().sort((a, b) => a.label.localeCompare(b.label))] as const)
+      .sort((a, b) => a[0].localeCompare(b[0]))
   }, [filtered, groupByCategory])
 
   const isFiltered =
