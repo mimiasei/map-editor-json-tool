@@ -84,6 +84,7 @@ import FieldInfo from '@/components/common/FieldInfo'
 import { mintCustomSid } from '@/lib/zip-export'
 import { isMapObjectIdTaken } from '@/lib/custom-map-object-authoring'
 import EventBankLogicEditor, { isEventBankLogic } from './EventBankLogicEditor'
+import NodeGridEditor from './NodeGridEditor'
 
 interface CustomObjectEditorDialogProps {
   open: boolean
@@ -114,6 +115,10 @@ function hasInteractionCell(nodes: unknown): boolean {
   return Array.isArray(nodes) && nodes.some((n) => n === 2)
 }
 
+// Ring-padding for visual sources bigger than 1x1 — sizeX/sizeZ === 1 always
+// uses the corner scheme below instead (CORNER_1X1_PATTERNS), which is the
+// one actually confirmed correct in-game; this remains an unverified
+// approximation for the >1x1 case (see its own comment).
 function addInteractionRing(
   sizeX: number,
   sizeZ: number,
@@ -137,8 +142,11 @@ function addInteractionRing(
     // real interactable has *some* generatorConfig, so this stays
     // structurally consistent either way. Whether buildingInteractionLayout
     // itself is load-bearing at runtime (vs. map-generator-only metadata)
-    // is unconfirmed — not verifiable from data alone, flagged for the
-    // in-game test this whole feature already needs.
+    // is unconfirmed — not verifiable from data alone. UNLIKE the 1x1 corner
+    // scheme below, this >1x1 ring-padding approach has never actually been
+    // confirmed correct in-game (only the 1x1 case was tested, and it turned
+    // out this exact style of guess — centered building, full ring — was
+    // wrong for 1x1). Treat this path with the same caution.
     generatorConfig: {
       buildingSizeX: sizeX,
       buildingSizeZ: sizeZ,
@@ -159,6 +167,68 @@ function addInteractionRing(
   patch.pivotX = (pivotX ?? 0) + 1
   patch.pivotZ = (pivotZ ?? 0) + 1
   return patch
+}
+
+// Confirmed against 78 real Core/DB/map/objects/4_interactables.json entries
+// whose visual is a plain 1x1 building (black_tower, custom_black_tower,
+// windmill, tree_of_knowledge, fountain, storage_gold, and 73 more): the
+// correct shape is NOT a centered 3x3 ring (addInteractionRing's guess,
+// empirically wrong for 1x1 — a user's in-game test showed the interaction
+// ring landed diagonally offset from the visual) — it's a 2x2 grid with the
+// building in exactly ONE corner and the other 3 cells as interaction cells.
+// User re-tested this corner scheme in-game and confirmed it works.
+//
+// Real data has exactly two confirmed corner variants — array index 0 ("top-
+// left", 56 real instances, e.g. black_tower) and index 1 ("top-right", 22
+// instances, e.g. windmill/tree_of_knowledge). Corners 2/3 ("bottom-left"/
+// "bottom-right", array indices 2/3) never appear in ANY of the 78 real
+// examples — extrapolated here by the same x/z -> pivot/buildingLeftBottom/
+// buildingInteractionLayout pattern the confirmed two corners share, but NOT
+// independently verified in-game. Worth an in-game check specifically for
+// those two before relying on them.
+const CORNER_1X1_PATTERNS: Record<0 | 1 | 2 | 3, {
+  nodes: number[]
+  pivotX: number
+  pivotZ: number
+  buildingLeftBottomX: number
+  buildingLeftBottomZ: number
+  buildingInteractionLayout: number
+}> = {
+  0: { nodes: [1, 2, 2, 2], pivotX: 0, pivotZ: 0, buildingLeftBottomX: 0, buildingLeftBottomZ: 0, buildingInteractionLayout: 0 },
+  1: { nodes: [2, 1, 2, 2], pivotX: 1, pivotZ: 0, buildingLeftBottomX: 1, buildingLeftBottomZ: 0, buildingInteractionLayout: 1 },
+  2: { nodes: [2, 2, 1, 2], pivotX: 0, pivotZ: 1, buildingLeftBottomX: 0, buildingLeftBottomZ: 1, buildingInteractionLayout: 2 },
+  3: { nodes: [2, 2, 2, 1], pivotX: 1, pivotZ: 1, buildingLeftBottomX: 1, buildingLeftBottomZ: 1, buildingInteractionLayout: 3 },
+}
+
+function oneByOneCornerGeometry(corner: 0 | 1 | 2 | 3): Record<string, unknown> {
+  const p = CORNER_1X1_PATTERNS[corner]
+  return {
+    sizeX: 2,
+    sizeZ: 2,
+    nodes: p.nodes,
+    pivotX: p.pivotX,
+    pivotZ: p.pivotZ,
+    generatorConfig: {
+      buildingSizeX: 1,
+      buildingSizeZ: 1,
+      buildingLeftBottomX: p.buildingLeftBottomX,
+      buildingLeftBottomZ: p.buildingLeftBottomZ,
+      buildingInteractionLayout: p.buildingInteractionLayout,
+    },
+  }
+}
+
+// Dispatches to the confirmed 1x1 corner scheme or the unverified >1x1 ring
+// approximation, whichever applies to the visual source's own size.
+function computeDefaultPadding(
+  sizeX: number,
+  sizeZ: number,
+  nodes: number[],
+  pivotX: number | undefined,
+  pivotZ: number | undefined,
+): Record<string, unknown> {
+  if (sizeX === 1 && sizeZ === 1) return oneByOneCornerGeometry(0)
+  return addInteractionRing(sizeX, sizeZ, nodes, pivotX, pivotZ)
 }
 
 function parseDebugNodes(text: string): number[] {
@@ -333,7 +403,7 @@ export default function CustomObjectEditorDialog({
   // separate block rather than folded into the "seed once per pick" one.
   if (open && templateBase && mode === 'scratch' && !debugSeeded) {
     const padded = needsInteractionRing
-      ? addInteractionRing(
+      ? computeDefaultPadding(
           templateSizeX,
           templateSizeZ,
           templateNodes,
@@ -352,6 +422,10 @@ export default function CustomObjectEditorDialog({
     setDebugBuildingLeftBottomX(typeof gc.buildingLeftBottomX === 'number' ? gc.buildingLeftBottomX : 0)
     setDebugBuildingLeftBottomZ(typeof gc.buildingLeftBottomZ === 'number' ? gc.buildingLeftBottomZ : 0)
     setDebugBuildingInteractionLayout(typeof gc.buildingInteractionLayout === 'number' ? gc.buildingInteractionLayout : 3)
+    // Auto-expanded when padding is actually needed — choosing which corner
+    // the visual sits in is a normal editing step for these objects, not a
+    // power-user aside, so it shouldn't be hidden behind a collapsed toggle.
+    if (needsInteractionRing) setDebugOpen(true)
     setDebugSeeded(true)
   }
 
@@ -391,6 +465,30 @@ export default function CustomObjectEditorDialog({
     setLogicSourceObjectId('')
     setLogicPickerValue('')
     setLogicEdits(null)
+  }
+
+  // Clicking the node grid only tells us WHICH cell the visual should sit
+  // in — for the confirmed/extrapolated 2x2 (1x1 visual) case, that corner
+  // also determines pivot/buildingLeftBottom/buildingInteractionLayout
+  // (CORNER_1X1_PATTERNS), which the grid can't infer on its own. Leaving
+  // those stale after a click would silently reintroduce the exact
+  // corner-vs-anchor mismatch this whole feature exists to fix, just for a
+  // different corner. For any other grid size there's no such lookup, so
+  // only the nodes themselves are updated (matching the raw text field's
+  // existing behavior).
+  const handleNodeGridChange = (nodes: number[]) => {
+    setDebugNodesText(nodes.join(','))
+    if (debugSizeX === 2 && debugSizeZ === 2) {
+      const idx = nodes.indexOf(1)
+      if (idx >= 0 && idx <= 3) {
+        const p = CORNER_1X1_PATTERNS[idx as 0 | 1 | 2 | 3]
+        setDebugPivotX(p.pivotX)
+        setDebugPivotZ(p.pivotZ)
+        setDebugBuildingLeftBottomX(p.buildingLeftBottomX)
+        setDebugBuildingLeftBottomZ(p.buildingLeftBottomZ)
+        setDebugBuildingInteractionLayout(p.buildingInteractionLayout)
+      }
+    }
   }
 
   const handlePickSource = (value: string) => {
@@ -446,33 +544,17 @@ export default function CustomObjectEditorDialog({
       const template: Record<string, unknown> = mode === 'scratch'
         ? {
             ...templateBase,
-            // A visual source with no interaction cell of its own (every
-            // Environment/decoration/animal/fx source) gets a ring added —
-            // see addInteractionRing's own comment. Spread before the forced
-            // tag/isInteractable/identity fields below so it can't override
-            // them; spread after ...templateBase so it overrides the
-            // source's own (too-small, cell-less) sizeX/sizeZ/nodes.
-            ...(needsInteractionRing
-              ? addInteractionRing(
-                  templateSizeX,
-                  templateSizeZ,
-                  templateNodes,
-                  typeof templateBase?.pivotX === 'number' ? templateBase.pivotX : undefined,
-                  typeof templateBase?.pivotZ === 'number' ? templateBase.pivotZ : undefined,
-                )
-              : {}),
             // Forced regardless of the visual source's own values — it may be
             // a decoration/environment/animal object (tag: "Environment" or
             // no isInteractable field at all), but this is always meant to be
             // a real interactable so Script Template triggers can fire on it.
             tag: 'Interact',
             isInteractable: true,
-            // Advanced (debug) override — replaces whatever addInteractionRing
-            // computed above with the directly-edited values from the debug
-            // panel, so pivot/footprint placement can be iterated on without
-            // a new app build. Always applied in scratch mode (debug fields
-            // are seeded to match the computed geometry, so this is a no-op
-            // until the user actually edits something).
+            // Footprint/interaction-cell geometry always comes from the debug
+            // panel's fields, not recomputed here — they're seeded from
+            // computeDefaultPadding whenever a fresh visual is picked (see the
+            // debugSeeded effect), so this is a no-op until the user actually
+            // edits something in the debug panel.
             sizeX: debugSizeX,
             sizeZ: debugSizeZ,
             nodes: parseDebugNodes(debugNodesText),
@@ -638,9 +720,11 @@ export default function CustomObjectEditorDialog({
 
               {needsInteractionRing && (
                 <p className="text-xs text-muted-foreground">
-                  This visual has no interaction cells of its own — a 1-tile ring will be added
-                  around it so it's actually triggerable (footprint becomes {templateSizeX + 2}×
-                  {templateSizeZ + 2}, was {templateSizeX}×{templateSizeZ}).
+                  This visual has no interaction cells of its own — {templateSizeX === 1 && templateSizeZ === 1
+                    ? 'a corner interaction cell will be added so it\'s actually triggerable'
+                    : 'a 1-tile ring will be added around it so it\'s actually triggerable'} (footprint
+                  becomes {debugSizeX}×{debugSizeZ}, was {templateSizeX}×{templateSizeZ}). See "Advanced
+                  (debug)" below to change where the visual sits.
                 </p>
               )}
 
@@ -699,7 +783,19 @@ export default function CustomObjectEditorDialog({
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Nodes (comma-separated, {debugSizeX * debugSizeZ} expected)</Label>
+                        <div className="flex items-center gap-1">
+                          <Label className="text-xs">Where the visual sits</Label>
+                          <FieldInfo text="Green = interaction cell (a hero can trigger this object by standing here). Dark red = the visual/building itself. Click a cell to move the visual there — every other cell becomes an interaction cell." />
+                        </div>
+                        <NodeGridEditor
+                          sizeX={debugSizeX}
+                          sizeZ={debugSizeZ}
+                          nodes={parseDebugNodes(debugNodesText)}
+                          onChange={handleNodeGridChange}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Nodes (comma-separated, {debugSizeX * debugSizeZ} expected) — raw fallback for shapes the grid above can't produce</Label>
                         <Input
                           className="h-7 text-xs font-mono"
                           value={debugNodesText}
