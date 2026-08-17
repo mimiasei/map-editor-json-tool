@@ -36,12 +36,19 @@ const STORAGE_KEY = 'oe-game-database-filter'
 const FACTIONS      = FACTION_ORDER
 const CREATURE_TIERS = [1, 2, 3, 4, 5, 6, 7]
 const SCHOOLS       = ['Arcane', 'Daylight', 'Neutral', 'Nightshade', 'Primal']
-const MAP_CATEGORIES = ['interactables', 'resources', 'environments', 'spawns']
+// 'artifacts' deliberately excluded — those entries are excluded from the
+// mapObjects tab entirely (see GameDatabaseDialog.tsx), shown under the
+// Artifacts tab instead. Otherwise the full CatalogMapObject['category'] set.
+const MAP_CATEGORIES = ['interactables', 'resources', 'environments', 'spawns', 'animals', 'fxs', 'test', 'blocks']
 const MAP_CATEGORY_LABELS: Record<string, string> = {
   interactables: 'Interactables',
   resources:     'Resources',
   environments:  'Environments',
   spawns:        'Spawns',
+  animals:       'Animals',
+  fxs:           'FX',
+  test:          'Test (debug objects)',
+  blocks:        'Blocks',
 }
 
 export const DEFAULT_FILTER: GameDatabaseFilterState = {

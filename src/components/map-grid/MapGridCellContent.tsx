@@ -239,7 +239,7 @@ export default function MapGridCellContent({
       </div>
 
       {selected && (
-        <div className="border-t border-border shrink-0 p-3 space-y-2 text-sm">
+        <div className="border-t border-border shrink-0 max-h-[55%] overflow-y-auto p-3 space-y-2 text-sm">
           <div>
             <p className="text-xs text-muted-foreground">Object SID</p>
             <p className="font-mono text-xs truncate">{selected.sid}</p>

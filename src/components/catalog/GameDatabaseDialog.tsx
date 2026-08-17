@@ -286,9 +286,13 @@ function DetailPane({
         </div>
       )}
       {Object.entries(item)
-        .filter(([k]) => !['id', 'name', 'icon', 'subtitle', 'description', ...CREATURE_HANDLED_FIELDS].includes(k))
+        .filter(([k]) => !['id', 'name', 'icon', 'subtitle', 'description', 'raw', ...CREATURE_HANDLED_FIELDS].includes(k))
         .map(([k, v]) => {
           if (v === undefined || v === null || v === '') return null
+          // Plain objects/arrays (besides the excluded `raw`) would otherwise
+          // hit the `String(v)` fallback below and render as "[object
+          // Object]" — this generic dump only ever expects primitives.
+          if (typeof v === 'object') return null
           return (
             <div key={k} className="flex gap-2 text-xs">
               <span className="text-muted-foreground capitalize w-20 shrink-0">{k}</span>
@@ -296,6 +300,17 @@ function DetailPane({
             </div>
           )
         })}
+
+      {/* Raw Core.zip JSON entry — shown as formatted JSON, not stringified
+          (a plain object rendered via String() is literally "[object Object]"). */}
+      {'raw' in item && item.raw != null && (
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Raw</p>
+          <pre className="text-xs bg-muted rounded px-2 py-1.5 leading-relaxed whitespace-pre-wrap break-all">
+            {JSON.stringify(item.raw, null, 2)}
+          </pre>
+        </div>
+      )}
 
       {/* Named map instances (map objects with entity SIDs) */}
       {instancesOfType.length > 0 && (
@@ -537,10 +552,15 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
       case 'skills':
         return catalog.skills.map((s: CatalogSkill) => ({ ...s }))
       case 'mapObjects':
-        return catalog.mapObjects.map((o: CatalogMapObject) => ({
-          ...o,
-          subtitle: [o.category, o.tag].filter(Boolean).join(' · '),
-        }))
+        // Excludes category 'artifacts' — those are DB/map/objects/6_artifacts.json's
+        // ground-placement entries, already shown (with their real item data) under
+        // the Artifacts tab. Showing them again here duplicated every artifact.
+        return catalog.mapObjects
+          .filter((o: CatalogMapObject) => o.category !== 'artifacts')
+          .map((o: CatalogMapObject) => ({
+            ...o,
+            subtitle: [o.category, o.tag].filter(Boolean).join(' · '),
+          }))
       default:
         return []
     }
