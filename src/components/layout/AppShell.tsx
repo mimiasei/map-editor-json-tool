@@ -434,10 +434,11 @@ export default function AppShell() {
       const { listen } = await import('@tauri-apps/api/event')
       unlistenMenu = await listen<string>('menu-action', (event) => {
         switch (event.payload) {
-          case 'new':     handleNew(); break
-          case 'open':    window.dispatchEvent(new Event('oe:open')); break
-          case 'save':    handleSave(); break
-          case 'save-as': window.dispatchEvent(new Event('oe:save-as')); break
+          case 'new':      handleNew(); break
+          case 'open':     window.dispatchEvent(new Event('oe:open')); break
+          case 'open-map': window.dispatchEvent(new Event('oe:open-map')); break
+          case 'save':     handleSave(); break
+          case 'save-as':  window.dispatchEvent(new Event('oe:save-as')); break
           case 'undo':
             useScenarioStore.temporal.getState().undo()
             useScenarioStore.setState({ isDirty: true })

@@ -180,6 +180,11 @@ pub fn run() {
             let open_item = MenuItemBuilder::with_id("open", "Open...")
                 .accelerator("CmdOrCtrl+O")
                 .build(app)?;
+            // issue #160: the header's "Import Map"/"Open Map" button is redundant
+            // with the native File menu on desktop (same as New/Open/Save/Save As
+            // already were) — this gives it a native home instead of removing the
+            // capability. No accelerator: Ctrl+O is already "Open" (scenario JSON).
+            let open_map_item = MenuItemBuilder::with_id("open-map", "Open Map...").build(app)?;
             let save_item = MenuItemBuilder::with_id("save", "Save")
                 .accelerator("CmdOrCtrl+S")
                 .build(app)?;
@@ -191,6 +196,7 @@ pub fn run() {
             let file_menu = SubmenuBuilder::new(app, "File")
                 .item(&new_item)
                 .item(&open_item)
+                .item(&open_map_item)
                 .separator()
                 .item(&save_item)
                 .item(&save_as_item)

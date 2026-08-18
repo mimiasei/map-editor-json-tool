@@ -67,6 +67,7 @@ import {
   Save,
   LayoutGrid,
   Wand2,
+  UploadCloud,
 } from 'lucide-react'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -125,8 +126,10 @@ export default function Toolbar({
     customHeroes,
     customMapObjects,
     customArtifacts,
+    zipDirty,
     setScenario,
     markClean,
+    markZipPublished,
     setCurrentFile,
     togglePanel,
     setLocalizationDialogOpen,
@@ -339,6 +342,7 @@ export default function Toolbar({
       if (langs) {
         logInfo(`Exported ZIP: ${langs.length} language file(s) — ${langs.join(', ')}`)
       }
+      markZipPublished()
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       logError(`Export ZIP failed: ${msg}`)
@@ -429,15 +433,21 @@ export default function Toolbar({
 
         {/* Main actions */}
         <div className="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={onNew} className="gap-1.5">
-                <FilePlus className="h-4 w-4" />
-                New
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>New scenario (Ctrl+N)</TooltipContent>
-          </Tooltip>
+          {/* issue #160: on the Tauri desktop build, the native File menu
+              (lib.rs) already has New/Open/Save/Save As — duplicating them
+              here just doubled up on the same actions. Web has no native
+              menu at all, so it keeps these unconditionally. */}
+          {!isTauri() && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={onNew} className="gap-1.5">
+                  <FilePlus className="h-4 w-4" />
+                  New
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>New scenario (Ctrl+N)</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -459,47 +469,41 @@ export default function Toolbar({
             <TooltipContent>Generate scripting for classic HoMM3 objects Olden Era is missing</TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleImport} className="gap-1.5">
-                <Upload className="h-4 w-4" />
-                {isTauri() ? 'Open' : 'Import'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{isTauri() ? 'Open JSON file (Ctrl+O)' : 'Import JSON file'}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleOpenMap} className="gap-1.5">
-                <Upload className="h-4 w-4" />
-                {isTauri() ? 'Open Map' : 'Import Map'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{isTauri() ? 'Open .map file' : 'Import .map file'}</TooltipContent>
-          </Tooltip>
-
-          {isTauri() && currentFilePath && (
+          {!isTauri() && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleSave} className="gap-1.5" disabled={!isDirty}>
-                  <Download className="h-4 w-4" />
-                  Save
+                <Button variant="ghost" size="sm" onClick={handleImport} className="gap-1.5">
+                  <Upload className="h-4 w-4" />
+                  Import
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Save (Ctrl+S)</TooltipContent>
+              <TooltipContent>Import JSON file</TooltipContent>
             </Tooltip>
           )}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleExport} className="gap-1.5">
-                <Download className="h-4 w-4" />
-                {isTauri() ? 'Save As' : 'Export'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{isTauri() ? 'Save As… (Ctrl+Shift+S)' : 'Export scenario JSON'}</TooltipContent>
-          </Tooltip>
+          {!isTauri() && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleOpenMap} className="gap-1.5">
+                  <Upload className="h-4 w-4" />
+                  Import Map
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Import .map file</TooltipContent>
+            </Tooltip>
+          )}
+
+          {!isTauri() && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleExport} className="gap-1.5">
+                  <Download className="h-4 w-4" />
+                  Export
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Export scenario JSON</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -515,6 +519,43 @@ export default function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Validate scenario</TooltipContent>
+          </Tooltip>
+
+          {isTauri() && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={() => setPublishOpen(true)} className="gap-1.5">
+                  <UploadCloud className="h-4 w-4" />
+                  Publish
+                  {zipDirty && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title="Unpublished changes" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {zipDirty
+                  ? 'Publish map — you have changes not yet written to the game (custom heroes/objects/artifacts, dialogs, localization)'
+                  : 'Publish map'}
+              </TooltipContent>
+            </Tooltip>
+          )}
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onGuidesOpen}>
+                <BookOpen className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Guides</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onGameDatabaseOpen}>
+                <Database className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Game Database</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -630,7 +671,7 @@ export default function Toolbar({
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>Localization, Export ZIP, Guides, Game Data</TooltipContent>
+              <TooltipContent>Localization, Export ZIP, Game Data</TooltipContent>
             </Tooltip>
 
             <DropdownMenuContent align="start" className="w-52">
@@ -645,14 +686,6 @@ export default function Toolbar({
                 <Package className="h-4 w-4 mr-2" />
                 Export ZIP
               </DropdownMenuItem>
-
-              {/* Desktop only — neither destination path exists in the browser */}
-              {isTauri() && (
-                <DropdownMenuItem onClick={() => setTimeout(() => setPublishOpen(true), 0)}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Publish map…
-                </DropdownMenuItem>
-              )}
 
               {/* Desktop only test feature (issue #120) — needs a .map file loaded */}
               {isTauri() && mapFilePath && (
@@ -676,20 +709,6 @@ export default function Toolbar({
                   Check for updates…
                 </DropdownMenuItem>
               )}
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem onClick={() => setTimeout(() => onGuidesOpen?.(), 0)}>
-                <BookOpen className="h-4 w-4 mr-2" />
-                Guides
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem onClick={() => setTimeout(() => onGameDatabaseOpen?.(), 0)}>
-                <Database className="h-4 w-4 mr-2" />
-                Game Database
-              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 

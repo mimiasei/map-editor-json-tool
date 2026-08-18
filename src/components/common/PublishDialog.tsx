@@ -88,7 +88,7 @@ function TargetRow({
 // ─── Dialog ───────────────────────────────────────────────────────────────────
 
 export default function PublishDialog({ open, onOpenChange }: Props) {
-  const { scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, sidecarPath, currentFilePath, markClean } =
+  const { scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, sidecarPath, currentFilePath, markClean, markZipPublished } =
     useScenarioStore()
 
   const [targets, setTargets] = useState<PublishTargets | null>(null)
@@ -153,6 +153,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
       await writeBinaryFile(targets.zip.path!, new Uint8Array(await blob.arrayBuffer()))
 
       markClean()
+      markZipPublished()
       logInfo(`Published ${mapName}`)
       setPhase('done')
     } catch (e) {
