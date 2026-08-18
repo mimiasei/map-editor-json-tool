@@ -83,7 +83,7 @@ import LocalizedTextField from '@/components/common/LocalizedTextField'
 import FieldInfo from '@/components/common/FieldInfo'
 import { mintCustomSid } from '@/lib/zip-export'
 import { isMapObjectIdTaken } from '@/lib/custom-map-object-authoring'
-import EventBankLogicEditor, { isEventBankLogic } from './EventBankLogicEditor'
+import EventBankLogicEditor, { isEventBankLogic, collapseToSingleVariant } from './EventBankLogicEditor'
 import NodeGridEditor from './NodeGridEditor'
 
 interface CustomObjectEditorDialogProps {
@@ -457,7 +457,8 @@ export default function CustomObjectEditorDialog({
     if (logicBearingIds.has(value)) {
       setLogicSourceObjectId(value)
       const source = catalog?.objectLogics.find((l) => l.id === value)
-      setLogicEdits(source?.raw ? (JSON.parse(JSON.stringify(source.raw)) as Record<string, unknown>) : null)
+      const raw = source?.raw ? (JSON.parse(JSON.stringify(source.raw)) as Record<string, unknown>) : null
+      setLogicEdits(raw ? collapseToSingleVariant(raw) : null)
     }
   }
 

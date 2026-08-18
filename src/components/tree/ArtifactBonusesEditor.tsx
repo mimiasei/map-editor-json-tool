@@ -22,7 +22,7 @@
 // `activationLevel`) — editing fields *within* an effect (the attribute,
 // its value, its targeting) preserves those side fields untouched.
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -301,8 +301,7 @@ function AllegianceToggle({ value, options, onChange }: { value: string; options
 
 // ─── Per-effect fields ────────────────────────────────────────────────────────
 
-function BonusFieldsEditor({ bonus, onChange }: { bonus: RawBonus; onChange: (bonus: RawBonus) => void }) {
-  const effectId = effectIdForBonus(bonus)
+function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bonus: RawBonus; onChange: (bonus: RawBonus) => void }) {
   const type = typeOf(bonus)
   const p = paramsOf(bonus)
   const setParams = (parameters: string[]) => onChange({ ...bonus, parameters })
@@ -474,28 +473,37 @@ function BonusFieldsEditor({ bonus, onChange }: { bonus: RawBonus; onChange: (bo
 
     case 'battle-hero-effect': {
       const isSchool = p[0] === 'magicSchoolSet'
+      const battleAttr = attributeById(BATTLE_HERO_ATTRIBUTES, p[0]) ?? BATTLE_HERO_ATTRIBUTES[0]
+      const selected = isSchool ? 'magicSchoolSet' : battleAttr.id
       const allegiance = bonus.receiverAllegiance === 'all' ? 'all' : 'enemy'
+      const onSelectChange = (id: string) => {
+        if (id === 'magicSchoolSet') setParams(['magicSchoolSet', MAGIC_SCHOOL_OPTIONS[0].id, '0', '-1'])
+        else { const a = attributeById(BATTLE_HERO_ATTRIBUTES, id)!; setParams([id, defaultValueForAttr(a)]) }
+      }
       return (
         <div className="space-y-1.5">
-          {isSchool ? (
-            <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Select value={selected} onValueChange={onSelectChange}>
+              <SelectTrigger className="h-7 text-xs flex-1 min-w-0"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="magicSchoolSet">Reduce Enemy Spell School Level</SelectItem>
+                {BATTLE_HERO_ATTRIBUTES.map((a) => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {isSchool ? (
               <Select value={p[1] ?? MAGIC_SCHOOL_OPTIONS[0].id} onValueChange={(v) => setParams(['magicSchoolSet', v, '0', '-1'])}>
-                <SelectTrigger className="h-7 text-xs w-48"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-7 text-xs w-40 shrink-0"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MAGIC_SCHOOL_OPTIONS.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">-1 level to the target's spells of this school, for this battle only.</p>
-            </div>
-          ) : (
-            <AttributeBonusFields
-              attributes={BATTLE_HERO_ATTRIBUTES}
-              attrId={p[0]}
-              value={p[1]}
-              onAttrChange={(id) => { const a = attributeById(BATTLE_HERO_ATTRIBUTES, id)!; setParams([id, defaultValueForAttr(a)]) }}
-              onValueChange={(v) => setParamAt(1, v)}
-            />
-          )}
+            ) : (
+              <AttributeValueInput attr={battleAttr} value={p[1]} onChange={(v) => setParamAt(1, v)} />
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {isSchool ? "-1 level to the target's spells of this school, for this battle only." : battleAttr.description}
+          </p>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground shrink-0">Affects:</span>
             <AllegianceToggle
@@ -503,16 +511,6 @@ function BonusFieldsEditor({ bonus, onChange }: { bonus: RawBonus; onChange: (bo
               options={[{ id: 'enemy', label: 'Enemy hero' }, { id: 'all', label: 'Both heroes' }]}
               onChange={(v) => setAllegiance('receiverAllegiance', v)}
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground shrink-0">Also add:</span>
-            <Select value="__pick" onValueChange={(id) => { const a = attributeById(BATTLE_HERO_ATTRIBUTES, id); if (a) setParams([id, defaultValueForAttr(a)]) }}>
-              <SelectTrigger className="h-7 text-xs flex-1"><SelectValue placeholder="Switch effect…" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="magicSchoolSet">Reduce Enemy Spell School Level</SelectItem>
-                {BATTLE_HERO_ATTRIBUTES.map((a) => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
           </div>
         </div>
       )
@@ -602,20 +600,47 @@ export default function ArtifactBonusesEditor({ bonuses, onChange }: ArtifactBon
     () => EFFECT_GROUPS.map((group) => [group, EFFECT_DEFS.filter((d) => d.group === group)] as const),
     [],
   )
+  // "Advanced (raw parameters)" is a view choice, not a data shape — picking
+  // it doesn't change the bonus's type/parameters (that's the point: it lets
+  // you inspect/hand-edit whatever's already there), so effectIdForBonus()
+  // would immediately re-match it back to a typed effect and the dropdown
+  // would appear to reject the selection. This tracks "explicitly viewing
+  // raw" per row instead, cleared as soon as a real effect is picked.
+  const [forcedRawIndices, setForcedRawIndices] = useState<Set<number>>(new Set())
+
+  const removeBonus = (i: number) => {
+    onChange(bonuses.filter((_, idx) => idx !== i))
+    setForcedRawIndices((prev) => {
+      const next = new Set<number>()
+      prev.forEach((idx) => {
+        if (idx < i) next.add(idx)
+        else if (idx > i) next.add(idx - 1)
+      })
+      return next
+    })
+  }
 
   return (
     <div className="space-y-2">
       {bonuses.map((bonus, i) => {
-        const effectId = effectIdForBonus(bonus)
+        const effectId = forcedRawIndices.has(i) ? 'raw' : effectIdForBonus(bonus)
         return (
           <div key={i} className="rounded border border-border p-2 space-y-2">
             <div className="flex items-center gap-2">
               <Select
                 value={effectId}
                 onValueChange={(id) => {
-                  const next = id === 'raw'
-                    ? { type: typeOf(bonus) || 'heroStat', parameters: paramsOf(bonus) }
-                    : EFFECT_DEFS.find((d) => d.id === id)!.makeDefault()
+                  if (id === 'raw') {
+                    setForcedRawIndices((prev) => new Set(prev).add(i))
+                    return
+                  }
+                  setForcedRawIndices((prev) => {
+                    if (!prev.has(i)) return prev
+                    const next = new Set(prev)
+                    next.delete(i)
+                    return next
+                  })
+                  const next = EFFECT_DEFS.find((d) => d.id === id)!.makeDefault()
                   onChange(bonuses.map((b, idx) => (idx === i ? next : b)))
                 }}
               >
@@ -634,12 +659,13 @@ export default function ArtifactBonusesEditor({ bonuses, onChange }: ArtifactBon
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                onClick={() => onChange(bonuses.filter((_, idx) => idx !== i))}
+                onClick={() => removeBonus(i)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
             <BonusFieldsEditor
+              effectId={effectId}
               bonus={bonus}
               onChange={(next) => onChange(bonuses.map((b, idx) => (idx === i ? next : b)))}
             />

@@ -49,6 +49,22 @@ export function isEventBankLogic(raw: Record<string, unknown> | undefined): bool
   return !!raw && typeof raw.visitType === 'string' && Array.isArray(raw.variants)
 }
 
+/**
+ * Collapse a real event-bank behavior's `variants` (each with its own
+ * `rollChance`/`guardUnits`/`rewardSet`) down to just the first one, so it
+ * becomes editable here instead of hitting the "N weighted variants" fallback
+ * note below. Used when *attaching* a native behavior to a new custom
+ * object (issue #163) — unlike "Clone one object" mode, which keeps a real
+ * object's own logic verbatim, attaching is meant to hand the user something
+ * they can actually customize, and most real behaviors' variants are just
+ * difficulty/reward tiers of the same encounter, not distinct mechanics.
+ */
+export function collapseToSingleVariant(raw: Record<string, unknown>): Record<string, unknown> {
+  if (!isEventBankLogic(raw)) return raw
+  const variants = raw.variants as unknown[]
+  return variants.length > 1 ? { ...raw, variants: [variants[0]] } : raw
+}
+
 // ─── Reward type -> parameter form kind ────────────────────────────────────────
 // Confirmed against every rewardType actually used across all 183 real
 // Core/DB/objects_logic/event_banks/**/*.json files (11 subfolders). Any
