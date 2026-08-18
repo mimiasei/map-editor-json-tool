@@ -87,12 +87,21 @@ export interface ProjectPayload {
   sidecarPath?: string | null
   /** Restored sessions carry their unsaved state; fresh loads start clean. */
   isDirty?: boolean
+  /** Same, for zipDirty (issue #160) — see its own doc comment below. */
+  zipDirty?: boolean
 }
 
 interface ScenarioStore {
   // Document state
   scenario: ScenarioFile
   isDirty: boolean
+  /** issue #160: distinct from isDirty — true only when something that
+   *  actually ships inside the exported ZIP (custom heroes/objects/
+   *  artifacts, dialogs, localization) changed since the last Export ZIP/
+   *  Publish. A plain project Save clears isDirty but NOT this — the ZIP on
+   *  disk is still stale until re-exported/published. Drives the "Publish"
+   *  header button's needs-attention indicator. */
+  zipDirty: boolean
   currentFilePath: string | null   // absolute path (Tauri) or '' (browser)
   currentFileName: string | null   // display name, e.g. "my_map.json"
   /** Absolute path to the source .map binary (null if opened from bare JSON) */
@@ -132,6 +141,8 @@ interface ScenarioStore {
   setScenario: (scenario: ScenarioFile) => void
   resetScenario: () => void
   markClean: () => void
+  /** Called after a successful Export ZIP or Publish — see zipDirty's own doc comment. */
+  markZipPublished: () => void
   setCurrentFile: (path: string | null, name: string | null) => void
   setMapFile: (mapPath: string, sidecarPath: string) => void
   /** Load a whole project in one shot (import, template load, session restore). */
@@ -286,6 +297,7 @@ export const useScenarioStore = create<ScenarioStore>()(
     (set) => ({
   scenario: EMPTY_SCENARIO,
   isDirty: false,
+  zipDirty: false,
   currentFilePath: null,
   currentFileName: null,
   mapFilePath: null,
@@ -309,17 +321,18 @@ export const useScenarioStore = create<ScenarioStore>()(
   // ── Document CRUD ──────────────────────────────────────────────────────────
 
   setScenario: (scenario) => {
-    set({ scenario, isDirty: false, selectedType: null, selectedPath: [] })
+    set({ scenario, isDirty: false, zipDirty: false, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, customMapObjects: {}, customArtifacts: {}, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, zipDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, customMapObjects: {}, customArtifacts: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
     useMapContextStore.getState().clearContext()
   },
 
   markClean: () => set({ isDirty: false }),
+  markZipPublished: () => set({ zipDirty: false }),
 
   setCurrentFile: (path, name) => set({ currentFilePath: path, currentFileName: name }),
 
@@ -341,6 +354,7 @@ export const useScenarioStore = create<ScenarioStore>()(
       mapFilePath: payload.mapFilePath ?? null,
       sidecarPath: payload.sidecarPath ?? null,
       isDirty: payload.isDirty ?? false,
+      zipDirty: payload.zipDirty ?? false,
       selectedType: null,
       selectedPath: [],
     })
@@ -353,18 +367,22 @@ export const useScenarioStore = create<ScenarioStore>()(
 
   setMapName: (name) => set({ mapName: name, isDirty: true }),
 
+  // These six (through setLocalizationBatch) all also set zipDirty — every
+  // one of them changes data that actually ships inside the exported ZIP
+  // (dialogs, localization tokens), distinct from isDirty's much broader
+  // "the project has unsaved edits" (see zipDirty's own doc comment).
   setDialogFlow: (id, flow) =>
-    set((s) => ({ dialogs: { ...s.dialogs, [id]: flow }, isDirty: true })),
+    set((s) => ({ dialogs: { ...s.dialogs, [id]: flow }, isDirty: true, zipDirty: true })),
 
   removeDialogFlow: (id) =>
     set((s) => {
       const dialogs = { ...s.dialogs }
       delete dialogs[id]
-      return { dialogs, isDirty: true }
+      return { dialogs, isDirty: true, zipDirty: true }
     }),
 
   setLocalizationToken: (sid, text) =>
-    set((s) => ({ localization: { ...s.localization, [sid]: text }, isDirty: true })),
+    set((s) => ({ localization: { ...s.localization, [sid]: text }, isDirty: true, zipDirty: true })),
 
   removeLocalizationToken: (sid) =>
     set((s) => {
@@ -378,13 +396,13 @@ export const useScenarioStore = create<ScenarioStore>()(
         delete t[sid]
         translations[lang] = t
       }
-      return { localization, translations, isDirty: true }
+      return { localization, translations, isDirty: true, zipDirty: true }
     }),
 
   renameLocalizationToken: (oldSid, newSid, newText) =>
     set((s) => {
       if (oldSid === newSid) {
-        return { localization: { ...s.localization, [newSid]: newText }, isDirty: true }
+        return { localization: { ...s.localization, [newSid]: newText }, isDirty: true, zipDirty: true }
       }
       const localization = { ...s.localization }
       delete localization[oldSid]
@@ -398,11 +416,11 @@ export const useScenarioStore = create<ScenarioStore>()(
         if (oldValue !== undefined) t[newSid] = oldValue
         translations[lang] = t
       }
-      return { localization, translations, isDirty: true }
+      return { localization, translations, isDirty: true, zipDirty: true }
     }),
 
   setLocalizationBatch: (tokens) =>
-    set((s) => ({ localization: { ...s.localization, ...tokens }, isDirty: true })),
+    set((s) => ({ localization: { ...s.localization, ...tokens }, isDirty: true, zipDirty: true })),
 
   setTranslationToken: (lang, sid, text) =>
     set((s) => ({
@@ -449,39 +467,42 @@ export const useScenarioStore = create<ScenarioStore>()(
     }),
 
   // ── Custom hero identities ───────────────────────────────────────────────────
+  // All six of these (through removeCustomArtifact) also set zipDirty — each
+  // ships its own file into the exported ZIP (DB/heroes|map/objects|items/
+  // custom_maps/*), so this is exactly the "DB json changes" issue #160 means.
 
   setCustomHero: (heroSid, definition) =>
-    set((s) => ({ customHeroes: { ...s.customHeroes, [heroSid]: definition }, isDirty: true })),
+    set((s) => ({ customHeroes: { ...s.customHeroes, [heroSid]: definition }, isDirty: true, zipDirty: true })),
 
   removeCustomHero: (heroSid) =>
     set((s) => {
       const customHeroes = { ...s.customHeroes }
       delete customHeroes[heroSid]
-      return { customHeroes, isDirty: true }
+      return { customHeroes, isDirty: true, zipDirty: true }
     }),
 
   // ── Custom map object identities ─────────────────────────────────────────────
 
   setCustomMapObject: (id, definition) =>
-    set((s) => ({ customMapObjects: { ...s.customMapObjects, [id]: definition }, isDirty: true })),
+    set((s) => ({ customMapObjects: { ...s.customMapObjects, [id]: definition }, isDirty: true, zipDirty: true })),
 
   removeCustomMapObject: (id) =>
     set((s) => {
       const customMapObjects = { ...s.customMapObjects }
       delete customMapObjects[id]
-      return { customMapObjects, isDirty: true }
+      return { customMapObjects, isDirty: true, zipDirty: true }
     }),
 
   // ── Custom artifact identities ───────────────────────────────────────────────
 
   setCustomArtifact: (id, definition) =>
-    set((s) => ({ customArtifacts: { ...s.customArtifacts, [id]: definition }, isDirty: true })),
+    set((s) => ({ customArtifacts: { ...s.customArtifacts, [id]: definition }, isDirty: true, zipDirty: true })),
 
   removeCustomArtifact: (id) =>
     set((s) => {
       const customArtifacts = { ...s.customArtifacts }
       delete customArtifacts[id]
-      return { customArtifacts, isDirty: true }
+      return { customArtifacts, isDirty: true, zipDirty: true }
     }),
 
   // ── Counters ───────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-// ─── Full hero-authoring dialog (issue #141) ─────────────────────────────────
+// ─── Full hero-authoring dialog (issue #141, unified in issue #160) ──────────
 // Extends issue #139's minimal "customize hero name/description/motto" flow
 // (SetDisplayNameDialog.tsx) to every real field in a hero JSON
 // (Core/DB/heroes/**/*.json). Reuses that same write path unchanged: clone
@@ -24,6 +24,25 @@
 // every hero id in the game (catalog.heroes already covers all of
 // Core/DB/heroes/** recursively, real+campaign+tutorial+custom_maps) plus
 // every custom hero already authored on this map.
+//
+// Issue #160 unified this with Custom Objects/Custom Artifacts: `entity` is
+// now optional — null when authoring/editing a custom hero standalone from
+// the new sidebar "Custom Heroes" section (see `editingHeroSid`), non-null
+// for the original per-placed-spawner flow (Entity SIDs / Map Grid "Edit
+// full hero"). Both share the same "Clone one hero" / "Build from scratch"
+// mode + EntityCombobox base-hero picker CustomObjectEditorDialog already
+// established — a capability gap the standalone flow needed anyway (you
+// could not previously pick an arbitrary hero as the clone source; the base
+// was locked to whatever the spawner already pointed at). "Build from
+// scratch" needs no base hero at all: every helper below (`str`/`num`/
+// `toStats`/`toSquadEntries`/etc.) already tolerates an absent definition
+// and falls back to sensible defaults, and mesh/mount/skillsRollVariant/
+// baseline stats are derived live from fraction+classType alone
+// (hero-authoring.ts) — so "scratch" needed no new derivation logic, only
+// relaxed gating on what used to require a base definition to render at all.
+// A standalone-authored hero writes only to the `customHeroes` store slice,
+// same as objects/artifacts — never `saveMapFile`, which only makes sense
+// when repointing an actual placed spawner (`entity` present).
 
 import { useState } from 'react'
 import {
@@ -46,6 +65,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import EntityCombobox from '@/components/common/EntityCombobox'
+import { ENTITY_REGISTRIES } from '@/schema/entities'
 import type { MapEntity } from '@/types/map-context'
 import type {
   HeroDefinitionFields,
@@ -71,9 +92,15 @@ import {assetLeafName, LARGE_PORTRAIT_SUFFIX} from '@/lib/catalog/icon-requests.
 interface HeroEditorDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** The placed hero spawner being edited, or null when authoring/editing a
+   *  custom hero standalone (via the sidebar's "Custom Heroes" section) —
+   *  see `editingHeroSid` for which case applies then. */
   entity: MapEntity | null
   mapFilePath: string | null
   existingSids: string[]
+  /** Only meaningful when `entity` is null: an existing customHeroes key to
+   *  edit, or null/undefined to author a brand new one. */
+  editingHeroSid?: string | null
 }
 
 // ─── Safe readers off an opaque cloned definition ────────────────────────────
@@ -182,6 +209,7 @@ export default function HeroEditorDialog({
   entity,
   mapFilePath,
   existingSids,
+  editingHeroSid,
 }: HeroEditorDialogProps) {
   const localization = useScenarioStore((s) => s.localization)
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
@@ -193,15 +221,34 @@ export default function HeroEditorDialog({
   const mapName = useScenarioStore((s) => s.mapName)
   const catalog = useCatalogStore((s) => s.catalog)
 
-  const isHero = entity?.source === 'heroSpawner'
-  const currentHeroSid = isHero ? (entity?.heroSid ?? '') : ''
-  const existingCustomHero = currentHeroSid ? customHeroes[currentHeroSid] : undefined
-  const baseHeroSid = existingCustomHero?.sourceHeroSid ?? currentHeroSid
+  const [mode, setMode] = useState<'clone' | 'scratch'>('clone')
+  const [sourceHeroSid, setSourceHeroSid] = useState('')
+  const [sourcePickerValue, setSourcePickerValue] = useState('')
+  // Tracks whether this open has already pulled sourceHeroSid/mode from the
+  // entity/existing definition once — mirrors CustomObjectEditorDialog's
+  // `synced`, so "Change base" (which clears sourceHeroSid) sticks instead
+  // of snapping back on the next render.
+  const [synced, setSynced] = useState(false)
+
+  const isEntityHero = entity?.source === 'heroSpawner'
+  const currentHeroSid = isEntityHero ? (entity?.heroSid ?? '') : ''
+  // Which customHeroes entry are we editing (if any)? The entity's own
+  // placed heroSid for the per-spawner flow, or the explicit key passed in
+  // for the standalone sidebar flow — never both at once.
+  const editingKey = isEntityHero ? currentHeroSid : (editingHeroSid ?? '')
+  const existingCustomHero = editingKey ? customHeroes[editingKey] : undefined
+  const baseHeroSid = existingCustomHero?.sourceHeroSid || sourceHeroSid
   const baseCatalogHero = catalog?.heroes.find((h) => h.id === baseHeroSid)
+  // Absent (null) in a fresh "Build from scratch" pick — every field-seeding
+  // helper below already treats that as "use sensible defaults" rather than
+  // requiring a real definition to clone from.
   const heroBaseDefinition: Record<string, unknown> | null =
-    existingCustomHero?.definition ?? baseCatalogHero?.raw ?? null
-  const heroHasNoBase = isHero && !currentHeroSid
-  const heroCatalogMissing = isHero && !!currentHeroSid && !heroBaseDefinition
+    existingCustomHero?.definition ?? (mode === 'clone' ? baseCatalogHero?.raw ?? null : null)
+  const heroHasNoBase = isEntityHero && !currentHeroSid
+  const catalogMissing = mode === 'clone' && !!baseHeroSid && !existingCustomHero && !baseCatalogHero
+  // Once true, the full form renders — either a base/definition to seed from
+  // exists, or "Build from scratch" was explicitly chosen (which needs none).
+  const readyToEdit = mode === 'scratch' || !!baseHeroSid || !!existingCustomHero
   const heroDisplayName = (sid: string) => catalog?.heroes.find((h) => h.id === sid)?.name ?? sid
 
   const previousSid = str(heroBaseDefinition?.name)
@@ -245,10 +292,31 @@ export default function HeroEditorDialog({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Pull sourceHeroSid/mode from the entity or an existing standalone
+  // definition once per open — guarded by `synced` (not sourceHeroSid) so
+  // "Change base" sticks instead of snapping back on the next render.
+  if (open && !synced) {
+    if (isEntityHero) {
+      const src = existingCustomHero?.sourceHeroSid || currentHeroSid
+      setSourceHeroSid(src)
+      setSourcePickerValue(src)
+      setMode('clone')
+    } else if (editingHeroSid) {
+      const existing = customHeroes[editingHeroSid]
+      const src = existing?.sourceHeroSid ?? ''
+      setSourceHeroSid(src)
+      setSourcePickerValue(src)
+      // A previously scratch-made hero recorded no source — infer mode from
+      // that rather than defaulting everyone to 'clone'.
+      setMode(src ? 'clone' : 'scratch')
+    }
+    setSynced(true)
+  }
+
   // Seed every field once per open, from whichever definition is being
   // cloned/edited — mirrors SetDisplayNameDialog's open/entity effect, but
   // covers the full field set instead of 3 text fields.
-  if (open && entity && !initialized && (heroBaseDefinition || heroHasNoBase || heroCatalogMissing)) {
+  if (open && !initialized && (readyToEdit || heroHasNoBase || catalogMissing)) {
     const def = heroBaseDefinition
     nameField.reset(previousSid, previousSid ? (localization[previousSid] ?? '') : '')
     descField.reset(previousDescSid, previousDescSid ? (localization[previousDescSid] ?? '') : '')
@@ -271,9 +339,29 @@ export default function HeroEditorDialog({
     setError(null)
     setInitialized(true)
   }
-  if (!open && initialized) setInitialized(false)
+  if (!open && (initialized || synced)) {
+    setInitialized(false)
+    setSynced(false)
+    setMode('clone')
+    setSourceHeroSid('')
+    setSourcePickerValue('')
+  }
 
-  if (!entity || !isHero) return null
+  // A non-null entity that isn't a hero spawner is a caller mistake — every
+  // other case (no entity at all, or a real hero spawner) is valid.
+  if (entity && !isEntityHero) return null
+
+  const handleChangeBase = () => {
+    setSourceHeroSid('')
+    setSourcePickerValue('')
+    setInitialized(false)
+  }
+
+  const handlePickSource = (value: string) => {
+    setSourcePickerValue(value)
+    const knownIds = catalog ? catalog.heroes.map((h) => h.id) : ENTITY_REGISTRIES.hero.map((h) => h.id)
+    if (knownIds.includes(value)) setSourceHeroSid(value)
+  }
 
   const meshOptions = getMeshOptions(catalog, fraction, classType)
   const mount = getMountForFraction(catalog, fraction)
@@ -313,9 +401,10 @@ export default function HeroEditorDialog({
     : FALLBACK_FRACTIONS.map((f) => ({ id: f, label: f }))
 
   const canSave =
-    !!mapFilePath &&
+    (!entity || !!mapFilePath) &&
     !heroHasNoBase &&
-    !heroCatalogMissing &&
+    !catalogMissing &&
+    readyToEdit &&
     trimmedId !== '' &&
     !idTaken &&
     fraction !== '' &&
@@ -334,15 +423,10 @@ export default function HeroEditorDialog({
   }
 
   const handleSave = async () => {
-    if (!mapFilePath || !canSave || !entity) return
+    if (!canSave) return
     setSaving(true)
     setError(null)
     try {
-      const entityType = Number(entity.type)
-      if (!Number.isFinite(entityType)) {
-        throw new Error(`Entity has a non-numeric type ("${entity.type}") — cannot target it`)
-      }
-
       const definition: Record<string, unknown> = {
         id: trimmedId,
         name: nameField.trimmedSid,
@@ -367,19 +451,31 @@ export default function HeroEditorDialog({
         startMagics,
       }
 
-      await saveMapFile(mapFilePath, {
-        kind: 'setHeroSid',
-        entityType,
-        entityId: entity.id,
-        heroSid: trimmedId,
-      })
+      // Only a placed spawner needs its .map entry repointed — a standalone
+      // custom hero (authored from the sidebar) has no placement to update,
+      // exactly like custom objects/artifacts never touch the .map file.
+      if (entity) {
+        const entityType = Number(entity.type)
+        if (!Number.isFinite(entityType)) {
+          throw new Error(`Entity has a non-numeric type ("${entity.type}") — cannot target it`)
+        }
+        await saveMapFile(mapFilePath!, {
+          kind: 'setHeroSid',
+          entityType,
+          entityId: entity.id,
+          heroSid: trimmedId,
+        })
+      }
 
       // Renaming an already-customized hero's id — drop the stale entry so
       // it doesn't linger as an orphaned, unreferenced customHeroes key.
       if (existingCustomHero && existingCustomHero.heroSid !== trimmedId) {
         removeCustomHero(existingCustomHero.heroSid)
       }
-      setCustomHero(trimmedId, { heroSid: trimmedId, sourceHeroSid: baseHeroSid, definition })
+      // "Build from scratch" records no specific source hero — mesh/mount/
+      // skill table trace back to fraction+classType instead, not one
+      // individual hero's identity.
+      setCustomHero(trimmedId, { heroSid: trimmedId, sourceHeroSid: mode === 'scratch' ? '' : baseHeroSid, definition })
 
       manageToken(previousSid, nameField.trimmedSid, nameField.trimmedText)
       manageToken(previousDescSid, descField.trimmedSid, descField.trimmedText)
@@ -404,11 +500,20 @@ export default function HeroEditorDialog({
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Edit full hero</DialogTitle>
+          <DialogTitle>{entity ? 'Edit full hero' : existingCustomHero ? 'Edit custom hero' : 'New custom hero'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          {(heroHasNoBase || heroCatalogMissing) && (
+          {!entity && (
+            <p className="text-xs text-muted-foreground">
+              Clones a real hero's definition under a brand-new id, or builds one from just a
+              fraction/class type — the same "clone, edit, ship" mechanism custom objects and
+              artifacts use. This app authors and ships the definition only; the official Unfrozen
+              map editor is where a hero spawner actually gets placed to use it.
+            </p>
+          )}
+
+          {(heroHasNoBase || catalogMissing) && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="ml-2">
@@ -419,13 +524,67 @@ export default function HeroEditorDialog({
             </Alert>
           )}
 
-          {heroBaseDefinition && (
+          {!heroHasNoBase && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1">
+                <Label>Mode</Label>
+                <FieldInfo text="Clone one hero: every field starts from a real hero's own values. Build from scratch: skip picking a specific hero — mesh/mount/skill table/starting stats come from fraction + class type alone, and squad/skills/magics start empty. Switchable at any time." />
+              </div>
+              <div className="flex gap-1.5">
+                <Button type="button" variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
+                  Clone one hero
+                </Button>
+                <Button
+                  type="button"
+                  variant={mode === 'scratch' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => { setMode('scratch'); setSourceHeroSid(''); setSourcePickerValue('') }}
+                >
+                  Build from scratch
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {mode === 'clone' && !baseHeroSid && !heroHasNoBase && (
+            <div className="space-y-1.5">
+              <Label>Base hero</Label>
+              <EntityCombobox
+                value={sourcePickerValue}
+                onChange={handlePickSource}
+                category="hero"
+                placeholder="Search for a hero to clone…"
+              />
+            </div>
+          )}
+
+          {readyToEdit && (
             <>
-              <p className="text-xs text-muted-foreground">
-                Based on: <span className="font-medium text-foreground">{heroDisplayName(baseHeroSid)}</span>
-                {existingCustomHero && ' (already customized)'} — mesh, mounts, skill table, and starting
-                stats are re-derived from a real hero matching the fraction/class you pick below.
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {mode === 'clone' && baseHeroSid ? (
+                    <>
+                      Based on: <span className="font-medium text-foreground">{heroDisplayName(baseHeroSid)}</span>
+                      {existingCustomHero && ' (already customized)'} — mesh, mounts, skill table, and
+                      starting stats are re-derived from a real hero matching the fraction/class you pick
+                      below.
+                    </>
+                  ) : (
+                    'Building from scratch — mesh, mount, skill table, and starting stats come from the fraction/class type below; squad/skills/magics start empty.'
+                  )}
+                </p>
+                {mode === 'clone' && baseHeroSid && (
+                  <button
+                    type="button"
+                    onClick={handleChangeBase}
+                    className="shrink-0 rounded border border-transparent px-1.5 py-0.5 text-xs text-muted-foreground hover:border-border hover:bg-accent"
+                    title="Click to change the base hero"
+                  >
+                    Change base
+                  </button>
+                )}
+              </div>
 
               {/* ── Identity ─────────────────────────────────────────────── */}
               <div className="space-y-1.5">
@@ -730,10 +889,12 @@ export default function HeroEditorDialog({
             </Alert>
           )}
 
-          <p className="text-xs text-muted-foreground">
-            Writes directly to the loaded <code>.map</code> file and this map's project data.
-            A one-time backup is kept at <code>.map.bak</code> next to it.
-          </p>
+          {entity && (
+            <p className="text-xs text-muted-foreground">
+              Writes directly to the loaded <code>.map</code> file and this map's project data.
+              A one-time backup is kept at <code>.map.bak</code> next to it.
+            </p>
+          )}
         </div>
 
         <DialogFooter>
@@ -742,7 +903,7 @@ export default function HeroEditorDialog({
           </Button>
           <Button onClick={handleSave} disabled={!canSave || saving}>
             {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-            Save to .map
+            {entity ? 'Save to .map' : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>

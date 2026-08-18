@@ -7,6 +7,10 @@
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { MapContext } from '@/types/map-context'
+import type { CustomHeroDefinition } from '@/types/hero'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
+import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { TranslationMap } from '@/lib/languages'
 
 // ─── Panel metadata ───────────────────────────────────────────────────────────
 
@@ -27,6 +31,12 @@ export interface PanelState {
   mapName:      string
   dialogs:      Record<string, DialogFlow>
   localization: Record<string, string>
+  /** issue #160 — the undocked JSON Preview window needs these too, to show
+   *  (read-only) every doc kind the docked one can, not just scenario/dialogs. */
+  translations:     TranslationMap
+  customHeroes:      Record<string, CustomHeroDefinition>
+  customMapObjects:  Record<string, CustomMapObjectDefinition>
+  customArtifacts:   Record<string, CustomArtifactDefinition>
   selectedType: SelectionType
   selectedPath: number[]
   /** For the mapGridCell panel — the rest of the panels don't touch map state. */

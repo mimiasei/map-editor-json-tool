@@ -3,7 +3,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { DEBUG } from '@/lib/debug'
-import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -290,6 +290,8 @@ export default function ScenarioTree() {
     duplicateTrigger,
     openDialogEditor,
     removeDialogFlow,
+    customHeroes,
+    removeCustomHero,
     customMapObjects,
     removeCustomMapObject,
     customArtifacts,
@@ -385,6 +387,7 @@ export default function ScenarioTree() {
     interruptions: true,
     quests: true,
     dialogs: true,
+    customHeroes: true,
     customObjects: true,
     customArtifacts: true,
     entitySids: true,
@@ -410,6 +413,10 @@ export default function ScenarioTree() {
   const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
   const [displayNameTarget, setDisplayNameTarget] = useState<MapEntity | null>(null)
   const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
+  // Standalone "Custom Heroes" sidebar flow (issue #160) — independent of
+  // heroEditorTarget, which stays scoped to the per-placed-spawner flow.
+  const [customHeroEditorOpen, setCustomHeroEditorOpen] = useState(false)
+  const [customHeroEditorId, setCustomHeroEditorId] = useState<string | null>(null)
   const [objectEditorOpen, setObjectEditorOpen] = useState(false)
   const [objectEditorId, setObjectEditorId] = useState<string | null>(null)
   const [artifactEditorOpen, setArtifactEditorOpen] = useState(false)
@@ -734,6 +741,52 @@ export default function ScenarioTree() {
           </div>
         )}
 
+        {/* ── Custom Heroes (issue #160) ── */}
+        <SectionHeader
+          label="Custom Heroes"
+          count={Object.keys(customHeroes).length}
+          open={openSections.customHeroes}
+          onToggle={() => toggleSection('customHeroes')}
+          onAdd={() => { setCustomHeroEditorId(null); setCustomHeroEditorOpen(true) }}
+          icon={<UserCog className="h-3 w-3" />}
+        />
+        {openSections.customHeroes && (
+          <div className="px-1 py-1">
+            {Object.entries(customHeroes).map(([id, def]) => (
+              <div
+                key={id}
+                className="group relative flex items-center gap-1 rounded px-1 py-0.5 text-sm cursor-pointer select-none transition-shadow duration-150 hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.55)]"
+                style={{ paddingLeft: '22px' }}
+                onClick={() => { setCustomHeroEditorId(id); setCustomHeroEditorOpen(true) }}
+              >
+                <PortraitThumb
+                  iconId={typeof def.definition.icon === 'string' ? def.definition.icon : undefined}
+                  name={id}
+                  size={14}
+                  resolve={heroPortraitPath}
+                />
+                <span className="ml-1 truncate font-mono text-xs" style={labelStyle}>{id}</span>
+                <span className="text-xs text-muted-foreground shrink-0 truncate max-w-[35%]">
+                  {def.sourceHeroSid || 'from scratch'}
+                </span>
+                <span className="absolute right-0 flex items-center opacity-0 group-hover:opacity-100">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeCustomHero(id)
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* ── Custom Objects (issue #146) ── */}
         <SectionHeader
           label="Custom Objects"
@@ -872,13 +925,15 @@ export default function ScenarioTree() {
                       // (propsName, same as any other object — issue #133), so only
                       // the rename-SID button stays gated off for heroes.
                       const canRenameSid = isTauri() && entity.source !== 'heroSpawner' && !!mapFilePath
-                      const canSetDisplayName = isTauri() && !!mapFilePath
-                      // issue #141: a second, larger dialog covering every real
-                      // hero JSON field, alongside (not replacing) the quick
-                      // name/description/motto one above — both write into the
-                      // same customHeroes[heroSid].definition, so using either
-                      // (or both, in any order) composes fine.
-                      const canEditFullHero = canSetDisplayName && entity.source === 'heroSpawner'
+                      // issue #160: HeroEditorDialog ("Edit full hero") now covers
+                      // name/description/motto too (plus everything else), so the
+                      // quick display-name dialog would be a second, overlapping
+                      // affordance for heroes specifically — same convoluted-vs-
+                      // objects/artifacts complaint the issue raised. Hidden for
+                      // heroSpawner rows only; every other entity type still only
+                      // has this quick path, unchanged.
+                      const canSetDisplayName = isTauri() && !!mapFilePath && entity.source !== 'heroSpawner'
+                      const canEditFullHero = isTauri() && !!mapFilePath && entity.source === 'heroSpawner'
                       return (
                         <div
                           key={sid}
@@ -978,9 +1033,16 @@ export default function ScenarioTree() {
       />
 
       <HeroEditorDialog
-        open={heroEditorTarget !== null}
-        onOpenChange={(open) => { if (!open) setHeroEditorTarget(null) }}
+        open={heroEditorTarget !== null || customHeroEditorOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setHeroEditorTarget(null)
+            setCustomHeroEditorOpen(false)
+            setCustomHeroEditorId(null)
+          }
+        }}
         entity={heroEditorTarget}
+        editingHeroSid={customHeroEditorId}
         existingSids={[...entities.map((e) => e.sid), ...Object.keys(localization)]}
         mapFilePath={mapFilePath}
       />

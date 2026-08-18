@@ -74,10 +74,13 @@ export interface MapGridCellContentProps {
   catalog: GameCatalog | null
   /** Present only in the docked (interactive) instance — omit for the read-only undocked mirror. */
   onRename?: (entity: MapEntity) => void
+  /** issue #160: not rendered for hero spawners — HeroEditorDialog
+   *  ("Edit full hero" below) now covers name/description/motto too, so
+   *  this would otherwise be a second, overlapping affordance for heroes
+   *  specifically. Still the only option for every other entity type. */
   onSetDisplayName?: (entity: MapEntity) => void
-  /** issue #141 — opens the full hero-authoring dialog, alongside (not
-   *  replacing) onSetDisplayName's quick name/description/motto edit.
-   *  Docked-only, like the above. */
+  /** issue #141 — opens the full hero-authoring dialog. Docked-only, like
+   *  the above. */
   onEditFullHero?: (entity: MapEntity) => void
   /** "No Combine Geometry" toggle (issue #125 item 4) — docked-only, like the above. */
   onSetNoCombineGeometry?: (item: PlacedObject, value: boolean) => void
@@ -275,7 +278,7 @@ export default function MapGridCellContent({
                 <PenLine className="h-3 w-3" />
                 Rename SID
               </Button>
-              {onSetDisplayName && (
+              {onSetDisplayName && !isHeroSpawner && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
                   {isCitySpawner ? 'Set city name' : 'Set display name'}
@@ -314,7 +317,7 @@ export default function MapGridCellContent({
                   {sidTaken && <p className="text-xs text-destructive">Another entity already uses this SID.</p>}
                 </div>
               )}
-              {onSetDisplayName && (
+              {onSetDisplayName && !isHeroSpawner && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onSetDisplayName(toDisplayNameEntity(selected))}>
                   <Tag className="h-3 w-3" />
                   {isCitySpawner ? 'Set city name' : 'Set display name'}

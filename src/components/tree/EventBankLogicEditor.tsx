@@ -93,8 +93,10 @@ const REWARD_KIND_BY_TYPE: Record<string, RewardKind> = {
 const KNOWN_REWARD_TYPES = Object.keys(REWARD_KIND_BY_TYPE)
 
 // Confirmed against Core/Lang/english/texts/ui.json (college_of_wonder_reward_*/
-// unitStat_* sids) — not guessed.
-const STAT_OPTIONS = [
+// unitStat_* sids) — not guessed. Exported: CustomArtifactEditorDialog's bonus
+// editor needs the exact same 6-stat table (real artifact `heroStat` bonuses
+// reference the same stat ids).
+export const STAT_OPTIONS = [
   { id: 'offence', label: 'Attack' },
   { id: 'defence', label: 'Defense' },
   { id: 'spellPower', label: 'Spell Power' },
@@ -104,8 +106,10 @@ const STAT_OPTIONS = [
 ]
 
 // Confirmed against every real HeroRandomItemsReward parameter across
-// event_banks (common/rare/epic/legendary, always lowercase).
-const RARITY_OPTIONS = ['common', 'rare', 'epic', 'legendary']
+// event_banks (common/rare/epic/legendary, always lowercase) — also reused
+// by CustomArtifactEditorDialog for the artifact `rarity` field, confirmed
+// to use this exact same 4-value set.
+export const RARITY_OPTIONS = ['common', 'rare', 'epic', 'legendary']
 
 function defaultParamsFor(rewardType: string): string[] {
   switch (REWARD_KIND_BY_TYPE[rewardType] ?? 'raw') {
