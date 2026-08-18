@@ -12,12 +12,43 @@ import { Copy, Check, Pencil, AlertTriangle } from 'lucide-react'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
+import type { CustomHeroDefinition } from '@/types/hero'
+import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
+import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import { buildJsonDocs, SCENARIO_DOC_ID } from '@/lib/json-docs'
 import type { JsonDoc } from '@/lib/json-docs'
 import { parseDialogFile } from '@/lib/dialog-file'
 import { validateDialogFlow } from '@/lib/validate'
 import type { ValidationMessage } from '@/lib/validate'
+import { BASE_LANGUAGE, type TranslationMap } from '@/lib/languages'
 import UndockButton from '@/components/panels/UndockButton'
+
+/** Parses `{"array": [...]}`, the shape every batched/single-entry custom
+ *  JSON doc (heroes, map objects, artifacts, their logic/ground clones)
+ *  ships as — same convention the real Core.zip DB files use. */
+function parseArrayField(text: string): Record<string, unknown>[] {
+  const parsed = JSON.parse(text) as unknown
+  const arr = (parsed as { array?: unknown } | null)?.array
+  if (!Array.isArray(arr)) throw new Error('Expected an object with an "array" field, e.g. {"array": [...]}')
+  return arr as Record<string, unknown>[]
+}
+
+/** Parses `{"tokens": [{"sid": "...", "text": "..."}, ...]}`, the shape a
+ *  shipped Lang/*\/texts/*.json file uses. */
+function parseTokensField(text: string): Record<string, string> {
+  const parsed = JSON.parse(text) as unknown
+  const tokens = (parsed as { tokens?: unknown } | null)?.tokens
+  if (!Array.isArray(tokens)) throw new Error('Expected an object with a "tokens" array, e.g. {"tokens": [{"sid": "...", "text": "..."}]}')
+  const map: Record<string, string> = {}
+  for (const t of tokens as unknown[]) {
+    const entry = t as { sid?: unknown; text?: unknown }
+    if (typeof entry.sid !== 'string' || typeof entry.text !== 'string') {
+      throw new Error('Each token needs a string "sid" and "text"')
+    }
+    map[entry.sid] = entry.text
+  }
+  return map
+}
 
 // ─── Syntax-highlight helper ──────────────────────────────────────────────────
 
@@ -44,10 +75,21 @@ function highlight(json: string): string {
 
 // ─── Save handlers ────────────────────────────────────────────────────────────
 
-/** Applies an edited document. Returning messages means the save was rejected. */
+/** Applies an edited document. The three batched-array handlers (map object/
+ *  artifact templates, artifact ground objects) can only update EXISTING
+ *  entries matched by id — adding/removing a custom entity from its raw JSON
+ *  isn't supported (there's no way to validate a brand-new one has the other
+ *  fields — sourceObjectId, logic, etc. — its CustomXDefinition needs); they
+ *  return an error string naming the unmatched id(s) instead. */
 export interface JsonSaveHandlers {
   onSaveScenario: (scenario: ScenarioFile) => void
   onSaveDialog: (docDialogId: string, flow: DialogFlow) => void
+  onSaveLocalization: (lang: string, tokens: Record<string, string>) => void
+  onSaveCustomHero: (heroSid: string, definition: Record<string, unknown>) => void
+  onSaveCustomMapObjectTemplates: (templates: Record<string, unknown>[]) => string | void
+  onSaveCustomMapObjectLogic: (objectId: string, logic: Record<string, unknown>) => void
+  onSaveCustomArtifactTemplates: (templates: Record<string, unknown>[]) => string | void
+  onSaveCustomArtifactMapObjects: (templates: Record<string, unknown>[]) => string | void
 }
 
 // ─── Content (used by both docked and undocked) ───────────────────────────────
@@ -58,6 +100,10 @@ interface JsonPreviewContentProps {
   scenario: ScenarioFile
   dialogs?: Record<string, DialogFlow>
   localization?: Record<string, string>
+  translations?: TranslationMap
+  customHeroes?: Record<string, CustomHeroDefinition>
+  customMapObjects?: Record<string, CustomMapObjectDefinition>
+  customArtifacts?: Record<string, CustomArtifactDefinition>
   mapName?: string
   /** When provided, shows an Edit button that lets the user edit the JSON inline. */
   handlers?: JsonSaveHandlers
@@ -67,6 +113,10 @@ export function JsonPreviewContent({
   scenario,
   dialogs = {},
   localization = {},
+  translations = {},
+  customHeroes = {},
+  customMapObjects = {},
+  customArtifacts = {},
   mapName = '',
   handlers,
 }: JsonPreviewContentProps) {
@@ -80,8 +130,8 @@ export function JsonPreviewContent({
   const [docId, setDocId] = useState<string>(SCENARIO_DOC_ID)
 
   const docs = useMemo(
-    () => buildJsonDocs(scenario, dialogs, mapName),
-    [scenario, dialogs, mapName],
+    () => buildJsonDocs(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, mapName),
+    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, mapName],
   )
 
   // Fall back to the scenario if the selected dialog was renamed or deleted
@@ -149,23 +199,98 @@ export function JsonPreviewContent({
       return
     }
 
-    // ── Dialog document ─────────────────────────────────────────────────────
-    const { flow, errors: parseErrors } = parseDialogFile(editValue)
-    if (!flow) {
-      setParseError(parseErrors.join(' '))
+    // ── Dialog document ──────────────────────────────────────────────────────
+    if (doc.kind === 'dialog') {
+      const { flow, errors: parseErrors } = parseDialogFile(editValue)
+      if (!flow) {
+        setParseError(parseErrors.join(' '))
+        return
+      }
+
+      const result = validateDialogFlow(flow, localization)
+      if (result.errors.length > 0) {
+        setParseError(null)
+        setIssues(result.errors)
+        setIssuesAreErrors(true)
+        return
+      }
+
+      handlers.onSaveDialog(doc.dialogId!, flow)
+      clearEditState()
       return
     }
 
-    const result = validateDialogFlow(flow, localization)
-    if (result.errors.length > 0) {
-      setParseError(null)
-      setIssues(result.errors)
-      setIssuesAreErrors(true)
+    // ── Localization / translations ─────────────────────────────────────────
+    if (doc.kind === 'localization') {
+      try {
+        handlers.onSaveLocalization(doc.lang!, parseTokensField(editValue))
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
       return
     }
 
-    handlers.onSaveDialog(doc.dialogId!, flow)
-    clearEditState()
+    // ── Custom hero ──────────────────────────────────────────────────────────
+    if (doc.kind === 'customHero') {
+      try {
+        const arr = parseArrayField(editValue)
+        if (arr.length !== 1) throw new Error('Expected exactly one hero definition in "array"')
+        handlers.onSaveCustomHero(doc.heroSid!, arr[0])
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
+      return
+    }
+
+    // ── Custom map object templates (batched) ───────────────────────────────
+    if (doc.kind === 'customMapObjectTemplates') {
+      try {
+        const error = handlers.onSaveCustomMapObjectTemplates(parseArrayField(editValue))
+        if (error) { setParseError(error); return }
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
+      return
+    }
+
+    // ── Custom map object logic (one file per object) ───────────────────────
+    if (doc.kind === 'customMapObjectLogic') {
+      try {
+        const arr = parseArrayField(editValue)
+        if (arr.length !== 1) throw new Error('Expected exactly one logic entry in "array"')
+        handlers.onSaveCustomMapObjectLogic(doc.objectId!, arr[0])
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
+      return
+    }
+
+    // ── Custom artifact templates (batched) ─────────────────────────────────
+    if (doc.kind === 'customArtifactTemplates') {
+      try {
+        const error = handlers.onSaveCustomArtifactTemplates(parseArrayField(editValue))
+        if (error) { setParseError(error); return }
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
+      return
+    }
+
+    // ── Custom artifact ground-placement objects (batched) ──────────────────
+    if (doc.kind === 'customArtifactMapObjects') {
+      try {
+        const error = handlers.onSaveCustomArtifactMapObjects(parseArrayField(editValue))
+        if (error) { setParseError(error); return }
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
+    }
   }, [handlers, doc, editValue, localization, clearEditState])
 
   // ── Switcher (shared between read and edit modes) ──────────────────────────
@@ -298,8 +423,38 @@ interface JsonPreviewProps {
 }
 
 export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
-  const { scenario, dialogs, localization, mapName, setScenario, setDialogFlow, removeDialogFlow } =
-    useScenarioStore()
+  const {
+    scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, mapName,
+    setScenario, setDialogFlow, removeDialogFlow, setLocalizationBatch, setTranslationBatch,
+    setCustomHero, setCustomMapObject, setCustomArtifact,
+  } = useScenarioStore()
+
+  // Batched docs (map object/artifact templates, artifact ground objects) can
+  // only update entries that already exist — matched by each entry's own
+  // `id` field, which is always identical to its customMapObjects/
+  // customArtifacts store key (see CustomObjectEditorDialog/
+  // CustomArtifactEditorDialog's handleSave). Returns an error string
+  // naming any id that doesn't match an existing entry, or undefined on
+  // success.
+  function applyBatchedTemplates<T extends { template: Record<string, unknown> }>(
+    existing: Record<string, T>,
+    templates: Record<string, unknown>[],
+    setOne: (id: string, next: T) => void,
+    noun: string,
+  ): string | void {
+    const unknownIds: string[] = []
+    for (const template of templates) {
+      const id = typeof template.id === 'string' ? template.id : ''
+      if (!id || !(id in existing)) {
+        unknownIds.push(id || '(missing id)')
+        continue
+      }
+      setOne(id, { ...existing[id], template })
+    }
+    if (unknownIds.length > 0) {
+      return `Unknown ${noun} id(s): ${unknownIds.join(', ')} — add new ones via the sidebar, not here.`
+    }
+  }
 
   const handlers: JsonSaveHandlers = useMemo(
     () => ({
@@ -313,8 +468,46 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
         if (flow.id !== docDialogId) removeDialogFlow(docDialogId)
         setDialogFlow(flow.id, flow)
       },
+      onSaveLocalization: (lang, tokens) => {
+        // Merge-only, same as the localization dialog's own batch editor —
+        // a token omitted from the edited JSON isn't deleted, only ones
+        // present get updated/added.
+        if (lang === BASE_LANGUAGE) setLocalizationBatch(tokens)
+        else setTranslationBatch(lang, tokens)
+      },
+      onSaveCustomHero: (heroSid, definition) => {
+        const existing = customHeroes[heroSid]
+        if (!existing) return
+        setCustomHero(heroSid, { ...existing, definition })
+      },
+      onSaveCustomMapObjectTemplates: (templates) =>
+        applyBatchedTemplates(customMapObjects, templates, setCustomMapObject, 'object'),
+      onSaveCustomMapObjectLogic: (objectId, logic) => {
+        const existing = customMapObjects[objectId]
+        if (!existing) return
+        setCustomMapObject(objectId, { ...existing, logic })
+      },
+      onSaveCustomArtifactTemplates: (templates) =>
+        applyBatchedTemplates(customArtifacts, templates, setCustomArtifact, 'artifact'),
+      onSaveCustomArtifactMapObjects: (templates) => {
+        const unknownIds: string[] = []
+        for (const template of templates) {
+          const id = typeof template.id === 'string' ? template.id : ''
+          if (!id || !(id in customArtifacts)) {
+            unknownIds.push(id || '(missing id)')
+            continue
+          }
+          setCustomArtifact(id, { ...customArtifacts[id], mapObjectTemplate: template })
+        }
+        if (unknownIds.length > 0) {
+          return `Unknown artifact id(s): ${unknownIds.join(', ')} — ground objects must match an existing custom artifact's id.`
+        }
+      },
     }),
-    [setScenario, setDialogFlow, removeDialogFlow],
+    [
+      setScenario, setDialogFlow, removeDialogFlow, setLocalizationBatch, setTranslationBatch,
+      customHeroes, setCustomHero, customMapObjects, setCustomMapObject, customArtifacts, setCustomArtifact,
+    ],
   )
 
   return (
@@ -330,6 +523,10 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
           scenario={scenario}
           dialogs={dialogs}
           localization={localization}
+          translations={translations}
+          customHeroes={customHeroes}
+          customMapObjects={customMapObjects}
+          customArtifacts={customArtifacts}
           mapName={mapName}
           handlers={handlers}
         />

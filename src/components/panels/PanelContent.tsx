@@ -60,6 +60,10 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
           scenario={scenario}
           dialogs={state.dialogs}
           localization={state.localization}
+          translations={state.translations}
+          customHeroes={state.customHeroes}
+          customMapObjects={state.customMapObjects}
+          customArtifacts={state.customArtifacts}
           mapName={state.mapName}
         />
       )
