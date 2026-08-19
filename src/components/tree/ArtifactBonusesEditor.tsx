@@ -526,11 +526,13 @@ function BonusFieldsEditor({ effectId, bonus, onChange }: { effectId: string; bo
                 {COMBAT_BUFF_TARGETS.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Input className="h-7 text-xs flex-1" placeholder="my_artifact_bonus" value={p[1] ?? ''} onChange={(e) => setParamAt(1, e.target.value)} />
+            <div className="flex-1 min-w-0">
+              <EntityCombobox category="buff" value={p[1] ?? ''} onChange={(v) => setParamAt(1, v)} placeholder="Buff…" />
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Grants a combat effect during battle. Real artifacts each define their own one-off effect id in DB/buffs — for a
-            new artifact, type a short unique id of your own; it won't do anything unless a matching buff is also authored.
+            Grants a buff/status effect during battle — pick a real or custom buff (see Custom Buffs in
+            the sidebar), or type a short unique id if you're hand-authoring a matching buff yourself.
           </p>
         </div>
       )

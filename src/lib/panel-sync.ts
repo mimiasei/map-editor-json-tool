@@ -10,6 +10,7 @@ import type { MapContext } from '@/types/map-context'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { CustomBuffDefinition } from '@/types/custom-buff'
 import type { TranslationMap } from '@/lib/languages'
 
 // ─── Panel metadata ───────────────────────────────────────────────────────────
@@ -37,6 +38,7 @@ export interface PanelState {
   customHeroes:      Record<string, CustomHeroDefinition>
   customMapObjects:  Record<string, CustomMapObjectDefinition>
   customArtifacts:   Record<string, CustomArtifactDefinition>
+  customBuffs:       Record<string, CustomBuffDefinition>
   selectedType: SelectionType
   selectedPath: number[]
   /** For the mapGridCell panel — the rest of the panels don't touch map state. */

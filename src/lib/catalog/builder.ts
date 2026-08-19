@@ -276,6 +276,7 @@ async function collectBuffs(zip: JSZip, locMap: Map<string, string>): Promise<Ca
         id,
         name,
         icon: str(entry.icon || entry.id) || undefined,
+        raw: entry,
       })
     }
   }

@@ -63,6 +63,9 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
   // they're scenario-local, so their display name resolves against this
   // project's own localization map, not the catalog's (game-wide) one.
   const customArtifacts = useScenarioStore((s) => s.customArtifacts)
+  // Custom buffs (issue #165) — same reasoning as custom artifacts above:
+  // scenario-local, resolved against this project's own localization map.
+  const customBuffs = useScenarioStore((s) => s.customBuffs)
   const localization = useScenarioStore((s) => s.localization)
 
   return useMemo(() => {
@@ -93,8 +96,15 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         return catalog.spells.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
       case 'skill':
         return catalog.skills.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
-      case 'buff':
-        return catalog.buffs.map((b) => ({ id: b.id, label: b.name, icon: b.icon }))
+      case 'buff': {
+        const real = catalog.buffs.map((b) => ({ id: b.id, label: b.name, icon: b.icon }))
+        const custom = Object.values(customBuffs).map((def) => {
+          const nameSid = typeof def.template.name_ === 'string' ? def.template.name_ : def.id
+          const icon = typeof def.template.icon === 'string' ? def.template.icon : undefined
+          return { id: def.id, label: localization[nameSid] ?? nameSid, icon }
+        })
+        return [...real, ...custom]
+      }
       case 'squadTemplate': {
         // Squad templates have no display name of their own — compose one
         // from fraction/tier plus the real unit names inside it (issue #143),
@@ -110,7 +120,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
       default:
         return ENTITY_REGISTRIES[category] ?? []
     }
-  }, [catalog, category, customArtifacts, localization])
+  }, [catalog, category, customArtifacts, customBuffs, localization])
 }
 
 // ─── Map object filter helpers ────────────────────────────────────────────────

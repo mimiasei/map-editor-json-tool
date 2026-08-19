@@ -20,7 +20,7 @@ interface Props {
 export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
   const templateIndex = useTemplateIndex()
   const { dismissedAnnotations, clearDismissedAnnotations } = useGuideStore()
-  const { setScenario, setMapName, setDialogFlow, setLocalizationBatch, setTranslations, setCustomHero, setCustomMapObject, setCustomArtifact } =
+  const { setScenario, setMapName, setDialogFlow, setLocalizationBatch, setTranslations, setCustomHero, setCustomMapObject, setCustomArtifact, setCustomBuff } =
     useScenarioStore()
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -58,6 +58,9 @@ export default function TemplatePickerDialog({ open, onOpenChange }: Props) {
         }
         for (const [id, def] of Object.entries(result.customArtifacts)) {
           setCustomArtifact(id, def)
+        }
+        for (const [id, def] of Object.entries(result.customBuffs)) {
+          setCustomBuff(id, def)
         }
 
         // Store template annotations in guide store

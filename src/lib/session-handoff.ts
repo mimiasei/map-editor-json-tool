@@ -16,6 +16,7 @@ import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { CustomBuffDefinition } from '@/types/custom-buff'
 import type { TranslationMap } from '@/lib/languages'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { isTauri } from '@/lib/native-fs'
@@ -47,6 +48,7 @@ export interface SessionHandoff {
     customHeroes: Record<string, CustomHeroDefinition>
     customMapObjects: Record<string, CustomMapObjectDefinition>
     customArtifacts: Record<string, CustomArtifactDefinition>
+    customBuffs: Record<string, CustomBuffDefinition>
   }
   /** Whether the snapshot had unsaved changes, so the restore can say so. */
   wasDirty: boolean
@@ -94,6 +96,7 @@ export async function writeSessionHandoff(
       customHeroes: s.customHeroes,
       customMapObjects: s.customMapObjects,
       customArtifacts: s.customArtifacts,
+      customBuffs: s.customBuffs,
     },
     wasDirty: s.isDirty,
   }

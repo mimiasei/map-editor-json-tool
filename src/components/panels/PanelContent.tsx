@@ -64,6 +64,7 @@ export default function PanelContent({ panelId, state, sendAction }: Props) {
           customHeroes={state.customHeroes}
           customMapObjects={state.customMapObjects}
           customArtifacts={state.customArtifacts}
+          customBuffs={state.customBuffs}
           mapName={state.mapName}
         />
       )

@@ -14,6 +14,7 @@ import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { CustomBuffDefinition } from '@/types/custom-buff'
 import { exportScenario } from '@/lib/export'
 import { serializeDialogFile } from '@/lib/dialog-file'
 import { collectShippedSids, mapNameSnakeCase } from '@/lib/zip-export'
@@ -33,6 +34,7 @@ export interface JsonDoc {
     | 'customMapObjectLogic'
     | 'customArtifactTemplates'
     | 'customArtifactMapObjects'
+    | 'customBuffTemplates'
   /** Short label for the switcher. */
   label: string
   /** Where this document ends up on disk, shown under the switcher. */
@@ -69,6 +71,7 @@ export function buildJsonDocs(
   customHeroes: Record<string, CustomHeroDefinition>,
   customMapObjects: Record<string, CustomMapObjectDefinition>,
   customArtifacts: Record<string, CustomArtifactDefinition>,
+  customBuffs: Record<string, CustomBuffDefinition>,
   mapName = '',
 ): JsonDoc[] {
   const docs: JsonDoc[] = [
@@ -95,7 +98,7 @@ export function buildJsonDocs(
 
   // ── Localization / translations ─────────────────────────────────────────────
   const mapNameBase = mapNameSnakeCase(mapName)
-  const sids = collectShippedSids(dialogs, localization, customHeroes, customMapObjects, customArtifacts)
+  const sids = collectShippedSids(dialogs, localization, customHeroes, customMapObjects, customArtifacts, customBuffs)
   for (const lang of shippedLanguages(translations)) {
     const tokens = sids.map((sid) => ({ sid, text: resolveToken(sid, lang, localization, translations) }))
     const locFileName = lang === BASE_LANGUAGE ? `${mapNameBase}.json` : `${mapNameBase}_${lang}.json`
@@ -165,6 +168,18 @@ export function buildJsonDocs(
       label: 'Custom artifact ground objects',
       pathHint: `DB/map/objects/custom_maps/${mapNameBase}_artifact_objects.json`,
       text: JSON.stringify({ array: artifactMapObjects }, null, '\t'),
+    })
+  }
+
+  // ── Custom buffs ──────────────────────────────────────────────────────────
+  const buffTemplates = Object.values(customBuffs).map((b) => b.template)
+  if (buffTemplates.length > 0) {
+    docs.push({
+      id: 'customBuffTemplates',
+      kind: 'customBuffTemplates',
+      label: 'Custom buffs',
+      pathHint: `DB/buffs/custom_maps/${mapNameBase}_buffs.json`,
+      text: JSON.stringify({ array: buffTemplates }, null, '\t'),
     })
   }
 

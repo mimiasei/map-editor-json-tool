@@ -84,6 +84,11 @@ export interface CatalogBuff {
   id: string
   name: string
   icon?: string
+  /** The untouched Core/DB/buffs/*.json array entry, kept as a clone
+   *  template for custom buff identities (issue #165) — same "raw here,
+   *  resolved where shown" split as CatalogArtifact.raw. Only present when
+   *  built from a real Core.zip — absent from the static fallback catalog. */
+  raw?: Record<string, unknown>
 }
 
 export interface CatalogMapObject {

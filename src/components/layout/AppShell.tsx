@@ -68,6 +68,7 @@ function buildPanelState(): PanelState {
     customHeroes:      s.customHeroes,
     customMapObjects:  s.customMapObjects,
     customArtifacts:   s.customArtifacts,
+    customBuffs:       s.customBuffs,
     selectedType: s.selectedType,
     selectedPath: s.selectedPath,
     mapContext:       useMapContextStore.getState().context,

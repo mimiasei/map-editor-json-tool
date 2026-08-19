@@ -137,14 +137,4 @@ export function attributeById(list: AttributeDef[], id: string): AttributeDef | 
   return list.find((a) => a.id === id)
 }
 
-/** Convert a stored decimal-string percent ('0.15') to a display number (15), and back. */
-export function percentToDisplay(raw: string | undefined): string {
-  if (raw === undefined || raw === '') return ''
-  const n = Number(raw)
-  return Number.isFinite(n) ? String(Math.round(n * 10000) / 100) : ''
-}
-export function displayToPercent(display: string): string {
-  if (display === '') return ''
-  const n = Number(display)
-  return Number.isFinite(n) ? String(Math.round(n * 100) / 10000) : '0'
-}
+export { percentToDisplay, displayToPercent } from '@/lib/percent-utils'
