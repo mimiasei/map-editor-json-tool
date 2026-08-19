@@ -96,6 +96,11 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   let importedTranslations: import('@/lib/languages').TranslationMap = {}
   let importedCustomHeroes: Record<string, import('@/types/hero').CustomHeroDefinition> = {}
   let importedCustomMapObjects: Record<string, import('@/types/custom-map-object').CustomMapObjectDefinition> = {}
+  // Also never restored from the sidecar before this fix (issue #165 audit) —
+  // opening a .map+sidecar silently dropped any custom artifacts/buffs it had,
+  // unlike the "Open JSON" and "Load template" paths which already handled them.
+  let importedCustomArtifacts: Record<string, import('@/types/custom-artifact').CustomArtifactDefinition> = {}
+  let importedCustomBuffs: Record<string, import('@/types/custom-buff').CustomBuffDefinition> = {}
 
   // ── Try sidecar (Tauri only — needs file system access) ──────────────────────
   if (sidecarPath && (await checkFileExists(sidecarPath))) {
@@ -111,6 +116,8 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
         translations: tr,
         customHeroes: ch,
         customMapObjects: cmo,
+        customArtifacts: ca,
+        customBuffs: cb,
       } = importScenario(text)
       if (imported) {
         scenario = imported
@@ -120,6 +127,8 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
         importedTranslations = tr
         importedCustomHeroes = ch
         importedCustomMapObjects = cmo
+        importedCustomArtifacts = ca
+        importedCustomBuffs = cb
         sidecarLoaded = true
         logInfo(`Loaded sidecar: ${sidecarPath}`)
       } else {
@@ -163,6 +172,8 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   store.setTranslations(importedTranslations)
   for (const [heroSid, def] of Object.entries(importedCustomHeroes)) store.setCustomHero(heroSid, def)
   for (const [id, def] of Object.entries(importedCustomMapObjects)) store.setCustomMapObject(id, def)
+  for (const [id, def] of Object.entries(importedCustomArtifacts)) store.setCustomArtifact(id, def)
+  for (const [id, def] of Object.entries(importedCustomBuffs)) store.setCustomBuff(id, def)
   // setScenario() cleared the dirty flag; the hydration above must not resurrect it.
   store.markClean()
 

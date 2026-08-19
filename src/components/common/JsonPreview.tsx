@@ -15,6 +15,7 @@ import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { CustomBuffDefinition } from '@/types/custom-buff'
 import { buildJsonDocs, SCENARIO_DOC_ID } from '@/lib/json-docs'
 import type { JsonDoc } from '@/lib/json-docs'
 import { parseDialogFile } from '@/lib/dialog-file'
@@ -90,6 +91,7 @@ export interface JsonSaveHandlers {
   onSaveCustomMapObjectLogic: (objectId: string, logic: Record<string, unknown>) => void
   onSaveCustomArtifactTemplates: (templates: Record<string, unknown>[]) => string | void
   onSaveCustomArtifactMapObjects: (templates: Record<string, unknown>[]) => string | void
+  onSaveCustomBuffTemplates: (templates: Record<string, unknown>[]) => string | void
 }
 
 // ─── Content (used by both docked and undocked) ───────────────────────────────
@@ -104,6 +106,7 @@ interface JsonPreviewContentProps {
   customHeroes?: Record<string, CustomHeroDefinition>
   customMapObjects?: Record<string, CustomMapObjectDefinition>
   customArtifacts?: Record<string, CustomArtifactDefinition>
+  customBuffs?: Record<string, CustomBuffDefinition>
   mapName?: string
   /** When provided, shows an Edit button that lets the user edit the JSON inline. */
   handlers?: JsonSaveHandlers
@@ -117,6 +120,7 @@ export function JsonPreviewContent({
   customHeroes = {},
   customMapObjects = {},
   customArtifacts = {},
+  customBuffs = {},
   mapName = '',
   handlers,
 }: JsonPreviewContentProps) {
@@ -130,8 +134,8 @@ export function JsonPreviewContent({
   const [docId, setDocId] = useState<string>(SCENARIO_DOC_ID)
 
   const docs = useMemo(
-    () => buildJsonDocs(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, mapName),
-    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, mapName],
+    () => buildJsonDocs(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName),
+    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName],
   )
 
   // Fall back to the scenario if the selected dialog was renamed or deleted
@@ -290,6 +294,18 @@ export function JsonPreviewContent({
       } catch (err) {
         setParseError(err instanceof Error ? err.message : 'Invalid JSON')
       }
+      return
+    }
+
+    // ── Custom buff templates (batched) ──────────────────────────────────────
+    if (doc.kind === 'customBuffTemplates') {
+      try {
+        const error = handlers.onSaveCustomBuffTemplates(parseArrayField(editValue))
+        if (error) { setParseError(error); return }
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
     }
   }, [handlers, doc, editValue, localization, clearEditState])
 
@@ -424,9 +440,9 @@ interface JsonPreviewProps {
 
 export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
   const {
-    scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, mapName,
+    scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName,
     setScenario, setDialogFlow, removeDialogFlow, setLocalizationBatch, setTranslationBatch,
-    setCustomHero, setCustomMapObject, setCustomArtifact,
+    setCustomHero, setCustomMapObject, setCustomArtifact, setCustomBuff,
   } = useScenarioStore()
 
   // Batched docs (map object/artifact templates, artifact ground objects) can
@@ -503,10 +519,13 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
           return `Unknown artifact id(s): ${unknownIds.join(', ')} — ground objects must match an existing custom artifact's id.`
         }
       },
+      onSaveCustomBuffTemplates: (templates) =>
+        applyBatchedTemplates(customBuffs, templates, setCustomBuff, 'buff'),
     }),
     [
       setScenario, setDialogFlow, removeDialogFlow, setLocalizationBatch, setTranslationBatch,
       customHeroes, setCustomHero, customMapObjects, setCustomMapObject, customArtifacts, setCustomArtifact,
+      customBuffs, setCustomBuff,
     ],
   )
 
@@ -527,6 +546,7 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
           customHeroes={customHeroes}
           customMapObjects={customMapObjects}
           customArtifacts={customArtifacts}
+          customBuffs={customBuffs}
           mapName={mapName}
           handlers={handlers}
         />

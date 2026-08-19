@@ -3,6 +3,7 @@ import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { CustomBuffDefinition } from '@/types/custom-buff'
 import type { TranslationMap } from '@/lib/languages'
 import { ScenarioFileSchema } from '@/schema/zod'
 
@@ -20,6 +21,8 @@ export interface ImportResult {
   customMapObjects: Record<string, CustomMapObjectDefinition>
   /** Custom artifact identities from _customArtifacts. Empty for files saved before issue #150. */
   customArtifacts: Record<string, CustomArtifactDefinition>
+  /** Custom buff identities from _customBuffs. Empty for files saved before issue #165. */
+  customBuffs: Record<string, CustomBuffDefinition>
   /** Template metadata extracted from _templateMeta (null if not a template) */
   templateMeta: { id: string; name: string; description: string } | null
   /** Template annotations extracted from _annotations */
@@ -41,6 +44,7 @@ export function importScenario(rawJsonText: string): ImportResult {
     customHeroes: {} as Record<string, CustomHeroDefinition>,
     customMapObjects: {} as Record<string, CustomMapObjectDefinition>,
     customArtifacts: {} as Record<string, CustomArtifactDefinition>,
+    customBuffs: {} as Record<string, CustomBuffDefinition>,
     templateMeta: null as { id: string; name: string; description: string } | null,
     annotations: {} as Record<string, string>,
   }
@@ -93,6 +97,10 @@ export function importScenario(rawJsonText: string): ImportResult {
     if (r['_customArtifacts'] && typeof r['_customArtifacts'] === 'object') {
       extras.customArtifacts = r['_customArtifacts'] as Record<string, CustomArtifactDefinition>
       delete r['_customArtifacts']
+    }
+    if (r['_customBuffs'] && typeof r['_customBuffs'] === 'object') {
+      extras.customBuffs = r['_customBuffs'] as Record<string, CustomBuffDefinition>
+      delete r['_customBuffs']
     }
     if (r['_templateMeta'] && typeof r['_templateMeta'] === 'object') {
       extras.templateMeta = r['_templateMeta'] as { id: string; name: string; description: string }

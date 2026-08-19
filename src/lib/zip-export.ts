@@ -3,6 +3,7 @@ import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { CustomBuffDefinition } from '@/types/custom-buff'
 import { serializeDialogFile } from '@/lib/dialog-file'
 import {
   BASE_LANGUAGE,
@@ -97,6 +98,7 @@ export function collectShippedSids(
   customHeroes: Record<string, CustomHeroDefinition> = {},
   customMapObjects: Record<string, CustomMapObjectDefinition> = {},
   customArtifacts: Record<string, CustomArtifactDefinition> = {},
+  customBuffs: Record<string, CustomBuffDefinition> = {},
 ): string[] {
   const sids = new Set<string>(Object.keys(localization))
   for (const flow of Object.values(dialogs)) {
@@ -134,6 +136,15 @@ export function collectShippedSids(
     if (typeof name === 'string' && name) sids.add(name)
     if (typeof description === 'string' && description) sids.add(description)
     if (typeof narrativeDescription === 'string' && narrativeDescription) sids.add(narrativeDescription)
+  }
+  // A custom buff's name_/description_ (issue #165, real buffs use trailing-
+  // underscore field names unlike heroes/objects/artifacts) — same reasoning
+  // as the cases above.
+  for (const buff of Object.values(customBuffs)) {
+    const name = buff.template.name_
+    const description = buff.template.description_
+    if (typeof name === 'string' && name) sids.add(name)
+    if (typeof description === 'string' && description) sids.add(description)
   }
   return Array.from(sids)
 }
@@ -186,6 +197,10 @@ export function collectShippedSids(
  * custom artifact's ground-placement clone (only present for artifacts whose
  * source had a matching Core/DB/map/objects/6_artifacts.json entry — magic
  * scroll items, for example, have none).
+ *
+ * DB/buffs/custom_maps/{mapName}_buffs.json (issue #165) — one file per map
+ * holding every custom buff's template in a single `array`, same flat-file
+ * convention as the artifact/object cases above.
  */
 export async function buildMapZipBlob(
   mapName: string,
@@ -195,6 +210,7 @@ export async function buildMapZipBlob(
   customHeroes: Record<string, CustomHeroDefinition> = {},
   customMapObjects: Record<string, CustomMapObjectDefinition> = {},
   customArtifacts: Record<string, CustomArtifactDefinition> = {},
+  customBuffs: Record<string, CustomBuffDefinition> = {},
 ): Promise<Blob> {
   if (!mapName.trim()) {
     throw new Error('Map name is required to export a ZIP.')
@@ -250,8 +266,17 @@ export async function buildMapZipBlob(
     )
   }
 
+  // ── Custom buff files (issue #165) ───────────────────────────────────────────
+  const customBuffTemplates = Object.values(customBuffs).map((b) => b.template)
+  if (customBuffTemplates.length > 0) {
+    zip.file(
+      `DB/buffs/custom_maps/${mapNameSnakeCase(mapName)}_buffs.json`,
+      JSON.stringify({ array: customBuffTemplates }, null, '\t'),
+    )
+  }
+
   // ── Localization files ─────────────────────────────────────────────────────
-  const sids = collectShippedSids(dialogs, localization, customHeroes, customMapObjects, customArtifacts)
+  const sids = collectShippedSids(dialogs, localization, customHeroes, customMapObjects, customArtifacts, customBuffs)
   // English always ships; extra languages only when they carry real content.
   const langs = shippedLanguages(translations)
   const mapNameBase = mapNameSnakeCase(mapName)
@@ -292,8 +317,9 @@ export async function exportMapZip(
   customHeroes: Record<string, CustomHeroDefinition> = {},
   customMapObjects: Record<string, CustomMapObjectDefinition> = {},
   customArtifacts: Record<string, CustomArtifactDefinition> = {},
+  customBuffs: Record<string, CustomBuffDefinition> = {},
 ): Promise<string[] | null> {
-  const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts)
+  const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)
   const filename = mapZipFileName(mapName)
 
   // Check for Tauri at runtime — dynamic import avoids bundling issues

@@ -16,6 +16,7 @@ import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
+import type { CustomBuffDefinition } from '@/types/custom-buff'
 import type { TranslationMap } from '@/lib/languages'
 
 // ─── Empty defaults ─────────────────────────────────────────────────────────────
@@ -81,6 +82,7 @@ export interface ProjectPayload {
   customHeroes?: Record<string, CustomHeroDefinition>
   customMapObjects?: Record<string, CustomMapObjectDefinition>
   customArtifacts?: Record<string, CustomArtifactDefinition>
+  customBuffs?: Record<string, CustomBuffDefinition>
   currentFilePath?: string | null
   currentFileName?: string | null
   mapFilePath?: string | null
@@ -128,6 +130,9 @@ interface ScenarioStore {
    *  each one ships under. Editor-only, stored as _customArtifacts in
    *  project JSON. */
   customArtifacts: Record<string, CustomArtifactDefinition>
+  /** Custom buff identities (issue #165), keyed by the new buff id each one
+   *  ships under. Editor-only, stored as _customBuffs in project JSON. */
+  customBuffs: Record<string, CustomBuffDefinition>
 
   // Selection state
   selectedType: SelectionType
@@ -177,6 +182,10 @@ interface ScenarioStore {
   // ── Custom artifact identities (issue #150) ──────────────────────────────
   setCustomArtifact: (id: string, definition: CustomArtifactDefinition) => void
   removeCustomArtifact: (id: string) => void
+
+  // ── Custom buff identities (issue #165) ──────────────────────────────────
+  setCustomBuff: (id: string, definition: CustomBuffDefinition) => void
+  removeCustomBuff: (id: string) => void
 
   // ── Counter operations ───────────────────────────────────────────────────
   addCounter: () => void
@@ -310,6 +319,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   customHeroes: {},
   customMapObjects: {},
   customArtifacts: {},
+  customBuffs: {},
   dialogEditorOpenId: null,
   localizationDialogOpen: false,
   localizationFocusSid: null,
@@ -326,7 +336,7 @@ export const useScenarioStore = create<ScenarioStore>()(
   },
 
   resetScenario: () => {
-    set({ scenario: EMPTY_SCENARIO, isDirty: false, zipDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, customMapObjects: {}, customArtifacts: {}, selectedType: null, selectedPath: [] })
+    set({ scenario: EMPTY_SCENARIO, isDirty: false, zipDirty: false, currentFilePath: null, currentFileName: null, mapFilePath: null, sidecarPath: null, mapName: '', dialogs: {}, localization: {}, translations: {}, activeLanguages: [], customHeroes: {}, customMapObjects: {}, customArtifacts: {}, customBuffs: {}, selectedType: null, selectedPath: [] })
     useScenarioStore.temporal.getState().clear()
     useMapContextStore.getState().clearContext()
   },
@@ -349,6 +359,7 @@ export const useScenarioStore = create<ScenarioStore>()(
       customHeroes: payload.customHeroes ?? {},
       customMapObjects: payload.customMapObjects ?? {},
       customArtifacts: payload.customArtifacts ?? {},
+      customBuffs: payload.customBuffs ?? {},
       currentFilePath: payload.currentFilePath ?? null,
       currentFileName: payload.currentFileName ?? null,
       mapFilePath: payload.mapFilePath ?? null,
@@ -467,8 +478,8 @@ export const useScenarioStore = create<ScenarioStore>()(
     }),
 
   // ── Custom hero identities ───────────────────────────────────────────────────
-  // All six of these (through removeCustomArtifact) also set zipDirty — each
-  // ships its own file into the exported ZIP (DB/heroes|map/objects|items/
+  // All eight of these (through removeCustomBuff) also set zipDirty — each
+  // ships its own file into the exported ZIP (DB/heroes|map/objects|items|buffs/
   // custom_maps/*), so this is exactly the "DB json changes" issue #160 means.
 
   setCustomHero: (heroSid, definition) =>
@@ -503,6 +514,18 @@ export const useScenarioStore = create<ScenarioStore>()(
       const customArtifacts = { ...s.customArtifacts }
       delete customArtifacts[id]
       return { customArtifacts, isDirty: true, zipDirty: true }
+    }),
+
+  // ── Custom buff identities ───────────────────────────────────────────────────
+
+  setCustomBuff: (id, definition) =>
+    set((s) => ({ customBuffs: { ...s.customBuffs, [id]: definition }, isDirty: true, zipDirty: true })),
+
+  removeCustomBuff: (id) =>
+    set((s) => {
+      const customBuffs = { ...s.customBuffs }
+      delete customBuffs[id]
+      return { customBuffs, isDirty: true, zipDirty: true }
     }),
 
   // ── Counters ───────────────────────────────────────────────────────────────
