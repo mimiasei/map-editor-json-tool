@@ -29,6 +29,16 @@ import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
+/** These spawn-placeholder sids (Core/DB/map/objects/7_spawns.json) are
+ *  walked ONTO to interact — collecting a resource pile, engaging a guard
+ *  squad, picking up an item — unlike every other object here, where the
+ *  footprint's `1` cells are solid mesh you can't walk through. Confirmed by
+ *  the user's own domain knowledge, so their footprint never contributes to
+ *  the blocked set regardless of node value. city-spawner/hero-spawner are
+ *  deliberately NOT included — a spawned city/hero building genuinely
+ *  blocks. */
+const NON_BLOCKING_SPAWNER_SIDS = new Set(['random-res', 'random-squad', 'random-item'])
+
 /**
  * Whether `node` is an elevation "wall" tile: its own level is not 0, at
  * least one 4-neighbor is a *different* level, and no 4-neighbor is a ramp.
@@ -70,6 +80,7 @@ export function buildBlockedTileSet(context: PassabilityContext, catalog: GameCa
   // aren't physical terrain and have no footprint template in the catalog.
   for (const obj of placedObjects) {
     if (obj.type !== 0) continue
+    if (NON_BLOCKING_SPAWNER_SIDS.has(obj.sid)) continue
     const template = catalog?.mapObjects.find((o) => o.id === obj.sid)
     for (const cell of computeFootprintTiles(template, obj.x, obj.z)) {
       if (cell.value !== 1) continue

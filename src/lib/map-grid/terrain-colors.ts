@@ -20,17 +20,17 @@ export const BIOME_NAMES: Record<BiomeId, string> = {
 
 /** Saturated base color per biome — used only to derive the light fill below. */
 const BIOME_BASE_COLORS: Record<BiomeId, string> = {
-  1: '#4caf50', // Grass — green
+  1: '#1da324', // Grass — green
   2: '#d9b96b', // Sand — tan
-  3: '#5b4e63', // Deathland — blighted purple-gray
-  4: '#a9c6d9', // Snow — pale ice blue
-  5: '#c9812f', // Autumn — orange-brown
-  6: '#c0392b', // Lava — red-orange
-  7: '#8a6640', // Dirt — brown
+  3: '#37333e', // Deathland — blighted purple-gray
+  4: '#c9e6fa', // Snow — pale ice blue
+  5: '#9f445a', // Autumn — orange-brown
+  6: '#1c0606', // Lava — red-orange
+  7: '#4e3617', // Dirt — brown
 }
 
 /** Water overlay (DB/map/waters/waters.json, id 1-7 all render the same blue here). */
-const WATER_BASE_COLOR = '#3d85c6'
+const WATER_BASE_COLOR = '#2197ea'
 
 /** Fallback for an out-of-range/unknown tile id (shouldn't occur — every real map's
  *  tilesMap values were verified to fall in 1-7, but a malformed map could differ). */
@@ -72,19 +72,26 @@ export function terrainFillColor(
 }
 
 /**
- * "Dirt - Tile (6, 8)"-style label for a tile (issue #125) — shared by the
- * docked hover panel and the (docked/undocked) cell-info column so both
- * derive it identically instead of duplicating the lookup.
+ * "Dirt - Tile (6, 8), Level 0"-style label for a tile (issue #125, extended
+ * #167 with level/ramp info) — shared by the docked hover panel and the
+ * (docked/undocked) cell-info column so both derive it identically instead
+ * of duplicating the lookup. `rampDirection` is the tile's "up" direction
+ * from ramp-direction.ts's buildRampDirectionMap — passed in rather than
+ * recomputed here so this module doesn't need to depend on that one.
  */
 export function terrainLabel(
   tilesMap: number[],
   waterMap: number[],
   node: number,
   sizeX: number,
+  levelsMap?: number[],
+  rampDirection?: string,
 ): string {
   const tileId = tilesMap[node]
   const waterId = waterMap[node]
   const biome = tileId !== undefined && isBiomeId(tileId) ? BIOME_NAMES[tileId] : 'Unknown'
   const suffix = waterId ? ' (Water)' : ''
-  return `${biome}${suffix} - Tile (${node % sizeX}, ${Math.floor(node / sizeX)})`
+  const levelSuffix = levelsMap ? `, Level ${levelsMap[node] ?? 0}` : ''
+  const rampSuffix = rampDirection ? `, Ramp (${rampDirection})` : ''
+  return `${biome}${suffix} - Tile (${node % sizeX}, ${Math.floor(node / sizeX)})${levelSuffix}${rampSuffix}`
 }
