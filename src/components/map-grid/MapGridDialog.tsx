@@ -477,21 +477,37 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
-    // Blocked-tile pass: translucent red over everything else, toggle-gated —
-    // deliberately last so it's visible regardless of terrain/occupied color
-    // underneath.
-    if (settings.showBlockedTiles) {
-      ctx.fillStyle = 'rgba(220, 38, 38, 0.55)'
-      for (const node of blockedTileSet) {
-        const x = node % sizeX
-        const z = Math.floor(node / sizeX)
-        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
-      }
-    }
   }, [
     canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap, settings.showBlockedTiles, blockedTileSet,
+    settings.showElevationShading, elevationTintMap,
   ])
+
+  // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
+  // more pass on canvasEl above) so the red tint paints over every tile
+  // regardless of type, including the ones with a rendered object icon. The
+  // icon layer below is DOM, stacked visually on top of canvasEl — a pass
+  // added there would still render underneath every icon, which is exactly
+  // the "overlay doesn't go on top of the map objects" bug this fixes. This
+  // canvas is placed after the icon layer in the JSX instead, so it paints
+  // over icons too. Same 1-unit-per-tile pixelated technique, same cheap
+  // cost class as every other canvas layer here.
+  const [blockedCanvasEl, setBlockedCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!blockedCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = blockedCanvasEl
+    canvas.width = sizeX
+    canvas.height = sizeZ
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, sizeX, sizeZ)
+    if (!settings.showBlockedTiles) return
+    ctx.fillStyle = 'rgba(220, 38, 38, 0.55)'
+    for (const node of blockedTileSet) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+    }
+  }, [blockedCanvasEl, sizeX, sizeZ, settings.showBlockedTiles, blockedTileSet])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -580,6 +596,52 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return icons
   }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, primaryByNode, visibleRange])
+
+  // Combined, position-sorted render list — plain 1x1 icons and multi-tile
+  // bounding boxes together, painted in top-left → bottom-right order
+  // (screen row, then x) so overlapping objects layer correctly: whichever
+  // is further down/right paints on top, matching how these are visually
+  // placed in the real game. Two separate `.map()` passes (multi-tile always
+  // fully on top of single-tile, regardless of actual screen position) was
+  // the bug this replaces.
+  const sortedIconEntries = useMemo(() => {
+    const entries: {
+      key: string
+      left: number; top: number; width: number; height: number
+      clickNode: number
+      pick: { primary: PlacedObject; group: GridGroup; count: number }
+      sortRow: number; sortCol: number
+    }[] = []
+    for (const c of visibleCells) {
+      const screenRow = sizeZ - 1 - c.z
+      entries.push({
+        key: `s${c.node}`,
+        left: c.x * BASE_CELL_PX,
+        top: screenRow * BASE_CELL_PX,
+        width: BASE_CELL_PX,
+        height: BASE_CELL_PX,
+        clickNode: c.node,
+        pick: c.pick,
+        sortRow: screenRow,
+        sortCol: c.x,
+      })
+    }
+    for (const m of multiTileIcons) {
+      entries.push({
+        key: `m${m.key}`,
+        left: m.minX * BASE_CELL_PX,
+        top: m.screenRowMin * BASE_CELL_PX,
+        width: (m.maxX - m.minX + 1) * BASE_CELL_PX,
+        height: (m.screenRowMax - m.screenRowMin + 1) * BASE_CELL_PX,
+        clickNode: m.pick.primary.node,
+        pick: m.pick,
+        sortRow: m.screenRowMin,
+        sortCol: m.minX,
+      })
+    }
+    entries.sort((a, b) => a.sortRow - b.sortRow || a.sortCol - b.sortCol)
+    return entries
+  }, [visibleCells, multiTileIcons, sizeZ])
 
   // ── Hover info panel + click-to-edit ────────────────────────────────────────
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
@@ -1034,32 +1096,41 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
 
-                {/* Interactive icon layer — windowed to the visible range, only above the LOD threshold */}
-                {showIcons && visibleCells.map(({ x, z, node, pick }) => {
-                  const name = pick.primary.displayName || pick.primary.entitySid || pick.primary.sid
-                  const visual = resolveGridCellVisual(pick.primary, catalog)
+                {/* Interactive icon layer — windowed to the visible range, only
+                    above the LOD threshold. Single combined, position-sorted
+                    list (see sortedIconEntries above) so plain and multi-tile
+                    icons paint in one consistent top-left → bottom-right
+                    order, instead of two separate passes where one always
+                    fully covered the other regardless of actual position. */}
+                {showIcons && sortedIconEntries.map((entry) => {
+                  const name = entry.pick.primary.displayName || entry.pick.primary.entitySid || entry.pick.primary.sid
+                  const visual = resolveGridCellVisual(entry.pick.primary, catalog)
+                  const isSingleCell = entry.width === BASE_CELL_PX && entry.height === BASE_CELL_PX
+                  const thisIconSize = isSingleCell
+                    ? iconSize
+                    : Math.max(4, Math.min(entry.width, entry.height) - (2 * settings.cellBorderThickness) / transform.scale)
                   return (
                     <div
-                      key={node}
+                      key={entry.key}
                       className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer select-none"
                       style={{
-                        left: x * BASE_CELL_PX,
-                        top: (sizeZ - 1 - z) * BASE_CELL_PX,
-                        width: BASE_CELL_PX,
-                        height: BASE_CELL_PX,
+                        left: entry.left,
+                        top: entry.top,
+                        width: entry.width,
+                        height: entry.height,
                         boxSizing: 'border-box',
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState) selectNode(node) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState) selectNode(entry.clickNode) }}
                     >
-                      {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
+                      {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
                         <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
                       )}
                       {visual.kind === 'catalog' && (
                         <CatalogIcon
-                          iconId={pick.primary.sid}
+                          iconId={entry.pick.primary.sid}
                           name={name}
-                          size={iconSize}
+                          size={thisIconSize}
                           src={settings.iconImagesEnabled ? undefined : null}
                         />
                       )}
@@ -1067,69 +1138,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <CatalogIcon
                           iconId={visual.iconId}
                           name={visual.name}
-                          size={iconSize}
+                          size={thisIconSize}
                           src={settings.iconImagesEnabled ? undefined : null}
                         />
                       )}
-                      {pick.count > 1 && (
+                      {entry.pick.count > 1 && (
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
-                          {pick.count}
+                          {entry.pick.count}
                         </span>
                       )}
                     </div>
                   )
                 })}
 
-                {/* Multi-tile footprint icons (issue #167) — one bigger icon
-                    spanning each large object's real bounding box, instead of
-                    the flat 1x1 rendering every placed object used to get. */}
-                {showIcons && multiTileIcons.map(({ key, minX, maxX, screenRowMin, screenRowMax, pick }) => {
-                  const name = pick.primary.displayName || pick.primary.entitySid || pick.primary.sid
-                  const visual = resolveGridCellVisual(pick.primary, catalog)
-                  const boxW = (maxX - minX + 1) * BASE_CELL_PX
-                  const boxH = (screenRowMax - screenRowMin + 1) * BASE_CELL_PX
-                  const footprintIconSize = Math.max(4, Math.min(boxW, boxH) - (2 * settings.cellBorderThickness) / transform.scale)
-                  return (
-                    <div
-                      key={key}
-                      className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer select-none"
-                      style={{
-                        left: minX * BASE_CELL_PX,
-                        top: screenRowMin * BASE_CELL_PX,
-                        width: boxW,
-                        height: boxH,
-                        boxSizing: 'border-box',
-                      }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState) selectNode(pick.primary.node) }}
-                    >
-                      {visual.kind === 'icon' && <visual.Icon size={footprintIconSize} className="shrink-0" />}
-                      {visual.kind === 'text' && (
-                        <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
-                      )}
-                      {visual.kind === 'catalog' && (
-                        <CatalogIcon
-                          iconId={pick.primary.sid}
-                          name={name}
-                          size={footprintIconSize}
-                          src={settings.iconImagesEnabled ? undefined : null}
-                        />
-                      )}
-                      {visual.kind === 'catalogOverride' && (
-                        <CatalogIcon
-                          iconId={visual.iconId}
-                          name={visual.name}
-                          size={footprintIconSize}
-                          src={settings.iconImagesEnabled ? undefined : null}
-                        />
-                      )}
-                      {pick.count > 1 && (
-                        <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
-                          {pick.count}
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
+                {/* Blocked-tile overlay — a separate canvas stacked AFTER the
+                    icon layer above, so the red tint paints on top of every
+                    tile including occupied ones, not just bare terrain. */}
+                <canvas
+                  ref={setBlockedCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
               </div>
 
               {/* Grid-line + map-edge overlays live in screen space (outside the
