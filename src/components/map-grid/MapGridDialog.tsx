@@ -12,7 +12,7 @@
 // never drift out of alignment.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from 'react'
+import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
@@ -50,6 +50,7 @@ import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
+import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
 import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -64,7 +65,8 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'
+import EntityCombobox from '@/components/common/EntityCombobox'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -87,6 +89,14 @@ const GROUP_COLORS: Record<GridGroup, string> = {
   resources: '#c97fe0',
   decorations: '#8a8a8a',
   zones: '#3fb8af',
+}
+
+// Ramp/slope "up" direction → which Lucide arrow to render (ramp-direction.ts).
+const RAMP_DIRECTION_ICONS: Record<RampDirection, typeof ArrowUp> = {
+  up: ArrowUp,
+  down: ArrowDown,
+  left: ArrowLeft,
+  right: ArrowRight,
 }
 
 // ─── Filter state (persisted) ────────────────────────────────────────────────
@@ -288,6 +298,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // wall-vs-interior distinction the blocked-tile overlay uses.
   const elevationTintMap = useMemo(() => buildElevationTintMap(levelsMap), [levelsMap])
 
+  // Ramp/slope direction arrows (src/lib/map-grid/ramp-direction.ts) — folded
+  // into the same "Elevation shading" toggle rather than a separate setting,
+  // since it's the same underlying story (making levelsMap/climbsMap
+  // visually legible) and this dialog already has a lot of toggles.
+  const rampDirectionMap = useMemo(
+    () => buildRampDirectionMap(sizeX, sizeZ, levelsMap, climbsMap),
+    [sizeX, sizeZ, levelsMap, climbsMap],
+  )
+
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
   // State-backed (not a plain ref): DraggableDialogContent defers its own
@@ -406,6 +425,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null && isNodeInBoundsForMove(moveState, node)) {
         setMoveState((prev) => (prev ? { ...prev, node } : prev))
       }
+    }
+    // A plain click while placing a new object commits it immediately and
+    // stays in placing mode (issue #167 Phase B) — same "fires on pointerup,
+    // not the icon's own onClick" reasoning as Move above.
+    if (wasClick && placingSid) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null && isNodeInBoundsForPlacement(placingSid, node)) {
+        void placeAt(node)
+      }
+    }
+  }
+  const onContextMenuViewport = (e: ReactMouseEvent) => {
+    if (placingSid) {
+      e.preventDefault()
+      stopPlacing()
     }
   }
   const onPointerLeaveViewport = () => setHoveredNode(null)
@@ -643,6 +677,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return entries
   }, [visibleCells, multiTileIcons, sizeZ])
 
+  // Ramp/slope direction arrows — windowed to the viewport the same way
+  // visibleCells is, since ramp tiles (unlike the flood-fill tint/overlay
+  // canvases) render as small DOM icons, not a canvas fill.
+  const visibleRampArrows = useMemo(() => {
+    if (!showIcons || !settings.showElevationShading || sizeX <= 0 || sizeZ <= 0) return []
+    const arrows: { node: number; x: number; z: number; direction: RampDirection }[] = []
+    for (let screenRow = visibleRange.zMin; screenRow <= visibleRange.zMax; screenRow++) {
+      const z = sizeZ - 1 - screenRow
+      for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
+        const node = z * sizeX + x
+        const direction = rampDirectionMap.get(node)
+        if (direction) arrows.push({ node, x, z, direction })
+      }
+    }
+    return arrows
+  }, [showIcons, settings.showElevationShading, visibleRange, sizeX, sizeZ, rampDirectionMap])
+
   // ── Hover info panel + click-to-edit ────────────────────────────────────────
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
   const infoNode = hoveredNode
@@ -838,6 +889,53 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [moveState, sizeX, catalog])
 
+  // ── Place object (issue #167 Phase B) ───────────────────────────────────
+  // Pick a map-object sid, then every subsequent grid click adds a new
+  // instance immediately — unlike Move, this doesn't stage-then-save: each
+  // click is its own independent write (fully backed-up/verified by
+  // saveMapFile, same as every other edit here), and placing mode stays
+  // active afterward so multiple copies can be stamped down in a row.
+  // Escape or right-click ends it. Mutually exclusive with Move (the icon
+  // click/pointerup guards below key off whichever of the two is active).
+  const [placingSid, setPlacingSid] = useState<string | null>(null)
+  const [placingPickerOpen, setPlacingPickerOpen] = useState(false)
+  const stopPlacing = () => setPlacingSid(null)
+
+  const isNodeInBoundsForPlacement = useCallback((sid: string, node: number): boolean => {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return false
+    const template = catalog?.mapObjects.find((o) => o.id === sid)
+    return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
+  }, [catalog, sizeX, sizeZ])
+
+  const placeAt = async (node: number) => {
+    if (!placingSid || !mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 0, sid: placingSid, node })
+    } catch (e) {
+      logError(`Failed to place object: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  useEffect(() => {
+    if (!open || !placingSid) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') stopPlacing()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, placingSid])
+
+  const placingFootprintBounds = useMemo(() => {
+    if (!placingSid || hoveredNode === null) return null
+    const x = hoveredNode % sizeX
+    const z = Math.floor(hoveredNode / sizeX)
+    const template = catalog?.mapObjects.find((o) => o.id === placingSid)
+    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+  }, [placingSid, hoveredNode, sizeX, catalog])
+  const placingValid = placingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(placingSid, hoveredNode)
+
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
 
@@ -915,6 +1013,33 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               >
                 <Ban className="h-3.5 w-3.5" />
               </Button>
+              {canEditEntities && (
+                placingSid ? (
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacing}>
+                    <Plus className="h-3.5 w-3.5" />
+                    Placing… (Esc to stop)
+                  </Button>
+                ) : (
+                  <Popover open={placingPickerOpen} onOpenChange={setPlacingPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" title="Place a new object">
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-72" data-nodrag>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                        Place object
+                      </p>
+                      <EntityCombobox
+                        value=""
+                        onChange={(sid) => { setPlacingSid(sid); setPlacingPickerOpen(false) }}
+                        category="mapObject"
+                        placeholder="Search map objects…"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )
+              )}
               <div className="w-px h-4 bg-border mx-1" />
               <MapGridSettingsDialog settings={settings} onChange={updateSettings} />
             </div>
@@ -1035,6 +1160,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               onPointerCancel={onPointerUp}
               onPointerLeave={onPointerLeaveViewport}
               onWheel={onWheel}
+              onContextMenu={onContextMenuViewport}
             >
               <div className="absolute left-0">
                   {settings.showGridNumbers && Array.from(
@@ -1120,7 +1246,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         height: entry.height,
                         boxSizing: 'border-box',
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -1147,6 +1273,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           {entry.pick.count}
                         </span>
                       )}
+                    </div>
+                  )
+                })}
+
+                {/* Ramp/slope direction arrows — purely visual, non-
+                    interactive, so a hero-visible ramp tile is legible at a
+                    glance instead of just being an unexplained flat/lighter
+                    patch in the elevation tint above. */}
+                {visibleRampArrows.map(({ node, x, z, direction }) => {
+                  const ArrowIcon = RAMP_DIRECTION_ICONS[direction]
+                  return (
+                    <div
+                      key={`ramp${node}`}
+                      className="absolute flex items-center justify-center pointer-events-none text-foreground/70"
+                      style={{
+                        left: x * BASE_CELL_PX,
+                        top: (sizeZ - 1 - z) * BASE_CELL_PX,
+                        width: BASE_CELL_PX,
+                        height: BASE_CELL_PX,
+                      }}
+                    >
+                      <ArrowIcon size={iconSize * 0.6} strokeWidth={2.5} />
                     </div>
                   )
                 })}
@@ -1223,6 +1371,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     top: (sizeZ - 1 - moveFootprintBounds.maxZ) * effectiveCellPx,
                     width: (moveFootprintBounds.maxX - moveFootprintBounds.minX + 1) * effectiveCellPx,
                     height: (moveFootprintBounds.maxZ - moveFootprintBounds.minZ + 1) * effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+              {/* Place-object ghost preview (issue #167 Phase B) — follows
+                  the hovered tile, sized to the picked sid's real footprint;
+                  red instead of green wherever the footprint won't fit on
+                  the map (isNodeInBoundsForPlacement). */}
+              {placingFootprintBounds && (
+                <div
+                  className={`absolute pointer-events-none rounded-sm border-[3px] ${placingValid ? 'border-emerald-400' : 'border-red-500'}`}
+                  style={{
+                    left: placingFootprintBounds.minX * effectiveCellPx,
+                    top: (sizeZ - 1 - placingFootprintBounds.maxZ) * effectiveCellPx,
+                    width: (placingFootprintBounds.maxX - placingFootprintBounds.minX + 1) * effectiveCellPx,
+                    height: (placingFootprintBounds.maxZ - placingFootprintBounds.minZ + 1) * effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
                     boxSizing: 'border-box',
                   }}
