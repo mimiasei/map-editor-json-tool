@@ -59,6 +59,18 @@ export interface RawMapBlock2 {
   /** Water material ID per tile (DB/map/waters/waters.json, 1-7), 0 = no water.
    *  Same flat indexing as tilesMap. */
   waterMap?: number[]
+  /** Elevation tier per tile: -1 = lowered ("basin"), 0 = ground, 1 =
+   *  heightened. Confirmed (blocked-tile-overlay research): water only ever
+   *  sits on level -1 tiles, and a level-≠0 tile is only impassable at its
+   *  boundary with a different level (see climbsMap) — not across its whole
+   *  extent. Same flat indexing as tilesMap. */
+  levelsMap?: number[]
+  /** Slope/ramp marker, confirmed structurally (not the format-notes doc's
+   *  original "presumably cliff-passability" guess): every real `1` tile
+   *  sits on the LOWER side of a levelsMap height boundary, bordering the
+   *  higher side — it's the walkable transition, not a blocker itself. Same
+   *  flat indexing as tilesMap. */
+  climbsMap?: number[]
   objects?: Array<{
     sid?: string | string[]
     ids?: number[]
