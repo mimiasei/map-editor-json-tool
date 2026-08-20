@@ -315,8 +315,8 @@ export default function ScenarioTree() {
   // (entityUsageListMap) for the rename dialog's full reference warning.
   // Shared with the Map Grid's tile editor (issue #122) via entity-usage.ts.
   const entityUsageListMap = useMemo<Map<string, EntityUsage[]>>(
-    () => buildEntityUsageMap(scenario),
-    [scenario],
+    () => buildEntityUsageMap(scenario, dialogs),
+    [scenario, dialogs],
   )
 
   const entityUsageMap = useMemo<Map<string, EntityUsage>>(() => {
@@ -401,16 +401,22 @@ export default function ScenarioTree() {
   const [openSubQuests, setOpenSubQuests] = useState<Record<string, boolean>>({})
 
   // Navigate to the usage of an entity SID: expand tree nodes + select the item.
-  const navigateToUsage = (usage: { type: 'trigger'; path: [number, number, number] } | { type: 'interruption'; path: [number] }) => {
+  const navigateToUsage = (usage: EntityUsage) => {
     if (usage.type === 'trigger') {
       const [qi, sqi, ti] = usage.path
       setOpenSections(s => ({ ...s, quests: true }))
       setOpenQuests(s => ({ ...s, [qi]: true }))
       setOpenSubQuests(s => ({ ...s, [`${qi}-${sqi}`]: true }))
       setSelection('trigger', [qi, sqi, ti])
-    } else {
+    } else if (usage.type === 'interruption') {
       setOpenSections(s => ({ ...s, interruptions: true }))
       setSelection('interruption', usage.path)
+    } else {
+      // Opens the flow — doesn't deep-link to the specific slide (path[1]),
+      // DialogEditor has no "jump to slide" entry point today.
+      const [dialogId] = usage.path
+      setOpenSections(s => ({ ...s, dialogs: true }))
+      openDialogEditor(dialogId)
     }
   }
 

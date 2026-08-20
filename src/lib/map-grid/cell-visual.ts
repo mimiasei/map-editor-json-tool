@@ -12,7 +12,7 @@
 // check needed), but portals' real-icon status is unconfirmed, and squads
 // should show a real creature icon whenever one resolves.
 
-import { Castle, Shield, DoorOpen, SquareDashed, Dices, type LucideIcon } from 'lucide-react'
+import { Castle, Shield, DoorOpen, SquareDashed, Building2, UserRound, Swords, Gem, Package, Users, type LucideIcon } from 'lucide-react'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
 import type { PlacedObject } from '@/types/map-context'
@@ -35,17 +35,19 @@ export type GridCellVisual =
  *  has an opaque `bg-muted` background — masking the blue 'spawners' canvas
  *  swatch underneath and making them look gray instead of blue like
  *  city-spawner/hero-spawner (whose transparent Lucide icons let the swatch
- *  show through). Dices for all 6 — a plain "randomized" indicator rather
- *  than guessing a specific icon per spawn kind. */
+ *  show through). Originally all 6 shared one Dices icon (a plain
+ *  "randomized" indicator) — per user feedback that made them impossible to
+ *  tell apart on the grid, each now gets its own distinct icon instead,
+ *  matching what it actually spawns. */
 const SID_ICON_OVERRIDES: Record<string, LucideIcon> = {
   'city-spawner': Castle,
   'hero-spawner': Shield,
-  'random-city': Dices,
-  'random-hero': Dices,
-  'random-squad': Dices,
-  'random-res': Dices,
-  'random-item': Dices,
-  'random-hire': Dices,
+  'random-city': Building2,
+  'random-hero': UserRound,
+  'random-squad': Swords,
+  'random-res': Gem,
+  'random-item': Package,
+  'random-hire': Users,
 }
 
 export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog | null): GridCellVisual {

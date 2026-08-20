@@ -120,6 +120,20 @@ export interface MapGridCellContentProps {
   onSaveMove?: () => void
   /** Discard the staged destination without writing anything. Docked-only. */
   onCancelMove?: () => void
+  /** The parent's active delete confirmation, if any (issue #167 Phase C) —
+   *  same "compared locally against selected.key" convention as moveTarget. */
+  deleteTarget?: { key: string } | null
+  /** "trigger [0,1,2]"/"dialog [id, slideId]"-style descriptions of every
+   *  place the target's entitySid is referenced — computed by the parent via
+   *  entity-usage.ts, shown so deleting doesn't silently orphan a reference. */
+  deleteUsageWarnings?: string[]
+  /** Stage a delete confirmation for `item` — nothing is written until
+   *  Save. Docked-only. */
+  onStartDelete?: (item: PlacedObject) => void
+  /** Write the delete to the .map file. Docked-only. */
+  onSaveDelete?: () => void
+  /** Discard the staged delete without writing anything. Docked-only. */
+  onCancelDelete?: () => void
 }
 
 const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
@@ -158,6 +172,11 @@ export default function MapGridCellContent({
   onStartMove,
   onSaveMove,
   onCancelMove,
+  deleteTarget = null,
+  deleteUsageWarnings = [],
+  onStartDelete,
+  onSaveDelete,
+  onCancelDelete,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
@@ -299,11 +318,50 @@ export default function MapGridCellContent({
                         Move
                       </Button>
                     )}
+                    {onStartDelete && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-xs text-destructive hover:text-destructive"
+                        onClick={() => onStartDelete(selected)}
+                      >
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
             )
           })()}
+
+          {deleteTarget?.key === selected.key && (
+            <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/5 p-2">
+              <p className="text-xs font-semibold text-destructive">Delete this object?</p>
+              <p className="text-xs text-muted-foreground">
+                This removes it (and every property table row it has) from the .map file. There is no
+                undo in this app beyond the one-time .bak backup made on your next save.
+              </p>
+              {deleteUsageWarnings.length > 0 && (
+                <div className="space-y-1 rounded bg-amber-500/10 p-1.5">
+                  <p className="text-xs font-medium text-amber-600">
+                    Referenced by {deleteUsageWarnings.length} script location{deleteUsageWarnings.length > 1 ? 's' : ''} —
+                    deleting will leave those references dangling:
+                  </p>
+                  <ul className="text-xs text-muted-foreground list-disc list-inside">
+                    {deleteUsageWarnings.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </div>
+              )}
+              <div className="flex items-center gap-2 pt-0.5">
+                <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={onSaveDelete}>
+                  Delete and save to .map
+                </Button>
+                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelDelete}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
           {selected.isActive === false && (
             <Badge variant="secondary" className="text-amber-500 text-xs">

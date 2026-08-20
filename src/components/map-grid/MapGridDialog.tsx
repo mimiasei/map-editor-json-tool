@@ -176,6 +176,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const scenario = useScenarioStore((s) => s.scenario)
   const mapFilePath = useScenarioStore((s) => s.mapFilePath)
   const localization = useScenarioStore((s) => s.localization)
+  const dialogs = useScenarioStore((s) => s.dialogs)
   const entities = context?.entities ?? []
 
   const sizeX = context?.sizeX ?? 0
@@ -735,7 +736,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Rename/set-display-name are docked-only (issue #125 scope decision) —
   // the undocked mirror renders MapGridCellContent without these callbacks.
-  const entityUsageListMap = useMemo(() => buildEntityUsageMap(scenario), [scenario])
+  const entityUsageListMap = useMemo(() => buildEntityUsageMap(scenario, dialogs), [scenario, dialogs])
   const existingSids = useMemo(() => entities.map((e) => e.sid), [entities])
   const existingSidsAndLocTokens = useMemo(
     () => [...existingSids, ...Object.keys(localization)],
@@ -850,6 +851,35 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       logError(`Failed to move object: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
+
+  // ── Delete (issue #167 Phase C) ─────────────────────────────────────────
+  // Same "stage locally, then explicit Save to .map" convention as Move —
+  // unlike Add, a delete's confirmation copy should be more deliberate
+  // (destructive-action UX guidance from #167's original research), so
+  // there's real value in a staged, cancelable window rather than
+  // committing on the first click.
+  const [deleteState, setDeleteState] = useState<{ key: string; type: 0 | 1 | 2; id: number } | null>(null)
+  const startDelete = (item: PlacedObject) => {
+    setDeleteState({ key: item.key, type: item.type, id: item.id })
+  }
+  const cancelDelete = () => setDeleteState(null)
+  const saveDelete = async () => {
+    if (!deleteState || !mapFilePath) return
+    const { type, id } = deleteState
+    try {
+      await saveMapFile(mapFilePath, { kind: 'deleteObject', entityType: type, entityId: id })
+      setDeleteState(null)
+    } catch (e) {
+      logError(`Failed to delete object: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  const deleteTarget = deleteState ? { key: deleteState.key } : null
+  const deleteUsageWarnings = useMemo(() => {
+    if (!deleteState) return []
+    const item = placedObjects.find((o) => o.key === deleteState.key)
+    if (!item?.entitySid) return []
+    return (entityUsageListMap.get(item.entitySid) ?? []).map(describeEntityUsage)
+  }, [deleteState, placedObjects, entityUsageListMap])
 
   // Arrow-key nudging (per the UX research in issue #167): while a move is
   // active, arrow keys adjust the staged destination by one tile — cheap,
@@ -1474,7 +1504,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             {objectBrowserOpen && !undocked ? (
               <ObjectBrowserPanel
                 catalog={catalog}
-                onPick={(sid) => { setPlacingSid(sid); setObjectBrowserOpen(false) }}
+                placingSid={placingSid}
+                onPick={setPlacingSid}
                 onClose={() => setObjectBrowserOpen(false)}
               />
             ) : (
@@ -1517,6 +1548,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onStartMove={canEditEntities ? startMove : undefined}
                   onSaveMove={canEditEntities ? saveMove : undefined}
                   onCancelMove={canEditEntities ? cancelMove : undefined}
+                  deleteTarget={deleteTarget}
+                  deleteUsageWarnings={deleteUsageWarnings}
+                  onStartDelete={canEditEntities ? startDelete : undefined}
+                  onSaveDelete={canEditEntities ? saveDelete : undefined}
+                  onCancelDelete={canEditEntities ? cancelDelete : undefined}
                 />
               ) : null}
             </div>

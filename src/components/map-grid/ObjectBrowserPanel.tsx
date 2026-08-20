@@ -43,6 +43,34 @@ const BIOME_ID_TO_CATALOG_BIOME: Record<BiomeId, string> = {
   1: 'Grass', 2: 'Desert', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt',
 }
 
+// Remembered across opens, same convention as every other Map Grid filter
+// (oe-map-grid-filter, oe-map-grid-settings, etc.) — the search query is
+// deliberately NOT persisted, only the two pill-button filters.
+const FILTER_STORAGE_KEY = 'oe-object-browser-filter'
+
+interface StoredFilter {
+  types: TypeFilterKey[]
+  biomes: BiomeId[]
+}
+
+function loadStoredFilter(): StoredFilter {
+  try {
+    const raw = localStorage.getItem(FILTER_STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<StoredFilter>
+      return {
+        types: Array.isArray(parsed.types) ? parsed.types : [],
+        biomes: Array.isArray(parsed.biomes) ? parsed.biomes : [],
+      }
+    }
+  } catch { /* ignore */ }
+  return { types: [], biomes: [] }
+}
+
+function saveStoredFilter(types: TypeFilterKey[], biomes: BiomeId[]): void {
+  try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({ types, biomes })) } catch { /* ignore */ }
+}
+
 function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -60,13 +88,19 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
 
 interface Props {
   catalog: GameCatalog | null
+  /** The sid currently staged for placement, if any — highlights that row so
+   *  it's clear what's active while the browser stays open (issue #167: it
+   *  used to close on pick, which made stamping down several different kinds
+   *  of object tedious). */
+  placingSid: string | null
   onPick: (sid: string) => void
   onClose: () => void
 }
 
-export default function ObjectBrowserPanel({ catalog, onPick, onClose }: Props) {
-  const [typeFilter, setTypeFilter] = useState<Set<TypeFilterKey>>(new Set())
-  const [biomeFilter, setBiomeFilter] = useState<Set<BiomeId>>(new Set())
+export default function ObjectBrowserPanel({ catalog, placingSid, onPick, onClose }: Props) {
+  const initialFilter = useMemo(loadStoredFilter, [])
+  const [typeFilter, setTypeFilter] = useState<Set<TypeFilterKey>>(() => new Set(initialFilter.types))
+  const [biomeFilter, setBiomeFilter] = useState<Set<BiomeId>>(() => new Set(initialFilter.biomes))
   const [query, setQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
 
@@ -75,6 +109,7 @@ export default function ObjectBrowserPanel({ catalog, onPick, onClose }: Props) 
       const next = new Set(prev)
       if (next.has(t)) next.delete(t)
       else next.add(t)
+      saveStoredFilter([...next], [...biomeFilter])
       return next
     })
   }
@@ -83,6 +118,7 @@ export default function ObjectBrowserPanel({ catalog, onPick, onClose }: Props) 
       const next = new Set(prev)
       if (next.has(b)) next.delete(b)
       else next.add(b)
+      saveStoredFilter([...typeFilter], [...next])
       return next
     })
   }
@@ -156,7 +192,9 @@ export default function ObjectBrowserPanel({ catalog, onPick, onClose }: Props) 
           <button
             key={o.id}
             onClick={() => onPick(o.id)}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-accent transition-colors"
+            className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+              o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
+            }`}
           >
             <CatalogIcon iconId={o.icon} name={o.name} size={24} />
             <div className="flex-1 min-w-0">
