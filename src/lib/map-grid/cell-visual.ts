@@ -12,7 +12,7 @@
 // check needed), but portals' real-icon status is unconfirmed, and squads
 // should show a real creature icon whenever one resolves.
 
-import { Castle, Shield, DoorOpen, SquareDashed, type LucideIcon } from 'lucide-react'
+import { Castle, Shield, DoorOpen, SquareDashed, Dices, type LucideIcon } from 'lucide-react'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
 import type { PlacedObject } from '@/types/map-context'
@@ -27,10 +27,25 @@ export type GridCellVisual =
   | { kind: 'catalogOverride'; iconId: string; name: string }
 
 /** No real 2D icon texture exists for these (confirmed in issue #125/#127's
- *  investigation) — always use the manual icon, no real-icon check needed. */
+ *  investigation) — always use the manual icon, no real-icon check needed.
+ *  Bug fix: the other 6 entries of Core/DB/map/objects/7_spawns.json
+ *  (random-city/random-hero/random-squad/random-res/random-item/random-hire
+ *  — the map editor's randomized-spawn placeholder markers) had no entry
+ *  here, so they fell through to CatalogIcon's letter-fallback badge, which
+ *  has an opaque `bg-muted` background — masking the blue 'spawners' canvas
+ *  swatch underneath and making them look gray instead of blue like
+ *  city-spawner/hero-spawner (whose transparent Lucide icons let the swatch
+ *  show through). Dices for all 6 — a plain "randomized" indicator rather
+ *  than guessing a specific icon per spawn kind. */
 const SID_ICON_OVERRIDES: Record<string, LucideIcon> = {
   'city-spawner': Castle,
   'hero-spawner': Shield,
+  'random-city': Dices,
+  'random-hero': Dices,
+  'random-squad': Dices,
+  'random-res': Dices,
+  'random-item': Dices,
+  'random-hire': Dices,
 }
 
 export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog | null): GridCellVisual {

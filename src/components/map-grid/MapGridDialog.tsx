@@ -1434,7 +1434,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           {infoNode !== null && (
             <div className="absolute bottom-2 left-2 max-w-xs bg-popover border border-border rounded-md shadow-md p-2 text-xs space-y-1 pointer-events-none">
               <p className="font-semibold">
-                {terrainLabel(tilesMap, waterMap, infoNode, sizeX)}
+                {terrainLabel(tilesMap, waterMap, infoNode, sizeX, levelsMap, rampDirectionMap.get(infoNode))}
                 {infoItems.length > 0 && ` — ${infoItems.length} item${infoItems.length > 1 ? 's' : ''}`}
               </p>
               {infoItems.map((it, i) => (
@@ -1479,7 +1479,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : selectedNode !== null ? (
                 <MapGridCellContent
                   items={selectedItems}
-                  terrainLabel={terrainLabel(tilesMap, waterMap, selectedNode, sizeX)}
+                  terrainLabel={terrainLabel(tilesMap, waterMap, selectedNode, sizeX, levelsMap, rampDirectionMap.get(selectedNode))}
                   catalog={catalog}
                   existingSids={existingSids}
                   onRename={canEditEntities ? setRenameTarget : undefined}
