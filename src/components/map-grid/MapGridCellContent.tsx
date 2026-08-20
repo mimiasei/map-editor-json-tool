@@ -109,6 +109,17 @@ export interface MapGridCellContentProps {
   onSetCityGarrison?: (item: PlacedObject, sids: string[]) => void
   /** Set every reward slot's value at once (issue #143) — docked-only, like the above. */
   onSetRewardParams?: (item: PlacedObject, parameters: string[]) => void
+  /** The parent's active move, if any (issue #167 Phase A) — only relevant
+   *  when `key` matches `selected.key`, compared locally below since the
+   *  parent doesn't know which stacked item this panel currently shows. */
+  moveTarget?: { key: string; x: number; z: number } | null
+  /** Start moving `item` — enters "pick a destination" mode on the grid
+   *  (click a tile, or use arrow keys) until Save/Cancel. Docked-only. */
+  onStartMove?: (item: PlacedObject) => void
+  /** Write the staged destination to the .map file. Docked-only. */
+  onSaveMove?: () => void
+  /** Discard the staged destination without writing anything. Docked-only. */
+  onCancelMove?: () => void
 }
 
 const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
@@ -143,6 +154,10 @@ export default function MapGridCellContent({
   onSetGuardSquad,
   onSetCityGarrison,
   onSetRewardParams,
+  moveTarget = null,
+  onStartMove,
+  onSaveMove,
+  onCancelMove,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
@@ -247,6 +262,49 @@ export default function MapGridCellContent({
             <p className="text-xs text-muted-foreground">Object SID</p>
             <p className="font-mono text-xs truncate">{selected.sid}</p>
           </div>
+
+          {(() => {
+            const isMoving = moveTarget?.key === selected.key
+            const isDirty = isMoving && (moveTarget!.x !== selected.x || moveTarget!.z !== selected.z)
+            return (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Position</p>
+                {isMoving ? (
+                  <div className="space-y-1.5">
+                    <p className="text-xs">
+                      {isDirty ? `Moving to (${moveTarget!.x}, ${moveTarget!.z})` : `(${selected.x}, ${selected.z})`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Click a tile on the grid, or use the arrow keys, to choose a destination.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {isDirty && (
+                        <>
+                          <p className="text-xs text-amber-600">Unsaved change</p>
+                          <Button size="sm" className="h-6 text-xs" onClick={onSaveMove}>
+                            Save to .map
+                          </Button>
+                        </>
+                      )}
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelMove}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs">({selected.x}, {selected.z})</p>
+                    {onStartMove && (
+                      <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => onStartMove(selected)}>
+                        Move
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           {selected.isActive === false && (
             <Badge variant="secondary" className="text-amber-500 text-xs">
               Inactive at start

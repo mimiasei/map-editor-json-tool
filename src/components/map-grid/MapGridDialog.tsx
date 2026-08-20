@@ -50,7 +50,7 @@ import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
-import { footprintIconBounds, type FootprintCell } from '@/lib/map-grid/footprint'
+import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
@@ -395,8 +395,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const wasClick = !dragRef.current?.moved
     if (dragRef.current?.moved) e.currentTarget.releasePointerCapture(e.pointerId)
     dragRef.current = null
+    // A plain click (not a pan) while a move is active updates the staged
+    // destination — fires here (not the icon cells' own onClick) so it works
+    // identically whether the click lands on an empty tile or an occupied one.
+    if (wasClick && moveState) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null && isNodeInBoundsForMove(moveState, node)) {
+        setMoveState((prev) => (prev ? { ...prev, node } : prev))
+      }
+    }
   }
   const onPointerLeaveViewport = () => setHoveredNode(null)
 
@@ -680,6 +690,92 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
 
+  // ── Move (issue #167 Phase A) ───────────────────────────────────────────
+  // One active move at a time, keyed by the moving instance's own `key`.
+  // Once started, every grid click AND arrow-key press updates the staged
+  // destination (not a one-shot "pick then confirm") — nothing is written
+  // until an explicit Save, the same "stage locally, then Save to .map"
+  // convention issue #125's spawner Player-type edit established.
+  const [moveState, setMoveState] = useState<{ key: string; type: 0 | 1 | 2; id: number; sid: string; node: number } | null>(null)
+
+  const startMove = (item: PlacedObject) => {
+    setMoveState({ key: item.key, type: item.type, id: item.id, sid: item.sid, node: item.node })
+  }
+  const cancelMove = () => setMoveState(null)
+
+  // A destination is valid only if the FULL footprint (issue #167's
+  // multi-tile footprint work) fits on the map — a multi-tile object can't
+  // be nudged/clicked to a spot that would push any part of it off the edge.
+  // Markers/squads (type 1/2) have no footprint template, so this reduces to
+  // a plain single-tile bounds check for them.
+  const isNodeInBoundsForMove = useCallback((state: { type: 0 | 1 | 2; sid: string }, node: number): boolean => {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return false
+    if (state.type !== 0) return true
+    const template = catalog?.mapObjects.find((o) => o.id === state.sid)
+    return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
+  }, [catalog, sizeX, sizeZ])
+
+  const saveMove = async () => {
+    if (!moveState || !mapFilePath) return
+    const { type, id, node } = moveState
+    try {
+      await saveMapFile(mapFilePath, { kind: 'moveObject', entityType: type, entityId: id, newNode: node })
+      setMoveState(null)
+      // Follow the moved instance to its new tile (per issue #167's "Impact
+      // on the rest of the editor" note: selectedNode is a tile index chosen
+      // before the edit, not an identity — it needs an explicit retarget).
+      selectNode(node)
+    } catch (e) {
+      logError(`Failed to move object: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  // Arrow-key nudging (per the UX research in issue #167): while a move is
+  // active, arrow keys adjust the staged destination by one tile — cheap,
+  // precise (positions here are always whole-tile), and an alternative to
+  // clicking a destination on the grid rather than a replacement for it.
+  // Ignored while focus is in a text field so it doesn't fight typing
+  // elsewhere in the dialog (search box, staged-edit inputs, etc.).
+  useEffect(() => {
+    if (!open || !moveState) return
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      let dx = 0
+      let dz = 0
+      if (e.key === 'ArrowUp') dz = 1
+      else if (e.key === 'ArrowDown') dz = -1
+      else if (e.key === 'ArrowLeft') dx = -1
+      else if (e.key === 'ArrowRight') dx = 1
+      else return
+      e.preventDefault()
+      setMoveState((prev) => {
+        if (!prev) return prev
+        const x = prev.node % sizeX
+        const z = Math.floor(prev.node / sizeX)
+        const newNode = (z + dz) * sizeX + (x + dx)
+        if (!isNodeInBoundsForMove(prev, newNode)) return prev
+        return { ...prev, node: newNode }
+      })
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, moveState, sizeX, isNodeInBoundsForMove])
+
+  const moveTarget = moveState
+    ? { key: moveState.key, x: moveState.node % sizeX, z: Math.floor(moveState.node / sizeX) }
+    : null
+  const moveFootprintBounds = useMemo(() => {
+    if (!moveState) return null
+    const x = moveState.node % sizeX
+    const z = Math.floor(moveState.node / sizeX)
+    if (moveState.type !== 0) return { minX: x, maxX: x, minZ: z, maxZ: z }
+    const template = catalog?.mapObjects.find((o) => o.id === moveState.sid)
+    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+  }, [moveState, sizeX, catalog])
+
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
 
@@ -953,7 +1049,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         height: BASE_CELL_PX,
                         boxSizing: 'border-box',
                       }}
-                      onClick={(e) => { e.stopPropagation(); selectNode(node) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState) selectNode(node) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -1004,7 +1100,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         height: boxH,
                         boxSizing: 'border-box',
                       }}
-                      onClick={(e) => { e.stopPropagation(); selectNode(pick.primary.node) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState) selectNode(pick.primary.node) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={footprintIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -1077,6 +1173,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     top: (sizeZ - 1 - Math.floor(highlightedNode / sizeX)) * effectiveCellPx,
                     width: effectiveCellPx,
                     height: effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+              {/* Move destination preview (issue #167 Phase A) — spans the
+                  full footprint of the item being moved, not just one tile,
+                  so a multi-tile object's real shape/bounds are visible
+                  while picking a destination. */}
+              {moveFootprintBounds && (
+                <div
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-blue-400"
+                  style={{
+                    left: moveFootprintBounds.minX * effectiveCellPx,
+                    top: (sizeZ - 1 - moveFootprintBounds.maxZ) * effectiveCellPx,
+                    width: (moveFootprintBounds.maxX - moveFootprintBounds.minX + 1) * effectiveCellPx,
+                    height: (moveFootprintBounds.maxZ - moveFootprintBounds.minZ + 1) * effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
                     boxSizing: 'border-box',
                   }}
@@ -1184,6 +1297,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetGuardSquad={canEditEntities ? handleSetGuardSquad : undefined}
                   onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
+                  moveTarget={moveTarget}
+                  onStartMove={canEditEntities ? startMove : undefined}
+                  onSaveMove={canEditEntities ? saveMove : undefined}
+                  onCancelMove={canEditEntities ? cancelMove : undefined}
                 />
               ) : null}
             </div>

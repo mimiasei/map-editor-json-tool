@@ -23,6 +23,7 @@ import {
   upsertPropSquads,
   upsertPropRandomSquads,
   upsertPropRewardParams,
+  moveObjectInstance,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -42,6 +43,7 @@ export type MapSaveEdit =
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
+  | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
  *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
@@ -129,6 +131,8 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = upsertPropRandomSquads(newChunks[1], edit.entityType, edit.entityId, edit.sids)
   } else if (edit?.kind === 'setRewardParams') {
     newChunks[1] = upsertPropRewardParams(newChunks[1], edit.entityType, edit.entityId, edit.parameters)
+  } else if (edit?.kind === 'moveObject') {
+    newChunks[1] = moveObjectInstance(newChunks[1], edit.entityType, edit.entityId, edit.newNode)
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -257,6 +261,25 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || JSON.stringify(match.parameters) !== JSON.stringify(edit.parameters)) {
       throw new Error('Verification failed: reward params not reflected in the rebuilt propRewardParams table')
+    }
+  } else if (edit?.kind === 'moveObject') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objects?: Array<{ ids?: number[]; nodes?: number[] }>
+      squads?: Array<{ ids?: number[]; nodes?: number[] }>
+      markers?: Array<{ id?: number; node?: number }>
+    }
+    let actualNode: number | undefined
+    if (edit.entityType === 1) {
+      actualNode = (block2.markers ?? []).find((m) => m.id === edit.entityId)?.node
+    } else {
+      const groups = edit.entityType === 0 ? block2.objects ?? [] : block2.squads ?? []
+      for (const group of groups) {
+        const idx = group.ids?.indexOf(edit.entityId) ?? -1
+        if (idx !== -1) { actualNode = group.nodes?.[idx]; break }
+      }
+    }
+    if (actualNode !== edit.newNode) {
+      throw new Error('Verification failed: move not reflected in the rebuilt placement table')
     }
   }
 
