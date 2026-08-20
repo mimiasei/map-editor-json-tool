@@ -651,6 +651,70 @@ export function upsertPropRewardParams(chunk: Uint8Array, entityType: number, en
   return new TextEncoder().encode(patchedText)
 }
 
+// ─── Move a placed instance (objects[] / squads[] / markers[]) ──────────────
+// Issue #167 Phase A. Unlike every editor above (which patches a row inside
+// one of the 29 objectsProperties.* sub-tables), this patches the placement
+// arrays themselves — objects[]/squads[] are grouped-by-sid parallel arrays
+// (`{sid, ids:[], nodes:[], rotations?:[], levels?:[]}`, confirmed against
+// real sample maps during #167's feasibility investigation); markers[] is a
+// flat array of `{node, sid, id, v}`. Position is stored only as `node` (a
+// row-major tile index) — there's no separate x/z in the file, so a move is
+// always exactly one `nodes[i]`/`.node` scalar overwrite, never a shape
+// change, hence the same "parse just this one array, not the whole block"
+// technique as upsertPropsName rather than a substring splice (a bare numeric
+// node value can't be substring-matched unambiguously — many entries can
+// share the same number).
+interface ObjectGroupEntry {
+  sid?: string
+  ids?: number[]
+  nodes?: number[]
+  rotations?: number[]
+  levels?: number[]
+}
+
+interface MarkerEntry {
+  node?: number
+  sid?: string
+  id?: number
+  v?: string
+}
+
+/**
+ * Move the placed instance identified by `(entityType, entityId)` to
+ * `newNode`. `entityType` 0/2 look inside `objects`/`squads` (grouped-by-sid
+ * parallel arrays — finds the group whose `ids[]` contains `entityId`,
+ * overwrites the same-index `nodes[]` entry); `entityType` 1 looks inside the
+ * flat `markers` array and overwrites `.node` directly. Throws if the
+ * instance can't be found — a partial/silent no-op would be worse.
+ */
+export function moveObjectInstance(chunk: Uint8Array, entityType: 0 | 1 | 2, entityId: number, newNode: number): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const key = entityType === 0 ? 'objects' : entityType === 2 ? 'squads' : 'markers'
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, key)
+
+  if (entityType === 1) {
+    const entries = JSON.parse(span) as MarkerEntry[]
+    const existing = entries.find((e) => e.id === entityId)
+    if (!existing) throw new Error(`No markers[] entry found for id ${entityId}`)
+    existing.node = newNode
+    const patchedSpan = JSON.stringify(entries)
+    const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+    return new TextEncoder().encode(patchedText)
+  }
+
+  const groups = JSON.parse(span) as ObjectGroupEntry[]
+  for (const group of groups) {
+    const idx = group.ids?.indexOf(entityId) ?? -1
+    if (idx === -1) continue
+    if (!group.nodes) throw new Error(`Group for sid "${group.sid}" has no nodes[] array`)
+    group.nodes[idx] = newNode
+    const patchedSpan = JSON.stringify(groups)
+    const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+    return new TextEncoder().encode(patchedText)
+  }
+  throw new Error(`No ${key} entry found for id ${entityId}`)
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {

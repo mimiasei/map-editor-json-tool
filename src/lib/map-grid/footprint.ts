@@ -116,3 +116,10 @@ export function footprintIconBounds(cells: FootprintCell[]): FootprintBounds | n
   if (minX === Infinity) return null
   return { minX, maxX, minZ, maxZ }
 }
+
+/** Whether every one of a footprint's cells falls within the map's bounds —
+ *  used by Move (issue #167 Phase A) to refuse a destination that would push
+ *  any part of a multi-tile object off the edge of the map. */
+export function isFootprintInBounds(cells: FootprintCell[], sizeX: number, sizeZ: number): boolean {
+  return cells.every((cell) => cell.x >= 0 && cell.x < sizeX && cell.z >= 0 && cell.z < sizeZ)
+}
