@@ -75,5 +75,21 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
   }
 
   if (groupOf(item, catalog) === 'resources') return { kind: 'text', text: 'Res' }
+
+  // A "custom_" object (e.g. custom_windmill) is a scripting-only variant of
+  // its base object (windmill) — same prefab/texture, just wrapped so it can
+  // carry an entity SID. The catalog already resolves this correctly
+  // (collectMapObjects derives `icon` from the shared `prefs[0]` path stem,
+  // confirmed identical between custom_windmill and windmill), but every
+  // caller here was passing the placed instance's own sid straight to
+  // CatalogIcon instead of the catalog's resolved icon — which only ever
+  // matches a real extracted thumbnail file for the base object's name, not
+  // the custom_-prefixed one. Preferring the catalog's `icon` field whenever
+  // it differs from the item's own sid fixes this in general, not just for
+  // custom_* specifically.
+  const catalogEntry = catalog?.mapObjects.find((o) => o.id === item.sid)
+  if (catalogEntry?.icon && catalogEntry.icon !== item.sid) {
+    return { kind: 'catalogOverride', iconId: catalogEntry.icon, name: catalogEntry.name }
+  }
   return { kind: 'catalog' }
 }

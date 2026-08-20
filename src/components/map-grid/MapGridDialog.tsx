@@ -507,7 +507,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       for (const [node, tint] of elevationTintMap) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
-        ctx.fillStyle = tint === 'lighter' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'
+        ctx.fillStyle = tint === 'lighter' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
@@ -535,7 +535,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (!ctx) return
     ctx.clearRect(0, 0, sizeX, sizeZ)
     if (!settings.showBlockedTiles) return
-    ctx.fillStyle = 'rgba(220, 38, 38, 0.55)'
+    ctx.fillStyle = 'rgba(220, 38, 38, 0.6)'
     for (const node of blockedTileSet) {
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
