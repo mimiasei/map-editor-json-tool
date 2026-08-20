@@ -84,3 +84,35 @@ export function computeFootprintTiles(
   }
   return cells
 }
+
+export interface FootprintBounds {
+  minX: number
+  maxX: number
+  minZ: number
+  maxZ: number
+}
+
+/**
+ * Tight world-space bounding box over a footprint's *visual* (`value === 1`)
+ * cells only — ignoring `2` (interaction-only, no mesh) and `0` (empty). This
+ * is why an artifact/resource template (a single "1" padded by an 8-cell "2"
+ * ring, per the real-catalog survey) still renders as a plain 1×1 icon, while
+ * an all-"1" environment decoration renders spanning its full size. Returns
+ * `null` only if the footprint has no "1" cells at all (e.g. a pure-FX/ground-
+ * clutter template with no `nodes[]`, see computeFootprintTiles' doc comment).
+ */
+export function footprintIconBounds(cells: FootprintCell[]): FootprintBounds | null {
+  let minX = Infinity
+  let maxX = -Infinity
+  let minZ = Infinity
+  let maxZ = -Infinity
+  for (const cell of cells) {
+    if (cell.value !== 1) continue
+    if (cell.x < minX) minX = cell.x
+    if (cell.x > maxX) maxX = cell.x
+    if (cell.z < minZ) minZ = cell.z
+    if (cell.z > maxZ) maxZ = cell.z
+  }
+  if (minX === Infinity) return null
+  return { minX, maxX, minZ, maxZ }
+}

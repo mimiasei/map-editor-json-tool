@@ -5,6 +5,7 @@
 
 import type { PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
+import { computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 
 // ─── User-facing groups ───────────────────────────────────────────────────────
 // Collapses the 9 raw CatalogMapObject categories + squads + markers into the
@@ -59,14 +60,53 @@ export function groupOf(placed: PlacedObject, catalog: GameCatalog | null): Grid
 
 // ─── Tile index ───────────────────────────────────────────────────────────────
 
-/** Groups placed objects by tile (node). Markers included — filtering them
- *  out of the stacking/rendering decision is the caller's job via groupOf(). */
-export function buildTileIndex(objects: PlacedObject[]): Map<number, PlacedObject[]> {
+/**
+ * A placed instance's real footprint cells (issue #167's object-footprint-size
+ * work) — only `objects[]` (type 0) carries a footprint template; squads/
+ * markers aren't terrain and always resolve to their single placed tile.
+ * Shared by buildTileIndex (below) and the grid renderer's multi-tile icon
+ * bounding-box computation, so both agree on exactly the same shape.
+ */
+export function resolveFootprintCells(obj: PlacedObject, catalog: GameCatalog | null): FootprintCell[] {
+  if (obj.type !== 0) return [{ x: obj.x, z: obj.z, value: 1 }]
+  const template = catalog?.mapObjects.find((o) => o.id === obj.sid)
+  return computeFootprintTiles(template, obj.x, obj.z)
+}
+
+/**
+ * Groups placed objects by tile (node). A multi-tile object (issue #167) is
+ * registered under *every* cell of its resolved footprint, not just its
+ * anchor node — so hovering/clicking anywhere within a 3×3 mountain's shape
+ * finds and selects it, not only its single anchor tile. Markers included —
+ * filtering them out of the stacking/rendering decision is the caller's job
+ * via groupOf().
+ */
+export function buildTileIndex(
+  objects: PlacedObject[],
+  catalog: GameCatalog | null,
+  sizeX: number,
+  sizeZ: number,
+): Map<number, PlacedObject[]> {
   const index = new Map<number, PlacedObject[]>()
-  for (const obj of objects) {
-    const list = index.get(obj.node)
+  const add = (node: number, obj: PlacedObject) => {
+    const list = index.get(node)
     if (list) list.push(obj)
-    else index.set(obj.node, [obj])
+    else index.set(node, [obj])
+  }
+  for (const obj of objects) {
+    if (obj.type !== 0 || sizeX <= 0 || sizeZ <= 0) {
+      add(obj.node, obj)
+      continue
+    }
+    const cells = resolveFootprintCells(obj, catalog)
+    if (cells.length <= 1) {
+      add(obj.node, obj)
+      continue
+    }
+    for (const cell of cells) {
+      if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
+      add(cell.z * sizeX + cell.x, obj)
+    }
   }
   return index
 }

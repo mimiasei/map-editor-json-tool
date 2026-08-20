@@ -36,8 +36,15 @@ export interface MapGridSettings {
     /** Turns on/off the tile hover border */
   showGridHover: boolean
   /** Translucent red fill over every tile a hero can't walk onto — object
-   *  footprints, unrampted elevation walls, and water (see passability.ts). */
+   *  footprints, unrampted elevation walls, and water (see passability.ts).
+   *  Toggled from the header icon row now, not this popover — kept here only
+   *  for persistence. */
   showBlockedTiles: boolean
+  /** Soft highlight/shadow bevel along unrampted elevation-level boundaries,
+   *  so a wall tile in the blocked-tile overlay reads as an actual raised/
+   *  sunken edge instead of a flat, unexplained red blob (see
+   *  elevation-shading.ts). */
+  showElevationShading: boolean
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
@@ -48,6 +55,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showGridNumbers: false,
   showGridHover: true,
   showBlockedTiles: false,
+  showElevationShading: true,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -129,11 +137,11 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-blocked" className="text-xs cursor-pointer">Blocked tiles</Label>
+          <Label htmlFor="grid-show-elevation" className="text-xs cursor-pointer">Elevation shading</Label>
           <Switch
-              id="grid-show-blocked"
-              checked={settings.showBlockedTiles}
-              onCheckedChange={(v) => update({ showBlockedTiles: v })}
+              id="grid-show-elevation"
+              checked={settings.showElevationShading}
+              onCheckedChange={(v) => update({ showElevationShading: v })}
           />
         </div>
 

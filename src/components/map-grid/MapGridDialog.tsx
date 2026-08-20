@@ -34,6 +34,7 @@ import {
   buildTileIndex,
   pickPrimary,
   getVisibleRange,
+  resolveFootprintCells,
   GRID_GROUP_ORDER,
   GRID_GROUP_LABELS,
   type GridGroup,
@@ -48,6 +49,8 @@ import {
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
+import { buildElevationShadeMap } from '@/lib/map-grid/elevation-shading'
+import { footprintIconBounds, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
@@ -61,7 +64,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -235,7 +238,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
   // thousand at most, never the full sizeX*sizeZ space) ──────────────────────
-  const tileIndex = useMemo(() => buildTileIndex(placedObjects), [placedObjects])
+  const tileIndex = useMemo(
+    () => buildTileIndex(placedObjects, catalog, sizeX, sizeZ),
+    [placedObjects, catalog, sizeX, sizeZ],
+  )
+
+  // Real footprint cells per placed object (issue #167's multi-tile
+  // rendering fix) — resolved once here and reused both for the multi-tile
+  // icon bounding boxes below and (via resolveFootprintCells, the same
+  // function buildTileIndex uses) so both agree on the exact same shape.
+  const footprintCellsByKey = useMemo(() => {
+    const map = new Map<string, FootprintCell[]>()
+    for (const obj of placedObjects) {
+      if (obj.type !== 0) continue
+      map.set(obj.key, resolveFootprintCells(obj, catalog))
+    }
+    return map
+  }, [placedObjects, catalog])
 
   const primaryByNode = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
@@ -262,6 +281,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const blockedTileSet = useMemo(
     () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap }, catalog),
     [sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap, catalog],
+  )
+
+  // Elevation bevel shading (src/lib/map-grid/elevation-shading.ts) — a
+  // second, independent read of levelsMap/climbsMap from the same data,
+  // rendered on its own smooth-scaled canvas (see the draw effect below) so
+  // it visually distinguishes elevation-driven blocking from object/water
+  // blocking within the same red overlay.
+  const elevationShadeMap = useMemo(
+    () => buildElevationShadeMap(sizeX, sizeZ, levelsMap, climbsMap),
+    [sizeX, sizeZ, levelsMap, climbsMap],
   )
 
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
@@ -443,6 +472,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, settings.showBlockedTiles, blockedTileSet])
 
+  // ── Elevation bevel canvas — separate element, deliberately NOT pixelated.
+  // Same 1-unit-per-tile resolution as the swatch canvas above, but drawn
+  // with the browser's default (bilinear) image scaling: a lone tinted tile
+  // next to untinted neighbors blends smoothly across the ~1-tile screen span
+  // between them once CSS-scaled up, which is what turns a single flat-color
+  // canvas pixel into a soft "raised/sunken edge" look with zero per-frame
+  // gradient math — the same "cheap regardless of map size" cost class as
+  // every other canvas layer here, just a different CSS rendering mode.
+  const [elevationCanvasEl, setElevationCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!elevationCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = elevationCanvasEl
+    canvas.width = sizeX
+    canvas.height = sizeZ
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, sizeX, sizeZ)
+    if (!settings.showElevationShading) return
+    for (const [node, shade] of elevationShadeMap) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      ctx.fillStyle = shade === 'highlight' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)'
+      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+    }
+  }, [elevationCanvasEl, elevationShadeMap, sizeX, sizeZ, settings.showElevationShading])
+
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
   const showIcons = effectiveCellPx >= ICON_LOD_THRESHOLD_PX
@@ -483,11 +538,53 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
         const node = z * sizeX + x
         const pick = primaryByNode.get(node)
-        if (pick) cells.push({ x, z, node, pick })
+        if (!pick) continue
+        // Multi-tile footprints (issue #167) get one bigger icon spanning
+        // their bounding box instead — see multiTileIcons below — so skip
+        // them here to avoid rendering the same object once per cell.
+        const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
+        const bounds1 = cells1 ? footprintIconBounds(cells1) : null
+        if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
+        cells.push({ x, z, node, pick })
       }
     }
     return cells
-  }, [showIcons, visibleRange, sizeX, sizeZ, primaryByNode])
+  }, [showIcons, visibleRange, sizeX, sizeZ, primaryByNode, footprintCellsByKey])
+
+  // Multi-tile footprint icons (issue #167) — discovered by iterating placed
+  // objects directly rather than the node grid, so a large object's bounding
+  // box is found by its own extent-vs-viewport intersection regardless of
+  // where its anchor tile happens to sit (no OVERDRAW_CELLS bump needed for
+  // this, unlike the original plan's assumption — see MapGridDialog's commit
+  // notes). Only objects that actually win the stacking pick at their own
+  // anchor tile render here, so one 1x1 object sitting exactly on another
+  // object's anchor still takes priority the same way primaryByNode already
+  // decides everywhere else.
+  const multiTileIcons = useMemo(() => {
+    if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
+    const icons: {
+      key: string
+      minX: number; maxX: number; minZ: number; maxZ: number
+      screenRowMin: number; screenRowMax: number
+      pick: { primary: PlacedObject; group: GridGroup; count: number }
+    }[] = []
+    for (const obj of placedObjects) {
+      if (obj.type !== 0) continue
+      const cells = footprintCellsByKey.get(obj.key)
+      if (!cells) continue
+      const bounds = footprintIconBounds(cells)
+      if (!bounds) continue
+      if (bounds.maxX === bounds.minX && bounds.maxZ === bounds.minZ) continue // plain 1x1 — handled above
+      const pick = primaryByNode.get(obj.node)
+      if (!pick || pick.primary.key !== obj.key) continue
+      const screenRowMin = sizeZ - 1 - bounds.maxZ
+      const screenRowMax = sizeZ - 1 - bounds.minZ
+      if (bounds.maxX < visibleRange.xMin || bounds.minX > visibleRange.xMax) continue
+      if (screenRowMax < visibleRange.zMin || screenRowMin > visibleRange.zMax) continue
+      icons.push({ key: obj.key, ...bounds, screenRowMin, screenRowMax, pick })
+    }
+    return icons
+  }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, primaryByNode, visibleRange])
 
   // ── Hover info panel + click-to-edit ────────────────────────────────────────
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
@@ -665,6 +762,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               <Button variant="ghost" size="icon" className="h-6 w-6" title="Fit to window"
                 onClick={fitToViewport}>
                 <Maximize2 className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant={settings.showBlockedTiles ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-6 w-6"
+                title="Toggle blocked-tile overlay"
+                onClick={() => updateSettings({ ...settings, showBlockedTiles: !settings.showBlockedTiles })}
+              >
+                <Ban className="h-3.5 w-3.5" />
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
               <MapGridSettingsDialog settings={settings} onChange={updateSettings} />
@@ -847,6 +953,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
 
+                {/* Elevation bevel layer — deliberately smooth-scaled (not
+                    pixelated), see the draw effect above for why that's what
+                    turns flat per-tile fills into a soft raised/sunken edge. */}
+                <canvas
+                  ref={setElevationCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                  }}
+                />
+
                 {/* Interactive icon layer — windowed to the visible range, only above the LOD threshold */}
                 {showIcons && visibleCells.map(({ x, z, node, pick }) => {
                   const name = pick.primary.displayName || pick.primary.entitySid || pick.primary.sid
@@ -881,6 +999,57 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           iconId={visual.iconId}
                           name={visual.name}
                           size={iconSize}
+                          src={settings.iconImagesEnabled ? undefined : null}
+                        />
+                      )}
+                      {pick.count > 1 && (
+                        <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
+                          {pick.count}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* Multi-tile footprint icons (issue #167) — one bigger icon
+                    spanning each large object's real bounding box, instead of
+                    the flat 1x1 rendering every placed object used to get. */}
+                {showIcons && multiTileIcons.map(({ key, minX, maxX, screenRowMin, screenRowMax, pick }) => {
+                  const name = pick.primary.displayName || pick.primary.entitySid || pick.primary.sid
+                  const visual = resolveGridCellVisual(pick.primary, catalog)
+                  const boxW = (maxX - minX + 1) * BASE_CELL_PX
+                  const boxH = (screenRowMax - screenRowMin + 1) * BASE_CELL_PX
+                  const footprintIconSize = Math.max(4, Math.min(boxW, boxH) - (2 * settings.cellBorderThickness) / transform.scale)
+                  return (
+                    <div
+                      key={key}
+                      className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer select-none"
+                      style={{
+                        left: minX * BASE_CELL_PX,
+                        top: screenRowMin * BASE_CELL_PX,
+                        width: boxW,
+                        height: boxH,
+                        boxSizing: 'border-box',
+                      }}
+                      onClick={(e) => { e.stopPropagation(); selectNode(pick.primary.node) }}
+                    >
+                      {visual.kind === 'icon' && <visual.Icon size={footprintIconSize} className="shrink-0" />}
+                      {visual.kind === 'text' && (
+                        <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
+                      )}
+                      {visual.kind === 'catalog' && (
+                        <CatalogIcon
+                          iconId={pick.primary.sid}
+                          name={name}
+                          size={footprintIconSize}
+                          src={settings.iconImagesEnabled ? undefined : null}
+                        />
+                      )}
+                      {visual.kind === 'catalogOverride' && (
+                        <CatalogIcon
+                          iconId={visual.iconId}
+                          name={visual.name}
+                          size={footprintIconSize}
                           src={settings.iconImagesEnabled ? undefined : null}
                         />
                       )}
