@@ -75,11 +75,20 @@ export function resolveFootprintCells(obj: PlacedObject, catalog: GameCatalog | 
 
 /**
  * Groups placed objects by tile (node). A multi-tile object (issue #167) is
- * registered under *every* cell of its resolved footprint, not just its
- * anchor node — so hovering/clicking anywhere within a 3×3 mountain's shape
- * finds and selects it, not only its single anchor tile. Markers included —
- * filtering them out of the stacking/rendering decision is the caller's job
- * via groupOf().
+ * registered under every *solid* (`value === 1`) cell of its resolved
+ * footprint, not just its anchor node — so hovering/clicking anywhere within
+ * a 3×3 mountain's shape finds and selects it. Deliberately excludes `2`
+ * (interaction-only, no mesh) cells: a real bug caught after shipping —
+ * artifact/resource/spawner templates are typically a single "1" padded by
+ * an 8-cell "2" ring (e.g. `random-res`: one "1" at its pivot, eight "2"
+ * around it), and registering all 9 cells made that one spawner instance win
+ * the stacking pick (spawners outrank most other groups) across its entire
+ * 3×3 ring, painting swaths of plain ground the spawner's category color even
+ * though only its single center tile is real. Falls back to the object's own
+ * anchor node when a resolved footprint has no "1" cell at all (e.g.
+ * `random-squad`, all "2"/"0") so it's still findable somewhere. Markers
+ * included — filtering them out of the stacking/rendering decision is the
+ * caller's job via groupOf().
  */
 export function buildTileIndex(
   objects: PlacedObject[],
@@ -98,12 +107,12 @@ export function buildTileIndex(
       add(obj.node, obj)
       continue
     }
-    const cells = resolveFootprintCells(obj, catalog)
-    if (cells.length <= 1) {
+    const solidCells = resolveFootprintCells(obj, catalog).filter((cell) => cell.value === 1)
+    if (solidCells.length === 0) {
       add(obj.node, obj)
       continue
     }
-    for (const cell of cells) {
+    for (const cell of solidCells) {
       if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
       add(cell.z * sizeX + cell.x, obj)
     }

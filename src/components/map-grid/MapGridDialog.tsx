@@ -49,7 +49,7 @@ import {
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
-import { buildElevationShadeMap } from '@/lib/map-grid/elevation-shading'
+import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { footprintIconBounds, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -283,15 +283,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     [sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap, catalog],
   )
 
-  // Elevation bevel shading (src/lib/map-grid/elevation-shading.ts) — a
-  // second, independent read of levelsMap/climbsMap from the same data,
-  // rendered on its own smooth-scaled canvas (see the draw effect below) so
-  // it visually distinguishes elevation-driven blocking from object/water
-  // blocking within the same red overlay.
-  const elevationShadeMap = useMemo(
-    () => buildElevationShadeMap(sizeX, sizeZ, levelsMap, climbsMap),
-    [sizeX, sizeZ, levelsMap, climbsMap],
-  )
+  // Elevation tint (src/lib/map-grid/elevation-shading.ts) — a flat darker/
+  // lighter fill over every level -1 / level 1 tile, independent of the
+  // wall-vs-interior distinction the blocked-tile overlay uses.
+  const elevationTintMap = useMemo(() => buildElevationTintMap(levelsMap), [levelsMap])
 
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
@@ -459,6 +454,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillStyle = GROUP_COLORS[pick.group]
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
+    // Elevation tint pass: translucent darker/lighter fill over every
+    // level -1 / level 1 tile (src/lib/map-grid/elevation-shading.ts),
+    // toggle-gated. On top of the occupied swatch pass (translucent, so the
+    // category color underneath stays legible) but before the blocked-tile
+    // pass below.
+    if (settings.showElevationShading) {
+      for (const [node, tint] of elevationTintMap) {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        ctx.fillStyle = tint === 'lighter' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'
+        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      }
+    }
     // Blocked-tile pass: translucent red over everything else, toggle-gated —
     // deliberately last so it's visible regardless of terrain/occupied color
     // underneath.
@@ -470,33 +478,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
-  }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, settings.showBlockedTiles, blockedTileSet])
-
-  // ── Elevation bevel canvas — separate element, deliberately NOT pixelated.
-  // Same 1-unit-per-tile resolution as the swatch canvas above, but drawn
-  // with the browser's default (bilinear) image scaling: a lone tinted tile
-  // next to untinted neighbors blends smoothly across the ~1-tile screen span
-  // between them once CSS-scaled up, which is what turns a single flat-color
-  // canvas pixel into a soft "raised/sunken edge" look with zero per-frame
-  // gradient math — the same "cheap regardless of map size" cost class as
-  // every other canvas layer here, just a different CSS rendering mode.
-  const [elevationCanvasEl, setElevationCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => {
-    if (!elevationCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const canvas = elevationCanvasEl
-    canvas.width = sizeX
-    canvas.height = sizeZ
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.clearRect(0, 0, sizeX, sizeZ)
-    if (!settings.showElevationShading) return
-    for (const [node, shade] of elevationShadeMap) {
-      const x = node % sizeX
-      const z = Math.floor(node / sizeX)
-      ctx.fillStyle = shade === 'highlight' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)'
-      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
-    }
-  }, [elevationCanvasEl, elevationShadeMap, sizeX, sizeZ, settings.showElevationShading])
+  }, [
+    canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
+    settings.showElevationShading, elevationTintMap, settings.showBlockedTiles, blockedTileSet,
+  ])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -950,18 +935,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     width: sizeX * BASE_CELL_PX,
                     height: sizeZ * BASE_CELL_PX,
                     imageRendering: 'pixelated',
-                  }}
-                />
-
-                {/* Elevation bevel layer — deliberately smooth-scaled (not
-                    pixelated), see the draw effect above for why that's what
-                    turns flat per-tile fills into a soft raised/sunken edge. */}
-                <canvas
-                  ref={setElevationCanvasEl}
-                  className="absolute top-0 left-0 pointer-events-none"
-                  style={{
-                    width: sizeX * BASE_CELL_PX,
-                    height: sizeZ * BASE_CELL_PX,
                   }}
                 />
 
