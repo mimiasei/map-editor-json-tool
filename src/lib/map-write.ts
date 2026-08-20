@@ -715,6 +715,93 @@ export function moveObjectInstance(chunk: Uint8Array, entityType: 0 | 1 | 2, ent
   throw new Error(`No ${key} entry found for id ${entityId}`)
 }
 
+// ─── Add a new placed instance (objects[] / squads[] / markers[]) ──────────
+// Issue #167 Phase B. `objectsFreeId`/`squadsFreeId`/`markersFreeId` are
+// monotonic high-water-mark counters (confirmed during #167's feasibility
+// investigation: never reused after a deletion, so the correct id to hand
+// out is always the counter's CURRENT value, verbatim — never recomputed as
+// "lowest free id" from what's currently placed). Reading/patching one is a
+// bare top-level numeric scalar, not an array — findJsonArraySpan doesn't
+// apply, hence the small sibling helper below.
+
+function findTopLevelScalarSpan(text: string, key: string): { valueStart: number; valueEnd: number; value: number } {
+  const marker = `"${key}":`
+  const markerIdx = text.indexOf(marker)
+  if (markerIdx === -1) throw new Error(`"${key}" not found in this block`)
+  const valueStart = markerIdx + marker.length
+  let valueEnd = valueStart
+  while (valueEnd < text.length && text[valueEnd] >= '0' && text[valueEnd] <= '9') valueEnd++
+  if (valueEnd === valueStart) throw new Error(`"${key}" is not a bare numeric scalar`)
+  return { valueStart, valueEnd, value: Number(text.slice(valueStart, valueEnd)) }
+}
+
+/** Patch a bare top-level numeric scalar (e.g. one of the *FreeId counters) —
+ *  a sibling to findJsonArraySpan, but for a single value rather than an array. */
+export function patchTopLevelScalar(chunk: Uint8Array, key: string, newValue: number): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { valueStart, valueEnd } = findTopLevelScalarSpan(text, key)
+  const patchedText = text.slice(0, valueStart) + String(newValue) + text.slice(valueEnd)
+  return new TextEncoder().encode(patchedText)
+}
+
+/**
+ * Add a new `objects[]` (type 0) or `squads[]` (type 2) instance at `node`.
+ * Finds the sid's existing group and pushes onto its parallel arrays
+ * (`rotations`/`levels` only extended if that group already carries them —
+ * not every group has those optional arrays, confirmed against real sample
+ * maps), or creates a brand-new group if this sid has no placements yet.
+ * Returns the allocated id alongside the patched chunk so the caller can
+ * immediately reference the new instance (e.g. to select it).
+ */
+export function addObjectInstance(
+  chunk: Uint8Array,
+  entityType: 0 | 2,
+  sid: string,
+  node: number,
+  rotation?: number,
+  level?: number,
+): { chunk: Uint8Array; newId: number } {
+  const key = entityType === 0 ? 'objects' : 'squads'
+  const freeIdKey = entityType === 0 ? 'objectsFreeId' : 'squadsFreeId'
+
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const newId = findTopLevelScalarSpan(text, freeIdKey).value
+
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, key)
+  const groups = JSON.parse(span) as ObjectGroupEntry[]
+  const existing = groups.find((g) => g.sid === sid)
+  if (existing) {
+    existing.ids = [...(existing.ids ?? []), newId]
+    existing.nodes = [...(existing.nodes ?? []), node]
+    if (existing.rotations) existing.rotations = [...existing.rotations, rotation ?? 0]
+    if (existing.levels) existing.levels = [...existing.levels, level ?? 0]
+  } else {
+    const group: ObjectGroupEntry = { sid, ids: [newId], nodes: [node] }
+    if (rotation !== undefined) group.rotations = [rotation]
+    if (level !== undefined) group.levels = [level]
+    groups.push(group)
+  }
+  const patchedSpan = JSON.stringify(groups)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  const finalChunk = patchTopLevelScalar(new TextEncoder().encode(patchedText), freeIdKey, newId + 1)
+  return { chunk: finalChunk, newId }
+}
+
+/** Add a new flat `markers[]` (type 1, zone) instance at `node`. Simpler than
+ *  objects/squads — no grouping, no rotation/level. */
+export function addMarkerInstance(chunk: Uint8Array, sid: string, node: number): { chunk: Uint8Array; newId: number } {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const newId = findTopLevelScalarSpan(text, 'markersFreeId').value
+
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'markers')
+  const entries = JSON.parse(span) as MarkerEntry[]
+  entries.push({ node, sid, id: newId, v: '' })
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  const finalChunk = patchTopLevelScalar(new TextEncoder().encode(patchedText), 'markersFreeId', newId + 1)
+  return { chunk: finalChunk, newId }
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {

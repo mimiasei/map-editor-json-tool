@@ -24,6 +24,8 @@ import {
   upsertPropRandomSquads,
   upsertPropRewardParams,
   moveObjectInstance,
+  addObjectInstance,
+  addMarkerInstance,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -44,6 +46,8 @@ export type MapSaveEdit =
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
+  | { kind: 'addObject'; entityType: 0 | 2; sid: string; node: number; rotation?: number; level?: number }
+  | { kind: 'addMarker'; sid: string; node: number }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
  *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
@@ -57,6 +61,10 @@ export interface MapSaveResult {
   backupPath: string
   backupCreated: boolean
   bytesWritten: number
+  /** The id allocated by an 'addObject'/'addMarker' edit — absent for every
+   *  other edit kind. Lets the caller immediately reference/select the new
+   *  instance without a second read of the map. */
+  newId?: number
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
@@ -101,6 +109,7 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   }
 
   const newChunks = container.chunks.slice()
+  let addedId: number | undefined
   if (edit?.kind === 'renameSid') {
     newChunks[1] = renameEntitySid(newChunks[1], edit.oldSid, edit.newSid)
   } else if (edit?.kind === 'setDisplayName') {
@@ -133,6 +142,14 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = upsertPropRewardParams(newChunks[1], edit.entityType, edit.entityId, edit.parameters)
   } else if (edit?.kind === 'moveObject') {
     newChunks[1] = moveObjectInstance(newChunks[1], edit.entityType, edit.entityId, edit.newNode)
+  } else if (edit?.kind === 'addObject') {
+    const result = addObjectInstance(newChunks[1], edit.entityType, edit.sid, edit.node, edit.rotation, edit.level)
+    newChunks[1] = result.chunk
+    addedId = result.newId
+  } else if (edit?.kind === 'addMarker') {
+    const result = addMarkerInstance(newChunks[1], edit.sid, edit.node)
+    newChunks[1] = result.chunk
+    addedId = result.newId
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -281,6 +298,30 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     if (actualNode !== edit.newNode) {
       throw new Error('Verification failed: move not reflected in the rebuilt placement table')
     }
+  } else if (edit?.kind === 'addObject') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objects?: Array<{ sid?: string; ids?: number[]; nodes?: number[] }>
+      squads?: Array<{ sid?: string; ids?: number[]; nodes?: number[] }>
+      objectsFreeId?: number
+      squadsFreeId?: number
+    }
+    const groups = edit.entityType === 0 ? block2.objects ?? [] : block2.squads ?? []
+    const group = groups.find((g) => g.sid === edit.sid)
+    const idx = group?.ids?.indexOf(addedId!) ?? -1
+    const actualNode = idx !== -1 ? group?.nodes?.[idx] : undefined
+    const freeId = edit.entityType === 0 ? block2.objectsFreeId : block2.squadsFreeId
+    if (actualNode !== edit.node || freeId !== addedId! + 1) {
+      throw new Error('Verification failed: new instance not reflected in the rebuilt placement table')
+    }
+  } else if (edit?.kind === 'addMarker') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      markers?: Array<{ id?: number; sid?: string; node?: number }>
+      markersFreeId?: number
+    }
+    const match = (block2.markers ?? []).find((m) => m.id === addedId)
+    if (!match || match.node !== edit.node || match.sid !== edit.sid || block2.markersFreeId !== addedId! + 1) {
+      throw new Error('Verification failed: new marker not reflected in the rebuilt markers table')
+    }
   }
 
   const gzipped = await gzipBytes(rebuiltDecompressed)
@@ -299,5 +340,5 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   const reparsedBlocks = await parseMapFile(toArrayBuffer(gzipped))
   useMapContextStore.getState().setContext(extractMapContext(reparsedBlocks))
 
-  return { backupPath, backupCreated, bytesWritten: gzipped.length }
+  return { backupPath, backupCreated, bytesWritten: gzipped.length, newId: addedId }
 }
