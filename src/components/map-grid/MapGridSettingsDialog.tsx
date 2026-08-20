@@ -35,6 +35,9 @@ export interface MapGridSettings {
   showGridNumbers: boolean
     /** Turns on/off the tile hover border */
   showGridHover: boolean
+  /** Translucent red fill over every tile a hero can't walk onto — object
+   *  footprints, unrampted elevation walls, and water (see passability.ts). */
+  showBlockedTiles: boolean
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
@@ -44,6 +47,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   cellBorderThickness: 0,
   showGridNumbers: false,
   showGridHover: true,
+  showBlockedTiles: false,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -121,6 +125,15 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
               id="grid-show-hover"
               checked={settings.showGridHover}
               onCheckedChange={(v) => update({ showGridHover: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-blocked" className="text-xs cursor-pointer">Blocked tiles</Label>
+          <Switch
+              id="grid-show-blocked"
+              checked={settings.showBlockedTiles}
+              onCheckedChange={(v) => update({ showBlockedTiles: v })}
           />
         </div>
 

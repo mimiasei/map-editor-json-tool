@@ -555,6 +555,8 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     placedObjects,
     tilesMap: Array.isArray(b2.tilesMap) ? b2.tilesMap : [],
     waterMap: Array.isArray(b2.waterMap) ? b2.waterMap : [],
+    levelsMap: Array.isArray(b2.levelsMap) ? b2.levelsMap : [],
+    climbsMap: Array.isArray(b2.climbsMap) ? b2.climbsMap : [],
   }
 }
 

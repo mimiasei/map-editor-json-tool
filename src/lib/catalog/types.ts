@@ -99,6 +99,21 @@ export interface CatalogMapObject {
     | 'animals' | 'fxs' | 'artifacts' | 'test' | 'blocks'
   isInteractable: boolean
   icon?: string
+  /** Footprint width/depth in tiles (Map Grid multi-tile rendering + blocked-
+   *  tile overlay research) — promoted out of `raw` since most real objects
+   *  are NOT 1×1 (confirmed: ~73% of 858 real templates are bigger). Default
+   *  1×1 when absent, matching every real template that omits these. */
+  sizeX?: number
+  sizeZ?: number
+  /** Per-cell footprint values, row-major, length `sizeX*sizeZ`: `1` = solid/
+   *  blocked, `2` = walkable interaction cell, `0` = empty/unused. */
+  nodes?: number[]
+  /** Local `nodes[]` grid coordinate that aligns with wherever this object is
+   *  actually placed on the map — default `0, 0` when absent, matching every
+   *  real template that omits these (confirmed via `CustomObjectEditorDialog`'s
+   *  already-tested `CORNER_1X1_PATTERNS`). */
+  pivotX?: number
+  pivotZ?: number
   /** The untouched Core/DB/map/objects/*.json entry, kept as a clone template
    *  for custom map object identities (issue #146) — same "raw here, resolved
    *  where shown" split as CatalogHero.raw. Only present when built from a

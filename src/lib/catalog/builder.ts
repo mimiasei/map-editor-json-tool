@@ -448,6 +448,11 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
         category,
         isInteractable: Boolean(entryInteractable),
         icon,
+        sizeX: typeof entry.sizeX === 'number' ? entry.sizeX : undefined,
+        sizeZ: typeof entry.sizeZ === 'number' ? entry.sizeZ : undefined,
+        nodes: Array.isArray(entry.nodes) ? (entry.nodes as number[]) : undefined,
+        pivotX: typeof entry.pivotX === 'number' ? entry.pivotX : undefined,
+        pivotZ: typeof entry.pivotZ === 'number' ? entry.pivotZ : undefined,
         raw: entry,
       })
     }

@@ -242,4 +242,10 @@ export interface MapContext {
   tilesMap: number[]
   /** Water material ID per tile (DB/map/waters/waters.json, 1-7), 0 = no water. */
   waterMap: number[]
+  /** Elevation tier per tile (-1 lowered / 0 ground / 1 heightened) — see
+   *  RawMapBlock2.levelsMap. Empty when the map has no known size. */
+  levelsMap: number[]
+  /** Slope/ramp marker per tile — see RawMapBlock2.climbsMap. Empty when the
+   *  map has no known size. */
+  climbsMap: number[]
 }

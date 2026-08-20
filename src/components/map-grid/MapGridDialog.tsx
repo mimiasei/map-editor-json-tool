@@ -47,6 +47,7 @@ import {
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
+import { buildBlockedTileSet } from '@/lib/map-grid/passability'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
@@ -169,6 +170,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const placedObjects = context?.placedObjects ?? []
   const tilesMap = context?.tilesMap ?? []
   const waterMap = context?.waterMap ?? []
+  const levelsMap = context?.levelsMap ?? []
+  const climbsMap = context?.climbsMap ?? []
 
   const [filter, setFilter] = useState<GridFilterState>(loadGridFilter)
   const toggleGroup = (g: GridGroup) => {
@@ -250,6 +253,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return map
   }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter])
+
+  // Blocked-tile ("passability") overlay — object footprints + elevation
+  // walls + water (src/lib/map-grid/passability.ts). Independent of
+  // filter/entitySidsOnly/interactableSubFilter (unlike primaryByNode above)
+  // since blocking isn't about what's *shown*, it's about what's real on the
+  // map regardless of the current view filters.
+  const blockedTileSet = useMemo(
+    () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap }, catalog),
+    [sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap, catalog],
+  )
 
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
@@ -417,7 +430,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillStyle = GROUP_COLORS[pick.group]
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
-  }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity])
+    // Blocked-tile pass: translucent red over everything else, toggle-gated —
+    // deliberately last so it's visible regardless of terrain/occupied color
+    // underneath.
+    if (settings.showBlockedTiles) {
+      ctx.fillStyle = 'rgba(220, 38, 38, 0.55)'
+      for (const node of blockedTileSet) {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      }
+    }
+  }, [canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, settings.showBlockedTiles, blockedTileSet])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
