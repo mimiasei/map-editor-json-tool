@@ -40,10 +40,9 @@ export interface MapGridSettings {
    *  Toggled from the header icon row now, not this popover — kept here only
    *  for persistence. */
   showBlockedTiles: boolean
-  /** Soft highlight/shadow bevel along unrampted elevation-level boundaries,
-   *  so a wall tile in the blocked-tile overlay reads as an actual raised/
-   *  sunken edge instead of a flat, unexplained red blob (see
-   *  elevation-shading.ts). */
+  /** Translucent darker/lighter fill over every level -1 / level 1 tile (see
+   *  elevation-shading.ts) — a flat elevation-relief tint, independent of the
+   *  blocked-tile overlay's wall-vs-interior distinction. */
   showElevationShading: boolean
 }
 
