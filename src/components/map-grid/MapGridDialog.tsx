@@ -53,6 +53,7 @@ import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
 import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
+import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
@@ -66,7 +67,6 @@ import MapGridSettingsDialog, {
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
 import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'
-import EntityCombobox from '@/components/common/EntityCombobox'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -707,7 +707,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const selectNode = useMapGridStore((s) => s.selectNode)
   const closeColumn = useMapGridStore((s) => s.closeColumn)
   const selectedItems = selectedNode !== null ? tileIndex.get(selectedNode) ?? [] : []
-  const columnOpen = selectedNode !== null && !columnClosed
+  // The cell-info column swaps to a full object browser while this is true
+  // (see the column render below), forcing the column open even with no
+  // tile selected — declared up here (not alongside the rest of the "Place
+  // object" state below) so columnOpen can reference it without a
+  // temporal-dead-zone issue.
+  const [objectBrowserOpen, setObjectBrowserOpen] = useState(false)
+  const columnOpen = (selectedNode !== null && !columnClosed) || objectBrowserOpen
 
   // Imperatively resized rather than conditionally mounted (same convention
   // as AppShell's sidebar/editor/preview panels) so the Group/Panel tree
@@ -898,7 +904,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Escape or right-click ends it. Mutually exclusive with Move (the icon
   // click/pointerup guards below key off whichever of the two is active).
   const [placingSid, setPlacingSid] = useState<string | null>(null)
-  const [placingPickerOpen, setPlacingPickerOpen] = useState(false)
   const stopPlacing = () => setPlacingSid(null)
 
   const isNodeInBoundsForPlacement = useCallback((sid: string, node: number): boolean => {
@@ -919,13 +924,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
 
   useEffect(() => {
-    if (!open || !placingSid) return
+    if (!open || (!placingSid && !objectBrowserOpen)) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') stopPlacing()
+      if (e.key !== 'Escape') return
+      // Defer to a focused text field's own Escape handling (e.g. the
+      // object browser's search popover) — otherwise this would close the
+      // whole browser out from under a popover that Radix is already
+      // closing on its own, the same "Escape does too much" class of bug
+      // just fixed for the dialog itself.
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (placingSid) stopPlacing()
+      else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid])
+  }, [open, placingSid, objectBrowserOpen])
 
   const placingFootprintBounds = useMemo(() => {
     if (!placingSid || hoveredNode === null) return null
@@ -952,6 +966,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         minHeight={360}
         storageKey="map-grid"
         onCloseAutoFocus={(e) => e.preventDefault()}
+        // Escape is reserved for canceling an in-progress Move/Place (the
+        // window keydown handlers above) — it should never also close the
+        // whole dialog underneath whatever it just canceled. Close via the
+        // [X] button or the toolbar toggle instead.
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogTitle className="sr-only">Map Grid</DialogTitle>
 
@@ -1020,24 +1039,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     Placing… (Esc to stop)
                   </Button>
                 ) : (
-                  <Popover open={placingPickerOpen} onOpenChange={setPlacingPickerOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" title="Place a new object">
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-72" data-nodrag>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                        Place object
-                      </p>
-                      <EntityCombobox
-                        value=""
-                        onChange={(sid) => { setPlacingSid(sid); setPlacingPickerOpen(false) }}
-                        category="mapObject"
-                        placeholder="Search map objects…"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Button
+                    variant={objectBrowserOpen ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Place a new object"
+                    onClick={() => setObjectBrowserOpen((prev) => !prev)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
                 )
               )}
               <div className="w-px h-4 bg-border mx-1" />
@@ -1461,6 +1471,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           collapsible
         >
           <div className="group flex h-full flex-col overflow-hidden border-l border-border bg-card">
+            {objectBrowserOpen && !undocked ? (
+              <ObjectBrowserPanel
+                catalog={catalog}
+                onPick={(sid) => { setPlacingSid(sid); setObjectBrowserOpen(false) }}
+                onClose={() => setObjectBrowserOpen(false)}
+              />
+            ) : (
+            <>
             <div className="flex items-center justify-between px-2 py-1.5 border-b border-border shrink-0">
               <span className="text-xs font-semibold text-muted-foreground pl-1">Tile Info</span>
               <div className="flex items-center gap-0.5">
@@ -1502,6 +1520,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 />
               ) : null}
             </div>
+            </>
+            )}
           </div>
         </Panel>
         </Group>

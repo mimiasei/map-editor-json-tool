@@ -453,6 +453,7 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
         nodes: Array.isArray(entry.nodes) ? (entry.nodes as number[]) : undefined,
         pivotX: typeof entry.pivotX === 'number' ? entry.pivotX : undefined,
         pivotZ: typeof entry.pivotZ === 'number' ? entry.pivotZ : undefined,
+        biome: str(entry.biome || '') || undefined,
         raw: entry,
       })
     }

@@ -99,6 +99,14 @@ export interface CatalogMapObject {
     | 'animals' | 'fxs' | 'artifacts' | 'test' | 'blocks'
   isInteractable: boolean
   icon?: string
+  /** Raw biome string from the object's own catalog entry (e.g. "Grass",
+   *  "Desert", "Snow") — only `environments` (all 296) and most `animals`
+   *  (27/33) entries carry this; every other category has none. Used by the
+   *  Map Grid's object browser (issue #167) to filter decorations/units by
+   *  terrain type. Confirmed distinct values: Grass, Desert, Deathland,
+   *  Snow, Autumn, Lava, Dirt — the same 7 biomes tiles use
+   *  (terrain-colors.ts's BIOME_NAMES), just "Desert" here vs. "Sand" there. */
+  biome?: string
   /** Footprint width/depth in tiles (Map Grid multi-tile rendering + blocked-
    *  tile overlay research) — promoted out of `raw` since most real objects
    *  are NOT 1×1 (confirmed: ~73% of 858 real templates are bigger). Default
