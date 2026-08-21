@@ -862,18 +862,34 @@ export function addObjectInstance(
  *  as "ends up as an empty object"). `random-res` genuinely has no such
  *  table (confirmed against two real, unedited placements — its
  *  propVariants/propRewardParams rows below are sufficient on their own),
- *  so it's deliberately absent from this map. Default values are the exact
- *  shape of a freshly-placed, never-edited real instance where that
- *  evidence was available (random-squad, from the same bug report's own
- *  Stormlight_squad.map); the best available real sample otherwise
- *  (random-item/random-hire — only non-default field values differ between
- *  real maps' own author-configured instances, e.g. `requestedValue`/
- *  `fraction`/`rarity`/`tier`, which TSE's Add flow has no UI to set yet). */
+ *  so it's deliberately absent from this map.
+ *
+ *  Default field values are sourced from real, shipped maps' own
+ *  author-configured instances — NOT from a "freshly placed, never edited"
+ *  sample, a mistake this file made once already: an early version of
+ *  random-squad's default copied `requestedValue: 0` from exactly such a
+ *  freshly-placed-but-never-actually-played sample, and it turned out that
+ *  value makes the in-game squad generator produce nothing to spawn, which
+ *  the engine treats as a fatal "WorldObject not found" for the whole
+ *  object rather than a harmless empty guard — worse than the original
+ *  missing-row bug, since the object no longer renders at all. Every real
+ *  SHIPPED map's random-squad instead uses a solidly nonzero value; see the
+ *  inline comment on that default for specifics. */
 const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: number) => Record<string, unknown> }> = {
   'random-squad': {
     table: 'propRandomSquads',
     row: (id) => ({
-      type: 0, id, sids: [], requestedValue: 0, fraction: '', tier: 2, isMainGuard: false,
+      // requestedValue: 0 (this field's value on every OTHER real map — but
+      // that one instance was placed purely to generate a bug-report diff,
+      // never actually played) turned out to make the in-game squad
+      // generator produce nothing to spawn, which the engine then treats as
+      // a fatal "WorldObject not found" for the whole placeholder rather
+      // than a harmless empty guard. Every real, shipped map's random-squad
+      // instead uses a solidly nonzero value (4000-90000) — 5000 here is
+      // one of those exact real values (Glittering_Strait.map), not a
+      // guess, chosen as a modest, clearly-nonzero default the user can
+      // freely retune afterward.
+      type: 0, id, sids: [], requestedValue: 5000, fraction: '', tier: 2, isMainGuard: false,
       reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
       isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
       isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
