@@ -24,6 +24,7 @@ import {
   upsertPropRandomSquads,
   upsertPropRewardParams,
   moveObjectInstance,
+  rotateObjectInstance,
   addObjectInstance,
   addMarkerInstance,
   deleteObjectInstance,
@@ -47,6 +48,7 @@ export type MapSaveEdit =
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
+  | { kind: 'rotateObject'; entityId: number; newRotation: number }
   | { kind: 'addObject'; entityType: 0 | 2; sid: string; node: number; rotation?: number; level?: number }
   | { kind: 'addMarker'; sid: string; node: number }
   | { kind: 'deleteObject'; entityType: 0 | 1 | 2; entityId: number }
@@ -147,6 +149,8 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = upsertPropRewardParams(newChunks[1], edit.entityType, edit.entityId, edit.parameters)
   } else if (edit?.kind === 'moveObject') {
     newChunks[1] = moveObjectInstance(newChunks[1], edit.entityType, edit.entityId, edit.newNode)
+  } else if (edit?.kind === 'rotateObject') {
+    newChunks[1] = rotateObjectInstance(newChunks[1], edit.entityId, edit.newRotation)
   } else if (edit?.kind === 'addObject') {
     const result = addObjectInstance(newChunks[1], edit.entityType, edit.sid, edit.node, edit.rotation, edit.level)
     newChunks[1] = result.chunk
@@ -306,6 +310,18 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     }
     if (actualNode !== edit.newNode) {
       throw new Error('Verification failed: move not reflected in the rebuilt placement table')
+    }
+  } else if (edit?.kind === 'rotateObject') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objects?: Array<{ ids?: number[]; rotations?: number[] }>
+    }
+    let actualRotation: number | undefined
+    for (const group of block2.objects ?? []) {
+      const idx = group.ids?.indexOf(edit.entityId) ?? -1
+      if (idx !== -1) { actualRotation = group.rotations?.[idx]; break }
+    }
+    if (actualRotation !== edit.newRotation) {
+      throw new Error('Verification failed: rotation not reflected in the rebuilt placement table')
     }
   } else if (edit?.kind === 'addObject') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

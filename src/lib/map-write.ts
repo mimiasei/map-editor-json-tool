@@ -715,6 +715,46 @@ export function moveObjectInstance(chunk: Uint8Array, entityType: 0 | 1 | 2, ent
   throw new Error(`No ${key} entry found for id ${entityId}`)
 }
 
+// ─── Rotate a placed instance (objects[] only) ─────────────────────────────
+// `rotations[]` is a 0-3 quadrant enum (0/90/180/270°) with a `+10` offset
+// for a mirrored variant (10-13) — confirmed against every real sample map's
+// `rotations[]` values (only {0,1,2,3,10,11,12,13} ever occur) and against
+// the mapmaking guide's documented SpawnMapObject rotation enum. Only
+// `objects[]` (type 0) ever carries this field — squads[]/markers[] never
+// do (confirmed structurally and in map-extract.ts's push() call sites).
+
+/** Step `currentRotation` by `delta` (±1), staying within whichever "half"
+ *  (plain 0-3 or mirrored 10-13) it's currently in. */
+export function stepRotation(currentRotation: number, delta: 1 | -1): number {
+  const mirrored = currentRotation >= 10
+  const quadrant = ((currentRotation % 10) + delta + 4) % 4
+  return quadrant + (mirrored ? 10 : 0)
+}
+
+/**
+ * Set the placed `objects[]` instance identified by `entityId`'s rotation to
+ * `newRotation` directly (same "find the group by id, mutate one parallel
+ * array's value at the matching index" shape as `moveObjectInstance`).
+ * Throws if the instance, or its `rotations[]` array, isn't found — a
+ * partial/silent no-op would be worse.
+ */
+export function rotateObjectInstance(chunk: Uint8Array, entityId: number, newRotation: number): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'objects')
+
+  const groups = JSON.parse(span) as ObjectGroupEntry[]
+  for (const group of groups) {
+    const idx = group.ids?.indexOf(entityId) ?? -1
+    if (idx === -1) continue
+    if (!group.rotations) throw new Error(`Group for sid "${group.sid}" has no rotations[] array`)
+    group.rotations[idx] = newRotation
+    const patchedSpan = JSON.stringify(groups)
+    const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+    return new TextEncoder().encode(patchedText)
+  }
+  throw new Error(`No objects[] entry found for id ${entityId}`)
+}
+
 // ─── Add a new placed instance (objects[] / squads[] / markers[]) ──────────
 // Issue #167 Phase B. `objectsFreeId`/`squadsFreeId`/`markersFreeId` are
 // monotonic high-water-mark counters (confirmed during #167's feasibility
@@ -746,10 +786,21 @@ export function patchTopLevelScalar(chunk: Uint8Array, key: string, newValue: nu
 
 /**
  * Add a new `objects[]` (type 0) or `squads[]` (type 2) instance at `node`.
- * Finds the sid's existing group and pushes onto its parallel arrays
- * (`rotations`/`levels` only extended if that group already carries them —
- * not every group has those optional arrays, confirmed against real sample
- * maps), or creates a brand-new group if this sid has no placements yet.
+ * Finds the sid's existing group and pushes onto its parallel arrays, or
+ * creates a brand-new group if this sid has no placements yet.
+ *
+ * A brand-new group always seeds `rotations`/`levels` with a default
+ * (`[rotation ?? 0]`/`[level ?? 0]`) rather than omitting the key — every
+ * real placed object on every sample map carries both, even single-instance
+ * groups. Confirmed the hard way: a TSE-added object that omitted these
+ * (the old behavior here) loaded fine in this app and in the game's own Map
+ * Editor, but crashed the actual game at launch with a NullReferenceException
+ * constructing its Minimap — diffing that map against the same file re-saved
+ * once through the game's own editor showed the editor backfilling exactly
+ * `rotations:[0]`/`levels:[0]` plus one default row each in
+ * `objectsProperties.propVariants`/`propRewardParams` (entityType 0 only;
+ * never observed for squads) — see `backfillNewObjectPropertiesDefaults`.
+ *
  * Returns the allocated id alongside the patched chunk so the caller can
  * immediately reference the new instance (e.g. to select it).
  */
@@ -776,15 +827,41 @@ export function addObjectInstance(
     if (existing.rotations) existing.rotations = [...existing.rotations, rotation ?? 0]
     if (existing.levels) existing.levels = [...existing.levels, level ?? 0]
   } else {
-    const group: ObjectGroupEntry = { sid, ids: [newId], nodes: [node] }
-    if (rotation !== undefined) group.rotations = [rotation]
-    if (level !== undefined) group.levels = [level]
-    groups.push(group)
+    groups.push({ sid, ids: [newId], nodes: [node], rotations: [rotation ?? 0], levels: [level ?? 0] })
   }
   const patchedSpan = JSON.stringify(groups)
-  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  let patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  if (entityType === 0) {
+    patchedText = backfillNewObjectPropertiesDefaults(patchedText, newId)
+  }
   const finalChunk = patchTopLevelScalar(new TextEncoder().encode(patchedText), freeIdKey, newId + 1)
   return { chunk: finalChunk, newId }
+}
+
+/** Seed the two `objectsProperties.*` rows the game's own Map Editor adds
+ *  for a brand-new type-0 object (see `addObjectInstance`'s doc comment for
+ *  how this was confirmed). Skips a table silently if it isn't present in
+ *  this particular file rather than inventing one — same "only touch what's
+ *  really there" caution `deleteObjectInstance`'s generic sweep already
+ *  follows, just in the insert direction. */
+function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number): string {
+  let text = block2Text
+  const tryAppendRow = (tableKey: string, row: Record<string, unknown>): void => {
+    let found: { arrayOpen: number; arrayClose: number; span: string }
+    try {
+      found = findJsonArraySpan(text, tableKey)
+    } catch {
+      return
+    }
+    const entries = JSON.parse(found.span) as Array<{ type?: number | string; id?: number }>
+    if (entries.some((e) => String(e.type) === '0' && e.id === newId)) return
+    entries.push(row)
+    const patchedSpan = JSON.stringify(entries)
+    text = text.slice(0, found.arrayOpen) + patchedSpan + text.slice(found.arrayClose + 1)
+  }
+  tryAppendRow('propVariants', { type: 0, id: newId, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
+  tryAppendRow('propRewardParams', { type: 0, id: newId, parameters: [] })
+  return text
 }
 
 /** Add a new flat `markers[]` (type 1, zone) instance at `node`. Simpler than

@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { PenLine, Tag, UserCog } from 'lucide-react'
+import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 
@@ -120,6 +120,18 @@ export interface MapGridCellContentProps {
   onSaveMove?: () => void
   /** Discard the staged destination without writing anything. Docked-only. */
   onCancelMove?: () => void
+  /** The parent's staged rotation, if any — only `type === 0` instances
+   *  ever have one (only `objects[]` carries a rotations[] array). Same
+   *  "compared locally against selected.key" convention as moveTarget. */
+  rotateTarget?: { key: string; rotation: number } | null
+  /** Step `item`'s rotation by one quadrant in either direction — starts
+   *  staging from its current rotation if nothing is staged yet. Nothing is
+   *  written until Save. Docked-only. */
+  onStepRotate?: (item: PlacedObject, delta: 1 | -1) => void
+  /** Write the staged rotation to the .map file. Docked-only. */
+  onSaveRotate?: () => void
+  /** Discard the staged rotation without writing anything. Docked-only. */
+  onCancelRotate?: () => void
   /** The parent's active delete confirmation, if any (issue #167 Phase C) —
    *  same "compared locally against selected.key" convention as moveTarget. */
   deleteTarget?: { key: string } | null
@@ -150,6 +162,14 @@ const LINK_KIND_EXPLANATIONS: Record<'two-way' | 'one-way' | 'unlinked', string>
 
 const PLAYER_TYPE_LABELS = ['Player', 'Bot', 'Unknown'] as const
 
+/** `rotation` is a 0-3 quadrant enum (0/90/180/270°) with a `+10` offset for
+ *  a mirrored variant (10-13) — confirmed against every real sample map's
+ *  rotations[] values (only {0,1,2,3,10,11,12,13} ever occur). */
+function formatRotation(rotation: number): string {
+  const degrees = (rotation % 10) * 90
+  return rotation >= 10 ? `${degrees}° (mirrored)` : `${degrees}°`
+}
+
 export default function MapGridCellContent({
   items,
   terrainLabel,
@@ -172,6 +192,10 @@ export default function MapGridCellContent({
   onStartMove,
   onSaveMove,
   onCancelMove,
+  rotateTarget = null,
+  onStepRotate,
+  onSaveRotate,
+  onCancelRotate,
   deleteTarget = null,
   deleteUsageWarnings = [],
   onStartDelete,
@@ -330,6 +354,51 @@ export default function MapGridCellContent({
                     )}
                   </div>
                 )}
+              </div>
+            )
+          })()}
+
+          {selected.type === 0 && selected.rotation !== undefined && (() => {
+            const isRotating = rotateTarget?.key === selected.key
+            const shown = isRotating ? rotateTarget!.rotation : selected.rotation!
+            const isDirty = isRotating && rotateTarget!.rotation !== selected.rotation
+            return (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Rotation</p>
+                <div className="flex items-center gap-1.5">
+                  {onStepRotate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => onStepRotate(selected, -1)}
+                    >
+                      <ChevronLeft className="h-3 w-3" />
+                    </Button>
+                  )}
+                  <p className="text-xs w-24">{formatRotation(shown)}</p>
+                  {onStepRotate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => onStepRotate(selected, 1)}
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  )}
+                  {isDirty && (
+                    <>
+                      <p className="text-xs text-amber-600">Unsaved</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={onSaveRotate}>
+                        Save to .map
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelRotate}>
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             )
           })()}
