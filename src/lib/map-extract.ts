@@ -14,6 +14,7 @@ import type {
   PlacedObject,
 } from '@/types/map-context'
 import type { ScenarioFile } from '@/types/scenario'
+import { normalizeQuests } from '@/lib/scenario-normalize'
 
 // ─── buildPlacedObjects ───────────────────────────────────────────────────────
 // `objects[]`, `squads[]` and `markers[]` are three SEPARATE id-namespaces
@@ -596,6 +597,6 @@ export function extractScenario(raw: RawMapBlocks): ScenarioFile {
   return {
     counters,
     interruptions: (b4.interruptions ?? []) as ScenarioFile['interruptions'],
-    quests: (b4.quests ?? []) as ScenarioFile['quests'],
+    quests: normalizeQuests(b4.quests),
   }
 }
