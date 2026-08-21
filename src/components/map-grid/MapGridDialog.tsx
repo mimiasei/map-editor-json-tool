@@ -47,7 +47,7 @@ import {
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
-import { terrainFillColor, terrainLabel } from '@/lib/map-grid/terrain-colors'
+import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
@@ -67,7 +67,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -77,6 +77,9 @@ const MAX_SCALE = 4
 /** Below this on-screen cell size, icons/letters aren't legible — canvas swatches only. */
 const ICON_LOD_THRESHOLD_PX = 16
 const OVERDRAW_CELLS = 3
+/** Same order as ObjectBrowserPanel.tsx's own BIOME_ORDER — each file keeps
+ *  its own copy rather than sharing, matching that file's existing convention. */
+const PAINT_BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 /** Shared styling for both row and column tile-number gutters — everything
  *  except color, which depends on whether this label's row/column is hovered. */
 const TILE_NUMBER_CLASS = 'text-[10px] bg-background/80'
@@ -322,6 +325,45 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const dragRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number; moved: boolean } | null>(null)
 
+  // ── Paint terrain (issue #167 Phase D) ──────────────────────────────────
+  // Repaints tilesMap's biome only — never touches objects[]/squads[]/
+  // markers[]/any objectsProperties.* table (a different top-level array
+  // entirely), so by construction this can't affect a placed object. One
+  // tool active at a time: activating this stops Place/the object browser
+  // (below), and picking a sid to place stops this (see stopPainting call
+  // sites). A whole drag stroke accumulates into one staged batch — nothing
+  // written until Save, same "stage locally, then explicit Save to .map"
+  // convention as Move/Add/Delete/Rotate — so one file write covers the
+  // whole stroke, not one per tile dragged over. Declared this early (ahead
+  // of onPointerDown/Move/Up and the paint-preview canvas effect below,
+  // which both reference it) to avoid a temporal-dead-zone reference.
+  const [paintBiome, setPaintBiome] = useState<BiomeId | null>(null)
+  const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
+  const paintingRef = useRef(false)
+
+  const stopPainting = () => {
+    setPaintBiome(null)
+    setPaintStaged(new Map())
+  }
+  const stagePaintNode = useCallback((node: number, biomeId: BiomeId) => {
+    setPaintStaged((prev) => {
+      if (prev.get(node) === biomeId) return prev
+      const next = new Map(prev)
+      next.set(node, biomeId)
+      return next
+    })
+  }, [])
+  const savePaint = async () => {
+    if (paintStaged.size === 0 || !mapFilePath) return
+    const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
+    try {
+      await saveMapFile(mapFilePath, { kind: 'paintTerrain', changes })
+      setPaintStaged(new Map())
+    } catch (e) {
+      logError(`Failed to paint terrain: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   const fitToViewport = useCallback(() => {
     if (!viewportEl || sizeX <= 0 || sizeZ <= 0) return
     const { width, height } = viewportEl.getBoundingClientRect()
@@ -371,6 +413,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const CLICK_DRAG_THRESHOLD_PX = 4
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
+    // Paint mode replaces panning entirely while active — a pointer-down
+    // starts a paint stroke (captured so it continues even if the cursor
+    // briefly leaves the canvas), not a viewport drag.
+    if (paintBiome !== null) {
+      paintingRef.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stagePaintNode(node, paintBiome)
+      return
+    }
     dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false }
   }
 
@@ -397,6 +449,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [transform, sizeX, sizeZ])
 
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (paintingRef.current && paintBiome !== null) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stagePaintNode(node, paintBiome)
+      setHoveredNode(node)
+      return
+    }
     const drag = dragRef.current
     if (drag) {
       const dx = e.clientX - drag.startX
@@ -416,6 +474,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (paintingRef.current) {
+      paintingRef.current = false
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
     const wasClick = !dragRef.current?.moved
     if (dragRef.current?.moved) e.currentTarget.releasePointerCapture(e.pointerId)
     dragRef.current = null
@@ -544,6 +607,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
   }, [blockedCanvasEl, sizeX, sizeZ, settings.showBlockedTiles, blockedTileSet])
+
+  // ── Terrain-paint preview canvas (issue #167 Phase D) — same "separate,
+  // top-stacked canvas painted after the icon layer" technique as the
+  // blocked-tile overlay above, so the preview tint is visible over icons
+  // too. Shows the STAGED (not yet saved) biome for every touched tile —
+  // the "see it before it's real" feedback Move/Add's ghost previews
+  // already establish for their own tools.
+  const [paintCanvasEl, setPaintCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!paintCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = paintCanvasEl
+    canvas.width = sizeX
+    canvas.height = sizeZ
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, sizeX, sizeZ)
+    if (paintStaged.size === 0) return
+    ctx.globalAlpha = 0.55
+    for (const [node, biomeId] of paintStaged) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      ctx.fillStyle = BIOME_BASE_COLORS[biomeId]
+      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+    }
+    ctx.globalAlpha = 1
+  }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -981,7 +1070,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
 
   useEffect(() => {
-    if (!open || (!placingSid && !objectBrowserOpen)) return
+    if (!open || (!placingSid && !objectBrowserOpen && paintBiome === null)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -992,11 +1081,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const tag = (document.activeElement as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if (placingSid) stopPlacing()
+      else if (paintBiome !== null) stopPainting()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, objectBrowserOpen])
+  }, [open, placingSid, objectBrowserOpen, paintBiome])
 
   const placingFootprintBounds = useMemo(() => {
     if (!placingSid || hoveredNode === null) return null
@@ -1101,9 +1191,63 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     size="icon"
                     className="h-6 w-6"
                     title="Place a new object"
-                    onClick={() => setObjectBrowserOpen((prev) => !prev)}
+                    onClick={() => { stopPainting(); setObjectBrowserOpen((prev) => !prev) }}
                   >
                     <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                )
+              )}
+              {canEditEntities && (
+                paintBiome !== null ? (
+                  <div className="flex items-center gap-1">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                          <span
+                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                            style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
+                          />
+                          {BIOME_NAMES[paintBiome]}
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                        {PAINT_BIOME_ORDER.map((b) => (
+                          <button
+                            key={b}
+                            className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                            onClick={() => setPaintBiome(b)}
+                          >
+                            <span
+                              className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                              style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
+                            />
+                            {BIOME_NAMES[b]}
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
+                    {paintStaged.size > 0 && (
+                      <>
+                        <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
+                        <Button size="sm" className="h-6 text-xs" onClick={savePaint}>
+                          Save to .map
+                        </Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
+                      {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Paint terrain"
+                    onClick={() => { stopPlacing(); setObjectBrowserOpen(false); setPaintBiome(1) }}
+                  >
+                    <Paintbrush className="h-3.5 w-3.5" />
                   </Button>
                 )
               )}
@@ -1313,7 +1457,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         height: entry.height,
                         boxSizing: 'border-box',
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && paintBiome === null) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -1371,6 +1515,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     tile including occupied ones, not just bare terrain. */}
                 <canvas
                   ref={setBlockedCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
+
+                {/* Terrain-paint preview — staged (unsaved) tiles tinted with
+                    their target biome, same stacking as the blocked-tile
+                    overlay above. */}
+                <canvas
+                  ref={setPaintCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,
@@ -1532,7 +1689,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               <ObjectBrowserPanel
                 catalog={catalog}
                 placingSid={placingSid}
-                onPick={setPlacingSid}
+                onPick={(sid) => { stopPainting(); setPlacingSid(sid) }}
                 onClose={() => setObjectBrowserOpen(false)}
               />
             ) : (

@@ -1009,6 +1009,31 @@ export function deleteObjectInstance(
   }
 }
 
+// ─── Paint terrain (issue #167 Phase D) ─────────────────────────────────────
+// `tilesMap` is a flat number[] (biome id 1-7), one entry per tile — the
+// simplest possible case here: parse the span as number[], overwrite the
+// touched indices, re-stringify. Never touches objects[]/squads[]/markers[]
+// or any objectsProperties.* table (a different top-level array entirely),
+// so by construction this can't overwrite or interact with a placed object.
+// Takes a whole batch of changes in one call, not one call per tile — a
+// paint/drag stroke across N tiles should produce one file write, not N.
+
+/** Overwrite `tilesMap[node]` for every `{node, biomeId}` in `changes`. */
+export function paintTerrainTiles(chunk: Uint8Array, changes: { node: number; biomeId: number }[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'tilesMap')
+  const tiles = JSON.parse(span) as number[]
+  for (const { node, biomeId } of changes) {
+    if (node < 0 || node >= tiles.length) {
+      throw new Error(`Node ${node} is out of bounds for tilesMap (length ${tiles.length})`)
+    }
+    tiles[node] = biomeId
+  }
+  const patchedSpan = JSON.stringify(tiles)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
