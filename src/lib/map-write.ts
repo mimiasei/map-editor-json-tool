@@ -801,24 +801,32 @@ export function patchTopLevelScalar(chunk: Uint8Array, key: string, newValue: nu
  * `objectsProperties.propVariants`/`propRewardParams` (entityType 0 only;
  * never observed for squads) — see `backfillNewObjectPropertiesDefaults`.
  *
- * Returns the allocated id alongside the patched chunk so the caller can
+ * `block1Chunk` is only actually touched for `city-spawner`/`hero-spawner`
+ * (real player-start points, not free-standing decorations — see
+ * `backfillPlayerStartSpawner`); every other sid returns it unchanged. Takes
+ * and returns both chunks unconditionally anyway, matching
+ * `deleteObjectInstance`'s existing dual-chunk convention, rather than a
+ * signature that special-cases by sid.
+ *
+ * Returns the allocated id alongside the patched chunks so the caller can
  * immediately reference the new instance (e.g. to select it).
  */
 export function addObjectInstance(
-  chunk: Uint8Array,
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
   entityType: 0 | 2,
   sid: string,
   node: number,
   rotation?: number,
   level?: number,
-): { chunk: Uint8Array; newId: number } {
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array; newId: number } {
   const key = entityType === 0 ? 'objects' : 'squads'
   const freeIdKey = entityType === 0 ? 'objectsFreeId' : 'squadsFreeId'
 
-  const text = new TextDecoder('utf-8').decode(chunk)
-  const newId = findTopLevelScalarSpan(text, freeIdKey).value
+  const text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  const newId = findTopLevelScalarSpan(text2, freeIdKey).value
 
-  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, key)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, key)
   const groups = JSON.parse(span) as ObjectGroupEntry[]
   const existing = groups.find((g) => g.sid === sid)
   if (existing) {
@@ -830,12 +838,20 @@ export function addObjectInstance(
     groups.push({ sid, ids: [newId], nodes: [node], rotations: [rotation ?? 0], levels: [level ?? 0] })
   }
   const patchedSpan = JSON.stringify(groups)
-  let patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  let patchedText2 = text2.slice(0, arrayOpen) + patchedSpan + text2.slice(arrayClose + 1)
+  let patchedBlock1Chunk = block1Chunk
+
   if (entityType === 0) {
-    patchedText = backfillNewObjectPropertiesDefaults(patchedText, newId, sid)
+    patchedText2 = backfillNewObjectPropertiesDefaults(patchedText2, newId, sid)
+    const playerStartDefault = PLAYER_START_SPAWNER_DEFAULTS[sid]
+    if (playerStartDefault) {
+      const result = backfillPlayerStartSpawner(patchedBlock1Chunk, patchedText2, newId, playerStartDefault)
+      patchedBlock1Chunk = result.block1Chunk
+      patchedText2 = result.block2Text
+    }
   }
-  const finalChunk = patchTopLevelScalar(new TextEncoder().encode(patchedText), freeIdKey, newId + 1)
-  return { chunk: finalChunk, newId }
+  const finalBlock2Chunk = patchTopLevelScalar(new TextEncoder().encode(patchedText2), freeIdKey, newId + 1)
+  return { block1Chunk: patchedBlock1Chunk, block2Chunk: finalBlock2Chunk, newId }
 }
 
 /** One of the "randomized spawn placeholder" sids' own `objectsProperties.*`
@@ -904,6 +920,137 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
     tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId))
   }
   return text
+}
+
+// ─── city-spawner / hero-spawner (real player-start points) ────────────────
+// Unlike every other addable sid, these two are tied to an actual player
+// slot, not a free-standing decoration: confirmed across every real sample
+// map (15/15, zero exceptions) that Block 1's `spawns.spawns[]` has EXACTLY
+// one entry per player (`owner` values are always the contiguous range
+// 1..playersCount, no gaps, no duplicates), and Block 2's `propSpawns[]`
+// duplicates the same `owner` per (type,id) — the same two-representations-
+// of-one-fact relationship `setSpawnerPlayerType`'s own doc comment already
+// describes. There is no `*FreeId`-style "next id" for the player slot
+// itself: a new spawner can only take over a player slot that's currently
+// UNCLAIMED (e.g. one whose old spawner was just deleted, which splices its
+// Block 1 entry out entirely per deleteObjectInstance) — it never invents a
+// slot beyond playersCount.
+interface PlayerStartSpawnerDefault {
+  /** 0 = city-spawner, 1 = hero-spawner — confirmed against every real
+   *  propSpawns/Block1 spawn entry for each sid, zero exceptions. */
+  spawnPointType: 0 | 1
+  /** The extra objectsProperties table(s) this sid needs beyond the shared
+   *  propSpawns row, each confirmed present on every real, unedited
+   *  instance of this sid across every sample map. */
+  extraTables: { table: string; row: (id: number) => Record<string, unknown> }[]
+}
+
+const PLAYER_START_SPAWNER_DEFAULTS: Record<string, PlayerStartSpawnerDefault> = {
+  'city-spawner': {
+    spawnPointType: 0,
+    extraTables: [
+      {
+        table: 'propCities',
+        row: (id) => ({
+          type: 0, id, isDefined: false, factionSid: '', spawnHero: true,
+          buildingsConstructionSid: 'default_buildings_construction',
+          buildingsBanSid: 'default_buildings_ban',
+          buildingsSettingsSid: 'default_buildings_settings', customCityName: '',
+        }),
+      },
+      {
+        // A city's starting-garrison config — same table random-squad uses,
+        // but confirmed with a DIFFERENT default (tier 0, not 2) on every
+        // one of 28 real city-spawner instances surveyed, zero exceptions.
+        table: 'propRandomSquads',
+        row: (id) => ({
+          type: 0, id, sids: [], requestedValue: 0, fraction: '', tier: 0, isMainGuard: false,
+          reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
+          isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
+          isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
+        }),
+      },
+      {
+        table: 'propGrowthUnits',
+        row: (id) => ({ type: 0, id, isConstantGrowth: true, countGrowth: 1 }),
+      },
+    ],
+  },
+  'hero-spawner': {
+    spawnPointType: 1,
+    extraTables: [
+      {
+        // Every real hero-spawner ships with a hero already assigned
+        // (isDefined:true) — no real "blank" instance exists to confirm
+        // against directly, but the field SET itself (exactly these two
+        // keys, on every real instance surveyed) is unambiguous; isDefined:
+        // false/heroSid:'' mirrors propCities' own confirmed "not yet
+        // chosen" convention above.
+        table: 'propHeroes',
+        row: (id) => ({ type: 0, id, isDefined: false, heroSid: '' }),
+      },
+    ],
+  },
+}
+
+/**
+ * Claim an unclaimed player slot for a brand-new city-spawner/hero-spawner:
+ * finds the lowest `owner` in `1..playersCount` not already present in
+ * Block 1's `spawns.spawns[]`, adds that slot's entry there, and adds the
+ * matching `propSpawns` + sid-specific extra rows to Block 2. Throws if
+ * every player slot is already claimed — a partial/silent no-op (or
+ * inventing a slot beyond playersCount) would leave the map in a state the
+ * game was never confirmed to tolerate.
+ */
+function backfillPlayerStartSpawner(
+  block1Chunk: Uint8Array,
+  block2Text: string,
+  newId: number,
+  config: PlayerStartSpawnerDefault,
+): { block1Chunk: Uint8Array; block2Text: string } {
+  const text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  const fullBlock1 = JSON.parse(text1) as { spawns?: { playersCount?: number } }
+  const playersCount = fullBlock1.spawns?.playersCount ?? 0
+
+  const span1 = findJsonArraySpan(text1, 'spawns')
+  const block1Spawns = JSON.parse(span1.span) as Block1SpawnEntry[]
+  const usedOwners = new Set(block1Spawns.map((e) => e.owner))
+  let owner: number | undefined
+  for (let candidate = 1; candidate <= playersCount; candidate++) {
+    if (!usedOwners.has(candidate)) { owner = candidate; break }
+  }
+  if (owner === undefined) {
+    throw new Error(
+      `Every player slot (1-${playersCount}) already has a spawn point. Increase the map's player ` +
+      'count first, or delete an existing city/hero spawner to free a slot.',
+    )
+  }
+
+  block1Spawns.push({
+    owner, spawnType: 0, playerId: '', spawnPointType: config.spawnPointType,
+    isCityDefined: false, factionSid: '', isHeroDefined: false, heroSid: '',
+    colorId: -1, isAlive: true, isLocked: false,
+  })
+  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+
+  let text2 = block2Text
+  const tryAppendRow = (tableKey: string, row: Record<string, unknown>): void => {
+    let found: { arrayOpen: number; arrayClose: number; span: string }
+    try {
+      found = findJsonArraySpan(text2, tableKey)
+    } catch {
+      return
+    }
+    const entries = JSON.parse(found.span) as unknown[]
+    entries.push(row)
+    text2 = text2.slice(0, found.arrayOpen) + JSON.stringify(entries) + text2.slice(found.arrayClose + 1)
+  }
+  tryAppendRow('propSpawns', { type: 0, id: newId, owner, spawnType: 0, spawnPointType: config.spawnPointType, isLocked: false })
+  for (const { table, row } of config.extraTables) {
+    tryAppendRow(table, row(newId))
+  }
+
+  return { block1Chunk: new TextEncoder().encode(patchedText1), block2Text: text2 }
 }
 
 /** Add a new flat `markers[]` (type 1, zone) instance at `node`. Simpler than

@@ -56,14 +56,19 @@ export type MapSaveEdit =
   | { kind: 'paintTerrain'; changes: { node: number; biomeId: number }[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
- *  deleteObject is scoped to Block 2 (chunks[1]) alone; those two also touch
- *  Block 1 (chunks[0]) — setSpawnerPlayerType because the Player type is
- *  duplicated across both, deleteObject because deleting a spawner also
- *  needs to clear its paired Block 1 spawns.spawns[] entry (see each
+ *  deleteObject/addObject is scoped to Block 2 (chunks[1]) alone; those three
+ *  also touch Block 1 (chunks[0]) — setSpawnerPlayerType because the Player
+ *  type is duplicated across both, deleteObject because deleting a spawner
+ *  also needs to clear its paired Block 1 spawns.spawns[] entry, addObject
+ *  because adding a city-spawner/hero-spawner needs to claim an unclaimed
+ *  player slot there (every OTHER addObject sid leaves Block 1 untouched,
+ *  but this flag is a coarse per-kind allowance, not per-sid — see each
  *  function's own doc comment in map-write.ts). */
 function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
   if (!edit) return new Set()
-  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'deleteObject' ? new Set([0, 1]) : new Set([1])
+  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'deleteObject' || edit.kind === 'addObject'
+    ? new Set([0, 1])
+    : new Set([1])
 }
 
 export interface MapSaveResult {
@@ -154,8 +159,9 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   } else if (edit?.kind === 'rotateObject') {
     newChunks[1] = rotateObjectInstance(newChunks[1], edit.entityId, edit.newRotation)
   } else if (edit?.kind === 'addObject') {
-    const result = addObjectInstance(newChunks[1], edit.entityType, edit.sid, edit.node, edit.rotation, edit.level)
-    newChunks[1] = result.chunk
+    const result = addObjectInstance(newChunks[0], newChunks[1], edit.entityType, edit.sid, edit.node, edit.rotation, edit.level)
+    newChunks[0] = result.block1Chunk
+    newChunks[1] = result.block2Chunk
     addedId = result.newId
   } else if (edit?.kind === 'addMarker') {
     const result = addMarkerInstance(newChunks[1], edit.sid, edit.node)
@@ -341,6 +347,21 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const freeId = edit.entityType === 0 ? block2.objectsFreeId : block2.squadsFreeId
     if (actualNode !== edit.node || freeId !== addedId! + 1) {
       throw new Error('Verification failed: new instance not reflected in the rebuilt placement table')
+    }
+    if (edit.sid === 'city-spawner' || edit.sid === 'hero-spawner') {
+      const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
+        spawns?: { spawns?: Array<{ owner?: number; spawnPointType?: number }> }
+      }
+      const block2Props = (block2 as unknown as {
+        objectsProperties?: { propSpawns?: Array<{ id?: number; owner?: number }> }
+      }).objectsProperties
+      const propSpawnsRow = (block2Props?.propSpawns ?? []).find((r) => r.id === addedId)
+      const owner = propSpawnsRow?.owner
+      const block1Entry = (block1.spawns?.spawns ?? []).find((s) => s.owner === owner)
+      const expectedSpawnPointType = edit.sid === 'city-spawner' ? 0 : 1
+      if (owner === undefined || !block1Entry || block1Entry.spawnPointType !== expectedSpawnPointType) {
+        throw new Error('Verification failed: new spawner not reflected in the rebuilt Block 1 spawns table')
+      }
     }
   } else if (edit?.kind === 'addMarker') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
