@@ -18,8 +18,9 @@ export const BIOME_NAMES: Record<BiomeId, string> = {
   7: 'Dirt',
 }
 
-/** Saturated base color per biome — used only to derive the light fill below. */
-const BIOME_BASE_COLORS: Record<BiomeId, string> = {
+/** Saturated base color per biome — used to derive the light fill below, and
+ *  directly as the terrain-paint tool's swatch/preview color (Phase D). */
+export const BIOME_BASE_COLORS: Record<BiomeId, string> = {
   1: '#1da324', // Grass — green
   2: '#d9b96b', // Sand — tan
   3: '#37333e', // Deathland — blighted purple-gray
