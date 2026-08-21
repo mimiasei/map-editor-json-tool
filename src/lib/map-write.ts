@@ -832,19 +832,57 @@ export function addObjectInstance(
   const patchedSpan = JSON.stringify(groups)
   let patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
   if (entityType === 0) {
-    patchedText = backfillNewObjectPropertiesDefaults(patchedText, newId)
+    patchedText = backfillNewObjectPropertiesDefaults(patchedText, newId, sid)
   }
   const finalChunk = patchTopLevelScalar(new TextEncoder().encode(patchedText), freeIdKey, newId + 1)
   return { chunk: finalChunk, newId }
 }
 
-/** Seed the two `objectsProperties.*` rows the game's own Map Editor adds
- *  for a brand-new type-0 object (see `addObjectInstance`'s doc comment for
- *  how this was confirmed). Skips a table silently if it isn't present in
- *  this particular file rather than inventing one — same "only touch what's
- *  really there" caution `deleteObjectInstance`'s generic sweep already
- *  follows, just in the insert direction. */
-function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number): string {
+/** One of the "randomized spawn placeholder" sids' own `objectsProperties.*`
+ *  row default, keyed on the field the game actually uses to decide what
+ *  spawns there — confirmed missing entirely on a TSE-added `random-squad`
+ *  (it ended up with no `propRandomSquads` row at all, so the game and its
+ *  own Map Editor couldn't recognize it as a configured spawner — reported
+ *  as "ends up as an empty object"). `random-res` genuinely has no such
+ *  table (confirmed against two real, unedited placements — its
+ *  propVariants/propRewardParams rows below are sufficient on their own),
+ *  so it's deliberately absent from this map. Default values are the exact
+ *  shape of a freshly-placed, never-edited real instance where that
+ *  evidence was available (random-squad, from the same bug report's own
+ *  Stormlight_squad.map); the best available real sample otherwise
+ *  (random-item/random-hire — only non-default field values differ between
+ *  real maps' own author-configured instances, e.g. `requestedValue`/
+ *  `fraction`/`rarity`/`tier`, which TSE's Add flow has no UI to set yet). */
+const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: number) => Record<string, unknown> }> = {
+  'random-squad': {
+    table: 'propRandomSquads',
+    row: (id) => ({
+      type: 0, id, sids: [], requestedValue: 0, fraction: '', tier: 2, isMainGuard: false,
+      reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
+      isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
+      isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
+    }),
+  },
+  'random-item': {
+    table: 'propRandomItems',
+    row: (id) => ({ type: 0, id, rarity: 0 }),
+  },
+  'random-hire': {
+    table: 'propRandomHires',
+    row: (id) => ({ type: 0, id, tier: 1, fraction: 0 }),
+  },
+}
+
+/** Seed the `objectsProperties.*` rows the game's own Map Editor adds for a
+ *  brand-new type-0 object (see `addObjectInstance`'s doc comment for how
+ *  the base two were confirmed) plus, for the randomized-spawn placeholder
+ *  sids, the one extra table that actually makes them function as a
+ *  configured spawner rather than an inert placement (see
+ *  `RANDOM_SPAWNER_TABLE_DEFAULTS`). Skips a table silently if it isn't
+ *  present in this particular file rather than inventing one — same "only
+ *  touch what's really there" caution `deleteObjectInstance`'s generic
+ *  sweep already follows, just in the insert direction. */
+function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, sid: string): string {
   let text = block2Text
   const tryAppendRow = (tableKey: string, row: Record<string, unknown>): void => {
     let found: { arrayOpen: number; arrayClose: number; span: string }
@@ -861,6 +899,10 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number):
   }
   tryAppendRow('propVariants', { type: 0, id: newId, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
   tryAppendRow('propRewardParams', { type: 0, id: newId, parameters: [] })
+  const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
+  if (randomSpawnerDefault) {
+    tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId))
+  }
   return text
 }
 
