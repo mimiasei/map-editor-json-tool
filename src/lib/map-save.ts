@@ -26,6 +26,7 @@ import {
   moveObjectInstance,
   addObjectInstance,
   addMarkerInstance,
+  deleteObjectInstance,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -48,13 +49,17 @@ export type MapSaveEdit =
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
   | { kind: 'addObject'; entityType: 0 | 2; sid: string; node: number; rotation?: number; level?: number }
   | { kind: 'addMarker'; sid: string; node: number }
+  | { kind: 'deleteObject'; entityType: 0 | 1 | 2; entityId: number }
 
-/** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType
- *  is scoped to Block 2 (chunks[1]) alone; that one also touches Block 1 (chunks[0]),
- *  since the Player type is duplicated across both (see setSpawnerPlayerType's doc comment). */
+/** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
+ *  deleteObject is scoped to Block 2 (chunks[1]) alone; those two also touch
+ *  Block 1 (chunks[0]) — setSpawnerPlayerType because the Player type is
+ *  duplicated across both, deleteObject because deleting a spawner also
+ *  needs to clear its paired Block 1 spawns.spawns[] entry (see each
+ *  function's own doc comment in map-write.ts). */
 function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
   if (!edit) return new Set()
-  return edit.kind === 'setSpawnerPlayerType' ? new Set([0, 1]) : new Set([1])
+  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'deleteObject' ? new Set([0, 1]) : new Set([1])
 }
 
 export interface MapSaveResult {
@@ -150,6 +155,10 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const result = addMarkerInstance(newChunks[1], edit.sid, edit.node)
     newChunks[1] = result.chunk
     addedId = result.newId
+  } else if (edit?.kind === 'deleteObject') {
+    const result = deleteObjectInstance(newChunks[0], newChunks[1], edit.entityType, edit.entityId)
+    newChunks[0] = result.block1Chunk
+    newChunks[1] = result.block2Chunk
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -321,6 +330,29 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const match = (block2.markers ?? []).find((m) => m.id === addedId)
     if (!match || match.node !== edit.node || match.sid !== edit.sid || block2.markersFreeId !== addedId! + 1) {
       throw new Error('Verification failed: new marker not reflected in the rebuilt markers table')
+    }
+  } else if (edit?.kind === 'deleteObject') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objects?: Array<{ ids?: number[] }>
+      squads?: Array<{ ids?: number[] }>
+      markers?: Array<{ id?: number }>
+      objectsProperties?: Record<string, Array<{ type?: number | string; id?: number }>>
+    }
+    let stillPresent = false
+    if (edit.entityType === 1) {
+      stillPresent = (block2.markers ?? []).some((m) => m.id === edit.entityId)
+    } else {
+      const groups = edit.entityType === 0 ? block2.objects ?? [] : block2.squads ?? []
+      stillPresent = groups.some((g) => g.ids?.includes(edit.entityId))
+    }
+    if (stillPresent) {
+      throw new Error('Verification failed: deleted instance still present in the rebuilt placement table')
+    }
+    for (const table of Object.values(block2.objectsProperties ?? {})) {
+      if (!Array.isArray(table)) continue
+      if (table.some((row) => String(row?.type) === String(edit.entityType) && row?.id === edit.entityId)) {
+        throw new Error('Verification failed: a deleted instance\'s row is still present in an objectsProperties table')
+      }
     }
   }
 

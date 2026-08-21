@@ -802,6 +802,136 @@ export function addMarkerInstance(chunk: Uint8Array, sid: string, node: number):
   return { chunk: finalChunk, newId }
 }
 
+// ─── Delete a placed instance (objects[] / squads[] / markers[]) ───────────
+// Issue #167 Phase C. Splices the instance out of its objects[]/squads[]
+// group's parallel arrays (or the flat markers[] array), sweeps every
+// objectsProperties.* table for matching (type,id) rows and drops them
+// (generic — iterates whatever keys the table actually has, not just the
+// ones this codebase's types model, so this cleans up all ~29 real tables,
+// not just the dozen explicitly typed in map-parser.ts), and auto-fixes the
+// two cheap/safe cross-references a real delete can leave dangling: a linked
+// portal partner's targetIdx, and the paired Block 1 spawns.spawns[] entry
+// for a spawner. Everything else that could reference this instance (a
+// trigger/condition/dialog param, keyObjects[], areas[].keyObjectId) is
+// deliberately NOT auto-fixed — the UI is expected to warn the user via
+// entity-usage.ts before calling this, not fix it silently, since this repo
+// has no way to know whether the game tolerates a dangling reference there.
+function findJsonObjectSpan(text: string, key: string): { objOpen: number; objClose: number; span: string } {
+  const marker = `"${key}":{`
+  const markerIdx = text.indexOf(marker)
+  if (markerIdx === -1) throw new Error(`"${key}" object not found in this block`)
+  const objOpen = markerIdx + marker.length - 1 // index of the "{"
+  let depth = 0
+  let objClose = -1
+  for (let i = objOpen; i < text.length; i++) {
+    if (text[i] === '{') depth++
+    else if (text[i] === '}') {
+      depth--
+      if (depth === 0) { objClose = i; break }
+    }
+  }
+  if (objClose === -1) throw new Error(`"${key}" object is not properly closed`)
+  return { objOpen, objClose, span: text.slice(objOpen, objClose + 1) }
+}
+
+export function deleteObjectInstance(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  entityType: 0 | 1 | 2,
+  entityId: number,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
+
+  // Read propPortals/propSpawns BEFORE the sweep below removes them — need
+  // their values to know what (if anything) to auto-fix afterward.
+  let linkedPortalId: number | undefined
+  let spawnerOwner: number | undefined
+  try {
+    const { span } = findJsonArraySpan(text2, 'propPortals')
+    const match = (JSON.parse(span) as PropPortalEntry[])
+      .find((p) => String(p.type) === String(entityType) && p.id === entityId)
+    if (match && match.targetIdx !== undefined && match.targetIdx !== -1) linkedPortalId = match.targetIdx
+  } catch { /* no propPortals table in this block */ }
+  try {
+    const { span } = findJsonArraySpan(text2, 'propSpawns')
+    const match = (JSON.parse(span) as PropSpawnEntry[])
+      .find((p) => String(p.type) === String(entityType) && p.id === entityId)
+    if (match?.owner !== undefined) spawnerOwner = match.owner
+  } catch { /* no propSpawns table in this block */ }
+
+  // 1. Remove the instance from objects[]/squads[]/markers[].
+  const placementKey = entityType === 0 ? 'objects' : entityType === 2 ? 'squads' : 'markers'
+  {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, placementKey)
+    let patchedSpan: string
+    if (entityType === 1) {
+      const entries = JSON.parse(span) as MarkerEntry[]
+      const idx = entries.findIndex((e) => e.id === entityId)
+      if (idx === -1) throw new Error(`No markers[] entry found for id ${entityId}`)
+      entries.splice(idx, 1)
+      patchedSpan = JSON.stringify(entries)
+    } else {
+      const groups = JSON.parse(span) as ObjectGroupEntry[]
+      let found = false
+      for (const group of groups) {
+        const idx = group.ids?.indexOf(entityId) ?? -1
+        if (idx === -1) continue
+        group.ids!.splice(idx, 1)
+        group.nodes?.splice(idx, 1)
+        group.rotations?.splice(idx, 1)
+        group.levels?.splice(idx, 1)
+        found = true
+        break
+      }
+      if (!found) throw new Error(`No ${placementKey} entry found for id ${entityId}`)
+      patchedSpan = JSON.stringify(groups.filter((g) => (g.ids?.length ?? 0) > 0))
+    }
+    text2 = text2.slice(0, arrayOpen) + patchedSpan + text2.slice(arrayClose + 1)
+  }
+
+  // 2. Sweep every objectsProperties.* table for matching (type,id) rows.
+  {
+    const { objOpen, objClose, span } = findJsonObjectSpan(text2, 'objectsProperties')
+    const props = JSON.parse(span) as Record<string, unknown>
+    for (const tableKey of Object.keys(props)) {
+      const table = props[tableKey]
+      if (!Array.isArray(table)) continue
+      props[tableKey] = table.filter((row) => {
+        if (!row || typeof row !== 'object') return true
+        const r = row as { type?: number | string; id?: number }
+        return !(String(r.type) === String(entityType) && r.id === entityId)
+      })
+    }
+    const patchedSpan = JSON.stringify(props)
+    text2 = text2.slice(0, objOpen) + patchedSpan + text2.slice(objClose + 1)
+  }
+
+  // 3. Auto-fix: null out the linked portal partner's targetIdx (portals are
+  // always type-0 objects, confirmed during #167's original investigation).
+  if (linkedPortalId !== undefined) {
+    text2 = new TextDecoder('utf-8').decode(
+      upsertPropPortals(new TextEncoder().encode(text2), 0, linkedPortalId, { targetIdx: -1 }),
+    )
+  }
+
+  // 4. Auto-fix: clear the paired Block 1 spawns.spawns[] entry for a spawner.
+  let text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  if (spawnerOwner !== undefined) {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text1, 'spawns')
+    const block1Spawns = JSON.parse(span) as Block1SpawnEntry[]
+    const idx = block1Spawns.findIndex((e) => e.owner === spawnerOwner)
+    if (idx !== -1) {
+      block1Spawns.splice(idx, 1)
+      text1 = text1.slice(0, arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(arrayClose + 1)
+    }
+  }
+
+  return {
+    block1Chunk: new TextEncoder().encode(text1),
+    block2Chunk: new TextEncoder().encode(text2),
+  }
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {

@@ -1,5 +1,6 @@
 import AppShell from '@/components/layout/AppShell'
 import PanelShell from '@/components/panels/PanelShell'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { isTauri } from '@/lib/native-fs'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
@@ -8,8 +9,10 @@ const panelId = new URLSearchParams(location.search).get('panel')
 
 export default function App() {
   return (
-    <TooltipProvider delayDuration={300}>
-      {panelId && isTauri() ? <PanelShell panelId={panelId} /> : <AppShell />}
-    </TooltipProvider>
+    <ErrorBoundary>
+      <TooltipProvider delayDuration={300}>
+        {panelId && isTauri() ? <PanelShell panelId={panelId} /> : <AppShell />}
+      </TooltipProvider>
+    </ErrorBoundary>
   )
 }
