@@ -133,6 +133,10 @@ export interface CatalogFaction {
   id: string
   name: string
   icon?: string
+  /** Native terrain (e.g. "Grass", "Snow") from the faction's own DB entry.
+   *  Used to backfill CatalogMapObject.biome for faction dwellings/city
+   *  halls, which carry no biome field of their own. */
+  biome?: string
 }
 
 /** A hero specialization (Core/DB/heroes_specializations/*.json), issue #141.
@@ -235,4 +239,8 @@ export interface GameCatalog {
 // `${id}_name` convention (issue #146) — hygiene-only bump, same reasoning.
 // v7: added CatalogArtifact.raw, kept as a clone template for custom
 // artifact identities (issue #150) — same hygiene-only reasoning.
-export const CATALOG_SCHEMA_VERSION = 7
+// v8: added CatalogFaction.biome, and backfilled CatalogMapObject.biome for
+// faction dwellings/city halls (interactables never had a biome field of
+// their own) via a sid-token → faction-id → fractions.json.biome lookup —
+// same hygiene-only reasoning.
+export const CATALOG_SCHEMA_VERSION = 8

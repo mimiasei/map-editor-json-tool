@@ -60,6 +60,7 @@ import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
 import { isTauri } from '@/lib/native-fs'
 import { saveMapFile } from '@/lib/map-save'
+import { stepRotation } from '@/lib/map-write'
 import { logError } from '@/lib/logger'
 import UndockButton from '@/components/panels/UndockButton'
 import MapGridSettingsDialog, {
@@ -852,6 +853,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
 
+  // ── Rotate — same "stage locally, then explicit Save to .map" convention
+  // as Move/Delete. Only `objects[]` (type 0) instances ever carry a
+  // rotation. Stepping the left/right arrow both starts staging (from the
+  // instance's current rotation) if it isn't already, and applies one step —
+  // there's no separate "enter rotate mode" click, unlike Move (which needs
+  // a mode to pick a destination on the grid) or Delete (whose confirmation
+  // copy deliberately needs a pause before committing).
+  const [rotateState, setRotateState] = useState<{ key: string; id: number; rotation: number } | null>(null)
+  const stepRotate = (item: PlacedObject, delta: 1 | -1) => {
+    setRotateState((prev) => {
+      const current = prev?.key === item.key ? prev.rotation : (item.rotation ?? 0)
+      return { key: item.key, id: item.id, rotation: stepRotation(current, delta) }
+    })
+  }
+  const cancelRotate = () => setRotateState(null)
+  const saveRotate = async () => {
+    if (!rotateState || !mapFilePath) return
+    const { id, rotation } = rotateState
+    try {
+      await saveMapFile(mapFilePath, { kind: 'rotateObject', entityId: id, newRotation: rotation })
+      setRotateState(null)
+    } catch (e) {
+      logError(`Failed to rotate object: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   // ── Delete (issue #167 Phase C) ─────────────────────────────────────────
   // Same "stage locally, then explicit Save to .map" convention as Move —
   // unlike Add, a delete's confirmation copy should be more deliberate
@@ -1548,6 +1575,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onStartMove={canEditEntities ? startMove : undefined}
                   onSaveMove={canEditEntities ? saveMove : undefined}
                   onCancelMove={canEditEntities ? cancelMove : undefined}
+                  rotateTarget={rotateState}
+                  onStepRotate={canEditEntities ? stepRotate : undefined}
+                  onSaveRotate={canEditEntities ? saveRotate : undefined}
+                  onCancelRotate={canEditEntities ? cancelRotate : undefined}
                   deleteTarget={deleteTarget}
                   deleteUsageWarnings={deleteUsageWarnings}
                   onStartDelete={canEditEntities ? startDelete : undefined}

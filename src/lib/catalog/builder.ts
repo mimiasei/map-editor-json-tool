@@ -478,10 +478,47 @@ async function collectFactions(zip: JSZip, locMap: Map<string, string>): Promise
         id,
         name: loc(locMap, name) ?? name,
         icon: str(entry.icon || '') || undefined,
+        biome: str(entry.biome || '') || undefined,
       })
     }
   }
   return factions.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+// A faction dwelling's sid uses "necropolis" (barracks_necropolis_1..7)
+// while the faction's own id is "undead" (Core/DB/fractions/2_undead.json,
+// undead_city) — the only sid/id mismatch found across all 6 factions.
+const FACTION_SID_ALIASES: Record<string, string> = { necropolis: 'undead' }
+
+/**
+ * Interactable map objects (dwellings, city halls, mines, shrines, ...)
+ * carry no `biome` field of their own in the game's data — unlike
+ * decorations/animals, which do. But a faction's barracks/city-hall sid
+ * always embeds that faction's id as an underscore-delimited token (e.g.
+ * `barracks_unfrozen_3`, `human_city`), and each faction's own DB entry
+ * declares its native `biome` directly (confirmed: human→Grass,
+ * undead→Deathland, dungeon→Dirt, nature→Autumn, demon→Lava,
+ * unfrozen→Snow) — so that's a cheap, first-party lookup, not a guess.
+ * Deliberately narrow: only a sid token that's an actual faction id (or its
+ * one known alias) matches, so the ~90% of interactables that are
+ * genuinely terrain-agnostic by design (mines, markets, portals, neutral
+ * dwellings, ...) are correctly left untagged rather than guessed at.
+ */
+function inferInteractableBiomes(mapObjects: CatalogMapObject[], factions: CatalogFaction[]): void {
+  const biomeByFactionId = new Map(
+    factions.filter((f): f is CatalogFaction & { biome: string } => !!f.biome).map((f) => [f.id, f.biome]),
+  )
+  for (const obj of mapObjects) {
+    if (obj.category !== 'interactables' || obj.biome) continue
+    for (const token of obj.id.split('_')) {
+      const factionId = FACTION_SID_ALIASES[token] ?? token
+      const biome = biomeByFactionId.get(factionId)
+      if (biome) {
+        obj.biome = biome
+        break
+      }
+    }
+  }
 }
 
 /** Result of the single pass over DB/dialogs/dialogs/. */
@@ -584,6 +621,8 @@ export async function buildCatalog(
       collectObjectLogics(zip),
       collectDialogs(zip, locMap),
     ])
+
+  inferInteractableBiomes(mapObjects, factions)
 
   return {
     version: CATALOG_SCHEMA_VERSION,
