@@ -6,6 +6,7 @@ import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { CustomBuffDefinition } from '@/types/custom-buff'
 import type { TranslationMap } from '@/lib/languages'
 import { ScenarioFileSchema } from '@/schema/zod'
+import { normalizeQuests } from '@/lib/scenario-normalize'
 
 export interface ImportResult {
   scenario: ScenarioFile | null
@@ -128,7 +129,7 @@ export function importScenario(rawJsonText: string): ImportResult {
         interruptions: Array.isArray(r['interruptions'])
           ? (r['interruptions'] as ScenarioFile['interruptions'])
           : [],
-        quests: Array.isArray(r['quests']) ? (r['quests'] as ScenarioFile['quests']) : [],
+        quests: normalizeQuests(r['quests']),
       }
       return { scenario, ...extras, errors, warnings }
     } catch {
