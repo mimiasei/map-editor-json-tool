@@ -879,17 +879,19 @@ const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: n
   'random-squad': {
     table: 'propRandomSquads',
     row: (id) => ({
-      // requestedValue: 0 (this field's value on every OTHER real map — but
-      // that one instance was placed purely to generate a bug-report diff,
-      // never actually played) turned out to make the in-game squad
-      // generator produce nothing to spawn, which the engine then treats as
-      // a fatal "WorldObject not found" for the whole placeholder rather
-      // than a harmless empty guard. Every real, shipped map's random-squad
-      // instead uses a solidly nonzero value (4000-90000) — 5000 here is
-      // one of those exact real values (Glittering_Strait.map), not a
-      // guess, chosen as a modest, clearly-nonzero default the user can
-      // freely retune afterward.
-      type: 0, id, sids: [], requestedValue: 5000, fraction: '', tier: 2, isMainGuard: false,
+      // Bumping requestedValue from 0 to 5000 alone (a prior fix) turned
+      // out to be an incomplete repeat of the same mistake: `tier: 2` was
+      // never updated alongside it, and mixing fields from two DIFFERENT
+      // real samples — Glittering_Strait.map's requestedValue:5000 with
+      // Stormlight_squad.map's untested tier:2 — produced a mismatched
+      // combination. Confirmed via a real player.log: the engine derives a
+      // nonzero "rollable value" from requestedValue (progress over the
+      // old 0), but still fails with "Can't roll any config squad with
+      // value: 3750" — i.e. no squad template matches that value at tier
+      // 2. Glittering_Strait.map's own instance pairs requestedValue:5000
+      // with tier:1, not 2 — using its FULL tuple verbatim this time,
+      // not fields cherry-picked across unrelated samples.
+      type: 0, id, sids: [], requestedValue: 5000, fraction: '', tier: 1, isMainGuard: false,
       reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
       isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
       isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
