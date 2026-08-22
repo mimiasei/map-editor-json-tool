@@ -88,6 +88,7 @@ export function CatalogIcon({
         width={size}
         height={h}
         className={className}
+        draggable={false}
         style={{ objectFit: 'contain', flexShrink: 0 }}
       />
     )
