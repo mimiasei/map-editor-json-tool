@@ -323,7 +323,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
 
-  const dragRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number; moved: boolean } | null>(null)
+  // Panning is middle-mouse-button only (button 1) — left-button drag is
+  // reserved for object move/paint below. Left-button-down still lands here
+  // as the fallback when nothing else claims it (e.g. moveState active,
+  // clicking a destination tile), so a plain click can still fall through;
+  // it just never pans on button 0 (see the `button` check in
+  // onPointerMove/onPointerUp).
+  const dragRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number; moved: boolean; button: number } | null>(null)
 
   // Drag-to-move (issue #167 punch list "real drag-to-move v2") — a
   // pointerdown directly on an occupied tile's icon records the candidate
@@ -334,6 +340,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // pointerup's native click reach the icon's own onClick (plain select),
   // completely unchanged from before this feature existed.
   const moveDragRef = useRef<{ item: PlacedObject; startX: number; startY: number; moved: boolean } | null>(null)
+
+  // Drag-to-paint-objects — mirrors moveDragRef's shape, kept separate so a
+  // middle-mouse pan mid-placingSid can't be misread as a paint stroke (see
+  // onPointerDown's button dispatch). Below CLICK_DRAG_THRESHOLD_PX, releasing
+  // still falls through to the single-placement click in onPointerUp.
+  const paintObjectDragRef = useRef<{ startX: number; startY: number; moved: boolean } | null>(null)
 
   // Staged (unsaved) object-paint placements — declared up here, ahead of
   // both its own preview-canvas effect and the "Place object" section below
@@ -430,6 +442,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // actually under the cursor — the cell — with no redirection to fight.
   const CLICK_DRAG_THRESHOLD_PX = 4
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    // Panning is the middle mouse button only, so it never fights the
+    // object-move/paint gestures below (which need left-button drag) and so
+    // native HTML5 image drag on an icon <img> (a "no-drop" cursor, since
+    // nothing here is a real drop target) never gets a chance to hijack a
+    // left-button gesture in the first place.
+    if (e.button === 1) {
+      e.preventDefault()
+      dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false, button: 1 }
+      return
+    }
     if (e.button !== 0) return
     // Paint mode replaces panning entirely while active — a pointer-down
     // starts a paint stroke (captured so it continues even if the cursor
@@ -441,11 +463,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null) stagePaintNode(node, paintBiome)
       return
     }
+    // Same idea while placing/painting objects: a left-button-down here is a
+    // paint-stroke candidate, resolved into either a stroke or a single
+    // placement by whether it crosses the threshold (see onPointerMove/Up).
+    if (placingSid) {
+      paintObjectDragRef.current = { startX: e.clientX, startY: e.clientY, moved: false }
+      return
+    }
     // A pointerdown directly on an occupied tile (no move/placing/paint
     // already active) is a drag-to-move candidate — real commitment (calling
     // startMove) waits for the same movement threshold as panning below, so
     // a plain click still reaches the icon's own onClick unmolested.
-    if (canEditEntities && !moveState && !placingSid) {
+    if (canEditEntities && !moveState) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       const item = node !== null ? primaryByNode.get(node)?.primary : undefined
       if (item) {
@@ -453,7 +482,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         return
       }
     }
-    dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false }
+    dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false, button: 0 }
   }
 
   // Screen (client) coordinates → world tile node, via the same inverse-
@@ -506,13 +535,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setHoveredNode(node)
       return
     }
-    const drag = dragRef.current
-    if (drag) {
+    if (paintObjectDragRef.current) {
+      const drag = paintObjectDragRef.current
       const dx = e.clientX - drag.startX
       const dy = e.clientY - drag.startY
+      const rect = e.currentTarget.getBoundingClientRect()
       if (!drag.moved) {
         if (Math.hypot(dx, dy) <= CLICK_DRAG_THRESHOLD_PX) {
-          setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+          setHoveredNode(screenToNode(e.clientX, e.clientY, rect))
           return
         }
         drag.moved = true
@@ -524,14 +554,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // Save" convention as terrain paint — nothing here writes to disk. A
       // plain (non-dragged) click still falls through to onPointerUp's
       // one-shot immediate placeAt below, unchanged.
-      if (placingSid) {
-        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null) stageObjectPaint(node, placingSid)
-        setHoveredNode(node)
-        return
+      const node = screenToNode(e.clientX, e.clientY, rect)
+      if (node !== null && placingSid) stageObjectPaint(node, placingSid)
+      setHoveredNode(node)
+      return
+    }
+    const drag = dragRef.current
+    if (drag) {
+      const dx = e.clientX - drag.startX
+      const dy = e.clientY - drag.startY
+      if (!drag.moved) {
+        if (Math.hypot(dx, dy) <= CLICK_DRAG_THRESHOLD_PX) {
+          setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+          return
+        }
+        drag.moved = true
+        if (drag.button === 1) e.currentTarget.setPointerCapture(e.pointerId)
       }
-      setTransform((prev) => ({ ...prev, x: drag.startTx + dx, y: drag.startTy + dy }))
-      setHoveredNode(null) // suppress hover info while actively panning
+      // Only the middle-button (pan) gesture actually moves the viewport —
+      // a left-button drag that reaches here matched nothing else in
+      // onPointerDown (e.g. empty background, no move/placing active), so it
+      // deliberately does nothing rather than panning.
+      if (drag.button === 1) {
+        setTransform((prev) => ({ ...prev, x: drag.startTx + dx, y: drag.startTy + dy }))
+        setHoveredNode(null) // suppress hover info while actively panning
+      }
       return
     }
     setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
@@ -549,8 +596,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       moveDragRef.current = null
       return
     }
-    const wasClick = !dragRef.current?.moved
-    if (dragRef.current?.moved) e.currentTarget.releasePointerCapture(e.pointerId)
+    if (paintObjectDragRef.current) {
+      const wasClick = !paintObjectDragRef.current.moved
+      if (paintObjectDragRef.current.moved && e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
+      paintObjectDragRef.current = null
+      // A plain click (not a paint stroke) while placing a new object commits
+      // it immediately and stays in placing mode (issue #167 Phase B) — same
+      // "fires on pointerup, not the icon's own onClick" reasoning as Move.
+      if (wasClick && placingSid) {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null && isNodeInBoundsForPlacement(placingSid, node)) {
+          void placeAt(node)
+        }
+      }
+      return
+    }
+    const drag = dragRef.current
+    const wasClick = !drag?.moved
+    if (drag?.moved && drag.button === 1 && e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
     dragRef.current = null
     // A plain click (not a pan) while a move is active updates the staged
     // destination — fires here (not the icon cells' own onClick) so it works
@@ -559,15 +626,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null && isNodeInBoundsForMove(moveState, node)) {
         setMoveState((prev) => (prev ? { ...prev, node } : prev))
-      }
-    }
-    // A plain click while placing a new object commits it immediately and
-    // stays in placing mode (issue #167 Phase B) — same "fires on pointerup,
-    // not the icon's own onClick" reasoning as Move above.
-    if (wasClick && placingSid) {
-      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-      if (node !== null && isNodeInBoundsForPlacement(placingSid, node)) {
-        void placeAt(node)
       }
     }
   }
@@ -1122,6 +1180,30 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return () => window.removeEventListener('keydown', handler)
   }, [open, moveState, sizeX, isNodeInBoundsForMove])
 
+  // Arrow-key panning — an optional alternative to middle-mouse-button drag.
+  // Deliberately disabled while a move is active: the arrow keys nudge the
+  // staged destination there instead (immediately above), and that takes
+  // priority over panning the viewport.
+  const PAN_STEP_PX = 60
+  useEffect(() => {
+    if (!open || moveState) return
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      let dx = 0
+      let dy = 0
+      if (e.key === 'ArrowUp') dy = PAN_STEP_PX
+      else if (e.key === 'ArrowDown') dy = -PAN_STEP_PX
+      else if (e.key === 'ArrowLeft') dx = PAN_STEP_PX
+      else if (e.key === 'ArrowRight') dx = -PAN_STEP_PX
+      else return
+      e.preventDefault()
+      setTransform((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }))
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, moveState])
+
   const moveTarget = moveState
     ? { key: moveState.key, x: moveState.node % sizeX, z: Math.floor(moveState.node / sizeX) }
     : null
@@ -1509,7 +1591,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           {context && sizeX > 0 && sizeZ > 0 && (
             <div
               ref={setViewportEl}
-              className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none select-none"
+              className={`absolute inset-0 touch-none select-none ${
+                moveState
+                  ? 'cursor-move'
+                  : placingSid || paintBiome !== null
+                    ? 'cursor-crosshair'
+                    : 'cursor-grab active:cursor-grabbing'
+              }`}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -1733,6 +1821,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   style={{
                     left: (highlightedNode % sizeX) * effectiveCellPx,
                     top: (sizeZ - 1 - Math.floor(highlightedNode / sizeX)) * effectiveCellPx,
+                    width: effectiveCellPx,
+                    height: effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+              {/* Selected-tile border — light/neutral so it reads distinctly
+                  from the blue move-destination preview below even when both
+                  show at once (the origin tile stays "selected" while its
+                  move destination is staged elsewhere). */}
+              {selectedNode !== null && (
+                <div
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-slate-300"
+                  style={{
+                    left: (selectedNode % sizeX) * effectiveCellPx,
+                    top: (sizeZ - 1 - Math.floor(selectedNode / sizeX)) * effectiveCellPx,
                     width: effectiveCellPx,
                     height: effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
