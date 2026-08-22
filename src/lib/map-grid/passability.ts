@@ -69,6 +69,19 @@ function isElevationWallTile(
 
 type PassabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
 
+/** A single `objects[]` (type 0) instance's own solid (`value === 1`)
+ *  footprint cells in world space — the same per-object rule
+ *  `buildBlockedTileSet` sweeps over every placed instance, factored out so
+ *  the object-paint tool (map-grid painter, generalized from terrain to any
+ *  object) can ask "would placing THIS sid HERE block anything" for a
+ *  candidate that isn't placed yet. Spawn-placeholder sids never block, per
+ *  the walked-onto-to-interact rule above. */
+export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null): { x: number; z: number }[] {
+  if (NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
+  const template = catalog?.mapObjects.find((o) => o.id === sid)
+  return computeFootprintTiles(template, x, z).filter((cell) => cell.value === 1)
+}
+
 /** Every blocked tile (node index) on the current map, per the three-source
  *  rule above. Returns an empty set for a sizeless/unloaded map. */
 export function buildBlockedTileSet(context: PassabilityContext, catalog: GameCatalog | null): Set<number> {
@@ -80,10 +93,7 @@ export function buildBlockedTileSet(context: PassabilityContext, catalog: GameCa
   // aren't physical terrain and have no footprint template in the catalog.
   for (const obj of placedObjects) {
     if (obj.type !== 0) continue
-    if (NON_BLOCKING_SPAWNER_SIDS.has(obj.sid)) continue
-    const template = catalog?.mapObjects.find((o) => o.id === obj.sid)
-    for (const cell of computeFootprintTiles(template, obj.x, obj.z)) {
-      if (cell.value !== 1) continue
+    for (const cell of objectBlockedCells(obj.sid, obj.x, obj.z, catalog)) {
       if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
       blocked.add(cell.z * sizeX + cell.x)
     }

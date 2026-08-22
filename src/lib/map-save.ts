@@ -29,6 +29,7 @@ import {
   addObjectInstance,
   addMarkerInstance,
   deleteObjectInstance,
+  paintObjects,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -54,19 +55,20 @@ export type MapSaveEdit =
   | { kind: 'addMarker'; sid: string; node: number }
   | { kind: 'deleteObject'; entityType: 0 | 1 | 2; entityId: number }
   | { kind: 'paintTerrain'; changes: { node: number; biomeId: number }[] }
+  | { kind: 'paintObjects'; additions: { node: number; sid: string }[]; deletions: number[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
- *  deleteObject/addObject is scoped to Block 2 (chunks[1]) alone; those three
- *  also touch Block 1 (chunks[0]) — setSpawnerPlayerType because the Player
- *  type is duplicated across both, deleteObject because deleting a spawner
- *  also needs to clear its paired Block 1 spawns.spawns[] entry, addObject
- *  because adding a city-spawner/hero-spawner needs to claim an unclaimed
- *  player slot there (every OTHER addObject sid leaves Block 1 untouched,
- *  but this flag is a coarse per-kind allowance, not per-sid — see each
- *  function's own doc comment in map-write.ts). */
+ *  deleteObject/addObject/paintObjects is scoped to Block 2 (chunks[1]) alone;
+ *  those four also touch Block 1 (chunks[0]) — setSpawnerPlayerType because the
+ *  Player type is duplicated across both, deleteObject because deleting a
+ *  spawner also needs to clear its paired Block 1 spawns.spawns[] entry,
+ *  addObject/paintObjects because adding a city-spawner/hero-spawner needs to
+ *  claim an unclaimed player slot there (every OTHER sid leaves Block 1
+ *  untouched, but this flag is a coarse per-kind allowance, not per-sid — see
+ *  each function's own doc comment in map-write.ts). */
 function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
   if (!edit) return new Set()
-  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'deleteObject' || edit.kind === 'addObject'
+  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects'
     ? new Set([0, 1])
     : new Set([1])
 }
@@ -173,6 +175,10 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = result.block2Chunk
   } else if (edit?.kind === 'paintTerrain') {
     newChunks[1] = paintTerrainTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintObjects') {
+    const result = paintObjects(newChunks[0], newChunks[1], edit.additions, edit.deletions)
+    newChunks[0] = result.block1Chunk
+    newChunks[1] = result.block2Chunk
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -401,6 +407,22 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     for (const { node, biomeId } of edit.changes) {
       if (tiles[node] !== biomeId) {
         throw new Error('Verification failed: painted tile not reflected in the rebuilt tilesMap')
+      }
+    }
+  } else if (edit?.kind === 'paintObjects') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objects?: Array<{ sid?: string; ids?: number[]; nodes?: number[] }>
+    }
+    const groups = block2.objects ?? []
+    for (const id of edit.deletions) {
+      if (groups.some((g) => g.ids?.includes(id))) {
+        throw new Error('Verification failed: painted-over instance still present in the rebuilt placement table')
+      }
+    }
+    for (const { node, sid } of edit.additions) {
+      const group = groups.find((g) => g.sid === sid)
+      if (!(group?.nodes ?? []).includes(node)) {
+        throw new Error('Verification failed: painted instance not reflected in the rebuilt placement table')
       }
     }
   }

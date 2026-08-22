@@ -1216,6 +1216,38 @@ export function deleteObjectInstance(
   }
 }
 
+/** A drag-painted batch of `objects[]` (type 0) placements — the terrain
+ *  painter's technique (Phase D) generalized to any placeable object, not
+ *  just tilesMap biomes. `deletions` are existing non-blocking decorative
+ *  instances the paint stroke overwrote (the caller — MapGridDialog, which
+ *  has the catalog footprint data — has already decided which ones qualify;
+ *  this function just applies both halves as one atomic edit, by chaining
+ *  the already-verified deleteObjectInstance/addObjectInstance one call at a
+ *  time). Deletions run first so an overwritten tile's old instance never
+ *  transiently coexists with its replacement. */
+export function paintObjects(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  additions: { node: number; sid: string }[],
+  deletions: number[],
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array; newIds: number[] } {
+  let b1 = block1Chunk
+  let b2 = block2Chunk
+  for (const id of deletions) {
+    const result = deleteObjectInstance(b1, b2, 0, id)
+    b1 = result.block1Chunk
+    b2 = result.block2Chunk
+  }
+  const newIds: number[] = []
+  for (const { node, sid } of additions) {
+    const result = addObjectInstance(b1, b2, 0, sid, node)
+    b1 = result.block1Chunk
+    b2 = result.block2Chunk
+    newIds.push(result.newId)
+  }
+  return { block1Chunk: b1, block2Chunk: b2, newIds }
+}
+
 // ─── Paint terrain (issue #167 Phase D) ─────────────────────────────────────
 // `tilesMap` is a flat number[] (biome id 1-7), one entry per tile — the
 // simplest possible case here: parse the span as number[], overwrite the
