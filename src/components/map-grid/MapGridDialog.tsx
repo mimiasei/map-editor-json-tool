@@ -48,7 +48,7 @@ import {
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
-import { buildBlockedTileSet } from '@/lib/map-grid/passability'
+import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
 import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
@@ -325,6 +325,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const dragRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number; moved: boolean } | null>(null)
 
+  // Drag-to-move (issue #167 punch list "real drag-to-move v2") — a
+  // pointerdown directly on an occupied tile's icon records the candidate
+  // item here (not yet a move — same click-vs-drag threshold disambiguation
+  // dragRef above uses for panning). Crossing CLICK_DRAG_THRESHOLD_PX in
+  // onPointerMove is what actually calls startMove and begins live-updating
+  // moveState.node under the cursor; releasing without crossing it lets the
+  // pointerup's native click reach the icon's own onClick (plain select),
+  // completely unchanged from before this feature existed.
+  const moveDragRef = useRef<{ item: PlacedObject; startX: number; startY: number; moved: boolean } | null>(null)
+
+  // Staged (unsaved) object-paint placements — declared up here, ahead of
+  // both its own preview-canvas effect and the "Place object" section below
+  // that populates it, since a dependency array (unlike a plain closure
+  // reference inside a handler body) is evaluated at this render's hook-call
+  // time, not deferred until later — so it needs the binding to already
+  // exist by then.
+  const [paintObjectStaged, setPaintObjectStaged] = useState<Map<number, string>>(new Map())
+
   // ── Paint terrain (issue #167 Phase D) ──────────────────────────────────
   // Repaints tilesMap's biome only — never touches objects[]/squads[]/
   // markers[]/any objectsProperties.* table (a different top-level array
@@ -423,6 +441,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null) stagePaintNode(node, paintBiome)
       return
     }
+    // A pointerdown directly on an occupied tile (no move/placing/paint
+    // already active) is a drag-to-move candidate — real commitment (calling
+    // startMove) waits for the same movement threshold as panning below, so
+    // a plain click still reaches the icon's own onClick unmolested.
+    if (canEditEntities && !moveState && !placingSid) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      const item = node !== null ? primaryByNode.get(node)?.primary : undefined
+      if (item) {
+        moveDragRef.current = { item, startX: e.clientX, startY: e.clientY, moved: false }
+        return
+      }
+    }
     dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false }
   }
 
@@ -455,6 +485,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setHoveredNode(node)
       return
     }
+    if (moveDragRef.current) {
+      const drag = moveDragRef.current
+      const dx = e.clientX - drag.startX
+      const dy = e.clientY - drag.startY
+      const rect = e.currentTarget.getBoundingClientRect()
+      if (!drag.moved) {
+        if (Math.hypot(dx, dy) <= CLICK_DRAG_THRESHOLD_PX) {
+          setHoveredNode(screenToNode(e.clientX, e.clientY, rect))
+          return
+        }
+        drag.moved = true
+        startMove(drag.item)
+        e.currentTarget.setPointerCapture(e.pointerId)
+      }
+      const node = screenToNode(e.clientX, e.clientY, rect)
+      if (node !== null && isNodeInBoundsForMove(drag.item, node)) {
+        setMoveState((prev) => (prev ? { ...prev, node } : prev))
+      }
+      setHoveredNode(node)
+      return
+    }
     const drag = dragRef.current
     if (drag) {
       const dx = e.clientX - drag.startX
@@ -467,6 +518,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         drag.moved = true
         e.currentTarget.setPointerCapture(e.pointerId)
       }
+      // Drag-painting a placed object (map-grid painter, generalized from
+      // terrain to any object): stamps a candidate at every newly-crossed
+      // tile into paintObjectStaged, same "stage locally, then explicit
+      // Save" convention as terrain paint — nothing here writes to disk. A
+      // plain (non-dragged) click still falls through to onPointerUp's
+      // one-shot immediate placeAt below, unchanged.
+      if (placingSid) {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) stageObjectPaint(node, placingSid)
+        setHoveredNode(node)
+        return
+      }
       setTransform((prev) => ({ ...prev, x: drag.startTx + dx, y: drag.startTy + dy }))
       setHoveredNode(null) // suppress hover info while actively panning
       return
@@ -477,6 +540,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (paintingRef.current) {
       paintingRef.current = false
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
+    if (moveDragRef.current) {
+      if (moveDragRef.current.moved && e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
+      moveDragRef.current = null
       return
     }
     const wasClick = !dragRef.current?.moved
@@ -633,6 +703,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     ctx.globalAlpha = 1
   }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
+
+  // ── Object-paint preview canvas — same technique as the terrain-paint
+  // preview above, one flat tint per staged tile (not the real catalog icon;
+  // a lighter-weight stand-in given a stroke can stage many tiles at once).
+  const [paintObjectCanvasEl, setPaintObjectCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!paintObjectCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = paintObjectCanvasEl
+    canvas.width = sizeX
+    canvas.height = sizeZ
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, sizeX, sizeZ)
+    if (paintObjectStaged.size === 0) return
+    ctx.globalAlpha = 0.55
+    ctx.fillStyle = 'rgba(34, 197, 94, 1)'
+    for (const node of paintObjectStaged.keys()) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+    }
+    ctx.globalAlpha = 1
+  }, [paintObjectCanvasEl, sizeX, sizeZ, paintObjectStaged])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -1050,7 +1143,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Escape or right-click ends it. Mutually exclusive with Move (the icon
   // click/pointerup guards below key off whichever of the two is active).
   const [placingSid, setPlacingSid] = useState<string | null>(null)
-  const stopPlacing = () => setPlacingSid(null)
+  const stopPlacing = () => {
+    setPlacingSid(null)
+    setPaintObjectStaged(new Map())
+  }
 
   const isNodeInBoundsForPlacement = useCallback((sid: string, node: number): boolean => {
     const x = node % sizeX
@@ -1066,6 +1162,45 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 0, sid: placingSid, node })
     } catch (e) {
       logError(`Failed to place object: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  // ── Paint objects (map-grid painter generalized from terrain-only to any
+  // placeable object) — dragging while placingSid is active stamps a
+  // candidate into paintObjectStaged at every newly-crossed tile instead of
+  // placing immediately, same staged-then-explicit-Save convention terrain
+  // paint established. A tile already blocked (existing object footprint,
+  // water, or elevation wall — the same buildBlockedTileSet the red overlay
+  // uses, plus whatever THIS stroke has staged so far) can't be painted on
+  // at all; an existing non-blocking decorative instance sitting exactly on
+  // a paintable tile gets overwritten (deleted, then replaced) on Save —
+  // see savePaintObjects.
+  const isNodeBlockedForObjectPaint = useCallback((node: number): boolean => {
+    if (blockedTileSet.has(node)) return true
+    for (const [stagedNode, sid] of paintObjectStaged) {
+      for (const cell of objectBlockedCells(sid, stagedNode % sizeX, Math.floor(stagedNode / sizeX), catalog)) {
+        if (cell.z * sizeX + cell.x === node) return true
+      }
+    }
+    return false
+  }, [blockedTileSet, paintObjectStaged, sizeX, catalog])
+
+  const stageObjectPaint = useCallback((node: number, sid: string) => {
+    if (!isNodeInBoundsForPlacement(sid, node) || isNodeBlockedForObjectPaint(node)) return
+    setPaintObjectStaged((prev) => (prev.get(node) === sid ? prev : new Map(prev).set(node, sid)))
+  }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint])
+
+  const savePaintObjects = async () => {
+    if (paintObjectStaged.size === 0 || !mapFilePath) return
+    const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid }))
+    const deletions = placedObjects
+      .filter((o) => o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
+      .map((o) => o.id)
+    try {
+      await saveMapFile(mapFilePath, { kind: 'paintObjects', additions, deletions })
+      setPaintObjectStaged(new Map())
+    } catch (e) {
+      logError(`Failed to paint objects: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
@@ -1181,10 +1316,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               </Button>
               {canEditEntities && (
                 placingSid ? (
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacing}>
-                    <Plus className="h-3.5 w-3.5" />
-                    Placing… (Esc to stop)
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacing} title="Click to place one, drag to paint several">
+                      <Plus className="h-3.5 w-3.5" />
+                      Placing… (drag to paint)
+                    </Button>
+                    {paintObjectStaged.size > 0 && (
+                      <>
+                        <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
+                        <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
+                          Save to .map
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 ) : (
                   <Button
                     variant={objectBrowserOpen ? 'secondary' : 'ghost'}
@@ -1528,6 +1673,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     overlay above. */}
                 <canvas
                   ref={setPaintCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
+
+                {/* Object-paint preview — staged (unsaved) object placements
+                    tinted green, same stacking as the other overlays above. */}
+                <canvas
+                  ref={setPaintObjectCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,
