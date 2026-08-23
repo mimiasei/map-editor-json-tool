@@ -8,6 +8,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { isTauri } from '@/lib/native-fs'
 import { isIconKnown } from '@/hooks/useThumbnailManifest'
 import { assetLeafName, heroPortraitIcon } from '@/lib/catalog/icon-requests'
+import type { CreatureStats } from '@/lib/catalog/types'
 
 // Cached once per session — populated by warmThumbnailDir() at startup.
 let _appLocalDataDir: string | null = null
@@ -188,5 +189,46 @@ export function PortraitThumb({
         />
       </TooltipContent>
     </Tooltip>
+  )
+}
+
+// ─── Creature stats grid ──────────────────────────────────────────────────────
+// Shared by the Game Database detail pane and the Map Grid Object Browser's
+// unit-hover tooltip — kept here alongside CatalogIcon/PortraitThumb as this
+// module's other shared catalog-display primitive.
+
+const STAT_LABELS: { key: keyof CreatureStats; label: string }[] = [
+  { key: 'hp',           label: 'HP' },
+  { key: 'offence',      label: 'Attack' },
+  { key: 'defence',      label: 'Defense' },
+  { key: 'initiative',   label: 'Initiative' },
+  { key: 'speed',        label: 'Speed' },
+  { key: 'luck',         label: 'Luck' },
+  { key: 'moral',        label: 'Morale' },
+  { key: 'actionPoints', label: 'Actions' },
+  { key: 'numCounters',  label: 'Counters' },
+]
+
+export function CreatureStatsSection({ stats }: { stats: CreatureStats }) {
+  const visible = STAT_LABELS.filter(({ key }) => stats[key] !== undefined)
+  const hasDamage = stats.damageMin !== undefined && stats.damageMax !== undefined
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Stats</p>
+      <div className="grid grid-cols-2 gap-1 text-xs">
+        {hasDamage && (
+          <div className="flex justify-between bg-muted rounded px-2 py-0.5">
+            <span className="text-muted-foreground">Damage</span>
+            <span className="font-semibold tabular-nums">{stats.damageMin} – {stats.damageMax}</span>
+          </div>
+        )}
+        {visible.map(({ key, label }) => (
+          <div key={key} className="flex justify-between bg-muted rounded px-2 py-0.5">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="font-semibold tabular-nums">{stats[key]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

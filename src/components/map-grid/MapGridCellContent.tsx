@@ -537,14 +537,21 @@ export default function MapGridCellContent({
             </div>
           )}
 
-          {selected && selected.type === 0 && !selected.isCity && !isHeroSpawner
+          {selected
+            && (selected.type === 0 ? !selected.isCity && !isHeroSpawner : selected.type === 2)
             && (selected.guardUnitProps !== undefined || onSetGuardSquad) && (() => {
               const guardRows = pendingGuardUnitProps ?? selected.guardUnitProps ?? []
               const guardDirty = pendingGuardUnitProps !== null
                 && JSON.stringify(pendingGuardUnitProps) !== JSON.stringify(selected.guardUnitProps ?? [])
+              // A standalone squads[] placement (type 2) isn't "guarding"
+              // anything — it IS the unit — so "Guard" would read oddly;
+              // everything else about this editor (HeroCatalogListEditor,
+              // onSetGuardSquad → upsertPropSquads) is already generic on
+              // entityType and needs no further change.
+              const heading = selected.type === 2 ? 'Composition' : 'Guard'
               return (
                 <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-                  <p className="text-xs font-semibold text-muted-foreground">Guard</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{heading}</p>
                   {onSetGuardSquad ? (
                     <HeroCatalogListEditor
                       category="creature"
@@ -572,8 +579,9 @@ export default function MapGridCellContent({
                     </ul>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Confirmed on interactable objects in real shipped maps; never observed
-                    on a mine specifically, though nothing here prevents setting one.
+                    {selected.type === 2
+                      ? 'Leave empty for a randomized count/creature, resolved by the game itself — setting an exact unit here overrides that.'
+                      : 'Confirmed on interactable objects in real shipped maps; never observed on a mine specifically, though nothing here prevents setting one.'}
                   </p>
                   {onSetGuardSquad && guardDirty && (
                     <div className="flex items-center gap-2 pt-1">

@@ -425,6 +425,11 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
       // this app lists map objects instead of its real name (issue #146).
       const nameSid = str(entry.name) || `${id}_name`
       const name = loc(locMap, nameSid) ?? loc(locMap, id) ?? id
+      // No `entry.description` field exists the way `entry.name` sometimes
+      // does — every real entry with a description uses the plain
+      // `${id}_description` convention (confirmed: mine_crystals ->
+      // mine_crystals_description), so no fallback chain needed here.
+      const description = loc(locMap, `${id}_description`)
       const entryInteractable = PER_ENTRY_INTERACTABLE_CATEGORIES.has(category)
         ? entry.isInteractable !== false
         : defaultInteractable
@@ -454,6 +459,7 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
         pivotX: typeof entry.pivotX === 'number' ? entry.pivotX : undefined,
         pivotZ: typeof entry.pivotZ === 'number' ? entry.pivotZ : undefined,
         biome: str(entry.biome || '') || undefined,
+        description,
         raw: entry,
       })
     }
