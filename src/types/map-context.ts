@@ -201,6 +201,10 @@ export interface PlacedObject {
    *  this table (cities AND portals share it), even though only the city
    *  case has edit UI so far. */
   citySquadSids?: string[]
+  /** Enrichment: objectsProperties.propRandomSquads.requestedValue for this
+   *  instance — a random-squad's "army value" the game rolls a matching
+   *  squad template against; only meaningful for the random-squad sid. */
+  randomSquadValue?: number
   /** Enrichment: whether this instance has a propCities entry at all (issue
    *  #143) — true, deliberately, even for a "random-city" (a procedurally-
    *  placed neutral/monster city with no propSpawns entry at all, so

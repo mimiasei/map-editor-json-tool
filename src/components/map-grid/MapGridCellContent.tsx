@@ -107,6 +107,9 @@ export interface MapGridCellContentProps {
   /** Set a city's starting garrison (squad template sids, not creature sids —
    *  issue #143) — docked-only, like the above. */
   onSetCityGarrison?: (item: PlacedObject, sids: string[]) => void
+  /** Set a random-squad's requestedValue ("army value" the game rolls a
+   *  matching squad against) — docked-only, like the above. */
+  onSetRandomSquadValue?: (item: PlacedObject, requestedValue: number) => void
   /** Set every reward slot's value at once (issue #143) — docked-only, like the above. */
   onSetRewardParams?: (item: PlacedObject, parameters: string[]) => void
   /** The parent's active move, if any (issue #167 Phase A) — only relevant
@@ -170,6 +173,17 @@ function formatRotation(rotation: number): string {
   return rotation >= 10 ? `${degrees}° (mirrored)` : `${degrees}°`
 }
 
+/** Labels match the game's own scenario-difficulty naming (Easy/Normal/
+ *  Difficult/Impossible/Lethal — see plans/mapmaking_guide_en_noMapEditor.md's
+ *  Difficulty condition docs) applied to a random-squad's requestedValue. */
+function randomSquadDifficultyLabel(value: number): string {
+  if (value <= 2000) return 'Easy'
+  if (value <= 4000) return 'Normal'
+  if (value <= 6000) return 'Difficult'
+  if (value <= 8000) return 'Impossible'
+  return 'Lethal'
+}
+
 export default function MapGridCellContent({
   items,
   terrainLabel,
@@ -187,6 +201,7 @@ export default function MapGridCellContent({
   onSetHighlightedNode,
   onSetGuardSquad,
   onSetCityGarrison,
+  onSetRandomSquadValue,
   onSetRewardParams,
   moveTarget = null,
   onStartMove,
@@ -212,6 +227,7 @@ export default function MapGridCellContent({
   // issue #143 — same staged-then-saved convention as Player type above.
   const [pendingGuardUnitProps, setPendingGuardUnitProps] = useState<{ sid: string; count: number }[] | null>(null)
   const [pendingCitySquadSids, setPendingCitySquadSids] = useState<string[] | null>(null)
+  const [pendingRandomSquadValue, setPendingRandomSquadValue] = useState<number | null>(null)
   const [pendingRewardParams, setPendingRewardParams] = useState<string[] | null>(null)
 
   // A newly-clicked tile arrives as a new `items` array — default back to
@@ -228,6 +244,7 @@ export default function MapGridCellContent({
   useEffect(() => { setPendingSpawnType(null) }, [selected?.key])
   useEffect(() => { setPendingGuardUnitProps(null) }, [selected?.key])
   useEffect(() => { setPendingCitySquadSids(null) }, [selected?.key])
+  useEffect(() => { setPendingRandomSquadValue(null) }, [selected?.key])
   useEffect(() => { setPendingRewardParams(null) }, [selected?.key])
 
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === selected?.sid)
@@ -700,6 +717,46 @@ export default function MapGridCellContent({
                       size="sm"
                       className="h-6 text-xs"
                       onClick={() => { onSetCityGarrison(selected, pendingCitySquadSids!); setPendingCitySquadSids(null) }}
+                    >
+                      Save to .map
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
+          {selected && selected.sid === 'random-squad'
+            && (selected.randomSquadValue !== undefined || onSetRandomSquadValue) && (() => {
+            const shownValue = pendingRandomSquadValue ?? selected.randomSquadValue ?? 0
+            const valueDirty = pendingRandomSquadValue !== null && pendingRandomSquadValue !== selected.randomSquadValue
+            return (
+              <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground">Value</p>
+                <p className="text-xs text-muted-foreground">
+                  Total army value the game rolls a matching squad against.
+                </p>
+                <div className="flex items-center gap-2">
+                  {onSetRandomSquadValue ? (
+                    <Input
+                      type="number"
+                      min={0}
+                      className="h-6 text-xs w-24"
+                      value={shownValue}
+                      onChange={(e) => setPendingRandomSquadValue(Math.max(0, Number(e.target.value) || 0))}
+                    />
+                  ) : (
+                    <p className="text-xs tabular-nums">{shownValue}</p>
+                  )}
+                  <Badge variant="outline" className="text-xs">{randomSquadDifficultyLabel(shownValue)}</Badge>
+                </div>
+                {onSetRandomSquadValue && valueDirty && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <p className="text-xs text-amber-600">Unsaved change</p>
+                    <Button
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={() => { onSetRandomSquadValue(selected, pendingRandomSquadValue!); setPendingRandomSquadValue(null) }}
                     >
                       Save to .map
                     </Button>

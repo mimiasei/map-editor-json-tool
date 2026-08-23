@@ -22,6 +22,7 @@ import {
   upsertPropHero,
   upsertPropSquads,
   upsertPropRandomSquads,
+  setRandomSquadValue,
   upsertPropRewardParams,
   moveObjectInstance,
   rotateObjectInstance,
@@ -48,6 +49,7 @@ export type MapSaveEdit =
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
+  | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
   | { kind: 'setRewardParams'; entityType: number; entityId: number; parameters: string[] }
   | { kind: 'moveObject'; entityType: 0 | 1 | 2; entityId: number; newNode: number }
   | { kind: 'rotateObject'; entityId: number; newRotation: number }
@@ -154,6 +156,8 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = upsertPropSquads(newChunks[1], edit.entityType, edit.entityId, edit.unitProps)
   } else if (edit?.kind === 'setCityGarrison') {
     newChunks[1] = upsertPropRandomSquads(newChunks[1], edit.entityType, edit.entityId, edit.sids)
+  } else if (edit?.kind === 'setRandomSquadValue') {
+    newChunks[1] = setRandomSquadValue(newChunks[1], edit.entityType, edit.entityId, edit.requestedValue)
   } else if (edit?.kind === 'setRewardParams') {
     newChunks[1] = upsertPropRewardParams(newChunks[1], edit.entityType, edit.entityId, edit.parameters)
   } else if (edit?.kind === 'moveObject') {
@@ -298,6 +302,15 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || JSON.stringify(match.sids) !== JSON.stringify(edit.sids)) {
       throw new Error('Verification failed: garrison not reflected in the rebuilt propRandomSquads table')
+    }
+  } else if (edit?.kind === 'setRandomSquadValue') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propRandomSquads?: Array<{ type?: number | string; id?: number; requestedValue?: number }> }
+    }
+    const entries = block2.objectsProperties?.propRandomSquads ?? []
+    const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.requestedValue !== edit.requestedValue) {
+      throw new Error('Verification failed: requested value not reflected in the rebuilt propRandomSquads table')
     }
   } else if (edit?.kind === 'setRewardParams') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

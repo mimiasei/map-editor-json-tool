@@ -44,6 +44,7 @@ export interface PlacedObjectEnrichment {
   markerDeleteAfterTriggerByKey: Map<string, boolean>
   guardUnitPropsByKey: Map<string, { sid: string; count: number }[]>
   citySquadSidsByKey: Map<string, string[]>
+  randomSquadValueByKey: Map<string, number>
   isCityByKey: Set<string>
 }
 
@@ -79,6 +80,7 @@ export function buildPlacedObjects(
       markerDeleteAfterTrigger: enrichment.markerDeleteAfterTriggerByKey.get(key),
       guardUnitProps: enrichment.guardUnitPropsByKey.get(key),
       citySquadSids: enrichment.citySquadSidsByKey.get(key),
+      randomSquadValue: enrichment.randomSquadValueByKey.get(key),
       isCity: enrichment.isCityByKey.has(key) || undefined,
     })
   }
@@ -290,10 +292,12 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     if (unitProps.length > 0) guardUnitPropsByKey.set(key, unitProps)
   }
   const citySquadSidsByKey = new Map<string, string[]>()
+  const randomSquadValueByKey = new Map<string, number>()
   for (const rs of b2.objectsProperties?.propRandomSquads ?? []) {
-    if (rs.id === undefined || !Array.isArray(rs.sids)) continue
+    if (rs.id === undefined) continue
     const key = `${rs.type ?? ''}:${rs.id}`
-    if (!citySquadSidsByKey.has(key)) citySquadSidsByKey.set(key, rs.sids)
+    if (Array.isArray(rs.sids) && !citySquadSidsByKey.has(key)) citySquadSidsByKey.set(key, rs.sids)
+    if (typeof rs.requestedValue === 'number' && !randomSquadValueByKey.has(key)) randomSquadValueByKey.set(key, rs.requestedValue)
   }
   const heroSidByKey = new Map<string, string>()
   for (const h of propHeroes) {
@@ -328,6 +332,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     markerDeleteAfterTriggerByKey,
     guardUnitPropsByKey,
     citySquadSidsByKey,
+    randomSquadValueByKey,
     isCityByKey,
   })
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))

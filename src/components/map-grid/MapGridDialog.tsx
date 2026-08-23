@@ -1069,6 +1069,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       logError(`Failed to set city garrison: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
+  const handleSetRandomSquadValue = async (item: PlacedObject, requestedValue: number) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue })
+    } catch (e) {
+      logError(`Failed to set random-squad value: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
   const handleSetRewardParams = async (item: PlacedObject, parameters: string[]) => {
     if (!mapFilePath) return
     try {
@@ -2074,6 +2082,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetHighlightedNode={setHighlightedNode}
                   onSetGuardSquad={canEditEntities ? handleSetGuardSquad : undefined}
                   onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
+                  onSetRandomSquadValue={canEditEntities ? handleSetRandomSquadValue : undefined}
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                   moveTarget={moveTarget}
                   onStartMove={canEditEntities ? startMove : undefined}
