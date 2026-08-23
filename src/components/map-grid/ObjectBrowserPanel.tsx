@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
 
@@ -127,6 +127,31 @@ interface Props {
  *  fact already uniquely identifies the right template. */
 function templateForCreature(catalog: GameCatalog | null, creature: CatalogCreature) {
   return catalog?.squadTemplates.find((t) => t.unitSids.length === 1 && t.unitSids[0] === creature.id)
+}
+
+/** e.g. "human" -> "Temple" (the real in-game faction display name, resolved
+ *  in catalog.factions via the same Lang loc pass as everything else) —
+ *  there's no real "neutral" faction entry in Core/DB/fractions (see
+ *  NEUTRAL_FRACTION_ID above), so that one bucket is hardcoded. */
+function factionDisplayName(catalog: GameCatalog | null, fraction: string): string {
+  if (fraction === NEUTRAL_FRACTION_ID) return 'Neutral'
+  return catalog?.factions.find((f) => f.id === fraction)?.name ?? fraction
+}
+
+/** CatalogCreature.aiType is a free-form string from Core/DB's raw `ai`
+ *  field, not a clean melee/ranged flag — real distinct values (grep-
+ *  confirmed against every Core/DB/units/units_logics/**\/*.json): melee_type,
+ *  melee_type_eater, melee_type_grouping (95+3+2 creatures), range_type,
+ *  range_type_eater, range_type_melee_shooters (32+1+2), and reach_type (14 —
+ *  all casters/curse-inflicters like druid/cultist/vampire/graverobber, not
+ *  physical melee attackers). Bucketing reach_type as Ranged since none of
+ *  those 14 need to be melee-adjacent to act — unconfirmed against real
+ *  in-game UI wording, flagged rather than silently guessed. */
+function unitTypeLabel(aiType: string | undefined): string | null {
+  if (!aiType) return null
+  if (aiType.startsWith('melee')) return 'Melee'
+  if (aiType.startsWith('range') || aiType === 'reach_type') return 'Ranged'
+  return null
 }
 
 export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placingCreatureId, onPickCreature, onClose }: Props) {
@@ -278,21 +303,36 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
             {entries.length === 0 && (
               <p className="px-3 py-2 text-xs text-muted-foreground">No objects match these filters.</p>
             )}
-            {entries.map((o) => (
-              <button
-                key={o.id}
-                onClick={() => onPick(o.id)}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
-                  o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
-                }`}
-              >
-                <CatalogIcon iconId={o.icon} name={o.name} size={24} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{o.name}</p>
-                  <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
-                </div>
-              </button>
-            ))}
+            {entries.map((o) => {
+              const row = (
+                <button
+                  key={o.id}
+                  onClick={() => onPick(o.id)}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+                    o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
+                  }`}
+                >
+                  <CatalogIcon iconId={o.icon} name={o.name} size={24} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate">{o.name}</p>
+                    <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
+                  </div>
+                </button>
+              )
+              // Most decorations/fx/animals/blocks have no real description
+              // string at all (see CatalogMapObject.description) — skip the
+              // tooltip entirely rather than show an empty hover box.
+              if (!o.description) return row
+              return (
+                <Tooltip key={o.id}>
+                  <TooltipTrigger asChild>{row}</TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-64 space-y-1 text-left">
+                    <p className="text-xs font-semibold">{o.name}</p>
+                    <p className="text-xs leading-relaxed">{o.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )
+            })}
           </>
         ) : (
           <>
@@ -301,6 +341,8 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
             )}
             {creatureEntries.map((c) => {
               const placeable = !!templateForCreature(catalog, c)
+              const portraitSrc = thumbnailPath(c.icon)
+              const typeLabel = unitTypeLabel(c.aiType)
               const row = (
                 <button
                   key={c.id}
@@ -317,11 +359,32 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                   </div>
                 </button>
               )
-              if (placeable) return row
               return (
                 <Tooltip key={c.id}>
                   <TooltipTrigger asChild>{row}</TooltipTrigger>
-                  <TooltipContent side="left">No placeable template for this creature</TooltipContent>
+                  <TooltipContent side="left" className="w-64 space-y-2 text-left">
+                    {portraitSrc && (
+                      <img
+                        src={portraitSrc}
+                        alt={c.name}
+                        className="block mx-auto"
+                        style={{ maxWidth: 'min(160px, 90vw)', maxHeight: 'min(160px, 80vh)', objectFit: 'contain' }}
+                      />
+                    )}
+                    <p className="text-xs font-semibold">
+                      {factionDisplayName(catalog, c.fraction)} - Tier {c.tier}
+                    </p>
+                    {c.stats && <CreatureStatsSection stats={c.stats} />}
+                    {typeLabel && (
+                      <p className="text-xs">
+                        <span className="text-muted-foreground">Type: </span>
+                        <span className="font-semibold">{typeLabel}</span>
+                      </p>
+                    )}
+                    {!placeable && (
+                      <p className="text-xs text-amber-500">No placeable template for this creature</p>
+                    )}
+                  </TooltipContent>
                 </Tooltip>
               )
             })}

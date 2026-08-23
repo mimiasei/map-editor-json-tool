@@ -12,7 +12,7 @@ import {
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
-import { CatalogIcon, PortraitThumb } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, PortraitThumb, CreatureStatsSection } from '@/lib/catalog/thumbnails'
 import {
   STATIC_HEROES,
   STATIC_CREATURES,
@@ -102,46 +102,6 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
     >
       {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
     </button>
-  )
-}
-
-// ─── Detail pane ─────────────────────────────────────────────────────────────
-
-// ─── Creature stats grid ──────────────────────────────────────────────────────
-
-const STAT_LABELS: { key: keyof CreatureStats; label: string }[] = [
-  { key: 'hp',           label: 'HP' },
-  { key: 'offence',      label: 'Attack' },
-  { key: 'defence',      label: 'Defense' },
-  { key: 'initiative',   label: 'Initiative' },
-  { key: 'speed',        label: 'Speed' },
-  { key: 'luck',         label: 'Luck' },
-  { key: 'moral',        label: 'Morale' },
-  { key: 'actionPoints', label: 'Actions' },
-  { key: 'numCounters',  label: 'Counters' },
-]
-
-function CreatureStatsSection({ stats }: { stats: CreatureStats }) {
-  const visible = STAT_LABELS.filter(({ key }) => stats[key] !== undefined)
-  const hasDamage = stats.damageMin !== undefined && stats.damageMax !== undefined
-  return (
-    <div className="space-y-1">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Stats</p>
-      <div className="grid grid-cols-2 gap-1 text-xs">
-        {hasDamage && (
-          <div className="flex justify-between bg-muted rounded px-2 py-0.5">
-            <span className="text-muted-foreground">Damage</span>
-            <span className="font-semibold tabular-nums">{stats.damageMin} – {stats.damageMax}</span>
-          </div>
-        )}
-        {visible.map(({ key, label }) => (
-          <div key={key} className="flex justify-between bg-muted rounded px-2 py-0.5">
-            <span className="text-muted-foreground">{label}</span>
-            <span className="font-semibold tabular-nums">{stats[key]}</span>
-          </div>
-        ))}
-      </div>
-    </div>
   )
 }
 

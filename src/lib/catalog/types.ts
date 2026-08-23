@@ -107,6 +107,12 @@ export interface CatalogMapObject {
    *  Snow, Autumn, Lava, Dirt — the same 7 biomes tiles use
    *  (terrain-colors.ts's BIOME_NAMES), just "Desert" here vs. "Sand" there. */
   biome?: string
+  /** Resolved via `${id}_description` in Core/Lang/english/texts/mapObjects.json
+   *  (e.g. mine_crystals -> mine_crystals_description, "Produces {0} Crystals
+   *  daily.") — only interactables/resources/spawns real entries carry one;
+   *  pure decorations/fx/animals/blocks generally don't. Used by the Map
+   *  Grid's object browser hover tooltip. */
+  description?: string
   /** Footprint width/depth in tiles (Map Grid multi-tile rendering + blocked-
    *  tile overlay research) — promoted out of `raw` since most real objects
    *  are NOT 1×1 (confirmed: ~73% of 858 real templates are bigger). Default
@@ -243,4 +249,7 @@ export interface GameCatalog {
 // faction dwellings/city halls (interactables never had a biome field of
 // their own) via a sid-token → faction-id → fractions.json.biome lookup —
 // same hygiene-only reasoning.
-export const CATALOG_SCHEMA_VERSION = 8
+// v9: added CatalogMapObject.description, resolved from the already-loaded
+// Lang/english/texts/mapObjects.json via the `${id}_description` convention
+// — same hygiene-only reasoning.
+export const CATALOG_SCHEMA_VERSION = 9
