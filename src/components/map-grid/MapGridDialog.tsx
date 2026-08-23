@@ -330,6 +330,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // it just never pans on button 0 (see the `button` check in
   // onPointerMove/onPointerUp).
   const dragRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number; moved: boolean; button: number } | null>(null)
+  // Drives the viewport's cursor while actively panning — dragRef alone
+  // can't do this since it's a plain ref (mutating it doesn't re-render), and
+  // the cursor should reflect "middle button is held" immediately, not only
+  // once the pan crosses the click/drag threshold.
+  const [isPanning, setIsPanning] = useState(false)
 
   // Drag-to-move (issue #167 punch list "real drag-to-move v2") — a
   // pointerdown directly on an occupied tile's icon records the candidate
@@ -450,6 +455,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (e.button === 1) {
       e.preventDefault()
       dragRef.current = { startX: e.clientX, startY: e.clientY, startTx: transform.x, startTy: transform.y, moved: false, button: 1 }
+      setIsPanning(true)
       return
     }
     if (e.button !== 0) return
@@ -526,6 +532,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         }
         drag.moved = true
         startMove(drag.item)
+        // Without this, an item dragged without first being clicked-to-select
+        // never surfaces its Move Save/Cancel controls (the info column only
+        // shows them for `selected.key === moveState.key`) — and since the
+        // icon onClick guard below is `!moveState`, no other item becomes
+        // selectable either once a move starts. That combination was a real
+        // dead end: the drag visibly staged nothing reachable, and clicking
+        // anything else silently did nothing until Escape (which didn't
+        // cancel Move either — see the Escape handler fix below).
+        selectNode(drag.item.node)
         e.currentTarget.setPointerCapture(e.pointerId)
       }
       const node = screenToNode(e.clientX, e.clientY, rect)
@@ -618,6 +633,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (drag?.moved && drag.button === 1 && e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
+    if (drag?.button === 1) setIsPanning(false)
     dragRef.current = null
     // A plain click (not a pan) while a move is active updates the staged
     // destination — fires here (not the icon cells' own onClick) so it works
@@ -1287,7 +1303,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
 
   useEffect(() => {
-    if (!open || (!placingSid && !objectBrowserOpen && paintBiome === null)) return
+    if (!open || (!placingSid && !objectBrowserOpen && paintBiome === null && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -1297,13 +1313,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // just fixed for the dialog itself.
       const tag = (document.activeElement as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
-      if (placingSid) stopPlacing()
+      // moveState checked first: the doc comment on DraggableDialogContent's
+      // onEscapeKeyDown ("Escape is reserved for canceling an in-progress
+      // Move/Place") was never actually true for Move — this effect's guard
+      // above never included moveState, so Escape silently did nothing while
+      // a drag-to-move was staged, with no other way to cancel it short of
+      // finding its Save/Cancel buttons (which requires it to be selected).
+      if (moveState) cancelMove()
+      else if (placingSid) stopPlacing()
       else if (paintBiome !== null) stopPainting()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, objectBrowserOpen, paintBiome])
+  }, [open, placingSid, objectBrowserOpen, paintBiome, moveState])
 
   const placingFootprintBounds = useMemo(() => {
     if (!placingSid || hoveredNode === null) return null
@@ -1592,11 +1615,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             <div
               ref={setViewportEl}
               className={`absolute inset-0 touch-none select-none ${
-                moveState
+                isPanning || moveState
                   ? 'cursor-move'
                   : placingSid || paintBiome !== null
                     ? 'cursor-crosshair'
-                    : 'cursor-grab active:cursor-grabbing'
+                    : 'cursor-default'
               }`}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
@@ -1679,10 +1702,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   const thisIconSize = isSingleCell
                     ? iconSize
                     : Math.max(4, Math.min(entry.width, entry.height) - (2 * settings.cellBorderThickness) / transform.scale)
+                  // A hardcoded cursor-pointer here used to win over the
+                  // viewport's own mode-aware cursor (move/crosshair)
+                  // whenever the pointer sat directly over an icon, since a
+                  // more specific element's CSS cursor always wins during hit
+                  // -testing. pointer-events-none while a mode is active lets
+                  // the viewport's cursor (and its pointer events — the
+                  // onClick below already no-ops in every one of these modes
+                  // anyway) show through uninterrupted.
+                  const modeActive = !!moveState || !!placingSid || paintBiome !== null
                   return (
                     <div
                       key={entry.key}
-                      className="absolute flex items-center justify-center hover:bg-accent/60 rounded-sm cursor-pointer select-none"
+                      className={`absolute flex items-center justify-center rounded-sm select-none ${
+                        modeActive ? 'pointer-events-none' : 'hover:bg-accent/60 cursor-pointer'
+                      }`}
                       style={{
                         left: entry.left,
                         top: entry.top,
@@ -1834,7 +1868,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   move destination is staged elsewhere). */}
               {selectedNode !== null && (
                 <div
-                  className="absolute pointer-events-none rounded-sm border-[3px] border-slate-300"
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-yellow-200"
                   style={{
                     left: (selectedNode % sizeX) * effectiveCellPx,
                     top: (sizeZ - 1 - Math.floor(selectedNode / sizeX)) * effectiveCellPx,
