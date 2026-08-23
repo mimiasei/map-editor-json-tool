@@ -601,6 +601,7 @@ interface PropRandomSquadEntry {
   type?: number | string
   id?: number
   sids?: string[]
+  requestedValue?: number
 }
 
 export function upsertPropRandomSquads(chunk: Uint8Array, entityType: number, entityId: number, sids: string[]): Uint8Array {
@@ -613,6 +614,26 @@ export function upsertPropRandomSquads(chunk: Uint8Array, entityType: number, en
     throw new Error(`No propRandomSquads entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured city/portal`)
   }
   existing.sids = sids
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
+/** A random-squad's "army value" (see `randomSquadDefaultValue`) — same
+ *  propRandomSquads table and (type,id) key as city/portal garrisons above,
+ *  different field. tier is deliberately left untouched at whatever
+ *  addObjectInstance seeded it with (0 — see RANDOM_SPAWNER_TABLE_DEFAULTS). */
+export function setRandomSquadValue(chunk: Uint8Array, entityType: number, entityId: number, requestedValue: number): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')
+
+  const entries = JSON.parse(span) as PropRandomSquadEntry[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propRandomSquads entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured random-squad`)
+  }
+  existing.requestedValue = requestedValue
 
   const patchedSpan = JSON.stringify(entries)
   const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
@@ -875,23 +896,29 @@ export function addObjectInstance(
  *  missing-row bug, since the object no longer renders at all. Every real
  *  SHIPPED map's random-squad instead uses a solidly nonzero value; see the
  *  inline comment on that default for specifics. */
-const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: number) => Record<string, unknown> }> = {
+/** A random-squad's starting "army value" (objectsProperties.propRandomSquads
+ *  .requestedValue) — user-editable after placement (object info column),
+ *  default is a random pick in this range at placement time. */
+export function randomSquadDefaultValue(): number {
+  return 250 + Math.floor(Math.random() * 751) // 250–1000 inclusive
+}
+
+const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: number, requestedValue: number) => Record<string, unknown> }> = {
   'random-squad': {
     table: 'propRandomSquads',
-    row: (id) => ({
-      // Bumping requestedValue from 0 to 5000 alone (a prior fix) turned
-      // out to be an incomplete repeat of the same mistake: `tier: 2` was
-      // never updated alongside it, and mixing fields from two DIFFERENT
-      // real samples — Glittering_Strait.map's requestedValue:5000 with
-      // Stormlight_squad.map's untested tier:2 — produced a mismatched
-      // combination. Confirmed via a real player.log: the engine derives a
-      // nonzero "rollable value" from requestedValue (progress over the
-      // old 0), but still fails with "Can't roll any config squad with
-      // value: 3750" — i.e. no squad template matches that value at tier
-      // 2. Glittering_Strait.map's own instance pairs requestedValue:5000
-      // with tier:1, not 2 — using its FULL tuple verbatim this time,
-      // not fields cherry-picked across unrelated samples.
-      type: 0, id, sids: [], requestedValue: 5000, fraction: '', tier: 1, isMainGuard: false,
+    row: (id, requestedValue) => ({
+      // requestedValue+tier are interdependent (confirmed the hard way: an
+      // earlier fix paired requestedValue:5000 with tier:2, and a real
+      // player.log showed "Can't roll any config squad with value: 3750" —
+      // no template matched at that tier). tier:0 is the dominant real
+      // pairing instead — 884 of 989 propRandomSquads rows surveyed across
+      // every real map in maps/*.map use tier:0, spanning requestedValue
+      // from ~1000 to 100000+ including the whole 250-8000 UI range below
+      // (confirmed present verbatim in Fun_and_Graves.map, Glittering_Strait
+      // .map, and 5 other real files) — read as "auto-derive tier from
+      // value" rather than a fixed tier that must be kept in lockstep with
+      // whatever value the user later edits in.
+      type: 0, id, sids: [], requestedValue, fraction: '', tier: 0, isMainGuard: false,
       reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
       isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
       isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
@@ -935,7 +962,7 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
   tryAppendRow('propRewardParams', { type: 0, id: newId, parameters: [] })
   const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
   if (randomSpawnerDefault) {
-    tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId))
+    tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId, randomSquadDefaultValue()))
   }
   return text
 }
