@@ -472,7 +472,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // Same idea while placing/painting objects: a left-button-down here is a
     // paint-stroke candidate, resolved into either a stroke or a single
     // placement by whether it crosses the threshold (see onPointerMove/Up).
-    if (placingSid) {
+    if (placingSid || placingCreatureId) {
       paintObjectDragRef.current = { startX: e.clientX, startY: e.clientY, moved: false }
       return
     }
@@ -625,6 +625,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         if (node !== null && isNodeInBoundsForPlacement(placingSid, node)) {
           void placeAt(node)
         }
+      } else if (wasClick && placingCreatureId) {
+        // Single-click only — a drag here never staged anything (see
+        // paintObjectDragRef's onPointerMove branch above), so it simply
+        // does nothing on release instead of placing.
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null && placingCreatureTemplateSid && isNodeInBoundsForPlacement(placingCreatureTemplateSid, node)) {
+          void placeCreatureAt(node)
+        }
       }
       return
     }
@@ -649,6 +657,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (placingSid) {
       e.preventDefault()
       stopPlacing()
+    } else if (placingCreatureId) {
+      e.preventDefault()
+      stopPlacingCreature()
     }
   }
   const onPointerLeaveViewport = () => setHoveredNode(null)
@@ -1246,6 +1257,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setPaintObjectStaged(new Map())
   }
 
+  // ── Place creature (Object Browser "Units" mode) ────────────────────────
+  // A picked creature resolves to its dedicated one-unit squad template sid
+  // (Core/DB/squads/**/one_tier_units_squads/) — the actual squads[] write
+  // uses that template sid, never the creature's own id. Mutually exclusive
+  // with placingSid (each pick handler clears the other). Deliberately
+  // single-click-only, no drag-to-paint: reuses paintObjectDragRef for its
+  // click-vs-drag threshold, but stageObjectPaint is only ever called for
+  // placingSid, so a drag while placing a creature just does nothing.
+  const [placingCreatureId, setPlacingCreatureId] = useState<string | null>(null)
+  const stopPlacingCreature = () => setPlacingCreatureId(null)
+  const placingCreatureTemplateSid = useMemo(() => {
+    if (!placingCreatureId) return null
+    const creature = catalog?.creatures.find((c) => c.id === placingCreatureId)
+    if (!creature) return null
+    const template = catalog?.squadTemplates.find((t) => t.unitSids.length === 1 && t.unitSids[0] === creature.id)
+    return template?.id ?? null
+  }, [placingCreatureId, catalog])
+  // The sid currently driving the ghost-preview/bounds-check — whichever
+  // placement mode is active. isNodeInBoundsForPlacement/computeFootprintTiles
+  // both fall back to a plain 1×1 anchored cell for a sid absent from
+  // catalog.mapObjects (every squad template), which is exactly right here.
+  const activePlacingSid = placingSid ?? placingCreatureTemplateSid
+
   const isNodeInBoundsForPlacement = useCallback((sid: string, node: number): boolean => {
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
@@ -1260,6 +1294,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 0, sid: placingSid, node })
     } catch (e) {
       logError(`Failed to place object: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  const placeCreatureAt = async (node: number) => {
+    if (!placingCreatureTemplateSid || !mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 2, sid: placingCreatureTemplateSid, node })
+    } catch (e) {
+      logError(`Failed to place unit: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
@@ -1303,7 +1346,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
 
   useEffect(() => {
-    if (!open || (!placingSid && !objectBrowserOpen && paintBiome === null && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !objectBrowserOpen && paintBiome === null && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -1321,21 +1364,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // finding its Save/Cancel buttons (which requires it to be selected).
       if (moveState) cancelMove()
       else if (placingSid) stopPlacing()
+      else if (placingCreatureId) stopPlacingCreature()
       else if (paintBiome !== null) stopPainting()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, objectBrowserOpen, paintBiome, moveState])
+  }, [open, placingSid, placingCreatureId, objectBrowserOpen, paintBiome, moveState])
 
   const placingFootprintBounds = useMemo(() => {
-    if (!placingSid || hoveredNode === null) return null
+    if (!activePlacingSid || hoveredNode === null) return null
     const x = hoveredNode % sizeX
     const z = Math.floor(hoveredNode / sizeX)
-    const template = catalog?.mapObjects.find((o) => o.id === placingSid)
+    const template = catalog?.mapObjects.find((o) => o.id === activePlacingSid)
     return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
-  }, [placingSid, hoveredNode, sizeX, catalog])
-  const placingValid = placingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(placingSid, hoveredNode)
+  }, [activePlacingSid, hoveredNode, sizeX, catalog])
+  const placingValid = activePlacingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(activePlacingSid, hoveredNode)
 
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
@@ -1435,6 +1479,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       </>
                     )}
                   </div>
+                ) : placingCreatureId ? (
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title="Click a tile to place">
+                    <Plus className="h-3.5 w-3.5" />
+                    Placing unit…
+                  </Button>
                 ) : (
                   <Button
                     variant={objectBrowserOpen ? 'secondary' : 'ghost'}
@@ -1617,7 +1666,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               className={`absolute inset-0 touch-none select-none ${
                 isPanning || moveState
                   ? 'cursor-move'
-                  : placingSid || paintBiome !== null
+                  : placingSid || placingCreatureId || paintBiome !== null
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
@@ -1710,7 +1759,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || paintBiome !== null
+                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || paintBiome !== null
                   return (
                     <div
                       key={entry.key}
@@ -1724,7 +1773,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         height: entry.height,
                         boxSizing: 'border-box',
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && paintBiome === null) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && paintBiome === null) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -1985,7 +2034,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               <ObjectBrowserPanel
                 catalog={catalog}
                 placingSid={placingSid}
-                onPick={(sid) => { stopPainting(); setPlacingSid(sid) }}
+                onPick={(sid) => { stopPainting(); stopPlacingCreature(); setPlacingSid(sid) }}
+                placingCreatureId={placingCreatureId}
+                onPickCreature={(id) => { stopPainting(); stopPlacing(); setPlacingCreatureId(id) }}
                 onClose={() => setObjectBrowserOpen(false)}
               />
             ) : (

@@ -2,38 +2,49 @@
 // Replaces the small sid-picker popover the "Place object" header button
 // used to open: a full browser that swaps into the cell-info column,
 // filterable by biome/terrain type and object type together (both narrow the
-// same list — AND, not either/or), plus a name/sid search. Only
-// `objects[]`-placeable map objects (catalog.mapObjects) are listed here —
-// squads/markers have no picker yet (see issue #167).
+// same list — AND, not either/or), plus a name/sid search. Two browsing
+// modes (`mode` state): "Objects" lists `objects[]`-placeable catalog
+// templates (catalog.mapObjects) filtered by biome+type; "Units" lists real
+// creatures (catalog.creatures) filtered by faction instead, for placing a
+// squads[] instance. Markers/zones still have no picker.
 
 import { useMemo, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
-import type { GameCatalog, CatalogMapObject } from '@/lib/catalog/types'
+import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
 
 // The 5 object-type filters requested — a different grouping from the
 // placed-object GridGroup system (tile-index.ts): this browses catalog
 // TEMPLATES (what could be placed), not placed instances, and only
 // `objects[]` (type 0) is placeable here at all, so squads/zones don't apply.
-// "Units" maps to the `animals` category (roaming wildlife decorations,
-// e.g. camel/scorpion/chicken) — the closest match to what a mapmaker would
-// call "units" among placeable map objects, since actual creature squads
-// aren't part of this picker. Resources/artifacts/test/blocks have no
-// dedicated button — they still show up whenever no type filter is active.
+// "Animals" maps to the `animals` category (roaming wildlife decorations,
+// e.g. camel/scorpion/chicken) — real creature squads are a separate
+// browsing mode below (`mode === 'creatures'`), not part of this filter row.
+// Resources/artifacts/test/blocks have no dedicated button — they still show
+// up whenever no type filter is active.
 type TypeFilterKey = 'environments' | 'interactables' | 'animals' | 'fxs' | 'spawns'
 
 const TYPE_FILTER_ORDER: TypeFilterKey[] = ['environments', 'interactables', 'animals', 'fxs', 'spawns']
 const TYPE_FILTER_LABELS: Record<TypeFilterKey, string> = {
   environments: 'Decorations',
   interactables: 'Interactables',
-  animals: 'Units',
+  animals: 'Animals',
   fxs: 'F/X',
   spawns: 'Spawners',
 }
+
+type BrowseMode = 'objects' | 'creatures'
+
+// Synthetic bucket for `CatalogCreature.fraction === 'neutral'` — monster
+// creatures/dwellings use this value (Core/DB/units/units_logics/neutral/*,
+// Core/DB/squads/squads_neutral/*) but there's no real "neutral" playable
+// faction entry in Core/DB/fractions, so it isn't part of `catalog.factions`.
+const NEUTRAL_FRACTION_ID = 'neutral'
 
 const BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 // Object catalog entries use their own biome string ("Desert") where tiles
@@ -51,6 +62,8 @@ const FILTER_STORAGE_KEY = 'oe-object-browser-filter'
 interface StoredFilter {
   types: TypeFilterKey[]
   biomes: BiomeId[]
+  mode: BrowseMode
+  fractions: string[]
 }
 
 function loadStoredFilter(): StoredFilter {
@@ -61,14 +74,16 @@ function loadStoredFilter(): StoredFilter {
       return {
         types: Array.isArray(parsed.types) ? parsed.types : [],
         biomes: Array.isArray(parsed.biomes) ? parsed.biomes : [],
+        mode: parsed.mode === 'creatures' ? 'creatures' : 'objects',
+        fractions: Array.isArray(parsed.fractions) ? parsed.fractions : [],
       }
     }
   } catch { /* ignore */ }
-  return { types: [], biomes: [] }
+  return { types: [], biomes: [], mode: 'objects', fractions: [] }
 }
 
-function saveStoredFilter(types: TypeFilterKey[], biomes: BiomeId[]): void {
-  try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({ types, biomes })) } catch { /* ignore */ }
+function saveStoredFilter(filter: StoredFilter): void {
+  try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filter)) } catch { /* ignore */ }
 }
 
 function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -94,22 +109,47 @@ interface Props {
    *  of object tedious). */
   placingSid: string | null
   onPick: (sid: string) => void
+  /** The creature id currently staged for placement, if any — same
+   *  highlight-while-open convention as placingSid, kept as a separate prop
+   *  since a creature pick resolves to a squad-template sid at write time,
+   *  not the creature's own id (see MapGridDialog's placingCreatureId). */
+  placingCreatureId: string | null
+  onPickCreature: (creatureId: string) => void
   onClose: () => void
 }
 
-export default function ObjectBrowserPanel({ catalog, placingSid, onPick, onClose }: Props) {
+/** Every real creature needs a matching one-unit squad template
+ *  (Core/DB/squads/**\/one_tier_units_squads/) to be placeable as a squads[]
+ *  instance — 142/152 real creatures have one (confirmed by direct grep
+ *  against Core/DB); the rest (upgrade/campaign-only creatures) aren't
+ *  placeable this way. Matching purely on "a template with exactly one unit
+ *  sid, and it's this creature" — not also fraction/tier — since that single
+ *  fact already uniquely identifies the right template. */
+function templateForCreature(catalog: GameCatalog | null, creature: CatalogCreature) {
+  return catalog?.squadTemplates.find((t) => t.unitSids.length === 1 && t.unitSids[0] === creature.id)
+}
+
+export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placingCreatureId, onPickCreature, onClose }: Props) {
   const initialFilter = useMemo(loadStoredFilter, [])
   const [typeFilter, setTypeFilter] = useState<Set<TypeFilterKey>>(() => new Set(initialFilter.types))
   const [biomeFilter, setBiomeFilter] = useState<Set<BiomeId>>(() => new Set(initialFilter.biomes))
+  const [mode, setMode] = useState<BrowseMode>(initialFilter.mode)
+  const [fractionFilter, setFractionFilter] = useState<Set<string>>(() => new Set(initialFilter.fractions))
   const [query, setQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
 
+  const persist = (next: Partial<StoredFilter>) => {
+    saveStoredFilter({
+      types: [...typeFilter], biomes: [...biomeFilter], mode, fractions: [...fractionFilter],
+      ...next,
+    })
+  }
   const toggleType = (t: TypeFilterKey) => {
     setTypeFilter((prev) => {
       const next = new Set(prev)
       if (next.has(t)) next.delete(t)
       else next.add(t)
-      saveStoredFilter([...next], [...biomeFilter])
+      persist({ types: [...next] })
       return next
     })
   }
@@ -118,9 +158,22 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, onClos
       const next = new Set(prev)
       if (next.has(b)) next.delete(b)
       else next.add(b)
-      saveStoredFilter([...typeFilter], [...next])
+      persist({ biomes: [...next] })
       return next
     })
+  }
+  const toggleFraction = (f: string) => {
+    setFractionFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(f)) next.delete(f)
+      else next.add(f)
+      persist({ fractions: [...next] })
+      return next
+    })
+  }
+  const setModeAndPersist = (m: BrowseMode) => {
+    setMode(m)
+    persist({ mode: m })
   }
 
   const entries = useMemo(() => {
@@ -135,10 +188,33 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, onClos
     })
   }, [catalog, typeFilter, biomeFilter, query])
 
+  const creatureEntries = useMemo(() => {
+    const all = catalog?.creatures ?? []
+    const q = query.trim().toLowerCase()
+    return all.filter((c) => {
+      if (fractionFilter.size > 0 && !fractionFilter.has(c.fraction)) return false
+      if (q && !c.name.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [catalog, fractionFilter, query])
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-        <span className="text-sm font-semibold">Place Object</span>
+        <div className="flex items-center gap-1 rounded border border-border p-0.5">
+          <button
+            onClick={() => setModeAndPersist('objects')}
+            className={`h-5 px-2 text-xs rounded-sm transition-colors ${mode === 'objects' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Objects
+          </button>
+          <button
+            onClick={() => setModeAndPersist('creatures')}
+            className={`h-5 px-2 text-xs rounded-sm transition-colors ${mode === 'creatures' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Units
+          </button>
+        </div>
         <Button variant="ghost" size="icon" className="h-6 w-6" title="Close" onClick={onClose}>
           <X className="h-3.5 w-3.5" />
         </Button>
@@ -147,11 +223,21 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, onClos
       <div className="px-3 pt-2 pb-1.5 space-y-1.5 shrink-0 border-b border-border">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1">
-            {BIOME_ORDER.map((b) => (
-              <FilterPill key={b} active={biomeFilter.has(b)} onClick={() => toggleBiome(b)}>
-                {BIOME_NAMES[b]}
-              </FilterPill>
-            ))}
+            {mode === 'objects'
+              ? BIOME_ORDER.map((b) => (
+                  <FilterPill key={b} active={biomeFilter.has(b)} onClick={() => toggleBiome(b)}>
+                    {BIOME_NAMES[b]}
+                  </FilterPill>
+                ))
+              : (catalog?.factions ?? []).map((f) => (
+                  <FilterPill key={f.id} active={fractionFilter.has(f.id)} onClick={() => toggleFraction(f.id)}>
+                    {f.name}
+                  </FilterPill>
+                )).concat(
+                  <FilterPill key={NEUTRAL_FRACTION_ID} active={fractionFilter.has(NEUTRAL_FRACTION_ID)} onClick={() => toggleFraction(NEUTRAL_FRACTION_ID)}>
+                    Neutral
+                  </FilterPill>,
+                )}
           </div>
           <Popover open={searchOpen} onOpenChange={setSearchOpen}>
             <PopoverTrigger asChild>
@@ -175,34 +261,72 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, onClos
             </PopoverContent>
           </Popover>
         </div>
-        <div className="flex flex-wrap gap-1">
-          {TYPE_FILTER_ORDER.map((t) => (
-            <FilterPill key={t} active={typeFilter.has(t)} onClick={() => toggleType(t)}>
-              {TYPE_FILTER_LABELS[t]}
-            </FilterPill>
-          ))}
-        </div>
+        {mode === 'objects' && (
+          <div className="flex flex-wrap gap-1">
+            {TYPE_FILTER_ORDER.map((t) => (
+              <FilterPill key={t} active={typeFilter.has(t)} onClick={() => toggleType(t)}>
+                {TYPE_FILTER_LABELS[t]}
+              </FilterPill>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto py-1">
-        {entries.length === 0 && (
-          <p className="px-3 py-2 text-xs text-muted-foreground">No objects match these filters.</p>
+        {mode === 'objects' ? (
+          <>
+            {entries.length === 0 && (
+              <p className="px-3 py-2 text-xs text-muted-foreground">No objects match these filters.</p>
+            )}
+            {entries.map((o) => (
+              <button
+                key={o.id}
+                onClick={() => onPick(o.id)}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+                  o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
+                }`}
+              >
+                <CatalogIcon iconId={o.icon} name={o.name} size={24} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm truncate">{o.name}</p>
+                  <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
+                </div>
+              </button>
+            ))}
+          </>
+        ) : (
+          <>
+            {creatureEntries.length === 0 && (
+              <p className="px-3 py-2 text-xs text-muted-foreground">No creatures match these filters.</p>
+            )}
+            {creatureEntries.map((c) => {
+              const placeable = !!templateForCreature(catalog, c)
+              const row = (
+                <button
+                  key={c.id}
+                  disabled={!placeable}
+                  onClick={() => onPickCreature(c.id)}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
+                    !placeable ? 'opacity-40 cursor-not-allowed' : c.id === placingCreatureId ? 'bg-accent' : 'hover:bg-accent/50'
+                  }`}
+                >
+                  <CatalogIcon iconId={c.icon} name={c.name} size={24} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate">{c.name}</p>
+                    <p className="text-xs text-muted-foreground truncate font-mono">{c.id}</p>
+                  </div>
+                </button>
+              )
+              if (placeable) return row
+              return (
+                <Tooltip key={c.id}>
+                  <TooltipTrigger asChild>{row}</TooltipTrigger>
+                  <TooltipContent side="left">No placeable template for this creature</TooltipContent>
+                </Tooltip>
+              )
+            })}
+          </>
         )}
-        {entries.map((o) => (
-          <button
-            key={o.id}
-            onClick={() => onPick(o.id)}
-            className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors ${
-              o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
-            }`}
-          >
-            <CatalogIcon iconId={o.icon} name={o.name} size={24} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm truncate">{o.name}</p>
-              <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
-            </div>
-          </button>
-        ))}
       </div>
     </div>
   )

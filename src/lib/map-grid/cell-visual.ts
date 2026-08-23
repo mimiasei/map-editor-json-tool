@@ -63,6 +63,18 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
     }
   }
 
+  // A freshly-placed "random" squad (Object Browser Units mode) has no
+  // propSquads row yet, so firstUnitSid above is unset — fall back to the
+  // one-unit template's own creature, since that's the only creature it
+  // could ever resolve to in-game.
+  if (item.type === 2 && !item.firstUnitSid) {
+    const template = catalog?.squadTemplates.find((t) => t.id === item.sid && t.unitSids.length === 1)
+    const creature = template && catalog?.creatures.find((c) => c.id === template.unitSids[0])
+    if (creature?.icon && thumbnailPath(creature.icon)) {
+      return { kind: 'catalogOverride', iconId: creature.icon, name: creature.name }
+    }
+  }
+
   const spawnerOverride = SID_ICON_OVERRIDES[item.sid]
   if (spawnerOverride) return { kind: 'icon', Icon: spawnerOverride }
 
