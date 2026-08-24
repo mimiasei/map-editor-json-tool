@@ -1042,6 +1042,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
 
+  const handleSetSpawnerOwner = async (item: PlacedObject, newOwner: number) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'swapSpawnerOwner', entityType: item.type, entityId: item.id, newOwner })
+    } catch (e) {
+      logError(`Failed to reassign spawner owner: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
   const handleSetPortalTarget = async (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) => {
     if (!mapFilePath) return
@@ -2076,6 +2085,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetNoCombineGeometry={canEditEntities ? handleSetNoCombineGeometry : undefined}
                   onAssignEntitySid={canEditEntities ? handleAssignEntitySid : undefined}
                   onSetSpawnerPlayerType={canEditEntities ? handleSetSpawnerPlayerType : undefined}
+                  playersCount={context?.playersCount ?? 0}
+                  onSetSpawnerOwner={canEditEntities ? handleSetSpawnerOwner : undefined}
                   allPortals={allPortals}
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}

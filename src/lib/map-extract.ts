@@ -133,6 +133,9 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   // ── Spawns ──────────────────────────────────────────────────────────────────
   // b1.spawns is an object { playersCount, spawns: [...], takenHeroes }
   const spawnsObj = b1.spawns as unknown
+  const playersCount = !Array.isArray(spawnsObj) && typeof (spawnsObj as Record<string, unknown>)?.playersCount === 'number'
+    ? (spawnsObj as Record<string, unknown>).playersCount as number
+    : 0
   const rawSpawns: unknown[] = Array.isArray(spawnsObj)
     ? spawnsObj
     : Array.isArray((spawnsObj as Record<string, unknown>)?.spawns)
@@ -551,6 +554,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     sizeX: b1.sizeX ?? 0,
     sizeZ: b1.sizeZ ?? 0,
     spawns,
+    playersCount,
     entities,
     heroes,
     banInfo,

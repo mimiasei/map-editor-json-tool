@@ -225,6 +225,9 @@ export interface MapContext {
   sizeZ: number
   /** Player spawn configurations */
   spawns: PlayerSpawn[]
+  /** Block 1 spawns.playersCount — the map's player slot count (1..N), for
+   *  building the city-spawner owner-assignment dropdown. */
+  playersCount: number
   /** Named entities available for trigger references */
   entities: MapEntity[]
   /** Hero assignments on spawner objects */

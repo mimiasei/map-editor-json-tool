@@ -92,6 +92,14 @@ export interface MapGridCellContentProps {
    *  to this spawner" has no setter here by design (Unfrozen's own guide flags
    *  reassigning it as bug-prone; this editor only changes the type, not the slot). */
   onSetSpawnerPlayerType?: (item: PlacedObject, spawnType: 0 | 1 | 2) => void
+  /** The map's player slot count (Block 1 spawns.playersCount), for the
+   *  city-spawner owner dropdown's options (1..playersCount). */
+  playersCount?: number
+  /** Reassign a city-spawner's owner — swaps with whichever other
+   *  city-spawner currently holds that slot, if any (issue: player-
+   *  assignment UI). Docked-only, like the above. City-spawners only this
+   *  round; hero-spawners are a follow-up. */
+  onSetSpawnerOwner?: (item: PlacedObject, newOwner: number) => void
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
@@ -184,6 +192,24 @@ function randomSquadDifficultyLabel(value: number): string {
   return 'Lethal'
 }
 
+/** Ranges for the difficulty quick-pick buttons next to the Value field —
+ *  same bucket boundaries as randomSquadDifficultyLabel above. Floors at
+ *  250, not 0 — requestedValue:0 makes a random-squad invisible in-game
+ *  (see randomSquadDefaultValue's doc comment in map-write.ts). Lethal has
+ *  no documented real ceiling above 8000; 16000 is just a reasonable cap
+ *  for this convenience roll. */
+const RANDOM_SQUAD_DIFFICULTY_RANGES: { label: string; min: number; max: number }[] = [
+  { label: 'Easy', min: 250, max: 2000 },
+  { label: 'Normal', min: 2001, max: 4000 },
+  { label: 'Difficult', min: 4001, max: 6000 },
+  { label: 'Impossible', min: 6001, max: 8000 },
+  { label: 'Lethal', min: 8001, max: 16000 },
+]
+
+function randomInRange(min: number, max: number): number {
+  return min + Math.floor(Math.random() * (max - min + 1))
+}
+
 export default function MapGridCellContent({
   items,
   terrainLabel,
@@ -195,6 +221,8 @@ export default function MapGridCellContent({
   onAssignEntitySid,
   existingSids = [],
   onSetSpawnerPlayerType,
+  playersCount = 0,
+  onSetSpawnerOwner,
   allPortals = [],
   onSetPortalTarget,
   highlightedNode = null,
@@ -224,6 +252,7 @@ export default function MapGridCellContent({
   // display-name convention (both of those already require a deliberate
   // action, not a click-and-forget one).
   const [pendingSpawnType, setPendingSpawnType] = useState<0 | 1 | 2 | null>(null)
+  const [pendingSpawnerOwner, setPendingSpawnerOwner] = useState<number | null>(null)
   // issue #143 — same staged-then-saved convention as Player type above.
   const [pendingGuardUnitProps, setPendingGuardUnitProps] = useState<{ sid: string; count: number }[] | null>(null)
   const [pendingCitySquadSids, setPendingCitySquadSids] = useState<string[] | null>(null)
@@ -242,6 +271,7 @@ export default function MapGridCellContent({
 
   useEffect(() => { setNewSidInput('') }, [selected?.key])
   useEffect(() => { setPendingSpawnType(null) }, [selected?.key])
+  useEffect(() => { setPendingSpawnerOwner(null) }, [selected?.key])
   useEffect(() => { setPendingGuardUnitProps(null) }, [selected?.key])
   useEffect(() => { setPendingCitySquadSids(null) }, [selected?.key])
   useEffect(() => { setPendingRandomSquadValue(null) }, [selected?.key])
@@ -638,9 +668,39 @@ export default function MapGridCellContent({
                 <p className="text-xs text-muted-foreground">Spawner type</p>
                 <p className="text-xs">{selected.spawnerInfo.spawnPointType === 0 ? 'City' : 'Hero'}</p>
               </div>
-              <div>
+              <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Player attached to this spawner</p>
-                <p className="text-xs">Player {selected.spawnerInfo.owner}</p>
+                {onSetSpawnerOwner && selected.spawnerInfo.spawnPointType === 0 && playersCount > 0 ? (
+                  <>
+                    <Select
+                      value={String(pendingSpawnerOwner ?? selected.spawnerInfo.owner)}
+                      onValueChange={(v) => setPendingSpawnerOwner(Number(v))}
+                    >
+                      <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: playersCount }, (_, i) => i + 1).map((p) => (
+                          <SelectItem key={p} value={String(p)}>Player {p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {pendingSpawnerOwner !== null && pendingSpawnerOwner !== selected.spawnerInfo.owner && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <p className="text-xs text-amber-600">Unsaved change</p>
+                        <Button
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={() => { onSetSpawnerOwner(selected, pendingSpawnerOwner); setPendingSpawnerOwner(null) }}
+                        >
+                          Save to .map
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-xs">Player {selected.spawnerInfo.owner}</p>
+                )}
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Player type</p>
@@ -750,6 +810,22 @@ export default function MapGridCellContent({
                   )}
                   <Badge variant="outline" className="text-xs">{randomSquadDifficultyLabel(shownValue)}</Badge>
                 </div>
+                {onSetRandomSquadValue && (
+                  <div className="flex flex-wrap gap-1">
+                    {RANDOM_SQUAD_DIFFICULTY_RANGES.map(({ label, min, max }) => (
+                      <Button
+                        key={label}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => setPendingRandomSquadValue(randomInRange(min, max))}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                )}
                 {onSetRandomSquadValue && valueDirty && (
                   <div className="flex items-center gap-2 pt-1">
                     <p className="text-xs text-amber-600">Unsaved change</p>
