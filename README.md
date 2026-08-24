@@ -30,6 +30,7 @@ This tool gives that file a visual interface:
 - **Edit** counters, interruptions, quests, sub-quests, triggers, conditions, and actions through structured forms
 - **Author dialog flows** — build branching NPC conversations with player choices, speaker titles, and map actions per slide
 - **Localise** — manage text tokens for dialogs and quest names in one panel, in English and any of the game's other 15 languages
+- **Edit the map itself** (desktop) — open the binary `.map` file and use the Map Grid to move, add, delete, rotate, and paint objects and terrain directly. Good for quick changes.
 - **Export** back to a correctly formatted scenario JSON, or as a **distributable map ZIP** ready to drop next to `Core.zip`
 
 It is a companion to the map editor, not a replacement for it.
@@ -62,50 +63,19 @@ It is a companion to the map editor, not a replacement for it.
 
 ## Features
 
-- Full CRUD for the entire scenario object graph: counters → interruptions → quests → sub-quests → triggers → conditions / actions
-- 55 known condition types and 114 known action types with labelled parameter fields, dropdowns and inline tooltips
-- Custom / unknown type fallback — forward-compatible with future game updates
-- Permissive import — never rejects a file for unknown fields or types
-- **Dialog flow editor** — per-dialog-key slide editor with text SIDs, speaker titles, next/end/player-choice flow modes, per-slide map actions, and auto-naming
-- **Editable speaker names** — the name shown above the dialog text is independent of the portrait, so a hero's portrait can speak under any name. Type the name directly and the SID is created for you. Picking a built-in game name instead disables the field and explains why: the engine ignores map overrides of its own text tokens, so renaming needs a SID of your own
-- **Full dialog format coverage** — visual five-slot avatar strip matching the game's positions 1–5 (icon, foreground/background layer, `zoomIn`/`zoomOut`/`appear` animations, width), plus voice line, notification, play conditions, story actions, close actions, and `resultDialog` on every slide. Player choices support availability conditions and their own map actions
-- **Editable JSON for dialogs** — the JSON column switches between the map scenario and each dialog file, shown exactly as it ships (`{"array":[…]}`). Hand-edits are validated before they apply: duplicate slide IDs, dangling `next`/`Go` targets, and dialogs with no ending are rejected
-- **Localization panel** — edit text tokens for all dialog slides and quest names; highlights missing tokens; import from an existing `customMaps.json`
-- **Multi-language localisation** — English is the base; add any of the game's 16 languages and translate side by side with the English source visible. Untranslated tokens ship with the English text as a fallback
-- **Export map ZIP** — one click produces a distributable ZIP (`DB/dialogs/…` + `Lang/<language>/texts/customMaps.json` for every language you've filled in) ready to place next to `Core.zip` in `StreamingAssets/`
-- **Publish map** (desktop) — writes the scenario JSON next to your `.map` file and the ZIP into `StreamingAssets/` in one step, showing both resolved paths and flagging overwrites before it touches anything
-- **Project save format** — Save / Save As preserves all editor metadata (`_mapName`, `_dialogs`, `_localization`, `_translations`) so everything round-trips; the game ignores these keys
-- **Load .map file** — open the binary `.map` file from your game's map editor to unlock live map context: named entity SIDs are extracted and displayed in the sidebar, entity parameter fields get autocomplete, and the sidecar scenario JSON is loaded automatically if present next to the `.map` file
-- **Entity SIDs sidebar section** — lists all user-named entities from the loaded map grouped by type; hover any SID to see its map coordinates (`Map Coords: x, z`); click a used SID to jump to its first trigger reference; copy any SID with one click
-- **Spawner heroes in the entity lookup** — a hero placed through a spawner never gets an entity SID, because a hero is already unique by its own SID. Those heroes now appear in their own **Heroes** group in the sidebar (with the resolved English name) and in `mapEntity` autocomplete. Spawners set to a random hero are skipped, as are city spawners whose "also spawn a hero" slot is switched off
-- **Map coordinates in action/condition forms** — when an entity SID parameter has a value, its map coordinates are shown inline below the field
-- **Game Data Catalog** — load `Core.zip` from your game install (auto-detected on Windows via Steam paths, or pick the file manually on any platform) to populate all entity dropdowns with live game data and real English names. Covers heroes, creatures, artifacts, spells, skills, buffs, and map objects. Falls back to built-in lists when not loaded
-- **First-run setup wizard** (desktop) — on first launch, locates `Core.zip` in your game folder and runs the icon extractor in one step, so dropdowns come up populated with names and icons
-- **Artwork re-run prompt** (desktop) — when a release teaches the extractor about new icons, a dismissible banner and a count on **More → Extract Thumbnails** say so, rather than leaving the artwork silently missing
-- **Icon extraction** (desktop) — a bundled Python sidecar reads the game's Unity asset bundles and writes PNGs to the app's local data folder, giving every dropdown, the Game Database and the hero picker real artwork. Re-runnable at any time from **More → Extract Thumbnails**; everything degrades to letter badges when it has not been run
-- **Hero picker** — a portrait-first browser on every hero parameter: heroes grouped by faction (Temple, Necropolis, Dungeon, Grove, Hive, Schism) showing the same portrait the game uses as the dialog speaker, enlarging on hover. The searchable dropdown still works for typing SIDs directly
-- **Game Database dialog** — browse all heroes (grouped by faction), creatures, artifacts, spells, skills, and map objects with search and filtering; detail pane shows usage counts (map placements + script references), stats, descriptions, and — when a `.map` file is loaded — the actual map coordinates of every placed instance of that entity (heroes, creature squads, artifacts, and named map objects all show their tile coordinates)
-- **Game Dialog Browser** — search all ~769 game dialog flows by ID, speaker, or text; expand any dialog to read its slides; copy the ID into a Dialog action with one click
-- **Map object filter** — funnel button on map object dropdowns narrows results by category (interactables, resources, environments, spawns) and interactability; filter persists between sessions
-- Searchable dropdowns for all entity parameters (heroes, creatures, artifacts, spells, skills, buffs, map objects) — shows human-readable names alongside SIDs
-- **In-editor guides** — built-in knowledge base covering how quests work, trigger patterns, counter tracking, dialog integration, timed events, and common pitfalls; accessible from the toolbar
-- **New from template** — start from one of four annotated scenario templates (simple kill quest, counter-based quest, timed event, dialog-driven quest) with inline hints that can be dismissed as you go
-- Live JSON preview with syntax highlighting and one-click copy
-- Validation: errors (duplicate/empty SIDs, broken dialog flows) and warnings (dangling references, empty triggers, missing dialog flows, missing localisation tokens, speaker labels with no text)
-- Duplicate any node in the tree
-- Resizable sidebar / editor columns
-- **Resizable, movable dialogs** — every content-heavy panel (Dialog Editor, Localization, Timeline, Quest Flow, Statistics, Dialog Browser, Game Database, Hero picker, Guides, Publish) can be dragged by its header and resized from any edge or corner, with a scrollbar whenever the content overflows. Most also remember their own size and position between opens; Game Database and Guides re-centre at their default size each time
-- **Theme editor** — switch between light and dark, and on light customise the panel colours, accents, font size and button style; settings persist
-- Undo / redo (100-step history)
-- SID autocomplete across the whole scenario
-- Command palette (Ctrl+K) for quick navigation
-- **Event timeline** — chronological view of all triggers grouped by category (turn-based, counter-gated, reactive, random/repeating)
-- **Quest flow diagram** — per-quest DAG visualisation of sub-quest dependencies
-- **Scenario statistics** — at-a-glance counts and breakdown of quests, triggers, conditions, and actions
-- Undockable panels (Tauri desktop) — JSON Preview, Event Timeline, Quest Flow Diagram, Scenario Statistics, and Guides can be popped out into separate windows, which mirror the main window's state live
-- **Auto-update** (macOS and Windows desktop) — checks GitHub for newer releases on startup and shows a dismissible banner; the release notes and a one-click "Install and restart" live behind it, or check on demand from the More menu. Your open file and any unsaved changes are saved before the restart and reopened automatically
-- Native desktop app (macOS, Windows, Linux) via Tauri v2 — native file open/save dialogs, menu bar, keyboard shortcuts
-- No backend — runs entirely in the browser (or as a standalone desktop app)
+**Map Grid** (desktop) — a live, click-to-inspect view of your actual map, not just the script. Select any tile to see and edit everything placed on it: move, add, delete, rotate, and drag-paint objects and terrain in one stroke; a blocked-tile overlay shows exactly what's walkable; place real creature squads (not just decorative wildlife) with hover tooltips for stats; assign which player starts where — city or hero — right on the map. Nothing is written to disk until you explicitly save, and Ctrl+Z undoes staged edits before you do.
+
+**Dialog & localization** — a visual slide editor for branching NPC conversations: portraits, animations, voice lines, player choices, and per-slide map actions. Translate every dialog and quest name into any of the game's 16 languages side by side, with English as a safety-net fallback.
+
+**Scenario scripting** — full CRUD across counters → interruptions → quests → sub-quests → triggers → conditions/actions, with 55 condition types and 114 action types, labelled fields and inline tooltips, plus a forward-compatible fallback for anything the registry doesn't know yet.
+
+**Custom content** — build your own heroes, map objects, artifacts, and buffs, either from scratch or by cloning something that already exists.
+
+**Game Data Catalog** — load your game's `Core.zip` to populate every dropdown with real names and artwork, and browse the full Hero / Creature / Artifact / Object database and every one of the game's ~769 shipped dialogs.
+
+**Quality of life** — undo/redo, a command palette (Ctrl+K), SID autocomplete, live JSON preview, an event timeline and quest-flow diagram, resizable/movable/undockable panels, and built-in guides with annotated starter templates.
+
+**Ship it** — export a distributable map ZIP, or (desktop) **Publish** straight into your game install in one click. Auto-update keeps the desktop app itself current.
 
 ---
 
@@ -197,6 +167,8 @@ src/
 │   ├── validate.ts            — Scenario, dialog-flow and localisation checks
 │   ├── map-parser.ts          — .map binary reader (gzip + LEB128-framed JSON blocks)
 │   ├── map-extract.ts         — Derives MapContext (entities, spawns, placements) from blocks
+│   ├── map-write.ts / map-save.ts — Span-patch-and-splice .map edits, verified before write
+│   ├── map-grid/               — Footprint, passability and cell-visual helpers for the Map Grid
 │   ├── map-file.ts            — Opens a .map plus its sidecar scenario JSON
 │   ├── timeline.ts / quest-flow.ts — Derived views for the timeline and DAG
 │   ├── native-fs.ts           — The only place Tauri file APIs are touched; isTauri() guard
@@ -213,6 +185,7 @@ src/
     ├── catalog/               — GameDatabaseDialog, HeroPickerDialog, DialogBrowser, filters
     ├── guides/                — GuidesDialog, GuideArticle, TemplatePicker, AnnotationBanner
     ├── panels/                — Undocked panel windows (PanelShell, PanelContent)
+    ├── map-grid/               — MapGridDialog, ObjectBrowserPanel, cell-info column (desktop)
     └── common/                — JsonPreview, DraggableDialogContent, Publish/Update/Setup/
                                  Theme/Thumbnail dialogs, CommandPalette, Timeline, QuestFlow, Stats
 
