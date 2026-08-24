@@ -95,10 +95,9 @@ export interface MapGridCellContentProps {
   /** The map's player slot count (Block 1 spawns.playersCount), for the
    *  city-spawner owner dropdown's options (1..playersCount). */
   playersCount?: number
-  /** Reassign a city-spawner's owner — swaps with whichever other
-   *  city-spawner currently holds that slot, if any (issue: player-
-   *  assignment UI). Docked-only, like the above. City-spawners only this
-   *  round; hero-spawners are a follow-up. */
+  /** Reassign a city- or hero-spawner's owner — swaps with whichever other
+   *  spawner (city or hero) currently holds that slot, if any (issue:
+   *  player-assignment UI). Docked-only, like the above. */
   onSetSpawnerOwner?: (item: PlacedObject, newOwner: number) => void
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
@@ -670,7 +669,7 @@ export default function MapGridCellContent({
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Player attached to this spawner</p>
-                {onSetSpawnerOwner && selected.spawnerInfo.spawnPointType === 0 && playersCount > 0 ? (
+                {onSetSpawnerOwner && playersCount > 0 ? (
                   <>
                     <Select
                       value={String(pendingSpawnerOwner ?? selected.spawnerInfo.owner)}

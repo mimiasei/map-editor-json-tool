@@ -447,15 +447,14 @@ export function setSpawnerPlayerType(
 }
 
 /**
- * Reassign a city-spawner's `owner` (the "Player N" it's attached to) to
- * `newOwner`, patching both Block 1's spawns.spawns[] and Block 2's
- * propSpawns[] like setSpawnerPlayerType above. If another city-spawner
- * already holds `newOwner`, the two owners are swapped (so no slot is ever
- * left duplicated or empty); if `newOwner` is a free slot, the target is
- * simply reassigned. Throws if the target isn't a city-spawner
- * (spawnPointType 0) or if `newOwner` is currently held by a hero-spawner —
- * hero-spawner reassignment is a separate follow-up feature, not yet wired
- * to any UI, so this only ever needs to reason about city-spawners.
+ * Reassign a city- or hero-spawner's `owner` (the "Player N" it's attached
+ * to) to `newOwner`, patching both Block 1's spawns.spawns[] and Block 2's
+ * propSpawns[] like setSpawnerPlayerType above. If another spawner (city or
+ * hero — the swap is just an exchange of the `owner` field, independent of
+ * which starting condition either side gives that player) already holds
+ * `newOwner`, the two owners are swapped (so no slot is ever left
+ * duplicated or empty); if `newOwner` is a free slot, the target is simply
+ * reassigned.
  *
  * NOTE: reassigning a spawner's owner after it's been placed was flagged by
  * Unfrozen's own guide as "EXTREMELY bug-prone" (see setSpawnerPlayerType's
@@ -475,17 +474,14 @@ export function swapSpawnerOwners(
   const span2 = findJsonArraySpan(text2, 'propSpawns')
   const propSpawns = JSON.parse(span2.span) as PropSpawnEntry[]
   const target = propSpawns.find((e) => String(e.type) === String(entityType) && e.id === entityId)
-  if (!target || target.owner === undefined || target.spawnPointType !== 0) {
-    throw new Error(`No city-spawner propSpawns entry found for (type=${entityType}, id=${entityId})`)
+  if (!target || target.owner === undefined) {
+    throw new Error(`No spawner propSpawns entry found for (type=${entityType}, id=${entityId})`)
   }
   const oldOwner = target.owner
   if (oldOwner === newOwner) {
     return { block1Chunk, block2Chunk }
   }
   const partner = propSpawns.find((e) => e.owner === newOwner)
-  if (partner && partner.spawnPointType !== 0) {
-    throw new Error(`Player ${newOwner} is currently a hero-spawner — reassigning that slot isn't supported yet`)
-  }
 
   target.owner = newOwner
   if (partner) partner.owner = oldOwner
@@ -1299,7 +1295,13 @@ export function deleteObjectInstance(
     )
   }
 
-  // 4. Auto-fix: clear the paired Block 1 spawns.spawns[] entry for a spawner.
+  // 4. Auto-fix: clear the paired Block 1 spawns.spawns[] entry for a spawner,
+  // and trim spawns.playersCount back down while its topmost slot is now
+  // unclaimed (deleting player 5-of-5 shrinks 5→4; deleting player 3-of-5
+  // leaves playersCount at 5 with a gap at 3 — backfillPlayerStartSpawner's
+  // "claim lowest free slot" already reuses gaps like that, and shrinking
+  // past a still-claimed top slot would violate the "owners are always the
+  // contiguous range 1..playersCount" invariant confirmed on every real map).
   let text1 = new TextDecoder('utf-8').decode(block1Chunk)
   if (spawnerOwner !== undefined) {
     const { arrayOpen, arrayClose, span } = findJsonArraySpan(text1, 'spawns')
@@ -1308,6 +1310,16 @@ export function deleteObjectInstance(
     if (idx !== -1) {
       block1Spawns.splice(idx, 1)
       text1 = text1.slice(0, arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(arrayClose + 1)
+
+      const spawnsObjSpan = findJsonObjectSpan(text1, 'spawns')
+      const spawnsObj = JSON.parse(spawnsObjSpan.span) as { playersCount?: number }
+      const owners = new Set(block1Spawns.map((e) => e.owner))
+      let count = spawnsObj.playersCount ?? 0
+      while (count > 0 && !owners.has(count)) count--
+      if (count !== spawnsObj.playersCount) {
+        spawnsObj.playersCount = count
+        text1 = text1.slice(0, spawnsObjSpan.objOpen) + JSON.stringify(spawnsObj) + text1.slice(spawnsObjSpan.objClose + 1)
+      }
     }
   }
 
