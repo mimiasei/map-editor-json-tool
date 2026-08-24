@@ -446,6 +446,74 @@ export function setSpawnerPlayerType(
   }
 }
 
+/**
+ * Reassign a city-spawner's `owner` (the "Player N" it's attached to) to
+ * `newOwner`, patching both Block 1's spawns.spawns[] and Block 2's
+ * propSpawns[] like setSpawnerPlayerType above. If another city-spawner
+ * already holds `newOwner`, the two owners are swapped (so no slot is ever
+ * left duplicated or empty); if `newOwner` is a free slot, the target is
+ * simply reassigned. Throws if the target isn't a city-spawner
+ * (spawnPointType 0) or if `newOwner` is currently held by a hero-spawner —
+ * hero-spawner reassignment is a separate follow-up feature, not yet wired
+ * to any UI, so this only ever needs to reason about city-spawners.
+ *
+ * NOTE: reassigning a spawner's owner after it's been placed was flagged by
+ * Unfrozen's own guide as "EXTREMELY bug-prone" (see setSpawnerPlayerType's
+ * doc comment above, where that finding first got recorded) — this function
+ * implements it anyway per explicit user request. Confirmed only by static
+ * verification so far; treat as unconfirmed for real game-runtime acceptance
+ * until tested in an actual desktop build/game load.
+ */
+export function swapSpawnerOwners(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  newOwner: number,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  const text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  const span2 = findJsonArraySpan(text2, 'propSpawns')
+  const propSpawns = JSON.parse(span2.span) as PropSpawnEntry[]
+  const target = propSpawns.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!target || target.owner === undefined || target.spawnPointType !== 0) {
+    throw new Error(`No city-spawner propSpawns entry found for (type=${entityType}, id=${entityId})`)
+  }
+  const oldOwner = target.owner
+  if (oldOwner === newOwner) {
+    return { block1Chunk, block2Chunk }
+  }
+  const partner = propSpawns.find((e) => e.owner === newOwner)
+  if (partner && partner.spawnPointType !== 0) {
+    throw new Error(`Player ${newOwner} is currently a hero-spawner — reassigning that slot isn't supported yet`)
+  }
+
+  target.owner = newOwner
+  if (partner) partner.owner = oldOwner
+  const patchedText2 = text2.slice(0, span2.arrayOpen) + JSON.stringify(propSpawns) + text2.slice(span2.arrayClose + 1)
+
+  const text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  const span1 = findJsonArraySpan(text1, 'spawns')
+  const block1Spawns = JSON.parse(span1.span) as Block1SpawnEntry[]
+  const entry1Target = block1Spawns.find((e) => e.owner === oldOwner)
+  if (!entry1Target) {
+    throw new Error(`No Block 1 spawns[] entry found for owner ${oldOwner}`)
+  }
+  entry1Target.owner = newOwner
+  if (partner) {
+    const entry1Partner = block1Spawns.find((e) => e.owner === newOwner && e !== entry1Target)
+    if (!entry1Partner) {
+      throw new Error(`No Block 1 spawns[] entry found for owner ${newOwner}`)
+    }
+    entry1Partner.owner = oldOwner
+  }
+  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+
+  return {
+    block1Chunk: new TextEncoder().encode(patchedText1),
+    block2Chunk: new TextEncoder().encode(patchedText2),
+  }
+}
+
 // ─── City name (objectsProperties.propCities.customCityName) ───────────────
 // A separate field from propsName, confirmed two ways: a real Unfrozen
 // sample map (Gorges_of_Discord.map) has "undead_city_name_12" here — a real
@@ -1039,13 +1107,13 @@ const PLAYER_START_SPAWNER_DEFAULTS: Record<string, PlayerStartSpawnerDefault> =
 }
 
 /**
- * Claim an unclaimed player slot for a brand-new city-spawner/hero-spawner:
- * finds the lowest `owner` in `1..playersCount` not already present in
- * Block 1's `spawns.spawns[]`, adds that slot's entry there, and adds the
- * matching `propSpawns` + sid-specific extra rows to Block 2. Throws if
- * every player slot is already claimed — a partial/silent no-op (or
- * inventing a slot beyond playersCount) would leave the map in a state the
- * game was never confirmed to tolerate.
+ * Claim a player slot for a brand-new city-spawner/hero-spawner: finds the
+ * lowest `owner` in `1..playersCount` not already present in Block 1's
+ * `spawns.spawns[]`, or — if every existing slot is claimed — grows
+ * `spawns.playersCount` by one and claims the new slot (the "third
+ * city-spawner auto-adds player 3" behavior; issue: player-assignment UI).
+ * Adds that slot's entry to Block 1, and adds the matching `propSpawns` +
+ * sid-specific extra rows to Block 2.
  */
 function backfillPlayerStartSpawner(
   block1Chunk: Uint8Array,
@@ -1053,9 +1121,9 @@ function backfillPlayerStartSpawner(
   newId: number,
   config: PlayerStartSpawnerDefault,
 ): { block1Chunk: Uint8Array; block2Text: string } {
-  const text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  let text1 = new TextDecoder('utf-8').decode(block1Chunk)
   const fullBlock1 = JSON.parse(text1) as { spawns?: { playersCount?: number } }
-  const playersCount = fullBlock1.spawns?.playersCount ?? 0
+  let playersCount = fullBlock1.spawns?.playersCount ?? 0
 
   const span1 = findJsonArraySpan(text1, 'spawns')
   const block1Spawns = JSON.parse(span1.span) as Block1SpawnEntry[]
@@ -1065,10 +1133,12 @@ function backfillPlayerStartSpawner(
     if (!usedOwners.has(candidate)) { owner = candidate; break }
   }
   if (owner === undefined) {
-    throw new Error(
-      `Every player slot (1-${playersCount}) already has a spawn point. Increase the map's player ` +
-      'count first, or delete an existing city/hero spawner to free a slot.',
-    )
+    owner = playersCount + 1
+    playersCount = owner
+    const spawnsObjSpan = findJsonObjectSpan(text1, 'spawns')
+    const spawnsObj = JSON.parse(spawnsObjSpan.span) as { playersCount?: number }
+    spawnsObj.playersCount = playersCount
+    text1 = text1.slice(0, spawnsObjSpan.objOpen) + JSON.stringify(spawnsObj) + text1.slice(spawnsObjSpan.objClose + 1)
   }
 
   block1Spawns.push({
@@ -1076,7 +1146,11 @@ function backfillPlayerStartSpawner(
     isCityDefined: false, factionSid: '', isHeroDefined: false, heroSid: '',
     colorId: -1, isAlive: true, isLocked: false,
   })
-  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+  // Re-find the array span: growing playersCount above (a sibling key inside
+  // the same "spawns" object) shifts every byte offset after it, invalidating
+  // the original span1 offsets if that branch ran.
+  const span1b = findJsonArraySpan(text1, 'spawns')
+  const patchedText1 = text1.slice(0, span1b.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1b.arrayClose + 1)
 
   let text2 = block2Text
   const tryAppendRow = (tableKey: string, row: Record<string, unknown>): void => {

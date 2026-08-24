@@ -17,6 +17,7 @@ import {
   upsertPropEntities,
   setNoCombineGeometry,
   setSpawnerPlayerType,
+  swapSpawnerOwners,
   upsertPropPortals,
   setCustomCityName,
   upsertPropHero,
@@ -44,6 +45,7 @@ export type MapSaveEdit =
   | { kind: 'assignEntitySid'; entityType: number; entityId: number; sid: string }
   | { kind: 'setNoCombineGeometry'; entityType: number; entityId: number; value: boolean }
   | { kind: 'setSpawnerPlayerType'; entityType: number; entityId: number; spawnType: 0 | 1 | 2 }
+  | { kind: 'swapSpawnerOwner'; entityType: number; entityId: number; newOwner: number }
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
   | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
@@ -70,7 +72,7 @@ export type MapSaveEdit =
  *  each function's own doc comment in map-write.ts). */
 function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
   if (!edit) return new Set()
-  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects'
+  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'swapSpawnerOwner' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects'
     ? new Set([0, 1])
     : new Set([1])
 }
@@ -141,6 +143,10 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = setNoCombineGeometry(newChunks[1], edit.entityType, edit.entityId, edit.value)
   } else if (edit?.kind === 'setSpawnerPlayerType') {
     const patched = setSpawnerPlayerType(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnType)
+    newChunks[0] = patched.block1Chunk
+    newChunks[1] = patched.block2Chunk
+  } else if (edit?.kind === 'swapSpawnerOwner') {
+    const patched = swapSpawnerOwners(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.newOwner)
     newChunks[0] = patched.block1Chunk
     newChunks[1] = patched.block2Chunk
   } else if (edit?.kind === 'setPortalTarget') {
@@ -255,6 +261,22 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === entry2.owner)
     if (!entry1 || entry1.spawnType !== edit.spawnType) {
       throw new Error('Verification failed: Player type not reflected in the rebuilt Block 1 spawns table')
+    }
+  } else if (edit?.kind === 'swapSpawnerOwner') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }> }
+    }
+    const entry2 = (block2.objectsProperties?.propSpawns ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!entry2 || entry2.owner !== edit.newOwner) {
+      throw new Error('Verification failed: new owner not reflected in the rebuilt propSpawns table')
+    }
+    const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
+      spawns?: { spawns?: Array<{ owner?: number }> }
+    }
+    const owners = (block1.spawns?.spawns ?? []).map((e) => e.owner)
+    if (!owners.includes(edit.newOwner) || new Set(owners).size !== owners.length) {
+      throw new Error('Verification failed: owner swap left the rebuilt Block 1 spawns table with a duplicate or missing owner')
     }
   } else if (edit?.kind === 'setPortalTarget') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
