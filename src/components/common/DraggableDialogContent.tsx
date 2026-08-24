@@ -100,6 +100,18 @@ export const DraggableDialogContent = React.forwardRef<
         if (target?.closest('[role="separator"]')) {
           e.preventDefault()
         }
+        // A Radix Select/DropdownMenu/Popover nested inside this dialog's
+        // content (e.g. the Map Grid info column's player/portal-target
+        // dropdowns) portals its open content to a `[data-radix-popper-
+        // content-wrapper]` outside this dialog's own DOM subtree. Clicking
+        // an item in it is consumed by the Select first and never reaches
+        // here, but a pointerdown that just DISMISSES the open dropdown
+        // (clicking elsewhere) was still reaching this dialog's own outside-
+        // pointerdown check and closing the whole dialog underneath it —
+        // same class of bug as the separator case above, same fix.
+        if (target?.closest('[data-radix-popper-content-wrapper]')) {
+          e.preventDefault()
+        }
         onPointerDownOutside?.(e)
       },
       [onPointerDownOutside]

@@ -376,24 +376,55 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
 
+  // ── Local undo (Ctrl+Z) for staged-but-unsaved edits ────────────────────
+  // Deliberately separate from useScenarioStore's zundo temporal() (scoped
+  // to the `scenario` field only, never .map writes — see CLAUDE.md). Once
+  // an edit is actually saved to disk there's no undo beyond the one-time
+  // .bak file; this only ever needs to cover the in-memory staged window,
+  // so one combined snapshot of every staged buffer that currently exists
+  // is enough — Ctrl+Z restores all four at once rather than needing a
+  // separate stack per feature (only one of the four is ever actually
+  // changing at a time in practice). Declared here (ahead of moveState/
+  // rotateState, both declared much further down) via a ref rather than a
+  // direct closure over those two, since pushUndo needs to be usable in
+  // earlier callbacks' (stagePaintNode etc.) own useCallback deps arrays —
+  // those are evaluated eagerly, so they can't forward-reference a `const`
+  // declared later in the component body. See the ref-sync effect below
+  // (near undoLastStagedEdit) that keeps this current every render.
+  interface StagedSnapshot {
+    paintStaged: Map<number, BiomeId>
+    paintObjectStaged: Map<number, string>
+    moveState: { key: string; type: 0 | 1 | 2; id: number; sid: string; node: number } | null
+    rotateState: { key: string; id: number; rotation: number } | null
+  }
+  const stagedSnapshotRef = useRef<StagedSnapshot>({
+    paintStaged: new Map(), paintObjectStaged: new Map(), moveState: null, rotateState: null,
+  })
+  const [undoStack, setUndoStack] = useState<StagedSnapshot[]>([])
+  const pushUndo = useCallback(() => {
+    setUndoStack((stack) => [...stack, stagedSnapshotRef.current])
+  }, [])
+
   const stopPainting = () => {
     setPaintBiome(null)
     setPaintStaged(new Map())
   }
   const stagePaintNode = useCallback((node: number, biomeId: BiomeId) => {
+    if (paintStaged.get(node) === biomeId) return
+    pushUndo()
     setPaintStaged((prev) => {
-      if (prev.get(node) === biomeId) return prev
       const next = new Map(prev)
       next.set(node, biomeId)
       return next
     })
-  }, [])
+  }, [paintStaged, pushUndo])
   const savePaint = async () => {
     if (paintStaged.size === 0 || !mapFilePath) return
     const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
     try {
       await saveMapFile(mapFilePath, { kind: 'paintTerrain', changes })
       setPaintStaged(new Map())
+      setUndoStack([])
     } catch (e) {
       logError(`Failed to paint terrain: ${e instanceof Error ? e.message : String(e)}`)
     }
@@ -649,6 +680,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (wasClick && moveState) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null && isNodeInBoundsForMove(moveState, node)) {
+        pushUndo()
         setMoveState((prev) => (prev ? { ...prev, node } : prev))
       }
     }
@@ -1128,6 +1160,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     try {
       await saveMapFile(mapFilePath, { kind: 'moveObject', entityType: type, entityId: id, newNode: node })
       setMoveState(null)
+      setUndoStack([])
       // Follow the moved instance to its new tile (per issue #167's "Impact
       // on the rest of the editor" note: selectedNode is a tile index chosen
       // before the edit, not an identity — it needs an explicit retarget).
@@ -1146,6 +1179,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // copy deliberately needs a pause before committing).
   const [rotateState, setRotateState] = useState<{ key: string; id: number; rotation: number } | null>(null)
   const stepRotate = (item: PlacedObject, delta: 1 | -1) => {
+    pushUndo()
     setRotateState((prev) => {
       const current = prev?.key === item.key ? prev.rotation : (item.rotation ?? 0)
       return { key: item.key, id: item.id, rotation: stepRotation(current, delta) }
@@ -1158,10 +1192,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     try {
       await saveMapFile(mapFilePath, { kind: 'rotateObject', entityId: id, newRotation: rotation })
       setRotateState(null)
+      setUndoStack([])
     } catch (e) {
       logError(`Failed to rotate object: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
+
+  // pushUndo/undoStack are declared earlier (before stagePaintNode, which
+  // needs pushUndo in its own useCallback deps array — evaluated eagerly,
+  // so it can't forward-reference something declared later in the file;
+  // see stagedSnapshotRef above). Keep the ref in sync with the 4 staged
+  // buffers on every render — cheap (plain object assignment), and means
+  // pushUndo always reads the true latest values with no stale-closure risk.
+  useEffect(() => {
+    stagedSnapshotRef.current = { paintStaged, paintObjectStaged, moveState, rotateState }
+  })
+  const undoLastStagedEdit = useCallback(() => {
+    setUndoStack((stack) => {
+      if (stack.length === 0) return stack
+      const prev = stack[stack.length - 1]
+      setPaintStaged(prev.paintStaged)
+      setPaintObjectStaged(prev.paintObjectStaged)
+      setMoveState(prev.moveState)
+      setRotateState(prev.rotateState)
+      return stack.slice(0, -1)
+    })
+  }, [])
+  // "Once persisted, no undo" — same boundary the one-time .bak file already
+  // represents for on-disk state. Cleared on close too, so a stale stack
+  // from a previous open doesn't resurrect state that no longer exists.
+  useEffect(() => {
+    if (!open) setUndoStack([])
+  }, [open])
 
   // ── Delete (issue #167 Phase C) ─────────────────────────────────────────
   // Same "stage locally, then explicit Save to .map" convention as Move —
@@ -1217,6 +1279,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         const z = Math.floor(prev.node / sizeX)
         const newNode = (z + dz) * sizeX + (x + dx)
         if (!isNodeInBoundsForMove(prev, newNode)) return prev
+        pushUndo()
         return { ...prev, node: newNode }
       })
     }
@@ -1272,6 +1335,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stopPlacing = () => {
     setPlacingSid(null)
     setPaintObjectStaged(new Map())
+  }
+  // Two-stage version for Escape/the "Placing…" button's own click — a
+  // switch to a different mode (Paint terrain, place a creature, etc.) still
+  // wants the full stopPlacing() above unconditionally. First press only
+  // clears any staged drag-paint (stays in placing mode); only a second
+  // press (nothing left staged) exits placing mode entirely.
+  const stopPlacingOrClearStaged = () => {
+    if (paintObjectStaged.size > 0) setPaintObjectStaged(new Map())
+    else stopPlacing()
   }
 
   // ── Place creature (Object Browser "Units" mode) ────────────────────────
@@ -1345,8 +1417,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const stageObjectPaint = useCallback((node: number, sid: string) => {
     if (!isNodeInBoundsForPlacement(sid, node) || isNodeBlockedForObjectPaint(node)) return
-    setPaintObjectStaged((prev) => (prev.get(node) === sid ? prev : new Map(prev).set(node, sid)))
-  }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint])
+    if (paintObjectStaged.get(node) === sid) return
+    pushUndo()
+    setPaintObjectStaged((prev) => new Map(prev).set(node, sid))
+  }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, paintObjectStaged, pushUndo])
 
   const savePaintObjects = async () => {
     if (paintObjectStaged.size === 0 || !mapFilePath) return
@@ -1357,6 +1431,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     try {
       await saveMapFile(mapFilePath, { kind: 'paintObjects', additions, deletions })
       setPaintObjectStaged(new Map())
+      setUndoStack([])
     } catch (e) {
       logError(`Failed to paint objects: ${e instanceof Error ? e.message : String(e)}`)
     }
@@ -1380,14 +1455,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // a drag-to-move was staged, with no other way to cancel it short of
       // finding its Save/Cancel buttons (which requires it to be selected).
       if (moveState) cancelMove()
-      else if (placingSid) stopPlacing()
+      else if (placingSid) stopPlacingOrClearStaged()
       else if (placingCreatureId) stopPlacingCreature()
       else if (paintBiome !== null) stopPainting()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, objectBrowserOpen, paintBiome, moveState])
+  }, [open, placingSid, placingCreatureId, objectBrowserOpen, paintBiome, moveState, paintObjectStaged])
+
+  // Ctrl+Z / Cmd+Z undoes the last staged-but-unsaved edit (see pushUndo's
+  // call sites above) — a separate effect from Escape's above since it
+  // needs to listen whenever undoStack is non-empty, independent of which
+  // (if any) placing/paint/move mode is currently active.
+  useEffect(() => {
+    if (!open || undoStack.length === 0) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'z' || !(e.ctrlKey || e.metaKey)) return
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      e.preventDefault()
+      undoLastStagedEdit()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, undoStack, undoLastStagedEdit])
 
   const placingFootprintBounds = useMemo(() => {
     if (!activePlacingSid || hoveredNode === null) return null
@@ -1483,7 +1575,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {canEditEntities && (
                 placingSid ? (
                   <div className="flex items-center gap-1">
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacing} title="Click to place one, drag to paint several">
+                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
                       <Plus className="h-3.5 w-3.5" />
                       Placing… (drag to paint)
                     </Button>
@@ -1811,6 +1903,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           size={thisIconSize}
                           src={settings.iconImagesEnabled ? undefined : null}
                         />
+                      )}
+                      {entry.pick.primary.spawnerInfo?.owner !== undefined && (
+                        <span
+                          className="absolute inset-0 flex items-center justify-center font-black leading-none pointer-events-none"
+                          style={{
+                            fontSize: Math.min(entry.width, entry.height) * 0.7,
+                            color: 'white',
+                            textShadow: '0 0 3px black, 0 0 3px black, 1px 1px 1px black',
+                          }}
+                        >
+                          {entry.pick.primary.spawnerInfo.owner}
+                        </span>
                       )}
                       {entry.pick.count > 1 && (
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
