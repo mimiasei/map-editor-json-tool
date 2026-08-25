@@ -29,7 +29,11 @@ export async function createNewMap(options: CreateNewMapOptions): Promise<OpenMa
   if (!isTauri()) return null
 
   const { resourceDir, join } = await import('@tauri-apps/api/path')
-  const templatePath = await join(await resourceDir(), 'template.map')
+  // Tauri preserves the declared resource's original directory structure
+  // under $RESOURCE (tauri.conf.json's "resources/template.map" entry ->
+  // $RESOURCE/resources/template.map) — confirmed against a real dev build,
+  // where the file lands at src-tauri/target/debug/resources/template.map.
+  const templatePath = await join(await resourceDir(), 'resources', 'template.map')
   const templateBuffer = await readBinaryFile(templatePath)
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
 
