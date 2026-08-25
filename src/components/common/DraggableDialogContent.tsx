@@ -94,41 +94,6 @@ export const DraggableDialogContent = React.forwardRef<
     // "was this inside the layer" check comes back negative. Fixed the
     // supported way: Radix calls the caller's `onPointerDownOutside` first and
     // skips its own dismiss when that handler calls preventDefault().
-    // Snapshot "was a Select/DropdownMenu/Popover open" on the CAPTURE phase of
-    // pointerdown — i.e. before any bubble-phase listener (including Radix's
-    // own DismissableLayer pointerdown handler, which closes the open Select
-    // and flips its `data-state` to "closed") has run. Confirmed via a real
-    // desktop-build (Tauri/WKWebView) repro: a live `document.querySelector`
-    // done from inside `onPointerDownOutside` (itself invoked from Radix's own
-    // bubble-phase pointerdown handling) already found `listboxOpen: false` —
-    // the Select had closed itself before this dialog's own check ran, a race
-    // this earlier, purely DOM-query-based fix never protected against
-    // (confirmed absent in a Chromium/Playwright repro, present in WKWebView —
-    // a browser-engine timing difference, not a logic bug in the query itself).
-    const hadOpenPopupRef = React.useRef(false)
-    React.useEffect(() => {
-      const captureOpenState = () => {
-        hadOpenPopupRef.current = !!document.querySelector('[role="listbox"][data-state="open"]')
-      }
-      document.addEventListener('pointerdown', captureOpenState, true)
-      return () => document.removeEventListener('pointerdown', captureOpenState, true)
-    }, [])
-
-    // A react-resizable-panels `Separator` (e.g. Map Grid's cell-info column
-    // resize handle) sitting inside this dialog's own content is still a real
-    // DOM descendant, but Radix's outside-pointerdown detection wrongly treats
-    // it as "outside" and closes the dialog on the very first click on it —
-    // confirmed via a live repro (issue #127): react-resizable-panels
-    // registers its own raw `document`-level pointerdown listener (capture
-    // phase, for its drag logic) the moment a Group first mounts, and that
-    // listener sits higher in the DOM (on `document` itself) than React's own
-    // root container, so it runs before React's synthetic event dispatch ever
-    // reaches Radix's DismissableLayer — meaning Radix's
-    // `isPointerInsideReactTreeRef` (set via a React onPointerDownCapture
-    // handler) is never marked true for this click, and Radix's own
-    // "was this inside the layer" check comes back negative. Fixed the
-    // supported way: Radix calls the caller's `onPointerDownOutside` first and
-    // skips its own dismiss when that handler calls preventDefault().
     const handlePointerDownOutside = React.useCallback(
       (e: Parameters<NonNullable<typeof onPointerDownOutside>>[0]) => {
         const target = e.target as HTMLElement | null
@@ -140,14 +105,20 @@ export const DraggableDialogContent = React.forwardRef<
         // portals its open content elsewhere in the DOM. Clicking an item in
         // it is consumed by the Select first and never reaches here, but a
         // pointerdown that just DISMISSES the open dropdown — clicking
-        // anywhere else, including this dialog's own overlay (a real click
-        // target: `DialogOverlay` covers the whole viewport) — was still
-        // reaching this dialog's own outside-pointerdown check and closing
-        // the whole dialog underneath it. `hadOpenPopupRef` (set above, on
-        // pointerdown's capture phase, before the Select's own close) is the
-        // reliable signal; a live query here would race against the Select
-        // already having closed itself by this point.
-        if (target?.closest('[data-radix-popper-content-wrapper]') || hadOpenPopupRef.current) {
+        // anywhere else, including outside this dialog's own floating
+        // window, since it's not full-screen — was still reaching this
+        // dialog's own outside-pointerdown check and closing the whole
+        // dialog underneath it. An earlier fix here allow-listed
+        // `[data-radix-popper-content-wrapper]` by the CLICK'S OWN target,
+        // which only covers the click landing back inside the dialog; it
+        // didn't cover the dismiss-click landing outside the dialog
+        // entirely, which is legitimate ("outside the dialog" is literally
+        // true) but still shouldn't close it while a nested Select is what's
+        // actually being dismissed. Checking whether any Select is *open at
+        // all* at pointerdown time, regardless of where the click lands,
+        // covers both cases.
+        if (target?.closest('[data-radix-popper-content-wrapper]')
+          || document.querySelector('[role="listbox"][data-state="open"]')) {
           e.preventDefault()
         }
         onPointerDownOutside?.(e)
