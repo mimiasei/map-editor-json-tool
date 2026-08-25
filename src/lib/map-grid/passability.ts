@@ -79,7 +79,7 @@ type PassabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' |
 export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null): { x: number; z: number }[] {
   if (NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
   const template = catalog?.mapObjects.find((o) => o.id === sid)
-  return computeFootprintTiles(template, x, z).filter((cell) => cell.value === 1)
+  return computeFootprintTiles(template, x, z, sid).filter((cell) => cell.value === 1)
 }
 
 /** Every blocked tile (node index) on the current map, per the three-source

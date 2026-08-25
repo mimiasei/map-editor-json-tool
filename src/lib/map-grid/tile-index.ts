@@ -70,7 +70,7 @@ export function groupOf(placed: PlacedObject, catalog: GameCatalog | null): Grid
 export function resolveFootprintCells(obj: PlacedObject, catalog: GameCatalog | null): FootprintCell[] {
   if (obj.type !== 0) return [{ x: obj.x, z: obj.z, value: 1 }]
   const template = catalog?.mapObjects.find((o) => o.id === obj.sid)
-  return computeFootprintTiles(template, obj.x, obj.z)
+  return computeFootprintTiles(template, obj.x, obj.z, obj.sid)
 }
 
 /**

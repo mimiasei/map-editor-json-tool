@@ -1176,7 +1176,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return false
     if (state.type !== 0) return true
     const template = catalog?.mapObjects.find((o) => o.id === state.sid)
-    return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
+    return isFootprintInBounds(computeFootprintTiles(template, x, z, state.sid), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
 
   const saveMove = async () => {
@@ -1345,7 +1345,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const z = Math.floor(moveState.node / sizeX)
     if (moveState.type !== 0) return { minX: x, maxX: x, minZ: z, maxZ: z }
     const template = catalog?.mapObjects.find((o) => o.id === moveState.sid)
-    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+    return footprintIconBounds(computeFootprintTiles(template, x, z, moveState.sid)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [moveState, sizeX, catalog])
 
   // ── Place object (issue #167 Phase B) ───────────────────────────────────
@@ -1399,7 +1399,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const z = Math.floor(node / sizeX)
     if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return false
     const template = catalog?.mapObjects.find((o) => o.id === sid)
-    return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
+    return isFootprintInBounds(computeFootprintTiles(template, x, z, sid), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
 
   const placeAt = async (node: number) => {
@@ -1511,7 +1511,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const x = hoveredNode % sizeX
     const z = Math.floor(hoveredNode / sizeX)
     const template = catalog?.mapObjects.find((o) => o.id === activePlacingSid)
-    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+    return footprintIconBounds(computeFootprintTiles(template, x, z, activePlacingSid ?? undefined)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [activePlacingSid, hoveredNode, sizeX, catalog])
   const placingValid = activePlacingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(activePlacingSid, hoveredNode)
 
