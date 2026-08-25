@@ -48,15 +48,24 @@ function sidecarPathFor(mapPath: string, mapName: string): string {
 export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   const file = await openMapFile()
   if (!file) return null
+  return loadParsedMapFile(file.name, file.path || null, file.buffer)
+}
 
-  // Convert empty path (browser) to null — empty string is not a valid path
-  const mapPath = file.path || null
-
+/**
+ * Parse an already-in-memory .map file's bytes, load the sidecar JSON (or
+ * fall back to Block 4), and populate both the scenario store and the map
+ * context store — the shared tail end of `openAndLoadMapFile()`, factored
+ * out so a freshly-created map (written to disk, never opened via a picker)
+ * can be loaded through the exact same path. For a brand-new map there's no
+ * sidecar yet and Block 4 is a blank shell, so this naturally produces an
+ * empty scenario with zero special-casing.
+ */
+export async function loadParsedMapFile(name: string, mapPath: string | null, buffer: ArrayBuffer): Promise<OpenMapResult> {
   const warnings: string[] = []
 
   // ── Parse binary ────────────────────────────────────────────────────────────
-  const raw = await parseMapFile(file.buffer)
-  logInfo(`Parsed .map: ${file.name}`)
+  const raw = await parseMapFile(buffer)
+  logInfo(`Parsed .map: ${name}`)
   if (DEBUG.mapLoading) {
     console.log('[map-file] raw blocks:', {
       block1Keys: Object.keys(raw.block1),
@@ -82,7 +91,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
 
   // ── Sidecar path — derived from native OS path, not forward-slash-normalized ─
   // Using the raw path preserves backslashes on Windows so Tauri FS calls work.
-  const sidecarPath = mapPath ? sidecarPathFor(mapPath, file.name) : null
+  const sidecarPath = mapPath ? sidecarPathFor(mapPath, name) : null
 
   let sidecarLoaded = false
   let block4Used = false
@@ -141,7 +150,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
 
   if (!sidecarLoaded) {
     block4Used = true
-    logWarn(`No sidecar found for ${file.name}, using Block 4 scripting data`)
+    logWarn(`No sidecar found for ${name}, using Block 4 scripting data`)
   }
 
   if (DEBUG.mapLoading) {
@@ -162,7 +171,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   // currentFilePath = sidecarPath so Ctrl+S knows where to write.
   const store = useScenarioStore.getState()
   store.setScenario(scenario)
-  store.setCurrentFile(sidecarPath ?? null, file.name)
+  store.setCurrentFile(sidecarPath ?? null, name)
   store.setMapFile(mapPath ?? '', sidecarPath ?? '')
   store.setMapName(mapName)
   for (const [id, flow] of Object.entries(importedDialogs)) store.setDialogFlow(id, flow)
@@ -178,7 +187,7 @@ export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   store.markClean()
 
   return {
-    name: file.name,
+    name,
     mapPath,
     sidecarPath,
     sidecarLoaded,

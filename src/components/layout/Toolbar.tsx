@@ -12,6 +12,7 @@ import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
 import { openAndLoadMapFile } from '@/lib/map-file'
+import NewMapDialog from '@/components/common/NewMapDialog'
 import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
@@ -156,6 +157,7 @@ export default function Toolbar({
   const [updateChecking,      setUpdateChecking]      = useState(false)
   const [updateMessage,       setUpdateMessage]       = useState<string | null>(null)
   const [aboutOpen,           setAboutOpen]           = useState(false)
+  const [newMapOpen,          setNewMapOpen]          = useState(false)
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -450,6 +452,23 @@ export default function Toolbar({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>New scenario (Ctrl+N)</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Needs real filesystem write access to produce a brand-new .map
+              file from the bundled blank template — Tauri only, the
+              opposite gating of Import Map below (which the native File
+              menu already covers on Tauri, but has no equivalent for this
+              since map creation isn't part of that menu yet). */}
+          {isTauri() && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={() => setNewMapOpen(true)} className="gap-1.5">
+                  <FilePlus className="h-4 w-4" />
+                  New Map
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Create a new blank .map file</TooltipContent>
             </Tooltip>
           )}
 
@@ -1035,6 +1054,19 @@ export default function Toolbar({
 
       {/* About works in both builds — the version row just reads "web build" on the web. */}
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+
+      {isTauri() && (
+        <NewMapDialog
+          open={newMapOpen}
+          onOpenChange={setNewMapOpen}
+          onCreated={({ warnings }) => {
+            if (warnings.length > 0) {
+              setImportWarnings(warnings)
+              setImportFeedbackOpen(true)
+            }
+          }}
+        />
+      )}
 
       {/* Manual update check result — only for the no-update / failure cases;
           a found update is handed to AppShell's banner and dialog instead. */}

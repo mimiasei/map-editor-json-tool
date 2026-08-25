@@ -50,6 +50,9 @@
     "externalBin": [
       "sidecar/extract_thumbnails"
     ],
+    "resources": [
+      "resources/template.map"
+    ],
     "macOS": {
       "signingIdentity": "-"
     },
