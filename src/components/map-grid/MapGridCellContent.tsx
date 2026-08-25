@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
+import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
@@ -99,6 +100,13 @@ export interface MapGridCellContentProps {
    *  spawner (city or hero) currently holds that slot, if any (issue:
    *  player-assignment UI). Docked-only, like the above. */
   onSetSpawnerOwner?: (item: PlacedObject, newOwner: number) => void
+  /** Set a city spawner's faction, '' for random — docked-only, like the above. */
+  onSetCityFaction?: (item: PlacedObject, factionSid: string) => void
+  /** Toggle whether a city spawner comes with a companion hero (always random
+   *  when on — GME gives no way to pick a specific one) — docked-only, like the above. */
+  onSetCitySpawnHero?: (item: PlacedObject, spawnHero: boolean) => void
+  /** Set a hero spawner's own hero, or 'random' — docked-only, like the above. */
+  onSetHeroSid?: (item: PlacedObject, heroSid: string) => void
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
@@ -222,6 +230,9 @@ export default function MapGridCellContent({
   onSetSpawnerPlayerType,
   playersCount = 0,
   onSetSpawnerOwner,
+  onSetCityFaction,
+  onSetCitySpawnHero,
+  onSetHeroSid,
   allPortals = [],
   onSetPortalTarget,
   highlightedNode = null,
@@ -252,6 +263,14 @@ export default function MapGridCellContent({
   // action, not a click-and-forget one).
   const [pendingSpawnType, setPendingSpawnType] = useState<0 | 1 | 2 | null>(null)
   const [pendingSpawnerOwner, setPendingSpawnerOwner] = useState<number | null>(null)
+  const [pendingCityFaction, setPendingCityFaction] = useState<string | null>(null)
+  const [pendingSpawnHero, setPendingSpawnHero] = useState<boolean | null>(null)
+  const [pendingHeroSid, setPendingHeroSid] = useState<string | null>(null)
+  // Hero-spawner only, local-only (never written) — just narrows the hero
+  // browser below, since a hero-spawner has no propCities row to persist a
+  // faction to; the faction becomes implicit once a specific hero is picked.
+  const [heroFactionFilter, setHeroFactionFilter] = useState<string>('')
+  const [heroPickerOpen, setHeroPickerOpen] = useState(false)
   // issue #143 — same staged-then-saved convention as Player type above.
   const [pendingGuardUnitProps, setPendingGuardUnitProps] = useState<{ sid: string; count: number }[] | null>(null)
   const [pendingCitySquadSids, setPendingCitySquadSids] = useState<string[] | null>(null)
@@ -271,6 +290,12 @@ export default function MapGridCellContent({
   useEffect(() => { setNewSidInput('') }, [selected?.key])
   useEffect(() => { setPendingSpawnType(null) }, [selected?.key])
   useEffect(() => { setPendingSpawnerOwner(null) }, [selected?.key])
+  useEffect(() => {
+    setPendingCityFaction(null)
+    setPendingSpawnHero(null)
+    setPendingHeroSid(null)
+    setHeroFactionFilter('')
+  }, [selected?.key])
   useEffect(() => { setPendingGuardUnitProps(null) }, [selected?.key])
   useEffect(() => { setPendingCitySquadSids(null) }, [selected?.key])
   useEffect(() => { setPendingRandomSquadValue(null) }, [selected?.key])
@@ -648,25 +673,142 @@ export default function MapGridCellContent({
           {selected.spawnerInfo && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground">Spawner</p>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {selected.spawnerInfo.spawnPointType === 0 ? 'Faction' : 'Hero'}
-                </p>
-                <p className="text-xs">
-                  {selected.spawnerInfo.spawnPointType === 0
-                    ? (selected.spawnerInfo.factionSid
-                        ? (() => {
-                            const factionName = catalog?.factions.find((f) => f.id === selected.spawnerInfo!.factionSid)?.name
-                            return factionName ? `${factionName} (${selected.spawnerInfo!.factionSid})` : selected.spawnerInfo!.factionSid
-                          })()
-                        : 'Random')
-                    : (selected.spawnerInfo.heroSid || 'Random')}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Spawner type</p>
-                <p className="text-xs">{selected.spawnerInfo.spawnPointType === 0 ? 'City' : 'Hero'}</p>
-              </div>
+              {(() => {
+                const info = selected.spawnerInfo!
+                const isCitySpawnerHere = info.spawnPointType === 0
+                const currentFactionSid = isCitySpawnerHere ? (info.factionSid ?? '') : heroFactionFilter
+                const shownFactionSid = isCitySpawnerHere ? (pendingCityFaction ?? currentFactionSid) : currentFactionSid
+                const factionDirty = isCitySpawnerHere && pendingCityFaction !== null && pendingCityFaction !== currentFactionSid
+                const currentSpawnHero = info.spawnHero ?? false
+                const shownSpawnHero = pendingSpawnHero ?? currentSpawnHero
+                const spawnHeroDirty = pendingSpawnHero !== null && pendingSpawnHero !== currentSpawnHero
+                const currentHeroSid = info.heroSid ?? 'random'
+                const shownHeroSid = pendingHeroSid ?? currentHeroSid
+                const heroDirty = pendingHeroSid !== null && pendingHeroSid !== currentHeroSid
+                const factionName = (sid: string) => {
+                  const name = catalog?.factions.find((f) => f.id === sid)?.name
+                  return name ? `${name} (${sid})` : sid
+                }
+                const canEditFaction = isCitySpawnerHere ? !!onSetCityFaction : !!onSetHeroSid
+                return (
+                  <>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Faction</p>
+                      {canEditFaction ? (
+                        <Select
+                          value={shownFactionSid || 'random'}
+                          onValueChange={(v) => {
+                            const sid = v === 'random' ? '' : v
+                            if (isCitySpawnerHere) setPendingCityFaction(sid)
+                            else setHeroFactionFilter(sid)
+                          }}
+                        >
+                          <SelectTrigger className="h-7 text-xs mt-0.5 w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="random">Random</SelectItem>
+                            {(catalog?.factions ?? []).map((f) => (
+                              <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-xs">{shownFactionSid ? factionName(shownFactionSid) : 'Random'}</p>
+                      )}
+                      {factionDirty && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <p className="text-xs text-amber-600">Unsaved change</p>
+                          <Button
+                            size="sm"
+                            className="h-6 text-xs"
+                            onClick={() => { onSetCityFaction!(selected, pendingCityFaction!); setPendingCityFaction(null) }}
+                          >
+                            Save to .map
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {isCitySpawnerHere && (
+                      <div className="space-y-1">
+                        <label className="flex items-center gap-2 text-xs">
+                          {onSetCitySpawnHero ? (
+                            <Checkbox
+                              checked={shownSpawnHero}
+                              onCheckedChange={(v) => setPendingSpawnHero(v === true)}
+                            />
+                          ) : (
+                            <Checkbox checked={shownSpawnHero} disabled />
+                          )}
+                          Spawns with a hero
+                        </label>
+                        {shownSpawnHero && <p className="text-xs text-muted-foreground pl-6">Random hero</p>}
+                        {spawnHeroDirty && (
+                          <div className="flex items-center gap-2 pt-1">
+                            <p className="text-xs text-amber-600">Unsaved change</p>
+                            <Button
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() => { onSetCitySpawnHero!(selected, pendingSpawnHero!); setPendingSpawnHero(null) }}
+                            >
+                              Save to .map
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!isCitySpawnerHere && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Hero</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs">{shownHeroSid === 'random' ? 'Random' : shownHeroSid}</p>
+                          {onSetHeroSid && (
+                            <>
+                              <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
+                                Browse…
+                              </Button>
+                              {shownHeroSid !== 'random' && (
+                                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setPendingHeroSid('random')}>
+                                  Set to random
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        {heroDirty && (
+                          <div className="flex items-center gap-2 pt-1">
+                            <p className="text-xs text-amber-600">Unsaved change</p>
+                            <Button
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() => { onSetHeroSid!(selected, pendingHeroSid!); setPendingHeroSid(null) }}
+                            >
+                              Save to .map
+                            </Button>
+                          </div>
+                        )}
+                        {onSetHeroSid && (
+                          <HeroPickerDialog
+                            open={heroPickerOpen}
+                            onOpenChange={setHeroPickerOpen}
+                            value={shownHeroSid !== 'random' ? shownHeroSid : undefined}
+                            lockedFaction={heroFactionFilter || undefined}
+                            onSelect={(entry) => { if (entry.heroId) setPendingHeroSid(entry.heroId) }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+              {isCitySpawner && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Spawner type</p>
+                  <p className="text-xs">City</p>
+                </div>
+              )}
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Player attached to this spawner</p>
                 {onSetSpawnerOwner && playersCount > 0 ? (

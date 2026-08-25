@@ -186,9 +186,12 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
   const propCities = b2.objectsProperties?.propCities ?? []
   const propHeroes = b2.objectsProperties?.propHeroes ?? []
   const factionByKey = new Map<string, string>()
+  const spawnHeroByKey = new Map<string, boolean>()
   for (const c of propCities) {
-    if (c.id === undefined || typeof c.factionSid !== 'string' || !c.factionSid.trim()) continue
-    factionByKey.set(`${c.type ?? ''}:${c.id}`, c.factionSid)
+    if (c.id === undefined) continue
+    const key = `${c.type ?? ''}:${c.id}`
+    if (typeof c.factionSid === 'string' && c.factionSid.trim()) factionByKey.set(key, c.factionSid)
+    if (typeof c.spawnHero === 'boolean') spawnHeroByKey.set(key, c.spawnHero)
   }
   // A generic "this instance is a city" flag from propCities' mere presence
   // (issue #143) — deliberately independent of spawnerInfo/propSpawns, which
@@ -317,6 +320,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
       spawnPointType: s.spawnPointType as 0 | 1,
       factionSid: factionByKey.get(key),
       heroSid: heroSidByKey.get(key),
+      spawnHero: spawnHeroByKey.get(key),
     })
   }
 

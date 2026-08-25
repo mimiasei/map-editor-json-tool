@@ -21,6 +21,8 @@ import {
   upsertPropPortals,
   setCustomCityName,
   upsertPropHero,
+  setCitySpawnHero,
+  setCityFaction,
   upsertPropSquads,
   upsertPropRandomSquads,
   setRandomSquadValue,
@@ -49,6 +51,8 @@ export type MapSaveEdit =
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
   | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
+  | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean }
+  | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string }
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
@@ -158,6 +162,10 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = setCustomCityName(newChunks[1], edit.entityType, edit.entityId, edit.customCityName)
   } else if (edit?.kind === 'setHeroSid') {
     newChunks[1] = upsertPropHero(newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
+  } else if (edit?.kind === 'setCitySpawnHero') {
+    newChunks[1] = setCitySpawnHero(newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
+  } else if (edit?.kind === 'setCityFaction') {
+    newChunks[1] = setCityFaction(newChunks[1], edit.entityType, edit.entityId, edit.factionSid)
   } else if (edit?.kind === 'setGuardSquad') {
     newChunks[1] = upsertPropSquads(newChunks[1], edit.entityType, edit.entityId, edit.unitProps)
   } else if (edit?.kind === 'setCityGarrison') {
@@ -306,6 +314,30 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.heroSid !== edit.heroSid) {
       throw new Error('Verification failed: heroSid not reflected in the rebuilt propHeroes table')
+    }
+  } else if (edit?.kind === 'setCitySpawnHero') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: {
+        propCities?: Array<{ type?: number | string; id?: number; spawnHero?: boolean }>
+        propHeroes?: Array<{ type?: number | string; id?: number }>
+      }
+    }
+    const cityMatch = (block2.objectsProperties?.propCities ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    const heroRowPresent = (block2.objectsProperties?.propHeroes ?? [])
+      .some((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!cityMatch || cityMatch.spawnHero !== edit.spawnHero || heroRowPresent !== edit.spawnHero) {
+      throw new Error('Verification failed: spawnHero not reflected consistently in propCities/propHeroes')
+    }
+  } else if (edit?.kind === 'setCityFaction') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propCities?: Array<{ type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }> }
+    }
+    const match = (block2.objectsProperties?.propCities ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    const expectedDefined = edit.factionSid !== ''
+    if (!match || match.factionSid !== edit.factionSid || match.isDefined !== expectedDefined) {
+      throw new Error('Verification failed: faction not reflected in the rebuilt propCities table')
     }
   } else if (edit?.kind === 'setGuardSquad') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

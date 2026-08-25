@@ -101,15 +101,24 @@ export const DraggableDialogContent = React.forwardRef<
           e.preventDefault()
         }
         // A Radix Select/DropdownMenu/Popover nested inside this dialog's
-        // content (e.g. the Map Grid info column's player/portal-target
-        // dropdowns) portals its open content to a `[data-radix-popper-
-        // content-wrapper]` outside this dialog's own DOM subtree. Clicking
-        // an item in it is consumed by the Select first and never reaches
-        // here, but a pointerdown that just DISMISSES the open dropdown
-        // (clicking elsewhere) was still reaching this dialog's own outside-
-        // pointerdown check and closing the whole dialog underneath it —
-        // same class of bug as the separator case above, same fix.
-        if (target?.closest('[data-radix-popper-content-wrapper]')) {
+        // content (e.g. the Map Grid info column's player/faction dropdowns)
+        // portals its open content elsewhere in the DOM. Clicking an item in
+        // it is consumed by the Select first and never reaches here, but a
+        // pointerdown that just DISMISSES the open dropdown — clicking
+        // anywhere else, including outside this dialog's own floating
+        // window, since it's not full-screen — was still reaching this
+        // dialog's own outside-pointerdown check and closing the whole
+        // dialog underneath it. An earlier fix here allow-listed
+        // `[data-radix-popper-content-wrapper]` by the CLICK'S OWN target,
+        // which only covers the click landing back inside the dialog; it
+        // didn't cover the dismiss-click landing outside the dialog
+        // entirely, which is legitimate ("outside the dialog" is literally
+        // true) but still shouldn't close it while a nested Select is what's
+        // actually being dismissed. Checking whether any Select is *open at
+        // all* at pointerdown time, regardless of where the click lands,
+        // covers both cases.
+        if (target?.closest('[data-radix-popper-content-wrapper]')
+          || document.querySelector('[role="listbox"][data-state="open"]')) {
           e.preventDefault()
         }
         onPointerDownOutside?.(e)
