@@ -32,16 +32,30 @@ const SPAWNER_TYPES = [
   { value: 'hero-spawner', label: 'Hero' },
 ] as const
 
-/** Spread N players evenly along the top edge, clear of the map border by
- *  enough margin that a 3x3 spawner footprint never clips out of bounds. */
+/** Place N players in a grid near the top of the map, clear of the map
+ *  border by enough margin that a 3x3 spawner footprint never clips out of
+ *  bounds, and
+ *  spaced at least 4 tiles apart so adjacent footprints never overlap — a
+ *  single-row evenly-spread layout (the original approach here) breaks this
+ *  for a small map with several players (e.g. 16x16/6 players spaced only
+ *  2 tiles apart), and two overlapping 3x3 spawner footprints shadow each
+ *  other in the tile-index stacking pick, making one of them unselectable
+ *  in the Map Grid — confirmed both by computing real gaps for that case and
+ *  by directly testing buildTileIndex()'s stacking behavior. Wraps into
+ *  multiple rows instead of tightening the gap once a row can't fit
+ *  everyone at safe spacing. */
 function defaultPlayerNodes(sizeX: number, sizeZ: number, n: number): number[] {
-  const marginX = Math.min(2, Math.max(1, Math.floor(sizeX / 4)))
-  const z = Math.min(2, Math.max(1, Math.floor(sizeZ / 4)))
-  const usableX = Math.max(0, sizeX - 1 - 2 * marginX)
+  if (n === 0) return []
+  const SPACING = 4 // > the widest real player-start footprint (3x3)
+  const margin = Math.min(2, Math.max(1, Math.floor(Math.min(sizeX, sizeZ) / 4)))
+  const cols = Math.max(1, Math.min(n, Math.floor((sizeX - 2 * margin) / SPACING) + 1))
   const nodes: number[] = []
   for (let i = 0; i < n; i++) {
-    const x = marginX + Math.round((i * usableX) / Math.max(1, n - 1))
-    nodes.push(z * sizeX + Math.min(x, sizeX - 1))
+    const col = i % cols
+    const row = Math.floor(i / cols)
+    const x = Math.min(sizeX - 1, margin + col * SPACING)
+    const z = Math.min(sizeZ - 1, margin + row * SPACING)
+    nodes.push(z * sizeX + x)
   }
   return nodes
 }
@@ -121,7 +135,7 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Placed along the top edge — move them individually in the Map Grid afterward.
+                Placed in a grid near the top edge — move them individually in the Map Grid afterward.
               </p>
             </div>
           )}
