@@ -117,6 +117,27 @@ export function footprintIconBounds(cells: FootprintCell[]): FootprintBounds | n
   return { minX, maxX, minZ, maxZ }
 }
 
+/**
+ * Icon-rendering bounds for a placed instance, aware of one confirmed
+ * exception to the general "1" cells = icon" rule: `hero-spawner` shares its
+ * 3×3 `city-spawner`-style template (8 solid "1" cells around one "2"
+ * interaction cell), but unlike a city-spawner — a real building that does
+ * occupy its full solid footprint — a hero-spawner places a single hero
+ * character. Confirmed in-game: the hero actually appears at the template's
+ * one "2" cell, in the bottom-left corner of the 3×3 area, not spanning the
+ * full building-sized footprint. Falls back to footprintIconBounds() (the
+ * general "1"-cells rule) for every other sid, including city-spawner.
+ */
+export function iconBoundsForSid(cells: FootprintCell[], sid: string | undefined): FootprintBounds | null {
+  if (sid === 'hero-spawner') {
+    const interactionCell = cells.find((cell) => cell.value === 2)
+    if (interactionCell) {
+      return { minX: interactionCell.x, maxX: interactionCell.x, minZ: interactionCell.z, maxZ: interactionCell.z }
+    }
+  }
+  return footprintIconBounds(cells)
+}
+
 /** Whether every one of a footprint's cells falls within the map's bounds —
  *  used by Move (issue #167 Phase A) to refuse a destination that would push
  *  any part of a multi-tile object off the edge of the map. */

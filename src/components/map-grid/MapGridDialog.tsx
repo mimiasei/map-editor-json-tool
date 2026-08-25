@@ -51,7 +51,7 @@ import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, type Bi
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
-import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
+import { footprintIconBounds, iconBoundsForSid, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -923,11 +923,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (bounds.maxX === bounds.minX && bounds.maxZ === bounds.minZ) continue // plain 1x1 — handled above
       const pick = primaryByNode.get(obj.node)
       if (!pick || pick.primary.key !== obj.key) continue
-      const screenRowMin = sizeZ - 1 - bounds.maxZ
-      const screenRowMax = sizeZ - 1 - bounds.minZ
-      if (bounds.maxX < visibleRange.xMin || bounds.minX > visibleRange.xMax) continue
+      // hero-spawner renders a 1x1 icon at its interaction cell (see
+      // iconBoundsForSid) even though its raw footprint is still the 3x3
+      // shape checked just above — that shape-check must stay unchanged so
+      // this object keeps routing through this multi-tile path instead of
+      // visibleCells' node-driven one, which can't find it (its interaction
+      // cell is a "2", never registered in tileIndex/primaryByNode).
+      const renderBounds = iconBoundsForSid(cells, obj.sid) ?? bounds
+      const screenRowMin = sizeZ - 1 - renderBounds.maxZ
+      const screenRowMax = sizeZ - 1 - renderBounds.minZ
+      if (renderBounds.maxX < visibleRange.xMin || renderBounds.minX > visibleRange.xMax) continue
       if (screenRowMax < visibleRange.zMin || screenRowMin > visibleRange.zMax) continue
-      icons.push({ key: obj.key, ...bounds, screenRowMin, screenRowMax, pick })
+      icons.push({ key: obj.key, ...renderBounds, screenRowMin, screenRowMax, pick })
     }
     return icons
   }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, primaryByNode, visibleRange])
@@ -1345,7 +1352,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const z = Math.floor(moveState.node / sizeX)
     if (moveState.type !== 0) return { minX: x, maxX: x, minZ: z, maxZ: z }
     const template = catalog?.mapObjects.find((o) => o.id === moveState.sid)
-    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+    return iconBoundsForSid(computeFootprintTiles(template, x, z), moveState.sid) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [moveState, sizeX, catalog])
 
   // ── Place object (issue #167 Phase B) ───────────────────────────────────
@@ -1511,7 +1518,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const x = hoveredNode % sizeX
     const z = Math.floor(hoveredNode / sizeX)
     const template = catalog?.mapObjects.find((o) => o.id === activePlacingSid)
-    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+    return iconBoundsForSid(computeFootprintTiles(template, x, z), activePlacingSid ?? undefined) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [activePlacingSid, hoveredNode, sizeX, catalog])
   const placingValid = activePlacingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(activePlacingSid, hoveredNode)
 
