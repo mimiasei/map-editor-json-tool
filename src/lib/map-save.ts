@@ -66,17 +66,24 @@ export type MapSaveEdit =
   | { kind: 'paintObjects'; additions: { node: number; sid: string }[]; deletions: number[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
- *  deleteObject/addObject/paintObjects is scoped to Block 2 (chunks[1]) alone;
- *  those four also touch Block 1 (chunks[0]) — setSpawnerPlayerType because the
- *  Player type is duplicated across both, deleteObject because deleting a
- *  spawner also needs to clear its paired Block 1 spawns.spawns[] entry,
- *  addObject/paintObjects because adding a city-spawner/hero-spawner needs to
- *  claim an unclaimed player slot there (every OTHER sid leaves Block 1
- *  untouched, but this flag is a coarse per-kind allowance, not per-sid — see
- *  each function's own doc comment in map-write.ts). */
+ *  swapSpawnerOwner/deleteObject/addObject/paintObjects/setHeroSid/setCitySpawnHero/
+ *  setCityFaction is scoped to Block 2 (chunks[1]) alone; those also touch
+ *  Block 1 (chunks[0]) — setSpawnerPlayerType because the Player type is
+ *  duplicated across both, deleteObject because deleting a spawner also
+ *  needs to clear its paired Block 1 spawns.spawns[] entry, addObject/
+ *  paintObjects because adding a city-spawner/hero-spawner needs to claim an
+ *  unclaimed player slot there, and setHeroSid/setCitySpawnHero/
+ *  setCityFaction because Block 1's spawns.spawns[] duplicates
+ *  factionSid/isCityDefined/heroSid/isHeroDefined per owner — confirmed via
+ *  a real map (Stormlight.map) whose faction/hero edits only took effect
+ *  in-game after Block 1 was also updated (originally only GME did this;
+ *  see setCityFaction/setCitySpawnHero/upsertPropHero in map-write.ts) —
+ *  every OTHER sid leaves Block 1 untouched, but this flag is a coarse
+ *  per-kind allowance, not per-sid — see each function's own doc comment in
+ *  map-write.ts). */
 function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
   if (!edit) return new Set()
-  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'swapSpawnerOwner' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects'
+  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'swapSpawnerOwner' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects' || edit.kind === 'setHeroSid' || edit.kind === 'setCitySpawnHero' || edit.kind === 'setCityFaction'
     ? new Set([0, 1])
     : new Set([1])
 }
@@ -161,11 +168,17 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   } else if (edit?.kind === 'setCityName') {
     newChunks[1] = setCustomCityName(newChunks[1], edit.entityType, edit.entityId, edit.customCityName)
   } else if (edit?.kind === 'setHeroSid') {
-    newChunks[1] = upsertPropHero(newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
+    const patched = upsertPropHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
+    newChunks[0] = patched.block1Chunk
+    newChunks[1] = patched.block2Chunk
   } else if (edit?.kind === 'setCitySpawnHero') {
-    newChunks[1] = setCitySpawnHero(newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
+    const patched = setCitySpawnHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
+    newChunks[0] = patched.block1Chunk
+    newChunks[1] = patched.block2Chunk
   } else if (edit?.kind === 'setCityFaction') {
-    newChunks[1] = setCityFaction(newChunks[1], edit.entityType, edit.entityId, edit.factionSid)
+    const patched = setCityFaction(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.factionSid)
+    newChunks[0] = patched.block1Chunk
+    newChunks[1] = patched.block2Chunk
   } else if (edit?.kind === 'setGuardSquad') {
     newChunks[1] = upsertPropSquads(newChunks[1], edit.entityType, edit.entityId, edit.unitProps)
   } else if (edit?.kind === 'setCityGarrison') {
@@ -308,18 +321,32 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     }
   } else if (edit?.kind === 'setHeroSid') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
-      objectsProperties?: { propHeroes?: Array<{ type?: number | string; id?: number; heroSid?: string }> }
+      objectsProperties?: {
+        propHeroes?: Array<{ type?: number | string; id?: number; heroSid?: string }>
+        propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }>
+      }
     }
     const entries = block2.objectsProperties?.propHeroes ?? []
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.heroSid !== edit.heroSid) {
       throw new Error('Verification failed: heroSid not reflected in the rebuilt propHeroes table')
     }
+    const owner = (block2.objectsProperties?.propSpawns ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)?.owner
+    const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
+      spawns?: { spawns?: Array<{ owner?: number; isHeroDefined?: boolean; heroSid?: string }> }
+    }
+    const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === owner)
+    const expectedDefined = edit.heroSid !== 'random'
+    if (!entry1 || entry1.isHeroDefined !== expectedDefined || entry1.heroSid !== (expectedDefined ? edit.heroSid : '')) {
+      throw new Error('Verification failed: heroSid not reflected in the rebuilt Block 1 spawns table')
+    }
   } else if (edit?.kind === 'setCitySpawnHero') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: {
         propCities?: Array<{ type?: number | string; id?: number; spawnHero?: boolean }>
         propHeroes?: Array<{ type?: number | string; id?: number }>
+        propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }>
       }
     }
     const cityMatch = (block2.objectsProperties?.propCities ?? [])
@@ -329,15 +356,36 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     if (!cityMatch || cityMatch.spawnHero !== edit.spawnHero || heroRowPresent !== edit.spawnHero) {
       throw new Error('Verification failed: spawnHero not reflected consistently in propCities/propHeroes')
     }
+    const owner = (block2.objectsProperties?.propSpawns ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)?.owner
+    const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
+      spawns?: { spawns?: Array<{ owner?: number; isHeroDefined?: boolean; heroSid?: string }> }
+    }
+    const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === owner)
+    if (!entry1 || entry1.isHeroDefined !== false || entry1.heroSid !== '') {
+      throw new Error('Verification failed: spawnHero not reflected in the rebuilt Block 1 spawns table')
+    }
   } else if (edit?.kind === 'setCityFaction') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
-      objectsProperties?: { propCities?: Array<{ type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }> }
+      objectsProperties?: {
+        propCities?: Array<{ type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }>
+        propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }>
+      }
     }
     const match = (block2.objectsProperties?.propCities ?? [])
       .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     const expectedDefined = edit.factionSid !== ''
     if (!match || match.factionSid !== edit.factionSid || match.isDefined !== expectedDefined) {
       throw new Error('Verification failed: faction not reflected in the rebuilt propCities table')
+    }
+    const owner = (block2.objectsProperties?.propSpawns ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)?.owner
+    const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
+      spawns?: { spawns?: Array<{ owner?: number; isCityDefined?: boolean; factionSid?: string }> }
+    }
+    const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === owner)
+    if (!entry1 || entry1.isCityDefined !== expectedDefined || entry1.factionSid !== edit.factionSid) {
+      throw new Error('Verification failed: faction not reflected in the rebuilt Block 1 spawns table')
     }
   } else if (edit?.kind === 'setGuardSquad') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
