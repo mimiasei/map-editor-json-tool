@@ -62,6 +62,7 @@ export function computeFootprintTiles(
   template: FootprintTemplate | undefined,
   anchorX: number,
   anchorZ: number,
+  sid?: string,
 ): FootprintCell[] {
   if (!template) {
     return [{ x: anchorX, z: anchorZ, value: 1 }]
@@ -81,6 +82,19 @@ export function computeFootprintTiles(
       z: anchorZ + lz - pivotZ,
       value: template.nodes[i],
     })
+  }
+  // hero-spawner shares city-spawner's 3×3 catalog template (8 solid "1"
+  // cells around one "2" interaction cell), which is correct for a
+  // city-spawner — a real building occupying its full footprint — but not
+  // for a hero-spawner: confirmed in-game, the hero itself is a single-tile
+  // character standing at that one "2" cell, not a 3×3 structure. Override
+  // the whole footprint (not just icon rendering) to that one cell, marked
+  // solid, so click-hit-testing, blocked-tile passability, and move/place
+  // bounds-checking all agree it's a genuine 1×1 object instead of treating
+  // the other 8 cells of the shared template as real, blocking, in-game space.
+  if (sid === 'hero-spawner') {
+    const interactionCell = cells.find((cell) => cell.value === 2)
+    if (interactionCell) return [{ x: interactionCell.x, z: interactionCell.z, value: 1 }]
   }
   return cells
 }
@@ -115,27 +129,6 @@ export function footprintIconBounds(cells: FootprintCell[]): FootprintBounds | n
   }
   if (minX === Infinity) return null
   return { minX, maxX, minZ, maxZ }
-}
-
-/**
- * Icon-rendering bounds for a placed instance, aware of one confirmed
- * exception to the general "1" cells = icon" rule: `hero-spawner` shares its
- * 3×3 `city-spawner`-style template (8 solid "1" cells around one "2"
- * interaction cell), but unlike a city-spawner — a real building that does
- * occupy its full solid footprint — a hero-spawner places a single hero
- * character. Confirmed in-game: the hero actually appears at the template's
- * one "2" cell, in the bottom-left corner of the 3×3 area, not spanning the
- * full building-sized footprint. Falls back to footprintIconBounds() (the
- * general "1"-cells rule) for every other sid, including city-spawner.
- */
-export function iconBoundsForSid(cells: FootprintCell[], sid: string | undefined): FootprintBounds | null {
-  if (sid === 'hero-spawner') {
-    const interactionCell = cells.find((cell) => cell.value === 2)
-    if (interactionCell) {
-      return { minX: interactionCell.x, maxX: interactionCell.x, minZ: interactionCell.z, maxZ: interactionCell.z }
-    }
-  }
-  return footprintIconBounds(cells)
 }
 
 /** Whether every one of a footprint's cells falls within the map's bounds —
