@@ -569,10 +569,13 @@ interface PropHeroEntry {
 }
 
 /**
- * Set a hero spawner's heroSid. Requires an existing propHeroes entry for
- * (entityType, entityId) — same "refuse to fabricate a new entry" reasoning
- * as setCustomCityName: a real hero spawner always has one already (it's how
- * this editor knows the object is a hero spawner at all).
+ * Set a hero spawner's heroSid, or pass 'random' to set it back to a random
+ * hero (isDefined:false) — confirmed real, GME-authored state (a user-built
+ * test map's hero-spawner had exactly {isDefined:false, heroSid:"random"}).
+ * Requires an existing propHeroes entry for (entityType, entityId) — same
+ * "refuse to fabricate a new entry" reasoning as setCustomCityName: a real
+ * hero spawner always has one already (it's how this editor knows the
+ * object is a hero spawner at all).
  */
 export function upsertPropHero(chunk: Uint8Array, entityType: number, entityId: number, heroSid: string): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
@@ -584,7 +587,64 @@ export function upsertPropHero(chunk: Uint8Array, entityType: number, entityId: 
     throw new Error(`No propHeroes entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured hero spawner`)
   }
   existing.heroSid = heroSid
-  existing.isDefined = true
+  existing.isDefined = heroSid !== 'random'
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
+/**
+ * Toggle whether a city spawner comes with a companion hero. A city's
+ * companion hero has no "pick a specific one" state at all — confirmed on a
+ * user-built test map, GME only ever produces {isDefined:false,
+ * heroSid:"random"} for it — so turning this on always (re)creates that
+ * exact row; turning it off removes it entirely. Confirmed on the same test
+ * map that spawnHero:true/false always co-occurs with a propHeroes row
+ * existing/not existing for that (type,id).
+ */
+export function setCitySpawnHero(chunk: Uint8Array, entityType: number, entityId: number, spawnHero: boolean): Uint8Array {
+  let text = new TextDecoder('utf-8').decode(chunk)
+  const citiesSpan = findJsonArraySpan(text, 'propCities')
+  const cities = JSON.parse(citiesSpan.span) as { type?: number | string; id?: number; spawnHero?: boolean }[]
+  const city = cities.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!city) {
+    throw new Error(`No propCities entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured city spawner`)
+  }
+  city.spawnHero = spawnHero
+  text = text.slice(0, citiesSpan.arrayOpen) + JSON.stringify(cities) + text.slice(citiesSpan.arrayClose + 1)
+
+  const heroesSpan = findJsonArraySpan(text, 'propHeroes')
+  const heroes = JSON.parse(heroesSpan.span) as PropHeroEntry[]
+  const idx = heroes.findIndex((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (spawnHero) {
+    if (idx === -1) heroes.push({ type: entityType, id: entityId, isDefined: false, heroSid: 'random' })
+  } else if (idx !== -1) {
+    heroes.splice(idx, 1)
+  }
+  text = text.slice(0, heroesSpan.arrayOpen) + JSON.stringify(heroes) + text.slice(heroesSpan.arrayClose + 1)
+
+  return new TextEncoder().encode(text)
+}
+
+/**
+ * Set a city spawner's faction, or '' for random. Confirmed real on a
+ * user-built test map: both a fresh spawnHero:true and spawnHero:false city
+ * had {isDefined:false, factionSid:""} — GME's own default/unset state, not
+ * a broken one. isDefined mirrors propHeroes.isDefined exactly: true only
+ * when a real faction has been explicitly chosen.
+ */
+export function setCityFaction(chunk: Uint8Array, entityType: number, entityId: number, factionSid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propCities')
+
+  const entries = JSON.parse(span) as { type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }[]
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!existing) {
+    throw new Error(`No propCities entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured city spawner`)
+  }
+  existing.factionSid = factionSid
+  existing.isDefined = factionSid !== ''
 
   const patchedSpan = JSON.stringify(entries)
   const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
@@ -1089,14 +1149,12 @@ const PLAYER_START_SPAWNER_DEFAULTS: Record<string, PlayerStartSpawnerDefault> =
     spawnPointType: 1,
     extraTables: [
       {
-        // Every real hero-spawner ships with a hero already assigned
-        // (isDefined:true) — no real "blank" instance exists to confirm
-        // against directly, but the field SET itself (exactly these two
-        // keys, on every real instance surveyed) is unambiguous; isDefined:
-        // false/heroSid:'' mirrors propCities' own confirmed "not yet
-        // chosen" convention above.
+        // Every real SHIPPED hero-spawner ships with a hero already assigned
+        // (isDefined:true) — but a user-built test map's fresh hero-spawner
+        // confirmed {isDefined:false, heroSid:"random"} is GME's own real
+        // default/random state (not empty string — see upsertPropHero).
         table: 'propHeroes',
-        row: (id) => ({ type: 0, id, isDefined: false, heroSid: '' }),
+        row: (id) => ({ type: 0, id, isDefined: false, heroSid: 'random' }),
       },
     ],
   },

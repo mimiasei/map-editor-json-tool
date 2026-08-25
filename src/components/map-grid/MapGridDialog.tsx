@@ -1083,6 +1083,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
 
+  const handleSetCityFaction = async (item: PlacedObject, factionSid: string) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid })
+    } catch (e) {
+      logError(`Failed to set faction: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  const handleSetCitySpawnHero = async (item: PlacedObject, spawnHero: boolean) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero })
+    } catch (e) {
+      logError(`Failed to toggle companion hero: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+  const handleSetHeroSid = async (item: PlacedObject, heroSid: string) => {
+    if (!mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid })
+    } catch (e) {
+      logError(`Failed to set hero: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
   const handleSetPortalTarget = async (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) => {
     if (!mapFilePath) return
@@ -2191,6 +2216,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetSpawnerPlayerType={canEditEntities ? handleSetSpawnerPlayerType : undefined}
                   playersCount={context?.playersCount ?? 0}
                   onSetSpawnerOwner={canEditEntities ? handleSetSpawnerOwner : undefined}
+                  onSetCityFaction={canEditEntities ? handleSetCityFaction : undefined}
+                  onSetCitySpawnHero={canEditEntities ? handleSetCitySpawnHero : undefined}
+                  onSetHeroSid={canEditEntities ? handleSetHeroSid : undefined}
                   allPortals={allPortals}
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}

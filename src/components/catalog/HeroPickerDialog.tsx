@@ -39,6 +39,10 @@ interface Props {
   mode?: PickerMode
   /** Overrides the header. */
   title?: string
+  /** Restrict to one faction's entries (raw catalog faction id, e.g. "human") and hide the
+   *  picker's own faction filter row — used when the caller already knows the faction (e.g.
+   *  the Map Grid's spawner Faction field) so there's nothing left to filter by. */
+  lockedFaction?: string
 }
 
 export default function HeroPickerDialog({
@@ -48,6 +52,7 @@ export default function HeroPickerDialog({
   onSelect,
   mode = 'hero',
   title,
+  lockedFaction,
 }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
   const [search, setSearch] = useState('')
@@ -91,11 +96,12 @@ export default function HeroPickerDialog({
       ) {
         return false
       }
+      if (lockedFaction !== undefined && e.fraction !== lockedFaction) return false
       return portraitFilterAdmits(filter, factionOf(e), e.kind)
     })
     return groupByFaction(matching, factionOf)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, search, catalog, filter])
+  }, [entries, search, catalog, filter, lockedFaction])
 
   const shown = groups.reduce((n, g) => n + g.items.length, 0)
 
@@ -132,13 +138,15 @@ export default function HeroPickerDialog({
           <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
             {shown === entries.length ? entries.length : `${shown}/${entries.length}`}
           </span>
-          <div data-nodrag>
-            <HeroPickerFilter
-              value={filter}
-              onChange={setFilter}
-              showKinds={mode === 'portrait'}
-            />
-          </div>
+          {lockedFaction === undefined && (
+            <div data-nodrag>
+              <HeroPickerFilter
+                value={filter}
+                onChange={setFilter}
+                showKinds={mode === 'portrait'}
+              />
+            </div>
+          )}
         </DraggableDialogDragHandle>
 
         <ScrollArea className="flex-1 min-h-0">

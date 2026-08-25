@@ -137,10 +137,14 @@ export interface PlacedObject {
     spawnType: 0 | 1 | 2
     /** "Spawner type": 0=City, 1=Hero. */
     spawnPointType: 0 | 1
-    /** Set for city spawners with a defined faction; absent/undefined means random or unset. */
+    /** Set for city spawners with a defined faction; absent/undefined means random. */
     factionSid?: string
-    /** Set for hero spawners with a defined hero; absent/undefined means random or unset. */
+    /** A defined hero sid, or the literal string "random" — city spawners' companion hero
+     *  (when spawnHero is true) and hero spawners' own hero both use this same field/table. */
     heroSid?: string
+    /** City spawners only: whether this city comes with a companion hero (always random when
+     *  true — GME gives no way to pick a specific one). Undefined for hero spawners. */
+    spawnHero?: boolean
   }
   /** Enrichment: portal linkage from objectsProperties.propPortals (issue #127).
    *  Present only for objects with a propPortals entry (i.e. actual portal objects). */
