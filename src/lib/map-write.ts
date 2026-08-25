@@ -402,7 +402,25 @@ interface PropSpawnEntry {
 interface Block1SpawnEntry {
   owner?: number
   spawnType?: number
+  isCityDefined?: boolean
+  factionSid?: string
+  isHeroDefined?: boolean
+  heroSid?: string
   [key: string]: unknown
+}
+
+/** Look up which player `owner` a spawner belongs to, via Block 2's
+ *  propSpawns[] — the join every faction/hero edit needs before it can also
+ *  patch Block 1's spawns.spawns[] copy of that data (see upsertPropHero,
+ *  setCitySpawnHero, setCityFaction below). */
+function findOwnerForEntity(block2Text: string, entityType: number, entityId: number): number {
+  const span = findJsonArraySpan(block2Text, 'propSpawns')
+  const propSpawns = JSON.parse(span.span) as PropSpawnEntry[]
+  const entry = propSpawns.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!entry || entry.owner === undefined) {
+    throw new Error(`No propSpawns entry found for (type=${entityType}, id=${entityId})`)
+  }
+  return entry.owner
 }
 
 /**
@@ -576,22 +594,53 @@ interface PropHeroEntry {
  * "refuse to fabricate a new entry" reasoning as setCustomCityName: a real
  * hero spawner always has one already (it's how this editor knows the
  * object is a hero spawner at all).
+ *
+ * Also patches Block 1's spawns.spawns[] entry for this spawner's owner —
+ * confirmed against a real map (Stormlight.map vs. the same map resaved by
+ * GME after this exact edit) that Block 1 duplicates isHeroDefined/heroSid
+ * per-owner alongside Block 2's propHeroes, and the actual game reads Block
+ * 1's copy: a TSE save that only patched propHeroes loaded fine in both
+ * editors but the chosen hero never appeared in-game, while GME's resave
+ * (which updates both) worked every time. Block 1 uses '' as its "no
+ * defined hero" sentinel, not the literal "random" string propHeroes uses —
+ * confirmed distinct per block from the same real comparison.
  */
-export function upsertPropHero(chunk: Uint8Array, entityType: number, entityId: number, heroSid: string): Uint8Array {
-  const text = new TextDecoder('utf-8').decode(chunk)
-  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propHeroes')
+export function upsertPropHero(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  heroSid: string,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  const text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  const span2 = findJsonArraySpan(text2, 'propHeroes')
 
-  const entries = JSON.parse(span) as PropHeroEntry[]
+  const entries = JSON.parse(span2.span) as PropHeroEntry[]
   const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
   if (!existing) {
     throw new Error(`No propHeroes entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured hero spawner`)
   }
   existing.heroSid = heroSid
-  existing.isDefined = heroSid !== 'random'
+  const isDefined = heroSid !== 'random'
+  existing.isDefined = isDefined
+  const patchedText2 = text2.slice(0, span2.arrayOpen) + JSON.stringify(entries) + text2.slice(span2.arrayClose + 1)
 
-  const patchedSpan = JSON.stringify(entries)
-  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
-  return new TextEncoder().encode(patchedText)
+  const owner = findOwnerForEntity(patchedText2, entityType, entityId)
+  const text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  const span1 = findJsonArraySpan(text1, 'spawns')
+  const block1Spawns = JSON.parse(span1.span) as Block1SpawnEntry[]
+  const entry1 = block1Spawns.find((e) => e.owner === owner)
+  if (!entry1) {
+    throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
+  }
+  entry1.isHeroDefined = isDefined
+  entry1.heroSid = isDefined ? heroSid : ''
+  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+
+  return {
+    block1Chunk: new TextEncoder().encode(patchedText1),
+    block2Chunk: new TextEncoder().encode(patchedText2),
+  }
 }
 
 /**
@@ -602,19 +651,31 @@ export function upsertPropHero(chunk: Uint8Array, entityType: number, entityId: 
  * exact row; turning it off removes it entirely. Confirmed on the same test
  * map that spawnHero:true/false always co-occurs with a propHeroes row
  * existing/not existing for that (type,id).
+ *
+ * Also patches Block 1's spawns.spawns[] entry for this spawner's owner to
+ * isHeroDefined:false, heroSid:'' in both directions — TSE itself never
+ * writes a real companion-hero value here (see upsertPropHero's doc comment
+ * for why this sync matters at all: a real map/GME-resave comparison showed
+ * the game reads Block 1, not Block 2, for a player's starting hero state).
  */
-export function setCitySpawnHero(chunk: Uint8Array, entityType: number, entityId: number, spawnHero: boolean): Uint8Array {
-  let text = new TextDecoder('utf-8').decode(chunk)
-  const citiesSpan = findJsonArraySpan(text, 'propCities')
+export function setCitySpawnHero(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  spawnHero: boolean,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  const citiesSpan = findJsonArraySpan(text2, 'propCities')
   const cities = JSON.parse(citiesSpan.span) as { type?: number | string; id?: number; spawnHero?: boolean }[]
   const city = cities.find((e) => String(e.type) === String(entityType) && e.id === entityId)
   if (!city) {
     throw new Error(`No propCities entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured city spawner`)
   }
   city.spawnHero = spawnHero
-  text = text.slice(0, citiesSpan.arrayOpen) + JSON.stringify(cities) + text.slice(citiesSpan.arrayClose + 1)
+  text2 = text2.slice(0, citiesSpan.arrayOpen) + JSON.stringify(cities) + text2.slice(citiesSpan.arrayClose + 1)
 
-  const heroesSpan = findJsonArraySpan(text, 'propHeroes')
+  const heroesSpan = findJsonArraySpan(text2, 'propHeroes')
   const heroes = JSON.parse(heroesSpan.span) as PropHeroEntry[]
   const idx = heroes.findIndex((e) => String(e.type) === String(entityType) && e.id === entityId)
   if (spawnHero) {
@@ -622,9 +683,24 @@ export function setCitySpawnHero(chunk: Uint8Array, entityType: number, entityId
   } else if (idx !== -1) {
     heroes.splice(idx, 1)
   }
-  text = text.slice(0, heroesSpan.arrayOpen) + JSON.stringify(heroes) + text.slice(heroesSpan.arrayClose + 1)
+  const patchedText2 = text2.slice(0, heroesSpan.arrayOpen) + JSON.stringify(heroes) + text2.slice(heroesSpan.arrayClose + 1)
 
-  return new TextEncoder().encode(text)
+  const owner = findOwnerForEntity(patchedText2, entityType, entityId)
+  const text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  const span1 = findJsonArraySpan(text1, 'spawns')
+  const block1Spawns = JSON.parse(span1.span) as Block1SpawnEntry[]
+  const entry1 = block1Spawns.find((e) => e.owner === owner)
+  if (!entry1) {
+    throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
+  }
+  entry1.isHeroDefined = false
+  entry1.heroSid = ''
+  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+
+  return {
+    block1Chunk: new TextEncoder().encode(patchedText1),
+    block2Chunk: new TextEncoder().encode(patchedText2),
+  }
 }
 
 /**
@@ -633,22 +709,49 @@ export function setCitySpawnHero(chunk: Uint8Array, entityType: number, entityId
  * had {isDefined:false, factionSid:""} — GME's own default/unset state, not
  * a broken one. isDefined mirrors propHeroes.isDefined exactly: true only
  * when a real faction has been explicitly chosen.
+ *
+ * Also patches Block 1's spawns.spawns[] entry for this spawner's owner —
+ * see upsertPropHero's doc comment: a real map/GME-resave comparison showed
+ * the actual game reads Block 1's factionSid/isCityDefined, not Block 2's,
+ * for a player's starting faction, so leaving Block 1 stale silently no-ops
+ * this edit in-game even though both editors show it as applied.
  */
-export function setCityFaction(chunk: Uint8Array, entityType: number, entityId: number, factionSid: string): Uint8Array {
-  const text = new TextDecoder('utf-8').decode(chunk)
-  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propCities')
+export function setCityFaction(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  factionSid: string,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  const text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  const span2 = findJsonArraySpan(text2, 'propCities')
 
-  const entries = JSON.parse(span) as { type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }[]
+  const entries = JSON.parse(span2.span) as { type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }[]
   const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
   if (!existing) {
     throw new Error(`No propCities entry found for (type=${entityType}, id=${entityId}) — this object isn't a configured city spawner`)
   }
   existing.factionSid = factionSid
-  existing.isDefined = factionSid !== ''
+  const isDefined = factionSid !== ''
+  existing.isDefined = isDefined
+  const patchedText2 = text2.slice(0, span2.arrayOpen) + JSON.stringify(entries) + text2.slice(span2.arrayClose + 1)
 
-  const patchedSpan = JSON.stringify(entries)
-  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
-  return new TextEncoder().encode(patchedText)
+  const owner = findOwnerForEntity(patchedText2, entityType, entityId)
+  const text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  const span1 = findJsonArraySpan(text1, 'spawns')
+  const block1Spawns = JSON.parse(span1.span) as Block1SpawnEntry[]
+  const entry1 = block1Spawns.find((e) => e.owner === owner)
+  if (!entry1) {
+    throw new Error(`No Block 1 spawns[] entry found for owner ${owner}`)
+  }
+  entry1.factionSid = factionSid
+  entry1.isCityDefined = isDefined
+  const patchedText1 = text1.slice(0, span1.arrayOpen) + JSON.stringify(block1Spawns) + text1.slice(span1.arrayClose + 1)
+
+  return {
+    block1Chunk: new TextEncoder().encode(patchedText1),
+    block2Chunk: new TextEncoder().encode(patchedText2),
+  }
 }
 
 // ─── Guard squad (objectsProperties.propSquads) ──────────────────────────────
