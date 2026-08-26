@@ -68,7 +68,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -388,6 +388,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // of onPointerDown/Move/Up and the paint-preview canvas effect below,
   // which both reference it) to avoid a temporal-dead-zone reference.
   const [paintBiome, setPaintBiome] = useState<BiomeId | null>(null)
+  // Terrain bucket-fill (issue #193 Phase 3) — an alternate click-to-flood-
+  // fill interaction for the same Terrain tool/staging buffer, reusing
+  // floodFillRegion the same way Water does. Freehand (drag-stroke) stays
+  // the default, matching today's existing behavior unchanged.
+  const [terrainBucketMode, setTerrainBucketMode] = useState(false)
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
 
@@ -475,6 +480,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       logError(`Failed to paint terrain: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
+
+  // Terrain bucket-fill (issue #193 Phase 3) — click a tile, flood-fill
+  // every contiguous tile of ITS CURRENT biome (committed, not staged —
+  // matches Water's own "flood the real thing, not the in-progress edit"
+  // behavior) with the newly chosen biome. Merges into paintStaged exactly
+  // like a freehand stroke would, so Save/undo/preview all work unchanged.
+  const stageBucketFill = useCallback((node: number, biomeId: BiomeId) => {
+    if (tilesMap[node] === undefined) return
+    const targetBiome = tilesMap[node]
+    const region = floodFillRegion(node, sizeX, sizeZ, (n) => tilesMap[n] === targetBiome)
+    if (region.length === 0) return
+    pushUndo()
+    setPaintStaged((prev) => {
+      const next = new Map(prev)
+      for (const n of region) next.set(n, biomeId)
+      return next
+    })
+  }, [tilesMap, sizeX, sizeZ, pushUndo])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -597,6 +620,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // starts a paint stroke (captured so it continues even if the cursor
     // briefly leaves the canvas), not a viewport drag.
     if (paintBiome !== null) {
+      if (terrainBucketMode) {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) stageBucketFill(node, paintBiome)
+        return
+      }
       paintingRef.current = true
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -622,7 +650,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // Same idea while placing/painting objects: a left-button-down here is a
     // paint-stroke candidate, resolved into either a stroke or a single
     // placement by whether it crosses the threshold (see onPointerMove/Up).
-    if (placingSid || placingCreatureId) {
+    if (placingSid || placingCreatureId || placingZoneSid) {
       paintObjectDragRef.current = { startX: e.clientX, startY: e.clientY, moved: false }
       return
     }
@@ -794,6 +822,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         if (node !== null && placingCreatureTemplateSid && isNodeInBoundsForPlacement(placingCreatureTemplateSid, node)) {
           void placeCreatureAt(node)
         }
+      } else if (wasClick && placingZoneSid) {
+        // Single-click only, same as placing a creature above — zones have
+        // no drag-to-paint.
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) void placeZoneAt(node)
       }
       return
     }
@@ -1578,6 +1611,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // placingSid, so a drag while placing a creature just does nothing.
   const [placingCreatureId, setPlacingCreatureId] = useState<string | null>(null)
   const stopPlacingCreature = () => setPlacingCreatureId(null)
+
+  // ── Place zone/marker (issue #193 Phase 3) — thin wrapper on the already-
+  // fully-built addMarkerInstance/addMarker write path, which had zero UI
+  // anywhere before this. Deliberately single-click-only (like Add object),
+  // not staged like Terrain/Level/Water — a zone marker is a single simple
+  // placement with no batch-editing need, matching how "Add object"'s plain
+  // click already commits immediately rather than staging.
+  const [placingZoneSid, setPlacingZoneSid] = useState<string | null>(null)
+  const stopPlacingZone = () => setPlacingZoneSid(null)
+  const placeZoneAt = async (node: number) => {
+    if (!placingZoneSid || !mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'addMarker', sid: placingZoneSid, node })
+    } catch (e) {
+      logError(`Failed to place zone: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
   const placingCreatureTemplateSid = useMemo(() => {
     if (!placingCreatureId) return null
     const creature = catalog?.creatures.find((c) => c.id === placingCreatureId)
@@ -1709,7 +1759,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [showIcons, moveState, sizeX, sizeZ])
 
   useEffect(() => {
-    if (!open || (!placingSid && !placingCreatureId && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -1728,6 +1778,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (moveState) cancelMove()
       else if (placingSid) stopPlacingOrClearStaged()
       else if (placingCreatureId) stopPlacingCreature()
+      else if (placingZoneSid) stopPlacingZone()
       else if (paintBiome !== null) stopPainting()
       else if (levelBrush !== null) stopLevelPainting()
       else if (waterBrush !== null) stopWaterPainting()
@@ -1735,7 +1786,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, objectBrowserOpen, paintBiome, levelBrush, waterBrush, moveState, paintObjectStaged])
+  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, moveState, paintObjectStaged])
 
   // Ctrl+Z / Cmd+Z undoes the last staged-but-unsaved edit (see pushUndo's
   // call sites above) — a separate effect from Escape's above since it
@@ -1913,7 +1964,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
@@ -1949,6 +2000,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       ))}
                     </PopoverContent>
                   </Popover>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setTerrainBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to fill the contiguous same-biome region"
+                      onClick={() => setTerrainBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
                   {paintStaged.size > 0 && (
                     <>
                       <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
@@ -1967,7 +2034,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); setPaintBiome(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); setPaintBiome(1) }}
                 >
                   <Paintbrush className="h-3.5 w-3.5" />
                   Terrain
@@ -2011,7 +2078,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint elevation level"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); setLevelBrush(0) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopPlacingZone(); setLevelBrush(0) }}
                 >
                   <Layers className="h-3.5 w-3.5" />
                   Level
@@ -2059,11 +2126,48 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Flood-fill water (click a tile at level 0 or lower)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); setWaterBrush(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); setWaterBrush(1) }}
                 >
                   <Droplets className="h-3.5 w-3.5" />
                   Water
                 </Button>
+              )}
+              {catalog && catalog.zoneTemplates.length > 0 && (
+                <>
+                  <div className="w-px h-4 bg-amber-500/30" />
+                  {/* Zones (issue #193 Phase 3) — thin wrapper on the
+                      already-fully-built addMarker write path. */}
+                  {placingZoneSid ? (
+                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
+                      <SquareDashed className="h-3.5 w-3.5" />
+                      Placing {placingZoneSid}…
+                    </Button>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" title="Place a zone marker">
+                          <SquareDashed className="h-3.5 w-3.5" />
+                          Zones
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-48 p-1 max-h-64 overflow-y-auto" data-nodrag>
+                        {catalog.zoneTemplates.map((z) => (
+                          <button
+                            key={z.id}
+                            className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                            onClick={() => {
+                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting()
+                              setPlacingZoneSid(z.id)
+                            }}
+                          >
+                            <span>{z.id}</span>
+                            <span className="text-muted-foreground">{z.sizeX}×{z.sizeZ}</span>
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </>
               )}
             </div>
           ) : (
@@ -2179,7 +2283,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               className={`absolute inset-0 touch-none select-none ${
                 isPanning || moveState
                   ? 'cursor-move'
-                  : placingSid || placingCreatureId || paintBiome !== null || levelBrush !== null || waterBrush !== null
+                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
@@ -2272,7 +2376,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || paintBiome !== null || levelBrush !== null || waterBrush !== null
+                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null
                   // Staged-edit visual treatment (issue #195 Phase 1) — a
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
@@ -2305,7 +2409,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             : undefined,
                         outlineOffset: isDeleting || isRotating ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && paintBiome === null && levelBrush === null && waterBrush === null) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (

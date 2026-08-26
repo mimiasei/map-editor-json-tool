@@ -123,4 +123,5 @@ export const STATIC_CATALOG: GameCatalog = {
   // inputs when these are empty.
   dialogAvatarIcons: [],
   speakerTitles: [],
+  zoneTemplates: [],
 }

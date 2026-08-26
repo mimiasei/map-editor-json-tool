@@ -210,6 +210,17 @@ export interface CatalogSpeakerTitle {
   name: string
 }
 
+/** A trigger-zone (marker) shape template — Core/DB/map/trigger_zones/
+ *  zones.json, id 17 fixed real shapes (issue #193 Phase 3's Zones tool).
+ *  No name/description strings exist for these in Lang/ — the id itself
+ *  ("Zone 3x3", "Zone 2x2 full", ...) is the only real label, confirmed
+ *  against every real sample map's markers[].sid. */
+export interface CatalogZoneTemplate {
+  id: string
+  sizeX: number
+  sizeZ: number
+}
+
 export interface GameCatalog {
   /** Schema version — bump on breaking changes */
   version: number
@@ -232,6 +243,7 @@ export interface GameCatalog {
   dialogAvatarIcons: string[]
   /** Known `dialogue_title_*` speaker SIDs with resolved English names. */
   speakerTitles: CatalogSpeakerTitle[]
+  zoneTemplates: CatalogZoneTemplate[]
 }
 
 // v3: mapObjects now covers all 9 DB/map/objects/*.json category files
@@ -252,4 +264,6 @@ export interface GameCatalog {
 // v9: added CatalogMapObject.description, resolved from the already-loaded
 // Lang/english/texts/mapObjects.json via the `${id}_description` convention
 // — same hygiene-only reasoning.
-export const CATALOG_SCHEMA_VERSION = 9
+// v10: added zoneTemplates, parsed from Core/DB/map/trigger_zones/zones.json
+// (issue #193 Phase 3's Zones tool) — same hygiene-only reasoning.
+export const CATALOG_SCHEMA_VERSION = 10

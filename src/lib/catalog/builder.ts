@@ -20,6 +20,7 @@ import type {
   CatalogObjectLogic,
   CatalogDialog,
   CatalogDialogSlide,
+  CatalogZoneTemplate,
 } from './types'
 import { CATALOG_SCHEMA_VERSION } from './types'
 
@@ -318,6 +319,23 @@ async function collectSpecializations(zip: JSZip): Promise<CatalogSpecialization
  * template only meant for one campaign map is still a real, resolvable
  * pick, just one the searchable combobox will rank low unless typed for.
  */
+/** Core/DB/map/trigger_zones/zones.json — a single file, 17 real fixed zone
+ *  shapes (issue #193 Phase 3's Zones tool). No localization entry exists
+ *  for these ids (confirmed: they're not `${id}_name`-style tokens like
+ *  every other DB/map/objects/* category), so `id` is used verbatim as the
+ *  display label, matching what every real sample map's markers[].sid
+ *  already contains. */
+async function collectZoneTemplates(zip: JSZip): Promise<CatalogZoneTemplate[]> {
+  const entries = await readJsonArray(zip, 'DB/map/trigger_zones/zones.json')
+  const templates: CatalogZoneTemplate[] = []
+  for (const entry of entries) {
+    const id = str(entry.id)
+    if (!id) continue
+    templates.push({ id, sizeX: num(entry.sizeX) || 1, sizeZ: num(entry.sizeZ) || 1 })
+  }
+  return templates
+}
+
 async function collectSquadTemplates(zip: JSZip): Promise<CatalogSquadTemplate[]> {
   const paths = zipFilesUnder(zip, 'DB/squads/')
   const templates: CatalogSquadTemplate[] = []
@@ -612,7 +630,7 @@ export async function buildCatalog(
 ): Promise<GameCatalog> {
   const locMap = await loadLocalization(zip)
 
-  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, objectLogics, dialogData] =
+  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, objectLogics, dialogData, zoneTemplates] =
     await Promise.all([
       collectHeroes(zip, locMap),
       collectCreatures(zip, locMap),
@@ -626,6 +644,7 @@ export async function buildCatalog(
       collectSquadTemplates(zip),
       collectObjectLogics(zip),
       collectDialogs(zip, locMap),
+      collectZoneTemplates(zip),
     ])
 
   inferInteractableBiomes(mapObjects, factions)
@@ -648,5 +667,6 @@ export async function buildCatalog(
     dialogs: dialogData.dialogs,
     dialogAvatarIcons: dialogData.avatarIcons,
     speakerTitles: dialogData.speakerTitles,
+    zoneTemplates,
   }
 }
