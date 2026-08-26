@@ -49,6 +49,7 @@ import {
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
+import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
@@ -393,6 +394,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // floodFillRegion the same way Water does. Freehand (drag-stroke) stays
   // the default, matching today's existing behavior unchanged.
   const [terrainBucketMode, setTerrainBucketMode] = useState(false)
+
+  // ── Rectangle interaction mode (issue #193 Phase 4) — a shared toggle
+  // applying uniformly to Terrain/Level/Water: drag a rectangle (live
+  // outline preview, Shift=square, Alt=center from src/lib/map-grid/
+  // rectangle.ts, matching Tiled's Rectangle tool), and every enclosed node
+  // stages with the currently-active brush's value on release — the exact
+  // same node-set-computation swap flood-fill already established, so this
+  // needs no new write-path code, only a new way to compute which nodes get
+  // staged. Terrain's own Bucket toggle is ignored while this is active
+  // (checked first in onPointerDown) since a rectangle and a flood-fill are
+  // two different selection shapes for the same "batch of nodes" concept.
+  const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water'; startX: number; startZ: number } | null>(null)
+  const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
 
@@ -498,6 +513,34 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return next
     })
   }, [tilesMap, sizeX, sizeZ, pushUndo])
+
+  // Rectangle mode's release-time commit — one pushUndo() for the whole
+  // rectangle (not one per enclosed node), so Ctrl+Z undoes the drag as a
+  // single step like a freehand stroke or a flood-fill does.
+  const stageRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water', bounds: RectangleBounds) => {
+    const nodes = nodesInRectangle(bounds, sizeX)
+    if (nodes.length === 0) return
+    pushUndo()
+    if (tool === 'terrain' && paintBiome !== null) {
+      setPaintStaged((prev) => {
+        const next = new Map(prev)
+        for (const n of nodes) next.set(n, paintBiome)
+        return next
+      })
+    } else if (tool === 'level' && levelBrush !== null) {
+      setPaintLevelStaged((prev) => {
+        const next = new Map(prev)
+        for (const n of nodes) next.set(n, levelBrush)
+        return next
+      })
+    } else if (tool === 'water' && waterBrush !== null) {
+      setPaintWaterStaged((prev) => {
+        const next = new Map(prev)
+        for (const n of nodes) next.set(n, waterBrush)
+        return next
+      })
+    }
+  }, [sizeX, paintBiome, levelBrush, waterBrush, pushUndo])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -620,6 +663,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // starts a paint stroke (captured so it continues even if the cursor
     // briefly leaves the canvas), not a viewport drag.
     if (paintBiome !== null) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'terrain', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
       if (terrainBucketMode) {
         const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
         if (node !== null) stageBucketFill(node, paintBiome)
@@ -633,6 +685,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     // Same freehand-stroke idea for the Level brush.
     if (levelBrush !== null) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'level', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
       levelPaintingRef.current = true
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -641,8 +702,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     // Water is click-to-flood-fill, not a drag stroke — one pointerdown
     // computes and stages the whole contiguous region in one action (see
-    // stageWaterFill's doc comment).
+    // stageWaterFill's doc comment). Rectangle mode replaces that with a
+    // drag-a-rect-then-fill-every-enclosed-tile interaction instead — a
+    // genuinely different selection shape (not level-bounded), so it's
+    // offered as an alternative rather than folded into the click behavior.
     if (waterBrush !== null) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'water', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stageWaterFill(node, waterBrush)
       return
@@ -691,7 +764,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return z * sizeX + x
   }, [transform, sizeX, sizeZ])
 
+  // Same math as screenToNode, but never returns null for an out-of-bounds
+  // cursor — Rectangle mode's live preview needs to keep tracking the drag
+  // past the map's edge (computeRectangleBounds clamps the result itself),
+  // matching how a real rectangle-select tool behaves when you drag off
+  // the canvas.
+  const screenToTileRaw = useCallback((clientX: number, clientY: number, rect: DOMRect): { x: number; z: number } => {
+    const worldX = (clientX - rect.left - transform.x) / transform.scale
+    const worldY = (clientY - rect.top - transform.y) / transform.scale
+    const x = Math.floor(worldX / BASE_CELL_PX)
+    const screenRow = Math.floor(worldY / BASE_CELL_PX)
+    const z = sizeZ - 1 - screenRow
+    return { x, z }
+  }, [transform, sizeZ])
+
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (rectangleDragRef.current) {
+      const drag = rectangleDragRef.current
+      const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      setRectanglePreview(computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ))
+      return
+    }
     if (paintingRef.current && paintBiome !== null) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stagePaintNode(node, paintBiome)
@@ -783,6 +876,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (rectangleDragRef.current) {
+      const drag = rectangleDragRef.current
+      const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      const bounds = computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ)
+      stageRectangleFill(drag.tool, bounds)
+      rectangleDragRef.current = null
+      setRectanglePreview(null)
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
     if (paintingRef.current) {
       paintingRef.current = false
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
@@ -2169,6 +2272,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   )}
                 </>
               )}
+              {/* Freehand/Rectangle interaction mode (issue #193 Phase 4) —
+                  a shared toggle for Terrain/Level/Water, not a separate
+                  top-level tool. Only shown once a relevant brush is active,
+                  since it has nothing to modify otherwise. */}
+              {(paintBiome !== null || levelBrush !== null || waterBrush !== null) && (
+                <>
+                  <div className="flex-1" />
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Mode:</span>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Drag to paint tile by tile"
+                      onClick={() => setInteractionMode('freehand')}
+                    >
+                      Freehand
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Drag a rectangle — Shift=square, Alt=from center"
+                      onClick={() => setInteractionMode('rectangle')}
+                    >
+                      Rectangle
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
           <div className="flex gap-1 flex-wrap" data-nodrag>
@@ -2666,6 +2795,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     top: (sizeZ - 1 - placingFootprintBounds.maxZ) * effectiveCellPx,
                     width: (placingFootprintBounds.maxX - placingFootprintBounds.minX + 1) * effectiveCellPx,
                     height: (placingFootprintBounds.maxZ - placingFootprintBounds.minZ + 1) * effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+              {/* Rectangle-mode live drag preview (issue #193 Phase 4) —
+                  same screen-space overlay technique as Move/Place above,
+                  amber to match the Paint-mode row's own accent color. */}
+              {rectanglePreview && (
+                <div
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-amber-500"
+                  style={{
+                    left: rectanglePreview.minX * effectiveCellPx,
+                    top: (sizeZ - 1 - rectanglePreview.maxZ) * effectiveCellPx,
+                    width: (rectanglePreview.maxX - rectanglePreview.minX + 1) * effectiveCellPx,
+                    height: (rectanglePreview.maxZ - rectanglePreview.minZ + 1) * effectiveCellPx,
                     transform: `translate(${transform.x}px, ${transform.y}px)`,
                     boxSizing: 'border-box',
                   }}
