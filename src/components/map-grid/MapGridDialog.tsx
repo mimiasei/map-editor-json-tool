@@ -51,6 +51,7 @@ import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_T
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
 import { buildFuzzyObstaclePools, computeFuzzyDistances, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
+import { tilesInRadius } from '@/lib/map-grid/brush'
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
@@ -70,7 +71,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -396,6 +397,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // the default, matching today's existing behavior unchanged.
   const [terrainBucketMode, setTerrainBucketMode] = useState(false)
 
+  // Shared brush-size radius (issue #193 punch-list item, scoped in the
+  // original plan but never wired up in any earlier phase) — applies to
+  // every freehand per-tile brush (Terrain, Level, Obstacles). Not
+  // meaningful for Water (click-to-flood-fill, not per-tile) or Bucket/
+  // Rectangle modes (already their own explicit region shapes). Circular
+  // brush shape, computed by src/lib/map-grid/brush.ts's tilesInRadius().
+  const [brushRadius, setBrushRadius] = useState(1)
+
   // ── Rectangle interaction mode (issue #193 Phase 4) — a shared toggle
   // applying uniformly to Terrain/Level/Water: drag a rectangle (live
   // outline preview, Shift=square, Alt=center from src/lib/map-grid/
@@ -517,14 +526,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setPaintStaged(new Map())
   }
   const stagePaintNode = useCallback((node: number, biomeId: BiomeId) => {
-    if (paintStaged.get(node) === biomeId) return
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    if (tiles.every((n) => paintStaged.get(n) === biomeId)) return
     pushUndo()
     setPaintStaged((prev) => {
       const next = new Map(prev)
-      next.set(node, biomeId)
+      for (const n of tiles) next.set(n, biomeId)
       return next
     })
-  }, [paintStaged, pushUndo])
+  }, [paintStaged, pushUndo, brushRadius, sizeX, sizeZ])
   const savePaint = async () => {
     if (paintStaged.size === 0 || !mapFilePath) return
     const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
@@ -596,14 +606,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setPaintLevelStaged(new Map())
   }
   const stageLevelNode = useCallback((node: number, level: -1 | 0 | 1) => {
-    if (paintLevelStaged.get(node) === level) return
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    if (tiles.every((n) => paintLevelStaged.get(n) === level)) return
     pushUndo()
     setPaintLevelStaged((prev) => {
       const next = new Map(prev)
-      next.set(node, level)
+      for (const n of tiles) next.set(n, level)
       return next
     })
-  }, [paintLevelStaged, pushUndo])
+  }, [paintLevelStaged, pushUndo, brushRadius, sizeX, sizeZ])
   const saveLevelPaint = async () => {
     if (paintLevelStaged.size === 0 || !mapFilePath) return
     const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
@@ -786,7 +797,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       obstacleDragRef.current = new Set()
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-      if (node !== null) obstacleDragRef.current.add(node)
+      if (node !== null) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+          obstacleDragRef.current.add(n)
+        }
+      }
       return
     }
     // Same idea while placing/painting objects: a left-button-down here is a
@@ -868,7 +883,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     if (obstacleDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-      if (node !== null) obstacleDragRef.current.add(node)
+      if (node !== null) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+          obstacleDragRef.current.add(n)
+        }
+      }
       setHoveredNode(node)
       return
     }
@@ -2454,6 +2473,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     </button>
                   </div>
                 </>
+              )}
+              {/* Brush-size radius (issue #193 punch-list item, never wired
+                  up until now) — only meaningful for a freehand per-tile
+                  brush: Terrain (non-Bucket), Level, Obstacles. Water is
+                  click-to-flood-fill regardless of interactionMode, and
+                  Bucket/Rectangle already select their own explicit region,
+                  so radius has nothing to modify for either. */}
+              {interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive) && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Smaller brush"
+                    disabled={brushRadius <= 1}
+                    onClick={() => setBrushRadius((r) => Math.max(1, r - 1))}
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </Button>
+                  <span className="text-xs tabular-nums w-4 text-center">{brushRadius}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Bigger brush"
+                    disabled={brushRadius >= 5}
+                    onClick={() => setBrushRadius((r) => Math.min(5, r + 1))}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               )}
             </div>
           ) : (
