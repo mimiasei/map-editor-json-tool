@@ -47,7 +47,11 @@ import {
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
-import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { floodFillRegion } from '@/lib/map-grid/flood-fill'
+import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
+import { buildFuzzyObstaclePools, computeFuzzyDistances, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
+import { tilesInRadius } from '@/lib/map-grid/brush'
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
@@ -67,7 +71,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -80,6 +84,8 @@ const OVERDRAW_CELLS = 3
 /** Same order as ObjectBrowserPanel.tsx's own BIOME_ORDER — each file keeps
  *  its own copy rather than sharing, matching that file's existing convention. */
 const PAINT_BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
+/** Real ids from Core/DB/map/waters/waters.json, for the Water tool's swatch. */
+const WATER_TYPE_ORDER = [1, 2, 3, 4, 5, 6, 7]
 /** Shared styling for both row and column tile-number gutters — everything
  *  except color, which depends on whether this label's row/column is hovered. */
 const TILE_NUMBER_CLASS = 'text-[10px] bg-background/80'
@@ -191,6 +197,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const levelsMap = context?.levelsMap ?? []
   const climbsMap = context?.climbsMap ?? []
 
+  // Browse/Paint mode toggle (issue #193 Phase 1) — swaps the second header
+  // row between the filter-pill row (Browse, always available) and the
+  // relocated Paint Terrain/Objects tools (Paint, edit-capable maps only).
+  // Deliberately local/ephemeral state, not persisted — resets to Browse on
+  // reopen, same as every other in-progress tool state in this dialog
+  // (paintBiome, placingSid, etc.).
+  const [gridMode, setGridMode] = useState<'browse' | 'paint'>('browse')
+
   const [filter, setFilter] = useState<GridFilterState>(loadGridFilter)
   const toggleGroup = (g: GridGroup) => {
     setFilter((prev) => {
@@ -301,7 +315,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Elevation tint (src/lib/map-grid/elevation-shading.ts) — a flat darker/
   // lighter fill over every level -1 / level 1 tile, independent of the
   // wall-vs-interior distinction the blocked-tile overlay uses.
-  const elevationTintMap = useMemo(() => buildElevationTintMap(levelsMap), [levelsMap])
+  // elevationTintMap is declared further down, after paintLevelStaged exists
+  // (issue #193 Phase 2 merges staged Level paint into it) — a memo's
+  // dependency array can't forward-reference a binding declared later in
+  // the component body, same reasoning as the staged-preview memos in the
+  // savePaintObjects area (see that comment for the fuller explanation).
 
   // Ramp/slope direction arrows (src/lib/map-grid/ramp-direction.ts) — folded
   // into the same "Elevation shading" toggle rather than a separate setting,
@@ -373,8 +391,73 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // of onPointerDown/Move/Up and the paint-preview canvas effect below,
   // which both reference it) to avoid a temporal-dead-zone reference.
   const [paintBiome, setPaintBiome] = useState<BiomeId | null>(null)
+  // Terrain bucket-fill (issue #193 Phase 3) — an alternate click-to-flood-
+  // fill interaction for the same Terrain tool/staging buffer, reusing
+  // floodFillRegion the same way Water does. Freehand (drag-stroke) stays
+  // the default, matching today's existing behavior unchanged.
+  const [terrainBucketMode, setTerrainBucketMode] = useState(false)
+
+  // Shared brush-size radius (issue #193 punch-list item, scoped in the
+  // original plan but never wired up in any earlier phase) — applies to
+  // every freehand per-tile brush (Terrain, Level, Obstacles). Not
+  // meaningful for Water (click-to-flood-fill, not per-tile) or Bucket/
+  // Rectangle modes (already their own explicit region shapes). Circular
+  // brush shape, computed by src/lib/map-grid/brush.ts's tilesInRadius().
+  const [brushRadius, setBrushRadius] = useState(1)
+
+  // ── Rectangle interaction mode (issue #193 Phase 4) — a shared toggle
+  // applying uniformly to Terrain/Level/Water: drag a rectangle (live
+  // outline preview, Shift=square, Alt=center from src/lib/map-grid/
+  // rectangle.ts, matching Tiled's Rectangle tool), and every enclosed node
+  // stages with the currently-active brush's value on release — the exact
+  // same node-set-computation swap flood-fill already established, so this
+  // needs no new write-path code, only a new way to compute which nodes get
+  // staged. Terrain's own Bucket toggle is ignored while this is active
+  // (checked first in onPointerDown) since a rectangle and a flood-fill are
+  // two different selection shapes for the same "batch of nodes" concept.
+  const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'obstacles'; startX: number; startZ: number } | null>(null)
+  const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
+
+  // Fuzzy obstacle brush state declared here (ahead of pushUndo, further
+  // down) since it's referenced by the rectangleDragRef type above —
+  // commitObstacleStroke itself (which needs pushUndo) is declared after
+  // pushUndo exists, same forward-reference reasoning as pushUndo's own
+  // doc comment below.
+  const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
+  const obstacleDragRef = useRef<Set<number> | null>(null)
+
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
+
+  // ── Paint level (issue #193 Phase 2) — same freehand drag-stroke staging
+  // convention as Paint Terrain above, just targeting levelsMap (-1/0/1)
+  // instead of tilesMap. Deliberately does not touch climbsMap (ramp
+  // markers) — see paintLevelTiles' doc comment in map-write.ts.
+  const [levelBrush, setLevelBrush] = useState<-1 | 0 | 1 | null>(null)
+  const [paintLevelStaged, setPaintLevelStaged] = useState<Map<number, -1 | 0 | 1>>(new Map())
+  const levelPaintingRef = useRef(false)
+
+  // ── Paint water (issue #193 Phase 2) — click-to-flood-fill, not a
+  // freehand stroke: one click fills every contiguous same-level tile at
+  // level <= 0 (water never occurs at level 1 in any real sample map) with
+  // the chosen water type. Multiple separate fills can stage before Save,
+  // same as a multi-stroke terrain paint session.
+  const [waterBrush, setWaterBrush] = useState<number | null>(null)
+  const [paintWaterStaged, setPaintWaterStaged] = useState<Map<number, number>>(new Map())
+
+  // Elevation tint, merged with any staged (unsaved) Level paint — same
+  // merge-before-render pattern issue #195 Phase 1 established for Paint
+  // Terrain, so a staged level change looks identical to what Save will
+  // produce instead of needing its own separate preview overlay.
+  // blockedTileSet/rampDirectionMap (declared above) deliberately stay
+  // committed-only — see paintLevelTiles' climbsMap note in map-write.ts.
+  const elevationTintMap = useMemo(() => {
+    if (paintLevelStaged.size === 0) return buildElevationTintMap(levelsMap)
+    const merged = levelsMap.slice()
+    for (const [node, level] of paintLevelStaged) merged[node] = level
+    return buildElevationTintMap(merged)
+  }, [levelsMap, paintLevelStaged])
 
   // ── Local undo (Ctrl+Z) for staged-but-unsaved edits ────────────────────
   // Deliberately separate from useScenarioStore's zundo temporal() (scoped
@@ -394,30 +477,64 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   interface StagedSnapshot {
     paintStaged: Map<number, BiomeId>
     paintObjectStaged: Map<number, string>
+    paintLevelStaged: Map<number, -1 | 0 | 1>
+    paintWaterStaged: Map<number, number>
     moveState: { key: string; type: 0 | 1 | 2; id: number; sid: string; node: number } | null
     rotateState: { key: string; id: number; rotation: number } | null
   }
   const stagedSnapshotRef = useRef<StagedSnapshot>({
-    paintStaged: new Map(), paintObjectStaged: new Map(), moveState: null, rotateState: null,
+    paintStaged: new Map(), paintObjectStaged: new Map(), paintLevelStaged: new Map(), paintWaterStaged: new Map(), moveState: null, rotateState: null,
   })
   const [undoStack, setUndoStack] = useState<StagedSnapshot[]>([])
   const pushUndo = useCallback(() => {
     setUndoStack((stack) => [...stack, stagedSnapshotRef.current])
   }, [])
 
+  // ── Fuzzy obstacle brush (issue #193 Phase 5) — a freehand drag (or a
+  // Rectangle-mode selection, reusing the same drag machinery declared
+  // above) accumulates a raw node set; on release the whole set is sampled
+  // ONCE via sampleFuzzyObstacles (distance-from-center only makes sense
+  // for a complete stroke, not incrementally per tile the way Terrain
+  // paints). Output merges into paintObjectStaged — the exact same staged
+  // buffer/Save path Objects already uses, since a sampled obstacle IS just
+  // an object placement; no new write path, no new staging state, and
+  // nothing new needed in StagedSnapshot (paintObjectStaged already covers
+  // undo for this).
+  const fuzzyObstaclePools = useMemo(
+    () => (catalog ? buildFuzzyObstaclePools(catalog.mapObjects) : null),
+    [catalog],
+  )
+  const commitObstacleStroke = useCallback((nodes: number[]) => {
+    if (!fuzzyObstaclePools || nodes.length === 0) return
+    const distances = computeFuzzyDistances(nodes, sizeX)
+    const additions = sampleFuzzyObstacles(distances, (n) => {
+      const v = tilesMap[n]
+      return v >= 1 && v <= 7 ? (v as BiomeId) : undefined
+    }, fuzzyObstaclePools)
+    if (additions.length === 0) return
+    pushUndo()
+    setPaintObjectStaged((prev) => {
+      const next = new Map(prev)
+      for (const { node, sid } of additions) next.set(node, sid)
+      return next
+    })
+  }, [fuzzyObstaclePools, sizeX, tilesMap, pushUndo])
+  const stopObstaclePainting = () => setObstacleBrushActive(false)
+
   const stopPainting = () => {
     setPaintBiome(null)
     setPaintStaged(new Map())
   }
   const stagePaintNode = useCallback((node: number, biomeId: BiomeId) => {
-    if (paintStaged.get(node) === biomeId) return
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    if (tiles.every((n) => paintStaged.get(n) === biomeId)) return
     pushUndo()
     setPaintStaged((prev) => {
       const next = new Map(prev)
-      next.set(node, biomeId)
+      for (const n of tiles) next.set(n, biomeId)
       return next
     })
-  }, [paintStaged, pushUndo])
+  }, [paintStaged, pushUndo, brushRadius, sizeX, sizeZ])
   const savePaint = async () => {
     if (paintStaged.size === 0 || !mapFilePath) return
     const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
@@ -427,6 +544,118 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setUndoStack([])
     } catch (e) {
       logError(`Failed to paint terrain: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  // Terrain bucket-fill (issue #193 Phase 3) — click a tile, flood-fill
+  // every contiguous tile of ITS CURRENT biome (committed, not staged —
+  // matches Water's own "flood the real thing, not the in-progress edit"
+  // behavior) with the newly chosen biome. Merges into paintStaged exactly
+  // like a freehand stroke would, so Save/undo/preview all work unchanged.
+  const stageBucketFill = useCallback((node: number, biomeId: BiomeId) => {
+    if (tilesMap[node] === undefined) return
+    const targetBiome = tilesMap[node]
+    const region = floodFillRegion(node, sizeX, sizeZ, (n) => tilesMap[n] === targetBiome)
+    if (region.length === 0) return
+    pushUndo()
+    setPaintStaged((prev) => {
+      const next = new Map(prev)
+      for (const n of region) next.set(n, biomeId)
+      return next
+    })
+  }, [tilesMap, sizeX, sizeZ, pushUndo])
+
+  // Rectangle mode's release-time commit — one pushUndo() for the whole
+  // rectangle (not one per enclosed node), so Ctrl+Z undoes the drag as a
+  // single step like a freehand stroke or a flood-fill does.
+  const stageRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'obstacles', bounds: RectangleBounds) => {
+    const nodes = nodesInRectangle(bounds, sizeX)
+    if (nodes.length === 0) return
+    // Obstacles samples per-node values (not one fixed value like the other
+    // three), and commitObstacleStroke already does its own pushUndo() —
+    // handled separately so the generic single-value merge below doesn't
+    // apply to it.
+    if (tool === 'obstacles') {
+      commitObstacleStroke(nodes)
+      return
+    }
+    pushUndo()
+    if (tool === 'terrain' && paintBiome !== null) {
+      setPaintStaged((prev) => {
+        const next = new Map(prev)
+        for (const n of nodes) next.set(n, paintBiome)
+        return next
+      })
+    } else if (tool === 'level' && levelBrush !== null) {
+      setPaintLevelStaged((prev) => {
+        const next = new Map(prev)
+        for (const n of nodes) next.set(n, levelBrush)
+        return next
+      })
+    } else if (tool === 'water' && waterBrush !== null) {
+      setPaintWaterStaged((prev) => {
+        const next = new Map(prev)
+        for (const n of nodes) next.set(n, waterBrush)
+        return next
+      })
+    }
+  }, [sizeX, paintBiome, levelBrush, waterBrush, pushUndo, commitObstacleStroke])
+
+  const stopLevelPainting = () => {
+    setLevelBrush(null)
+    setPaintLevelStaged(new Map())
+  }
+  const stageLevelNode = useCallback((node: number, level: -1 | 0 | 1) => {
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    if (tiles.every((n) => paintLevelStaged.get(n) === level)) return
+    pushUndo()
+    setPaintLevelStaged((prev) => {
+      const next = new Map(prev)
+      for (const n of tiles) next.set(n, level)
+      return next
+    })
+  }, [paintLevelStaged, pushUndo, brushRadius, sizeX, sizeZ])
+  const saveLevelPaint = async () => {
+    if (paintLevelStaged.size === 0 || !mapFilePath) return
+    const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
+    try {
+      await saveMapFile(mapFilePath, { kind: 'paintLevel', changes })
+      setPaintLevelStaged(new Map())
+      setUndoStack([])
+    } catch (e) {
+      logError(`Failed to paint level: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  const stopWaterPainting = () => {
+    setWaterBrush(null)
+    setPaintWaterStaged(new Map())
+  }
+  // One click fills the whole contiguous region at that tile's own level
+  // (level <= 0 only — see the paintWaterStaged doc comment above), merging
+  // the result into any already-staged fills from earlier clicks this
+  // session rather than replacing them.
+  const stageWaterFill = useCallback((node: number, waterId: number) => {
+    if (levelsMap[node] === undefined || levelsMap[node] > 0) return
+    const targetLevel = levelsMap[node] ?? 0
+    const region = floodFillRegion(node, sizeX, sizeZ, (n) => (levelsMap[n] ?? 0) === targetLevel)
+    if (region.length === 0) return
+    pushUndo()
+    setPaintWaterStaged((prev) => {
+      const next = new Map(prev)
+      for (const n of region) next.set(n, waterId)
+      return next
+    })
+  }, [levelsMap, sizeX, sizeZ, pushUndo])
+  const saveWaterPaint = async () => {
+    if (paintWaterStaged.size === 0 || !mapFilePath) return
+    const changes = [...paintWaterStaged.entries()].map(([node, waterId]) => ({ node, waterId }))
+    try {
+      await saveMapFile(mapFilePath, { kind: 'paintWater', changes })
+      setPaintWaterStaged(new Map())
+      setUndoStack([])
+    } catch (e) {
+      logError(`Failed to paint water: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
@@ -494,16 +723,91 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // starts a paint stroke (captured so it continues even if the cursor
     // briefly leaves the canvas), not a viewport drag.
     if (paintBiome !== null) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'terrain', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
+      if (terrainBucketMode) {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) stageBucketFill(node, paintBiome)
+        return
+      }
       paintingRef.current = true
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stagePaintNode(node, paintBiome)
       return
     }
+    // Same freehand-stroke idea for the Level brush.
+    if (levelBrush !== null) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'level', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
+      levelPaintingRef.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageLevelNode(node, levelBrush)
+      return
+    }
+    // Water is click-to-flood-fill, not a drag stroke — one pointerdown
+    // computes and stages the whole contiguous region in one action (see
+    // stageWaterFill's doc comment). Rectangle mode replaces that with a
+    // drag-a-rect-then-fill-every-enclosed-tile interaction instead — a
+    // genuinely different selection shape (not level-bounded), so it's
+    // offered as an alternative rather than folded into the click behavior.
+    if (waterBrush !== null) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'water', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageWaterFill(node, waterBrush)
+      return
+    }
+    // Fuzzy obstacle brush — freehand drag accumulates the raw node set
+    // (sampled once as a whole on release, see commitObstacleStroke); a
+    // Rectangle-mode drag reuses the exact same rectangleDragRef machinery
+    // Terrain/Level/Water already use.
+    if (obstacleBrushActive) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'obstacles', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
+      obstacleDragRef.current = new Set()
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+          obstacleDragRef.current.add(n)
+        }
+      }
+      return
+    }
     // Same idea while placing/painting objects: a left-button-down here is a
     // paint-stroke candidate, resolved into either a stroke or a single
     // placement by whether it crosses the threshold (see onPointerMove/Up).
-    if (placingSid || placingCreatureId) {
+    if (placingSid || placingCreatureId || placingZoneSid) {
       paintObjectDragRef.current = { startX: e.clientX, startY: e.clientY, moved: false }
       return
     }
@@ -544,10 +848,46 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return z * sizeX + x
   }, [transform, sizeX, sizeZ])
 
+  // Same math as screenToNode, but never returns null for an out-of-bounds
+  // cursor — Rectangle mode's live preview needs to keep tracking the drag
+  // past the map's edge (computeRectangleBounds clamps the result itself),
+  // matching how a real rectangle-select tool behaves when you drag off
+  // the canvas.
+  const screenToTileRaw = useCallback((clientX: number, clientY: number, rect: DOMRect): { x: number; z: number } => {
+    const worldX = (clientX - rect.left - transform.x) / transform.scale
+    const worldY = (clientY - rect.top - transform.y) / transform.scale
+    const x = Math.floor(worldX / BASE_CELL_PX)
+    const screenRow = Math.floor(worldY / BASE_CELL_PX)
+    const z = sizeZ - 1 - screenRow
+    return { x, z }
+  }, [transform, sizeZ])
+
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (rectangleDragRef.current) {
+      const drag = rectangleDragRef.current
+      const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      setRectanglePreview(computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ))
+      return
+    }
     if (paintingRef.current && paintBiome !== null) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stagePaintNode(node, paintBiome)
+      setHoveredNode(node)
+      return
+    }
+    if (levelPaintingRef.current && levelBrush !== null) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageLevelNode(node, levelBrush)
+      setHoveredNode(node)
+      return
+    }
+    if (obstacleDragRef.current) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+          obstacleDragRef.current.add(n)
+        }
+      }
       setHoveredNode(node)
       return
     }
@@ -630,8 +970,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (rectangleDragRef.current) {
+      const drag = rectangleDragRef.current
+      const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      const bounds = computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ)
+      stageRectangleFill(drag.tool, bounds)
+      rectangleDragRef.current = null
+      setRectanglePreview(null)
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
     if (paintingRef.current) {
       paintingRef.current = false
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
+    if (levelPaintingRef.current) {
+      levelPaintingRef.current = false
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
+    if (obstacleDragRef.current) {
+      commitObstacleStroke([...obstacleDragRef.current])
+      obstacleDragRef.current = null
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       return
     }
@@ -664,6 +1025,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         if (node !== null && placingCreatureTemplateSid && isNodeInBoundsForPlacement(placingCreatureTemplateSid, node)) {
           void placeCreatureAt(node)
         }
+      } else if (wasClick && placingZoneSid) {
+        // Single-click only, same as placing a creature above — zones have
+        // no drag-to-paint.
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) void placeZoneAt(node)
       }
       return
     }
@@ -734,12 +1100,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     ctx.clearRect(0, 0, sizeX, sizeZ)
     // Base pass: every tile gets its light terrain/water fill, occupied or
     // not — this is what makes the grid readable even with all filters off.
+    // A staged (unsaved) Paint Terrain/Water edit wins over the committed
+    // value — same `terrainFillColor()` call as committed tiles, just fed
+    // the staged value(s), so a staged tile renders pixel-identical to what
+    // it'll look like once saved (issue #195 Phase 1 pattern, extended to
+    // Water in issue #193 Phase 2) instead of a separate tinted overlay
+    // approximating it.
     const tileCount = sizeX * sizeZ
     if (tilesMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
-        ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node], settings.terrainOpacity)
+        ctx.fillStyle = terrainFillColor(
+          paintStaged.get(node) ?? tilesMap[node],
+          paintWaterStaged.get(node) ?? waterMap[node],
+          settings.terrainOpacity,
+        )
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
@@ -765,7 +1141,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap,
+    settings.showElevationShading, elevationTintMap, paintStaged, paintWaterStaged,
   ])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
@@ -795,54 +1171,109 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [blockedCanvasEl, sizeX, sizeZ, settings.showBlockedTiles, blockedTileSet])
 
-  // ── Terrain-paint preview canvas (issue #167 Phase D) — same "separate,
-  // top-stacked canvas painted after the icon layer" technique as the
-  // blocked-tile overlay above, so the preview tint is visible over icons
-  // too. Shows the STAGED (not yet saved) biome for every touched tile —
-  // the "see it before it's real" feedback Move/Add's ghost previews
-  // already establish for their own tools.
+  // ── Terrain-paint "pending" indicator canvas (issue #167 Phase D, redone
+  // for issue #195 Phase 1) — the base canvasEl pass above now already
+  // renders a staged tile with its real, final `terrainFillColor()`, so this
+  // canvas's only remaining job is marking WHICH tiles are still unsaved, not
+  // showing what they'll look like. A flat color fill can't do that without
+  // distorting the now-accurate color underneath, so this draws a thin
+  // outline instead — which needs sub-tile precision this canvas's siblings
+  // don't (they're exactly 1 canvas pixel per tile, CSS-scaled up). Internal
+  // resolution is bumped to SUBPX-per-tile just for this canvas; its CSS
+  // display size (set in the JSX) stays identical to every other layer, so
+  // it still lines up pixel-for-pixel on screen.
   const [paintCanvasEl, setPaintCanvasEl] = useState<HTMLCanvasElement | null>(null)
   useEffect(() => {
     if (!paintCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = paintCanvasEl
-    canvas.width = sizeX
-    canvas.height = sizeZ
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.clearRect(0, 0, sizeX, sizeZ)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     if (paintStaged.size === 0) return
-    ctx.globalAlpha = 0.55
-    for (const [node, biomeId] of paintStaged) {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)'
+    ctx.lineWidth = 2
+    for (const node of paintStaged.keys()) {
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
-      ctx.fillStyle = BIOME_BASE_COLORS[biomeId]
-      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
-    ctx.globalAlpha = 1
   }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
 
-  // ── Object-paint preview canvas — same technique as the terrain-paint
-  // preview above, one flat tint per staged tile (not the real catalog icon;
-  // a lighter-weight stand-in given a stroke can stage many tiles at once).
+  // ── Object-paint "pending" indicator canvas — same outline technique and
+  // rationale as the terrain-paint indicator above (issue #195 Phase 1): the
+  // real catalog icon for each staged stamp now renders via
+  // `stagedObjectPaintIcons` below, so this canvas only needs to mark which
+  // tiles are unsaved, not draw a flat placeholder tint over them.
   const [paintObjectCanvasEl, setPaintObjectCanvasEl] = useState<HTMLCanvasElement | null>(null)
   useEffect(() => {
     if (!paintObjectCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = paintObjectCanvasEl
-    canvas.width = sizeX
-    canvas.height = sizeZ
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.clearRect(0, 0, sizeX, sizeZ)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     if (paintObjectStaged.size === 0) return
-    ctx.globalAlpha = 0.55
-    ctx.fillStyle = 'rgba(34, 197, 94, 1)'
+    ctx.strokeStyle = 'rgba(34, 197, 94, 0.9)'
+    ctx.lineWidth = 2
     for (const node of paintObjectStaged.keys()) {
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
-      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
-    ctx.globalAlpha = 1
   }, [paintObjectCanvasEl, sizeX, sizeZ, paintObjectStaged])
+
+  // ── Level/Water "pending" indicator canvases (issue #193 Phase 2) — same
+  // outline technique as the two above: the real color already renders via
+  // the base canvasEl pass (elevationTintMap/terrainFillColor merges above),
+  // so these only mark which tiles are unsaved.
+  const [paintLevelCanvasEl, setPaintLevelCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!paintLevelCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = paintLevelCanvasEl
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (paintLevelStaged.size === 0) return
+    ctx.strokeStyle = 'rgba(37, 99, 235, 0.9)'
+    ctx.lineWidth = 2
+    for (const node of paintLevelStaged.keys()) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
+    }
+  }, [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
+
+  const [paintWaterCanvasEl, setPaintWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!paintWaterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = paintWaterCanvasEl
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (paintWaterStaged.size === 0) return
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.9)'
+    ctx.lineWidth = 2
+    for (const node of paintWaterStaged.keys()) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
+    }
+  }, [paintWaterCanvasEl, sizeX, sizeZ, paintWaterStaged])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -1230,7 +1661,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // buffers on every render — cheap (plain object assignment), and means
   // pushUndo always reads the true latest values with no stale-closure risk.
   useEffect(() => {
-    stagedSnapshotRef.current = { paintStaged, paintObjectStaged, moveState, rotateState }
+    stagedSnapshotRef.current = { paintStaged, paintObjectStaged, paintLevelStaged, paintWaterStaged, moveState, rotateState }
   })
   const undoLastStagedEdit = useCallback(() => {
     setUndoStack((stack) => {
@@ -1238,6 +1669,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const prev = stack[stack.length - 1]
       setPaintStaged(prev.paintStaged)
       setPaintObjectStaged(prev.paintObjectStaged)
+      setPaintLevelStaged(prev.paintLevelStaged)
+      setPaintWaterStaged(prev.paintWaterStaged)
       setMoveState(prev.moveState)
       setRotateState(prev.rotateState)
       return stack.slice(0, -1)
@@ -1381,6 +1814,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // placingSid, so a drag while placing a creature just does nothing.
   const [placingCreatureId, setPlacingCreatureId] = useState<string | null>(null)
   const stopPlacingCreature = () => setPlacingCreatureId(null)
+
+  // ── Place zone/marker (issue #193 Phase 3) — thin wrapper on the already-
+  // fully-built addMarkerInstance/addMarker write path, which had zero UI
+  // anywhere before this. Deliberately single-click-only (like Add object),
+  // not staged like Terrain/Level/Water — a zone marker is a single simple
+  // placement with no batch-editing need, matching how "Add object"'s plain
+  // click already commits immediately rather than staging.
+  const [placingZoneSid, setPlacingZoneSid] = useState<string | null>(null)
+  const stopPlacingZone = () => setPlacingZoneSid(null)
+  const placeZoneAt = async (node: number) => {
+    if (!placingZoneSid || !mapFilePath) return
+    try {
+      await saveMapFile(mapFilePath, { kind: 'addMarker', sid: placingZoneSid, node })
+    } catch (e) {
+      logError(`Failed to place zone: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
   const placingCreatureTemplateSid = useMemo(() => {
     if (!placingCreatureId) return null
     const creature = catalog?.creatures.find((c) => c.id === placingCreatureId)
@@ -1462,8 +1912,57 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
 
+  // ── Staged-edit full-fidelity preview (issue #195 Phase 1) — deliberately
+  // placed here rather than up near sortedIconEntries, since a useMemo's
+  // dependency array is evaluated at THIS render's hook-call time and can't
+  // forward-reference moveState/rotateState/deleteState/paintObjectStaged,
+  // all declared earlier in the component body but after sortedIconEntries.
+
+  // Committed objects a staged Paint Objects stroke will delete on Save —
+  // mirrors savePaintObjects' own `deletions` filter exactly (two lines up)
+  // so the preview can never disagree with what Save actually does.
+  const stagedPaintObjectDeletionKeys = useMemo(() => {
+    const keys = new Set<string>()
+    if (paintObjectStaged.size === 0) return keys
+    for (const o of placedObjects) {
+      if (o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0) {
+        keys.add(o.key)
+      }
+    }
+    return keys
+  }, [paintObjectStaged, placedObjects, catalog])
+
+  // Staged Paint Objects additions, rendered with their real catalog icon
+  // instead of a flat swatch. Bounded by paintObjectStaged.size (a brush
+  // stroke, never the whole map), so this stays a small additive DOM layer,
+  // not the "one DOM node per map tile" pattern this project avoids.
+  // Deliberately single-cell even for a multi-tile template — an accepted
+  // simplification for a transient preview; the actual saved placement still
+  // renders through the normal committed-object pipeline once saved.
+  const stagedObjectPaintIcons = useMemo(() => {
+    if (!showIcons || paintObjectStaged.size === 0) return []
+    const icons: { key: string; left: number; top: number; sid: string }[] = []
+    for (const [node, sid] of paintObjectStaged) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      icons.push({ key: `paintobj${node}`, left: x * BASE_CELL_PX, top: (sizeZ - 1 - z) * BASE_CELL_PX, sid })
+    }
+    return icons
+  }, [showIcons, paintObjectStaged, sizeX, sizeZ])
+
+  // Staged Move destination — same real-icon treatment as a paint-object
+  // addition above, so the preview shows where the object will actually
+  // land instead of only an outline box (the source tile fades out instead,
+  // via isMoveSource in the icon render loop below).
+  const stagedMoveIcon = useMemo(() => {
+    if (!showIcons || !moveState) return null
+    const x = moveState.node % sizeX
+    const z = Math.floor(moveState.node / sizeX)
+    return { key: `move${moveState.node}`, left: x * BASE_CELL_PX, top: (sizeZ - 1 - z) * BASE_CELL_PX, sid: moveState.sid }
+  }, [showIcons, moveState, sizeX, sizeZ])
+
   useEffect(() => {
-    if (!open || (!placingSid && !placingCreatureId && !objectBrowserOpen && paintBiome === null && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -1482,12 +1981,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (moveState) cancelMove()
       else if (placingSid) stopPlacingOrClearStaged()
       else if (placingCreatureId) stopPlacingCreature()
+      else if (placingZoneSid) stopPlacingZone()
       else if (paintBiome !== null) stopPainting()
+      else if (levelBrush !== null) stopLevelPainting()
+      else if (waterBrush !== null) stopWaterPainting()
+      else if (obstacleBrushActive) stopObstaclePainting()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, objectBrowserOpen, paintBiome, moveState, paintObjectStaged])
+  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, obstacleBrushActive, moveState, paintObjectStaged])
 
   // Ctrl+Z / Cmd+Z undoes the last staged-but-unsaved edit (see pushUndo's
   // call sites above) — a separate effect from Escape's above since it
@@ -1514,6 +2017,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [activePlacingSid, hoveredNode, sizeX, catalog])
   const placingValid = activePlacingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(activePlacingSid, hoveredNode)
+
+  // Brush-shape cursor preview (requested follow-up to the brush-radius
+  // control) — same gating as the Size stepper's own visibility (Freehand
+  // mode, Terrain-non-Bucket/Level/Obstacles): shows the actual circular
+  // tilesInRadius() shape centered on the hovered tile, not just a plain
+  // single-tile square, so the brush's real footprint is visible before
+  // every click/drag rather than only after. Bounded by brushRadius (max
+  // 5 -> at most ~69 tiles), a tiny cursor-following set, not a per-map-
+  // tile render — doesn't reintroduce the one-DOM-node-per-map-tile
+  // pattern this codebase avoids.
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive)
+  const brushPreviewTiles = useMemo(() => {
+    if (!brushToolActive || hoveredNode === null) return []
+    return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ)
+  }, [brushToolActive, hoveredNode, brushRadius, sizeX, sizeZ])
 
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
@@ -1547,6 +2065,55 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             <span className="text-sm font-semibold shrink-0">
               Map Grid{sizeX > 0 && sizeZ > 0 ? ` — ${sizeX} x ${sizeZ}` : ''}
             </span>
+            {/* Browse/Paint mode toggle (issue #193 Phase 1) — labeled, not
+                icon-only (mode-switching UX research: redundant text avoids
+                "mode error" confusion an icon-only toggle risks). Hidden
+                entirely when the map can't be edited — Paint mode has
+                nothing to switch to without write access, and Browse's
+                filter pills stay the only/default row exactly as before. */}
+            {canEditEntities && (
+              <div className="flex items-center rounded border border-border p-0.5 shrink-0" data-nodrag>
+                <button
+                  className={`h-5 px-2 text-xs rounded-sm transition-colors ${
+                    gridMode === 'browse' ? 'bg-secondary text-secondary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => {
+                    // Deactivate every armed tool on the way out — a
+                    // click in Browse mode must always mean "select this
+                    // tile," never "paint/fill/place here." Real bug fix:
+                    // switching modes previously only swapped which row
+                    // rendered, leaving e.g. paintBiome still non-null, so
+                    // a click after switching back to Browse could still
+                    // trigger a full paint/flood-fill action. Uses the raw
+                    // setters (not the stopX() wrappers, several of which
+                    // are declared later in the component body than this
+                    // callback) and deliberately does NOT clear any staged
+                    // Map (paintStaged etc.) — only what's "live-armed,"
+                    // so in-progress unsaved work survives a peek at
+                    // Browse and back.
+                    setPaintBiome(null)
+                    setLevelBrush(null)
+                    setWaterBrush(null)
+                    setObstacleBrushActive(false)
+                    setPlacingSid(null)
+                    setPlacingCreatureId(null)
+                    setPlacingZoneSid(null)
+                    setObjectBrowserOpen(false)
+                    setGridMode('browse')
+                  }}
+                >
+                  Browse
+                </button>
+                <button
+                  className={`h-5 px-2 text-xs rounded-sm transition-colors ${
+                    gridMode === 'paint' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setGridMode('paint')}
+                >
+                  Paint
+                </button>
+              </div>
+            )}
             <div className="flex-1" />
             <div className="relative w-64 shrink-0" data-nodrag>
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -1597,98 +2164,365 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               >
                 <Ban className="h-3.5 w-3.5" />
               </Button>
-              {canEditEntities && (
-                placingSid ? (
-                  <div className="flex items-center gap-1">
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
-                      <Plus className="h-3.5 w-3.5" />
-                      Placing… (drag to paint)
-                    </Button>
-                    {paintObjectStaged.size > 0 && (
-                      <>
-                        <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
-                        <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
-                          Save to .map
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                ) : placingCreatureId ? (
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title="Click a tile to place">
-                    <Plus className="h-3.5 w-3.5" />
-                    Placing unit…
-                  </Button>
-                ) : (
-                  <Button
-                    variant={objectBrowserOpen ? 'secondary' : 'ghost'}
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Place a new object"
-                    onClick={() => { stopPainting(); setObjectBrowserOpen((prev) => !prev) }}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
-                )
-              )}
-              {canEditEntities && (
-                paintBiome !== null ? (
-                  <div className="flex items-center gap-1">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
-                          <span
-                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                            style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
-                          />
-                          {BIOME_NAMES[paintBiome]}
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-40 p-1" data-nodrag>
-                        {PAINT_BIOME_ORDER.map((b) => (
-                          <button
-                            key={b}
-                            className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                            onClick={() => setPaintBiome(b)}
-                          >
-                            <span
-                              className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                              style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
-                            />
-                            {BIOME_NAMES[b]}
-                          </button>
-                        ))}
-                      </PopoverContent>
-                    </Popover>
-                    {paintStaged.size > 0 && (
-                      <>
-                        <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
-                        <Button size="sm" className="h-6 text-xs" onClick={savePaint}>
-                          Save to .map
-                        </Button>
-                      </>
-                    )}
-                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
-                      {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Paint terrain"
-                    onClick={() => { stopPlacing(); setObjectBrowserOpen(false); setPaintBiome(1) }}
-                  >
-                    <Paintbrush className="h-3.5 w-3.5" />
-                  </Button>
-                )
-              )}
               <div className="w-px h-4 bg-border mx-1" />
               <MapGridSettingsDialog settings={settings} onChange={updateSettings} />
             </div>
           </div>
 
+          {gridMode === 'paint' && canEditEntities ? (
+            /* Paint-mode tool row (issue #193 Phase 1) — relocated Objects +
+               Terrain tools from the old row-1 icon cluster, now labeled
+               (not icon-only) and set against an amber-tinted row background
+               — redundant signaling alongside the header toggle's own color
+               change, so Paint mode is never identifiable by icon shape
+               alone (mode-switching UX research: minimizes "mode error"
+               risk). Behavior is unchanged from before this phase — same
+               state, same handlers, same stage-then-Save convention. */
+            <div className="flex items-center gap-2 -mx-4 px-4 py-1 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
+              {placingSid ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
+                    <Plus className="h-3.5 w-3.5" />
+                    Placing… (drag to paint)
+                  </Button>
+                  {paintObjectStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : placingCreatureId ? (
+                <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title="Click a tile to place">
+                  <Plus className="h-3.5 w-3.5" />
+                  Placing unit…
+                </Button>
+              ) : (
+                <Button
+                  variant={objectBrowserOpen ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Place a new object"
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); setObjectBrowserOpen((prev) => !prev) }}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Objects
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {paintBiome !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                          style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
+                        />
+                        {BIOME_NAMES[paintBiome]}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {PAINT_BIOME_ORDER.map((b) => (
+                        <button
+                          key={b}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setPaintBiome(b)}
+                        >
+                          <span
+                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                            style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
+                          />
+                          {BIOME_NAMES[b]}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setTerrainBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to fill the contiguous same-biome region"
+                      onClick={() => setTerrainBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
+                  {paintStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={savePaint}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
+                    {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Paint terrain"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); setPaintBiome(1) }}
+                >
+                  <Paintbrush className="h-3.5 w-3.5" />
+                  Terrain
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Level brush (issue #193 Phase 2) — same freehand-stroke
+                  staging as Terrain, targeting levelsMap instead of
+                  tilesMap. Deliberately no ramp/climbsMap authoring — see
+                  paintLevelTiles' doc comment in map-write.ts. */}
+              {levelBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    {([-1, 0, 1] as const).map((lvl) => (
+                      <button
+                        key={lvl}
+                        className={`h-6 px-2 text-xs transition-colors ${
+                          levelBrush === lvl ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
+                        }`}
+                        onClick={() => setLevelBrush(lvl)}
+                      >
+                        {lvl === -1 ? 'Lower' : lvl === 0 ? 'Flat' : 'Higher'}
+                      </button>
+                    ))}
+                  </div>
+                  {paintLevelStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={saveLevelPaint}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting}>
+                    {paintLevelStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Paint elevation level"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); setLevelBrush(0) }}
+                >
+                  <Layers className="h-3.5 w-3.5" />
+                  Level
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Water flood-fill (issue #193 Phase 2) — click-to-fill, not
+                  a freehand stroke — see stageWaterFill's doc comment. */}
+              {waterBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        {WATER_TYPE_NAMES[waterBrush]}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {WATER_TYPE_ORDER.map((w) => (
+                        <button
+                          key={w}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setWaterBrush(w)}
+                        >
+                          {WATER_TYPE_NAMES[w]}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  {paintWaterStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintWaterStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={saveWaterPaint}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting}>
+                    {paintWaterStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Flood-fill water (click a tile at level 0 or lower)"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); setWaterBrush(1) }}
+                >
+                  <Droplets className="h-3.5 w-3.5" />
+                  Water
+                </Button>
+              )}
+              {fuzzyObstaclePools && (
+                <>
+                  <div className="w-px h-4 bg-amber-500/30" />
+                  {/* Fuzzy obstacle brush (issue #193 Phase 5) — drag (or
+                      Rectangle-mode select); every enclosed tile samples a
+                      biome-appropriate obstacle/clutter/nothing on release,
+                      weighted by distance from the stroke's center. Shares
+                      paintObjectStaged with the Objects tool (a sampled
+                      obstacle IS just an object placement), so its staged
+                      count/Save below reflects both combined. */}
+                  {obstacleBrushActive ? (
+                    <div className="flex items-center gap-1">
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                        <Mountain className="h-3.5 w-3.5" />
+                        Drawing…
+                      </Button>
+                      {paintObjectStaged.size > 0 && (
+                        <>
+                          <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
+                          <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
+                            Save to .map
+                          </Button>
+                        </>
+                      )}
+                      {/* Deliberately always "Stop", never "Cancel" — unlike
+                          Terrain/Level/Water's own staged buffers, this one
+                          is shared with the Objects tool, so there's no safe
+                          "discard just the obstacles" action that wouldn't
+                          also risk wiping a manual placement staged earlier
+                          (or vice versa). Discarding staged content is only
+                          ever offered from the Objects tool's own Cancel. */}
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopObstaclePainting}>
+                        Stop (Esc)
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs gap-1"
+                      title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
+                      onClick={() => {
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone()
+                        setObstacleBrushActive(true)
+                      }}
+                    >
+                      <Mountain className="h-3.5 w-3.5" />
+                      Obstacles
+                    </Button>
+                  )}
+                </>
+              )}
+              {catalog && catalog.zoneTemplates.length > 0 && (
+                <>
+                  <div className="w-px h-4 bg-amber-500/30" />
+                  {/* Zones (issue #193 Phase 3) — thin wrapper on the
+                      already-fully-built addMarker write path. */}
+                  {placingZoneSid ? (
+                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
+                      <SquareDashed className="h-3.5 w-3.5" />
+                      Placing {placingZoneSid}…
+                    </Button>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" title="Place a zone marker">
+                          <SquareDashed className="h-3.5 w-3.5" />
+                          Zones
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-48 p-1 max-h-64 overflow-y-auto" data-nodrag>
+                        {catalog.zoneTemplates.map((z) => (
+                          <button
+                            key={z.id}
+                            className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                            onClick={() => {
+                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopObstaclePainting()
+                              setPlacingZoneSid(z.id)
+                            }}
+                          >
+                            <span>{z.id}</span>
+                            <span className="text-muted-foreground">{z.sizeX}×{z.sizeZ}</span>
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </>
+              )}
+              {/* Freehand/Rectangle interaction mode (issue #193 Phase 4) —
+                  a shared toggle for Terrain/Level/Water, not a separate
+                  top-level tool. Only shown once a relevant brush is active,
+                  since it has nothing to modify otherwise. */}
+              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive) && (
+                <>
+                  <div className="flex-1" />
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Mode:</span>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Drag to paint tile by tile"
+                      onClick={() => setInteractionMode('freehand')}
+                    >
+                      Freehand
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Drag a rectangle — Shift=square, Alt=from center"
+                      onClick={() => setInteractionMode('rectangle')}
+                    >
+                      Rectangle
+                    </button>
+                  </div>
+                </>
+              )}
+              {/* Brush-size radius (issue #193 punch-list item, never wired
+                  up until now) — only meaningful for a freehand per-tile
+                  brush: Terrain (non-Bucket), Level, Obstacles. Water is
+                  click-to-flood-fill regardless of interactionMode, and
+                  Bucket/Rectangle already select their own explicit region,
+                  so radius has nothing to modify for either. */}
+              {interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive) && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Smaller brush"
+                    disabled={brushRadius <= 1}
+                    onClick={() => setBrushRadius((r) => Math.max(1, r - 1))}
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </Button>
+                  <span className="text-xs tabular-nums w-4 text-center">{brushRadius}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Bigger brush"
+                    disabled={brushRadius >= 5}
+                    onClick={() => setBrushRadius((r) => Math.min(5, r + 1))}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
           <div className="flex gap-1 flex-wrap" data-nodrag>
             {GRID_GROUP_ORDER.map((g) => (
               <div key={g} className="flex items-stretch">
@@ -1777,6 +2611,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               Entity SIDs only
             </button>
           </div>
+          )}
         </DraggableDialogDragHandle>
 
         <Group orientation="horizontal" className="flex-1 min-h-0">
@@ -1800,7 +2635,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               className={`absolute inset-0 touch-none select-none ${
                 isPanning || moveState
                   ? 'cursor-move'
-                  : placingSid || placingCreatureId || paintBiome !== null
+                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
@@ -1893,7 +2728,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || paintBiome !== null
+                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive
+                  // Staged-edit visual treatment (issue #195 Phase 1) — a
+                  // committed icon that a pending edit will remove (Delete,
+                  // or a Paint Objects stamp overwriting a decoration) or
+                  // relocate (Move, now shown for real at its destination via
+                  // stagedMoveIcon below) fades out; a pending Rotate gets a
+                  // highlighted ring instead of an actually-rotated icon,
+                  // since no committed object visually rotates its icon
+                  // either — there's no "final appearance" to preview here,
+                  // only a way to mark that a change is pending.
+                  const isMoveSource = moveState?.key === entry.pick.primary.key
+                  const isDeleting = deleteState?.key === entry.pick.primary.key || stagedPaintObjectDeletionKeys.has(entry.pick.primary.key)
+                  const isRotating = rotateState?.key === entry.pick.primary.key
                   return (
                     <div
                       key={entry.key}
@@ -1906,8 +2753,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         width: entry.width,
                         height: entry.height,
                         boxSizing: 'border-box',
+                        opacity: isDeleting || isMoveSource ? 0.35 : 1,
+                        outline: isDeleting
+                          ? '2px dashed rgba(220, 38, 38, 0.9)'
+                          : isRotating
+                            ? '2px dashed rgba(37, 99, 235, 0.9)'
+                            : undefined,
+                        outlineOffset: isDeleting || isRotating ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && paintBiome === null) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -1945,6 +2799,46 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
                           {entry.pick.count}
                         </span>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* Staged (unsaved) object icons — Paint Objects additions +
+                    the Move destination — real catalog icon, dashed outline
+                    to mark "pending" (issue #195 Phase 1). Deliberately a
+                    thinner render than sortedIconEntries above (no count/
+                    owner badge, no multi-tile bounds): these are transient
+                    previews of edits that don't exist as PlacedObject rows
+                    yet, not committed data going through the same pipeline. */}
+                {[...stagedObjectPaintIcons, ...(stagedMoveIcon ? [stagedMoveIcon] : [])].map((icon) => {
+                  const visual = resolveGridCellVisual(
+                    { key: icon.key, type: 0, id: -1, sid: icon.sid, x: 0, z: 0, node: 0 },
+                    catalog,
+                  )
+                  return (
+                    <div
+                      key={icon.key}
+                      className="absolute flex items-center justify-center rounded-sm select-none pointer-events-none"
+                      style={{
+                        left: icon.left,
+                        top: icon.top,
+                        width: BASE_CELL_PX,
+                        height: BASE_CELL_PX,
+                        boxSizing: 'border-box',
+                        outline: '2px dashed rgba(34, 197, 94, 0.9)',
+                        outlineOffset: '-2px',
+                      }}
+                    >
+                      {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
+                      {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
+                      {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
+                        <CatalogIcon
+                          iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}
+                          name={visual.kind === 'catalogOverride' ? visual.name : icon.sid}
+                          size={iconSize}
+                          src={settings.iconImagesEnabled ? undefined : null}
+                        />
                       )}
                     </div>
                   )
@@ -2002,6 +2896,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     tinted green, same stacking as the other overlays above. */}
                 <canvas
                   ref={setPaintObjectCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
+
+                {/* Level/Water "pending" outline indicators (issue #193
+                    Phase 2) — same stacking as the overlays above. */}
+                <canvas
+                  ref={setPaintLevelCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
+                <canvas
+                  ref={setPaintWaterCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,
@@ -2108,7 +3023,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
-              {settings.showGridHover && hoveredNode !== null && (
+              {/* Rectangle-mode live drag preview (issue #193 Phase 4) —
+                  same screen-space overlay technique as Move/Place above,
+                  amber to match the Paint-mode row's own accent color. */}
+              {rectanglePreview && (
+                <div
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-amber-500"
+                  style={{
+                    left: rectanglePreview.minX * effectiveCellPx,
+                    top: (sizeZ - 1 - rectanglePreview.maxZ) * effectiveCellPx,
+                    width: (rectanglePreview.maxX - rectanglePreview.minX + 1) * effectiveCellPx,
+                    height: (rectanglePreview.maxZ - rectanglePreview.minZ + 1) * effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              )}
+              {settings.showGridHover && hoveredNode !== null && !brushToolActive && (
                 <div
                     className="absolute pointer-events-none rounded-sm border-[2px] border-orange-500/50"
                     style={{
@@ -2121,6 +3052,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     }}
                 />
               )}
+              {/* Brush-shape cursor preview — one outline square per tile
+                  the current brush radius would actually touch, composing
+                  the circular shape tilesInRadius() computes (radius 1 is
+                  exactly the one-tile square this replaces). */}
+              {brushToolActive && brushPreviewTiles.map((node) => (
+                <div
+                  key={node}
+                  className="absolute pointer-events-none border-[2px] border-amber-500/70"
+                  style={{
+                    left: (node % sizeX) * effectiveCellPx,
+                    top: (sizeZ - 1 - Math.floor(node / sizeX)) * effectiveCellPx,
+                    width: effectiveCellPx,
+                    height: effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              ))}
 
               {/* Search-match highlight (issue #130) — one static (non-pulsing)
                   outline per matched node, deliberately distinct from the single

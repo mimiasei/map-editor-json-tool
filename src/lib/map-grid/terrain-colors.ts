@@ -33,6 +33,20 @@ export const BIOME_BASE_COLORS: Record<BiomeId, string> = {
 /** Water overlay (DB/map/waters/waters.json, id 1-7 all render the same blue here). */
 const WATER_BASE_COLOR = '#2197ea'
 
+/** Real names from Core/DB/map/waters/waters.json — used by the Water
+ *  flood-fill tool's swatch (issue #193 Phase 2). All 7 render the same
+ *  WATER_BASE_COLOR above (confirmed: no per-id color data exists, same
+ *  situation as biomes), so the swatch differentiates by label only. */
+export const WATER_TYPE_NAMES: Record<number, string> = {
+  1: 'Water (Dirt)',
+  2: 'Water (Sand)',
+  3: 'Water (Death)',
+  4: 'Water (Snow)',
+  5: 'Water (Fallen)',
+  6: 'Lava',
+  7: 'Water (Grass)',
+}
+
 /** Fallback for an out-of-range/unknown tile id (shouldn't occur — every real map's
  *  tilesMap values were verified to fall in 1-7, but a malformed map could differ). */
 const UNKNOWN_BASE_COLOR = '#9a9a9a'

@@ -30,6 +30,8 @@ import {
   moveObjectInstance,
   rotateObjectInstance,
   paintTerrainTiles,
+  paintLevelTiles,
+  paintWaterTiles,
   addObjectInstance,
   addMarkerInstance,
   deleteObjectInstance,
@@ -63,6 +65,8 @@ export type MapSaveEdit =
   | { kind: 'addMarker'; sid: string; node: number }
   | { kind: 'deleteObject'; entityType: 0 | 1 | 2; entityId: number }
   | { kind: 'paintTerrain'; changes: { node: number; biomeId: number }[] }
+  | { kind: 'paintLevel'; changes: { node: number; level: number }[] }
+  | { kind: 'paintWater'; changes: { node: number; waterId: number }[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string }[]; deletions: number[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
@@ -206,6 +210,10 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     newChunks[1] = result.block2Chunk
   } else if (edit?.kind === 'paintTerrain') {
     newChunks[1] = paintTerrainTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintLevel') {
+    newChunks[1] = paintLevelTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintWater') {
+    newChunks[1] = paintWaterTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintObjects') {
     const result = paintObjects(newChunks[0], newChunks[1], edit.additions, edit.deletions)
     newChunks[0] = result.block1Chunk
@@ -522,6 +530,22 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     for (const { node, biomeId } of edit.changes) {
       if (tiles[node] !== biomeId) {
         throw new Error('Verification failed: painted tile not reflected in the rebuilt tilesMap')
+      }
+    }
+  } else if (edit?.kind === 'paintLevel') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { levelsMap?: number[] }
+    const levels = block2.levelsMap ?? []
+    for (const { node, level } of edit.changes) {
+      if (levels[node] !== level) {
+        throw new Error('Verification failed: painted level not reflected in the rebuilt levelsMap')
+      }
+    }
+  } else if (edit?.kind === 'paintWater') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { waterMap?: number[] }
+    const water = block2.waterMap ?? []
+    for (const { node, waterId } of edit.changes) {
+      if (water[node] !== waterId) {
+        throw new Error('Verification failed: painted water not reflected in the rebuilt waterMap')
       }
     }
   } else if (edit?.kind === 'paintObjects') {

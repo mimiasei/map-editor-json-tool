@@ -1161,14 +1161,63 @@ const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: n
   },
 }
 
+/** Which sids get a `propVariants` and/or `propRewardParams` row on a fresh
+ *  placement — confirmed by surveying every `city-spawner`/interactable/
+ *  decoration instance across every real map in `maps/*.map` (677 distinct
+ *  sids, thousands of instances total): most sids (527/677 surveyed) NEVER
+ *  carry either table, so unconditionally adding both (this file's original
+ *  approach) was wrong for the vast majority of objects — confirmed
+ *  concretely on `city-spawner` and `alchemy_lab`, whose TSE-added instances
+ *  had `propVariants`/`propRewardParams` rows no real GME-placed instance of
+ *  either sid has (0/11 `alchemy_lab` samples; only 1/41 `city-spawner`
+ *  samples, too rare to treat as the default). These three lists are exactly
+ *  the sids that were 100% consistent one way or the other across every
+ *  sampled instance — sids with mixed/partial coverage (e.g. `city-spawner`
+ *  itself, `grass_1`, `random-squad`) are deliberately left out and default
+ *  to neither table, matching their own real-data majority. */
+const SIDS_WITH_VARIANTS_AND_REWARD_PARAMS = new Set([
+  'abandoned_corpse', 'abandoned_mansion', 'alvars_eye', 'black_tower', 'campaign_M3_cage',
+  'circle_of_life', 'crow_nest', 'cursed_old_house', 'dragon_utopia', 'gardener',
+  'gingerbread_house', 'goblin_cache', 'heros_crypt', 'iridescent_abbey', 'jousting_range',
+  'legions_memorial', 'lost_library', 'mereas_shrine', 'monty_hall', 'overgrown_grave',
+  'peasant_cart', 'petrified_memorial', 'point_of_balance', 'prismatic_lair', 'raiders_camp',
+  'research_laboratory', 'ritual_pyre', 'shady_den', 'storage_crystals', 'storage_dust',
+  'storage_gemstones', 'storage_gold', 'storage_mercury', 'storage_ore', 'storage_wood',
+  'troglodyte_throne', 'twilight_bloom', 'uncanny_rite', 'unforgotten_grave', 'unstable_ruins',
+  'village', 'windmill', 'wise_owl',
+])
+const SIDS_WITH_REWARD_PARAMS_ONLY = new Set([
+  'altar_of_magic_1', 'altar_of_magic_2', 'altar_of_magic_3', 'altar_of_magic_4',
+  'armory_automaton', 'beer_fountain', 'campaign_M4_construction_site', 'campaign_flattering_mirror',
+  'campaign_gingerbread_house', 'celestial_sphere', 'circus', 'college_of_wonder', 'crystal_trail',
+  'custom_abandoned_corpse', 'custom_abandoned_mansion', 'custom_abnormal_structure',
+  'custom_altar_of_magic_1', 'custom_altar_of_magic_2', 'custom_altar_of_magic_3', 'custom_altar_of_magic_4',
+  'custom_alvars_eye', 'custom_black_tower', 'custom_circle_of_life', 'custom_crow_nest',
+  'custom_cursed_old_house', 'custom_dragon_utopia', 'custom_gardener', 'custom_gingerbread_house',
+  'custom_goblin_cache', 'custom_heros_crypt', 'custom_iridescent_abbey', 'custom_jousting_range',
+  'custom_legions_memorial', 'custom_monty_hall', 'custom_overgrown_grave', 'custom_peasant_cart',
+  'custom_point_of_balance', 'custom_prismatic_lair', 'custom_raiders_camp', 'custom_research_laboratory',
+  'custom_ritual_pyre', 'custom_shady_den', 'custom_storage_gold', 'custom_storage_wood',
+  'custom_testing_grounds', 'custom_troglodyte_throne', 'custom_twilight_bloom', 'custom_uncanny_rite',
+  'custom_underground_lair', 'custom_unforgotten_grave', 'custom_university', 'custom_unstable_ruins',
+  'custom_vanguard', 'custom_village', 'custom_windmill', 'custom_wise_owl', 'flattering_mirror',
+  'fort', 'fountain', 'huntsmans_camp', 'infernal_cirque', 'knowledge_garden', 'learning_stone',
+  'magic_wheel', 'mana_well', 'maze', 'mysterious_stone', 'mystical_tower', 'orb_observatory',
+  'pile_of_books', 'quixs_path', 'stables', 'stinging_sword', 'tear_of_truth', 'tree_of_abundance',
+  'trial_scales', 'university', 'watchtower',
+])
+const SIDS_WITH_VARIANTS_ONLY = new Set([
+  'camp_fire', 'chest', 'enchanted_scroll_box', 'pandora_box', 'scroll_box',
+])
+
 /** Seed the `objectsProperties.*` rows the game's own Map Editor adds for a
- *  brand-new type-0 object (see `addObjectInstance`'s doc comment for how
- *  the base two were confirmed) plus, for the randomized-spawn placeholder
- *  sids, the one extra table that actually makes them function as a
- *  configured spawner rather than an inert placement (see
- *  `RANDOM_SPAWNER_TABLE_DEFAULTS`). Skips a table silently if it isn't
- *  present in this particular file rather than inventing one — same "only
- *  touch what's really there" caution `deleteObjectInstance`'s generic
+ *  brand-new type-0 object — `propVariants`/`propRewardParams` only for the
+ *  specific sids confirmed to always carry them (see the three lists above),
+ *  plus, for the randomized-spawn placeholder sids, the one extra table that
+ *  actually makes them function as a configured spawner rather than an inert
+ *  placement (see `RANDOM_SPAWNER_TABLE_DEFAULTS`). Skips a table silently if
+ *  it isn't present in this particular file rather than inventing one — same
+ *  "only touch what's really there" caution `deleteObjectInstance`'s generic
  *  sweep already follows, just in the insert direction. */
 function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, sid: string): string {
   let text = block2Text
@@ -1185,8 +1234,14 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
     const patchedSpan = JSON.stringify(entries)
     text = text.slice(0, found.arrayOpen) + patchedSpan + text.slice(found.arrayClose + 1)
   }
-  tryAppendRow('propVariants', { type: 0, id: newId, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
-  tryAppendRow('propRewardParams', { type: 0, id: newId, parameters: [] })
+  const wantsVariants = SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_VARIANTS_ONLY.has(sid)
+  const wantsRewardParams = SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_REWARD_PARAMS_ONLY.has(sid)
+  if (wantsVariants) {
+    tryAppendRow('propVariants', { type: 0, id: newId, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
+  }
+  if (wantsRewardParams) {
+    tryAppendRow('propRewardParams', { type: 0, id: newId, parameters: [] })
+  }
   const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
   if (randomSpawnerDefault) {
     tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId, randomSquadDefaultValue()))
@@ -1522,29 +1577,56 @@ export function paintObjects(
   return { block1Chunk: b1, block2Chunk: b2, newIds }
 }
 
-// ─── Paint terrain (issue #167 Phase D) ─────────────────────────────────────
-// `tilesMap` is a flat number[] (biome id 1-7), one entry per tile — the
-// simplest possible case here: parse the span as number[], overwrite the
-// touched indices, re-stringify. Never touches objects[]/squads[]/markers[]
-// or any objectsProperties.* table (a different top-level array entirely),
-// so by construction this can't overwrite or interact with a placed object.
-// Takes a whole batch of changes in one call, not one call per tile — a
-// paint/drag stroke across N tiles should produce one file write, not N.
+// ─── Paint terrain / level / water (issue #167 Phase D, generalized #193
+// Phase 2) — `tilesMap`/`levelsMap`/`waterMap` are all flat number[] arrays,
+// one entry per tile, same row-major indexing (see CLAUDE.md's "Object
+// footprint / rotation / terrain encoding" section) — the simplest possible
+// case here: parse the named array's span, overwrite the touched indices,
+// re-stringify. Never touches objects[]/squads[]/markers[] or any
+// objectsProperties.* table (a different top-level array entirely), so by
+// construction this can't overwrite or interact with a placed object. Takes
+// a whole batch of changes in one call, not one call per tile — a paint/
+// drag stroke (or a flood-fill) across N tiles should produce one file
+// write, not N.
+
+/** Overwrite `arrayKey`'s value at every `{node, value}` in `changes`. Shared
+ *  by paintTerrainTiles/paintLevelTiles/paintWaterTiles below — the only
+ *  thing that varies between them is which flat array they target. */
+function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap', changes: { node: number; value: number }[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, arrayKey)
+  const values = JSON.parse(span) as number[]
+  for (const { node, value } of changes) {
+    if (node < 0 || node >= values.length) {
+      throw new Error(`Node ${node} is out of bounds for ${arrayKey} (length ${values.length})`)
+    }
+    values[node] = value
+  }
+  const patchedSpan = JSON.stringify(values)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
 
 /** Overwrite `tilesMap[node]` for every `{node, biomeId}` in `changes`. */
 export function paintTerrainTiles(chunk: Uint8Array, changes: { node: number; biomeId: number }[]): Uint8Array {
-  const text = new TextDecoder('utf-8').decode(chunk)
-  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'tilesMap')
-  const tiles = JSON.parse(span) as number[]
-  for (const { node, biomeId } of changes) {
-    if (node < 0 || node >= tiles.length) {
-      throw new Error(`Node ${node} is out of bounds for tilesMap (length ${tiles.length})`)
-    }
-    tiles[node] = biomeId
-  }
-  const patchedSpan = JSON.stringify(tiles)
-  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
-  return new TextEncoder().encode(patchedText)
+  return paintFlatArrayTiles(chunk, 'tilesMap', changes.map(({ node, biomeId }) => ({ node, value: biomeId })))
+}
+
+/** Overwrite `levelsMap[node]` for every `{node, level}` in `changes`
+ *  (level is -1/0/1 — see CLAUDE.md). Deliberately does not touch
+ *  `climbsMap` (ramp markers) — placing/adjusting a ramp at a new level
+ *  boundary is a separate, not-yet-built tool; painting a level change here
+ *  can produce a boundary with no ramp, same as it's possible to do by hand
+ *  in GME. */
+export function paintLevelTiles(chunk: Uint8Array, changes: { node: number; level: number }[]): Uint8Array {
+  return paintFlatArrayTiles(chunk, 'levelsMap', changes.map(({ node, level }) => ({ node, value: level })))
+}
+
+/** Overwrite `waterMap[node]` for every `{node, waterId}` in `changes`
+ *  (waterId 0 = none, 1-7 = a themed water variant — Core/DB/map/waters/
+ *  waters.json). */
+export function paintWaterTiles(chunk: Uint8Array, changes: { node: number; waterId: number }[]): Uint8Array {
+  return paintFlatArrayTiles(chunk, 'waterMap', changes.map(({ node, waterId }) => ({ node, value: waterId })))
 }
 
 // ─── Create a new blank map ──────────────────────────────────────────────────
@@ -1588,6 +1670,15 @@ export interface BlankMapOptions {
  * bytes; only its JSON content is used as a starting shape, and only for
  * the fields not explicitly overridden here.
  */
+// Real names from tilesMap's own biome id convention (terrain-colors.ts's
+// BIOME_NAMES — confirmed against every real sample map's `areas[].biome`
+// string, which uses "Sand" not the catalog's own "Desert"; kept as a
+// local, self-contained copy here rather than importing the UI-layer
+// terrain-colors.ts module from this low-level writer).
+const BLANK_MAP_BIOME_NAMES: Record<number, string> = {
+  1: 'Grass', 2: 'Sand', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt',
+}
+
 export function buildBlankMap(template: MapContainer, options: BlankMapOptions): MapContainer {
   const { sizeX, sizeZ, biomeId, players } = options
   const tileCount = sizeX * sizeZ
@@ -1605,6 +1696,45 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     spawns: { playersCount: players.length, spawns: [] as unknown[], takenHeroes: [] as string[] },
   }
 
+  // `views` gates GME's own pannable/editable viewport — every real sample
+  // map's views[0].secSizeX/secSizeZ equals exactly sizeX/16 and sizeZ/16
+  // (confirmed with zero exceptions across every map in maps/, from a
+  // 16x16 map at 1x1 up to a 256x256 map at 16x16). The bundled template
+  // is itself only 16x16 (secSizeX/secSizeZ: 1,1) — left un-rescaled here
+  // before this fix, every created map silently inherited that tiny 1x1
+  // viewport regardless of its real chosen size, so GME could only pan a
+  // 16x16 corner of the actual map (issue: "testing.map" bug report).
+  const templateViews = (templateB2.views as Array<Record<string, unknown>>) ?? []
+  const views = templateViews.map((v, i) => (
+    i === 0 ? { ...v, secSizeX: Math.ceil(sizeX / 16), secSizeZ: Math.ceil(sizeZ / 16) } : v
+  ))
+
+  // `areas` is the map's own connectivity/region index — every real sample
+  // map's areas[] nodes sum to exactly sizeX*sizeZ (full coverage), split
+  // into multiple regions by GME's own (unreplicated-here) terrain-aware
+  // algorithm. The bundled template's single area only covers its own 256
+  // (16x16) nodes — left un-rescaled here before this fix, every created
+  // map inherited that same 256-node area regardless of real size, so only
+  // ~6% of a 64x64 map (and far less at larger sizes) was ever a member of
+  // any area at all. A freshly blank map has no reason to be split into
+  // multiple regions yet (uniform biome, no water, flat terrain) — one
+  // area spanning every tile is the direct, correctly-scaled equivalent of
+  // the template's own single-area shape, not a guess; this does NOT
+  // attempt to replicate GME's real multi-region splitting algorithm for a
+  // map with actual terrain variety; painting Water/Level/Obstacles after
+  // creation does not update this — a known, real gap, not part of this
+  // fix (see issue tracker for a proper areas-recompute pass).
+  const templateArea = (templateB2.areas as Array<Record<string, unknown>>)?.[0] ?? {}
+  const areas = [{
+    ...templateArea,
+    id: 0,
+    keyObjectId: -1,
+    rootNode: 0,
+    nodes: Array.from({ length: tileCount }, (_, i) => i),
+    neighbors: [] as unknown[],
+    biome: BLANK_MAP_BIOME_NAMES[biomeId] ?? 'Grass',
+  }]
+
   const b2 = {
     ...templateB2,
     sizeX_: sizeX,
@@ -1620,6 +1750,8 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     objectsFreeId: 0,
     squadsFreeId: 0,
     markersFreeId: 0,
+    views,
+    areas,
   }
 
   const chunks: Uint8Array[] = [
