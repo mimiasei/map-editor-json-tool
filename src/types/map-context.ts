@@ -259,4 +259,14 @@ export interface MapContext {
   /** Slope/ramp marker per tile — see RawMapBlock2.climbsMap. Empty when the
    *  map has no known size. */
   climbsMap: number[]
+  /** Road type ID per tile (0 = none) — see RawMapBlock2.roadsMap. Empty
+   *  when the map has no known size. */
+  roadsMap: number[]
+  /** Every river tile on the map, keyed by node — pre-flattened out of
+   *  RawMapBlock2.rivers[0].nodes (the real format's single wrapper entry)
+   *  since every consumer only ever needs "is this node a river tile, and
+   *  what's its shape," matching how waterMap/levelsMap are already exposed
+   *  as flat per-node data rather than a raw nested structure. Empty when
+   *  the map has no river data. */
+  riverNodes: Map<number, { s: number; isWaterfall: boolean }>
 }

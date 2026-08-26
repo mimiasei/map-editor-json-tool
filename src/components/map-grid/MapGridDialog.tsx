@@ -42,7 +42,8 @@ import {
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
-import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
 import { buildFuzzyObstaclePools, computeFuzzyDistances, computeStrokeBoundingSize, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
@@ -67,7 +68,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -85,6 +86,11 @@ const WATER_TYPE_ORDER = [1, 2, 3, 4, 5, 6, 7]
 /** Shared styling for both row and column tile-number gutters — everything
  *  except color, which depends on whether this label's row/column is hovered. */
 const TILE_NUMBER_CLASS = 'text-[10px] bg-background/80'
+/** Stable empty default for context?.riverNodes — a plain `new Map()` inline
+ *  would recreate on every render, same identity-churn issue arrays like
+ *  waterMap already accept, but a Map is used directly in Set conversions
+ *  below so a stable reference avoids needless recomputation. */
+const EMPTY_MAP = new Map<number, { s: number; isWaterfall: boolean }>()
 
 // One flat color per group, for the canvas swatch layer.
 const GROUP_COLORS: Record<GridGroup, string> = {
@@ -192,6 +198,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const waterMap = context?.waterMap ?? []
   const levelsMap = context?.levelsMap ?? []
   const climbsMap = context?.climbsMap ?? []
+  const roadsMap = context?.roadsMap ?? []
+  const riverNodes = context?.riverNodes ?? EMPTY_MAP
 
   // issue #195 follow-up: every edit applies directly to the in-memory
   // document (useMapDocumentStore) and commits immediately — no staging
@@ -435,7 +443,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'obstacles' | 'eraser'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'road' | 'obstacles' | 'eraser'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
@@ -464,6 +472,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (unlike Terrain/Level/Objects) since there's no drag to accumulate —
   // the whole batch is known synchronously.
   const [waterBrush, setWaterBrush] = useState<number | null>(null)
+
+  // ── Paint road — same freehand drag-stroke in-progress-batch convention
+  // as Paint Level above, targeting roadsMap (0=none, 1=Dirt, 2=Stone —
+  // see terrain-colors.ts's ROAD_TYPE_NAMES for the caveat on which id is
+  // which). State declared here (rather than alongside stageRoadNode/
+  // commitRoadStroke below) so applyRectangleFill above can reference
+  // roadBrush without a temporal-dead-zone error, matching where
+  // levelBrush/waterBrush are declared relative to it.
+  const [roadBrush, setRoadBrush] = useState<1 | 2 | null>(null)
+  const [paintRoadStaged, setPaintRoadStaged] = useState<Map<number, number>>(new Map())
+  const roadPaintingRef = useRef(false)
 
   // Elevation tint, merged with any in-progress (not yet committed) Level
   // drag stroke — same merge-before-render pattern issue #195 Phase 1
@@ -537,7 +556,30 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const { entityType, entityId } of targets) {
       applyEdit({ kind: 'deleteObject', entityType, entityId }, 'erase object')
     }
-  }, [placedObjects, catalog, sizeX, applyEdit])
+    // Also deletes any river node under the brush (reuses the same tool
+    // rather than a bespoke river-eraser) — the surviving neighbors of a
+    // deleted node need their own `s` re-derived too (e.g. a straight line
+    // losing one end becomes a point), same reclassification computeShapeChanges
+    // does for a newly-painted stroke in commitRiverStroke below.
+    const erasedRiverNodes = nodes.filter((n) => riverNodes.has(n))
+    if (erasedRiverNodes.length > 0) {
+      const survivingSet = new Set(riverNodes.keys())
+      for (const n of erasedRiverNodes) survivingSet.delete(n)
+      const affected: number[] = []
+      for (const n of erasedRiverNodes) {
+        const x = n % sizeX
+        const z = Math.floor(n / sizeX)
+        for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const nx = x + dx
+          const nz = z + dz
+          if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+          affected.push(nz * sizeX + nx)
+        }
+      }
+      const changes = computeShapeChanges(affected, survivingSet, sizeX, sizeZ)
+      applyEdit({ kind: 'paintRiver', changes, deletions: erasedRiverNodes }, 'erase river')
+    }
+  }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, applyEdit])
 
   const stopPainting = () => {
     setPaintBiome(null)
@@ -577,7 +619,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Rectangle mode's release-time commit — the whole enclosed region is
   // known at once, so (unlike freehand) this applies immediately rather
   // than accumulating into an in-progress buffer first.
-  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'obstacles' | 'eraser', bounds: RectangleBounds) => {
+  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'road' | 'obstacles' | 'eraser', bounds: RectangleBounds) => {
     const nodes = nodesInRectangle(bounds, sizeX)
     if (nodes.length === 0) return
     if (tool === 'obstacles') {
@@ -600,8 +642,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (waterableNodes.length > 0) {
         applyEdit({ kind: 'paintWater', changes: waterableNodes.map((n) => ({ node: n, waterId: waterBrush })) }, 'paint water')
       }
+    } else if (tool === 'road' && roadBrush !== null) {
+      applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, paintBiome, levelBrush, waterBrush, applyEdit, commitObstacleStroke, commitEraserStroke, levelsMap])
+  }, [sizeX, paintBiome, levelBrush, waterBrush, roadBrush, applyEdit, commitObstacleStroke, commitEraserStroke, levelsMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -641,6 +685,77 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (region.length === 0) return
     applyEdit({ kind: 'paintWater', changes: region.map((n) => ({ node: n, waterId })) }, 'paint water')
   }, [levelsMap, sizeX, sizeZ, applyEdit])
+
+  // roadBrush/paintRoadStaged/roadPaintingRef declared above (near
+  // waterBrush) so applyRectangleFill can reference roadBrush without a
+  // temporal-dead-zone error. No level/water side effects here — real
+  // sample data shows roads coexisting freely with both, including at a
+  // straight road/river crossing (confirmed: painting a road at an
+  // existing river node needs no special handling — see paintRoadTiles's
+  // doc comment in map-write.ts).
+  const stopRoadPainting = () => {
+    setRoadBrush(null)
+    setPaintRoadStaged(new Map())
+  }
+  // Accumulates the in-progress stroke locally (for live preview) — see
+  // commitRoadStroke below (called from onPointerUp) for where this
+  // actually applies to the document.
+  const stageRoadNode = useCallback((node: number, roadId: number) => {
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    if (tiles.every((n) => paintRoadStaged.get(n) === roadId)) return
+    setPaintRoadStaged((prev) => {
+      const next = new Map(prev)
+      for (const n of tiles) next.set(n, roadId)
+      return next
+    })
+  }, [paintRoadStaged, brushRadius, sizeX, sizeZ])
+  const commitRoadStroke = useCallback(() => {
+    if (paintRoadStaged.size === 0) return
+    const changes = [...paintRoadStaged.entries()].map(([node, roadId]) => ({ node, roadId }))
+    setPaintRoadStaged(new Map())
+    applyEdit({ kind: 'paintRoad', changes }, 'paint road')
+  }, [paintRoadStaged, applyEdit])
+
+  // ── River (issue: roads/rivers investigation) — a single-mode tool (no
+  // material choice — rivers.json only ever defines one real type) that
+  // traces a PATH, not an area fill, so it needs the dragged tiles' actual
+  // ORDER rather than the unordered Set/Map every other freehand tool uses
+  // — river-drag captures them into a plain ordered array (riverDragRef),
+  // append-if-different-from-last on every pointermove, same per-move
+  // sampling every other freehand tool already does (no Bresenham
+  // interpolation needed). No brush-radius/Rectangle-mode support — a
+  // river is inherently one tile wide, matching the real format's own
+  // sparse per-node (not per-area) shape. Applies immediately on stroke
+  // release (no staged preview, same convention as Obstacles/Eraser) since
+  // there's no in-progress buffer to render a "final" color for — the real
+  // color only renders once committed anyway (see the river canvas pass
+  // below). Deletion reuses the Eraser tool (see commitEraserStroke's own
+  // extension above) rather than a bespoke river-eraser.
+  const [riverActive, setRiverActive] = useState(false)
+  const riverDragRef = useRef<number[] | null>(null)
+  const stopRiverPainting = () => setRiverActive(false)
+  const commitRiverStroke = useCallback((orderedNodes: number[]) => {
+    const newNodes = orderedNodes.filter((n) => !riverNodes.has(n))
+    if (newNodes.length === 0) return
+    const mergedSet = new Set(riverNodes.keys())
+    for (const n of newNodes) mergedSet.add(n)
+    // Reclassify every newly-painted node AND any pre-existing neighbor
+    // whose own shape just changed (e.g. a straight line gaining a branch
+    // becomes a join) — not just the new nodes themselves.
+    const affected = [...newNodes]
+    for (const n of newNodes) {
+      const x = n % sizeX
+      const z = Math.floor(n / sizeX)
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+        affected.push(nz * sizeX + nx)
+      }
+    }
+    const changes = computeShapeChanges(affected, mergedSet, sizeX, sizeZ)
+    applyEdit({ kind: 'paintRiver', changes }, 'paint river')
+  }, [riverNodes, sizeX, sizeZ, applyEdit])
 
   const fitToViewport = useCallback(() => {
     if (!viewportEl || sizeX <= 0 || sizeZ <= 0) return
@@ -761,6 +876,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) applyWaterFill(node, waterBrush)
+      return
+    }
+    // Same freehand-stroke idea for the Road brush.
+    if (roadBrush !== null) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'road', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
+      roadPaintingRef.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageRoadNode(node, roadBrush)
+      return
+    }
+    // River — ordered stroke capture, no Rectangle-mode/brush-radius (see
+    // riverActive's own doc comment above).
+    if (riverActive) {
+      riverDragRef.current = []
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) riverDragRef.current.push(node)
       return
     }
     // Fuzzy obstacle brush — freehand drag accumulates the raw node set
@@ -886,6 +1027,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setHoveredNode(node)
       return
     }
+    if (roadPaintingRef.current && roadBrush !== null) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageRoadNode(node, roadBrush)
+      setHoveredNode(node)
+      return
+    }
+    if (riverDragRef.current) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null && riverDragRef.current[riverDragRef.current.length - 1] !== node) {
+        riverDragRef.current.push(node)
+      }
+      setHoveredNode(node)
+      return
+    }
     if (obstacleDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
@@ -1005,6 +1160,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       levelPaintingRef.current = false
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       commitLevelStroke()
+      return
+    }
+    if (roadPaintingRef.current) {
+      roadPaintingRef.current = false
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      commitRoadStroke()
+      return
+    }
+    if (riverDragRef.current) {
+      commitRiverStroke(riverDragRef.current)
+      riverDragRef.current = null
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       return
     }
     if (obstacleDragRef.current) {
@@ -1149,6 +1316,35 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillStyle = GROUP_COLORS[pick.group]
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
+    // Road pass: an in-progress (not yet committed) Paint Road drag stroke
+    // wins over the committed roadsMap value, same merge-before-render
+    // pattern as the base terrain pass above. Roads are meant to read as
+    // simple representative lines (not real game graphics — see
+    // RawMapBlock2.roadsMap's doc comment), so a solid per-tile fill is
+    // enough once several adjacent tiles are painted; skipped on top of an
+    // occupied tile so the object swatch above stays legible.
+    if (roadsMap.length === tileCount) {
+      for (let node = 0; node < tileCount; node++) {
+        const roadId = paintRoadStaged.get(node) ?? roadsMap[node]
+        if (!roadId || primaryByNode.has(node)) continue
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        ctx.fillStyle = ROAD_BASE_COLORS[roadId] ?? ROAD_BASE_COLORS[1]
+        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      }
+    }
+    // River pass: same flat per-tile fill treatment as the road pass above
+    // — a solid RIVER_BASE_COLOR fill already reads as a simple line once
+    // adjacent tiles are painted, matching the "abstract representative
+    // lines, not real game graphics" ask, with no in-progress buffer (a
+    // river stroke applies immediately on release, same as Obstacles/Eraser).
+    for (const node of riverNodes.keys()) {
+      if (primaryByNode.has(node)) continue
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      ctx.fillStyle = RIVER_BASE_COLOR
+      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+    }
     // Elevation tint pass: translucent darker/lighter fill over every
     // level -1 / level 1 tile (src/lib/map-grid/elevation-shading.ts),
     // toggle-gated. On top of the occupied swatch pass (translucent, so the
@@ -1164,7 +1360,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap, paintStaged,
+    settings.showElevationShading, elevationTintMap, paintStaged, roadsMap, paintRoadStaged, riverNodes,
   ])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
@@ -1276,6 +1472,30 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
   }, [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
+
+  // ── Road "pending" indicator canvas — same outline technique as Level's
+  // above: the real color already renders via the road pass on the base
+  // canvasEl, so this only marks which tiles are unsaved.
+  const [paintRoadCanvasEl, setPaintRoadCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!paintRoadCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = paintRoadCanvasEl
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (paintRoadStaged.size === 0) return
+    ctx.strokeStyle = 'rgba(217, 119, 6, 0.9)'
+    ctx.lineWidth = 2
+    for (const node of paintRoadStaged.keys()) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
+    }
+  }, [paintRoadCanvasEl, sizeX, sizeZ, paintRoadStaged])
 
   // Water has no in-progress-stroke outline canvas (unlike Terrain/Level/
   // Objects) — a click applies immediately, so there's nothing pending to
@@ -1824,7 +2044,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [showIcons, moveState, sizeX, sizeZ])
 
   useEffect(() => {
-    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive && !eraserActive && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !riverActive && !obstacleBrushActive && !eraserActive && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -1847,13 +2067,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else if (paintBiome !== null) stopPainting()
       else if (levelBrush !== null) stopLevelPainting()
       else if (waterBrush !== null) stopWaterPainting()
+      else if (roadBrush !== null) stopRoadPainting()
+      else if (riverActive) stopRiverPainting()
       else if (obstacleBrushActive) stopObstaclePainting()
       else if (eraserActive) stopEraser()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, obstacleBrushActive, eraserActive, moveState, paintObjectStaged])
+  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, roadBrush, riverActive, obstacleBrushActive, eraserActive, moveState, paintObjectStaged])
 
   // Ctrl+Z / Cmd+Z undoes the last edit applied to the in-memory .map
   // document (issue #195 follow-up: useMapDocumentStore's own zundo
@@ -1897,7 +2119,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // 5 -> at most ~69 tiles), a tiny cursor-following set, not a per-map-
   // tile render — doesn't reintroduce the one-DOM-node-per-map-tile
   // pattern this codebase avoids.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || eraserActive)
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || roadBrush !== null || obstacleBrushActive || eraserActive)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
     return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ)
@@ -2069,7 +2291,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
@@ -2134,7 +2356,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setPaintBiome(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setPaintBiome(1) }}
                 >
                   <Paintbrush className="h-3.5 w-3.5" />
                   Terrain
@@ -2173,7 +2395,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint elevation level"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setLevelBrush(0) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setLevelBrush(0) }}
                 >
                   <Layers className="h-3.5 w-3.5" />
                   Level
@@ -2215,10 +2437,82 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Flood-fill water (click a tile at level 0 or lower)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setWaterBrush(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); stopRoadPainting(); stopRiverPainting(); setWaterBrush(1) }}
                 >
                   <Droplets className="h-3.5 w-3.5" />
                   Water
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Road brush — same freehand-stroke staging as Level, targeting
+                  roadsMap instead of levelsMap. Can freely paint over an
+                  existing river node (or vice versa) — a straight road/river
+                  crossing needs no special handling, confirmed against real
+                  map data (see paintRoadTiles's doc comment). */}
+              {roadBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    {([1, 2] as const).map((r) => (
+                      <button
+                        key={r}
+                        className={`h-6 px-2 text-xs transition-colors ${
+                          roadBrush === r ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
+                        }`}
+                        onClick={() => setRoadBrush(r)}
+                      >
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50 mr-1 align-middle"
+                          style={{ backgroundColor: ROAD_BASE_COLORS[r] }}
+                        />
+                        {ROAD_TYPE_NAMES[r]}
+                      </button>
+                    ))}
+                  </div>
+                  {paintRoadStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{paintRoadStaged.size} staged</p>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRoadPainting}>
+                    {paintRoadStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Paint a road (dirt or stone)"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); stopRiverPainting(); setRoadBrush(1) }}
+                >
+                  <Milestone className="h-3.5 w-3.5" />
+                  Road
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* River — a single-mode tool, ordered-drag path tracing (see
+                  riverActive's own doc comment). Can freely cross an existing
+                  road tile (or vice versa) — no special handling needed,
+                  same as the road/river crossing case confirmed against
+                  real map data. */}
+              {riverActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <Waves className="h-3.5 w-3.5" />
+                    Drawing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting}>
+                    Stop (Esc)
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Draw a river — drag to trace a path"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setRiverActive(true) }}
+                >
+                  <Waves className="h-3.5 w-3.5" />
+                  River
                 </Button>
               )}
               {fuzzyObstaclePools && (
@@ -2248,7 +2542,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       className="h-6 text-xs gap-1"
                       title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopEraser()
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRiverPainting(); stopPlacingZone(); stopEraser()
                         setObstacleBrushActive(true)
                       }}
                     >
@@ -2281,7 +2575,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   className="h-6 text-xs gap-1"
                   title="Eraser — drag to delete objects/units/zones (not terrain)"
                   onClick={() => {
-                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting()
+                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting()
                     setEraserActive(true)
                   }}
                 >
@@ -2313,7 +2607,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             key={z.id}
                             className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
                             onClick={() => {
-                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopObstaclePainting(); stopEraser()
+                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRiverPainting(); stopObstaclePainting(); stopEraser()
                               setPlacingZoneSid(z.id)
                             }}
                           >
@@ -2330,7 +2624,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   a shared toggle for Terrain/Level/Water, not a separate
                   top-level tool. Only shown once a relevant brush is active,
                   since it has nothing to modify otherwise. */}
-              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive || eraserActive) && (
+              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || obstacleBrushActive || eraserActive) && (
                 <>
                   <div className="flex-1" />
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Mode:</span>
@@ -2358,7 +2652,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   click-to-flood-fill regardless of interactionMode, and
                   Bucket/Rectangle already select their own explicit region,
                   so radius has nothing to modify for either. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || eraserActive) && (
+              {interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || roadBrush !== null || obstacleBrushActive || eraserActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
                   <Button
@@ -2507,7 +2801,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               className={`absolute inset-0 touch-none select-none ${
                 isPanning || moveState
                   ? 'cursor-move'
-                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive || eraserActive
+                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || riverActive || obstacleBrushActive || eraserActive
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
@@ -2600,7 +2894,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive || eraserActive
+                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || riverActive || obstacleBrushActive || eraserActive
                   // Staged-edit visual treatment (issue #195 Phase 1) — a
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
@@ -2628,7 +2922,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive && !eraserActive) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !riverActive && !obstacleBrushActive && !eraserActive) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -2775,6 +3069,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     Phase 2) — same stacking as the overlays above. */}
                 <canvas
                   ref={setPaintLevelCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
+
+                {/* Road "pending" outline indicator — same stacking as the
+                    overlays above. */}
+                <canvas
+                  ref={setPaintRoadCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,

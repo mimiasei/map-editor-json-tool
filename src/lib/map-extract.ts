@@ -571,6 +571,12 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     waterMap: Array.isArray(b2.waterMap) ? b2.waterMap : [],
     levelsMap: Array.isArray(b2.levelsMap) ? b2.levelsMap : [],
     climbsMap: Array.isArray(b2.climbsMap) ? b2.climbsMap : [],
+    roadsMap: Array.isArray(b2.roadsMap) ? b2.roadsMap : [],
+    riverNodes: new Map(
+      (b2.rivers?.[0]?.nodes ?? [])
+        .filter((n): n is { n: number; s?: number; isWaterfall?: boolean } => typeof n?.n === 'number')
+        .map((n) => [n.n, { s: n.s ?? 0, isWaterfall: n.isWaterfall ?? false }]),
+    ),
   }
 }
 

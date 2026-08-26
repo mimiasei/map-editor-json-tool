@@ -71,6 +71,38 @@ export interface RawMapBlock2 {
    *  higher side — it's the walkable transition, not a blocker itself. Same
    *  flat indexing as tilesMap. */
   climbsMap?: number[]
+  /** Road type ID per tile, 0 = none. Confirmed against DB/map/roads/roads.json,
+   *  which defines exactly two types (id 1 "test Road" bonus 0.20, id 2
+   *  "test Road2" bonus 0.30) — matches every real sample map's observed
+   *  value set of {0,1,2} exactly. Which id renders as "dirt" vs "stone" is
+   *  NOT confirmed by the game data (both names are undescriptive
+   *  placeholders) — TSE assumes id 2 = Stone (higher bonus) as an
+   *  unconfirmed best guess pending real desktop-build/GME testing. Same
+   *  flat indexing as tilesMap. Already round-trips today (the blank-map
+   *  template zero-fills it) but was unparsed/unused until this field. */
+  roadsMap?: number[]
+  /** River path data. Confirmed across every parseable real sample map to
+   *  always contain exactly ONE entry (sid "test", matching the single
+   *  template DB/map/rivers/rivers.json ships) — even on maps with zero
+   *  river tiles (nodes: []). NOT one entry per distinct river: one map's
+   *  single entry can (and does) contain several spatially disconnected
+   *  river networks in one flat nodes[] list. `nodes[].n` is a flat tile
+   *  index in the same node space as tilesMap/roadsMap, but the array is
+   *  SPARSE (only tiles with river data), unlike roadsMap's dense per-tile
+   *  array. `s` (observed range 0-14) is a shape/orientation code — the
+   *  real rivers.json piece roles (point x1 + line x3-texture-variants +
+   *  turn x4-rotations + join x4-rotations + cross x1 + waterfall x1 = 14)
+   *  match the observed 1-14 range; s=0 (rare) is an unconfirmed sentinel.
+   *  Confirmed: river tiles do NOT set waterMap — this is a separate
+   *  overlay from lake/sea water. Confirmed real straight road/river
+   *  crossing exists (road and river tiles independently referencing the
+   *  same node, no bridge/junction flag) — no coordination needed when
+   *  writing to this and roadsMap at the same node. */
+  rivers?: Array<{
+    sid?: string
+    randomSeed?: number
+    nodes?: Array<{ n?: number; s?: number; isWaterfall?: boolean }>
+  }>
   objects?: Array<{
     sid?: string | string[]
     ids?: number[]
