@@ -6,7 +6,8 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
-import { exportProjectJson } from '@/lib/export'
+import { useMapDocumentStore, commitMapIfDirty } from '@/store/useMapDocumentStore'
+import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
@@ -20,6 +21,7 @@ import { restoreSessionHandoff } from '@/lib/session-handoff'
 import type { RestoreResult } from '@/lib/session-handoff'
 import { UpdateBanner, RestoreBanner, ThumbnailsBanner } from '@/components/common/UpdateBanner'
 import UpdateDialog from '@/components/common/UpdateDialog'
+import UnsavedChangesDialog from '@/components/common/UnsavedChangesDialog'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -85,10 +87,16 @@ export default function AppShell() {
     panels,
     currentFilePath,
     currentFileName,
+    sidecarPath,
+    mapFilePath,
     mapName,
     dialogs,
     localization,
     translations,
+    customHeroes,
+    customMapObjects,
+    customArtifacts,
+    customBuffs,
     setSidebarWidth,
     resetScenario,
     markClean,
@@ -106,6 +114,21 @@ export default function AppShell() {
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
   const [mapGridOpen, setMapGridOpen] = useState(false)
+  // Desktop exit-confirmation (issue #195 follow-up) — resolved via
+  // askExitChoice below, which the close-request handler awaits.
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
+  const exitChoiceResolverRef = useRef<((choice: 'save' | 'discard' | 'cancel') => void) | null>(null)
+  const askExitChoice = useCallback((): Promise<'save' | 'discard' | 'cancel'> => {
+    return new Promise((resolve) => {
+      exitChoiceResolverRef.current = resolve
+      setExitConfirmOpen(true)
+    })
+  }, [])
+  const resolveExitChoice = (choice: 'save' | 'discard' | 'cancel') => {
+    setExitConfirmOpen(false)
+    exitChoiceResolverRef.current?.(choice)
+    exitChoiceResolverRef.current = null
+  }
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
   const [setupOpen, setSetupOpen] = useState(false)
 
@@ -215,19 +238,31 @@ export default function AppShell() {
   const scenarioRef        = useRef(scenario)
   const currentFilePathRef = useRef(currentFilePath)
   const currentFileNameRef = useRef(currentFileName)
+  const sidecarPathRef     = useRef(sidecarPath)
+  const mapFilePathRef     = useRef(mapFilePath)
   const mapNameRef         = useRef(mapName)
   const dialogsRef         = useRef(dialogs)
   const localizationRef    = useRef(localization)
   const translationsRef    = useRef(translations)
+  const customHeroesRef       = useRef(customHeroes)
+  const customMapObjectsRef   = useRef(customMapObjects)
+  const customArtifactsRef    = useRef(customArtifacts)
+  const customBuffsRef        = useRef(customBuffs)
   const undockedRef        = useRef(undocked)
   useEffect(() => { isDirtyRef.current         = isDirty },         [isDirty])
   useEffect(() => { scenarioRef.current         = scenario },         [scenario])
   useEffect(() => { currentFilePathRef.current  = currentFilePath },  [currentFilePath])
   useEffect(() => { currentFileNameRef.current  = currentFileName },  [currentFileName])
+  useEffect(() => { sidecarPathRef.current      = sidecarPath },      [sidecarPath])
+  useEffect(() => { mapFilePathRef.current      = mapFilePath },      [mapFilePath])
   useEffect(() => { mapNameRef.current          = mapName },          [mapName])
   useEffect(() => { dialogsRef.current          = dialogs },          [dialogs])
   useEffect(() => { localizationRef.current     = localization },     [localization])
   useEffect(() => { translationsRef.current     = translations },     [translations])
+  useEffect(() => { customHeroesRef.current      = customHeroes },      [customHeroes])
+  useEffect(() => { customMapObjectsRef.current  = customMapObjects },  [customMapObjects])
+  useEffect(() => { customArtifactsRef.current   = customArtifacts },   [customArtifacts])
+  useEffect(() => { customBuffsRef.current       = customBuffs },       [customBuffs])
   useEffect(() => { undockedRef.current         = undocked },         [undocked])
 
   // ── Imperative panel handles ─────────────────────────────────────────────────
@@ -256,14 +291,39 @@ export default function AppShell() {
   }, [panels.preview])
 
   // ── Save helper (used by Ctrl+S and native menu) ─────────────────────────────
+  // issue #195 follow-up: Save is unified — also commits any pending Map
+  // Grid edit, and skips creating a sidecar .json when the scenario has no
+  // real content. Was previously missing customHeroes/customMapObjects/
+  // customArtifacts/customBuffs (dropped silently on every native-menu/
+  // Ctrl+S save — Toolbar.tsx's own handleSave, unreachable dead code since
+  // nothing ever dispatches 'oe:save', had the correct/complete version) and
+  // the sidecarPath branch a .map-anchored project needs — both fixed here
+  // while unifying, matching Toolbar.tsx's own logic exactly.
   const handleSave = useCallback(async () => {
+    await commitMapIfDirty(mapFilePathRef.current)
+    if (isScenarioEmpty(
+      scenarioRef.current, dialogsRef.current, localizationRef.current, translationsRef.current,
+      customHeroesRef.current, customMapObjectsRef.current, customArtifactsRef.current, customBuffsRef.current,
+    )) {
+      markClean()
+      return
+    }
     const json = exportProjectJson(
       scenarioRef.current,
       mapNameRef.current,
       dialogsRef.current,
       localizationRef.current,
       translationsRef.current,
+      customHeroesRef.current,
+      customMapObjectsRef.current,
+      customArtifactsRef.current,
+      customBuffsRef.current,
     )
+    if (isTauri() && sidecarPathRef.current) {
+      await saveToPath(sidecarPathRef.current, json)
+      markClean()
+      return
+    }
     if (currentFilePathRef.current) {
       await saveToPath(currentFilePathRef.current, json)
       markClean()
@@ -278,9 +338,26 @@ export default function AppShell() {
     }
   }, [markClean, setCurrentFile])
 
+  // Web-only unsaved-changes exit guard (issue #195 follow-up) — the
+  // desktop build gets a real confirmation dialog with a Save shortcut via
+  // Tauri's onCloseRequested below; a browser tab close/reload can only
+  // trigger the browser's own generic, non-customizable "leave site?"
+  // prompt (no custom buttons possible by browser design), but that's still
+  // real protection the web build previously had none of at all.
+  useEffect(() => {
+    if (isTauri()) return
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!isDirtyRef.current && !useMapDocumentStore.getState().mapIsDirty) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
+
   // ── New handler ──────────────────────────────────────────────────────────────
   const handleNew = useCallback(async () => {
-    if (isDirtyRef.current) {
+    if (isDirtyRef.current || useMapDocumentStore.getState().mapIsDirty) {
       const ok = await confirmDialog(
         'You have unsaved changes. Start a new scenario anyway?',
         'New Scenario',
@@ -288,6 +365,7 @@ export default function AppShell() {
       if (!ok) return
     }
     resetScenario()
+    useMapDocumentStore.getState().clear()
   }, [resetScenario])
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────────────
@@ -473,15 +551,18 @@ export default function AppShell() {
             await panelWin?.destroy()
           }
 
-          if (!isDirtyRef.current) {
+          if (!isDirtyRef.current && !useMapDocumentStore.getState().mapIsDirty) {
             await win.destroy()
             return
           }
-          const ok = await confirmDialog(
-            'You have unsaved changes. Quit without saving?',
-            'Unsaved Changes',
-          )
-          if (ok) await win.destroy()
+          const choice = await askExitChoice()
+          if (choice === 'save') {
+            await handleSave()
+            await win.destroy()
+          } else if (choice === 'discard') {
+            await win.destroy()
+          }
+          // 'cancel': leave the window open, nothing to do.
         } catch {
           // Fallback: force-exit if destroy fails for any reason
           logError('win.destroy() failed — falling back to process.exit')
@@ -575,6 +656,12 @@ export default function AppShell() {
         open={updateDialogOpen}
         onOpenChange={setUpdateDialogOpen}
         update={pendingUpdate}
+      />
+      <UnsavedChangesDialog
+        open={exitConfirmOpen}
+        onSave={() => resolveExitChoice('save')}
+        onDiscard={() => resolveExitChoice('discard')}
+        onCancel={() => resolveExitChoice('cancel')}
       />
 
       <ThumbnailExtractDialog

@@ -51,6 +51,40 @@ export function exportProjectJson(
 }
 
 /**
+ * True when the scenario side has no real content to save — every field
+ * `exportProjectJson` would otherwise write is empty (mapName excluded: the
+ * .map's own Block 2 mapName is the canonical source and is used as a
+ * fallback whenever no sidecar exists, so a bare mapName isn't "content"
+ * worth creating a file for). Used to skip creating/writing a sidecar
+ * .json for a map the user hasn't added any quests/dialogs/scripting to —
+ * issue #195 follow-up: unified Save shouldn't create a near-empty file
+ * just because the .map side has real, saveable edits.
+ */
+export function isScenarioEmpty(
+  scenario: ScenarioFile,
+  dialogs: Record<string, DialogFlow>,
+  localization: Record<string, string>,
+  translations: TranslationMap = {},
+  customHeroes: Record<string, CustomHeroDefinition> = {},
+  customMapObjects: Record<string, CustomMapObjectDefinition> = {},
+  customArtifacts: Record<string, CustomArtifactDefinition> = {},
+  customBuffs: Record<string, CustomBuffDefinition> = {},
+): boolean {
+  return (
+    scenario.counters.length === 0 &&
+    scenario.interruptions.length === 0 &&
+    scenario.quests.length === 0 &&
+    Object.keys(dialogs).length === 0 &&
+    Object.keys(localization).length === 0 &&
+    Object.keys(translations).length === 0 &&
+    Object.keys(customHeroes).length === 0 &&
+    Object.keys(customMapObjects).length === 0 &&
+    Object.keys(customArtifacts).length === 0 &&
+    Object.keys(customBuffs).length === 0
+  )
+}
+
+/**
  * Trigger a browser download of the JSON string.
  */
 export function downloadJson(json: string, filename = 'scenario.json'): void {

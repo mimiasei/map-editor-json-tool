@@ -125,3 +125,16 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
     },
   ),
 )
+
+/** Persist the in-memory .map document to `mapFilePath` if (and only if) it
+ *  has unsaved edits — a no-op otherwise (no path known, or nothing
+ *  pending). Shared by every top-level Save/Save As entry point (issue
+ *  #195 follow-up: Save is unified — one action covers both the .map and
+ *  the scenario JSON, instead of the .map side having its own separate
+ *  save trigger inside the Map Grid). */
+export async function commitMapIfDirty(mapFilePath: string | null): Promise<void> {
+  const { mapIsDirty, commitToDisk } = useMapDocumentStore.getState()
+  if (mapIsDirty && mapFilePath) {
+    await commitToDisk(mapFilePath)
+  }
+}
