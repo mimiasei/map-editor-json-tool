@@ -1,5 +1,5 @@
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
+    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     Emitter,
 };
 
@@ -191,7 +191,16 @@ pub fn run() {
             let save_as_item = MenuItemBuilder::with_id("save-as", "Save As...")
                 .accelerator("CmdOrCtrl+Shift+S")
                 .build(app)?;
-            let quit_item = PredefinedMenuItem::quit(app, None)?;
+            // A custom item, not PredefinedMenuItem::quit — the predefined one
+            // calls the app's native exit directly, bypassing onCloseRequested
+            // entirely (confirmed: quitting from this menu item, or Cmd+Q, never
+            // showed the unsaved-changes prompt). Relayed to the frontend like
+            // every other item here instead, which just calls win.close() — that
+            // still fires closeRequested, reusing the exact same dirty-check flow
+            // the window's own [x] button already goes through.
+            let quit_item = MenuItemBuilder::with_id("quit", "Quit")
+                .accelerator("CmdOrCtrl+Q")
+                .build(app)?;
 
             let file_menu = SubmenuBuilder::new(app, "File")
                 .item(&new_item)

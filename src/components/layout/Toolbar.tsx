@@ -4,8 +4,9 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useGuideStore } from '@/store/useGuideStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useMapDocumentStore, commitMapIfDirty } from '@/store/useMapDocumentStore'
 import { importScenario } from '@/lib/import'
-import { exportProjectJson } from '@/lib/export'
+import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
 import { checkForUpdate } from '@/lib/updater'
@@ -146,6 +147,7 @@ export default function Toolbar({
   } = useScenarioStore()
 
   const mapLoaded = useMapContextStore((s) => s.context !== null)
+  const mapIsDirty = useMapDocumentStore((s) => s.mapIsDirty)
 
   const [validateOpen,        setValidateOpen]        = useState(false)
   const [importErrors,        setImportErrors]        = useState<string[]>([])
@@ -304,8 +306,16 @@ export default function Toolbar({
   }
 
   // ── Save (Ctrl+S) — writes to known path; for anchored .map projects this is
-  //   the sidecar JSON. Falls back to Save As when no path is known.
+  //   the sidecar JSON. Falls back to Save As when no path is known. Also
+  //   commits any pending Map Grid edits (issue #195 follow-up: Save is
+  //   unified — one action for both halves, matching how the .map side no
+  //   longer has its own separate save trigger).
   const handleSave = async () => {
+    await commitMapIfDirty(mapFilePath)
+    if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
+      markClean()
+      return
+    }
     const json = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)
     if (isTauri() && sidecarPath) {
       await saveToPath(sidecarPath, json)
@@ -323,7 +333,13 @@ export default function Toolbar({
 
   // ── Save As ───────────────────────────────────────────────────────────────────
   // Always shows a file-save dialog, even when a .map/sidecar path is known.
+  // Also commits any pending Map Grid edits, same as Save.
   const handleExport = async () => {
+    await commitMapIfDirty(mapFilePath)
+    if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
+      markClean()
+      return
+    }
     const json     = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)
     const saveName = currentFileName ?? 'scenario.json'
     const savedPath = await saveFile(json, saveName)
@@ -786,10 +802,12 @@ export default function Toolbar({
           />
         </div>
 
-        {/* Current file name + dirty indicator */}
-        {(currentFileName || isDirty) && (
+        {/* Current file name + dirty indicator — covers both the scenario
+            JSON (isDirty) and any unsaved Map Grid edit (mapIsDirty, issue
+            #195 follow-up: Save is unified, so the indicator is too). */}
+        {(currentFileName || isDirty || mapIsDirty) && (
           <span className="text-xs text-muted-foreground ml-1 truncate max-w-48">
-            {isDirty && <span className="mr-1 text-primary">●</span>}
+            {(isDirty || mapIsDirty) && <span className="mr-1 text-primary">●</span>}
             {currentFileName ?? 'unsaved'}
           </span>
         )}

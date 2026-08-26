@@ -15,11 +15,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
-import { Dialog, DialogTitle } from '@/components/ui/dialog'
-import {
-  DraggableDialogContent,
-  DraggableDialogDragHandle,
-} from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -50,7 +45,7 @@ import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
-import { buildFuzzyObstaclePools, computeFuzzyDistances, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, computeFuzzyDistances, computeStrokeBoundingSize, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { tilesInRadius } from '@/lib/map-grid/brush'
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
@@ -63,7 +58,8 @@ import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
 import { isTauri } from '@/lib/native-fs'
-import { saveMapFile } from '@/lib/map-save'
+import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
 import { logError } from '@/lib/logger'
 import UndockButton from '@/components/panels/UndockButton'
@@ -71,7 +67,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -197,6 +193,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const levelsMap = context?.levelsMap ?? []
   const climbsMap = context?.climbsMap ?? []
 
+  // issue #195 follow-up: every edit applies directly to the in-memory
+  // document (useMapDocumentStore) and commits immediately — no staging
+  // buffer, no separate Save step, matching Tiled/Photoshop/GIMP's "the
+  // canvas always shows the true live result" model. This one wrapper
+  // replaces every tool's old stage*/save* pair: same try/catch + logError
+  // convention every individual handler already used, just called
+  // synchronously at the moment of the edit instead of on a later Save
+  // click. Returns the id an 'addObject'/'addMarker' edit allocated, or
+  // undefined (both for every other kind, and if the edit failed).
+  const applyEdit = useCallback((edit: MapSaveEdit, failureLabel: string): number | undefined => {
+    try {
+      return useMapDocumentStore.getState().applyEdit(edit)
+    } catch (e) {
+      logError(`Failed to ${failureLabel}: ${e instanceof Error ? e.message : String(e)}`)
+      return undefined
+    }
+  }, [])
+
   // Browse/Paint mode toggle (issue #193 Phase 1) — swaps the second header
   // row between the filter-pill row (Browse, always available) and the
   // relocated Paint Terrain/Objects tools (Paint, edit-capable maps only).
@@ -267,6 +281,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
   // thousand at most, never the full sizeX*sizeZ space) ──────────────────────
+  // issue #195 follow-up: every edit now applies straight to the in-memory
+  // document and re-syncs `placedObjects` (via useMapContextStore)
+  // immediately, so this reads the committed list directly — no staged/
+  // pending merge layer needed anywhere anymore.
   const tileIndex = useMemo(
     () => buildTileIndex(placedObjects, catalog, sizeX, sizeZ),
     [placedObjects, catalog, sizeX, sizeZ],
@@ -316,10 +334,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // lighter fill over every level -1 / level 1 tile, independent of the
   // wall-vs-interior distinction the blocked-tile overlay uses.
   // elevationTintMap is declared further down, after paintLevelStaged exists
-  // (issue #193 Phase 2 merges staged Level paint into it) — a memo's
-  // dependency array can't forward-reference a binding declared later in
-  // the component body, same reasoning as the staged-preview memos in the
-  // savePaintObjects area (see that comment for the fuller explanation).
+  // (issue #193 Phase 2 merges the in-progress Level stroke into it) — a
+  // memo's dependency array can't forward-reference a binding declared
+  // later in the component body.
 
   // Ramp/slope direction arrows (src/lib/map-grid/ramp-direction.ts) — folded
   // into the same "Elevation shading" toggle rather than a separate setting,
@@ -332,12 +349,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
-  // State-backed (not a plain ref): DraggableDialogContent defers its own
-  // layout via internal state that resolves through its own effect, so a
-  // plain useEffect here can fire before that resolves and never re-fire once
-  // it does (nothing in ITS OWN deps would change). A callback ref, by
-  // contrast, is invoked by React exactly when this DOM node mounts, no
-  // matter how deeply that mount was deferred by an ancestor.
+  // State-backed (not a plain ref): a parent that conditionally mounts this
+  // view (AppShell) can defer this DOM node's mount arbitrarily, and a plain
+  // useEffect here could fire before that resolves and never re-fire once it
+  // does. A callback ref, by contrast, is invoked by React exactly when this
+  // DOM node mounts, no matter how deeply that mount was deferred.
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
 
@@ -370,12 +386,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // still falls through to the single-placement click in onPointerUp.
   const paintObjectDragRef = useRef<{ startX: number; startY: number; moved: boolean } | null>(null)
 
-  // Staged (unsaved) object-paint placements — declared up here, ahead of
-  // both its own preview-canvas effect and the "Place object" section below
-  // that populates it, since a dependency array (unlike a plain closure
-  // reference inside a handler body) is evaluated at this render's hook-call
-  // time, not deferred until later — so it needs the binding to already
-  // exist by then.
+  // In-progress object-paint drag stroke — purely transient (cleared the
+  // instant the gesture ends and commits via applyEdit; never held across a
+  // tool switch, unlike this session's earlier staging-buffer design).
+  // Declared up here, ahead of both its own preview-canvas effect and the
+  // "Place object" section below that populates it, since a dependency
+  // array (unlike a plain closure reference inside a handler body) is
+  // evaluated at this render's hook-call time, not deferred until later —
+  // so it needs the binding to already exist by then.
   const [paintObjectStaged, setPaintObjectStaged] = useState<Map<number, string>>(new Map())
 
   // ── Paint terrain (issue #167 Phase D) ──────────────────────────────────
@@ -384,17 +402,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // entirely), so by construction this can't affect a placed object. One
   // tool active at a time: activating this stops Place/the object browser
   // (below), and picking a sid to place stops this (see stopPainting call
-  // sites). A whole drag stroke accumulates into one staged batch — nothing
-  // written until Save, same "stage locally, then explicit Save to .map"
-  // convention as Move/Add/Delete/Rotate — so one file write covers the
-  // whole stroke, not one per tile dragged over. Declared this early (ahead
-  // of onPointerDown/Move/Up and the paint-preview canvas effect below,
-  // which both reference it) to avoid a temporal-dead-zone reference.
+  // sites). A whole drag stroke accumulates into one in-memory batch,
+  // applied to the document (issue #195 follow-up: useMapDocumentStore) the
+  // instant the drag ends — one applyEdit call per stroke, not one per tile
+  // dragged over, same batching Save always had, just no separate manual
+  // Save click anymore. Declared this early (ahead of onPointerDown/Move/Up
+  // and the paint-preview canvas effect below, which both reference it) to
+  // avoid a temporal-dead-zone reference.
   const [paintBiome, setPaintBiome] = useState<BiomeId | null>(null)
   // Terrain bucket-fill (issue #193 Phase 3) — an alternate click-to-flood-
-  // fill interaction for the same Terrain tool/staging buffer, reusing
-  // floodFillRegion the same way Water does. Freehand (drag-stroke) stays
-  // the default, matching today's existing behavior unchanged.
+  // fill interaction for the same Terrain tool, reusing floodFillRegion the
+  // same way Water does. Freehand (drag-stroke) stays the default, matching
+  // today's existing behavior unchanged.
   const [terrainBucketMode, setTerrainBucketMode] = useState(false)
 
   // Shared brush-size radius (issue #193 punch-list item, scoped in the
@@ -409,49 +428,49 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // applying uniformly to Terrain/Level/Water: drag a rectangle (live
   // outline preview, Shift=square, Alt=center from src/lib/map-grid/
   // rectangle.ts, matching Tiled's Rectangle tool), and every enclosed node
-  // stages with the currently-active brush's value on release — the exact
+  // applies with the currently-active brush's value on release — the exact
   // same node-set-computation swap flood-fill already established, so this
   // needs no new write-path code, only a new way to compute which nodes get
-  // staged. Terrain's own Bucket toggle is ignored while this is active
+  // edited. Terrain's own Bucket toggle is ignored while this is active
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'obstacles'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'obstacles' | 'eraser'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
-  // Fuzzy obstacle brush state declared here (ahead of pushUndo, further
-  // down) since it's referenced by the rectangleDragRef type above —
-  // commitObstacleStroke itself (which needs pushUndo) is declared after
-  // pushUndo exists, same forward-reference reasoning as pushUndo's own
-  // doc comment below.
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
   const obstacleDragRef = useRef<Set<number> | null>(null)
 
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
 
-  // ── Paint level (issue #193 Phase 2) — same freehand drag-stroke staging
-  // convention as Paint Terrain above, just targeting levelsMap (-1/0/1)
-  // instead of tilesMap. Deliberately does not touch climbsMap (ramp
-  // markers) — see paintLevelTiles' doc comment in map-write.ts.
+  // ── Paint level (issue #193 Phase 2) — same freehand drag-stroke
+  // in-progress-batch convention as Paint Terrain above, just targeting
+  // levelsMap (-1/0/1) instead of tilesMap. Deliberately does not touch
+  // climbsMap (ramp markers) — see paintLevelTiles' doc comment in
+  // map-write.ts.
   const [levelBrush, setLevelBrush] = useState<-1 | 0 | 1 | null>(null)
   const [paintLevelStaged, setPaintLevelStaged] = useState<Map<number, -1 | 0 | 1>>(new Map())
   const levelPaintingRef = useRef(false)
 
   // ── Paint water (issue #193 Phase 2) — click-to-flood-fill, not a
-  // freehand stroke: one click fills every contiguous same-level tile at
-  // level <= 0 (water never occurs at level 1 in any real sample map) with
-  // the chosen water type. Multiple separate fills can stage before Save,
-  // same as a multi-stroke terrain paint session.
+  // freehand stroke: one click computes and immediately applies the whole
+  // contiguous level -1 region with the chosen water type. Restricted to
+  // level -1 only (issue #195 follow-up — user-requested; earlier real-map
+  // surveys found a rare-but-real minority of shipped water at level 0, but
+  // this editor no longer lets new water be painted there) — raising a
+  // watered tile to 0/1 via the Level tool clears its water instead (see
+  // paintLevelTiles in map-write.ts). No in-progress buffer needed at all
+  // (unlike Terrain/Level/Objects) since there's no drag to accumulate —
+  // the whole batch is known synchronously.
   const [waterBrush, setWaterBrush] = useState<number | null>(null)
-  const [paintWaterStaged, setPaintWaterStaged] = useState<Map<number, number>>(new Map())
 
-  // Elevation tint, merged with any staged (unsaved) Level paint — same
-  // merge-before-render pattern issue #195 Phase 1 established for Paint
-  // Terrain, so a staged level change looks identical to what Save will
-  // produce instead of needing its own separate preview overlay.
-  // blockedTileSet/rampDirectionMap (declared above) deliberately stay
-  // committed-only — see paintLevelTiles' climbsMap note in map-write.ts.
+  // Elevation tint, merged with any in-progress (not yet committed) Level
+  // drag stroke — same merge-before-render pattern issue #195 Phase 1
+  // established, so the preview during an active stroke looks identical to
+  // what applying it will produce. blockedTileSet/rampDirectionMap
+  // (declared above) deliberately stay committed-only — see
+  // paintLevelTiles' climbsMap note in map-write.ts.
   const elevationTintMap = useMemo(() => {
     if (paintLevelStaged.size === 0) return buildElevationTintMap(levelsMap)
     const merged = levelsMap.slice()
@@ -459,47 +478,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return buildElevationTintMap(merged)
   }, [levelsMap, paintLevelStaged])
 
-  // ── Local undo (Ctrl+Z) for staged-but-unsaved edits ────────────────────
-  // Deliberately separate from useScenarioStore's zundo temporal() (scoped
-  // to the `scenario` field only, never .map writes — see CLAUDE.md). Once
-  // an edit is actually saved to disk there's no undo beyond the one-time
-  // .bak file; this only ever needs to cover the in-memory staged window,
-  // so one combined snapshot of every staged buffer that currently exists
-  // is enough — Ctrl+Z restores all four at once rather than needing a
-  // separate stack per feature (only one of the four is ever actually
-  // changing at a time in practice). Declared here (ahead of moveState/
-  // rotateState, both declared much further down) via a ref rather than a
-  // direct closure over those two, since pushUndo needs to be usable in
-  // earlier callbacks' (stagePaintNode etc.) own useCallback deps arrays —
-  // those are evaluated eagerly, so they can't forward-reference a `const`
-  // declared later in the component body. See the ref-sync effect below
-  // (near undoLastStagedEdit) that keeps this current every render.
-  interface StagedSnapshot {
-    paintStaged: Map<number, BiomeId>
-    paintObjectStaged: Map<number, string>
-    paintLevelStaged: Map<number, -1 | 0 | 1>
-    paintWaterStaged: Map<number, number>
-    moveState: { key: string; type: 0 | 1 | 2; id: number; sid: string; node: number } | null
-    rotateState: { key: string; id: number; rotation: number } | null
-  }
-  const stagedSnapshotRef = useRef<StagedSnapshot>({
-    paintStaged: new Map(), paintObjectStaged: new Map(), paintLevelStaged: new Map(), paintWaterStaged: new Map(), moveState: null, rotateState: null,
-  })
-  const [undoStack, setUndoStack] = useState<StagedSnapshot[]>([])
-  const pushUndo = useCallback(() => {
-    setUndoStack((stack) => [...stack, stagedSnapshotRef.current])
-  }, [])
-
   // ── Fuzzy obstacle brush (issue #193 Phase 5) — a freehand drag (or a
   // Rectangle-mode selection, reusing the same drag machinery declared
   // above) accumulates a raw node set; on release the whole set is sampled
   // ONCE via sampleFuzzyObstacles (distance-from-center only makes sense
   // for a complete stroke, not incrementally per tile the way Terrain
-  // paints). Output merges into paintObjectStaged — the exact same staged
-  // buffer/Save path Objects already uses, since a sampled obstacle IS just
-  // an object placement; no new write path, no new staging state, and
-  // nothing new needed in StagedSnapshot (paintObjectStaged already covers
-  // undo for this).
+  // paints) and applied immediately — a sampled obstacle IS just an object
+  // placement, so this reuses the exact same 'paintObjects' edit kind
+  // Objects already uses, no new write path.
   const fuzzyObstaclePools = useMemo(
     () => (catalog ? buildFuzzyObstaclePools(catalog.mapObjects) : null),
     [catalog],
@@ -507,157 +493,154 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const commitObstacleStroke = useCallback((nodes: number[]) => {
     if (!fuzzyObstaclePools || nodes.length === 0) return
     const distances = computeFuzzyDistances(nodes, sizeX)
+    // Pools (pool_small etc.) only look right at 4x4+ (issue #195 follow-up,
+    // user-requested) — measured from the stroke's own bounding box so this
+    // works the same whether it came from a freehand drag or a Rectangle
+    // selection.
+    const { width, height } = computeStrokeBoundingSize(nodes, sizeX)
+    const poolsAllowed = width >= 4 && height >= 4
     const additions = sampleFuzzyObstacles(distances, (n) => {
       const v = tilesMap[n]
       return v >= 1 && v <= 7 ? (v as BiomeId) : undefined
-    }, fuzzyObstaclePools)
+    }, fuzzyObstaclePools, { poolsAllowed })
     if (additions.length === 0) return
-    pushUndo()
-    setPaintObjectStaged((prev) => {
-      const next = new Map(prev)
-      for (const { node, sid } of additions) next.set(node, sid)
-      return next
-    })
-  }, [fuzzyObstaclePools, sizeX, tilesMap, pushUndo])
+    applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'scatter obstacles')
+  }, [fuzzyObstaclePools, sizeX, tilesMap, applyEdit])
   const stopObstaclePainting = () => setObstacleBrushActive(false)
+
+  // ── Eraser (issue #195 follow-up) — deletes non-terrain content (objects/
+  // units/zones) under the brush, same freehand (brush-radius, via
+  // eraserDragRef mirroring obstacleDragRef above) or Rectangle-mode
+  // selection every other paint tool already offers. Never touches
+  // terrain/level/water — only ever calls deleteObject. Applies
+  // immediately on stroke release, same as every other brush tool here (no
+  // extra confirmation step, unlike the single-object Delete tool in the
+  // info panel — Ctrl+Z covers an eraser mistake same as any other edit).
+  const [eraserActive, setEraserActive] = useState(false)
+  const eraserDragRef = useRef<Set<number> | null>(null)
+  const stopEraser = () => setEraserActive(false)
+  const commitEraserStroke = useCallback((nodes: number[]) => {
+    if (nodes.length === 0) return
+    const erased = new Set(nodes)
+    // Match by footprint overlap (resolveFootprintCells — the same function
+    // click/hover selection already uses), not just an object's own anchor
+    // node, so erasing part of a multi-tile mountain/building removes it
+    // even if its anchor sits just outside the brushed area. Markers/squads
+    // have no footprint template and resolve to their own single node.
+    const targets: { entityType: 0 | 1 | 2; entityId: number }[] = []
+    for (const obj of placedObjects) {
+      const cells = resolveFootprintCells(obj, catalog)
+      if (cells.some((c) => erased.has(c.z * sizeX + c.x))) {
+        targets.push({ entityType: obj.type, entityId: obj.id })
+      }
+    }
+    for (const { entityType, entityId } of targets) {
+      applyEdit({ kind: 'deleteObject', entityType, entityId }, 'erase object')
+    }
+  }, [placedObjects, catalog, sizeX, applyEdit])
 
   const stopPainting = () => {
     setPaintBiome(null)
     setPaintStaged(new Map())
   }
+  // Accumulates the in-progress stroke locally (for live preview) — see
+  // commitPaintStroke below (called from onPointerUp) for where this
+  // actually applies to the document.
   const stagePaintNode = useCallback((node: number, biomeId: BiomeId) => {
     const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
     if (tiles.every((n) => paintStaged.get(n) === biomeId)) return
-    pushUndo()
     setPaintStaged((prev) => {
       const next = new Map(prev)
       for (const n of tiles) next.set(n, biomeId)
       return next
     })
-  }, [paintStaged, pushUndo, brushRadius, sizeX, sizeZ])
-  const savePaint = async () => {
-    if (paintStaged.size === 0 || !mapFilePath) return
+  }, [paintStaged, brushRadius, sizeX, sizeZ])
+  const commitPaintStroke = useCallback(() => {
+    if (paintStaged.size === 0) return
     const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintTerrain', changes })
-      setPaintStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint terrain: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+    setPaintStaged(new Map())
+    applyEdit({ kind: 'paintTerrain', changes }, 'paint terrain')
+  }, [paintStaged, applyEdit])
 
   // Terrain bucket-fill (issue #193 Phase 3) — click a tile, flood-fill
-  // every contiguous tile of ITS CURRENT biome (committed, not staged —
-  // matches Water's own "flood the real thing, not the in-progress edit"
-  // behavior) with the newly chosen biome. Merges into paintStaged exactly
-  // like a freehand stroke would, so Save/undo/preview all work unchanged.
-  const stageBucketFill = useCallback((node: number, biomeId: BiomeId) => {
+  // every contiguous tile of ITS CURRENT biome with the newly chosen biome,
+  // and apply immediately (the whole region is known synchronously from one
+  // click, same as Water's flood-fill — no drag to batch).
+  const applyBucketFill = useCallback((node: number, biomeId: BiomeId) => {
     if (tilesMap[node] === undefined) return
     const targetBiome = tilesMap[node]
     const region = floodFillRegion(node, sizeX, sizeZ, (n) => tilesMap[n] === targetBiome)
     if (region.length === 0) return
-    pushUndo()
-    setPaintStaged((prev) => {
-      const next = new Map(prev)
-      for (const n of region) next.set(n, biomeId)
-      return next
-    })
-  }, [tilesMap, sizeX, sizeZ, pushUndo])
+    applyEdit({ kind: 'paintTerrain', changes: region.map((n) => ({ node: n, biomeId })) }, 'bucket-fill terrain')
+  }, [tilesMap, sizeX, sizeZ, applyEdit])
 
-  // Rectangle mode's release-time commit — one pushUndo() for the whole
-  // rectangle (not one per enclosed node), so Ctrl+Z undoes the drag as a
-  // single step like a freehand stroke or a flood-fill does.
-  const stageRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'obstacles', bounds: RectangleBounds) => {
+  // Rectangle mode's release-time commit — the whole enclosed region is
+  // known at once, so (unlike freehand) this applies immediately rather
+  // than accumulating into an in-progress buffer first.
+  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'obstacles' | 'eraser', bounds: RectangleBounds) => {
     const nodes = nodesInRectangle(bounds, sizeX)
     if (nodes.length === 0) return
-    // Obstacles samples per-node values (not one fixed value like the other
-    // three), and commitObstacleStroke already does its own pushUndo() —
-    // handled separately so the generic single-value merge below doesn't
-    // apply to it.
     if (tool === 'obstacles') {
       commitObstacleStroke(nodes)
       return
     }
-    pushUndo()
-    if (tool === 'terrain' && paintBiome !== null) {
-      setPaintStaged((prev) => {
-        const next = new Map(prev)
-        for (const n of nodes) next.set(n, paintBiome)
-        return next
-      })
-    } else if (tool === 'level' && levelBrush !== null) {
-      setPaintLevelStaged((prev) => {
-        const next = new Map(prev)
-        for (const n of nodes) next.set(n, levelBrush)
-        return next
-      })
-    } else if (tool === 'water' && waterBrush !== null) {
-      setPaintWaterStaged((prev) => {
-        const next = new Map(prev)
-        for (const n of nodes) next.set(n, waterBrush)
-        return next
-      })
+    if (tool === 'eraser') {
+      commitEraserStroke(nodes)
+      return
     }
-  }, [sizeX, paintBiome, levelBrush, waterBrush, pushUndo, commitObstacleStroke])
+    if (tool === 'terrain' && paintBiome !== null) {
+      applyEdit({ kind: 'paintTerrain', changes: nodes.map((n) => ({ node: n, biomeId: paintBiome })) }, 'paint terrain')
+    } else if (tool === 'level' && levelBrush !== null) {
+      applyEdit({ kind: 'paintLevel', changes: nodes.map((n) => ({ node: n, level: levelBrush })) }, 'paint level')
+    } else if (tool === 'water' && waterBrush !== null) {
+      // Water only ever paints level -1 tiles (see applyWaterFill's doc
+      // comment) — a rectangle can span other levels too, so filter rather
+      // than assume the whole selection qualifies.
+      const waterableNodes = nodes.filter((n) => levelsMap[n] === -1)
+      if (waterableNodes.length > 0) {
+        applyEdit({ kind: 'paintWater', changes: waterableNodes.map((n) => ({ node: n, waterId: waterBrush })) }, 'paint water')
+      }
+    }
+  }, [sizeX, paintBiome, levelBrush, waterBrush, applyEdit, commitObstacleStroke, commitEraserStroke, levelsMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
     setPaintLevelStaged(new Map())
   }
+  // Accumulates the in-progress stroke locally (for live preview) — see
+  // commitLevelStroke below (called from onPointerUp) for where this
+  // actually applies to the document.
   const stageLevelNode = useCallback((node: number, level: -1 | 0 | 1) => {
     const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
     if (tiles.every((n) => paintLevelStaged.get(n) === level)) return
-    pushUndo()
     setPaintLevelStaged((prev) => {
       const next = new Map(prev)
       for (const n of tiles) next.set(n, level)
       return next
     })
-  }, [paintLevelStaged, pushUndo, brushRadius, sizeX, sizeZ])
-  const saveLevelPaint = async () => {
-    if (paintLevelStaged.size === 0 || !mapFilePath) return
+  }, [paintLevelStaged, brushRadius, sizeX, sizeZ])
+  const commitLevelStroke = useCallback(() => {
+    if (paintLevelStaged.size === 0) return
     const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintLevel', changes })
-      setPaintLevelStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint level: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+    setPaintLevelStaged(new Map())
+    applyEdit({ kind: 'paintLevel', changes }, 'paint level')
+  }, [paintLevelStaged, applyEdit])
 
   const stopWaterPainting = () => {
     setWaterBrush(null)
-    setPaintWaterStaged(new Map())
   }
-  // One click fills the whole contiguous region at that tile's own level
-  // (level <= 0 only — see the paintWaterStaged doc comment above), merging
-  // the result into any already-staged fills from earlier clicks this
-  // session rather than replacing them.
-  const stageWaterFill = useCallback((node: number, waterId: number) => {
-    if (levelsMap[node] === undefined || levelsMap[node] > 0) return
-    const targetLevel = levelsMap[node] ?? 0
-    const region = floodFillRegion(node, sizeX, sizeZ, (n) => (levelsMap[n] ?? 0) === targetLevel)
+  // One click fills the whole contiguous level -1 region containing this
+  // tile and applies immediately — see the waterBrush doc comment above for
+  // why there's no in-progress buffer for this tool. Water is only ever
+  // paintable at level -1 (issue #195 follow-up — user-requested, tighter
+  // than the format itself); raising a watered tile to 0/1 via the Level
+  // tool clears its water instead (see paintLevelTiles in map-write.ts).
+  const applyWaterFill = useCallback((node: number, waterId: number) => {
+    if (levelsMap[node] !== -1) return
+    const region = floodFillRegion(node, sizeX, sizeZ, (n) => (levelsMap[n] ?? 0) === -1)
     if (region.length === 0) return
-    pushUndo()
-    setPaintWaterStaged((prev) => {
-      const next = new Map(prev)
-      for (const n of region) next.set(n, waterId)
-      return next
-    })
-  }, [levelsMap, sizeX, sizeZ, pushUndo])
-  const saveWaterPaint = async () => {
-    if (paintWaterStaged.size === 0 || !mapFilePath) return
-    const changes = [...paintWaterStaged.entries()].map(([node, waterId]) => ({ node, waterId }))
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintWater', changes })
-      setPaintWaterStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint water: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+    applyEdit({ kind: 'paintWater', changes: region.map((n) => ({ node: n, waterId })) }, 'paint water')
+  }, [levelsMap, sizeX, sizeZ, applyEdit])
 
   const fitToViewport = useCallback(() => {
     if (!viewportEl || sizeX <= 0 || sizeZ <= 0) return
@@ -734,7 +717,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       if (terrainBucketMode) {
         const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null) stageBucketFill(node, paintBiome)
+        if (node !== null) applyBucketFill(node, paintBiome)
         return
       }
       paintingRef.current = true
@@ -761,8 +744,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     // Water is click-to-flood-fill, not a drag stroke — one pointerdown
-    // computes and stages the whole contiguous region in one action (see
-    // stageWaterFill's doc comment). Rectangle mode replaces that with a
+    // computes and applies the whole contiguous region in one action (see
+    // applyWaterFill's doc comment). Rectangle mode replaces that with a
     // drag-a-rect-then-fill-every-enclosed-tile interaction instead — a
     // genuinely different selection shape (not level-bounded), so it's
     // offered as an alternative rather than folded into the click behavior.
@@ -777,7 +760,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         return
       }
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-      if (node !== null) stageWaterFill(node, waterBrush)
+      if (node !== null) applyWaterFill(node, waterBrush)
       return
     }
     // Fuzzy obstacle brush — freehand drag accumulates the raw node set
@@ -800,6 +783,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null) {
         for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
           obstacleDragRef.current.add(n)
+        }
+      }
+      return
+    }
+    // Eraser — same freehand/Rectangle drag machinery as Obstacles above,
+    // committed via commitEraserStroke instead of the fuzzy sampler.
+    if (eraserActive) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'eraser', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
+      eraserDragRef.current = new Set()
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+          eraserDragRef.current.add(n)
         }
       }
       return
@@ -891,6 +896,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setHoveredNode(node)
       return
     }
+    if (eraserDragRef.current) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+          eraserDragRef.current.add(n)
+        }
+      }
+      setHoveredNode(node)
+      return
+    }
     if (moveDragRef.current) {
       const drag = moveDragRef.current
       const dx = e.clientX - drag.startX
@@ -974,7 +989,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       const bounds = computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ)
-      stageRectangleFill(drag.tool, bounds)
+      applyRectangleFill(drag.tool, bounds)
       rectangleDragRef.current = null
       setRectanglePreview(null)
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
@@ -983,16 +998,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (paintingRef.current) {
       paintingRef.current = false
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      commitPaintStroke()
       return
     }
     if (levelPaintingRef.current) {
       levelPaintingRef.current = false
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      commitLevelStroke()
       return
     }
     if (obstacleDragRef.current) {
       commitObstacleStroke([...obstacleDragRef.current])
       obstacleDragRef.current = null
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
+    if (eraserDragRef.current) {
+      commitEraserStroke([...eraserDragRef.current])
+      eraserDragRef.current = null
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       return
     }
@@ -1029,7 +1052,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         // Single-click only, same as placing a creature above — zones have
         // no drag-to-paint.
         const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null) void placeZoneAt(node)
+        if (node !== null) placeZoneAt(node)
+      } else if (!wasClick) {
+        // An Objects-paint drag stroke — commit the whole accumulated batch now.
+        commitObjectPaintStroke()
       }
       return
     }
@@ -1040,15 +1066,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     if (drag?.button === 1) setIsPanning(false)
     dragRef.current = null
-    // A plain click (not a pan) while a move is active updates the staged
-    // destination — fires here (not the icon cells' own onClick) so it works
-    // identically whether the click lands on an empty tile or an occupied one.
+    // A plain click (not a pan) while a move is active relocates immediately
+    // — fires here (not the icon cells' own onClick) so it works identically
+    // whether the click lands on an empty tile or an occupied one.
     if (wasClick && moveState) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-      if (node !== null && isNodeInBoundsForMove(moveState, node)) {
-        pushUndo()
-        setMoveState((prev) => (prev ? { ...prev, node } : prev))
-      }
+      if (node !== null) applyMoveTo(node)
     }
   }
   const onContextMenuViewport = (e: ReactMouseEvent) => {
@@ -1100,12 +1123,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     ctx.clearRect(0, 0, sizeX, sizeZ)
     // Base pass: every tile gets its light terrain/water fill, occupied or
     // not — this is what makes the grid readable even with all filters off.
-    // A staged (unsaved) Paint Terrain/Water edit wins over the committed
-    // value — same `terrainFillColor()` call as committed tiles, just fed
-    // the staged value(s), so a staged tile renders pixel-identical to what
-    // it'll look like once saved (issue #195 Phase 1 pattern, extended to
-    // Water in issue #193 Phase 2) instead of a separate tinted overlay
-    // approximating it.
+    // An in-progress (not yet committed) Paint Terrain drag stroke wins over
+    // the committed tilesMap value — same `terrainFillColor()` call as
+    // committed tiles, just fed the in-progress value, so a mid-stroke tile
+    // renders pixel-identical to what committing will produce (issue #195
+    // Phase 1 pattern). Water has no in-progress buffer — it applies
+    // immediately on click, so waterMap already reflects it by the next render.
     const tileCount = sizeX * sizeZ
     if (tilesMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
@@ -1113,7 +1136,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         const z = Math.floor(node / sizeX)
         ctx.fillStyle = terrainFillColor(
           paintStaged.get(node) ?? tilesMap[node],
-          paintWaterStaged.get(node) ?? waterMap[node],
+          waterMap[node],
           settings.terrainOpacity,
         )
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
@@ -1141,7 +1164,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap, paintStaged, paintWaterStaged,
+    settings.showElevationShading, elevationTintMap, paintStaged,
   ])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
@@ -1254,26 +1277,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
 
-  const [paintWaterCanvasEl, setPaintWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => {
-    if (!paintWaterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const canvas = paintWaterCanvasEl
-    const SUBPX = 8
-    canvas.width = sizeX * SUBPX
-    canvas.height = sizeZ * SUBPX
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    if (paintWaterStaged.size === 0) return
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.9)'
-    ctx.lineWidth = 2
-    for (const node of paintWaterStaged.keys()) {
-      const x = node % sizeX
-      const z = Math.floor(node / sizeX)
-      const screenRow = sizeZ - 1 - z
-      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
-    }
-  }, [paintWaterCanvasEl, sizeX, sizeZ, paintWaterStaged])
+  // Water has no in-progress-stroke outline canvas (unlike Terrain/Level/
+  // Objects) — a click applies immediately, so there's nothing pending to
+  // outline by the time this would render.
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -1478,117 +1484,46 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
   const canEditEntities = isTauri() && !!mapFilePath
 
-  const handleSetNoCombineGeometry = async (item: PlacedObject, value: boolean) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setNoCombineGeometry', entityType: item.type, entityId: item.id, value })
-    } catch (e) {
-      logError(`Failed to set No Combine Geometry: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  const handleAssignEntitySid = async (item: PlacedObject, sid: string) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid })
-    } catch (e) {
-      logError(`Failed to assign entity SID: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  const handleSetSpawnerPlayerType = async (item: PlacedObject, spawnType: 0 | 1 | 2) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setSpawnerPlayerType', entityType: item.type, entityId: item.id, spawnType })
-    } catch (e) {
-      logError(`Failed to set spawner Player type: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  const handleSetSpawnerOwner = async (item: PlacedObject, newOwner: number) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'swapSpawnerOwner', entityType: item.type, entityId: item.id, newOwner })
-    } catch (e) {
-      logError(`Failed to reassign spawner owner: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  const handleSetCityFaction = async (item: PlacedObject, factionSid: string) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid })
-    } catch (e) {
-      logError(`Failed to set faction: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetCitySpawnHero = async (item: PlacedObject, spawnHero: boolean) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero })
-    } catch (e) {
-      logError(`Failed to toggle companion hero: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetHeroSid = async (item: PlacedObject, heroSid: string) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid })
-    } catch (e) {
-      logError(`Failed to set hero: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // issue #195 follow-up: every spawner/entity-property handler below used
+  // to write to disk immediately on its own onChange already — that part's
+  // unchanged, just now going through the shared in-memory applyEdit
+  // wrapper (declared near the top of the component) instead of calling
+  // saveMapFile directly.
+  const handleSetNoCombineGeometry = (item: PlacedObject, value: boolean) =>
+    applyEdit({ kind: 'setNoCombineGeometry', entityType: item.type, entityId: item.id, value }, 'set No Combine Geometry')
+  const handleAssignEntitySid = (item: PlacedObject, sid: string) =>
+    applyEdit({ kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid }, 'assign entity SID')
+  const handleSetSpawnerPlayerType = (item: PlacedObject, spawnType: 0 | 1 | 2) =>
+    applyEdit({ kind: 'setSpawnerPlayerType', entityType: item.type, entityId: item.id, spawnType }, 'set spawner Player type')
+  const handleSetSpawnerOwner = (item: PlacedObject, newOwner: number) =>
+    applyEdit({ kind: 'swapSpawnerOwner', entityType: item.type, entityId: item.id, newOwner }, 'reassign spawner owner')
+  const handleSetCityFaction = (item: PlacedObject, factionSid: string) =>
+    applyEdit({ kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid }, 'set faction')
+  const handleSetCitySpawnHero = (item: PlacedObject, spawnHero: boolean) =>
+    applyEdit({ kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero }, 'toggle companion hero')
+  const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
+    applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
-  const handleSetPortalTarget = async (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch })
-    } catch (e) {
-      logError(`Failed to set portal target: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
+    applyEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch }, 'set portal target')
   const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
 
-  const handleSetGuardSquad = async (item: PlacedObject, unitProps: { sid: string; count: number }[]) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setGuardSquad', entityType: item.type, entityId: item.id, unitProps })
-    } catch (e) {
-      logError(`Failed to set guard squad: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetCityGarrison = async (item: PlacedObject, sids: string[]) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids })
-    } catch (e) {
-      logError(`Failed to set city garrison: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetRandomSquadValue = async (item: PlacedObject, requestedValue: number) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue })
-    } catch (e) {
-      logError(`Failed to set random-squad value: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetRewardParams = async (item: PlacedObject, parameters: string[]) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setRewardParams', entityType: item.type, entityId: item.id, parameters })
-    } catch (e) {
-      logError(`Failed to set reward params: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  const handleSetGuardSquad = (item: PlacedObject, unitProps: { sid: string; count: number }[]) =>
+    applyEdit({ kind: 'setGuardSquad', entityType: item.type, entityId: item.id, unitProps }, 'set guard squad')
+  const handleSetCityGarrison = (item: PlacedObject, sids: string[]) =>
+    applyEdit({ kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids }, 'set city garrison')
+  const handleSetRandomSquadValue = (item: PlacedObject, requestedValue: number) =>
+    applyEdit({ kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue }, 'set random-squad value')
+  const handleSetRewardParams = (item: PlacedObject, parameters: string[]) =>
+    applyEdit({ kind: 'setRewardParams', entityType: item.type, entityId: item.id, parameters }, 'set reward params')
 
   // ── Move (issue #167 Phase A) ───────────────────────────────────────────
   // One active move at a time, keyed by the moving instance's own `key`.
-  // Once started, every grid click AND arrow-key press updates the staged
-  // destination (not a one-shot "pick then confirm") — nothing is written
-  // until an explicit Save, the same "stage locally, then Save to .map"
-  // convention issue #125's spawner Player-type edit established.
+  // Once started, every grid click AND arrow-key press relocates it
+  // immediately (issue #195 follow-up — not a "pick then confirm with a
+  // separate Save"); move mode stays armed afterward so you can keep trying
+  // different spots. See applyMoveTo below.
   const [moveState, setMoveState] = useState<{ key: string; type: 0 | 1 | 2; id: number; sid: string; node: number } | null>(null)
 
   const startMove = (item: PlacedObject) => {
@@ -1610,114 +1545,56 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
 
-  const saveMove = async () => {
-    if (!moveState || !mapFilePath) return
-    const { type, id, node } = moveState
-    try {
-      await saveMapFile(mapFilePath, { kind: 'moveObject', entityType: type, entityId: id, newNode: node })
-      setMoveState(null)
-      setUndoStack([])
-      // Follow the moved instance to its new tile (per issue #167's "Impact
-      // on the rest of the editor" note: selectedNode is a tile index chosen
-      // before the edit, not an identity — it needs an explicit retarget).
+  // Relocates the currently-armed move target to `node` immediately (issue
+  // #195 follow-up — no more separate Save step). Move mode stays armed
+  // afterward so a click or arrow-key press can keep trying different spots,
+  // same as before; only the moment each attempt takes effect changed —
+  // there's no "staged, discardable" position anymore, only Ctrl+Z. Shared
+  // by both the grid click handler (onPointerUp) and arrow-key nudging below.
+  const applyMoveTo = useCallback((node: number) => {
+    setMoveState((prev) => {
+      if (!prev || !isNodeInBoundsForMove(prev, node) || prev.node === node) return prev
+      applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: node }, 'move object')
       selectNode(node)
-    } catch (e) {
-      logError(`Failed to move object: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+      return { ...prev, node }
+    })
+  }, [isNodeInBoundsForMove, applyEdit, selectNode])
 
-  // ── Rotate — same "stage locally, then explicit Save to .map" convention
-  // as Move/Delete. Only `objects[]` (type 0) instances ever carry a
-  // rotation. Stepping the left/right arrow both starts staging (from the
-  // instance's current rotation) if it isn't already, and applies one step —
-  // there's no separate "enter rotate mode" click, unlike Move (which needs
-  // a mode to pick a destination on the grid) or Delete (whose confirmation
-  // copy deliberately needs a pause before committing).
-  const [rotateState, setRotateState] = useState<{ key: string; id: number; rotation: number } | null>(null)
+  // ── Rotate — only `objects[]` (type 0) instances ever carry a rotation.
+  // Each click applies one step immediately (issue #195 follow-up) — no
+  // local state needed at all, since "current rotation" always reads live
+  // from the already-committed item.
   const stepRotate = (item: PlacedObject, delta: 1 | -1) => {
-    pushUndo()
-    setRotateState((prev) => {
-      const current = prev?.key === item.key ? prev.rotation : (item.rotation ?? 0)
-      return { key: item.key, id: item.id, rotation: stepRotation(current, delta) }
-    })
+    applyEdit({ kind: 'rotateObject', entityId: item.id, newRotation: stepRotation(item.rotation ?? 0, delta) }, 'rotate object')
   }
-  const cancelRotate = () => setRotateState(null)
-  const saveRotate = async () => {
-    if (!rotateState || !mapFilePath) return
-    const { id, rotation } = rotateState
-    try {
-      await saveMapFile(mapFilePath, { kind: 'rotateObject', entityId: id, newRotation: rotation })
-      setRotateState(null)
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to rotate object: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  // pushUndo/undoStack are declared earlier (before stagePaintNode, which
-  // needs pushUndo in its own useCallback deps array — evaluated eagerly,
-  // so it can't forward-reference something declared later in the file;
-  // see stagedSnapshotRef above). Keep the ref in sync with the 4 staged
-  // buffers on every render — cheap (plain object assignment), and means
-  // pushUndo always reads the true latest values with no stale-closure risk.
-  useEffect(() => {
-    stagedSnapshotRef.current = { paintStaged, paintObjectStaged, paintLevelStaged, paintWaterStaged, moveState, rotateState }
-  })
-  const undoLastStagedEdit = useCallback(() => {
-    setUndoStack((stack) => {
-      if (stack.length === 0) return stack
-      const prev = stack[stack.length - 1]
-      setPaintStaged(prev.paintStaged)
-      setPaintObjectStaged(prev.paintObjectStaged)
-      setPaintLevelStaged(prev.paintLevelStaged)
-      setPaintWaterStaged(prev.paintWaterStaged)
-      setMoveState(prev.moveState)
-      setRotateState(prev.rotateState)
-      return stack.slice(0, -1)
-    })
-  }, [])
-  // "Once persisted, no undo" — same boundary the one-time .bak file already
-  // represents for on-disk state. Cleared on close too, so a stale stack
-  // from a previous open doesn't resurrect state that no longer exists.
-  useEffect(() => {
-    if (!open) setUndoStack([])
-  }, [open])
 
   // ── Delete (issue #167 Phase C) ─────────────────────────────────────────
-  // Same "stage locally, then explicit Save to .map" convention as Move —
-  // unlike Add, a delete's confirmation copy should be more deliberate
-  // (destructive-action UX guidance from #167's original research), so
-  // there's real value in a staged, cancelable window rather than
-  // committing on the first click.
-  const [deleteState, setDeleteState] = useState<{ key: string; type: 0 | 1 | 2; id: number } | null>(null)
+  // Unlike Add/Move/Rotate, a delete still needs a deliberate confirmation
+  // step (destructive-action UX guidance from #167's original research) —
+  // this is now purely an "are you sure?" UI flag, not a staged edit;
+  // confirming applies the delete immediately.
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{ key: string; type: 0 | 1 | 2; id: number } | null>(null)
   const startDelete = (item: PlacedObject) => {
-    setDeleteState({ key: item.key, type: item.type, id: item.id })
+    setDeleteConfirmTarget({ key: item.key, type: item.type, id: item.id })
   }
-  const cancelDelete = () => setDeleteState(null)
-  const saveDelete = async () => {
-    if (!deleteState || !mapFilePath) return
-    const { type, id } = deleteState
-    try {
-      await saveMapFile(mapFilePath, { kind: 'deleteObject', entityType: type, entityId: id })
-      setDeleteState(null)
-    } catch (e) {
-      logError(`Failed to delete object: ${e instanceof Error ? e.message : String(e)}`)
-    }
+  const cancelDelete = () => setDeleteConfirmTarget(null)
+  const confirmDelete = () => {
+    if (!deleteConfirmTarget) return
+    applyEdit({ kind: 'deleteObject', entityType: deleteConfirmTarget.type, entityId: deleteConfirmTarget.id }, 'delete object')
+    setDeleteConfirmTarget(null)
   }
-  const deleteTarget = deleteState ? { key: deleteState.key } : null
+  const deleteTarget = deleteConfirmTarget ? { key: deleteConfirmTarget.key } : null
   const deleteUsageWarnings = useMemo(() => {
-    if (!deleteState) return []
-    const item = placedObjects.find((o) => o.key === deleteState.key)
+    if (!deleteConfirmTarget) return []
+    const item = placedObjects.find((o) => o.key === deleteConfirmTarget.key)
     if (!item?.entitySid) return []
     return (entityUsageListMap.get(item.entitySid) ?? []).map(describeEntityUsage)
-  }, [deleteState, placedObjects, entityUsageListMap])
+  }, [deleteConfirmTarget, placedObjects, entityUsageListMap])
 
   // Arrow-key nudging (per the UX research in issue #167): while a move is
-  // active, arrow keys adjust the staged destination by one tile — cheap,
-  // precise (positions here are always whole-tile), and an alternative to
-  // clicking a destination on the grid rather than a replacement for it.
+  // active, arrow keys relocate by one tile immediately, same as a click.
   // Ignored while focus is in a text field so it doesn't fight typing
-  // elsewhere in the dialog (search box, staged-edit inputs, etc.).
+  // elsewhere in the dialog (search box, etc.).
   useEffect(() => {
     if (!open || !moveState) return
     const handler = (e: KeyboardEvent) => {
@@ -1731,24 +1608,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else if (e.key === 'ArrowRight') dx = 1
       else return
       e.preventDefault()
-      setMoveState((prev) => {
-        if (!prev) return prev
-        const x = prev.node % sizeX
-        const z = Math.floor(prev.node / sizeX)
-        const newNode = (z + dz) * sizeX + (x + dx)
-        if (!isNodeInBoundsForMove(prev, newNode)) return prev
-        pushUndo()
-        return { ...prev, node: newNode }
-      })
+      const x = moveState.node % sizeX
+      const z = Math.floor(moveState.node / sizeX)
+      applyMoveTo((z + dz) * sizeX + (x + dx))
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, moveState, sizeX, isNodeInBoundsForMove])
+  }, [open, moveState, sizeX, applyMoveTo])
 
   // Arrow-key panning — an optional alternative to middle-mouse-button drag.
-  // Deliberately disabled while a move is active: the arrow keys nudge the
-  // staged destination there instead (immediately above), and that takes
-  // priority over panning the viewport.
+  // Deliberately disabled while a move is active: the arrow keys relocate it
+  // there instead (immediately above), and that takes priority over panning
+  // the viewport.
   const PAN_STEP_PX = 60
   useEffect(() => {
     if (!open || moveState) return
@@ -1818,18 +1689,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // ── Place zone/marker (issue #193 Phase 3) — thin wrapper on the already-
   // fully-built addMarkerInstance/addMarker write path, which had zero UI
   // anywhere before this. Deliberately single-click-only (like Add object),
-  // not staged like Terrain/Level/Water — a zone marker is a single simple
-  // placement with no batch-editing need, matching how "Add object"'s plain
-  // click already commits immediately rather than staging.
+  // not a drag stroke — a zone marker is a single simple placement, applied
+  // immediately (issue #195 follow-up).
   const [placingZoneSid, setPlacingZoneSid] = useState<string | null>(null)
   const stopPlacingZone = () => setPlacingZoneSid(null)
-  const placeZoneAt = async (node: number) => {
-    if (!placingZoneSid || !mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'addMarker', sid: placingZoneSid, node })
-    } catch (e) {
-      logError(`Failed to place zone: ${e instanceof Error ? e.message : String(e)}`)
-    }
+  const placeZoneAt = (node: number) => {
+    if (!placingZoneSid) return
+    applyEdit({ kind: 'addMarker', sid: placingZoneSid, node }, 'place zone')
   }
   const placingCreatureTemplateSid = useMemo(() => {
     if (!placingCreatureId) return null
@@ -1852,34 +1718,35 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
 
-  const placeAt = async (node: number) => {
-    if (!placingSid || !mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 0, sid: placingSid, node })
-    } catch (e) {
-      logError(`Failed to place object: ${e instanceof Error ? e.message : String(e)}`)
-    }
+  // issue #195 follow-up: applies immediately (a single click was always
+  // one addObject edit before any staging concept existed) — isNodeBlockedForObjectPaint
+  // is declared below (safe to reference here since placeAt's BODY only
+  // runs when actually called from an event handler, well after that
+  // `const` exists; unlike a hook's dependency array, this isn't evaluated
+  // at placeAt's own definition time), reusing the same blocked-tile check
+  // the drag-paint tool already has.
+  const placeAt = (node: number) => {
+    if (!placingSid || isNodeBlockedForObjectPaint(node)) return
+    applyEdit({ kind: 'addObject', entityType: 0, sid: placingSid, node }, 'place object')
   }
 
-  const placeCreatureAt = async (node: number) => {
-    if (!placingCreatureTemplateSid || !mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 2, sid: placingCreatureTemplateSid, node })
-    } catch (e) {
-      logError(`Failed to place unit: ${e instanceof Error ? e.message : String(e)}`)
-    }
+  // Squads have no footprint template (always single-tile), so no
+  // blocked-tile check — matches this handler's pre-existing behavior.
+  const placeCreatureAt = (node: number) => {
+    if (!placingCreatureTemplateSid) return
+    applyEdit({ kind: 'addObject', entityType: 2, sid: placingCreatureTemplateSid, node }, 'place unit')
   }
 
   // ── Paint objects (map-grid painter generalized from terrain-only to any
   // placeable object) — dragging while placingSid is active stamps a
-  // candidate into paintObjectStaged at every newly-crossed tile instead of
-  // placing immediately, same staged-then-explicit-Save convention terrain
-  // paint established. A tile already blocked (existing object footprint,
+  // candidate into paintObjectStaged at every newly-crossed tile (an
+  // in-progress stroke, purely local); commitObjectPaintStroke below applies
+  // the whole batch the instant the drag ends (issue #195 follow-up — no
+  // separate Save click). A tile already blocked (existing object footprint,
   // water, or elevation wall — the same buildBlockedTileSet the red overlay
   // uses, plus whatever THIS stroke has staged so far) can't be painted on
   // at all; an existing non-blocking decorative instance sitting exactly on
-  // a paintable tile gets overwritten (deleted, then replaced) on Save —
-  // see savePaintObjects.
+  // a paintable tile gets overwritten (deleted, then replaced) on commit.
   const isNodeBlockedForObjectPaint = useCallback((node: number): boolean => {
     if (blockedTileSet.has(node)) return true
     for (const [stagedNode, sid] of paintObjectStaged) {
@@ -1893,34 +1760,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stageObjectPaint = useCallback((node: number, sid: string) => {
     if (!isNodeInBoundsForPlacement(sid, node) || isNodeBlockedForObjectPaint(node)) return
     if (paintObjectStaged.get(node) === sid) return
-    pushUndo()
     setPaintObjectStaged((prev) => new Map(prev).set(node, sid))
-  }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, paintObjectStaged, pushUndo])
+  }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, paintObjectStaged])
 
-  const savePaintObjects = async () => {
-    if (paintObjectStaged.size === 0 || !mapFilePath) return
+  const commitObjectPaintStroke = useCallback(() => {
+    if (paintObjectStaged.size === 0) return
     const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid }))
     const deletions = placedObjects
       .filter((o) => o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
       .map((o) => o.id)
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintObjects', additions, deletions })
-      setPaintObjectStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint objects: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+    setPaintObjectStaged(new Map())
+    applyEdit({ kind: 'paintObjects', additions, deletions }, 'paint objects')
+  }, [paintObjectStaged, placedObjects, catalog, applyEdit])
 
-  // ── Staged-edit full-fidelity preview (issue #195 Phase 1) — deliberately
-  // placed here rather than up near sortedIconEntries, since a useMemo's
-  // dependency array is evaluated at THIS render's hook-call time and can't
-  // forward-reference moveState/rotateState/deleteState/paintObjectStaged,
-  // all declared earlier in the component body but after sortedIconEntries.
+  // ── In-progress-stroke full-fidelity preview (issue #195 Phase 1) —
+  // deliberately placed here rather than up near sortedIconEntries, since a
+  // useMemo's dependency array is evaluated at THIS render's hook-call time
+  // and can't forward-reference moveState/deleteConfirmTarget/
+  // paintObjectStaged, all declared earlier in the component body but after
+  // sortedIconEntries.
 
-  // Committed objects a staged Paint Objects stroke will delete on Save —
-  // mirrors savePaintObjects' own `deletions` filter exactly (two lines up)
-  // so the preview can never disagree with what Save actually does.
+  // Committed objects an in-progress Paint Objects drag stroke will delete
+  // on commit — mirrors commitObjectPaintStroke's own `deletions` filter
+  // exactly, so the preview can never disagree with what committing produces.
   const stagedPaintObjectDeletionKeys = useMemo(() => {
     const keys = new Set<string>()
     if (paintObjectStaged.size === 0) return keys
@@ -1962,7 +1824,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [showIcons, moveState, sizeX, sizeZ])
 
   useEffect(() => {
-    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive && !eraserActive && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -1986,28 +1848,36 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else if (levelBrush !== null) stopLevelPainting()
       else if (waterBrush !== null) stopWaterPainting()
       else if (obstacleBrushActive) stopObstaclePainting()
+      else if (eraserActive) stopEraser()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, obstacleBrushActive, moveState, paintObjectStaged])
+  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, obstacleBrushActive, eraserActive, moveState, paintObjectStaged])
 
-  // Ctrl+Z / Cmd+Z undoes the last staged-but-unsaved edit (see pushUndo's
-  // call sites above) — a separate effect from Escape's above since it
-  // needs to listen whenever undoStack is non-empty, independent of which
-  // (if any) placing/paint/move mode is currently active.
+  // Ctrl+Z / Cmd+Z undoes the last edit applied to the in-memory .map
+  // document (issue #195 follow-up: useMapDocumentStore's own zundo
+  // temporal() covers this now — no local staging state to restore). Shift
+  // (or Ctrl+Y) redoes. A separate effect from Escape's above since it
+  // needs to listen whenever there's history to undo/redo, independent of
+  // which (if any) placing/paint/move mode is currently active.
   useEffect(() => {
-    if (!open || undoStack.length === 0) return
+    if (!open) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'z' || !(e.ctrlKey || e.metaKey)) return
+      const key = e.key.toLowerCase()
+      if ((key !== 'z' && key !== 'y') || !(e.ctrlKey || e.metaKey)) return
       const tag = (document.activeElement as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      const isRedo = key === 'y' || (key === 'z' && e.shiftKey)
+      const temporal = useMapDocumentStore.temporal.getState()
+      if (isRedo ? temporal.futureStates.length === 0 : temporal.pastStates.length === 0) return
       e.preventDefault()
-      undoLastStagedEdit()
+      if (isRedo) useMapDocumentStore.getState().redo()
+      else useMapDocumentStore.getState().undo()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, undoStack, undoLastStagedEdit])
+  }, [open])
 
   const placingFootprintBounds = useMemo(() => {
     if (!activePlacingSid || hoveredNode === null) return null
@@ -2027,7 +1897,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // 5 -> at most ~69 tiles), a tiny cursor-following set, not a per-map-
   // tile render — doesn't reintroduce the one-DOM-node-per-map-tile
   // pattern this codebase avoids.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive)
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || eraserActive)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
     return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ)
@@ -2040,27 +1910,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent
-        className="p-0 gap-0 overflow-hidden"
-        defaultWidth={900}
-        defaultHeight={650}
-        minWidth={500}
-        minHeight={360}
-        storageKey="map-grid"
-        onCloseAutoFocus={(e) => e.preventDefault()}
-        // Escape is reserved for canceling an in-progress Move/Place (the
-        // window keydown handlers above) — it should never also close the
-        // whole dialog underneath whatever it just canceled. Close via the
-        // [X] button or the toolbar toggle instead.
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
-        <DialogTitle className="sr-only">Map Grid</DialogTitle>
-
-        {/* pr-10 clears the dialog's own [X] close button, which is absolutely
-            positioned top-right independent of this row's flow — without it,
-            wrapped content here can sit underneath and silently eat clicks. */}
-        <DraggableDialogDragHandle className="flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
+    {/* Inline view, not a modal Dialog — replaces the main editor Group in
+        AppShell's layout slot (issue #195 follow-up: the dialog blocked the
+        rest of the editor and needed manual resizing to match the window;
+        rendering here instead keeps the toolbar reachable and needs no
+        resize chrome of its own). AppShell only mounts this component while
+        `open` is true, so the `open`-gated effects/guards throughout this
+        file (unchanged from the dialog version) still behave correctly. */}
+    <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
+        <div className="relative flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 h-7 w-7"
+            title="Close Map Grid"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold shrink-0">
               Map Grid{sizeX > 0 && sizeZ > 0 ? ` — ${sizeX} x ${sizeZ}` : ''}
@@ -2095,6 +1962,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setLevelBrush(null)
                     setWaterBrush(null)
                     setObstacleBrushActive(false)
+                    setEraserActive(false)
                     setPlacingSid(null)
                     setPlacingCreatureId(null)
                     setPlacingZoneSid(null)
@@ -2187,12 +2055,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     Placing… (drag to paint)
                   </Button>
                   {paintObjectStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
-                        Save to .map
-                      </Button>
-                    </>
+                    <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
                   )}
                 </div>
               ) : placingCreatureId ? (
@@ -2206,7 +2069,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
@@ -2259,12 +2122,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     </button>
                   </div>
                   {paintStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={savePaint}>
-                        Save to .map
-                      </Button>
-                    </>
+                    <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
                   )}
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
                     {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
@@ -2276,7 +2134,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); setPaintBiome(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setPaintBiome(1) }}
                 >
                   <Paintbrush className="h-3.5 w-3.5" />
                   Terrain
@@ -2303,12 +2161,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     ))}
                   </div>
                   {paintLevelStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={saveLevelPaint}>
-                        Save to .map
-                      </Button>
-                    </>
+                    <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
                   )}
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting}>
                     {paintLevelStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
@@ -2320,7 +2173,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint elevation level"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); setLevelBrush(0) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setLevelBrush(0) }}
                 >
                   <Layers className="h-3.5 w-3.5" />
                   Level
@@ -2328,7 +2181,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Water flood-fill (issue #193 Phase 2) — click-to-fill, not
-                  a freehand stroke — see stageWaterFill's doc comment. */}
+                  a freehand stroke — see applyWaterFill's doc comment. Each
+                  click applies immediately (issue #195 follow-up), so
+                  there's nothing to Cancel — just Stop to exit the tool. */}
               {waterBrush !== null ? (
                 <div className="flex items-center gap-1">
                   <Popover>
@@ -2350,16 +2205,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       ))}
                     </PopoverContent>
                   </Popover>
-                  {paintWaterStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintWaterStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={saveWaterPaint}>
-                        Save to .map
-                      </Button>
-                    </>
-                  )}
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting}>
-                    {paintWaterStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                    Stop (Esc)
                   </Button>
                 </div>
               ) : (
@@ -2368,7 +2215,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Flood-fill water (click a tile at level 0 or lower)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); setWaterBrush(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopEraser(); setWaterBrush(1) }}
                 >
                   <Droplets className="h-3.5 w-3.5" />
                   Water
@@ -2380,31 +2227,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {/* Fuzzy obstacle brush (issue #193 Phase 5) — drag (or
                       Rectangle-mode select); every enclosed tile samples a
                       biome-appropriate obstacle/clutter/nothing on release,
-                      weighted by distance from the stroke's center. Shares
-                      paintObjectStaged with the Objects tool (a sampled
-                      obstacle IS just an object placement), so its staged
-                      count/Save below reflects both combined. */}
+                      weighted by distance from the stroke's center, and
+                      applies immediately via the same 'paintObjects' edit
+                      Objects itself uses (issue #195 follow-up — no staging,
+                      nothing to Cancel mid-drag, only Stop to exit the tool). */}
                   {obstacleBrushActive ? (
                     <div className="flex items-center gap-1">
                       <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
                         <Mountain className="h-3.5 w-3.5" />
                         Drawing…
                       </Button>
-                      {paintObjectStaged.size > 0 && (
-                        <>
-                          <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
-                          <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
-                            Save to .map
-                          </Button>
-                        </>
-                      )}
-                      {/* Deliberately always "Stop", never "Cancel" — unlike
-                          Terrain/Level/Water's own staged buffers, this one
-                          is shared with the Objects tool, so there's no safe
-                          "discard just the obstacles" action that wouldn't
-                          also risk wiping a manual placement staged earlier
-                          (or vice versa). Discarding staged content is only
-                          ever offered from the Objects tool's own Cancel. */}
                       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopObstaclePainting}>
                         Stop (Esc)
                       </Button>
@@ -2416,7 +2248,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       className="h-6 text-xs gap-1"
                       title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone()
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopEraser()
                         setObstacleBrushActive(true)
                       }}
                     >
@@ -2425,6 +2257,37 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     </Button>
                   )}
                 </>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Eraser (issue #195 follow-up) — deletes non-terrain
+                  content (objects/units/zones) under the brush; drag
+                  (brush-size, via eraserDragRef) or Rectangle-mode select,
+                  same as Obstacles above. Applies immediately on release —
+                  see commitEraserStroke's own doc comment. */}
+              {eraserActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <Eraser className="h-3.5 w-3.5" />
+                    Erasing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopEraser}>
+                    Stop (Esc)
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Eraser — drag to delete objects/units/zones (not terrain)"
+                  onClick={() => {
+                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting()
+                    setEraserActive(true)
+                  }}
+                >
+                  <Eraser className="h-3.5 w-3.5" />
+                  Eraser
+                </Button>
               )}
               {catalog && catalog.zoneTemplates.length > 0 && (
                 <>
@@ -2450,7 +2313,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             key={z.id}
                             className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
                             onClick={() => {
-                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopObstaclePainting()
+                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopObstaclePainting(); stopEraser()
                               setPlacingZoneSid(z.id)
                             }}
                           >
@@ -2467,7 +2330,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   a shared toggle for Terrain/Level/Water, not a separate
                   top-level tool. Only shown once a relevant brush is active,
                   since it has nothing to modify otherwise. */}
-              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive) && (
+              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive || eraserActive) && (
                 <>
                   <div className="flex-1" />
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Mode:</span>
@@ -2495,7 +2358,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   click-to-flood-fill regardless of interactionMode, and
                   Bucket/Rectangle already select their own explicit region,
                   so radius has nothing to modify for either. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive) && (
+              {interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || eraserActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
                   <Button
@@ -2521,6 +2384,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               )}
+              {/* issue #195 follow-up: every tool here now applies straight
+                  to the in-memory .map document — there's no more per-tool
+                  or per-dialog "Save to .map" button anywhere in this view.
+                  Persisting to disk is exclusively a top-level action (File
+                  Menu Save/Ctrl+S/Save As), which also covers the scenario
+                  JSON in the same action — see AppShell's dirty-state
+                  handling. Cancel/Stop next to each individual tool above
+                  still discards just that one tool's own in-progress
+                  (not-yet-committed) drag stroke. */}
             </div>
           ) : (
           <div className="flex gap-1 flex-wrap" data-nodrag>
@@ -2612,7 +2484,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             </button>
           </div>
           )}
-        </DraggableDialogDragHandle>
+        </div>
 
         <Group orientation="horizontal" className="flex-1 min-h-0">
         <Panel id="map-grid-viewport" defaultSize="100%" minSize="40%">
@@ -2635,7 +2507,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               className={`absolute inset-0 touch-none select-none ${
                 isPanning || moveState
                   ? 'cursor-move'
-                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive
+                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive || eraserActive
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
@@ -2728,7 +2600,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive
+                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || obstacleBrushActive || eraserActive
                   // Staged-edit visual treatment (issue #195 Phase 1) — a
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
@@ -2739,8 +2611,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // either — there's no "final appearance" to preview here,
                   // only a way to mark that a change is pending.
                   const isMoveSource = moveState?.key === entry.pick.primary.key
-                  const isDeleting = deleteState?.key === entry.pick.primary.key || stagedPaintObjectDeletionKeys.has(entry.pick.primary.key)
-                  const isRotating = rotateState?.key === entry.pick.primary.key
+                  const isDeleting = deleteConfirmTarget?.key === entry.pick.primary.key || stagedPaintObjectDeletionKeys.has(entry.pick.primary.key)
                   return (
                     <div
                       key={entry.key}
@@ -2754,14 +2625,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         height: entry.height,
                         boxSizing: 'border-box',
                         opacity: isDeleting || isMoveSource ? 0.35 : 1,
-                        outline: isDeleting
-                          ? '2px dashed rgba(220, 38, 38, 0.9)'
-                          : isRotating
-                            ? '2px dashed rgba(37, 99, 235, 0.9)'
-                            : undefined,
-                        outlineOffset: isDeleting || isRotating ? '-2px' : undefined,
+                        outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
+                        outlineOffset: isDeleting ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && !obstacleBrushActive && !eraserActive) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -2908,15 +2775,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     Phase 2) — same stacking as the overlays above. */}
                 <canvas
                   ref={setPaintLevelCanvasEl}
-                  className="absolute top-0 left-0 pointer-events-none"
-                  style={{
-                    width: sizeX * BASE_CELL_PX,
-                    height: sizeZ * BASE_CELL_PX,
-                    imageRendering: 'pixelated',
-                  }}
-                />
-                <canvas
-                  ref={setPaintWaterCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,
@@ -3178,16 +3036,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                   moveTarget={moveTarget}
                   onStartMove={canEditEntities ? startMove : undefined}
-                  onSaveMove={canEditEntities ? saveMove : undefined}
                   onCancelMove={canEditEntities ? cancelMove : undefined}
-                  rotateTarget={rotateState}
                   onStepRotate={canEditEntities ? stepRotate : undefined}
-                  onSaveRotate={canEditEntities ? saveRotate : undefined}
-                  onCancelRotate={canEditEntities ? cancelRotate : undefined}
                   deleteTarget={deleteTarget}
                   deleteUsageWarnings={deleteUsageWarnings}
                   onStartDelete={canEditEntities ? startDelete : undefined}
-                  onSaveDelete={canEditEntities ? saveDelete : undefined}
+                  onConfirmDelete={canEditEntities ? confirmDelete : undefined}
                   onCancelDelete={canEditEntities ? cancelDelete : undefined}
                 />
               ) : null}
@@ -3197,8 +3051,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           </div>
         </Panel>
         </Group>
-      </DraggableDialogContent>
-    </Dialog>
+    </div>
 
     <RenameEntitySidDialog
       open={renameTarget !== null}
