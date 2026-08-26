@@ -2041,9 +2041,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               <div className="flex items-center rounded border border-border p-0.5 shrink-0" data-nodrag>
                 <button
                   className={`h-5 px-2 text-xs rounded-sm transition-colors ${
-                    gridMode === 'browse' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    gridMode === 'browse' ? 'bg-secondary text-secondary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
-                  onClick={() => setGridMode('browse')}
+                  onClick={() => {
+                    // Deactivate every armed tool on the way out — a
+                    // click in Browse mode must always mean "select this
+                    // tile," never "paint/fill/place here." Real bug fix:
+                    // switching modes previously only swapped which row
+                    // rendered, leaving e.g. paintBiome still non-null, so
+                    // a click after switching back to Browse could still
+                    // trigger a full paint/flood-fill action. Uses the raw
+                    // setters (not the stopX() wrappers, several of which
+                    // are declared later in the component body than this
+                    // callback) and deliberately does NOT clear any staged
+                    // Map (paintStaged etc.) — only what's "live-armed,"
+                    // so in-progress unsaved work survives a peek at
+                    // Browse and back.
+                    setPaintBiome(null)
+                    setLevelBrush(null)
+                    setWaterBrush(null)
+                    setObstacleBrushActive(false)
+                    setPlacingSid(null)
+                    setPlacingCreatureId(null)
+                    setPlacingZoneSid(null)
+                    setObjectBrowserOpen(false)
+                    setGridMode('browse')
+                  }}
                 >
                   Browse
                 </button>
