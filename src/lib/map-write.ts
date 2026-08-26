@@ -1161,14 +1161,63 @@ const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: n
   },
 }
 
+/** Which sids get a `propVariants` and/or `propRewardParams` row on a fresh
+ *  placement — confirmed by surveying every `city-spawner`/interactable/
+ *  decoration instance across every real map in `maps/*.map` (677 distinct
+ *  sids, thousands of instances total): most sids (527/677 surveyed) NEVER
+ *  carry either table, so unconditionally adding both (this file's original
+ *  approach) was wrong for the vast majority of objects — confirmed
+ *  concretely on `city-spawner` and `alchemy_lab`, whose TSE-added instances
+ *  had `propVariants`/`propRewardParams` rows no real GME-placed instance of
+ *  either sid has (0/11 `alchemy_lab` samples; only 1/41 `city-spawner`
+ *  samples, too rare to treat as the default). These three lists are exactly
+ *  the sids that were 100% consistent one way or the other across every
+ *  sampled instance — sids with mixed/partial coverage (e.g. `city-spawner`
+ *  itself, `grass_1`, `random-squad`) are deliberately left out and default
+ *  to neither table, matching their own real-data majority. */
+const SIDS_WITH_VARIANTS_AND_REWARD_PARAMS = new Set([
+  'abandoned_corpse', 'abandoned_mansion', 'alvars_eye', 'black_tower', 'campaign_M3_cage',
+  'circle_of_life', 'crow_nest', 'cursed_old_house', 'dragon_utopia', 'gardener',
+  'gingerbread_house', 'goblin_cache', 'heros_crypt', 'iridescent_abbey', 'jousting_range',
+  'legions_memorial', 'lost_library', 'mereas_shrine', 'monty_hall', 'overgrown_grave',
+  'peasant_cart', 'petrified_memorial', 'point_of_balance', 'prismatic_lair', 'raiders_camp',
+  'research_laboratory', 'ritual_pyre', 'shady_den', 'storage_crystals', 'storage_dust',
+  'storage_gemstones', 'storage_gold', 'storage_mercury', 'storage_ore', 'storage_wood',
+  'troglodyte_throne', 'twilight_bloom', 'uncanny_rite', 'unforgotten_grave', 'unstable_ruins',
+  'village', 'windmill', 'wise_owl',
+])
+const SIDS_WITH_REWARD_PARAMS_ONLY = new Set([
+  'altar_of_magic_1', 'altar_of_magic_2', 'altar_of_magic_3', 'altar_of_magic_4',
+  'armory_automaton', 'beer_fountain', 'campaign_M4_construction_site', 'campaign_flattering_mirror',
+  'campaign_gingerbread_house', 'celestial_sphere', 'circus', 'college_of_wonder', 'crystal_trail',
+  'custom_abandoned_corpse', 'custom_abandoned_mansion', 'custom_abnormal_structure',
+  'custom_altar_of_magic_1', 'custom_altar_of_magic_2', 'custom_altar_of_magic_3', 'custom_altar_of_magic_4',
+  'custom_alvars_eye', 'custom_black_tower', 'custom_circle_of_life', 'custom_crow_nest',
+  'custom_cursed_old_house', 'custom_dragon_utopia', 'custom_gardener', 'custom_gingerbread_house',
+  'custom_goblin_cache', 'custom_heros_crypt', 'custom_iridescent_abbey', 'custom_jousting_range',
+  'custom_legions_memorial', 'custom_monty_hall', 'custom_overgrown_grave', 'custom_peasant_cart',
+  'custom_point_of_balance', 'custom_prismatic_lair', 'custom_raiders_camp', 'custom_research_laboratory',
+  'custom_ritual_pyre', 'custom_shady_den', 'custom_storage_gold', 'custom_storage_wood',
+  'custom_testing_grounds', 'custom_troglodyte_throne', 'custom_twilight_bloom', 'custom_uncanny_rite',
+  'custom_underground_lair', 'custom_unforgotten_grave', 'custom_university', 'custom_unstable_ruins',
+  'custom_vanguard', 'custom_village', 'custom_windmill', 'custom_wise_owl', 'flattering_mirror',
+  'fort', 'fountain', 'huntsmans_camp', 'infernal_cirque', 'knowledge_garden', 'learning_stone',
+  'magic_wheel', 'mana_well', 'maze', 'mysterious_stone', 'mystical_tower', 'orb_observatory',
+  'pile_of_books', 'quixs_path', 'stables', 'stinging_sword', 'tear_of_truth', 'tree_of_abundance',
+  'trial_scales', 'university', 'watchtower',
+])
+const SIDS_WITH_VARIANTS_ONLY = new Set([
+  'camp_fire', 'chest', 'enchanted_scroll_box', 'pandora_box', 'scroll_box',
+])
+
 /** Seed the `objectsProperties.*` rows the game's own Map Editor adds for a
- *  brand-new type-0 object (see `addObjectInstance`'s doc comment for how
- *  the base two were confirmed) plus, for the randomized-spawn placeholder
- *  sids, the one extra table that actually makes them function as a
- *  configured spawner rather than an inert placement (see
- *  `RANDOM_SPAWNER_TABLE_DEFAULTS`). Skips a table silently if it isn't
- *  present in this particular file rather than inventing one — same "only
- *  touch what's really there" caution `deleteObjectInstance`'s generic
+ *  brand-new type-0 object — `propVariants`/`propRewardParams` only for the
+ *  specific sids confirmed to always carry them (see the three lists above),
+ *  plus, for the randomized-spawn placeholder sids, the one extra table that
+ *  actually makes them function as a configured spawner rather than an inert
+ *  placement (see `RANDOM_SPAWNER_TABLE_DEFAULTS`). Skips a table silently if
+ *  it isn't present in this particular file rather than inventing one — same
+ *  "only touch what's really there" caution `deleteObjectInstance`'s generic
  *  sweep already follows, just in the insert direction. */
 function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, sid: string): string {
   let text = block2Text
@@ -1185,8 +1234,14 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
     const patchedSpan = JSON.stringify(entries)
     text = text.slice(0, found.arrayOpen) + patchedSpan + text.slice(found.arrayClose + 1)
   }
-  tryAppendRow('propVariants', { type: 0, id: newId, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
-  tryAppendRow('propRewardParams', { type: 0, id: newId, parameters: [] })
+  const wantsVariants = SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_VARIANTS_ONLY.has(sid)
+  const wantsRewardParams = SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_REWARD_PARAMS_ONLY.has(sid)
+  if (wantsVariants) {
+    tryAppendRow('propVariants', { type: 0, id: newId, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
+  }
+  if (wantsRewardParams) {
+    tryAppendRow('propRewardParams', { type: 0, id: newId, parameters: [] })
+  }
   const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
   if (randomSpawnerDefault) {
     tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId, randomSquadDefaultValue()))
