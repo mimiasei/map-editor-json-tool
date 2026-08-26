@@ -2018,6 +2018,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [activePlacingSid, hoveredNode, sizeX, catalog])
   const placingValid = activePlacingSid !== null && hoveredNode !== null && isNodeInBoundsForPlacement(activePlacingSid, hoveredNode)
 
+  // Brush-shape cursor preview (requested follow-up to the brush-radius
+  // control) — same gating as the Size stepper's own visibility (Freehand
+  // mode, Terrain-non-Bucket/Level/Obstacles): shows the actual circular
+  // tilesInRadius() shape centered on the hovered tile, not just a plain
+  // single-tile square, so the brush's real footprint is visible before
+  // every click/drag rather than only after. Bounded by brushRadius (max
+  // 5 -> at most ~69 tiles), a tiny cursor-following set, not a per-map-
+  // tile render — doesn't reintroduce the one-DOM-node-per-map-tile
+  // pattern this codebase avoids.
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive)
+  const brushPreviewTiles = useMemo(() => {
+    if (!brushToolActive || hoveredNode === null) return []
+    return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ)
+  }, [brushToolActive, hoveredNode, brushRadius, sizeX, sizeZ])
+
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
 
@@ -3024,7 +3039,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
-              {settings.showGridHover && hoveredNode !== null && (
+              {settings.showGridHover && hoveredNode !== null && !brushToolActive && (
                 <div
                     className="absolute pointer-events-none rounded-sm border-[2px] border-orange-500/50"
                     style={{
@@ -3037,6 +3052,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     }}
                 />
               )}
+              {/* Brush-shape cursor preview — one outline square per tile
+                  the current brush radius would actually touch, composing
+                  the circular shape tilesInRadius() computes (radius 1 is
+                  exactly the one-tile square this replaces). */}
+              {brushToolActive && brushPreviewTiles.map((node) => (
+                <div
+                  key={node}
+                  className="absolute pointer-events-none border-[2px] border-amber-500/70"
+                  style={{
+                    left: (node % sizeX) * effectiveCellPx,
+                    top: (sizeZ - 1 - Math.floor(node / sizeX)) * effectiveCellPx,
+                    width: effectiveCellPx,
+                    height: effectiveCellPx,
+                    transform: `translate(${transform.x}px, ${transform.y}px)`,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              ))}
 
               {/* Search-match highlight (issue #130) — one static (non-pulsing)
                   outline per matched node, deliberately distinct from the single
