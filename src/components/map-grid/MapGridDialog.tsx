@@ -191,6 +191,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const levelsMap = context?.levelsMap ?? []
   const climbsMap = context?.climbsMap ?? []
 
+  // Browse/Paint mode toggle (issue #193 Phase 1) — swaps the second header
+  // row between the filter-pill row (Browse, always available) and the
+  // relocated Paint Terrain/Objects tools (Paint, edit-capable maps only).
+  // Deliberately local/ephemeral state, not persisted — resets to Browse on
+  // reopen, same as every other in-progress tool state in this dialog
+  // (paintBiome, placingSid, etc.).
+  const [gridMode, setGridMode] = useState<'browse' | 'paint'>('browse')
+
   const [filter, setFilter] = useState<GridFilterState>(loadGridFilter)
   const toggleGroup = (g: GridGroup) => {
     setFilter((prev) => {
@@ -1610,6 +1618,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             <span className="text-sm font-semibold shrink-0">
               Map Grid{sizeX > 0 && sizeZ > 0 ? ` — ${sizeX} x ${sizeZ}` : ''}
             </span>
+            {/* Browse/Paint mode toggle (issue #193 Phase 1) — labeled, not
+                icon-only (mode-switching UX research: redundant text avoids
+                "mode error" confusion an icon-only toggle risks). Hidden
+                entirely when the map can't be edited — Paint mode has
+                nothing to switch to without write access, and Browse's
+                filter pills stay the only/default row exactly as before. */}
+            {canEditEntities && (
+              <div className="flex items-center rounded border border-border p-0.5 shrink-0" data-nodrag>
+                <button
+                  className={`h-5 px-2 text-xs rounded-sm transition-colors ${
+                    gridMode === 'browse' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setGridMode('browse')}
+                >
+                  Browse
+                </button>
+                <button
+                  className={`h-5 px-2 text-xs rounded-sm transition-colors ${
+                    gridMode === 'paint' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setGridMode('paint')}
+                >
+                  Paint
+                </button>
+              </div>
+            )}
             <div className="flex-1" />
             <div className="relative w-64 shrink-0" data-nodrag>
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -1660,98 +1694,110 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               >
                 <Ban className="h-3.5 w-3.5" />
               </Button>
-              {canEditEntities && (
-                placingSid ? (
-                  <div className="flex items-center gap-1">
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
-                      <Plus className="h-3.5 w-3.5" />
-                      Placing… (drag to paint)
-                    </Button>
-                    {paintObjectStaged.size > 0 && (
-                      <>
-                        <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
-                        <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
-                          Save to .map
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                ) : placingCreatureId ? (
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title="Click a tile to place">
-                    <Plus className="h-3.5 w-3.5" />
-                    Placing unit…
-                  </Button>
-                ) : (
-                  <Button
-                    variant={objectBrowserOpen ? 'secondary' : 'ghost'}
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Place a new object"
-                    onClick={() => { stopPainting(); setObjectBrowserOpen((prev) => !prev) }}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
-                )
-              )}
-              {canEditEntities && (
-                paintBiome !== null ? (
-                  <div className="flex items-center gap-1">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
-                          <span
-                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                            style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
-                          />
-                          {BIOME_NAMES[paintBiome]}
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-40 p-1" data-nodrag>
-                        {PAINT_BIOME_ORDER.map((b) => (
-                          <button
-                            key={b}
-                            className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                            onClick={() => setPaintBiome(b)}
-                          >
-                            <span
-                              className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                              style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
-                            />
-                            {BIOME_NAMES[b]}
-                          </button>
-                        ))}
-                      </PopoverContent>
-                    </Popover>
-                    {paintStaged.size > 0 && (
-                      <>
-                        <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
-                        <Button size="sm" className="h-6 text-xs" onClick={savePaint}>
-                          Save to .map
-                        </Button>
-                      </>
-                    )}
-                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
-                      {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Paint terrain"
-                    onClick={() => { stopPlacing(); setObjectBrowserOpen(false); setPaintBiome(1) }}
-                  >
-                    <Paintbrush className="h-3.5 w-3.5" />
-                  </Button>
-                )
-              )}
               <div className="w-px h-4 bg-border mx-1" />
               <MapGridSettingsDialog settings={settings} onChange={updateSettings} />
             </div>
           </div>
 
+          {gridMode === 'paint' && canEditEntities ? (
+            /* Paint-mode tool row (issue #193 Phase 1) — relocated Objects +
+               Terrain tools from the old row-1 icon cluster, now labeled
+               (not icon-only) and set against an amber-tinted row background
+               — redundant signaling alongside the header toggle's own color
+               change, so Paint mode is never identifiable by icon shape
+               alone (mode-switching UX research: minimizes "mode error"
+               risk). Behavior is unchanged from before this phase — same
+               state, same handlers, same stage-then-Save convention. */
+            <div className="flex items-center gap-2 -mx-4 px-4 py-1 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
+              {placingSid ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
+                    <Plus className="h-3.5 w-3.5" />
+                    Placing… (drag to paint)
+                  </Button>
+                  {paintObjectStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : placingCreatureId ? (
+                <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title="Click a tile to place">
+                  <Plus className="h-3.5 w-3.5" />
+                  Placing unit…
+                </Button>
+              ) : (
+                <Button
+                  variant={objectBrowserOpen ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Place a new object"
+                  onClick={() => { stopPainting(); setObjectBrowserOpen((prev) => !prev) }}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Objects
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {paintBiome !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                          style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
+                        />
+                        {BIOME_NAMES[paintBiome]}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {PAINT_BIOME_ORDER.map((b) => (
+                        <button
+                          key={b}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setPaintBiome(b)}
+                        >
+                          <span
+                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                            style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
+                          />
+                          {BIOME_NAMES[b]}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  {paintStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={savePaint}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
+                    {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Paint terrain"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); setPaintBiome(1) }}
+                >
+                  <Paintbrush className="h-3.5 w-3.5" />
+                  Terrain
+                </Button>
+              )}
+            </div>
+          ) : (
           <div className="flex gap-1 flex-wrap" data-nodrag>
             {GRID_GROUP_ORDER.map((g) => (
               <div key={g} className="flex items-stretch">
@@ -1840,6 +1886,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               Entity SIDs only
             </button>
           </div>
+          )}
         </DraggableDialogDragHandle>
 
         <Group orientation="horizontal" className="flex-1 min-h-0">
