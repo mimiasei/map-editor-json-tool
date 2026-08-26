@@ -616,12 +616,20 @@ export default function AppShell() {
       />
       <DialogBrowser open={dialogBrowserOpen} onOpenChange={setDialogBrowserOpen} />
       <GameDatabaseDialog open={gameDatabaseOpen} onOpenChange={setGameDatabaseOpen} />
-      <MapGridDialog
-        open={mapGridOpen}
-        onOpenChange={setMapGridOpen}
-        onUndock={() => handleUndock('mapGridCell')}
-        undocked={isUndocked('mapGridCell')}
-      />
+      {mapGridOpen ? (
+        // Inline view (issue #195 follow-up), not a modal — replaces this
+        // whole slot instead of layering on top, so it fills the same space
+        // the normal 3-pane editor Group occupies below and needs no resize
+        // chrome of its own.
+        <div className="flex-1 overflow-hidden p-3">
+          <MapGridDialog
+            open={mapGridOpen}
+            onOpenChange={setMapGridOpen}
+            onUndock={() => handleUndock('mapGridCell')}
+            undocked={isUndocked('mapGridCell')}
+          />
+        </div>
+      ) : (
       <Group
         orientation="horizontal"
         defaultLayout={defaultLayout}
@@ -682,6 +690,7 @@ export default function AppShell() {
           </aside>
         </Panel>
       </Group>
+      )}
     </div>
   )
 }

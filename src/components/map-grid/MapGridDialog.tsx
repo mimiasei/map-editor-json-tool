@@ -15,11 +15,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
-import { Dialog, DialogTitle } from '@/components/ui/dialog'
-import {
-  DraggableDialogContent,
-  DraggableDialogDragHandle,
-} from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -446,12 +441,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
-  // State-backed (not a plain ref): DraggableDialogContent defers its own
-  // layout via internal state that resolves through its own effect, so a
-  // plain useEffect here can fire before that resolves and never re-fire once
-  // it does (nothing in ITS OWN deps would change). A callback ref, by
-  // contrast, is invoked by React exactly when this DOM node mounts, no
-  // matter how deeply that mount was deferred by an ancestor.
+  // State-backed (not a plain ref): a parent that conditionally mounts this
+  // view (AppShell) can defer this DOM node's mount arbitrarily, and a plain
+  // useEffect here could fire before that resolves and never re-fire once it
+  // does. A callback ref, by contrast, is invoked by React exactly when this
+  // DOM node mounts, no matter how deeply that mount was deferred.
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
 
@@ -2172,27 +2166,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent
-        className="p-0 gap-0 overflow-hidden"
-        defaultWidth={900}
-        defaultHeight={650}
-        minWidth={500}
-        minHeight={360}
-        storageKey="map-grid"
-        onCloseAutoFocus={(e) => e.preventDefault()}
-        // Escape is reserved for canceling an in-progress Move/Place (the
-        // window keydown handlers above) — it should never also close the
-        // whole dialog underneath whatever it just canceled. Close via the
-        // [X] button or the toolbar toggle instead.
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
-        <DialogTitle className="sr-only">Map Grid</DialogTitle>
-
-        {/* pr-10 clears the dialog's own [X] close button, which is absolutely
-            positioned top-right independent of this row's flow — without it,
-            wrapped content here can sit underneath and silently eat clicks. */}
-        <DraggableDialogDragHandle className="flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
+    {/* Inline view, not a modal Dialog — replaces the main editor Group in
+        AppShell's layout slot (issue #195 follow-up: the dialog blocked the
+        rest of the editor and needed manual resizing to match the window;
+        rendering here instead keeps the toolbar reachable and needs no
+        resize chrome of its own). AppShell only mounts this component while
+        `open` is true, so the `open`-gated effects/guards throughout this
+        file (unchanged from the dialog version) still behave correctly. */}
+    <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
+        <div className="relative flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 h-7 w-7"
+            title="Close Map Grid"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold shrink-0">
               Map Grid{sizeX > 0 && sizeZ > 0 ? ` — ${sizeX} x ${sizeZ}` : ''}
@@ -2751,7 +2742,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             </button>
           </div>
           )}
-        </DraggableDialogDragHandle>
+        </div>
 
         <Group orientation="horizontal" className="flex-1 min-h-0">
         <Panel id="map-grid-viewport" defaultSize="100%" minSize="40%">
@@ -3333,8 +3324,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           </div>
         </Panel>
         </Group>
-      </DraggableDialogContent>
-    </Dialog>
+    </div>
 
     <RenameEntitySidDialog
       open={renameTarget !== null}
