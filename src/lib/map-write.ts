@@ -1588,6 +1588,15 @@ export interface BlankMapOptions {
  * bytes; only its JSON content is used as a starting shape, and only for
  * the fields not explicitly overridden here.
  */
+// Real names from tilesMap's own biome id convention (terrain-colors.ts's
+// BIOME_NAMES — confirmed against every real sample map's `areas[].biome`
+// string, which uses "Sand" not the catalog's own "Desert"; kept as a
+// local, self-contained copy here rather than importing the UI-layer
+// terrain-colors.ts module from this low-level writer).
+const BLANK_MAP_BIOME_NAMES: Record<number, string> = {
+  1: 'Grass', 2: 'Sand', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt',
+}
+
 export function buildBlankMap(template: MapContainer, options: BlankMapOptions): MapContainer {
   const { sizeX, sizeZ, biomeId, players } = options
   const tileCount = sizeX * sizeZ
@@ -1605,6 +1614,45 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     spawns: { playersCount: players.length, spawns: [] as unknown[], takenHeroes: [] as string[] },
   }
 
+  // `views` gates GME's own pannable/editable viewport — every real sample
+  // map's views[0].secSizeX/secSizeZ equals exactly sizeX/16 and sizeZ/16
+  // (confirmed with zero exceptions across every map in maps/, from a
+  // 16x16 map at 1x1 up to a 256x256 map at 16x16). The bundled template
+  // is itself only 16x16 (secSizeX/secSizeZ: 1,1) — left un-rescaled here
+  // before this fix, every created map silently inherited that tiny 1x1
+  // viewport regardless of its real chosen size, so GME could only pan a
+  // 16x16 corner of the actual map (issue: "testing.map" bug report).
+  const templateViews = (templateB2.views as Array<Record<string, unknown>>) ?? []
+  const views = templateViews.map((v, i) => (
+    i === 0 ? { ...v, secSizeX: Math.ceil(sizeX / 16), secSizeZ: Math.ceil(sizeZ / 16) } : v
+  ))
+
+  // `areas` is the map's own connectivity/region index — every real sample
+  // map's areas[] nodes sum to exactly sizeX*sizeZ (full coverage), split
+  // into multiple regions by GME's own (unreplicated-here) terrain-aware
+  // algorithm. The bundled template's single area only covers its own 256
+  // (16x16) nodes — left un-rescaled here before this fix, every created
+  // map inherited that same 256-node area regardless of real size, so only
+  // ~6% of a 64x64 map (and far less at larger sizes) was ever a member of
+  // any area at all. A freshly blank map has no reason to be split into
+  // multiple regions yet (uniform biome, no water, flat terrain) — one
+  // area spanning every tile is the direct, correctly-scaled equivalent of
+  // the template's own single-area shape, not a guess; this does NOT
+  // attempt to replicate GME's real multi-region splitting algorithm for a
+  // map with actual terrain variety; painting Water/Level/Obstacles after
+  // creation does not update this — a known, real gap, not part of this
+  // fix (see issue tracker for a proper areas-recompute pass).
+  const templateArea = (templateB2.areas as Array<Record<string, unknown>>)?.[0] ?? {}
+  const areas = [{
+    ...templateArea,
+    id: 0,
+    keyObjectId: -1,
+    rootNode: 0,
+    nodes: Array.from({ length: tileCount }, (_, i) => i),
+    neighbors: [] as unknown[],
+    biome: BLANK_MAP_BIOME_NAMES[biomeId] ?? 'Grass',
+  }]
+
   const b2 = {
     ...templateB2,
     sizeX_: sizeX,
@@ -1620,6 +1668,8 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     objectsFreeId: 0,
     squadsFreeId: 0,
     markersFreeId: 0,
+    views,
+    areas,
   }
 
   const chunks: Uint8Array[] = [
