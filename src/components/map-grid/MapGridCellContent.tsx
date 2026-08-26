@@ -132,20 +132,16 @@ export interface MapGridCellContentProps {
    *  parent doesn't know which stacked item this panel currently shows. */
   moveTarget?: { key: string; x: number; z: number } | null
   /** Start moving `item` — enters "pick a destination" mode on the grid
-   *  (click a tile, or use arrow keys) until Save/Cancel. Docked-only. */
+   *  (click a tile, or use arrow keys); each click/arrow-key press relocates
+   *  it immediately (issue #195 follow-up — no separate Save step). Docked-only. */
   onStartMove?: (item: PlacedObject) => void
-  /** Discard the staged destination without writing anything. Docked-only. */
+  /** Exit move mode — does not revert any relocation already applied while
+   *  it was active (there's no "staged, discardable" position anymore, only
+   *  Ctrl+Z). Docked-only. */
   onCancelMove?: () => void
-  /** The parent's staged rotation, if any — only `type === 0` instances
-   *  ever have one (only `objects[]` carries a rotations[] array). Same
-   *  "compared locally against selected.key" convention as moveTarget. */
-  rotateTarget?: { key: string; rotation: number } | null
-  /** Step `item`'s rotation by one quadrant in either direction — starts
-   *  staging from its current rotation if nothing is staged yet. Nothing is
-   *  written until Save. Docked-only. */
+  /** Step `item`'s rotation by one quadrant in either direction — applies
+   *  immediately (issue #195 follow-up). Docked-only. */
   onStepRotate?: (item: PlacedObject, delta: 1 | -1) => void
-  /** Discard the staged rotation without writing anything. Docked-only. */
-  onCancelRotate?: () => void
   /** The parent's active delete confirmation, if any (issue #167 Phase C) —
    *  same "compared locally against selected.key" convention as moveTarget. */
   deleteTarget?: { key: string } | null
@@ -153,10 +149,12 @@ export interface MapGridCellContentProps {
    *  place the target's entitySid is referenced — computed by the parent via
    *  entity-usage.ts, shown so deleting doesn't silently orphan a reference. */
   deleteUsageWarnings?: string[]
-  /** Stage a delete confirmation for `item` — nothing is written until
-   *  Save. Docked-only. */
+  /** Arm a delete confirmation for `item` — nothing is written until
+   *  onConfirmDelete. Docked-only. */
   onStartDelete?: (item: PlacedObject) => void
-  /** Discard the staged delete without writing anything. Docked-only. */
+  /** Apply the delete immediately (issue #195 follow-up). Docked-only. */
+  onConfirmDelete?: () => void
+  /** Dismiss the confirmation without deleting anything. Docked-only. */
   onCancelDelete?: () => void
 }
 
@@ -238,12 +236,11 @@ export default function MapGridCellContent({
   moveTarget = null,
   onStartMove,
   onCancelMove,
-  rotateTarget = null,
   onStepRotate,
-  onCancelRotate,
   deleteTarget = null,
   deleteUsageWarnings = [],
   onStartDelete,
+  onConfirmDelete,
   onCancelDelete,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
@@ -370,26 +367,18 @@ export default function MapGridCellContent({
 
           {(() => {
             const isMoving = moveTarget?.key === selected.key
-            const isDirty = isMoving && (moveTarget!.x !== selected.x || moveTarget!.z !== selected.z)
             return (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Position</p>
                 {isMoving ? (
                   <div className="space-y-1.5">
-                    <p className="text-xs">
-                      {isDirty ? `Moving to (${moveTarget!.x}, ${moveTarget!.z})` : `(${selected.x}, ${selected.z})`}
-                    </p>
+                    <p className="text-xs">({selected.x}, {selected.z})</p>
                     <p className="text-xs text-muted-foreground">
-                      Click a tile on the grid, or use the arrow keys, to choose a destination.
+                      Click a tile on the grid, or use the arrow keys, to relocate it — takes effect immediately.
                     </p>
-                    <div className="flex items-center gap-2">
-                      {isDirty && (
-                        <p className="text-xs text-amber-600">Pending — Save to .map above</p>
-                      )}
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelMove}>
-                        Cancel
-                      </Button>
-                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelMove}>
+                      Done
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -415,55 +404,41 @@ export default function MapGridCellContent({
             )
           })()}
 
-          {selected.type === 0 && selected.rotation !== undefined && (() => {
-            const isRotating = rotateTarget?.key === selected.key
-            const shown = isRotating ? rotateTarget!.rotation : selected.rotation!
-            const isDirty = isRotating && rotateTarget!.rotation !== selected.rotation
-            return (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Rotation</p>
-                <div className="flex items-center gap-1.5">
-                  {onStepRotate && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={() => onStepRotate(selected, -1)}
-                    >
-                      <ChevronLeft className="h-3 w-3" />
-                    </Button>
-                  )}
-                  <p className="text-xs w-24">{formatRotation(shown)}</p>
-                  {onStepRotate && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={() => onStepRotate(selected, 1)}
-                    >
-                      <ChevronRight className="h-3 w-3" />
-                    </Button>
-                  )}
-                  {isDirty && (
-                    <>
-                      <p className="text-xs text-amber-600">Pending — Save to .map above</p>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelRotate}>
-                        Cancel
-                      </Button>
-                    </>
-                  )}
-                </div>
+          {selected.type === 0 && selected.rotation !== undefined && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Rotation</p>
+              <div className="flex items-center gap-1.5">
+                {onStepRotate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => onStepRotate(selected, -1)}
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                  </Button>
+                )}
+                <p className="text-xs w-24">{formatRotation(selected.rotation)}</p>
+                {onStepRotate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => onStepRotate(selected, 1)}
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
-            )
-          })()}
+            </div>
+          )}
 
           {deleteTarget?.key === selected.key && (
             <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/5 p-2">
-              <p className="text-xs font-semibold text-destructive">Staged for deletion</p>
+              <p className="text-xs font-semibold text-destructive">Delete this object?</p>
               <p className="text-xs text-muted-foreground">
-                Click "Save to .map" in the toolbar above to actually remove it (and every property
-                table row it has) from the file. There is no undo in this app beyond the one-time .bak
-                backup made on your next save.
+                This removes it (and every property table row it has) from the .map file. There is no
+                undo in this app beyond Ctrl+Z (before the next Save) or the one-time .bak backup.
               </p>
               {deleteUsageWarnings.length > 0 && (
                 <div className="space-y-1 rounded bg-amber-500/10 p-1.5">
@@ -477,6 +452,9 @@ export default function MapGridCellContent({
                 </div>
               )}
               <div className="flex items-center gap-2 pt-0.5">
+                <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={onConfirmDelete}>
+                  Delete
+                </Button>
                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelDelete}>
                   Cancel
                 </Button>

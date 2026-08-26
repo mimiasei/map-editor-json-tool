@@ -63,6 +63,13 @@ interface MapDocumentStore {
   /** Discard the loaded document without writing anything — used on New/
    *  closing a map, mirroring useMapContextStore's own clearContext(). */
   clear: () => void
+  /** Step the zundo history back/forward one edit and re-sync
+   *  useMapContextStore — zundo's own undo()/redo() (on
+   *  `useMapDocumentStore.temporal`) mutate `container` directly, bypassing
+   *  applyEdit's own re-sync, so callers should use these instead of
+   *  reaching into `.temporal` themselves. */
+  undo: () => void
+  redo: () => void
 }
 
 export const useMapDocumentStore = create<MapDocumentStore>()(
@@ -96,6 +103,19 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       clear: () => {
         set({ container: null, mapIsDirty: false })
         useMapDocumentStore.temporal.getState().clear()
+      },
+
+      undo: () => {
+        useMapDocumentStore.temporal.getState().undo()
+        const current = get().container
+        if (current) useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(current)))
+        set({ mapIsDirty: useMapDocumentStore.temporal.getState().pastStates.length > 0 })
+      },
+      redo: () => {
+        useMapDocumentStore.temporal.getState().redo()
+        const current = get().container
+        if (current) useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(current)))
+        set({ mapIsDirty: true })
       },
     }),
     {
