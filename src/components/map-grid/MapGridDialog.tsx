@@ -734,12 +734,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     ctx.clearRect(0, 0, sizeX, sizeZ)
     // Base pass: every tile gets its light terrain/water fill, occupied or
     // not — this is what makes the grid readable even with all filters off.
+    // A staged (unsaved) Paint Terrain edit wins over the committed biome —
+    // same `terrainFillColor()` call as committed tiles, just fed the staged
+    // value, so a staged tile renders pixel-identical to what it'll look
+    // like once saved (issue #195 Phase 1) instead of a separate tinted
+    // overlay approximating it.
     const tileCount = sizeX * sizeZ
     if (tilesMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
-        ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node], settings.terrainOpacity)
+        ctx.fillStyle = terrainFillColor(paintStaged.get(node) ?? tilesMap[node], waterMap[node], settings.terrainOpacity)
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
@@ -765,7 +770,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap,
+    settings.showElevationShading, elevationTintMap, paintStaged,
   ])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
@@ -795,53 +800,62 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [blockedCanvasEl, sizeX, sizeZ, settings.showBlockedTiles, blockedTileSet])
 
-  // ── Terrain-paint preview canvas (issue #167 Phase D) — same "separate,
-  // top-stacked canvas painted after the icon layer" technique as the
-  // blocked-tile overlay above, so the preview tint is visible over icons
-  // too. Shows the STAGED (not yet saved) biome for every touched tile —
-  // the "see it before it's real" feedback Move/Add's ghost previews
-  // already establish for their own tools.
+  // ── Terrain-paint "pending" indicator canvas (issue #167 Phase D, redone
+  // for issue #195 Phase 1) — the base canvasEl pass above now already
+  // renders a staged tile with its real, final `terrainFillColor()`, so this
+  // canvas's only remaining job is marking WHICH tiles are still unsaved, not
+  // showing what they'll look like. A flat color fill can't do that without
+  // distorting the now-accurate color underneath, so this draws a thin
+  // outline instead — which needs sub-tile precision this canvas's siblings
+  // don't (they're exactly 1 canvas pixel per tile, CSS-scaled up). Internal
+  // resolution is bumped to SUBPX-per-tile just for this canvas; its CSS
+  // display size (set in the JSX) stays identical to every other layer, so
+  // it still lines up pixel-for-pixel on screen.
   const [paintCanvasEl, setPaintCanvasEl] = useState<HTMLCanvasElement | null>(null)
   useEffect(() => {
     if (!paintCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = paintCanvasEl
-    canvas.width = sizeX
-    canvas.height = sizeZ
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.clearRect(0, 0, sizeX, sizeZ)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     if (paintStaged.size === 0) return
-    ctx.globalAlpha = 0.55
-    for (const [node, biomeId] of paintStaged) {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)'
+    ctx.lineWidth = 2
+    for (const node of paintStaged.keys()) {
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
-      ctx.fillStyle = BIOME_BASE_COLORS[biomeId]
-      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
-    ctx.globalAlpha = 1
   }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
 
-  // ── Object-paint preview canvas — same technique as the terrain-paint
-  // preview above, one flat tint per staged tile (not the real catalog icon;
-  // a lighter-weight stand-in given a stroke can stage many tiles at once).
+  // ── Object-paint "pending" indicator canvas — same outline technique and
+  // rationale as the terrain-paint indicator above (issue #195 Phase 1): the
+  // real catalog icon for each staged stamp now renders via
+  // `stagedObjectPaintIcons` below, so this canvas only needs to mark which
+  // tiles are unsaved, not draw a flat placeholder tint over them.
   const [paintObjectCanvasEl, setPaintObjectCanvasEl] = useState<HTMLCanvasElement | null>(null)
   useEffect(() => {
     if (!paintObjectCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = paintObjectCanvasEl
-    canvas.width = sizeX
-    canvas.height = sizeZ
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.clearRect(0, 0, sizeX, sizeZ)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     if (paintObjectStaged.size === 0) return
-    ctx.globalAlpha = 0.55
-    ctx.fillStyle = 'rgba(34, 197, 94, 1)'
+    ctx.strokeStyle = 'rgba(34, 197, 94, 0.9)'
+    ctx.lineWidth = 2
     for (const node of paintObjectStaged.keys()) {
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
-      ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
-    ctx.globalAlpha = 1
   }, [paintObjectCanvasEl, sizeX, sizeZ, paintObjectStaged])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
@@ -1462,6 +1476,55 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }
 
+  // ── Staged-edit full-fidelity preview (issue #195 Phase 1) — deliberately
+  // placed here rather than up near sortedIconEntries, since a useMemo's
+  // dependency array is evaluated at THIS render's hook-call time and can't
+  // forward-reference moveState/rotateState/deleteState/paintObjectStaged,
+  // all declared earlier in the component body but after sortedIconEntries.
+
+  // Committed objects a staged Paint Objects stroke will delete on Save —
+  // mirrors savePaintObjects' own `deletions` filter exactly (two lines up)
+  // so the preview can never disagree with what Save actually does.
+  const stagedPaintObjectDeletionKeys = useMemo(() => {
+    const keys = new Set<string>()
+    if (paintObjectStaged.size === 0) return keys
+    for (const o of placedObjects) {
+      if (o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0) {
+        keys.add(o.key)
+      }
+    }
+    return keys
+  }, [paintObjectStaged, placedObjects, catalog])
+
+  // Staged Paint Objects additions, rendered with their real catalog icon
+  // instead of a flat swatch. Bounded by paintObjectStaged.size (a brush
+  // stroke, never the whole map), so this stays a small additive DOM layer,
+  // not the "one DOM node per map tile" pattern this project avoids.
+  // Deliberately single-cell even for a multi-tile template — an accepted
+  // simplification for a transient preview; the actual saved placement still
+  // renders through the normal committed-object pipeline once saved.
+  const stagedObjectPaintIcons = useMemo(() => {
+    if (!showIcons || paintObjectStaged.size === 0) return []
+    const icons: { key: string; left: number; top: number; sid: string }[] = []
+    for (const [node, sid] of paintObjectStaged) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      icons.push({ key: `paintobj${node}`, left: x * BASE_CELL_PX, top: (sizeZ - 1 - z) * BASE_CELL_PX, sid })
+    }
+    return icons
+  }, [showIcons, paintObjectStaged, sizeX, sizeZ])
+
+  // Staged Move destination — same real-icon treatment as a paint-object
+  // addition above, so the preview shows where the object will actually
+  // land instead of only an outline box (the source tile fades out instead,
+  // via isMoveSource in the icon render loop below).
+  const stagedMoveIcon = useMemo(() => {
+    if (!showIcons || !moveState) return null
+    const x = moveState.node % sizeX
+    const z = Math.floor(moveState.node / sizeX)
+    return { key: `move${moveState.node}`, left: x * BASE_CELL_PX, top: (sizeZ - 1 - z) * BASE_CELL_PX, sid: moveState.sid }
+  }, [showIcons, moveState, sizeX, sizeZ])
+
   useEffect(() => {
     if (!open || (!placingSid && !placingCreatureId && !objectBrowserOpen && paintBiome === null && !moveState)) return
     const handler = (e: KeyboardEvent) => {
@@ -1894,6 +1957,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
                   const modeActive = !!moveState || !!placingSid || !!placingCreatureId || paintBiome !== null
+                  // Staged-edit visual treatment (issue #195 Phase 1) — a
+                  // committed icon that a pending edit will remove (Delete,
+                  // or a Paint Objects stamp overwriting a decoration) or
+                  // relocate (Move, now shown for real at its destination via
+                  // stagedMoveIcon below) fades out; a pending Rotate gets a
+                  // highlighted ring instead of an actually-rotated icon,
+                  // since no committed object visually rotates its icon
+                  // either — there's no "final appearance" to preview here,
+                  // only a way to mark that a change is pending.
+                  const isMoveSource = moveState?.key === entry.pick.primary.key
+                  const isDeleting = deleteState?.key === entry.pick.primary.key || stagedPaintObjectDeletionKeys.has(entry.pick.primary.key)
+                  const isRotating = rotateState?.key === entry.pick.primary.key
                   return (
                     <div
                       key={entry.key}
@@ -1906,6 +1981,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         width: entry.width,
                         height: entry.height,
                         boxSizing: 'border-box',
+                        opacity: isDeleting || isMoveSource ? 0.35 : 1,
+                        outline: isDeleting
+                          ? '2px dashed rgba(220, 38, 38, 0.9)'
+                          : isRotating
+                            ? '2px dashed rgba(37, 99, 235, 0.9)'
+                            : undefined,
+                        outlineOffset: isDeleting || isRotating ? '-2px' : undefined,
                       }}
                       onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && paintBiome === null) selectNode(entry.clickNode) }}
                     >
@@ -1945,6 +2027,46 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
                           {entry.pick.count}
                         </span>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* Staged (unsaved) object icons — Paint Objects additions +
+                    the Move destination — real catalog icon, dashed outline
+                    to mark "pending" (issue #195 Phase 1). Deliberately a
+                    thinner render than sortedIconEntries above (no count/
+                    owner badge, no multi-tile bounds): these are transient
+                    previews of edits that don't exist as PlacedObject rows
+                    yet, not committed data going through the same pipeline. */}
+                {[...stagedObjectPaintIcons, ...(stagedMoveIcon ? [stagedMoveIcon] : [])].map((icon) => {
+                  const visual = resolveGridCellVisual(
+                    { key: icon.key, type: 0, id: -1, sid: icon.sid, x: 0, z: 0, node: 0 },
+                    catalog,
+                  )
+                  return (
+                    <div
+                      key={icon.key}
+                      className="absolute flex items-center justify-center rounded-sm select-none pointer-events-none"
+                      style={{
+                        left: icon.left,
+                        top: icon.top,
+                        width: BASE_CELL_PX,
+                        height: BASE_CELL_PX,
+                        boxSizing: 'border-box',
+                        outline: '2px dashed rgba(34, 197, 94, 0.9)',
+                        outlineOffset: '-2px',
+                      }}
+                    >
+                      {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
+                      {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
+                      {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
+                        <CatalogIcon
+                          iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}
+                          name={visual.kind === 'catalogOverride' ? visual.name : icon.sid}
+                          size={iconSize}
+                          src={settings.iconImagesEnabled ? undefined : null}
+                        />
                       )}
                     </div>
                   )
