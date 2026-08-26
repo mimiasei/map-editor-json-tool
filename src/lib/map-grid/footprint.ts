@@ -62,7 +62,6 @@ export function computeFootprintTiles(
   template: FootprintTemplate | undefined,
   anchorX: number,
   anchorZ: number,
-  sid?: string,
 ): FootprintCell[] {
   if (!template) {
     return [{ x: anchorX, z: anchorZ, value: 1 }]
@@ -82,19 +81,6 @@ export function computeFootprintTiles(
       z: anchorZ + lz - pivotZ,
       value: template.nodes[i],
     })
-  }
-  // hero-spawner shares city-spawner's 3×3 catalog template (8 solid "1"
-  // cells around one "2" interaction cell), which is correct for a
-  // city-spawner — a real building occupying its full footprint — but not
-  // for a hero-spawner: confirmed in-game, the hero itself is a single-tile
-  // character standing at that one "2" cell, not a 3×3 structure. Override
-  // the whole footprint (not just icon rendering) to that one cell, marked
-  // solid, so click-hit-testing, blocked-tile passability, and move/place
-  // bounds-checking all agree it's a genuine 1×1 object instead of treating
-  // the other 8 cells of the shared template as real, blocking, in-game space.
-  if (sid === 'hero-spawner') {
-    const interactionCell = cells.find((cell) => cell.value === 2)
-    if (interactionCell) return [{ x: interactionCell.x, z: interactionCell.z, value: 1 }]
   }
   return cells
 }

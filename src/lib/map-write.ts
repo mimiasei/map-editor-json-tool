@@ -1547,6 +1547,111 @@ export function paintTerrainTiles(chunk: Uint8Array, changes: { node: number; bi
   return new TextEncoder().encode(patchedText)
 }
 
+// ─── Create a new blank map ──────────────────────────────────────────────────
+// The .map header's hash algorithm is confirmed unknown (issue #120
+// brute-forced every plausible digest with no match) — this module has never
+// computed one, only preserved an existing file's verbatim. A brand-new map
+// can't synthesize a header from nothing, so it clones one from a small,
+// first-party, genuinely blank real map TSE ships as a bundled resource
+// (src-tauri/resources/template.map — 16x16, 0 players, all-default
+// content, produced once via the game's own map editor) — reusing its
+// header AND its already-valid Block 1/2/3 JSON shape verbatim, overriding
+// only the fields that actually vary per new map (size, terrain, players).
+// Block 4 doesn't exist in the 3-chunk template (a real, tolerated shape —
+// `parseMapFile` already substitutes `{}` for a missing block), so a
+// minimal empty one is added here for future quest/counter data.
+
+const BLANK_BLOCK4 = '{"comment":"","aiRolesId":"","counters":[],"interruptions":[],"quests":[]}'
+
+export interface BlankMapPlayer {
+  /** A player-start spawner sid — the only two sids real Block 1
+   *  spawns.spawns[] entries are ever backed by (see backfillPlayerStartSpawner). */
+  sid: 'city-spawner' | 'hero-spawner'
+  node: number
+}
+
+export interface BlankMapOptions {
+  sizeX: number
+  sizeZ: number
+  /** Biome id 1-7 (BIOME_NAMES in terrain-colors.ts) — fills the whole map. */
+  biomeId: number
+  /** One entry per player. Each gets a real placed spawner object via the
+   *  same addObjectInstance() path the Add-object feature already uses —
+   *  no spawner construction logic is re-derived here. */
+  players: BlankMapPlayer[]
+}
+
+/**
+ * Build a brand-new, blank map container from `template` (expected to be
+ * `template.map`'s already-parsed container — see `create-map.ts` for where
+ * that's read). Never touches `template`'s own hash/version/separator
+ * bytes; only its JSON content is used as a starting shape, and only for
+ * the fields not explicitly overridden here.
+ */
+export function buildBlankMap(template: MapContainer, options: BlankMapOptions): MapContainer {
+  const { sizeX, sizeZ, biomeId, players } = options
+  const tileCount = sizeX * sizeZ
+
+  const templateB1 = JSON.parse(new TextDecoder('utf-8').decode(template.chunks[0])) as Record<string, unknown>
+  const templateB2 = JSON.parse(new TextDecoder('utf-8').decode(template.chunks[1])) as Record<string, unknown>
+  const templateB3Text = template.chunks[2]
+    ? new TextDecoder('utf-8').decode(template.chunks[2])
+    : '{"dialogs":{"lines":[]},"quests":{"quests":[]}}'
+
+  const b1 = {
+    ...templateB1,
+    sizeX,
+    sizeZ,
+    spawns: { playersCount: players.length, spawns: [] as unknown[], takenHeroes: [] as string[] },
+  }
+
+  const b2 = {
+    ...templateB2,
+    sizeX_: sizeX,
+    sizeZ_: sizeZ,
+    tilesMap: new Array(tileCount).fill(biomeId),
+    waterMap: new Array(tileCount).fill(0),
+    levelsMap: new Array(tileCount).fill(0),
+    climbsMap: new Array(tileCount).fill(0),
+    roadsMap: new Array(tileCount).fill(0),
+    objects: [] as unknown[],
+    squads: [] as unknown[],
+    markers: [] as unknown[],
+    objectsFreeId: 0,
+    squadsFreeId: 0,
+    markersFreeId: 0,
+  }
+
+  const chunks: Uint8Array[] = [
+    new TextEncoder().encode(JSON.stringify(b1)),
+    new TextEncoder().encode(JSON.stringify(b2)),
+    new TextEncoder().encode(templateB3Text),
+    new TextEncoder().encode(BLANK_BLOCK4),
+  ]
+
+  let container: MapContainer = {
+    hash: template.hash,
+    version: template.version,
+    separator: template.separator,
+    chunks,
+  }
+
+  // Populate real player-start spawners — same write path, same defaults,
+  // as adding a city/hero-spawner to an existing map (backfillPlayerStartSpawner
+  // claims player slots 1..N in order, so calling it N times against a
+  // playersCount already set to N and an empty spawns[] fills them in
+  // sequence with no extra bookkeeping needed here).
+  for (const { sid, node } of players) {
+    const result = addObjectInstance(container.chunks[0], container.chunks[1], 0, sid, node)
+    const newChunks = container.chunks.slice()
+    newChunks[0] = result.block1Chunk
+    newChunks[1] = result.block2Chunk
+    container = { ...container, chunks: newChunks }
+  }
+
+  return container
+}
+
 // ─── Byte equality (verification) ───────────────────────────────────────────
 
 export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
