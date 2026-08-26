@@ -47,7 +47,8 @@ import {
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
-import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
@@ -67,7 +68,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -80,6 +81,8 @@ const OVERDRAW_CELLS = 3
 /** Same order as ObjectBrowserPanel.tsx's own BIOME_ORDER — each file keeps
  *  its own copy rather than sharing, matching that file's existing convention. */
 const PAINT_BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
+/** Real ids from Core/DB/map/waters/waters.json, for the Water tool's swatch. */
+const WATER_TYPE_ORDER = [1, 2, 3, 4, 5, 6, 7]
 /** Shared styling for both row and column tile-number gutters — everything
  *  except color, which depends on whether this label's row/column is hovered. */
 const TILE_NUMBER_CLASS = 'text-[10px] bg-background/80'
@@ -309,7 +312,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Elevation tint (src/lib/map-grid/elevation-shading.ts) — a flat darker/
   // lighter fill over every level -1 / level 1 tile, independent of the
   // wall-vs-interior distinction the blocked-tile overlay uses.
-  const elevationTintMap = useMemo(() => buildElevationTintMap(levelsMap), [levelsMap])
+  // elevationTintMap is declared further down, after paintLevelStaged exists
+  // (issue #193 Phase 2 merges staged Level paint into it) — a memo's
+  // dependency array can't forward-reference a binding declared later in
+  // the component body, same reasoning as the staged-preview memos in the
+  // savePaintObjects area (see that comment for the fuller explanation).
 
   // Ramp/slope direction arrows (src/lib/map-grid/ramp-direction.ts) — folded
   // into the same "Elevation shading" toggle rather than a separate setting,
@@ -384,6 +391,35 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
 
+  // ── Paint level (issue #193 Phase 2) — same freehand drag-stroke staging
+  // convention as Paint Terrain above, just targeting levelsMap (-1/0/1)
+  // instead of tilesMap. Deliberately does not touch climbsMap (ramp
+  // markers) — see paintLevelTiles' doc comment in map-write.ts.
+  const [levelBrush, setLevelBrush] = useState<-1 | 0 | 1 | null>(null)
+  const [paintLevelStaged, setPaintLevelStaged] = useState<Map<number, -1 | 0 | 1>>(new Map())
+  const levelPaintingRef = useRef(false)
+
+  // ── Paint water (issue #193 Phase 2) — click-to-flood-fill, not a
+  // freehand stroke: one click fills every contiguous same-level tile at
+  // level <= 0 (water never occurs at level 1 in any real sample map) with
+  // the chosen water type. Multiple separate fills can stage before Save,
+  // same as a multi-stroke terrain paint session.
+  const [waterBrush, setWaterBrush] = useState<number | null>(null)
+  const [paintWaterStaged, setPaintWaterStaged] = useState<Map<number, number>>(new Map())
+
+  // Elevation tint, merged with any staged (unsaved) Level paint — same
+  // merge-before-render pattern issue #195 Phase 1 established for Paint
+  // Terrain, so a staged level change looks identical to what Save will
+  // produce instead of needing its own separate preview overlay.
+  // blockedTileSet/rampDirectionMap (declared above) deliberately stay
+  // committed-only — see paintLevelTiles' climbsMap note in map-write.ts.
+  const elevationTintMap = useMemo(() => {
+    if (paintLevelStaged.size === 0) return buildElevationTintMap(levelsMap)
+    const merged = levelsMap.slice()
+    for (const [node, level] of paintLevelStaged) merged[node] = level
+    return buildElevationTintMap(merged)
+  }, [levelsMap, paintLevelStaged])
+
   // ── Local undo (Ctrl+Z) for staged-but-unsaved edits ────────────────────
   // Deliberately separate from useScenarioStore's zundo temporal() (scoped
   // to the `scenario` field only, never .map writes — see CLAUDE.md). Once
@@ -402,11 +438,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   interface StagedSnapshot {
     paintStaged: Map<number, BiomeId>
     paintObjectStaged: Map<number, string>
+    paintLevelStaged: Map<number, -1 | 0 | 1>
+    paintWaterStaged: Map<number, number>
     moveState: { key: string; type: 0 | 1 | 2; id: number; sid: string; node: number } | null
     rotateState: { key: string; id: number; rotation: number } | null
   }
   const stagedSnapshotRef = useRef<StagedSnapshot>({
-    paintStaged: new Map(), paintObjectStaged: new Map(), moveState: null, rotateState: null,
+    paintStaged: new Map(), paintObjectStaged: new Map(), paintLevelStaged: new Map(), paintWaterStaged: new Map(), moveState: null, rotateState: null,
   })
   const [undoStack, setUndoStack] = useState<StagedSnapshot[]>([])
   const pushUndo = useCallback(() => {
@@ -435,6 +473,63 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setUndoStack([])
     } catch (e) {
       logError(`Failed to paint terrain: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  const stopLevelPainting = () => {
+    setLevelBrush(null)
+    setPaintLevelStaged(new Map())
+  }
+  const stageLevelNode = useCallback((node: number, level: -1 | 0 | 1) => {
+    if (paintLevelStaged.get(node) === level) return
+    pushUndo()
+    setPaintLevelStaged((prev) => {
+      const next = new Map(prev)
+      next.set(node, level)
+      return next
+    })
+  }, [paintLevelStaged, pushUndo])
+  const saveLevelPaint = async () => {
+    if (paintLevelStaged.size === 0 || !mapFilePath) return
+    const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
+    try {
+      await saveMapFile(mapFilePath, { kind: 'paintLevel', changes })
+      setPaintLevelStaged(new Map())
+      setUndoStack([])
+    } catch (e) {
+      logError(`Failed to paint level: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  const stopWaterPainting = () => {
+    setWaterBrush(null)
+    setPaintWaterStaged(new Map())
+  }
+  // One click fills the whole contiguous region at that tile's own level
+  // (level <= 0 only — see the paintWaterStaged doc comment above), merging
+  // the result into any already-staged fills from earlier clicks this
+  // session rather than replacing them.
+  const stageWaterFill = useCallback((node: number, waterId: number) => {
+    if (levelsMap[node] === undefined || levelsMap[node] > 0) return
+    const targetLevel = levelsMap[node] ?? 0
+    const region = floodFillRegion(node, sizeX, sizeZ, (n) => (levelsMap[n] ?? 0) === targetLevel)
+    if (region.length === 0) return
+    pushUndo()
+    setPaintWaterStaged((prev) => {
+      const next = new Map(prev)
+      for (const n of region) next.set(n, waterId)
+      return next
+    })
+  }, [levelsMap, sizeX, sizeZ, pushUndo])
+  const saveWaterPaint = async () => {
+    if (paintWaterStaged.size === 0 || !mapFilePath) return
+    const changes = [...paintWaterStaged.entries()].map(([node, waterId]) => ({ node, waterId }))
+    try {
+      await saveMapFile(mapFilePath, { kind: 'paintWater', changes })
+      setPaintWaterStaged(new Map())
+      setUndoStack([])
+    } catch (e) {
+      logError(`Failed to paint water: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
@@ -508,6 +603,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null) stagePaintNode(node, paintBiome)
       return
     }
+    // Same freehand-stroke idea for the Level brush.
+    if (levelBrush !== null) {
+      levelPaintingRef.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageLevelNode(node, levelBrush)
+      return
+    }
+    // Water is click-to-flood-fill, not a drag stroke — one pointerdown
+    // computes and stages the whole contiguous region in one action (see
+    // stageWaterFill's doc comment).
+    if (waterBrush !== null) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageWaterFill(node, waterBrush)
+      return
+    }
     // Same idea while placing/painting objects: a left-button-down here is a
     // paint-stroke candidate, resolved into either a stroke or a single
     // placement by whether it crosses the threshold (see onPointerMove/Up).
@@ -556,6 +667,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (paintingRef.current && paintBiome !== null) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stagePaintNode(node, paintBiome)
+      setHoveredNode(node)
+      return
+    }
+    if (levelPaintingRef.current && levelBrush !== null) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageLevelNode(node, levelBrush)
       setHoveredNode(node)
       return
     }
@@ -640,6 +757,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (paintingRef.current) {
       paintingRef.current = false
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      return
+    }
+    if (levelPaintingRef.current) {
+      levelPaintingRef.current = false
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       return
     }
@@ -742,17 +864,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     ctx.clearRect(0, 0, sizeX, sizeZ)
     // Base pass: every tile gets its light terrain/water fill, occupied or
     // not — this is what makes the grid readable even with all filters off.
-    // A staged (unsaved) Paint Terrain edit wins over the committed biome —
-    // same `terrainFillColor()` call as committed tiles, just fed the staged
-    // value, so a staged tile renders pixel-identical to what it'll look
-    // like once saved (issue #195 Phase 1) instead of a separate tinted
-    // overlay approximating it.
+    // A staged (unsaved) Paint Terrain/Water edit wins over the committed
+    // value — same `terrainFillColor()` call as committed tiles, just fed
+    // the staged value(s), so a staged tile renders pixel-identical to what
+    // it'll look like once saved (issue #195 Phase 1 pattern, extended to
+    // Water in issue #193 Phase 2) instead of a separate tinted overlay
+    // approximating it.
     const tileCount = sizeX * sizeZ
     if (tilesMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
-        ctx.fillStyle = terrainFillColor(paintStaged.get(node) ?? tilesMap[node], waterMap[node], settings.terrainOpacity)
+        ctx.fillStyle = terrainFillColor(
+          paintStaged.get(node) ?? tilesMap[node],
+          paintWaterStaged.get(node) ?? waterMap[node],
+          settings.terrainOpacity,
+        )
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
@@ -778,7 +905,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap, paintStaged,
+    settings.showElevationShading, elevationTintMap, paintStaged, paintWaterStaged,
   ])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
@@ -865,6 +992,52 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
   }, [paintObjectCanvasEl, sizeX, sizeZ, paintObjectStaged])
+
+  // ── Level/Water "pending" indicator canvases (issue #193 Phase 2) — same
+  // outline technique as the two above: the real color already renders via
+  // the base canvasEl pass (elevationTintMap/terrainFillColor merges above),
+  // so these only mark which tiles are unsaved.
+  const [paintLevelCanvasEl, setPaintLevelCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!paintLevelCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = paintLevelCanvasEl
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (paintLevelStaged.size === 0) return
+    ctx.strokeStyle = 'rgba(37, 99, 235, 0.9)'
+    ctx.lineWidth = 2
+    for (const node of paintLevelStaged.keys()) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
+    }
+  }, [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
+
+  const [paintWaterCanvasEl, setPaintWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!paintWaterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const canvas = paintWaterCanvasEl
+    const SUBPX = 8
+    canvas.width = sizeX * SUBPX
+    canvas.height = sizeZ * SUBPX
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (paintWaterStaged.size === 0) return
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.9)'
+    ctx.lineWidth = 2
+    for (const node of paintWaterStaged.keys()) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      const screenRow = sizeZ - 1 - z
+      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
+    }
+  }, [paintWaterCanvasEl, sizeX, sizeZ, paintWaterStaged])
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
@@ -1252,7 +1425,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // buffers on every render — cheap (plain object assignment), and means
   // pushUndo always reads the true latest values with no stale-closure risk.
   useEffect(() => {
-    stagedSnapshotRef.current = { paintStaged, paintObjectStaged, moveState, rotateState }
+    stagedSnapshotRef.current = { paintStaged, paintObjectStaged, paintLevelStaged, paintWaterStaged, moveState, rotateState }
   })
   const undoLastStagedEdit = useCallback(() => {
     setUndoStack((stack) => {
@@ -1260,6 +1433,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const prev = stack[stack.length - 1]
       setPaintStaged(prev.paintStaged)
       setPaintObjectStaged(prev.paintObjectStaged)
+      setPaintLevelStaged(prev.paintLevelStaged)
+      setPaintWaterStaged(prev.paintWaterStaged)
       setMoveState(prev.moveState)
       setRotateState(prev.rotateState)
       return stack.slice(0, -1)
@@ -1534,7 +1709,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [showIcons, moveState, sizeX, sizeZ])
 
   useEffect(() => {
-    if (!open || (!placingSid && !placingCreatureId && !objectBrowserOpen && paintBiome === null && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -1554,11 +1729,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else if (placingSid) stopPlacingOrClearStaged()
       else if (placingCreatureId) stopPlacingCreature()
       else if (paintBiome !== null) stopPainting()
+      else if (levelBrush !== null) stopLevelPainting()
+      else if (waterBrush !== null) stopWaterPainting()
       else setObjectBrowserOpen(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, objectBrowserOpen, paintBiome, moveState, paintObjectStaged])
+  }, [open, placingSid, placingCreatureId, objectBrowserOpen, paintBiome, levelBrush, waterBrush, moveState, paintObjectStaged])
 
   // Ctrl+Z / Cmd+Z undoes the last staged-but-unsaved edit (see pushUndo's
   // call sites above) — a separate effect from Escape's above since it
@@ -1736,7 +1913,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
@@ -1790,10 +1967,102 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); setPaintBiome(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); setPaintBiome(1) }}
                 >
                   <Paintbrush className="h-3.5 w-3.5" />
                   Terrain
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Level brush (issue #193 Phase 2) — same freehand-stroke
+                  staging as Terrain, targeting levelsMap instead of
+                  tilesMap. Deliberately no ramp/climbsMap authoring — see
+                  paintLevelTiles' doc comment in map-write.ts. */}
+              {levelBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    {([-1, 0, 1] as const).map((lvl) => (
+                      <button
+                        key={lvl}
+                        className={`h-6 px-2 text-xs transition-colors ${
+                          levelBrush === lvl ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'
+                        }`}
+                        onClick={() => setLevelBrush(lvl)}
+                      >
+                        {lvl === -1 ? 'Lower' : lvl === 0 ? 'Flat' : 'Higher'}
+                      </button>
+                    ))}
+                  </div>
+                  {paintLevelStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={saveLevelPaint}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting}>
+                    {paintLevelStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Paint elevation level"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); setLevelBrush(0) }}
+                >
+                  <Layers className="h-3.5 w-3.5" />
+                  Level
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Water flood-fill (issue #193 Phase 2) — click-to-fill, not
+                  a freehand stroke — see stageWaterFill's doc comment. */}
+              {waterBrush !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        {WATER_TYPE_NAMES[waterBrush]}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {WATER_TYPE_ORDER.map((w) => (
+                        <button
+                          key={w}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setWaterBrush(w)}
+                        >
+                          {WATER_TYPE_NAMES[w]}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  {paintWaterStaged.size > 0 && (
+                    <>
+                      <p className="text-xs text-amber-600">{paintWaterStaged.size} staged</p>
+                      <Button size="sm" className="h-6 text-xs" onClick={saveWaterPaint}>
+                        Save to .map
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting}>
+                    {paintWaterStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Flood-fill water (click a tile at level 0 or lower)"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); setWaterBrush(1) }}
+                >
+                  <Droplets className="h-3.5 w-3.5" />
+                  Water
                 </Button>
               )}
             </div>
@@ -1910,7 +2179,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               className={`absolute inset-0 touch-none select-none ${
                 isPanning || moveState
                   ? 'cursor-move'
-                  : placingSid || placingCreatureId || paintBiome !== null
+                  : placingSid || placingCreatureId || paintBiome !== null || levelBrush !== null || waterBrush !== null
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
@@ -2003,7 +2272,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || paintBiome !== null
+                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || paintBiome !== null || levelBrush !== null || waterBrush !== null
                   // Staged-edit visual treatment (issue #195 Phase 1) — a
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
@@ -2036,7 +2305,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             : undefined,
                         outlineOffset: isDeleting || isRotating ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && paintBiome === null) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && paintBiome === null && levelBrush === null && waterBrush === null) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -2171,6 +2440,27 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     tinted green, same stacking as the other overlays above. */}
                 <canvas
                   ref={setPaintObjectCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
+
+                {/* Level/Water "pending" outline indicators (issue #193
+                    Phase 2) — same stacking as the overlays above. */}
+                <canvas
+                  ref={setPaintLevelCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    imageRendering: 'pixelated',
+                  }}
+                />
+                <canvas
+                  ref={setPaintWaterCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,

@@ -1522,29 +1522,56 @@ export function paintObjects(
   return { block1Chunk: b1, block2Chunk: b2, newIds }
 }
 
-// ─── Paint terrain (issue #167 Phase D) ─────────────────────────────────────
-// `tilesMap` is a flat number[] (biome id 1-7), one entry per tile — the
-// simplest possible case here: parse the span as number[], overwrite the
-// touched indices, re-stringify. Never touches objects[]/squads[]/markers[]
-// or any objectsProperties.* table (a different top-level array entirely),
-// so by construction this can't overwrite or interact with a placed object.
-// Takes a whole batch of changes in one call, not one call per tile — a
-// paint/drag stroke across N tiles should produce one file write, not N.
+// ─── Paint terrain / level / water (issue #167 Phase D, generalized #193
+// Phase 2) — `tilesMap`/`levelsMap`/`waterMap` are all flat number[] arrays,
+// one entry per tile, same row-major indexing (see CLAUDE.md's "Object
+// footprint / rotation / terrain encoding" section) — the simplest possible
+// case here: parse the named array's span, overwrite the touched indices,
+// re-stringify. Never touches objects[]/squads[]/markers[] or any
+// objectsProperties.* table (a different top-level array entirely), so by
+// construction this can't overwrite or interact with a placed object. Takes
+// a whole batch of changes in one call, not one call per tile — a paint/
+// drag stroke (or a flood-fill) across N tiles should produce one file
+// write, not N.
+
+/** Overwrite `arrayKey`'s value at every `{node, value}` in `changes`. Shared
+ *  by paintTerrainTiles/paintLevelTiles/paintWaterTiles below — the only
+ *  thing that varies between them is which flat array they target. */
+function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap', changes: { node: number; value: number }[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, arrayKey)
+  const values = JSON.parse(span) as number[]
+  for (const { node, value } of changes) {
+    if (node < 0 || node >= values.length) {
+      throw new Error(`Node ${node} is out of bounds for ${arrayKey} (length ${values.length})`)
+    }
+    values[node] = value
+  }
+  const patchedSpan = JSON.stringify(values)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
 
 /** Overwrite `tilesMap[node]` for every `{node, biomeId}` in `changes`. */
 export function paintTerrainTiles(chunk: Uint8Array, changes: { node: number; biomeId: number }[]): Uint8Array {
-  const text = new TextDecoder('utf-8').decode(chunk)
-  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'tilesMap')
-  const tiles = JSON.parse(span) as number[]
-  for (const { node, biomeId } of changes) {
-    if (node < 0 || node >= tiles.length) {
-      throw new Error(`Node ${node} is out of bounds for tilesMap (length ${tiles.length})`)
-    }
-    tiles[node] = biomeId
-  }
-  const patchedSpan = JSON.stringify(tiles)
-  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
-  return new TextEncoder().encode(patchedText)
+  return paintFlatArrayTiles(chunk, 'tilesMap', changes.map(({ node, biomeId }) => ({ node, value: biomeId })))
+}
+
+/** Overwrite `levelsMap[node]` for every `{node, level}` in `changes`
+ *  (level is -1/0/1 — see CLAUDE.md). Deliberately does not touch
+ *  `climbsMap` (ramp markers) — placing/adjusting a ramp at a new level
+ *  boundary is a separate, not-yet-built tool; painting a level change here
+ *  can produce a boundary with no ramp, same as it's possible to do by hand
+ *  in GME. */
+export function paintLevelTiles(chunk: Uint8Array, changes: { node: number; level: number }[]): Uint8Array {
+  return paintFlatArrayTiles(chunk, 'levelsMap', changes.map(({ node, level }) => ({ node, value: level })))
+}
+
+/** Overwrite `waterMap[node]` for every `{node, waterId}` in `changes`
+ *  (waterId 0 = none, 1-7 = a themed water variant — Core/DB/map/waters/
+ *  waters.json). */
+export function paintWaterTiles(chunk: Uint8Array, changes: { node: number; waterId: number }[]): Uint8Array {
+  return paintFlatArrayTiles(chunk, 'waterMap', changes.map(({ node, waterId }) => ({ node, value: waterId })))
 }
 
 // ─── Create a new blank map ──────────────────────────────────────────────────
