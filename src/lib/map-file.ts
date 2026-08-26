@@ -8,6 +8,8 @@ import { extractMapContext, extractScenario } from '@/lib/map-extract'
 import { importScenario } from '@/lib/import'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { readMapContainer, gunzipBytes } from '@/lib/map-write'
 import { logInfo, logWarn } from '@/lib/logger'
 import { DEBUG } from '@/lib/debug'
 
@@ -66,6 +68,15 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
   // ── Parse binary ────────────────────────────────────────────────────────────
   const raw = await parseMapFile(buffer)
   logInfo(`Parsed .map: ${name}`)
+
+  // ── In-memory document (issue #195 follow-up) ────────────────────────────
+  // A second, independent parse of the same bytes via map-write.ts's own
+  // reader — deliberately duplicated rather than shared with parseMapFile
+  // above, matching this codebase's existing "neither parser is safe to
+  // build the other on" convention (see map-write.ts's header comment).
+  // Every Map Grid edit applies to this container directly from now on;
+  // nothing touches disk until an explicit Save.
+  useMapDocumentStore.getState().loadContainer(readMapContainer(await gunzipBytes(new Uint8Array(buffer))))
   if (DEBUG.mapLoading) {
     console.log('[map-file] raw blocks:', {
       block1Keys: Object.keys(raw.block1),

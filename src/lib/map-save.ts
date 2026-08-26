@@ -1,10 +1,16 @@
-// ─── Write entity SID edits (and no-op repacks) back to the .map file ────────
-// Desktop-only test feature — see issue #120: this exists to answer, once and
-// for all, whether the game accepts a map this tool has re-packed, given that
-// the `.map` header carries a hash whose algorithm is unknown. Every write
-// re-reads the file from disk (mapFilePath is all the store keeps — the raw
-// buffer is intentionally not retained, see map-file.ts), verifies the
-// rebuilt bytes before ever touching disk, and keeps a one-time backup.
+// ─── Apply edits to a `.map` container, and persist that container to disk ──
+// Split in two (issue #195 follow-up: in-memory document model) so an edit
+// can be applied to whatever container is currently held in memory
+// (`useMapDocumentStore`) without touching disk at all, and disk is only
+// ever touched by an explicit Save. `applyMapEdit` and `writeMapChunks`
+// below are exactly the two halves `saveMapFile` (issue #120's original
+// "does the game accept a repacked map" test feature) used to do as one
+// atomic disk-read-then-disk-write operation — the verify-before-commit
+// rigor is unchanged, it just now verifies against an in-memory container
+// instead of a freshly-read one. `saveMapFile` itself survives as a thin
+// read-apply-write wrapper, since Toolbar.tsx's debug "re-save unchanged"
+// menu item (issue #120's original no-op-repack test) still needs exactly
+// that one-shot shape and has nothing to do with this feature.
 
 import { readBinaryFile, writeBinaryFile, checkFileExists } from '@/lib/native-fs'
 import {
@@ -92,14 +98,19 @@ function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
     : new Set([1])
 }
 
-export interface MapSaveResult {
-  backupPath: string
-  backupCreated: boolean
-  bytesWritten: number
+export interface ApplyMapEditResult {
+  /** The new container — apply's output never mutates the input container. */
+  container: MapContainer
   /** The id allocated by an 'addObject'/'addMarker' edit — absent for every
    *  other edit kind. Lets the caller immediately reference/select the new
    *  instance without a second read of the map. */
   newId?: number
+}
+
+export interface MapSaveResult {
+  backupPath: string
+  backupCreated: boolean
+  bytesWritten: number
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
@@ -119,24 +130,13 @@ function assertAllChunksAreJson(container: MapContainer) {
 }
 
 /**
- * Re-read the .map at `mapFilePath`, optionally apply one edit to block 2
- * (rename a propEntities SID, or set a propsName display name), verify the
- * rebuilt bytes before writing anything, back up the original (once — never
- * overwrites an existing .bak), write the result, then re-parse what actually
- * landed on disk back into the map-context store.
- *
- * Called with no `edit` this is the no-op "re-save unchanged" control action —
- * same write path, zero semantic changes, used to isolate whether re-packing
- * itself (independent of any edit) is accepted by the game.
+ * Apply one edit to an in-memory `.map` container (or, called with no
+ * `edit`, just a no-op "rebuild and verify unchanged" pass), verify the
+ * rebuilt bytes before returning. Never touches disk — see `writeMapChunks`
+ * for that. Throws (leaving the caller's own container reference untouched)
+ * if the edit's own semantic assertion fails against the rebuilt bytes.
  */
-export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Promise<MapSaveResult> {
-  const originalBuffer = await readBinaryFile(mapFilePath)
-  if (!originalBuffer) throw new Error(`Could not read "${mapFilePath}"`)
-  const originalBytes = new Uint8Array(originalBuffer)
-
-  const decompressed = await gunzipBytes(originalBytes)
-  const container = readMapContainer(decompressed)
-
+export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): ApplyMapEditResult {
   // Both edit kinds target block 2 (chunks[1]) — anything with fewer chunks
   // than that has nothing for either to target.
   if (container.chunks.length < 2) {
@@ -222,7 +222,7 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
 
-  // ── Verify before touching disk ──────────────────────────────────────────
+  // ── Verify before returning ───────────────────────────────────────────────
   const reparsed = readMapContainer(rebuiltDecompressed)
 
   if (reparsed.chunks.length !== container.chunks.length) {
@@ -566,21 +566,51 @@ export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Prom
     }
   }
 
-  const gzipped = await gzipBytes(rebuiltDecompressed)
+  return { container: reparsed, newId: addedId }
+}
 
-  // ── Back up the original (once) ──────────────────────────────────────────
+/**
+ * Persist a `.map` container to disk: gzip, back up the file currently at
+ * `mapFilePath` (once — never overwrites an existing `.bak`, and always
+ * against whatever's actually on disk right now, not a possibly-stale
+ * in-memory snapshot), write the result, then re-parse what actually landed
+ * on disk back into the map-context store.
+ */
+export async function writeMapChunks(mapFilePath: string, container: MapContainer): Promise<MapSaveResult> {
+  const gzipped = await gzipBytes(buildMapContainer(container))
+
   const backupPath = `${mapFilePath}.bak`
   const backupCreated = !(await checkFileExists(backupPath))
   if (backupCreated) {
-    await writeBinaryFile(backupPath, originalBytes)
+    const currentBuffer = await readBinaryFile(mapFilePath)
+    if (currentBuffer) await writeBinaryFile(backupPath, new Uint8Array(currentBuffer))
   }
 
-  // ── Write ─────────────────────────────────────────────────────────────────
   await writeBinaryFile(mapFilePath, gzipped)
 
-  // ── Reflect what's actually on disk in the sidebar ───────────────────────
   const reparsedBlocks = await parseMapFile(toArrayBuffer(gzipped))
   useMapContextStore.getState().setContext(extractMapContext(reparsedBlocks))
 
-  return { backupPath, backupCreated, bytesWritten: gzipped.length, newId: addedId }
+  return { backupPath, backupCreated, bytesWritten: gzipped.length }
+}
+
+/**
+ * Read `.map` at `mapFilePath`, apply one edit (or, with no `edit`, just a
+ * no-op "re-save unchanged" control action — same write path, zero semantic
+ * changes, used to isolate whether re-packing itself is accepted by the
+ * game), and write the result — the one-shot read+apply+write combination
+ * `applyMapEdit`/`writeMapChunks` split apart. Kept only for Toolbar.tsx's
+ * debug "Re-save map (no changes)" menu item (issue #120's original test);
+ * everything else should hold its own `MapContainer` in memory
+ * (`useMapDocumentStore`) and call `applyMapEdit`/`writeMapChunks` directly.
+ */
+export async function saveMapFile(mapFilePath: string, edit?: MapSaveEdit): Promise<MapSaveResult & { newId?: number }> {
+  const originalBuffer = await readBinaryFile(mapFilePath)
+  if (!originalBuffer) throw new Error(`Could not read "${mapFilePath}"`)
+  const decompressed = await gunzipBytes(new Uint8Array(originalBuffer))
+  const container = readMapContainer(decompressed)
+
+  const { container: editedContainer, newId } = applyMapEdit(container, edit)
+  const result = await writeMapChunks(mapFilePath, editedContainer)
+  return { ...result, newId }
 }
