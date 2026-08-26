@@ -1,7 +1,9 @@
 // ─── Create New Map ──────────────────────────────────────────────────────────
-// Tauri-only (needs real filesystem write access to produce a new .map file
-// from src-tauri/resources/template.map — see create-map.ts's own doc
-// comment for why this can't work purely as an in-browser feature). Picks a
+// Tauri-only (needs real filesystem read access to the bundled template at
+// src-tauri/resources/template.map — see create-map.ts's own doc comment
+// for why this can't work purely as an in-browser feature). Creation itself
+// doesn't write anything to disk — the resulting map lives entirely
+// in-memory until the user's first Save/Save As. Picks a
 // size and terrain biome and hands off to createNewMap() — always with zero
 // players. Deliberately no player-count/spawner UI here: adding a
 // city-spawner/hero-spawner already auto-grows spawns.playersCount and
@@ -43,7 +45,7 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
     setCreating(true)
     try {
       const result = await createNewMap({ mapName, sizeX: size, sizeZ: size, biomeId, players: [] })
-      if (!result) return // cancelled, or not Tauri
+      if (!result) return // not Tauri — no filesystem access to read the template
       logInfo(`Created new map: ${result.name}`)
       onCreated({ name: result.name, warnings: result.warnings })
       onOpenChange(false)

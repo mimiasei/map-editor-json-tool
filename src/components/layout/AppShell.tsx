@@ -6,7 +6,8 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
-import { useMapDocumentStore, commitMapIfDirty } from '@/store/useMapDocumentStore'
+import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { commitMapWithPathPrompt } from '@/lib/map-file'
 import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
 import { logInfo, logError } from '@/lib/logger'
@@ -88,7 +89,6 @@ export default function AppShell() {
     currentFilePath,
     currentFileName,
     sidecarPath,
-    mapFilePath,
     mapName,
     dialogs,
     localization,
@@ -240,7 +240,6 @@ export default function AppShell() {
   const currentFilePathRef = useRef(currentFilePath)
   const currentFileNameRef = useRef(currentFileName)
   const sidecarPathRef     = useRef(sidecarPath)
-  const mapFilePathRef     = useRef(mapFilePath)
   const mapNameRef         = useRef(mapName)
   const dialogsRef         = useRef(dialogs)
   const localizationRef    = useRef(localization)
@@ -255,7 +254,6 @@ export default function AppShell() {
   useEffect(() => { currentFilePathRef.current  = currentFilePath },  [currentFilePath])
   useEffect(() => { currentFileNameRef.current  = currentFileName },  [currentFileName])
   useEffect(() => { sidecarPathRef.current      = sidecarPath },      [sidecarPath])
-  useEffect(() => { mapFilePathRef.current      = mapFilePath },      [mapFilePath])
   useEffect(() => { mapNameRef.current          = mapName },          [mapName])
   useEffect(() => { dialogsRef.current          = dialogs },          [dialogs])
   useEffect(() => { localizationRef.current     = localization },     [localization])
@@ -300,8 +298,14 @@ export default function AppShell() {
   // nothing ever dispatches 'oe:save', had the correct/complete version) and
   // the sidecarPath branch a .map-anchored project needs — both fixed here
   // while unifying, matching Toolbar.tsx's own logic exactly.
+  // commitMapWithPathPrompt (map-file.ts) additionally prompts for a save
+  // location the very first time a never-saved-to-disk .map document (e.g.
+  // one just created via New Map) is committed — plain Save's first real
+  // write behaves exactly like Save As, instead of the old commitMapIfDirty
+  // silently dropping the in-memory .map edits on the floor when no path
+  // was known.
   const handleSave = useCallback(async () => {
-    await commitMapIfDirty(mapFilePathRef.current)
+    if (!(await commitMapWithPathPrompt())) return // user cancelled the .map save-location prompt — abort the whole Save
     if (isScenarioEmpty(
       scenarioRef.current, dialogsRef.current, localizationRef.current, translationsRef.current,
       customHeroesRef.current, customMapObjectsRef.current, customArtifactsRef.current, customBuffsRef.current,

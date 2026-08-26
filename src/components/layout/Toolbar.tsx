@@ -12,7 +12,7 @@ import { validateScenario } from '@/lib/validate'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
-import { openAndLoadMapFile } from '@/lib/map-file'
+import { openAndLoadMapFile, commitMapWithPathPrompt } from '@/lib/map-file'
 import NewMapDialog from '@/components/common/NewMapDialog'
 import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
@@ -333,9 +333,12 @@ export default function Toolbar({
 
   // ── Save As ───────────────────────────────────────────────────────────────────
   // Always shows a file-save dialog, even when a .map/sidecar path is known.
-  // Also commits any pending Map Grid edits, same as Save.
+  // Also commits any pending Map Grid edits, same as Save — via
+  // commitMapWithPathPrompt (map-file.ts), which itself prompts for a .map
+  // save location whenever none is known yet (a never-saved map), same
+  // behavior plain Save now has for that same first-save case.
   const handleExport = async () => {
-    await commitMapIfDirty(mapFilePath)
+    if (!(await commitMapWithPathPrompt())) return // user cancelled the .map save-location prompt — abort the whole Save As
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
