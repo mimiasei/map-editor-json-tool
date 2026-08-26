@@ -265,11 +265,125 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     saveMapGridSettings(next)
   }
 
+  // ── issue #195 Phase 2: unified staged-edit model ───────────────────────
+  // Place creature (type-2 squad) and Place zone (marker) both used to write
+  // to disk immediately on click, with no staging/undo — the exact
+  // inconsistency this issue's own audit flagged. They now stage into these
+  // two Maps (node -> template/zone sid), same shape and same "stage
+  // locally, then explicit Save" convention paintObjectStaged already
+  // established for type-0 Add — there's no dedicated preview overlay for
+  // either, since both feed the same tileIndex/icon pipeline as committed
+  // objects via previewPlacedObjects below (a real object icon, not a
+  // bespoke swatch).
+  const [pendingCreatureStaged, setPendingCreatureStaged] = useState<Map<number, string>>(new Map())
+  const [pendingZoneStaged, setPendingZoneStaged] = useState<Map<number, string>>(new Map())
+
+  // Every "spawner/entity property" edit (owner, faction, spawn-hero, portal
+  // target, guard squad, reward params, ...) used to write to disk
+  // immediately on every onChange, with zero staging/undo — the other half
+  // of the same inconsistency. They now queue here instead; queueFieldEdit
+  // (declared further down, after the handlers it's used by are grouped)
+  // dedupes by (kind, entityType, entityId), merging a repeated edit's own
+  // fields onto the existing pending entry rather than appending a second
+  // one — needed because setPortalTarget's `patch` is a PARTIAL update
+  // (targetIdx and isActive come from two separate UI controls), so a naive
+  // full-replace on the second call would silently drop the first field.
+  type FieldEdit = Extract<import('@/lib/map-save').MapSaveEdit,
+    | { kind: 'setNoCombineGeometry' } | { kind: 'assignEntitySid' } | { kind: 'setSpawnerPlayerType' }
+    | { kind: 'swapSpawnerOwner' } | { kind: 'setCityFaction' } | { kind: 'setCitySpawnHero' }
+    | { kind: 'setHeroSid' } | { kind: 'setPortalTarget' } | { kind: 'setGuardSquad' }
+    | { kind: 'setCityGarrison' } | { kind: 'setRandomSquadValue' } | { kind: 'setRewardParams' }
+  >
+  const [pendingFieldEdits, setPendingFieldEdits] = useState<FieldEdit[]>([])
+
+  // A staged edit for an instance not yet reflected in `placedObjects` (Move/
+  // Delete already exist there, but a spawner-field edit for one of THIS
+  // session's own pending creature/zone adds can't target a real id yet —
+  // there's no UI to reach that state today, so queueFieldEdit is only ever
+  // called with an id already present in placedObjects; this merge is for
+  // rendering the LATEST pending value, not for resolving cross-edit
+  // dependencies).
+  const patchPlacedObjectPreview = (obj: PlacedObject, edit: FieldEdit): PlacedObject => {
+    switch (edit.kind) {
+      case 'setNoCombineGeometry':
+        return { ...obj, noCombineGeometry: edit.value }
+      case 'assignEntitySid':
+        return { ...obj, entitySid: edit.sid }
+      case 'setSpawnerPlayerType':
+        return obj.spawnerInfo ? { ...obj, spawnerInfo: { ...obj.spawnerInfo, spawnType: edit.spawnType } } : obj
+      case 'swapSpawnerOwner':
+        return obj.spawnerInfo ? { ...obj, spawnerInfo: { ...obj.spawnerInfo, owner: edit.newOwner } } : obj
+      case 'setCityFaction':
+        return obj.spawnerInfo
+          ? { ...obj, spawnerInfo: { ...obj.spawnerInfo, factionSid: edit.factionSid === '' ? undefined : edit.factionSid } }
+          : obj
+      case 'setCitySpawnHero':
+        return obj.spawnerInfo ? { ...obj, spawnerInfo: { ...obj.spawnerInfo, spawnHero: edit.spawnHero } } : obj
+      case 'setHeroSid':
+        return obj.spawnerInfo ? { ...obj, spawnerInfo: { ...obj.spawnerInfo, heroSid: edit.heroSid } } : obj
+      case 'setPortalTarget':
+        // targetNode/linkKind are derived from every portal's state at
+        // extractMapContext time, not patchable in isolation here — this
+        // preview updates targetIdx/isActive (what the dropdown/checkbox
+        // actually read) and leaves the derived two-way/one-way badge
+        // showing its pre-edit value until Save re-reads from disk.
+        return obj.portalInfo
+          ? { ...obj, portalInfo: { ...obj.portalInfo, ...(edit.targetIdx !== undefined ? { targetIdx: edit.targetIdx } : {}), ...(edit.isActive !== undefined ? { isActive: edit.isActive } : {}) } }
+          : obj
+      case 'setGuardSquad':
+        return { ...obj, guardUnitProps: edit.unitProps }
+      case 'setCityGarrison':
+        return { ...obj, citySquadSids: edit.sids }
+      case 'setRandomSquadValue':
+        return { ...obj, randomSquadValue: edit.requestedValue }
+      case 'setRewardParams':
+        return { ...obj, rewardParams: edit.parameters }
+      default:
+        return obj
+    }
+  }
+
+  // Merges every pending Add (creature/zone) and field edit onto the
+  // committed placedObjects list — the single source both the grid's icon
+  // rendering (via tileIndex below) and the info panel (selectedItems) read,
+  // so "what's on screen" and "what Save will write" never disagree, same
+  // merge-before-render principle issue #195 Phase 1 established for
+  // Terrain/Objects. Pending creature/zone adds get a large negative
+  // synthetic id (never collides with a real, disk-allocated id, which only
+  // ever grows from 0) so they render as real objects/markers through the
+  // existing pipeline rather than a bespoke overlay.
+  const previewPlacedObjects = useMemo(() => {
+    if (pendingFieldEdits.length === 0 && pendingCreatureStaged.size === 0 && pendingZoneStaged.size === 0) {
+      return placedObjects
+    }
+    let list = placedObjects
+    if (pendingFieldEdits.length > 0) {
+      list = list.map((obj) => {
+        let patched = obj
+        for (const edit of pendingFieldEdits) {
+          if (edit.entityType !== obj.type || edit.entityId !== obj.id) continue
+          patched = patchPlacedObjectPreview(patched, edit)
+        }
+        return patched
+      })
+    }
+    const additions: PlacedObject[] = []
+    for (const [node, sid] of pendingCreatureStaged) {
+      const id = -1_000_000 - node
+      additions.push({ key: `2:${id}`, type: 2, id, sid, x: node % sizeX, z: Math.floor(node / sizeX), node })
+    }
+    for (const [node, sid] of pendingZoneStaged) {
+      const id = -2_000_000 - node
+      additions.push({ key: `1:${id}`, type: 1, id, sid, x: node % sizeX, z: Math.floor(node / sizeX), node })
+    }
+    return additions.length > 0 ? [...list, ...additions] : list
+  }, [placedObjects, pendingFieldEdits, pendingCreatureStaged, pendingZoneStaged, sizeX])
+
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
   // thousand at most, never the full sizeX*sizeZ space) ──────────────────────
   const tileIndex = useMemo(
-    () => buildTileIndex(placedObjects, catalog, sizeX, sizeZ),
-    [placedObjects, catalog, sizeX, sizeZ],
+    () => buildTileIndex(previewPlacedObjects, catalog, sizeX, sizeZ),
+    [previewPlacedObjects, catalog, sizeX, sizeZ],
   )
 
   // Real footprint cells per placed object (issue #167's multi-tile
@@ -318,8 +432,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // elevationTintMap is declared further down, after paintLevelStaged exists
   // (issue #193 Phase 2 merges staged Level paint into it) — a memo's
   // dependency array can't forward-reference a binding declared later in
-  // the component body, same reasoning as the staged-preview memos in the
-  // savePaintObjects area (see that comment for the fuller explanation).
+  // the component body, same reasoning as the staged-preview memos further
+  // down (see saveAllPending's doc comment for the fuller explanation).
 
   // Ramp/slope direction arrows (src/lib/map-grid/ramp-direction.ts) — folded
   // into the same "Elevation shading" toggle rather than a separate setting,
@@ -479,11 +593,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     paintObjectStaged: Map<number, string>
     paintLevelStaged: Map<number, -1 | 0 | 1>
     paintWaterStaged: Map<number, number>
+    pendingCreatureStaged: Map<number, string>
+    pendingZoneStaged: Map<number, string>
+    pendingFieldEdits: FieldEdit[]
     moveState: { key: string; type: 0 | 1 | 2; id: number; sid: string; node: number } | null
     rotateState: { key: string; id: number; rotation: number } | null
+    deleteState: { key: string; type: 0 | 1 | 2; id: number } | null
   }
   const stagedSnapshotRef = useRef<StagedSnapshot>({
-    paintStaged: new Map(), paintObjectStaged: new Map(), paintLevelStaged: new Map(), paintWaterStaged: new Map(), moveState: null, rotateState: null,
+    paintStaged: new Map(), paintObjectStaged: new Map(), paintLevelStaged: new Map(), paintWaterStaged: new Map(),
+    pendingCreatureStaged: new Map(), pendingZoneStaged: new Map(), pendingFieldEdits: [],
+    moveState: null, rotateState: null, deleteState: null,
   })
   const [undoStack, setUndoStack] = useState<StagedSnapshot[]>([])
   const pushUndo = useCallback(() => {
@@ -535,17 +655,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return next
     })
   }, [paintStaged, pushUndo, brushRadius, sizeX, sizeZ])
-  const savePaint = async () => {
-    if (paintStaged.size === 0 || !mapFilePath) return
-    const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintTerrain', changes })
-      setPaintStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint terrain: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // Save is unified (issue #195 Phase 2) — see saveAllPending, declared once
+  // every staged buffer exists further down.
 
   // Terrain bucket-fill (issue #193 Phase 3) — click a tile, flood-fill
   // every contiguous tile of ITS CURRENT biome (committed, not staged —
@@ -615,17 +726,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return next
     })
   }, [paintLevelStaged, pushUndo, brushRadius, sizeX, sizeZ])
-  const saveLevelPaint = async () => {
-    if (paintLevelStaged.size === 0 || !mapFilePath) return
-    const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintLevel', changes })
-      setPaintLevelStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint level: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // Save is unified — see saveAllPending.
 
   const stopWaterPainting = () => {
     setWaterBrush(null)
@@ -647,17 +748,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return next
     })
   }, [levelsMap, sizeX, sizeZ, pushUndo])
-  const saveWaterPaint = async () => {
-    if (paintWaterStaged.size === 0 || !mapFilePath) return
-    const changes = [...paintWaterStaged.entries()].map(([node, waterId]) => ({ node, waterId }))
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintWater', changes })
-      setPaintWaterStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint water: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // Save is unified — see saveAllPending.
 
   const fitToViewport = useCallback(() => {
     if (!viewportEl || sizeX <= 0 || sizeZ <= 0) return
@@ -1478,110 +1569,55 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
   const canEditEntities = isTauri() && !!mapFilePath
 
-  const handleSetNoCombineGeometry = async (item: PlacedObject, value: boolean) => {
+  // issue #195 Phase 2: every spawner/entity-property handler below used to
+  // write to disk immediately on its own onChange (zero staging, zero
+  // undo — the exact inconsistency issue #195 was filed to fix). They now
+  // queue onto pendingFieldEdits via queueFieldEdit instead; the actual
+  // write happens once, later, from saveAllPending — see that function's
+  // own doc comment for the full flush order/rationale.
+  const queueFieldEdit = useCallback((edit: FieldEdit) => {
     if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setNoCombineGeometry', entityType: item.type, entityId: item.id, value })
-    } catch (e) {
-      logError(`Failed to set No Combine Geometry: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+    pushUndo()
+    setPendingFieldEdits((prev) => {
+      const idx = prev.findIndex((e) => e.kind === edit.kind && e.entityType === edit.entityType && e.entityId === edit.entityId)
+      if (idx === -1) return [...prev, edit]
+      // Merge, don't replace — setPortalTarget's `patch` is a partial update
+      // (targetIdx and isActive come from two separate controls); a second
+      // call with just one field shouldn't drop the other one already queued.
+      const next = prev.slice()
+      next[idx] = { ...next[idx], ...edit } as FieldEdit
+      return next
+    })
+  }, [mapFilePath, pushUndo])
 
-  const handleAssignEntitySid = async (item: PlacedObject, sid: string) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid })
-    } catch (e) {
-      logError(`Failed to assign entity SID: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  const handleSetSpawnerPlayerType = async (item: PlacedObject, spawnType: 0 | 1 | 2) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setSpawnerPlayerType', entityType: item.type, entityId: item.id, spawnType })
-    } catch (e) {
-      logError(`Failed to set spawner Player type: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  const handleSetSpawnerOwner = async (item: PlacedObject, newOwner: number) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'swapSpawnerOwner', entityType: item.type, entityId: item.id, newOwner })
-    } catch (e) {
-      logError(`Failed to reassign spawner owner: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  const handleSetCityFaction = async (item: PlacedObject, factionSid: string) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid })
-    } catch (e) {
-      logError(`Failed to set faction: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetCitySpawnHero = async (item: PlacedObject, spawnHero: boolean) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero })
-    } catch (e) {
-      logError(`Failed to toggle companion hero: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetHeroSid = async (item: PlacedObject, heroSid: string) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid })
-    } catch (e) {
-      logError(`Failed to set hero: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  const handleSetNoCombineGeometry = (item: PlacedObject, value: boolean) =>
+    queueFieldEdit({ kind: 'setNoCombineGeometry', entityType: item.type, entityId: item.id, value })
+  const handleAssignEntitySid = (item: PlacedObject, sid: string) =>
+    queueFieldEdit({ kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid })
+  const handleSetSpawnerPlayerType = (item: PlacedObject, spawnType: 0 | 1 | 2) =>
+    queueFieldEdit({ kind: 'setSpawnerPlayerType', entityType: item.type, entityId: item.id, spawnType })
+  const handleSetSpawnerOwner = (item: PlacedObject, newOwner: number) =>
+    queueFieldEdit({ kind: 'swapSpawnerOwner', entityType: item.type, entityId: item.id, newOwner })
+  const handleSetCityFaction = (item: PlacedObject, factionSid: string) =>
+    queueFieldEdit({ kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid })
+  const handleSetCitySpawnHero = (item: PlacedObject, spawnHero: boolean) =>
+    queueFieldEdit({ kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero })
+  const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
+    queueFieldEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid })
 
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
-  const handleSetPortalTarget = async (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch })
-    } catch (e) {
-      logError(`Failed to set portal target: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
+    queueFieldEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch })
   const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
 
-  const handleSetGuardSquad = async (item: PlacedObject, unitProps: { sid: string; count: number }[]) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setGuardSquad', entityType: item.type, entityId: item.id, unitProps })
-    } catch (e) {
-      logError(`Failed to set guard squad: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetCityGarrison = async (item: PlacedObject, sids: string[]) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids })
-    } catch (e) {
-      logError(`Failed to set city garrison: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetRandomSquadValue = async (item: PlacedObject, requestedValue: number) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue })
-    } catch (e) {
-      logError(`Failed to set random-squad value: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-  const handleSetRewardParams = async (item: PlacedObject, parameters: string[]) => {
-    if (!mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'setRewardParams', entityType: item.type, entityId: item.id, parameters })
-    } catch (e) {
-      logError(`Failed to set reward params: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  const handleSetGuardSquad = (item: PlacedObject, unitProps: { sid: string; count: number }[]) =>
+    queueFieldEdit({ kind: 'setGuardSquad', entityType: item.type, entityId: item.id, unitProps })
+  const handleSetCityGarrison = (item: PlacedObject, sids: string[]) =>
+    queueFieldEdit({ kind: 'setCityGarrison', entityType: item.type, entityId: item.id, sids })
+  const handleSetRandomSquadValue = (item: PlacedObject, requestedValue: number) =>
+    queueFieldEdit({ kind: 'setRandomSquadValue', entityType: item.type, entityId: item.id, requestedValue })
+  const handleSetRewardParams = (item: PlacedObject, parameters: string[]) =>
+    queueFieldEdit({ kind: 'setRewardParams', entityType: item.type, entityId: item.id, parameters })
 
   // ── Move (issue #167 Phase A) ───────────────────────────────────────────
   // One active move at a time, keyed by the moving instance's own `key`.
@@ -1610,21 +1646,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
 
-  const saveMove = async () => {
-    if (!moveState || !mapFilePath) return
-    const { type, id, node } = moveState
-    try {
-      await saveMapFile(mapFilePath, { kind: 'moveObject', entityType: type, entityId: id, newNode: node })
-      setMoveState(null)
-      setUndoStack([])
-      // Follow the moved instance to its new tile (per issue #167's "Impact
-      // on the rest of the editor" note: selectedNode is a tile index chosen
-      // before the edit, not an identity — it needs an explicit retarget).
-      selectNode(node)
-    } catch (e) {
-      logError(`Failed to move object: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // Save is unified — see saveAllPending.
 
   // ── Rotate — same "stage locally, then explicit Save to .map" convention
   // as Move/Delete. Only `objects[]` (type 0) instances ever carry a
@@ -1642,17 +1664,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     })
   }
   const cancelRotate = () => setRotateState(null)
-  const saveRotate = async () => {
-    if (!rotateState || !mapFilePath) return
-    const { id, rotation } = rotateState
-    try {
-      await saveMapFile(mapFilePath, { kind: 'rotateObject', entityId: id, newRotation: rotation })
-      setRotateState(null)
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to rotate object: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // Save is unified — see saveAllPending.
 
   // pushUndo/undoStack are declared earlier (before stagePaintNode, which
   // needs pushUndo in its own useCallback deps array — evaluated eagerly,
@@ -1661,7 +1673,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // buffers on every render — cheap (plain object assignment), and means
   // pushUndo always reads the true latest values with no stale-closure risk.
   useEffect(() => {
-    stagedSnapshotRef.current = { paintStaged, paintObjectStaged, paintLevelStaged, paintWaterStaged, moveState, rotateState }
+    stagedSnapshotRef.current = {
+      paintStaged, paintObjectStaged, paintLevelStaged, paintWaterStaged,
+      pendingCreatureStaged, pendingZoneStaged, pendingFieldEdits,
+      moveState, rotateState, deleteState,
+    }
   })
   const undoLastStagedEdit = useCallback(() => {
     setUndoStack((stack) => {
@@ -1671,8 +1687,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setPaintObjectStaged(prev.paintObjectStaged)
       setPaintLevelStaged(prev.paintLevelStaged)
       setPaintWaterStaged(prev.paintWaterStaged)
+      setPendingCreatureStaged(prev.pendingCreatureStaged)
+      setPendingZoneStaged(prev.pendingZoneStaged)
+      setPendingFieldEdits(prev.pendingFieldEdits)
       setMoveState(prev.moveState)
       setRotateState(prev.rotateState)
+      setDeleteState(prev.deleteState)
       return stack.slice(0, -1)
     })
   }, [])
@@ -1691,19 +1711,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // committing on the first click.
   const [deleteState, setDeleteState] = useState<{ key: string; type: 0 | 1 | 2; id: number } | null>(null)
   const startDelete = (item: PlacedObject) => {
+    pushUndo()
     setDeleteState({ key: item.key, type: item.type, id: item.id })
   }
   const cancelDelete = () => setDeleteState(null)
-  const saveDelete = async () => {
-    if (!deleteState || !mapFilePath) return
-    const { type, id } = deleteState
-    try {
-      await saveMapFile(mapFilePath, { kind: 'deleteObject', entityType: type, entityId: id })
-      setDeleteState(null)
-    } catch (e) {
-      logError(`Failed to delete object: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // Save is unified — see saveAllPending.
   const deleteTarget = deleteState ? { key: deleteState.key } : null
   const deleteUsageWarnings = useMemo(() => {
     if (!deleteState) return []
@@ -1711,6 +1723,132 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (!item?.entitySid) return []
     return (entityUsageListMap.get(item.entitySid) ?? []).map(describeEntityUsage)
   }, [deleteState, placedObjects, entityUsageListMap])
+
+  // ── issue #195 Phase 2: one Save, one pending-changes count, one Discard ──
+  // Replaces the ~13 separate tool-scoped Save buttons that used to exist
+  // (5 in the Paint-mode tool row, 3 in the info panel for Move/Rotate/
+  // Delete, ~12 more implicit immediate writes on every spawner-field
+  // onChange). Every staged buffer above keeps its own local shape/preview
+  // exactly as it already worked (issue #195 Phase 1's merge-before-render
+  // pattern is untouched) — this only changes WHEN each buffer's contents
+  // reach disk: no longer its own click, but this one shared action, walked
+  // sequentially so each edit/batch still goes through the existing
+  // per-edit span-patch-and-splice + verify-before-write writer unchanged
+  // (saveMapFile is called once per already-batched buffer, e.g. once for
+  // the whole paintStaged Map, not once per tile). A failure partway
+  // through stops the walk and leaves everything from that point on still
+  // pending (nothing already written gets silently retried or lost) —
+  // matches this project's "no invented recovery for an unproven scenario"
+  // convention rather than pretending a multi-write batch can be atomic.
+  const pendingCount =
+    (paintStaged.size > 0 ? 1 : 0) +
+    (paintLevelStaged.size > 0 ? 1 : 0) +
+    (paintWaterStaged.size > 0 ? 1 : 0) +
+    (paintObjectStaged.size > 0 ? 1 : 0) +
+    pendingCreatureStaged.size +
+    pendingZoneStaged.size +
+    pendingFieldEdits.length +
+    (moveState ? 1 : 0) +
+    (rotateState ? 1 : 0) +
+    (deleteState ? 1 : 0)
+
+  const [isSavingAll, setIsSavingAll] = useState(false)
+  const [saveAllError, setSaveAllError] = useState<string | null>(null)
+
+  const discardAllPending = () => {
+    setPaintStaged(new Map())
+    setPaintLevelStaged(new Map())
+    setPaintWaterStaged(new Map())
+    setPaintObjectStaged(new Map())
+    setPendingCreatureStaged(new Map())
+    setPendingZoneStaged(new Map())
+    setPendingFieldEdits([])
+    setMoveState(null)
+    setRotateState(null)
+    setDeleteState(null)
+    setUndoStack([])
+    setSaveAllError(null)
+  }
+
+  const saveAllPending = async () => {
+    if (!mapFilePath || pendingCount === 0 || isSavingAll) return
+    setIsSavingAll(true)
+    setSaveAllError(null)
+    // Any successful write below makes the pre-existing undo history unsafe
+    // to replay (a snapshot could resurrect an edit that's now already on
+    // disk as "still staged") — cleared up front, same "once persisted, no
+    // undo" boundary the one-time .bak file already represents.
+    setUndoStack([])
+    try {
+      if (paintStaged.size > 0) {
+        const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
+        await saveMapFile(mapFilePath, { kind: 'paintTerrain', changes })
+        setPaintStaged(new Map())
+      }
+      if (paintLevelStaged.size > 0) {
+        const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
+        await saveMapFile(mapFilePath, { kind: 'paintLevel', changes })
+        setPaintLevelStaged(new Map())
+      }
+      if (paintWaterStaged.size > 0) {
+        const changes = [...paintWaterStaged.entries()].map(([node, waterId]) => ({ node, waterId }))
+        await saveMapFile(mapFilePath, { kind: 'paintWater', changes })
+        setPaintWaterStaged(new Map())
+      }
+      if (paintObjectStaged.size > 0) {
+        const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid }))
+        const deletions = placedObjects
+          .filter((o) => o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
+          .map((o) => o.id)
+        await saveMapFile(mapFilePath, { kind: 'paintObjects', additions, deletions })
+        setPaintObjectStaged(new Map())
+      }
+      // addObject/addMarker add one instance per call (unlike the batch
+      // writers above) — one saveMapFile call per staged tile.
+      for (const [node, sid] of pendingCreatureStaged) {
+        await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 2, sid, node })
+        setPendingCreatureStaged((prev) => { const next = new Map(prev); next.delete(node); return next })
+      }
+      for (const [node, sid] of pendingZoneStaged) {
+        await saveMapFile(mapFilePath, { kind: 'addMarker', sid, node })
+        setPendingZoneStaged((prev) => { const next = new Map(prev); next.delete(node); return next })
+      }
+      if (moveState) {
+        await saveMapFile(mapFilePath, { kind: 'moveObject', entityType: moveState.type, entityId: moveState.id, newNode: moveState.node })
+        // Follow the moved instance to its new tile (per issue #167's
+        // "Impact on the rest of the editor" note: selectedNode is a tile
+        // index chosen before the edit, not an identity — needs a retarget).
+        selectNode(moveState.node)
+        setMoveState(null)
+      }
+      if (rotateState) {
+        await saveMapFile(mapFilePath, { kind: 'rotateObject', entityId: rotateState.id, newRotation: rotateState.rotation })
+        setRotateState(null)
+      }
+      // Field edits before Delete: if a user staged both a field edit and a
+      // delete for the same instance in one session, the field edit should
+      // land (harmlessly) before the delete removes it, not fail against an
+      // instance an earlier step in this same walk already removed.
+      for (const edit of pendingFieldEdits) {
+        await saveMapFile(mapFilePath, edit)
+        setPendingFieldEdits((prev) => prev.filter((e) => e !== edit))
+      }
+      if (deleteState) {
+        await saveMapFile(mapFilePath, { kind: 'deleteObject', entityType: deleteState.type, entityId: deleteState.id })
+        setDeleteState(null)
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      setSaveAllError(message)
+      logError(`Failed to save pending Map Grid edits: ${message}`)
+    } finally {
+      setIsSavingAll(false)
+    }
+  }
+
+  // previewPlacedObjects/patchPlacedObjectPreview live up near tileIndex
+  // (both need to exist before that useMemo); queueFieldEdit lives up near
+  // the field-edit handlers it's used by, further up in the component body.
 
   // Arrow-key nudging (per the UX research in issue #167): while a move is
   // active, arrow keys adjust the staged destination by one tile — cheap,
@@ -1823,13 +1961,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // click already commits immediately rather than staging.
   const [placingZoneSid, setPlacingZoneSid] = useState<string | null>(null)
   const stopPlacingZone = () => setPlacingZoneSid(null)
-  const placeZoneAt = async (node: number) => {
-    if (!placingZoneSid || !mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'addMarker', sid: placingZoneSid, node })
-    } catch (e) {
-      logError(`Failed to place zone: ${e instanceof Error ? e.message : String(e)}`)
-    }
+  // issue #195 Phase 2: stages instead of writing immediately — see
+  // pendingZoneStaged's own doc comment up near tileIndex.
+  const placeZoneAt = (node: number) => {
+    if (!placingZoneSid) return
+    pushUndo()
+    setPendingZoneStaged((prev) => new Map(prev).set(node, placingZoneSid))
   }
   const placingCreatureTemplateSid = useMemo(() => {
     if (!placingCreatureId) return null
@@ -1852,22 +1989,30 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
 
-  const placeAt = async (node: number) => {
-    if (!placingSid || !mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 0, sid: placingSid, node })
-    } catch (e) {
-      logError(`Failed to place object: ${e instanceof Error ? e.message : String(e)}`)
-    }
+  // issue #195 Phase 2: a plain (non-dragged) click now stages into
+  // paintObjectStaged too, via stageObjectPaint (declared below — safe to
+  // reference here since placeAt's BODY only runs when actually called from
+  // an event handler, well after stageObjectPaint's own `const` exists;
+  // unlike a hook's dependency array, this isn't evaluated at placeAt's own
+  // definition time). Single-click Add and drag-to-paint were already the
+  // same underlying write (addObject vs paintObjects, both just staged
+  // one-at-a-time or in bulk) — sharing one buffer means Add now also
+  // respects the same blocked-tile check drag-paint already had (previously
+  // absent for a single click), a reasonable side effect of true unification
+  // rather than a deliberate new restriction.
+  const placeAt = (node: number) => {
+    if (!placingSid) return
+    stageObjectPaint(node, placingSid)
   }
 
-  const placeCreatureAt = async (node: number) => {
-    if (!placingCreatureTemplateSid || !mapFilePath) return
-    try {
-      await saveMapFile(mapFilePath, { kind: 'addObject', entityType: 2, sid: placingCreatureTemplateSid, node })
-    } catch (e) {
-      logError(`Failed to place unit: ${e instanceof Error ? e.message : String(e)}`)
-    }
+  // issue #195 Phase 2: stages instead of writing immediately — see
+  // pendingCreatureStaged's own doc comment up near tileIndex. Squads have
+  // no footprint template (always single-tile), so no blocked-tile check —
+  // matches this handler's pre-existing behavior exactly, just deferred.
+  const placeCreatureAt = (node: number) => {
+    if (!placingCreatureTemplateSid) return
+    pushUndo()
+    setPendingCreatureStaged((prev) => new Map(prev).set(node, placingCreatureTemplateSid))
   }
 
   // ── Paint objects (map-grid painter generalized from terrain-only to any
@@ -1879,7 +2024,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // uses, plus whatever THIS stroke has staged so far) can't be painted on
   // at all; an existing non-blocking decorative instance sitting exactly on
   // a paintable tile gets overwritten (deleted, then replaced) on Save —
-  // see savePaintObjects.
+  // see saveAllPending's paintObjectStaged step.
   const isNodeBlockedForObjectPaint = useCallback((node: number): boolean => {
     if (blockedTileSet.has(node)) return true
     for (const [stagedNode, sid] of paintObjectStaged) {
@@ -1897,20 +2042,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setPaintObjectStaged((prev) => new Map(prev).set(node, sid))
   }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, paintObjectStaged, pushUndo])
 
-  const savePaintObjects = async () => {
-    if (paintObjectStaged.size === 0 || !mapFilePath) return
-    const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid }))
-    const deletions = placedObjects
-      .filter((o) => o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
-      .map((o) => o.id)
-    try {
-      await saveMapFile(mapFilePath, { kind: 'paintObjects', additions, deletions })
-      setPaintObjectStaged(new Map())
-      setUndoStack([])
-    } catch (e) {
-      logError(`Failed to paint objects: ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
+  // Save is unified — see saveAllPending.
 
   // ── Staged-edit full-fidelity preview (issue #195 Phase 1) — deliberately
   // placed here rather than up near sortedIconEntries, since a useMemo's
@@ -1919,8 +2051,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // all declared earlier in the component body but after sortedIconEntries.
 
   // Committed objects a staged Paint Objects stroke will delete on Save —
-  // mirrors savePaintObjects' own `deletions` filter exactly (two lines up)
-  // so the preview can never disagree with what Save actually does.
+  // mirrors saveAllPending's own `deletions` filter for paintObjectStaged
+  // exactly, so the preview can never disagree with what Save actually does.
   const stagedPaintObjectDeletionKeys = useMemo(() => {
     const keys = new Set<string>()
     if (paintObjectStaged.size === 0) return keys
@@ -2187,19 +2319,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     Placing… (drag to paint)
                   </Button>
                   {paintObjectStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
-                        Save to .map
-                      </Button>
-                    </>
+                    <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
                   )}
                 </div>
               ) : placingCreatureId ? (
-                <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title="Click a tile to place">
-                  <Plus className="h-3.5 w-3.5" />
-                  Placing unit…
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingCreature} title="Click a tile to place">
+                    <Plus className="h-3.5 w-3.5" />
+                    Placing unit…
+                  </Button>
+                  {pendingCreatureStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{pendingCreatureStaged.size} staged</p>
+                  )}
+                </div>
               ) : (
                 <Button
                   variant={objectBrowserOpen ? 'secondary' : 'ghost'}
@@ -2259,12 +2391,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     </button>
                   </div>
                   {paintStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={savePaint}>
-                        Save to .map
-                      </Button>
-                    </>
+                    <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
                   )}
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
                     {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
@@ -2303,12 +2430,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     ))}
                   </div>
                   {paintLevelStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={saveLevelPaint}>
-                        Save to .map
-                      </Button>
-                    </>
+                    <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
                   )}
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting}>
                     {paintLevelStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
@@ -2351,12 +2473,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     </PopoverContent>
                   </Popover>
                   {paintWaterStaged.size > 0 && (
-                    <>
-                      <p className="text-xs text-amber-600">{paintWaterStaged.size} staged</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={saveWaterPaint}>
-                        Save to .map
-                      </Button>
-                    </>
+                    <p className="text-xs text-amber-600">{paintWaterStaged.size} staged</p>
                   )}
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting}>
                     {paintWaterStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
@@ -2391,12 +2508,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         Drawing…
                       </Button>
                       {paintObjectStaged.size > 0 && (
-                        <>
-                          <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
-                          <Button size="sm" className="h-6 text-xs" onClick={savePaintObjects}>
-                            Save to .map
-                          </Button>
-                        </>
+                        <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
                       )}
                       {/* Deliberately always "Stop", never "Cancel" — unlike
                           Terrain/Level/Water's own staged buffers, this one
@@ -2432,10 +2544,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {/* Zones (issue #193 Phase 3) — thin wrapper on the
                       already-fully-built addMarker write path. */}
                   {placingZoneSid ? (
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
-                      <SquareDashed className="h-3.5 w-3.5" />
-                      Placing {placingZoneSid}…
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
+                        <SquareDashed className="h-3.5 w-3.5" />
+                        Placing {placingZoneSid}…
+                      </Button>
+                      {pendingZoneStaged.size > 0 && (
+                        <p className="text-xs text-amber-600">{pendingZoneStaged.size} staged</p>
+                      )}
+                    </div>
                   ) : (
                     <Popover>
                       <PopoverTrigger asChild>
@@ -2519,6 +2636,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </Button>
+                </div>
+              )}
+              {/* issue #195 Phase 2: the ~13 separate tool-scoped Save
+                  buttons this row and the info panel used to have are gone —
+                  every staged/pending edit above (and every spawner-field
+                  edit, queued from the info panel) now flushes from this one
+                  action. Cancel/Stop next to each individual tool above still
+                  discards just that one tool's own buffer without touching
+                  anything else pending. */}
+              <div className="flex-1" />
+              {pendingCount > 0 && (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <p className="text-xs text-amber-700 dark:text-amber-500 font-medium">{pendingCount} pending</p>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={discardAllPending} disabled={isSavingAll}>
+                    Discard
+                  </Button>
+                  <Button size="sm" className="h-6 text-xs" onClick={saveAllPending} disabled={isSavingAll}>
+                    {isSavingAll ? 'Saving…' : 'Save to .map'}
+                  </Button>
+                  {saveAllError && (
+                    <p className="text-xs text-destructive max-w-64 truncate" title={saveAllError}>{saveAllError}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -3178,16 +3317,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                   moveTarget={moveTarget}
                   onStartMove={canEditEntities ? startMove : undefined}
-                  onSaveMove={canEditEntities ? saveMove : undefined}
                   onCancelMove={canEditEntities ? cancelMove : undefined}
                   rotateTarget={rotateState}
                   onStepRotate={canEditEntities ? stepRotate : undefined}
-                  onSaveRotate={canEditEntities ? saveRotate : undefined}
                   onCancelRotate={canEditEntities ? cancelRotate : undefined}
                   deleteTarget={deleteTarget}
                   deleteUsageWarnings={deleteUsageWarnings}
                   onStartDelete={canEditEntities ? startDelete : undefined}
-                  onSaveDelete={canEditEntities ? saveDelete : undefined}
                   onCancelDelete={canEditEntities ? cancelDelete : undefined}
                 />
               ) : null}

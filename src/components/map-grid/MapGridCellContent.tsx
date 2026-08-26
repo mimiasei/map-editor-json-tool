@@ -134,8 +134,6 @@ export interface MapGridCellContentProps {
   /** Start moving `item` — enters "pick a destination" mode on the grid
    *  (click a tile, or use arrow keys) until Save/Cancel. Docked-only. */
   onStartMove?: (item: PlacedObject) => void
-  /** Write the staged destination to the .map file. Docked-only. */
-  onSaveMove?: () => void
   /** Discard the staged destination without writing anything. Docked-only. */
   onCancelMove?: () => void
   /** The parent's staged rotation, if any — only `type === 0` instances
@@ -146,8 +144,6 @@ export interface MapGridCellContentProps {
    *  staging from its current rotation if nothing is staged yet. Nothing is
    *  written until Save. Docked-only. */
   onStepRotate?: (item: PlacedObject, delta: 1 | -1) => void
-  /** Write the staged rotation to the .map file. Docked-only. */
-  onSaveRotate?: () => void
   /** Discard the staged rotation without writing anything. Docked-only. */
   onCancelRotate?: () => void
   /** The parent's active delete confirmation, if any (issue #167 Phase C) —
@@ -160,8 +156,6 @@ export interface MapGridCellContentProps {
   /** Stage a delete confirmation for `item` — nothing is written until
    *  Save. Docked-only. */
   onStartDelete?: (item: PlacedObject) => void
-  /** Write the delete to the .map file. Docked-only. */
-  onSaveDelete?: () => void
   /** Discard the staged delete without writing anything. Docked-only. */
   onCancelDelete?: () => void
 }
@@ -243,16 +237,13 @@ export default function MapGridCellContent({
   onSetRewardParams,
   moveTarget = null,
   onStartMove,
-  onSaveMove,
   onCancelMove,
   rotateTarget = null,
   onStepRotate,
-  onSaveRotate,
   onCancelRotate,
   deleteTarget = null,
   deleteUsageWarnings = [],
   onStartDelete,
-  onSaveDelete,
   onCancelDelete,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
@@ -393,12 +384,7 @@ export default function MapGridCellContent({
                     </p>
                     <div className="flex items-center gap-2">
                       {isDirty && (
-                        <>
-                          <p className="text-xs text-amber-600">Unsaved change</p>
-                          <Button size="sm" className="h-6 text-xs" onClick={onSaveMove}>
-                            Save to .map
-                          </Button>
-                        </>
+                        <p className="text-xs text-amber-600">Pending — Save to .map above</p>
                       )}
                       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelMove}>
                         Cancel
@@ -460,10 +446,7 @@ export default function MapGridCellContent({
                   )}
                   {isDirty && (
                     <>
-                      <p className="text-xs text-amber-600">Unsaved</p>
-                      <Button size="sm" className="h-6 text-xs" onClick={onSaveRotate}>
-                        Save to .map
-                      </Button>
+                      <p className="text-xs text-amber-600">Pending — Save to .map above</p>
                       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelRotate}>
                         Cancel
                       </Button>
@@ -476,10 +459,11 @@ export default function MapGridCellContent({
 
           {deleteTarget?.key === selected.key && (
             <div className="space-y-2 rounded-md border border-destructive/40 bg-destructive/5 p-2">
-              <p className="text-xs font-semibold text-destructive">Delete this object?</p>
+              <p className="text-xs font-semibold text-destructive">Staged for deletion</p>
               <p className="text-xs text-muted-foreground">
-                This removes it (and every property table row it has) from the .map file. There is no
-                undo in this app beyond the one-time .bak backup made on your next save.
+                Click "Save to .map" in the toolbar above to actually remove it (and every property
+                table row it has) from the file. There is no undo in this app beyond the one-time .bak
+                backup made on your next save.
               </p>
               {deleteUsageWarnings.length > 0 && (
                 <div className="space-y-1 rounded bg-amber-500/10 p-1.5">
@@ -493,9 +477,6 @@ export default function MapGridCellContent({
                 </div>
               )}
               <div className="flex items-center gap-2 pt-0.5">
-                <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={onSaveDelete}>
-                  Delete and save to .map
-                </Button>
                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onCancelDelete}>
                   Cancel
                 </Button>
