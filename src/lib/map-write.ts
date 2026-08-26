@@ -1617,14 +1617,43 @@ export function paintTerrainTiles(chunk: Uint8Array, changes: { node: number; bi
  *  `climbsMap` (ramp markers) — placing/adjusting a ramp at a new level
  *  boundary is a separate, not-yet-built tool; painting a level change here
  *  can produce a boundary with no ramp, same as it's possible to do by hand
- *  in GME. */
+ *  in GME.
+ *
+ *  Also clears `waterMap` at every node raised OFF level -1 (issue #195
+ *  follow-up: water is only ever paintable at level -1 in this editor now —
+ *  see paintWaterTiles's own doc comment — so raising a watered tile to 0/1
+ *  must make its water disappear, matching "the terrain underneath" rather
+ *  than leaving water floating over newly-raised land with no way to have
+ *  been painted there in the first place). */
 export function paintLevelTiles(chunk: Uint8Array, changes: { node: number; level: number }[]): Uint8Array {
-  return paintFlatArrayTiles(chunk, 'levelsMap', changes.map(({ node, level }) => ({ node, value: level })))
+  const patched = paintFlatArrayTiles(chunk, 'levelsMap', changes.map(({ node, level }) => ({ node, value: level })))
+  const clearWaterAt = changes.filter((c) => c.level !== -1).map((c) => c.node)
+  if (clearWaterAt.length === 0) return patched
+
+  const text = new TextDecoder('utf-8').decode(patched)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'waterMap')
+  const water = JSON.parse(span) as number[]
+  let changed = false
+  for (const node of clearWaterAt) {
+    if (node >= 0 && node < water.length && water[node] !== 0) {
+      water[node] = 0
+      changed = true
+    }
+  }
+  if (!changed) return patched
+  const patchedSpan = JSON.stringify(water)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
 }
 
 /** Overwrite `waterMap[node]` for every `{node, waterId}` in `changes`
  *  (waterId 0 = none, 1-7 = a themed water variant — Core/DB/map/waters/
- *  waters.json). */
+ *  waters.json). This writer itself is format-generic and doesn't enforce
+ *  it, but the Map Grid's own Water tool only ever calls this for level -1
+ *  tiles (issue #195 follow-up: user-requested restriction, tighter than
+ *  the format itself — see MapGridDialog.tsx's applyWaterFill) — the
+ *  matching cleanup direction (level raised → water cleared) lives in
+ *  paintLevelTiles above. */
 export function paintWaterTiles(chunk: Uint8Array, changes: { node: number; waterId: number }[]): Uint8Array {
   return paintFlatArrayTiles(chunk, 'waterMap', changes.map(({ node, waterId }) => ({ node, value: waterId })))
 }

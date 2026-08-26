@@ -103,6 +103,7 @@ export default function AppShell() {
     setCurrentFile,
     setSelection,
   } = useScenarioStore()
+  const mapIsDirty = useMapDocumentStore((s) => s.mapIsDirty)
 
   const [paletteOpen,   setPaletteOpen]   = useState(false)
   const [timelineOpen,  setTimelineOpen]  = useState(false)
@@ -533,6 +534,13 @@ export default function AppShell() {
           // Help menu — the Toolbar owns both dialogs, so relay rather than duplicate.
           case 'about':         window.dispatchEvent(new Event('oe:about')); break
           case 'check-updates': window.dispatchEvent(new Event('oe:check-updates')); break
+          // win.close() (defined just below) fires the same closeRequested event
+          // the window's own [x] button does — reuses that handler's dirty-check
+          // + save-prompt flow rather than duplicating it here. Safe to reference
+          // `win` ahead of its own declaration: this callback only ever RUNS once
+          // a real menu event fires, well after the enclosing async function has
+          // finished assigning it.
+          case 'quit': win.close(); break
         }
       })
 
@@ -598,13 +606,13 @@ export default function AppShell() {
         // Keep the fallback — a versionless title beats none.
       }
       const { getCurrentWindow } = await import('@tauri-apps/api/window')
-      const dirty = isDirty ? '● ' : ''
+      const dirty = (isDirty || mapIsDirty) ? '● ' : ''
       const title = currentFileName
         ? `${dirty}${currentFileName} — ${appLabel}`
         : `${dirty}${appLabel}`
       getCurrentWindow().setTitle(title)
     })()
-  }, [isDirty, currentFileName])
+  }, [isDirty, mapIsDirty, currentFileName])
 
   // ── Derived helpers ───────────────────────────────────────────────────────────
   const isUndocked = (id: string) => undocked.has(id)

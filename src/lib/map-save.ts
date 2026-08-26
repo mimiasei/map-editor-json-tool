@@ -533,11 +533,15 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       }
     }
   } else if (edit?.kind === 'paintLevel') {
-    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { levelsMap?: number[] }
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { levelsMap?: number[]; waterMap?: number[] }
     const levels = block2.levelsMap ?? []
+    const water = block2.waterMap ?? []
     for (const { node, level } of edit.changes) {
       if (levels[node] !== level) {
         throw new Error('Verification failed: painted level not reflected in the rebuilt levelsMap')
+      }
+      if (level !== -1 && water[node] !== 0) {
+        throw new Error('Verification failed: water not cleared in the rebuilt waterMap for a tile raised off level -1')
       }
     }
   } else if (edit?.kind === 'paintWater') {
