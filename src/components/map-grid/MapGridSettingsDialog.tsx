@@ -120,7 +120,11 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
           <Settings className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className={`${advancedOpen ? 'w-80' : 'w-64'} space-y-4 transition-[width]`} data-nodrag>
+      <PopoverContent
+        align="end"
+        className={`${advancedOpen ? 'w-80' : 'w-64'} space-y-4 transition-[width] max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto`}
+        data-nodrag
+      >
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Terrain opacity</Label>
