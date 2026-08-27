@@ -37,17 +37,41 @@ export function randomInRange(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1))
 }
 
+/** Weighting for the `Random` option specifically — a flat roll across
+ *  Random's own 500-15000 span gave Lethal (8001-15000 of that span, ~48%)
+ *  a wildly disproportionate chance compared to how rare a Lethal encounter
+ *  should feel scattered across a map. Reuses the named buckets' own
+ *  min/max (not Random's flat range) so a weighted pick is internally
+ *  consistent with what manually enabling e.g. just "Lethal" rolls —
+ *  user-tuned weights, not derived from any game data. */
+const RANDOM_WEIGHTED_LABELS: { label: string; weight: number }[] = [
+  { label: 'Easy', weight: 35 },
+  { label: 'Normal', weight: 30 },
+  { label: 'Difficult', weight: 20 },
+  { label: 'Impossible', weight: 10 },
+  { label: 'Lethal', weight: 5 },
+]
+
 /** Encounter tool only — multiple difficulties can be enabled at once (each
  *  placement picks one of the enabled labels at random, then rolls within
  *  its range), so one drag stroke can mix e.g. Easy and Lethal guards.
  *  `Random` is mutually exclusive with the rest (enforced by the caller
- *  that builds this array, not here) since it already spans their whole
- *  combined range. */
+ *  that builds this array, not here) and picks a weighted bucket instead of
+ *  a flat roll across its own range — see RANDOM_WEIGHTED_LABELS above. */
 export function pickSquadRange(
   enabledLabels: string[],
   rng: () => number = Math.random,
 ): { label: string; min: number; max: number } {
-  const label = enabledLabels[Math.floor(rng() * enabledLabels.length)] ?? 'Random'
+  if (enabledLabels.includes('Random')) {
+    const totalWeight = RANDOM_WEIGHTED_LABELS.reduce((sum, w) => sum + w.weight, 0)
+    let roll = rng() * totalWeight
+    for (const { label, weight } of RANDOM_WEIGHTED_LABELS) {
+      if (roll < weight) return RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === label)!
+      roll -= weight
+    }
+    return RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === 'Easy')!
+  }
+  const label = enabledLabels[Math.floor(rng() * enabledLabels.length)] ?? 'Easy'
   return RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === label) ?? RANDOM_SQUAD_DIFFICULTY_RANGES[0]
 }
 
