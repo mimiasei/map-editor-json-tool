@@ -40,10 +40,12 @@ interface Props {
    *  clash the same way, and issue #203 didn't ask for it. */
   allowHighContrastBiomes: boolean
   onAllowHighContrastBiomesChange: (value: boolean) => void
-  /** Encounter only — a RANDOM_SQUAD_DIFFICULTY_RANGES label (squad-pool.ts),
-   *  sampled for requestedValue at placement time. */
-  squadDifficulty: string
-  onSquadDifficultyChange: (label: string) => void
+  /** Encounter only — the enabled RANDOM_SQUAD_DIFFICULTY_RANGES labels
+   *  (squad-pool.ts); each placement picks one at random. 'Random' is
+   *  mutually exclusive with the rest — enforced by the toggle handler in
+   *  MapGridDialog.tsx, not here. */
+  squadDifficulties: string[]
+  onToggleSquadDifficulty: (label: string) => void
   /** Encounter only — also place a random-res pickup on the tile directly
    *  north of the squad (auto-generates a resource with a guard). */
   squadPlaceResourceAbove: boolean
@@ -95,8 +97,8 @@ export default function ToolBrushSettingsPopover({
   onBiomePurityChange,
   allowHighContrastBiomes,
   onAllowHighContrastBiomesChange,
-  squadDifficulty,
-  onSquadDifficultyChange,
+  squadDifficulties,
+  onToggleSquadDifficulty,
   squadPlaceResourceAbove,
   onSquadPlaceResourceAboveChange,
 }: Props) {
@@ -140,21 +142,27 @@ export default function ToolBrushSettingsPopover({
 
         {tool === 'squad' && (
           <div className="space-y-1.5">
-            <LabelWithTooltip tooltip="Total army value the game rolls a matching squad against — same ranges as the Value field's quick-pick buttons in Browse mode.">
+            <LabelWithTooltip tooltip="Total army value the game rolls a matching squad against — same ranges as the Value field's quick-pick buttons in Browse mode. Multiple can be on at once (each placement picks one at random); Random already covers their whole combined range, so picking it clears the rest.">
               Difficulty
             </LabelWithTooltip>
+            {/* Same on/off pill style as the Browse-mode header filters
+                (Units/Artifact pickups/...) — user-requested, the previous
+                Button variant={secondary/outline} pairing read as
+                too-similar-to-tell-apart at this size. */}
             <div className="flex flex-wrap gap-1">
               {RANDOM_SQUAD_DIFFICULTY_RANGES.map(({ label }) => (
-                <Button
+                <button
                   key={label}
                   type="button"
-                  variant={squadDifficulty === label ? 'secondary' : 'outline'}
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={() => onSquadDifficultyChange(label)}
+                  onClick={() => onToggleSquadDifficulty(label)}
+                  className={`h-6 px-2 text-xs rounded shrink-0 border transition-colors ${
+                    squadDifficulties.includes(label)
+                      ? 'bg-background text-foreground border-border'
+                      : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
+                  }`}
                 >
                   {label}
-                </Button>
+                </button>
               ))}
             </div>
           </div>

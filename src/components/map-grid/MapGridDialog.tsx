@@ -49,7 +49,7 @@ import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
 import { buildFuzzyObstaclePools, buildTreePools, computeFuzzyDistances, computeStrokeBoundingSize, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
-import { RANDOM_SQUAD_DIFFICULTY_RANGES, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
+import { pickSquadRange, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
@@ -58,6 +58,7 @@ import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type F
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
+import ToolButton from '@/components/map-grid/ToolButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
@@ -728,12 +729,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Encounter (issue #203) brush settings — declared here for the same
   // temporal-dead-zone reason as the Interactable block above, since
-  // applyRectangleFill's 'squad' branch needs them too. squadDifficulty
-  // indexes RANDOM_SQUAD_DIFFICULTY_RANGES by label; squadBiomePurity drives
-  // sampleFraction (squad-pool.ts) the same 0-1 way Obstacles/Trees/
-  // Landmark's biome-mix slider drives their own sampling.
+  // applyRectangleFill's 'squad' branch needs them too. squadDifficulties
+  // is a multi-select set of RANDOM_SQUAD_DIFFICULTY_RANGES labels — each
+  // placement picks one of the enabled labels at random (pickSquadRange,
+  // squad-pool.ts), so one stroke can mix difficulties. 'Random' is
+  // mutually exclusive with the rest (it already spans their whole
+  // combined range) — toggleSquadDifficulty below enforces that.
+  // squadBiomePurity drives sampleFraction (squad-pool.ts) the same 0-1
+  // way Obstacles/Trees/Landmark's biome-mix slider drives their own
+  // sampling.
   const [squadActive, setSquadActive] = useState(false)
-  const [squadDifficulty, setSquadDifficulty] = useState('Random')
+  const [squadDifficulties, setSquadDifficulties] = useState<string[]>(['Random'])
+  const toggleSquadDifficulty = useCallback((label: string) => {
+    setSquadDifficulties((prev) => {
+      if (label === 'Random') return ['Random']
+      const withoutRandom = prev.filter((l) => l !== 'Random')
+      const next = withoutRandom.includes(label) ? withoutRandom.filter((l) => l !== label) : [...withoutRandom, label]
+      return next.length === 0 ? ['Random'] : next
+    })
+  }, [])
   const [squadBiomePurity, setSquadBiomePurity] = useState(0.9)
   const [squadPlaceResourceAbove, setSquadPlaceResourceAbove] = useState(false)
 
@@ -794,11 +808,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     if (tool === 'squad') {
-      const range = RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === squadDifficulty) ?? RANDOM_SQUAD_DIFFICULTY_RANGES[0]
       const additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
       for (const n of nodes) {
         const biome = tilesMap[n]
         const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
+        const range = pickSquadRange(squadDifficulties)
         additions.push({ node: n, sid: 'random-squad', randomSquadOverrides: { requestedValue: randomInRange(range.min, range.max), fraction } })
         if (squadPlaceResourceAbove) {
           const z = Math.floor(n / sizeX)
@@ -827,7 +841,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     } else if (tool === 'road' && roadBrush !== null) {
       applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, sizeZ, paintBiome, levelBrush, waterBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, levelsMap, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulty, squadBiomePurity, squadPlaceResourceAbove, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, waterBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, levelsMap, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, squadBiomePurity, squadPlaceResourceAbove, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -973,7 +987,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setInteractableStaged(new Map())
   }
 
-  // ── Encounter (issue #203) — squadActive/squadDifficulty/squadBiomePurity/
+  // ── Encounter (issue #203) — squadActive/squadDifficulties/squadBiomePurity/
   // squadPlaceResourceAbove declared earlier (near interactablePools) so
   // applyRectangleFill's own 'squad' branch can reference them. Always
   // exactly one tile per position, same as Landmark/Road — a random-squad
@@ -984,7 +998,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [squadStaged, setSquadStaged] = useState<Map<number, { requestedValue: number; fraction: string }>>(new Map())
   const stageSquadNode = useCallback((node: number) => {
     if (squadStaged.has(node)) return
-    const range = RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === squadDifficulty) ?? RANDOM_SQUAD_DIFFICULTY_RANGES[0]
+    const range = pickSquadRange(squadDifficulties)
     const biome = tilesMap[node]
     const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
     setSquadStaged((prev) => {
@@ -992,7 +1006,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       next.set(node, { requestedValue: randomInRange(range.min, range.max), fraction })
       return next
     })
-  }, [squadStaged, squadDifficulty, squadBiomePurity, tilesMap])
+  }, [squadStaged, squadDifficulties, squadBiomePurity, tilesMap])
   const commitSquadStroke = useCallback(() => {
     if (squadStaged.size === 0) return
     const additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
@@ -2775,7 +2789,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setPaintBiome(null)
                     setLevelBrush(null)
                     setWaterBrush(null)
+                    setRoadBrush(null)
+                    setRampActive(false)
+                    setInteractableActive(false)
+                    setSquadActive(false)
+                    setRiverActive(false)
                     setObstacleBrushActive(false)
+                    setTreesActive(false)
                     setEraserActive(false)
                     setPlacingSid(null)
                     setPlacingCreatureId(null)
@@ -2877,9 +2897,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <Plus className="h-3.5 w-3.5" />
                   Placing unit…
                 </Button>
-              ) : (
+              ) : objectBrowserOpen ? (
                 <Button
-                  variant={objectBrowserOpen ? 'secondary' : 'ghost'}
+                  variant="secondary"
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
@@ -2888,6 +2908,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <Plus className="h-3.5 w-3.5" />
                   Objects
                 </Button>
+              ) : (
+                <ToolButton
+                  icon={<Plus className="h-3.5 w-3.5" />}
+                  label="Objects"
+                  title="Place a new object"
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Landmark — places one randomly-picked interactable per
@@ -2908,16 +2935,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Landmark className="h-3.5 w-3.5" />}
+                  label="Landmark"
                   title="Landmark — drag to place random interactables"
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopRampPainting(); setInteractableActive(true) }}
-                >
-                  <Landmark className="h-3.5 w-3.5" />
-                  Landmark
-                </Button>
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Encounter (issue #203) — places a random-squad guard
@@ -2937,16 +2960,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Swords className="h-3.5 w-3.5" />}
+                  label="Encounter"
                   title="Encounter — drag to place random-squad guards"
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSquadActive(true) }}
-                >
-                  <Swords className="h-3.5 w-3.5" />
-                  Encounter
-                </Button>
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {paintBiome !== null ? (
@@ -3002,16 +3021,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Paintbrush className="h-3.5 w-3.5" />}
+                  label="Terrain"
                   title="Paint terrain"
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
-                >
-                  <Paintbrush className="h-3.5 w-3.5" />
-                  Terrain
-                </Button>
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Level brush (issue #193 Phase 2) — same freehand-stroke
@@ -3041,16 +3056,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Layers className="h-3.5 w-3.5" />}
+                  label="Level"
                   title="Paint elevation level"
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
-                >
-                  <Layers className="h-3.5 w-3.5" />
-                  Level
-                </Button>
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Ramp — toggles climbsMap, restricted to tiles that already
@@ -3072,16 +3083,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<TrendingUpDown className="h-3.5 w-3.5" />}
+                  label="Ramp"
                   title="Ramp — drag onto the lower side of a level boundary"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting();setRampActive(true) }}
-                >
-                  <TrendingUpDown className="h-3.5 w-3.5" />
-                  Ramp
-                </Button>
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); setRampActive(true) }}
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Water flood-fill (issue #193 Phase 2) — click-to-fill, not
@@ -3114,16 +3121,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Droplets className="h-3.5 w-3.5" />}
+                  label="Water"
                   title="Flood-fill water (click a tile at level 0 or lower)"
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); setWaterBrush(1) }}
-                >
-                  <Droplets className="h-3.5 w-3.5" />
-                  Water
-                </Button>
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* River — a single-mode tool, ordered-drag path tracing (see
@@ -3142,16 +3145,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Waves className="h-3.5 w-3.5" />}
+                  label="River"
                   title="Draw a river — drag to trace a path"
                   onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
-                >
-                  <Waves className="h-3.5 w-3.5" />
-                  River
-                </Button>
+                />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Road brush — same freehand-stroke staging as Level, targeting
@@ -3186,16 +3185,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Milestone className="h-3.5 w-3.5" />}
+                  label="Road"
                   title="Paint a road (dirt or stone)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting();setRoadBrush(1) }}
-                >
-                  <Milestone className="h-3.5 w-3.5" />
-                  Road
-                </Button>
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); setRoadBrush(1) }}
+                />
               )}
               {fuzzyObstaclePools && (
                 <>
@@ -3218,19 +3213,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       </Button>
                     </div>
                   ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs gap-1"
+                    <ToolButton
+                      icon={<Mountain className="h-3.5 w-3.5" />}
+                      label="Obstacles"
                       title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
                       onClick={() => {
                         stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
                         setObstacleBrushActive(true)
                       }}
-                    >
-                      <Mountain className="h-3.5 w-3.5" />
-                      Obstacles
-                    </Button>
+                    />
                   )}
                 </>
               )}
@@ -3252,19 +3243,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       </Button>
                     </div>
                   ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs gap-1"
+                    <ToolButton
+                      icon={<Trees className="h-3.5 w-3.5" />}
+                      label="Trees"
                       title="Tree brush — drag to scatter biome-appropriate trees"
                       onClick={() => {
                         stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
                         setTreesActive(true)
                       }}
-                    >
-                      <Trees className="h-3.5 w-3.5" />
-                      Trees
-                    </Button>
+                    />
                   )}
                 </>
               )}
@@ -3281,10 +3268,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   ) : (
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" title="Place a zone marker">
-                          <SquareDashed className="h-3.5 w-3.5" />
-                          Zones
-                        </Button>
+                        <ToolButton icon={<SquareDashed className="h-3.5 w-3.5" />} label="Zones" title="Place a zone marker" onClick={() => {}} />
                       </PopoverTrigger>
                       <PopoverContent align="start" className="w-48 p-1 max-h-64 overflow-y-auto" data-nodrag>
                         {catalog.zoneTemplates.map((z) => (
@@ -3322,19 +3306,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
+                <ToolButton
+                  icon={<Eraser className="h-3.5 w-3.5" />}
+                  label="Eraser"
                   title="Eraser — drag to delete objects/units/zones (not terrain)"
                   onClick={() => {
                     stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting()
                     setEraserActive(true)
                   }}
-                >
-                  <Eraser className="h-3.5 w-3.5" />
-                  Eraser
-                </Button>
+                />
               )}
               {/* Freehand/Rectangle interaction mode (issue #193 Phase 4) —
                   a shared toggle for Terrain/Level/Water, not a separate
@@ -3354,8 +3334,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : treesActive ? setTreeBiomePurity : squadActive ? setSquadBiomePurity : setInteractableBiomePurity}
                       allowHighContrastBiomes={obstacleBrushActive ? obstacleAllowHighContrast : treesActive ? treeAllowHighContrast : interactableAllowHighContrast}
                       onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : treesActive ? setTreeAllowHighContrast : setInteractableAllowHighContrast}
-                      squadDifficulty={squadDifficulty}
-                      onSquadDifficultyChange={setSquadDifficulty}
+                      squadDifficulties={squadDifficulties}
+                      onToggleSquadDifficulty={toggleSquadDifficulty}
                       squadPlaceResourceAbove={squadPlaceResourceAbove}
                       onSquadPlaceResourceAboveChange={setSquadPlaceResourceAbove}
                     />
