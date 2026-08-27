@@ -1613,6 +1613,39 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const hasRoad = (node: number) => mergedRoadId(node) !== 0
     const hasRiver = (node: number) => riverNodes.has(node) || riverStaged.has(node)
 
+    // Edge shading (user-requested, settings-flagged): darkest right at a
+    // shaded edge, fading gradually toward the lighter base color at the
+    // opposite/center side, rather than a single flat dark line. `offset`
+    // is 0 at the near (start) side of the strip's short axis, BAND-1 at
+    // the far side; `near`/`far` say which of those two sides is an outer
+    // edge that should be shaded at all (a strip can have one or both).
+    const MAX_SHADE_ALPHA = 0.35
+    const shadeAlphaAt = (offset: number, near: boolean, far: boolean): number => {
+      if (!near && !far) return 0
+      const distFromShadedEdge = near && far ? Math.min(offset, BAND - 1 - offset) : near ? offset : BAND - 1 - offset
+      return MAX_SHADE_ALPHA * Math.max(0, 1 - distFromShadedEdge / (BAND - 1))
+    }
+    // A horizontal strip [xStart, xStart+width) that's BAND subpixels tall
+    // starting at yTop — shades its top row (near) and/or bottom row (far).
+    const shadeHorizontal = (xStart: number, width: number, yTop: number, near: boolean, far: boolean) => {
+      for (let row = 0; row < BAND; row++) {
+        const alpha = shadeAlphaAt(row, near, far)
+        if (alpha <= 0) continue
+        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`
+        ctx.fillRect(xStart, yTop + row, width, 1)
+      }
+    }
+    // A vertical strip [yStart, yStart+height) that's BAND subpixels wide
+    // starting at xLeft — shades its left column (near) and/or right (far).
+    const shadeVertical = (yStart: number, height: number, xLeft: number, near: boolean, far: boolean) => {
+      for (let col = 0; col < BAND; col++) {
+        const alpha = shadeAlphaAt(col, near, far)
+        if (alpha <= 0) continue
+        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`
+        ctx.fillRect(xLeft + col, yStart, 1, height)
+      }
+    }
+
     const drawBand = (node: number, color: string, hasFeature: (n: number) => boolean) => {
       if (primaryByNode.has(node)) return
       const x = node % sizeX
@@ -1628,70 +1661,51 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         else if (dir === 'N') ctx.fillRect(baseX + OFFSET, baseY, BAND, OFFSET)
         else if (dir === 'S') ctx.fillRect(baseX + OFFSET, baseY + OFFSET + BAND, BAND, SUBPX - OFFSET - BAND)
       }
-      // Optional edge shading (user-requested, settings-flagged): a thin
-      // darker strip along the LONG edges only — the ones parallel to the
-      // direction of travel — never the short end-cap edges. Semi-
-      // transparent black over whatever color was just filled, so it works
-      // uniformly for both road colors and the river color without a
-      // per-color darken table. A tile with both a horizontal and a
-      // vertical connection (a turn/join/cross) shades both axes — the two
-      // strip-pairs overlap at the corner, which reads fine at this scale.
+      // Optional edge shading — see shadeHorizontal/shadeVertical's own doc
+      // comments for the gradient itself. Applied along the LONG edges only
+      // (parallel to the direction of travel), never the short end-cap
+      // edges, semi-transparent black over whatever color was just filled
+      // so it works uniformly for both road colors and the river color
+      // without a per-color darken table.
       if (!settings.lineFeatureShading || dirs.length === 0) return
       const hasH = dirs.includes('E') || dirs.includes('W')
       const hasV = dirs.includes('N') || dirs.includes('S')
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'
       if (hasH && !hasV) {
         // Pure horizontal (a straight run, or a single E/W dead-end) — one
-        // continuous strip across the whole span, including the center.
+        // continuous strip across the whole span, including the center,
+        // shaded on both long edges (fading toward the lighter middle row).
         const left = dirs.includes('W') ? baseX : baseX + OFFSET
         const right = dirs.includes('E') ? baseX + SUBPX : baseX + OFFSET + BAND
-        ctx.fillRect(left, baseY + OFFSET, right - left, 1)
-        ctx.fillRect(left, baseY + OFFSET + BAND - 1, right - left, 1)
+        shadeHorizontal(left, right - left, baseY + OFFSET, true, true)
       } else if (hasV && !hasH) {
         // Pure vertical — same as above, rotated.
         const top = dirs.includes('N') ? baseY : baseY + OFFSET
         const bottom = dirs.includes('S') ? baseY + SUBPX : baseY + OFFSET + BAND
-        ctx.fillRect(baseX + OFFSET, top, 1, bottom - top)
-        ctx.fillRect(baseX + OFFSET + BAND - 1, top, 1, bottom - top)
+        shadeVertical(top, bottom - top, baseX + OFFSET, true, true)
       } else if (dirs.length === 2) {
         // A clean 90° turn (exactly one horizontal + one vertical arm) —
-        // user-requested: shade only the OUTER (convex) edge, which runs
-        // continuously from the far end of one arm, straight through the
-        // center, to the far end of the other arm; the INNER (concave)
-        // notch where the two arms meet is left unshaded entirely, not
-        // just uncrossed.
+        // shade only the OUTER (convex) edge, which runs continuously from
+        // the far end of one arm, straight through the center, to the far
+        // end of the other arm (fading toward the inner/lighter side); the
+        // INNER (concave) notch where the two arms meet is left unshaded
+        // entirely, not just uncrossed.
         const hDir = dirs.includes('E') ? 'E' : 'W'
         const vDir = dirs.includes('N') ? 'N' : 'S'
-        // The outer horizontal edge sits on the side opposite the vertical arm.
-        const hEdgeY = vDir === 'N' ? baseY + OFFSET + BAND - 1 : baseY + OFFSET
         const hLeft = hDir === 'W' ? baseX : baseX + OFFSET
         const hRight = hDir === 'E' ? baseX + SUBPX : baseX + OFFSET + BAND
-        ctx.fillRect(hLeft, hEdgeY, hRight - hLeft, 1)
-        // The outer vertical edge sits on the side opposite the horizontal arm.
-        const vEdgeX = hDir === 'E' ? baseX + OFFSET : baseX + OFFSET + BAND - 1
+        shadeHorizontal(hLeft, hRight - hLeft, baseY + OFFSET, vDir === 'S', vDir === 'N')
         const vTop = vDir === 'N' ? baseY : baseY + OFFSET
         const vBottom = vDir === 'S' ? baseY + SUBPX : baseY + OFFSET + BAND
-        ctx.fillRect(vEdgeX, vTop, 1, vBottom - vTop)
+        shadeVertical(vTop, vBottom - vTop, baseX + OFFSET, hDir === 'E', hDir === 'W')
       } else {
         // 3+ directions (join/cross) — no single outer/inner edge exists,
-        // so shade each arm's own body only, avoiding any full-span strip
+        // so shade each arm's own body only (both its long edges, fading
+        // toward its own lighter middle), avoiding any full-span strip
         // crossing through the shared center square.
-        if (dirs.includes('E')) {
-          ctx.fillRect(baseX + OFFSET + BAND, baseY + OFFSET, SUBPX - OFFSET - BAND, 1)
-          ctx.fillRect(baseX + OFFSET + BAND, baseY + OFFSET + BAND - 1, SUBPX - OFFSET - BAND, 1)
-        }
-        if (dirs.includes('W')) {
-          ctx.fillRect(baseX, baseY + OFFSET, OFFSET, 1)
-          ctx.fillRect(baseX, baseY + OFFSET + BAND - 1, OFFSET, 1)
-        }
-        if (dirs.includes('N')) {
-          ctx.fillRect(baseX + OFFSET, baseY, 1, OFFSET)
-          ctx.fillRect(baseX + OFFSET + BAND - 1, baseY, 1, OFFSET)
-        }
-        if (dirs.includes('S')) {
-          ctx.fillRect(baseX + OFFSET, baseY + OFFSET + BAND, 1, SUBPX - OFFSET - BAND)
-          ctx.fillRect(baseX + OFFSET + BAND - 1, baseY + OFFSET + BAND, 1, SUBPX - OFFSET - BAND)
-        }
+        if (dirs.includes('E')) shadeHorizontal(baseX + OFFSET + BAND, SUBPX - OFFSET - BAND, baseY + OFFSET, true, true)
+        if (dirs.includes('W')) shadeHorizontal(baseX, OFFSET, baseY + OFFSET, true, true)
+        if (dirs.includes('N')) shadeVertical(baseY, OFFSET, baseX + OFFSET, true, true)
+        if (dirs.includes('S')) shadeVertical(baseY + OFFSET + BAND, SUBPX - OFFSET - BAND, baseX + OFFSET, true, true)
       }
     }
 
