@@ -1,37 +1,59 @@
 // ─── Map grid — random-squad "Encounter" brush + Browse-mode difficulty picker ─
-// Shared between the Encounter paint tool (MapGridDialog.tsx) and the
-// Browse-mode Value editor (MapGridCellContent.tsx) so both draw from the
-// same difficulty→value ranges — issue #203.
+// Shared between the Encounter paint tool (MapGridDialog.tsx), the
+// Browse-mode Value editor (MapGridCellContent.tsx), and the Map Grid
+// settings popover's Advanced section (MapGridSettingsDialog.tsx) — issue
+// #203. DEFAULT_SQUAD_DIFFICULTY_RANGES/DEFAULT_SQUAD_RANDOM_WEIGHTS below
+// are only the seed values for MapGridSettings (localStorage) — every
+// function here takes the live (possibly user-edited) ranges/weights as a
+// parameter rather than reading these constants directly, so a customized
+// value actually takes effect everywhere.
 
 import type { BiomeId } from './terrain-colors'
 
+export interface DifficultyRange { label: string; min: number; max: number }
+export interface DifficultyWeight { label: string; weight: number }
+
 /** Labels match the game's own scenario-difficulty naming (Easy/Normal/
  *  Difficult/Impossible/Lethal — see plans/mapmaking_guide_en_noMapEditor.md's
- *  Difficulty condition docs) applied to a random-squad's requestedValue. */
-export function randomSquadDifficultyLabel(value: number): string {
-  if (value <= 2000) return 'Easy'
-  if (value <= 4000) return 'Normal'
-  if (value <= 6000) return 'Difficult'
-  if (value <= 8000) return 'Impossible'
-  return 'Lethal'
+ *  Difficulty condition docs) applied to a random-squad's requestedValue.
+ *  Driven by the (possibly user-customized) ranges rather than hardcoded
+ *  thresholds, so the Browse-mode Value field's badge stays consistent with
+ *  whatever boundaries Advanced settings has set. */
+export function randomSquadDifficultyLabel(value: number, ranges: DifficultyRange[] = DEFAULT_SQUAD_DIFFICULTY_RANGES): string {
+  const named = ranges.filter((r) => r.label !== 'Random')
+  return (named.find((r) => value <= r.max) ?? named[named.length - 1] ?? ranges[0]).label
 }
 
-/** Ranges for the difficulty quick-pick buttons/Encounter tool setting —
- *  same bucket boundaries as randomSquadDifficultyLabel above. Easy floors
- *  at 400, not 0 — requestedValue:0 makes a random-squad invisible in-game
- *  (see randomSquadDefaultValue's doc comment in map-write.ts), and 400 is
- *  a user-picked floor above that (250 rolled too weak). Lethal has no
- *  documented real ceiling above 8000; 16000 is just a reasonable cap for
- *  this convenience roll. `Random` spans the same overall band flat, rather
- *  than being a 6th disjoint bracket — issue #203's own spec (500-15000,
- *  rounded to the nearest existing boundary either side). */
-export const RANDOM_SQUAD_DIFFICULTY_RANGES: { label: string; min: number; max: number }[] = [
+/** Default ranges for the difficulty quick-pick buttons/Encounter tool
+ *  setting. Easy floors at 400, not 0 — requestedValue:0 makes a
+ *  random-squad invisible in-game (see randomSquadDefaultValue's doc
+ *  comment in map-write.ts), and 400 is a user-picked floor above that (250
+ *  rolled too weak). Lethal has no documented real ceiling above 8000;
+ *  16000 is just a reasonable cap for this convenience roll. `Random` spans
+ *  the same overall band flat, rather than being a 6th disjoint bracket —
+ *  issue #203's own spec (500-15000, rounded to the nearest existing
+ *  boundary either side) — though pickSquadRange's weighted picking is what
+ *  actually drives it now, not a flat roll across this range. */
+export const DEFAULT_SQUAD_DIFFICULTY_RANGES: DifficultyRange[] = [
   { label: 'Random', min: 500, max: 15000 },
   { label: 'Easy', min: 400, max: 2000 },
   { label: 'Normal', min: 2001, max: 4000 },
   { label: 'Difficult', min: 4001, max: 6000 },
   { label: 'Impossible', min: 6001, max: 8000 },
   { label: 'Lethal', min: 8001, max: 16000 },
+]
+
+/** Default weighting for the `Random` option specifically — a flat roll
+ *  across Random's own 500-15000 span gave Lethal (8001-15000 of that span,
+ *  ~48%) a wildly disproportionate chance compared to how rare a Lethal
+ *  encounter should feel scattered across a map. User-tuned, not derived
+ *  from any game data — editable in Advanced settings. */
+export const DEFAULT_SQUAD_RANDOM_WEIGHTS: DifficultyWeight[] = [
+  { label: 'Easy', weight: 40 },
+  { label: 'Normal', weight: 25 },
+  { label: 'Difficult', weight: 20 },
+  { label: 'Impossible', weight: 10 },
+  { label: 'Lethal', weight: 5 },
 ]
 
 /** A bell-curve roll within [min, max], not a flat one — a plain uniform
@@ -45,42 +67,34 @@ export function randomInRange(min: number, max: number, rng: () => number = Math
   return min + Math.round(u * (max - min))
 }
 
-/** Weighting for the `Random` option specifically — a flat roll across
- *  Random's own 500-15000 span gave Lethal (8001-15000 of that span, ~48%)
- *  a wildly disproportionate chance compared to how rare a Lethal encounter
- *  should feel scattered across a map. Reuses the named buckets' own
- *  min/max (not Random's flat range) so a weighted pick is internally
- *  consistent with what manually enabling e.g. just "Lethal" rolls —
- *  user-tuned weights, not derived from any game data. */
-const RANDOM_WEIGHTED_LABELS: { label: string; weight: number }[] = [
-  { label: 'Easy', weight: 40 },
-  { label: 'Normal', weight: 25 },
-  { label: 'Difficult', weight: 20 },
-  { label: 'Impossible', weight: 10 },
-  { label: 'Lethal', weight: 5 },
-]
-
 /** Encounter tool only — multiple difficulties can be enabled at once (each
  *  placement picks one of the enabled labels at random, then rolls within
  *  its range), so one drag stroke can mix e.g. Easy and Lethal guards.
  *  `Random` is mutually exclusive with the rest (enforced by the caller
  *  that builds this array, not here) and picks a weighted bucket instead of
- *  a flat roll across its own range — see RANDOM_WEIGHTED_LABELS above. */
+ *  a flat roll across its own range — see `weights`' own doc comment
+ *  (DEFAULT_SQUAD_RANDOM_WEIGHTS). Falls back to Easy if a customized
+ *  ranges/weights set is missing an entry (shouldn't happen — the settings
+ *  UI always edits a full copy — but this file's own convention throughout
+ *  is to degrade gracefully rather than throw on missing data). */
 export function pickSquadRange(
   enabledLabels: string[],
+  ranges: DifficultyRange[] = DEFAULT_SQUAD_DIFFICULTY_RANGES,
+  weights: DifficultyWeight[] = DEFAULT_SQUAD_RANDOM_WEIGHTS,
   rng: () => number = Math.random,
-): { label: string; min: number; max: number } {
+): DifficultyRange {
+  const find = (label: string) => ranges.find((r) => r.label === label)
   if (enabledLabels.includes('Random')) {
-    const totalWeight = RANDOM_WEIGHTED_LABELS.reduce((sum, w) => sum + w.weight, 0)
+    const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0)
     let roll = rng() * totalWeight
-    for (const { label, weight } of RANDOM_WEIGHTED_LABELS) {
-      if (roll < weight) return RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === label)!
+    for (const { label, weight } of weights) {
+      if (roll < weight) return find(label) ?? ranges[0]
       roll -= weight
     }
-    return RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === 'Easy')!
+    return find('Easy') ?? ranges[0]
   }
   const label = enabledLabels[Math.floor(rng() * enabledLabels.length)] ?? 'Easy'
-  return RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === label) ?? RANDOM_SQUAD_DIFFICULTY_RANGES[0]
+  return find(label) ?? ranges[0]
 }
 
 /** Faction id a random-squad's `fraction` field resolves to when its owning

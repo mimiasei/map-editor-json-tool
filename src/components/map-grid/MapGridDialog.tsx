@@ -812,7 +812,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       for (const n of nodes) {
         const biome = tilesMap[n]
         const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
-        const range = pickSquadRange(squadDifficulties)
+        const range = pickSquadRange(squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights)
         additions.push({ node: n, sid: 'random-squad', randomSquadOverrides: { requestedValue: randomInRange(range.min, range.max), fraction } })
         if (squadPlaceResourceAbove) {
           const z = Math.floor(n / sizeX)
@@ -841,7 +841,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     } else if (tool === 'road' && roadBrush !== null) {
       applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, sizeZ, paintBiome, levelBrush, waterBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, levelsMap, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, squadBiomePurity, squadPlaceResourceAbove, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, waterBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, levelsMap, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -998,7 +998,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [squadStaged, setSquadStaged] = useState<Map<number, { requestedValue: number; fraction: string }>>(new Map())
   const stageSquadNode = useCallback((node: number) => {
     if (squadStaged.has(node)) return
-    const range = pickSquadRange(squadDifficulties)
+    const range = pickSquadRange(squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights)
     const biome = tilesMap[node]
     const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
     setSquadStaged((prev) => {
@@ -1006,7 +1006,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       next.set(node, { requestedValue: randomInRange(range.min, range.max), fraction })
       return next
     })
-  }, [squadStaged, squadDifficulties, squadBiomePurity, tilesMap])
+  }, [squadStaged, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, tilesMap])
   const commitSquadStroke = useCallback(() => {
     if (squadStaged.size === 0) return
     const additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
@@ -3336,6 +3336,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : treesActive ? setTreeAllowHighContrast : setInteractableAllowHighContrast}
                       squadDifficulties={squadDifficulties}
                       onToggleSquadDifficulty={toggleSquadDifficulty}
+                      squadDifficultyRanges={settings.squadDifficultyRanges}
                       squadPlaceResourceAbove={squadPlaceResourceAbove}
                       onSquadPlaceResourceAboveChange={setSquadPlaceResourceAbove}
                     />
@@ -4054,6 +4055,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetGuardSquad={canEditEntities ? handleSetGuardSquad : undefined}
                   onSetCityGarrison={canEditEntities ? handleSetCityGarrison : undefined}
                   onSetRandomSquadValue={canEditEntities ? handleSetRandomSquadValue : undefined}
+                  squadDifficultyRanges={settings.squadDifficultyRanges}
                   onSetRewardParams={canEditEntities ? handleSetRewardParams : undefined}
                   moveTarget={moveTarget}
                   onStartMove={canEditEntities ? startMove : undefined}

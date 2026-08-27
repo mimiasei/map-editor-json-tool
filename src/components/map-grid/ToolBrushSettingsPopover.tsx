@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Settings } from 'lucide-react'
-import { RANDOM_SQUAD_DIFFICULTY_RANGES } from '@/lib/map-grid/squad-pool'
+import { DEFAULT_SQUAD_DIFFICULTY_RANGES, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 
 interface Props {
   tool: 'obstacles' | 'trees' | 'interactable' | 'squad'
@@ -46,6 +46,9 @@ interface Props {
    *  MapGridDialog.tsx, not here. */
   squadDifficulties: string[]
   onToggleSquadDifficulty: (label: string) => void
+  /** The (possibly user-customized, Map Grid settings' Advanced section)
+   *  live difficulty list — just used here for the pill labels/order. */
+  squadDifficultyRanges?: DifficultyRange[]
   /** Encounter only — also place a random-res pickup on the tile directly
    *  north of the squad (auto-generates a resource with a guard). */
   squadPlaceResourceAbove: boolean
@@ -99,6 +102,7 @@ export default function ToolBrushSettingsPopover({
   onAllowHighContrastBiomesChange,
   squadDifficulties,
   onToggleSquadDifficulty,
+  squadDifficultyRanges = DEFAULT_SQUAD_DIFFICULTY_RANGES,
   squadPlaceResourceAbove,
   onSquadPlaceResourceAboveChange,
 }: Props) {
@@ -150,7 +154,7 @@ export default function ToolBrushSettingsPopover({
                 Button variant={secondary/outline} pairing read as
                 too-similar-to-tell-apart at this size. */}
             <div className="flex flex-wrap gap-1">
-              {RANDOM_SQUAD_DIFFICULTY_RANGES.map(({ label }) => (
+              {squadDifficultyRanges.map(({ label }) => (
                 <button
                   key={label}
                   type="button"

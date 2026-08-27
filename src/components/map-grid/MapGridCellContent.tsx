@@ -27,7 +27,7 @@ import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
-import { RANDOM_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel } from '@/lib/map-grid/squad-pool'
+import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
@@ -126,6 +126,11 @@ export interface MapGridCellContentProps {
   /** Set a random-squad's requestedValue ("army value" the game rolls a
    *  matching squad against) — docked-only, like the above. */
   onSetRandomSquadValue?: (item: PlacedObject, requestedValue: number) => void
+  /** Difficulty labels/min/max for the Value field's badge + quick-pick
+   *  buttons — the (possibly user-customized, Map Grid settings' Advanced
+   *  section) live ranges. Defaults to DEFAULT_SQUAD_DIFFICULTY_RANGES for
+   *  the undocked mirror, which doesn't wire this through. */
+  squadDifficultyRanges?: DifficultyRange[]
   /** Set every reward slot's value at once (issue #143) — docked-only, like the above. */
   onSetRewardParams?: (item: PlacedObject, parameters: string[]) => void
   /** The parent's active move, if any (issue #167 Phase A) — only relevant
@@ -204,6 +209,7 @@ export default function MapGridCellContent({
   onSetGuardSquad,
   onSetCityGarrison,
   onSetRandomSquadValue,
+  squadDifficultyRanges = DEFAULT_SQUAD_DIFFICULTY_RANGES,
   onSetRewardParams,
   moveTarget = null,
   onStartMove,
@@ -774,11 +780,11 @@ export default function MapGridCellContent({
                   ) : (
                     <p className="text-xs tabular-nums">{shownValue}</p>
                   )}
-                  <Badge variant="outline" className="text-xs">{randomSquadDifficultyLabel(shownValue)}</Badge>
+                  <Badge variant="outline" className="text-xs">{randomSquadDifficultyLabel(shownValue, squadDifficultyRanges)}</Badge>
                 </div>
                 {onSetRandomSquadValue && (
                   <div className="flex flex-wrap gap-1">
-                    {RANDOM_SQUAD_DIFFICULTY_RANGES.map(({ label, min, max }) => (
+                    {squadDifficultyRanges.map(({ label, min, max }) => (
                       <Button
                         key={label}
                         type="button"
