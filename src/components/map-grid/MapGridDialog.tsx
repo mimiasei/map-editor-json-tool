@@ -1600,8 +1600,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
-    const SUBPX = 8
-    const BAND = 3
+    const SUBPX = 12
+    const BAND = 3.5
     const OFFSET = Math.floor((SUBPX - BAND) / 2)
     canvas.width = sizeX * SUBPX
     canvas.height = sizeZ * SUBPX
@@ -1619,7 +1619,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // is 0 at the near (start) side of the strip's short axis, BAND-1 at
     // the far side; `near`/`far` say which of those two sides is an outer
     // edge that should be shaded at all (a strip can have one or both).
-    const MAX_SHADE_ALPHA = 0.35
+    const MAX_SHADE_ALPHA = 0.2
     const shadeAlphaAt = (offset: number, near: boolean, far: boolean): number => {
       if (!near && !far) return 0
       const distFromShadedEdge = near && far ? Math.min(offset, BAND - 1 - offset) : near ? offset : BAND - 1 - offset
