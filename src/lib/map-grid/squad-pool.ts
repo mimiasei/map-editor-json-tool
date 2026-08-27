@@ -33,8 +33,15 @@ export const RANDOM_SQUAD_DIFFICULTY_RANGES: { label: string; min: number; max: 
   { label: 'Lethal', min: 8001, max: 16000 },
 ]
 
-export function randomInRange(min: number, max: number): number {
-  return min + Math.floor(Math.random() * (max - min + 1))
+/** A bell-curve roll within [min, max], not a flat one — a plain uniform
+ *  roll landed on the low end of a range (e.g. near Easy's 250 floor) just
+ *  as often as its middle, which read as biased-low even though it wasn't
+ *  (user-requested fix). Averaging 3 independent uniform draws (Irwin-Hall)
+ *  clusters results around the midpoint with tapering tails at both ends —
+ *  cheap, bounded, no rejection sampling needed. */
+export function randomInRange(min: number, max: number, rng: () => number = Math.random): number {
+  const u = (rng() + rng() + rng()) / 3
+  return min + Math.round(u * (max - min))
 }
 
 /** Weighting for the `Random` option specifically — a flat roll across
