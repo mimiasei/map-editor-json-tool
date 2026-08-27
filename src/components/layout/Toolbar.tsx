@@ -11,7 +11,7 @@ import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
-import { openFile, saveFile, saveToPath, isTauri, pickCoreZip } from '@/lib/native-fs'
+import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog } from '@/lib/native-fs'
 import { openAndLoadMapFile, commitMapWithPathPrompt } from '@/lib/map-file'
 import NewMapDialog from '@/components/common/NewMapDialog'
 import { saveMapFile } from '@/lib/map-save'
@@ -283,6 +283,21 @@ export default function Toolbar({
     }
   }
 
+  // ── New Map — same unsaved-changes guard as AppShell's own "New" (scenario-
+  // only) handler, since creating a new map discards the currently loaded
+  // one immediately once the user actually hits "Create" in the dialog
+  // (NewMapDialog → createNewMap → loadParsedMapFile, unconditionally).
+  const handleNewMapClick = async () => {
+    if (isDirty || mapIsDirty) {
+      const ok = await confirmDialog(
+        'You have unsaved changes. Create a new map anyway?',
+        'New Map',
+      )
+      if (!ok) return
+    }
+    setNewMapOpen(true)
+  }
+
   // ── Open .map file ────────────────────────────────────────────────────────────
   const handleOpenMap = async () => {
     console.log('[Toolbar] handleOpenMap called')
@@ -482,7 +497,7 @@ export default function Toolbar({
           {isTauri() && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={() => setNewMapOpen(true)} className="gap-1.5">
+                <Button variant="ghost" size="sm" onClick={handleNewMapClick} className="gap-1.5">
                   <FilePlus className="h-4 w-4" />
                   New Map
                 </Button>

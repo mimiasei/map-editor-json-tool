@@ -1702,7 +1702,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [renameTarget, setRenameTarget] = useState<MapEntity | null>(null)
   const [displayNameTarget, setDisplayNameTarget] = useState<MapEntity | null>(null)
   const [heroEditorTarget, setHeroEditorTarget] = useState<MapEntity | null>(null)
-  const canEditEntities = isTauri() && !!mapFilePath
+  // Every edit here applies to the in-memory .map document (applyEdit,
+  // above) — nothing needs a real file path until an explicit Save, so a
+  // brand-new never-saved map (see create-map.ts) must be fully editable
+  // too. Previously required !!mapFilePath as well, a leftover from before
+  // the in-memory-document rework when edits wrote straight to disk.
+  const canEditEntities = isTauri()
 
   // issue #195 follow-up: every spawner/entity-property handler below used
   // to write to disk immediately on its own onChange already — that part's
