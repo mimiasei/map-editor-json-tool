@@ -117,13 +117,19 @@ export default function ToolBrushSettingsPopover({
           </p>
         </div>
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor={`${tool}-high-contrast`} className="text-xs cursor-pointer">Allow high-contrast biomes</Label>
-          <Switch
-            id={`${tool}-high-contrast`}
-            checked={allowHighContrastBiomes}
-            onCheckedChange={onAllowHighContrastBiomesChange}
-          />
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor={`${tool}-high-contrast`} className="text-xs cursor-pointer">Allow high-contrast biomes</Label>
+            <Switch
+              id={`${tool}-high-contrast`}
+              checked={allowHighContrastBiomes}
+              onCheckedChange={onAllowHighContrastBiomesChange}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            When off, a cross-biome pick only lands on a visually compatible biome — Grass/Sand/Autumn/Dirt mix
+            freely with each other, but Snow, Lava, and Deathland never mix with any other biome.
+          </p>
         </div>
       </PopoverContent>
     </Popover>
