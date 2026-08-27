@@ -17,16 +17,17 @@ export function randomSquadDifficultyLabel(value: number): string {
 }
 
 /** Ranges for the difficulty quick-pick buttons/Encounter tool setting —
- *  same bucket boundaries as randomSquadDifficultyLabel above. Floors at
- *  250, not 0 — requestedValue:0 makes a random-squad invisible in-game
- *  (see randomSquadDefaultValue's doc comment in map-write.ts). Lethal has
- *  no documented real ceiling above 8000; 16000 is just a reasonable cap
- *  for this convenience roll. `Random` spans the same overall 250-16000
- *  band flat, rather than being a 6th disjoint bracket — issue #203's own
- *  spec (500-15000, rounded to the nearest existing boundary either side). */
+ *  same bucket boundaries as randomSquadDifficultyLabel above. Easy floors
+ *  at 400, not 0 — requestedValue:0 makes a random-squad invisible in-game
+ *  (see randomSquadDefaultValue's doc comment in map-write.ts), and 400 is
+ *  a user-picked floor above that (250 rolled too weak). Lethal has no
+ *  documented real ceiling above 8000; 16000 is just a reasonable cap for
+ *  this convenience roll. `Random` spans the same overall band flat, rather
+ *  than being a 6th disjoint bracket — issue #203's own spec (500-15000,
+ *  rounded to the nearest existing boundary either side). */
 export const RANDOM_SQUAD_DIFFICULTY_RANGES: { label: string; min: number; max: number }[] = [
   { label: 'Random', min: 500, max: 15000 },
-  { label: 'Easy', min: 250, max: 2000 },
+  { label: 'Easy', min: 400, max: 2000 },
   { label: 'Normal', min: 2001, max: 4000 },
   { label: 'Difficult', min: 4001, max: 6000 },
   { label: 'Impossible', min: 6001, max: 8000 },
