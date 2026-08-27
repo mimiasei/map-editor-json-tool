@@ -72,7 +72,7 @@ export const ROAD_BASE_COLORS: Record<number, string> = {
 /** Vivid yellow — no other color on this canvas is yellow, so it can't be
  *  confused with WATER_BASE_COLOR/Snow's pale blue or anything else, unlike
  *  an earlier blue-family pick that was too close to Water's own blue. */
-export const RIVER_BASE_COLOR = '#ffd400'
+export const RIVER_BASE_COLOR = '#25eaf1'
 
 /** Fallback for an out-of-range/unknown tile id (shouldn't occur — every real map's
  *  tilesMap values were verified to fall in 1-7, but a malformed map could differ). */

@@ -44,6 +44,10 @@ export interface MapGridSettings {
    *  elevation-shading.ts) — a flat elevation-relief tint, independent of the
    *  blocked-tile overlay's wall-vs-interior distinction. */
   showElevationShading: boolean
+  /** A thin darker strip along the long edges of a road/river band (the
+   *  edges parallel to its direction of travel, not the short end caps) —
+   *  purely cosmetic, on the line-feature canvas in MapGridDialog.tsx. */
+  lineFeatureShading: boolean
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
@@ -55,6 +59,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showGridHover: true,
   showBlockedTiles: false,
   showElevationShading: true,
+  lineFeatureShading: true,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -141,6 +146,15 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
               id="grid-show-elevation"
               checked={settings.showElevationShading}
               onCheckedChange={(v) => update({ showElevationShading: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-line-feature-shading" className="text-xs cursor-pointer">Road/river edge shading</Label>
+          <Switch
+              id="grid-line-feature-shading"
+              checked={settings.lineFeatureShading}
+              onCheckedChange={(v) => update({ lineFeatureShading: v })}
           />
         </div>
 

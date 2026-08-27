@@ -1619,13 +1619,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const z = Math.floor(node / sizeX)
       const baseX = x * SUBPX
       const baseY = (sizeZ - 1 - z) * SUBPX
+      const dirs = connectedDirections(node, hasFeature, sizeX, sizeZ)
       ctx.fillStyle = color
       ctx.fillRect(baseX + OFFSET, baseY + OFFSET, BAND, BAND)
-      for (const dir of connectedDirections(node, hasFeature, sizeX, sizeZ)) {
+      for (const dir of dirs) {
         if (dir === 'E') ctx.fillRect(baseX + OFFSET + BAND, baseY + OFFSET, SUBPX - OFFSET - BAND, BAND)
         else if (dir === 'W') ctx.fillRect(baseX, baseY + OFFSET, OFFSET, BAND)
         else if (dir === 'N') ctx.fillRect(baseX + OFFSET, baseY, BAND, OFFSET)
         else if (dir === 'S') ctx.fillRect(baseX + OFFSET, baseY + OFFSET + BAND, BAND, SUBPX - OFFSET - BAND)
+      }
+      // Optional edge shading (user-requested, settings-flagged): a thin
+      // darker strip along the LONG edges only — the ones parallel to the
+      // direction of travel — never the short end-cap edges. Semi-
+      // transparent black over whatever color was just filled, so it works
+      // uniformly for both road colors and the river color without a
+      // per-color darken table. A tile with both a horizontal and a
+      // vertical connection (a turn/join/cross) shades both axes — the two
+      // strip-pairs overlap at the corner, which reads fine at this scale.
+      if (!settings.lineFeatureShading || dirs.length === 0) return
+      const hasH = dirs.includes('E') || dirs.includes('W')
+      const hasV = dirs.includes('N') || dirs.includes('S')
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'
+      if (hasH) {
+        const left = dirs.includes('W') ? baseX : baseX + OFFSET
+        const right = dirs.includes('E') ? baseX + SUBPX : baseX + OFFSET + BAND
+        ctx.fillRect(left, baseY + OFFSET, right - left, 1)
+        ctx.fillRect(left, baseY + OFFSET + BAND - 1, right - left, 1)
+      }
+      if (hasV) {
+        const top = dirs.includes('N') ? baseY : baseY + OFFSET
+        const bottom = dirs.includes('S') ? baseY + SUBPX : baseY + OFFSET + BAND
+        ctx.fillRect(baseX + OFFSET, top, 1, bottom - top)
+        ctx.fillRect(baseX + OFFSET + BAND - 1, top, 1, bottom - top)
       }
     }
 
@@ -1641,7 +1666,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawBand(node, RIVER_BASE_COLOR, hasRiver)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
