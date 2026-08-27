@@ -829,6 +829,7 @@ interface PropRandomSquadEntry {
   id?: number
   sids?: string[]
   requestedValue?: number
+  fraction?: string
 }
 
 export function upsertPropRandomSquads(chunk: Uint8Array, entityType: number, entityId: number, sids: string[]): Uint8Array {
@@ -1545,6 +1546,32 @@ export function deleteObjectInstance(
   }
 }
 
+/** Overwrites `requestedValue`/`fraction` on the `propRandomSquads` row
+ *  `addObjectInstance` just seeded with its own defaults (see
+ *  `RANDOM_SPAWNER_TABLE_DEFAULTS`/`randomSquadDefaultValue`) — used by
+ *  `paintObjects`'s `randomSquadOverrides` so the Encounter brush (issue
+ *  #203) can place a `random-squad` with a chosen difficulty/faction in one
+ *  atomic edit, instead of a separate follow-up edit per placement. A no-op
+ *  if the row is somehow missing (shouldn't happen right after
+ *  `addObjectInstance` backfilled it, but this file's convention throughout
+ *  is to skip a table it can't find rather than invent one). */
+function patchRandomSquadRow(
+  block2Chunk: Uint8Array,
+  id: number,
+  patch: { requestedValue: number; fraction: string },
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')
+  const entries = JSON.parse(span) as PropRandomSquadEntry[]
+  const existing = entries.find((e) => String(e.type) === '0' && e.id === id)
+  if (!existing) return block2Chunk
+  existing.requestedValue = patch.requestedValue
+  existing.fraction = patch.fraction
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
 /** A drag-painted batch of `objects[]` (type 0) placements — the terrain
  *  painter's technique (Phase D) generalized to any placeable object, not
  *  just tilesMap biomes. `deletions` are existing non-blocking decorative
@@ -1553,11 +1580,13 @@ export function deleteObjectInstance(
  *  this function just applies both halves as one atomic edit, by chaining
  *  the already-verified deleteObjectInstance/addObjectInstance one call at a
  *  time). Deletions run first so an overwritten tile's old instance never
- *  transiently coexists with its replacement. */
+ *  transiently coexists with its replacement. `randomSquadOverrides` (sid
+ *  'random-squad' only) lets the Encounter brush set a chosen value/faction
+ *  right after placement — see `patchRandomSquadRow`. */
 export function paintObjects(
   block1Chunk: Uint8Array,
   block2Chunk: Uint8Array,
-  additions: { node: number; sid: string }[],
+  additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[],
   deletions: number[],
 ): { block1Chunk: Uint8Array; block2Chunk: Uint8Array; newIds: number[] } {
   let b1 = block1Chunk
@@ -1568,13 +1597,95 @@ export function paintObjects(
     b2 = result.block2Chunk
   }
   const newIds: number[] = []
-  for (const { node, sid } of additions) {
+  for (const { node, sid, randomSquadOverrides } of additions) {
     const result = addObjectInstance(b1, b2, 0, sid, node)
     b1 = result.block1Chunk
     b2 = result.block2Chunk
+    if (sid === 'random-squad' && randomSquadOverrides) {
+      b2 = patchRandomSquadRow(b2, result.newId, randomSquadOverrides)
+    }
     newIds.push(result.newId)
   }
   return { block1Chunk: b1, block2Chunk: b2, newIds }
+}
+
+/** "Clear All" toolbar action (sibling to the Eraser tool, but for the
+ *  whole map instead of a brushed area) — wipes every objects[]/squads[]/
+ *  markers[] placement (including player-start city-spawner/hero-spawner —
+ *  explicit user decision to clear absolutely everything, not just
+ *  decorations/encounters) and every river node from Block 2, resets every
+ *  `tilesMap` tile to Grass (biome 1 — user-specified default; there is no
+ *  field anywhere in the format recording "the biome chosen at map
+ *  creation," since that value is only ever used once, to uniformly fill
+ *  tilesMap at creation time, and never persisted separately), and empties
+ *  Block 1's spawns.spawns[]/playersCount to match (no player-start object
+ *  survives to reference a slot, so 0 is the only consistent value — same
+ *  "owners are always the contiguous range 1..playersCount" invariant
+ *  deleteObjectInstance's own step 4 auto-fix maintains one spawner at a
+ *  time). Sweeps every objectsProperties.* table generically (Object.keys,
+ *  not a static list — same convention as deleteObjectInstance's own
+ *  cleanup sweep), emptying every array table since nothing survives.
+ *  Deliberately does not touch waterMap/levelsMap/climbsMap/roadsMap — only
+ *  tilesMap was asked for.
+ *
+ *  Deliberately its own function rather than looping deleteObjectInstance
+ *  once per placement: that would re-parse/re-stringify all of Block 1+2
+ *  once per object, which on a map with thousands of placements (confirmed
+ *  real — see CLAUDE.md's "up to 256x256/~17k objects") would be a real UI
+ *  freeze. This does one JSON.parse/stringify pass per table instead. */
+export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
+
+  {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'tilesMap')
+    const tiles = JSON.parse(span) as number[]
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(tiles.fill(1)) + text2.slice(arrayClose + 1)
+  }
+
+  // objects[]/squads[]/markers[] — fully cleared, no exceptions.
+  for (const key of ['objects', 'squads', 'markers']) {
+    try {
+      const { arrayOpen, arrayClose } = findJsonArraySpan(text2, key)
+      text2 = text2.slice(0, arrayOpen) + '[]' + text2.slice(arrayClose + 1)
+    } catch { /* table absent in this file */ }
+  }
+
+  // rivers[0].nodes — cleared; the single wrapper entry itself stays, same
+  // "never invent/remove the wrapper" convention as paintRiverTiles.
+  try {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'rivers')
+    const rivers = JSON.parse(span) as Array<{ nodes?: unknown[] }>
+    if (rivers[0]) rivers[0].nodes = []
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(rivers) + text2.slice(arrayClose + 1)
+  } catch { /* no rivers table in this file */ }
+
+  // Every objectsProperties.* table, generically — nothing survives, so
+  // every array-valued table becomes empty.
+  {
+    const { objOpen, objClose, span } = findJsonObjectSpan(text2, 'objectsProperties')
+    const props = JSON.parse(span) as Record<string, unknown>
+    for (const tableKey of Object.keys(props)) {
+      if (Array.isArray(props[tableKey])) props[tableKey] = []
+    }
+    text2 = text2.slice(0, objOpen) + JSON.stringify(props) + text2.slice(objClose + 1)
+  }
+
+  // Block 1 — no player-start object survives to hold a slot, so
+  // spawns.spawns[] empties and playersCount resets to 0 alongside it.
+  let text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  {
+    const { arrayOpen, arrayClose } = findJsonArraySpan(text1, 'spawns')
+    text1 = text1.slice(0, arrayOpen) + '[]' + text1.slice(arrayClose + 1)
+    const spawnsObjSpan = findJsonObjectSpan(text1, 'spawns')
+    const spawnsObj = JSON.parse(spawnsObjSpan.span) as { playersCount?: number }
+    spawnsObj.playersCount = 0
+    text1 = text1.slice(0, spawnsObjSpan.objOpen) + JSON.stringify(spawnsObj) + text1.slice(spawnsObjSpan.objClose + 1)
+  }
+
+  return {
+    block1Chunk: new TextEncoder().encode(text1),
+    block2Chunk: new TextEncoder().encode(text2),
+  }
 }
 
 // ─── Paint terrain / level / water (issue #167 Phase D, generalized #193
