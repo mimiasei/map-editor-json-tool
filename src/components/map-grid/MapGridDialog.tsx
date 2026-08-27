@@ -1653,11 +1653,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         const bottom = dirs.includes('S') ? baseY + SUBPX : baseY + OFFSET + BAND
         ctx.fillRect(baseX + OFFSET, top, 1, bottom - top)
         ctx.fillRect(baseX + OFFSET + BAND - 1, top, 1, bottom - top)
+      } else if (dirs.length === 2) {
+        // A clean 90° turn (exactly one horizontal + one vertical arm) —
+        // user-requested: shade only the OUTER (convex) edge, which runs
+        // continuously from the far end of one arm, straight through the
+        // center, to the far end of the other arm; the INNER (concave)
+        // notch where the two arms meet is left unshaded entirely, not
+        // just uncrossed.
+        const hDir = dirs.includes('E') ? 'E' : 'W'
+        const vDir = dirs.includes('N') ? 'N' : 'S'
+        // The outer horizontal edge sits on the side opposite the vertical arm.
+        const hEdgeY = vDir === 'N' ? baseY + OFFSET + BAND - 1 : baseY + OFFSET
+        const hLeft = hDir === 'W' ? baseX : baseX + OFFSET
+        const hRight = hDir === 'E' ? baseX + SUBPX : baseX + OFFSET + BAND
+        ctx.fillRect(hLeft, hEdgeY, hRight - hLeft, 1)
+        // The outer vertical edge sits on the side opposite the horizontal arm.
+        const vEdgeX = hDir === 'E' ? baseX + OFFSET : baseX + OFFSET + BAND - 1
+        const vTop = vDir === 'N' ? baseY : baseY + OFFSET
+        const vBottom = vDir === 'S' ? baseY + SUBPX : baseY + OFFSET + BAND
+        ctx.fillRect(vEdgeX, vTop, 1, vBottom - vTop)
       } else {
-        // Both axes present (a turn/join/cross) — a full-span strip on each
-        // axis would cross itself right through the shared center square
-        // (user-reported). Instead, shade each arm's own body only, never
-        // reaching into the center, so the two axes' strips never overlap.
+        // 3+ directions (join/cross) — no single outer/inner edge exists,
+        // so shade each arm's own body only, avoiding any full-span strip
+        // crossing through the shared center square.
         if (dirs.includes('E')) {
           ctx.fillRect(baseX + OFFSET + BAND, baseY + OFFSET, SUBPX - OFFSET - BAND, 1)
           ctx.fillRect(baseX + OFFSET + BAND, baseY + OFFSET + BAND - 1, SUBPX - OFFSET - BAND, 1)
