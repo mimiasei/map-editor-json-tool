@@ -6,7 +6,9 @@
 // this one popover component rather than each getting its own, since only
 // one of them is ever active at a time.
 
+import type { ReactNode } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
@@ -48,6 +50,28 @@ const TOOL_TITLES: Record<Props['tool'], string> = {
   interactable: 'Interactable brush settings',
 }
 
+/** Every setting's description moved from an always-visible line of text to
+ *  a hover tooltip on its label (user-requested) — the dotted underline is
+ *  the hover affordance since there's no other visual cue a label is
+ *  interactive here. */
+function LabelWithTooltip({ htmlFor, tooltip, children }: { htmlFor?: string; tooltip: string; children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Label
+          htmlFor={htmlFor}
+          className="text-xs cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2"
+        >
+          {children}
+        </Label>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-56 text-xs">
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 export default function ToolBrushSettingsPopover({
   tool,
   mountainChance,
@@ -71,7 +95,7 @@ export default function ToolBrushSettingsPopover({
           <>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Mountains</Label>
+                <LabelWithTooltip tooltip="Chance of a mountain in the cluster.">Mountains</LabelWithTooltip>
                 <span className="text-xs text-muted-foreground">{pctLabel(mountainChance, 'None', 'Always')}</span>
               </div>
               <Slider
@@ -79,12 +103,13 @@ export default function ToolBrushSettingsPopover({
                 value={[mountainChance]}
                 onValueChange={([v]) => onMountainChanceChange(v)}
               />
-              <p className="text-[11px] text-muted-foreground">Chance of a mountain in the cluster.</p>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Pools</Label>
+                <LabelWithTooltip tooltip="Chance of a pool in the cluster. Higher chance allows a smaller brush (down to 3×3).">
+                  Pools
+                </LabelWithTooltip>
                 <span className="text-xs text-muted-foreground">{pctLabel(poolChance, 'None', 'High')}</span>
               </div>
               <Slider
@@ -92,16 +117,17 @@ export default function ToolBrushSettingsPopover({
                 value={[poolChance]}
                 onValueChange={([v]) => onPoolChanceChange(v)}
               />
-              <p className="text-[11px] text-muted-foreground">
-                Chance of a pool in the cluster. Higher chance allows a smaller brush (down to 3×3).
-              </p>
             </div>
           </>
         )}
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Biome mix</Label>
+            <LabelWithTooltip
+              tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : 'picks'} vary from other biomes vs. only the biome painted on.`}
+            >
+              Biome mix
+            </LabelWithTooltip>
             <span className="text-xs text-muted-foreground">
               {biomePurity >= 1 ? 'This biome only' : biomePurity <= 0 ? 'All biomes' : `${Math.round(biomePurity * 100)}% pure`}
             </span>
@@ -111,25 +137,20 @@ export default function ToolBrushSettingsPopover({
             value={[biomePurity]}
             onValueChange={([v]) => onBiomePurityChange(v)}
           />
-          <p className="text-[11px] text-muted-foreground">
-            How much {tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : 'picks'} vary from
-            other biomes vs. only the biome painted on.
-          </p>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor={`${tool}-high-contrast`} className="text-xs cursor-pointer">Allow high-contrast biomes</Label>
-            <Switch
-              id={`${tool}-high-contrast`}
-              checked={allowHighContrastBiomes}
-              onCheckedChange={onAllowHighContrastBiomesChange}
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground">
-            When off, a cross-biome pick only lands on a visually compatible biome — Grass/Sand/Autumn/Dirt mix
-            freely with each other, but Snow, Lava, and Deathland never mix with any other biome.
-          </p>
+        <div className="flex items-center justify-between">
+          <LabelWithTooltip
+            htmlFor={`${tool}-high-contrast`}
+            tooltip="When off, a cross-biome pick only lands on a visually compatible biome — Grass/Sand/Autumn/Dirt mix freely with each other, but Snow, Lava, and Deathland never mix with any other biome."
+          >
+            Allow high-contrast biomes
+          </LabelWithTooltip>
+          <Switch
+            id={`${tool}-high-contrast`}
+            checked={allowHighContrastBiomes}
+            onCheckedChange={onAllowHighContrastBiomesChange}
+          />
         </div>
       </PopoverContent>
     </Popover>
