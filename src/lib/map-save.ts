@@ -39,6 +39,7 @@ import {
   paintLevelTiles,
   paintWaterTiles,
   paintRoadTiles,
+  paintClimbTiles,
   paintRiverTiles,
   addObjectInstance,
   addMarkerInstance,
@@ -76,6 +77,7 @@ export type MapSaveEdit =
   | { kind: 'paintLevel'; changes: { node: number; level: number }[] }
   | { kind: 'paintWater'; changes: { node: number; waterId: number }[] }
   | { kind: 'paintRoad'; changes: { node: number; roadId: number }[] }
+  | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string }[]; deletions: number[] }
 
@@ -220,6 +222,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = paintWaterTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintRoad') {
     newChunks[1] = paintRoadTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintClimb') {
+    newChunks[1] = paintClimbTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintRiver') {
     newChunks[1] = paintRiverTiles(newChunks[1], edit.changes, edit.deletions ?? [])
   } else if (edit?.kind === 'paintObjects') {
@@ -566,6 +570,14 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     for (const { node, roadId } of edit.changes) {
       if (roads[node] !== roadId) {
         throw new Error('Verification failed: painted road not reflected in the rebuilt roadsMap')
+      }
+    }
+  } else if (edit?.kind === 'paintClimb') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { climbsMap?: number[] }
+    const climbs = block2.climbsMap ?? []
+    for (const { node, climb } of edit.changes) {
+      if (climbs[node] !== climb) {
+        throw new Error('Verification failed: painted ramp not reflected in the rebuilt climbsMap')
       }
     }
   } else if (edit?.kind === 'paintRiver') {

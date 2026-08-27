@@ -57,14 +57,22 @@ export const ROAD_TYPE_NAMES: Record<number, string> = {
   2: 'Stone Road',
 }
 
+// Chosen to be unambiguous against every other color already on this
+// canvas — every BIOME_BASE_COLORS entry, WATER_BASE_COLOR, and every
+// GROUP_COLORS category swatch (units/artifacts/spawners/interactables/
+// resources/decorations/zones, MapGridDialog.tsx) — not just "close to
+// real dirt/stone," since a road/river tile can sit right next to any of
+// those and needs to read as its own distinct feature, not a shade of an
+// existing one (user-requested: issue roads/rivers follow-up).
 export const ROAD_BASE_COLORS: Record<number, string> = {
-  1: '#8a5a2b', // Dirt — brown
-  2: '#8c8c8c', // Stone — gray
+  1: '#ff8800', // Dirt — vivid orange (existing browns are all darker/muted)
+  2: '#a8b8c8', // Stone — cool blue-gray (existing grays have no blue tint)
 }
 
-/** River overlay — a distinct blue-family color from WATER_BASE_COLOR so the
- *  two read as separate features even where they run near each other. */
-export const RIVER_BASE_COLOR = '#0b5db8'
+/** Vivid yellow — no other color on this canvas is yellow, so it can't be
+ *  confused with WATER_BASE_COLOR/Snow's pale blue or anything else, unlike
+ *  an earlier blue-family pick that was too close to Water's own blue. */
+export const RIVER_BASE_COLOR = '#25eaf1'
 
 /** Fallback for an out-of-range/unknown tile id (shouldn't occur — every real map's
  *  tilesMap values were verified to fall in 1-7, but a malformed map could differ). */
