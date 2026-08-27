@@ -54,6 +54,23 @@ const BIOME_ID_TO_CATALOG_BIOME: Record<BiomeId, string> = {
 }
 const ALL_BIOME_IDS: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 
+/** Which biomes look visually plausible mixed together — an editor-UI
+ *  judgment call (there's no game data for this, unlike everything else in
+ *  this file), not confirmed against anything. User-requested: Grass(1)/
+ *  Sand(2)/Autumn(5)/Dirt(7) are a mutually-compatible "temperate" cluster
+ *  (plains, desert-fringe, harvest colors, and bare earth all read as
+ *  plausible neighbors); Deathland(3)/Snow(4)/Lava(6) are each visually
+ *  distinctive enough that decorations from one look wrong on any of the
+ *  others (explicitly confirmed by the user for Snow-on-{Grass,Dirt,Sand}
+ *  and Lava-on-anything-else) — so each of those three is only ever
+ *  "compatible" with itself when high-contrast mixing is disallowed. */
+const COMPATIBLE_BIOME_CLUSTERS: BiomeId[][] = [[1, 2, 5, 7]]
+
+export function areBiomesCompatible(a: BiomeId, b: BiomeId): boolean {
+  if (a === b) return true
+  return COMPATIBLE_BIOME_CLUSTERS.some((cluster) => cluster.includes(a) && cluster.includes(b))
+}
+
 /** Every non-campaign `environments` entry that reads as man-made rather
  *  than natural, confirmed by reading the full real catalog list (Core/DB/
  *  map/objects/1_environments.json) — bridges, a fence, a gallows,
@@ -204,6 +221,13 @@ export interface FuzzyObstacleOptions {
    *  Trees tool's "biome mix" slider maps directly onto this (see
    *  MapGridSettingsDialog-style popover in MapGridDialog.tsx). */
   crossBiomeChance?: number
+  /** Whether a cross-biome pick (see crossBiomeChance) can land on a
+   *  visually jarring biome (see COMPATIBLE_BIOME_CLUSTERS/
+   *  areBiomesCompatible above) — e.g. Snow decorations scattered onto
+   *  Grass, or Lava objects anywhere else. Defaults to true (unrestricted,
+   *  today's existing behavior) so a caller that doesn't wire up the
+   *  settings switch is unaffected. */
+  allowHighContrastBiomes?: boolean
   /** Of every node that gets an obstacle-role placement, the chance it's
    *  specifically a mountain_* entry instead of a regular obstacle (0 =
    *  none, 1 = always) — checked before poolChance (see below), so a high
@@ -239,7 +263,7 @@ export function sampleFuzzyObstacles(
   pools: Record<BiomeId, FuzzyObstaclePool>,
   options: FuzzyObstacleOptions = {},
 ): { node: number; sid: string }[] {
-  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, mountainChance = 0, poolChance = 0, rng = Math.random } = options
+  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, allowHighContrastBiomes = true, mountainChance = 0, poolChance = 0, rng = Math.random } = options
   const pObstacleFloor = 0.15
   const additions: { node: number; sid: string }[] = []
 
@@ -250,7 +274,8 @@ export function sampleFuzzyObstacles(
     let biomeId = ownBiome
     if (rng() < crossBiomeChance) {
       const candidates = ALL_BIOME_IDS.filter(
-        (id) => id !== ownBiome && (pools[id].obstacles.length > 0 || pools[id].clutter.length > 0),
+        (id) => id !== ownBiome && (pools[id].obstacles.length > 0 || pools[id].clutter.length > 0)
+          && (allowHighContrastBiomes || areBiomesCompatible(ownBiome, id)),
       )
       if (candidates.length > 0) biomeId = candidates[Math.floor(rng() * candidates.length)]
     }
