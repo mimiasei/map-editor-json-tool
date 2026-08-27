@@ -45,6 +45,7 @@ import {
   addMarkerInstance,
   deleteObjectInstance,
   paintObjects,
+  clearAllObjects,
   bytesEqual,
   type MapContainer,
 } from '@/lib/map-write'
@@ -80,6 +81,7 @@ export type MapSaveEdit =
   | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
+  | { kind: 'clearAll'; preserveObjectIds: number[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
  *  swapSpawnerOwner/deleteObject/addObject/paintObjects/setHeroSid/setCitySpawnHero/
@@ -230,6 +232,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const result = paintObjects(newChunks[0], newChunks[1], edit.additions, edit.deletions)
     newChunks[0] = result.block1Chunk
     newChunks[1] = result.block2Chunk
+  } else if (edit?.kind === 'clearAll') {
+    newChunks[1] = clearAllObjects(newChunks[1], new Set(edit.preserveObjectIds))
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -620,6 +624,24 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
           throw new Error('Verification failed: Encounter squad requestedValue/fraction not reflected in the rebuilt propRandomSquads row')
         }
       }
+    }
+  } else if (edit?.kind === 'clearAll') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objects?: Array<{ ids?: number[] }>
+      squads?: unknown[]
+      markers?: unknown[]
+      rivers?: Array<{ nodes?: unknown[] }>
+    }
+    const preserved = new Set(edit.preserveObjectIds)
+    const survivingIds = (block2.objects ?? []).flatMap((g) => g.ids ?? [])
+    if (survivingIds.some((id) => !preserved.has(id)) || survivingIds.length !== preserved.size) {
+      throw new Error('Verification failed: clear-all left behind (or dropped) an unexpected set of preserved object ids')
+    }
+    if ((block2.squads?.length ?? 0) > 0 || (block2.markers?.length ?? 0) > 0) {
+      throw new Error('Verification failed: clear-all left squads/markers behind')
+    }
+    if ((block2.rivers?.[0]?.nodes?.length ?? 0) > 0) {
+      throw new Error('Verification failed: clear-all left river nodes behind')
     }
   }
 

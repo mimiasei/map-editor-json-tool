@@ -73,7 +73,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2 } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -676,6 +676,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       applyEdit({ kind: 'paintRiver', changes, deletions: erasedRiverNodes }, 'erase river')
     }
   }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, applyEdit])
+
+  // ── Clear All — Eraser's whole-map sibling: wipes every object/squad/
+  // marker/river node in one atomic edit (clearAllObjects, map-write.ts),
+  // not a loop of per-object deletes (would re-parse Block 2 once per
+  // object on a map with thousands of them — see that function's own doc
+  // comment). Player-start spawners (city-spawner/hero-spawner) are kept,
+  // same reasoning as clearAllObjects: touching them would also mean
+  // rewriting Block 1, and nobody bulk-clearing decorations/encounters
+  // wants their player-start structure wiped out with it. A single click
+  // only arms a same-row confirm (Confirm/Cancel) — this has no undo beyond
+  // Ctrl+Z/the one-time .bak, same as every other edit here, but the blast
+  // radius is the whole map, so it gets the deliberate confirmation
+  // CLAUDE.md's own convention reserves for destructive actions.
+  const [clearAllConfirming, setClearAllConfirming] = useState(false)
+  const stopClearAllConfirm = () => setClearAllConfirming(false)
+  const commitClearAll = useCallback(() => {
+    const preserveObjectIds = placedObjects
+      .filter((o) => o.type === 0 && (o.spawnerInfo?.spawnPointType === 0 || o.spawnerInfo?.spawnPointType === 1))
+      .map((o) => o.id)
+    applyEdit({ kind: 'clearAll', preserveObjectIds }, 'clear all')
+    setClearAllConfirming(false)
+  }, [placedObjects, applyEdit])
 
   const stopPainting = () => {
     setPaintBiome(null)
@@ -2797,6 +2819,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setObstacleBrushActive(false)
                     setTreesActive(false)
                     setEraserActive(false)
+                    setClearAllConfirming(false)
                     setPlacingSid(null)
                     setPlacingCreatureId(null)
                     setPlacingZoneSid(null)
@@ -2903,7 +2926,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
@@ -2913,7 +2936,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Plus className="h-3.5 w-3.5" />}
                   label="Objects"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -3025,7 +3048,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Paintbrush className="h-3.5 w-3.5" />}
                   label="Terrain"
                   title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -3060,7 +3083,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Layers className="h-3.5 w-3.5" />}
                   label="Level"
                   title="Paint elevation level"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -3087,7 +3110,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<TrendingUpDown className="h-3.5 w-3.5" />}
                   label="Ramp"
                   title="Ramp — drag onto the lower side of a level boundary"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); setRampActive(true) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); setRampActive(true) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -3125,7 +3148,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Droplets className="h-3.5 w-3.5" />}
                   label="Water"
                   title="Flood-fill water (click a tile at level 0 or lower)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); setWaterBrush(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); setWaterBrush(1) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -3149,7 +3172,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Waves className="h-3.5 w-3.5" />}
                   label="River"
                   title="Draw a river — drag to trace a path"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -3189,7 +3212,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Milestone className="h-3.5 w-3.5" />}
                   label="Road"
                   title="Paint a road (dirt or stone)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); setRoadBrush(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); setRoadBrush(1) }}
                 />
               )}
               {fuzzyObstaclePools && (
@@ -3218,7 +3241,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       label="Obstacles"
                       title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
                         setObstacleBrushActive(true)
                       }}
                     />
@@ -3248,7 +3271,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       label="Trees"
                       title="Tree brush — drag to scatter biome-appropriate trees"
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
                         setTreesActive(true)
                       }}
                     />
@@ -3276,7 +3299,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             key={z.id}
                             className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
                             onClick={() => {
-                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopObstaclePainting(); stopTreePainting(); stopEraser()
                               setPlacingZoneSid(z.id)
                             }}
                           >
@@ -3311,8 +3334,33 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   label="Eraser"
                   title="Eraser — drag to delete objects/units/zones (not terrain)"
                   onClick={() => {
-                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting()
+                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting()
                     setEraserActive(true)
+                  }}
+                />
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Clear All — Eraser's whole-map sibling; see commitClearAll's
+                  own doc comment for why player-start spawners are kept and
+                  why this is one atomic edit rather than a per-object loop. */}
+              {clearAllConfirming ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-destructive">Clear everything?</span>
+                  <Button variant="destructive" size="sm" className="h-6 text-xs" onClick={commitClearAll}>
+                    Confirm
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setClearAllConfirming(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Trash2 className="h-3.5 w-3.5" />}
+                  label="Clear All"
+                  title="Delete every object, squad, zone, and river on the map (player-start spawners kept)"
+                  onClick={() => {
+                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                    setClearAllConfirming(true)
                   }}
                 />
               )}
