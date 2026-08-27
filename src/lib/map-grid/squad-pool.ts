@@ -1,0 +1,70 @@
+// ─── Map grid — random-squad "Encounter" brush + Browse-mode difficulty picker ─
+// Shared between the Encounter paint tool (MapGridDialog.tsx) and the
+// Browse-mode Value editor (MapGridCellContent.tsx) so both draw from the
+// same difficulty→value ranges — issue #203.
+
+import type { BiomeId } from './terrain-colors'
+
+/** Labels match the game's own scenario-difficulty naming (Easy/Normal/
+ *  Difficult/Impossible/Lethal — see plans/mapmaking_guide_en_noMapEditor.md's
+ *  Difficulty condition docs) applied to a random-squad's requestedValue. */
+export function randomSquadDifficultyLabel(value: number): string {
+  if (value <= 2000) return 'Easy'
+  if (value <= 4000) return 'Normal'
+  if (value <= 6000) return 'Difficult'
+  if (value <= 8000) return 'Impossible'
+  return 'Lethal'
+}
+
+/** Ranges for the difficulty quick-pick buttons/Encounter tool setting —
+ *  same bucket boundaries as randomSquadDifficultyLabel above. Floors at
+ *  250, not 0 — requestedValue:0 makes a random-squad invisible in-game
+ *  (see randomSquadDefaultValue's doc comment in map-write.ts). Lethal has
+ *  no documented real ceiling above 8000; 16000 is just a reasonable cap
+ *  for this convenience roll. `Random` spans the same overall 250-16000
+ *  band flat, rather than being a 6th disjoint bracket — issue #203's own
+ *  spec (500-15000, rounded to the nearest existing boundary either side). */
+export const RANDOM_SQUAD_DIFFICULTY_RANGES: { label: string; min: number; max: number }[] = [
+  { label: 'Random', min: 500, max: 15000 },
+  { label: 'Easy', min: 250, max: 2000 },
+  { label: 'Normal', min: 2001, max: 4000 },
+  { label: 'Difficult', min: 4001, max: 6000 },
+  { label: 'Impossible', min: 6001, max: 8000 },
+  { label: 'Lethal', min: 8001, max: 16000 },
+]
+
+export function randomInRange(min: number, max: number): number {
+  return min + Math.floor(Math.random() * (max - min + 1))
+}
+
+/** Faction id a random-squad's `fraction` field resolves to when its owning
+ *  tile's biome should determine "who's guarding this" — confirmed real
+ *  data (Core/DB/fractions/*.json, same mapping as the rest of this
+ *  codebase's biome logic): human->Grass, undead->Deathland, dungeon->Dirt,
+ *  nature->Autumn, demon->Lava, unfrozen->Snow. Sand/Desert (biome 2) is
+ *  intentionally absent — no faction natively occupies it. */
+const BIOME_FACTION: Partial<Record<BiomeId, string>> = {
+  1: 'human',
+  3: 'undead',
+  4: 'unfrozen',
+  5: 'nature',
+  6: 'demon',
+  7: 'dungeon',
+}
+
+const ALL_FRACTIONS = ['human', 'undead', 'dungeon', 'nature', 'demon', 'unfrozen', 'neutral', '']
+
+/** Picks a `propRandomSquads.fraction` value for a tile of the given biome —
+ *  confirmed against real shipped maps that this field is real, load-bearing
+ *  data (62% of 1039 sampled propRandomSquads rows set a specific faction,
+ *  independent of requestedValue/tier), not previously written by any path
+ *  in this codebase. `biomePurity` follows the same 0-1 semantics as the
+ *  Obstacles/Trees/Landmark brushes' slider: 1 always picks the tile's own
+ *  matching faction, 0 picks uniformly among every other option including
+ *  '' (no faction/random) and 'neutral'. */
+export function sampleFraction(ownBiome: BiomeId, biomePurity: number, rng: () => number = Math.random): string {
+  const ownFaction = BIOME_FACTION[ownBiome] ?? ''
+  if (rng() < biomePurity) return ownFaction
+  const others = ALL_FRACTIONS.filter((f) => f !== ownFaction)
+  return others[Math.floor(rng() * others.length)]
+}

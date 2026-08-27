@@ -27,6 +27,7 @@ import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
+import { RANDOM_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel } from '@/lib/map-grid/squad-pool'
 
 /** Only valid when item.entitySid already exists — used for the Rename flow. */
 function toEntity(item: PlacedObject): MapEntity | null {
@@ -180,35 +181,6 @@ function formatRotation(rotation: number): string {
   return rotation >= 10 ? `${degrees}° (mirrored)` : `${degrees}°`
 }
 
-/** Labels match the game's own scenario-difficulty naming (Easy/Normal/
- *  Difficult/Impossible/Lethal — see plans/mapmaking_guide_en_noMapEditor.md's
- *  Difficulty condition docs) applied to a random-squad's requestedValue. */
-function randomSquadDifficultyLabel(value: number): string {
-  if (value <= 2000) return 'Easy'
-  if (value <= 4000) return 'Normal'
-  if (value <= 6000) return 'Difficult'
-  if (value <= 8000) return 'Impossible'
-  return 'Lethal'
-}
-
-/** Ranges for the difficulty quick-pick buttons next to the Value field —
- *  same bucket boundaries as randomSquadDifficultyLabel above. Floors at
- *  250, not 0 — requestedValue:0 makes a random-squad invisible in-game
- *  (see randomSquadDefaultValue's doc comment in map-write.ts). Lethal has
- *  no documented real ceiling above 8000; 16000 is just a reasonable cap
- *  for this convenience roll. */
-const RANDOM_SQUAD_DIFFICULTY_RANGES: { label: string; min: number; max: number }[] = [
-  { label: 'Easy', min: 250, max: 2000 },
-  { label: 'Normal', min: 2001, max: 4000 },
-  { label: 'Difficult', min: 4001, max: 6000 },
-  { label: 'Impossible', min: 6001, max: 8000 },
-  { label: 'Lethal', min: 8001, max: 16000 },
-]
-
-function randomInRange(min: number, max: number): number {
-  return min + Math.floor(Math.random() * (max - min + 1))
-}
-
 export default function MapGridCellContent({
   items,
   terrainLabel,
@@ -245,25 +217,20 @@ export default function MapGridCellContent({
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
-  // issue #130 item 9: Player type used to save on every click — now staged
-  // locally and only written on an explicit Save, matching the entity-SID/
-  // display-name convention (both of those already require a deliberate
-  // action, not a click-and-forget one).
-  const [pendingSpawnType, setPendingSpawnType] = useState<0 | 1 | 2 | null>(null)
-  const [pendingSpawnerOwner, setPendingSpawnerOwner] = useState<number | null>(null)
-  const [pendingCityFaction, setPendingCityFaction] = useState<string | null>(null)
-  const [pendingSpawnHero, setPendingSpawnHero] = useState<boolean | null>(null)
-  const [pendingHeroSid, setPendingHeroSid] = useState<string | null>(null)
   // Hero-spawner only, local-only (never written) — just narrows the hero
   // browser below, since a hero-spawner has no propCities row to persist a
   // faction to; the faction becomes implicit once a specific hero is picked.
   const [heroFactionFilter, setHeroFactionFilter] = useState<string>('')
   const [heroPickerOpen, setHeroPickerOpen] = useState(false)
-  // issue #143 — same staged-then-saved convention as Player type above.
-  const [pendingGuardUnitProps, setPendingGuardUnitProps] = useState<{ sid: string; count: number }[] | null>(null)
-  const [pendingCitySquadSids, setPendingCitySquadSids] = useState<string[] | null>(null)
-  const [pendingRandomSquadValue, setPendingRandomSquadValue] = useState<number | null>(null)
-  const [pendingRewardParams, setPendingRewardParams] = useState<string[] | null>(null)
+  // Every other field on this panel commits straight to the in-memory
+  // document on change/click (issue #203 — a "Save to .map" button here was
+  // a pre-#195 leftover that never actually gated a real disk write, since
+  // every onSet* prop already goes through the same synchronous applyEdit
+  // every other control in the app calls unconditionally). The random-squad
+  // Value field is the one exception: it's free-typed, so committing per
+  // keystroke would spam the edit history — this stays a local draft,
+  // committed on blur instead.
+  const [draftRandomSquadValue, setDraftRandomSquadValue] = useState<number | null>(null)
 
   // A newly-clicked tile arrives as a new `items` array — default back to
   // the first row rather than keeping a stale selection from the old tile.
@@ -276,18 +243,8 @@ export default function MapGridCellContent({
   const renameEntity = selected ? toEntity(selected) : null
 
   useEffect(() => { setNewSidInput('') }, [selected?.key])
-  useEffect(() => { setPendingSpawnType(null) }, [selected?.key])
-  useEffect(() => { setPendingSpawnerOwner(null) }, [selected?.key])
-  useEffect(() => {
-    setPendingCityFaction(null)
-    setPendingSpawnHero(null)
-    setPendingHeroSid(null)
-    setHeroFactionFilter('')
-  }, [selected?.key])
-  useEffect(() => { setPendingGuardUnitProps(null) }, [selected?.key])
-  useEffect(() => { setPendingCitySquadSids(null) }, [selected?.key])
-  useEffect(() => { setPendingRandomSquadValue(null) }, [selected?.key])
-  useEffect(() => { setPendingRewardParams(null) }, [selected?.key])
+  useEffect(() => { setHeroFactionFilter('') }, [selected?.key])
+  useEffect(() => { setDraftRandomSquadValue(null) }, [selected?.key])
 
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === selected?.sid)
   const isCatalogInteractable = !!catalogEntry?.isInteractable
@@ -570,9 +527,7 @@ export default function MapGridCellContent({
           {selected
             && (selected.type === 0 ? !selected.isCity && !isHeroSpawner : selected.type === 2)
             && (selected.guardUnitProps !== undefined || onSetGuardSquad) && (() => {
-              const guardRows = pendingGuardUnitProps ?? selected.guardUnitProps ?? []
-              const guardDirty = pendingGuardUnitProps !== null
-                && JSON.stringify(pendingGuardUnitProps) !== JSON.stringify(selected.guardUnitProps ?? [])
+              const guardRows = selected.guardUnitProps ?? []
               // A standalone squads[] placement (type 2) isn't "guarding"
               // anything — it IS the unit — so "Guard" would read oddly;
               // everything else about this editor (HeroCatalogListEditor,
@@ -586,7 +541,7 @@ export default function MapGridCellContent({
                     <HeroCatalogListEditor
                       category="creature"
                       rows={guardRows}
-                      onChange={setPendingGuardUnitProps}
+                      onChange={(rows) => onSetGuardSquad(selected, rows)}
                       maxRows={12}
                       refField="sid"
                       emptyRow={{ sid: '', count: 1 }}
@@ -613,18 +568,6 @@ export default function MapGridCellContent({
                       ? 'Leave empty for a randomized count/creature, resolved by the game itself — setting an exact unit here overrides that.'
                       : 'Confirmed on interactable objects in real shipped maps; never observed on a mine specifically, though nothing here prevents setting one.'}
                   </p>
-                  {onSetGuardSquad && guardDirty && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <p className="text-xs text-amber-600">Unsaved change</p>
-                      <Button
-                        size="sm"
-                        className="h-6 text-xs"
-                        onClick={() => { onSetGuardSquad(selected, pendingGuardUnitProps!); setPendingGuardUnitProps(null) }}
-                      >
-                        Save to .map
-                      </Button>
-                    </div>
-                  )}
                 </div>
               )
             })()}
@@ -636,14 +579,8 @@ export default function MapGridCellContent({
                 const info = selected.spawnerInfo!
                 const isCitySpawnerHere = info.spawnPointType === 0
                 const currentFactionSid = isCitySpawnerHere ? (info.factionSid ?? '') : heroFactionFilter
-                const shownFactionSid = isCitySpawnerHere ? (pendingCityFaction ?? currentFactionSid) : currentFactionSid
-                const factionDirty = isCitySpawnerHere && pendingCityFaction !== null && pendingCityFaction !== currentFactionSid
                 const currentSpawnHero = info.spawnHero ?? false
-                const shownSpawnHero = pendingSpawnHero ?? currentSpawnHero
-                const spawnHeroDirty = pendingSpawnHero !== null && pendingSpawnHero !== currentSpawnHero
                 const currentHeroSid = info.heroSid ?? 'random'
-                const shownHeroSid = pendingHeroSid ?? currentHeroSid
-                const heroDirty = pendingHeroSid !== null && pendingHeroSid !== currentHeroSid
                 const factionName = (sid: string) => {
                   const name = catalog?.factions.find((f) => f.id === sid)?.name
                   return name ? `${name} (${sid})` : sid
@@ -655,10 +592,10 @@ export default function MapGridCellContent({
                       <p className="text-xs text-muted-foreground">Faction</p>
                       {canEditFaction ? (
                         <Select
-                          value={shownFactionSid || 'random'}
+                          value={currentFactionSid || 'random'}
                           onValueChange={(v) => {
                             const sid = v === 'random' ? '' : v
-                            if (isCitySpawnerHere) setPendingCityFaction(sid)
+                            if (isCitySpawnerHere) onSetCityFaction!(selected, sid)
                             else setHeroFactionFilter(sid)
                           }}
                         >
@@ -673,19 +610,7 @@ export default function MapGridCellContent({
                           </SelectContent>
                         </Select>
                       ) : (
-                        <p className="text-xs">{shownFactionSid ? factionName(shownFactionSid) : 'Random'}</p>
-                      )}
-                      {factionDirty && (
-                        <div className="flex items-center gap-2 pt-1">
-                          <p className="text-xs text-amber-600">Unsaved change</p>
-                          <Button
-                            size="sm"
-                            className="h-6 text-xs"
-                            onClick={() => { onSetCityFaction!(selected, pendingCityFaction!); setPendingCityFaction(null) }}
-                          >
-                            Save to .map
-                          </Button>
-                        </div>
+                        <p className="text-xs">{currentFactionSid ? factionName(currentFactionSid) : 'Random'}</p>
                       )}
                     </div>
 
@@ -694,27 +619,15 @@ export default function MapGridCellContent({
                         <label className="flex items-center gap-2 text-xs">
                           {onSetCitySpawnHero ? (
                             <Checkbox
-                              checked={shownSpawnHero}
-                              onCheckedChange={(v) => setPendingSpawnHero(v === true)}
+                              checked={currentSpawnHero}
+                              onCheckedChange={(v) => onSetCitySpawnHero(selected, v === true)}
                             />
                           ) : (
-                            <Checkbox checked={shownSpawnHero} disabled />
+                            <Checkbox checked={currentSpawnHero} disabled />
                           )}
                           Spawns with a hero
                         </label>
-                        {shownSpawnHero && <p className="text-xs text-muted-foreground pl-6">Random hero</p>}
-                        {spawnHeroDirty && (
-                          <div className="flex items-center gap-2 pt-1">
-                            <p className="text-xs text-amber-600">Unsaved change</p>
-                            <Button
-                              size="sm"
-                              className="h-6 text-xs"
-                              onClick={() => { onSetCitySpawnHero!(selected, pendingSpawnHero!); setPendingSpawnHero(null) }}
-                            >
-                              Save to .map
-                            </Button>
-                          </div>
-                        )}
+                        {currentSpawnHero && <p className="text-xs text-muted-foreground pl-6">Random hero</p>}
                       </div>
                     )}
 
@@ -722,39 +635,27 @@ export default function MapGridCellContent({
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground">Hero</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-xs">{shownHeroSid === 'random' ? 'Random' : shownHeroSid}</p>
+                          <p className="text-xs">{currentHeroSid === 'random' ? 'Random' : currentHeroSid}</p>
                           {onSetHeroSid && (
                             <>
                               <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
                                 Browse…
                               </Button>
-                              {shownHeroSid !== 'random' && (
-                                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setPendingHeroSid('random')}>
+                              {currentHeroSid !== 'random' && (
+                                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSetHeroSid(selected, 'random')}>
                                   Set to random
                                 </Button>
                               )}
                             </>
                           )}
                         </div>
-                        {heroDirty && (
-                          <div className="flex items-center gap-2 pt-1">
-                            <p className="text-xs text-amber-600">Unsaved change</p>
-                            <Button
-                              size="sm"
-                              className="h-6 text-xs"
-                              onClick={() => { onSetHeroSid!(selected, pendingHeroSid!); setPendingHeroSid(null) }}
-                            >
-                              Save to .map
-                            </Button>
-                          </div>
-                        )}
                         {onSetHeroSid && (
                           <HeroPickerDialog
                             open={heroPickerOpen}
                             onOpenChange={setHeroPickerOpen}
-                            value={shownHeroSid !== 'random' ? shownHeroSid : undefined}
+                            value={currentHeroSid !== 'random' ? currentHeroSid : undefined}
                             lockedFaction={heroFactionFilter || undefined}
-                            onSelect={(entry) => { if (entry.heroId) setPendingHeroSid(entry.heroId) }}
+                            onSelect={(entry) => { if (entry.heroId) onSetHeroSid(selected, entry.heroId) }}
                           />
                         )}
                       </div>
@@ -771,33 +672,19 @@ export default function MapGridCellContent({
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Player attached to this spawner</p>
                 {onSetSpawnerOwner && playersCount > 0 ? (
-                  <>
-                    <Select
-                      value={String(pendingSpawnerOwner ?? selected.spawnerInfo.owner)}
-                      onValueChange={(v) => setPendingSpawnerOwner(Number(v))}
-                    >
-                      <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: playersCount }, (_, i) => i + 1).map((p) => (
-                          <SelectItem key={p} value={String(p)}>Player {p}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {pendingSpawnerOwner !== null && pendingSpawnerOwner !== selected.spawnerInfo.owner && (
-                      <div className="flex items-center gap-2 pt-1">
-                        <p className="text-xs text-amber-600">Unsaved change</p>
-                        <Button
-                          size="sm"
-                          className="h-6 text-xs"
-                          onClick={() => { onSetSpawnerOwner(selected, pendingSpawnerOwner); setPendingSpawnerOwner(null) }}
-                        >
-                          Save to .map
-                        </Button>
-                      </div>
-                    )}
-                  </>
+                  <Select
+                    value={String(selected.spawnerInfo.owner)}
+                    onValueChange={(v) => onSetSpawnerOwner(selected, Number(v))}
+                  >
+                    <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: playersCount }, (_, i) => i + 1).map((p) => (
+                        <SelectItem key={p} value={String(p)}>Player {p}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <p className="text-xs">Player {selected.spawnerInfo.owner}</p>
                 )}
@@ -809,10 +696,10 @@ export default function MapGridCellContent({
                     {PLAYER_TYPE_LABELS.map((label, idx) => (
                       <button
                         key={label}
-                        onClick={() => setPendingSpawnType(idx as 0 | 1 | 2)}
+                        onClick={() => onSetSpawnerPlayerType(selected, idx as 0 | 1 | 2)}
                         className={cn(
                           'h-6 px-2 text-xs rounded border transition-colors',
-                          (pendingSpawnType ?? selected.spawnerInfo!.spawnType) === idx
+                          selected.spawnerInfo!.spawnType === idx
                             ? 'bg-background text-foreground border-border'
                             : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground',
                         )}
@@ -824,27 +711,13 @@ export default function MapGridCellContent({
                 ) : (
                   <p className="text-xs">{PLAYER_TYPE_LABELS[selected.spawnerInfo.spawnType] ?? 'Unknown'}</p>
                 )}
-                {onSetSpawnerPlayerType && pendingSpawnType !== null && pendingSpawnType !== selected.spawnerInfo.spawnType && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <p className="text-xs text-amber-600">Unsaved change</p>
-                    <Button
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() => { onSetSpawnerPlayerType(selected, pendingSpawnType); setPendingSpawnType(null) }}
-                    >
-                      Save to .map
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
           )}
 
           {selected && selected.isCity && (selected.citySquadSids !== undefined || onSetCityGarrison) && (() => {
-            const garrisonSids = pendingCitySquadSids ?? selected.citySquadSids ?? []
+            const garrisonSids = selected.citySquadSids ?? []
             const garrisonRows = garrisonSids.map((sid) => ({ sid }))
-            const garrisonDirty = pendingCitySquadSids !== null
-              && JSON.stringify(pendingCitySquadSids) !== JSON.stringify(selected.citySquadSids ?? [])
             return (
               <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
                 <p className="text-xs font-semibold text-muted-foreground">Garrison</p>
@@ -856,7 +729,7 @@ export default function MapGridCellContent({
                   <HeroCatalogListEditor
                     category="squadTemplate"
                     rows={garrisonRows}
-                    onChange={(rows) => setPendingCitySquadSids(rows.map((r) => r.sid))}
+                    onChange={(rows) => onSetCityGarrison(selected, rows.map((r) => r.sid))}
                     maxRows={5}
                     refField="sid"
                     emptyRow={{ sid: '' }}
@@ -870,26 +743,13 @@ export default function MapGridCellContent({
                     ))}
                   </ul>
                 )}
-                {onSetCityGarrison && garrisonDirty && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <p className="text-xs text-amber-600">Unsaved change</p>
-                    <Button
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() => { onSetCityGarrison(selected, pendingCitySquadSids!); setPendingCitySquadSids(null) }}
-                    >
-                      Save to .map
-                    </Button>
-                  </div>
-                )}
               </div>
             )
           })()}
 
           {selected && selected.sid === 'random-squad'
             && (selected.randomSquadValue !== undefined || onSetRandomSquadValue) && (() => {
-            const shownValue = pendingRandomSquadValue ?? selected.randomSquadValue ?? 0
-            const valueDirty = pendingRandomSquadValue !== null && pendingRandomSquadValue !== selected.randomSquadValue
+            const shownValue = draftRandomSquadValue ?? selected.randomSquadValue ?? 0
             return (
               <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
                 <p className="text-xs font-semibold text-muted-foreground">Value</p>
@@ -903,7 +763,13 @@ export default function MapGridCellContent({
                       min={0}
                       className="h-6 text-xs w-24"
                       value={shownValue}
-                      onChange={(e) => setPendingRandomSquadValue(Math.max(0, Number(e.target.value) || 0))}
+                      onChange={(e) => setDraftRandomSquadValue(Math.max(0, Number(e.target.value) || 0))}
+                      onBlur={() => {
+                        if (draftRandomSquadValue !== null && draftRandomSquadValue !== selected.randomSquadValue) {
+                          onSetRandomSquadValue(selected, draftRandomSquadValue)
+                        }
+                        setDraftRandomSquadValue(null)
+                      }}
                     />
                   ) : (
                     <p className="text-xs tabular-nums">{shownValue}</p>
@@ -919,23 +785,11 @@ export default function MapGridCellContent({
                         variant="outline"
                         size="sm"
                         className="h-6 px-2 text-xs"
-                        onClick={() => setPendingRandomSquadValue(randomInRange(min, max))}
+                        onClick={() => onSetRandomSquadValue(selected, randomInRange(min, max))}
                       >
                         {label}
                       </Button>
                     ))}
-                  </div>
-                )}
-                {onSetRandomSquadValue && valueDirty && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <p className="text-xs text-amber-600">Unsaved change</p>
-                    <Button
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() => { onSetRandomSquadValue(selected, pendingRandomSquadValue!); setPendingRandomSquadValue(null) }}
-                    >
-                      Save to .map
-                    </Button>
                   </div>
                 )}
               </div>
@@ -1012,32 +866,22 @@ export default function MapGridCellContent({
           )}
 
           {selected.rewardParams && selected.rewardParams.length > 0 && (() => {
-            const rewardValues = pendingRewardParams ?? selected.rewardParams!
-            const rewardDirty = pendingRewardParams !== null
-              && JSON.stringify(pendingRewardParams) !== JSON.stringify(selected.rewardParams)
+            const rewardValues = selected.rewardParams!
             return (
               <div className="space-y-1 pt-2 mt-1 border-t border-border/50">
                 <p className="text-xs font-semibold text-muted-foreground">Rewards</p>
                 {onSetRewardParams ? (
-                  <RewardSlotEditor parameters={rewardValues} onChange={setPendingRewardParams} catalog={catalog} />
+                  <RewardSlotEditor
+                    parameters={rewardValues}
+                    onChange={(params) => onSetRewardParams(selected, params)}
+                    catalog={catalog}
+                  />
                 ) : (
                   <ul className="text-xs list-disc list-inside space-y-0.5">
                     {rewardValues.map((p, i) => (
                       <li key={i}>{formatRewardParam(p, catalog)}</li>
                     ))}
                   </ul>
-                )}
-                {onSetRewardParams && rewardDirty && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <p className="text-xs text-amber-600">Unsaved change</p>
-                    <Button
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() => { onSetRewardParams(selected, pendingRewardParams!); setPendingRewardParams(null) }}
-                    >
-                      Save to .map
-                    </Button>
-                  </div>
                 )}
               </div>
             )

@@ -829,6 +829,7 @@ interface PropRandomSquadEntry {
   id?: number
   sids?: string[]
   requestedValue?: number
+  fraction?: string
 }
 
 export function upsertPropRandomSquads(chunk: Uint8Array, entityType: number, entityId: number, sids: string[]): Uint8Array {
@@ -1545,6 +1546,32 @@ export function deleteObjectInstance(
   }
 }
 
+/** Overwrites `requestedValue`/`fraction` on the `propRandomSquads` row
+ *  `addObjectInstance` just seeded with its own defaults (see
+ *  `RANDOM_SPAWNER_TABLE_DEFAULTS`/`randomSquadDefaultValue`) — used by
+ *  `paintObjects`'s `randomSquadOverrides` so the Encounter brush (issue
+ *  #203) can place a `random-squad` with a chosen difficulty/faction in one
+ *  atomic edit, instead of a separate follow-up edit per placement. A no-op
+ *  if the row is somehow missing (shouldn't happen right after
+ *  `addObjectInstance` backfilled it, but this file's convention throughout
+ *  is to skip a table it can't find rather than invent one). */
+function patchRandomSquadRow(
+  block2Chunk: Uint8Array,
+  id: number,
+  patch: { requestedValue: number; fraction: string },
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propRandomSquads')
+  const entries = JSON.parse(span) as PropRandomSquadEntry[]
+  const existing = entries.find((e) => String(e.type) === '0' && e.id === id)
+  if (!existing) return block2Chunk
+  existing.requestedValue = patch.requestedValue
+  existing.fraction = patch.fraction
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
+}
+
 /** A drag-painted batch of `objects[]` (type 0) placements — the terrain
  *  painter's technique (Phase D) generalized to any placeable object, not
  *  just tilesMap biomes. `deletions` are existing non-blocking decorative
@@ -1553,11 +1580,13 @@ export function deleteObjectInstance(
  *  this function just applies both halves as one atomic edit, by chaining
  *  the already-verified deleteObjectInstance/addObjectInstance one call at a
  *  time). Deletions run first so an overwritten tile's old instance never
- *  transiently coexists with its replacement. */
+ *  transiently coexists with its replacement. `randomSquadOverrides` (sid
+ *  'random-squad' only) lets the Encounter brush set a chosen value/faction
+ *  right after placement — see `patchRandomSquadRow`. */
 export function paintObjects(
   block1Chunk: Uint8Array,
   block2Chunk: Uint8Array,
-  additions: { node: number; sid: string }[],
+  additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[],
   deletions: number[],
 ): { block1Chunk: Uint8Array; block2Chunk: Uint8Array; newIds: number[] } {
   let b1 = block1Chunk
@@ -1568,10 +1597,13 @@ export function paintObjects(
     b2 = result.block2Chunk
   }
   const newIds: number[] = []
-  for (const { node, sid } of additions) {
+  for (const { node, sid, randomSquadOverrides } of additions) {
     const result = addObjectInstance(b1, b2, 0, sid, node)
     b1 = result.block1Chunk
     b2 = result.block2Chunk
+    if (sid === 'random-squad' && randomSquadOverrides) {
+      b2 = patchRandomSquadRow(b2, result.newId, randomSquadOverrides)
+    }
     newIds.push(result.newId)
   }
   return { block1Chunk: b1, block2Chunk: b2, newIds }

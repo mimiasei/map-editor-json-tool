@@ -49,6 +49,7 @@ import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { computeRectangleBounds, nodesInRectangle, type RectangleBounds } from '@/lib/map-grid/rectangle'
 import { buildFuzzyObstaclePools, buildTreePools, computeFuzzyDistances, computeStrokeBoundingSize, sampleFuzzyObstacles } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractablePools, sampleInteractable } from '@/lib/map-grid/interactable-pool'
+import { RANDOM_SQUAD_DIFFICULTY_RANGES, randomInRange, sampleFraction } from '@/lib/map-grid/squad-pool'
 import { tilesInRadius } from '@/lib/map-grid/brush'
 import { buildBlockedTileSet, objectBlockedCells } from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
@@ -71,7 +72,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -454,7 +455,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'eraser'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
@@ -725,6 +726,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     [catalog],
   )
 
+  // Encounter (issue #203) brush settings — declared here for the same
+  // temporal-dead-zone reason as the Interactable block above, since
+  // applyRectangleFill's 'squad' branch needs them too. squadDifficulty
+  // indexes RANDOM_SQUAD_DIFFICULTY_RANGES by label; squadBiomePurity drives
+  // sampleFraction (squad-pool.ts) the same 0-1 way Obstacles/Trees/
+  // Landmark's biome-mix slider drives their own sampling.
+  const [squadActive, setSquadActive] = useState(false)
+  const [squadDifficulty, setSquadDifficulty] = useState('Random')
+  const [squadBiomePurity, setSquadBiomePurity] = useState(0.9)
+  const [squadPlaceResourceAbove, setSquadPlaceResourceAbove] = useState(false)
+
   // Rectangle mode's release-time commit — the whole enclosed region is
   // known at once, so (unlike freehand) this applies immediately rather
   // than accumulating into an in-progress buffer first.
@@ -747,7 +759,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return false
   }, [levelsMap, sizeX, sizeZ])
-  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'eraser', bounds: RectangleBounds) => {
+  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser', bounds: RectangleBounds) => {
     const nodes = nodesInRectangle(bounds, sizeX)
     if (nodes.length === 0) return
     if (tool === 'ramp') {
@@ -781,6 +793,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       return
     }
+    if (tool === 'squad') {
+      const range = RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === squadDifficulty) ?? RANDOM_SQUAD_DIFFICULTY_RANGES[0]
+      const additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
+      for (const n of nodes) {
+        const biome = tilesMap[n]
+        const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
+        additions.push({ node: n, sid: 'random-squad', randomSquadOverrides: { requestedValue: randomInRange(range.min, range.max), fraction } })
+        if (squadPlaceResourceAbove) {
+          const z = Math.floor(n / sizeX)
+          if (z < sizeZ - 1) additions.push({ node: n + sizeX, sid: 'random-res' })
+        }
+      }
+      if (additions.length > 0) applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'place Encounter squads')
+      return
+    }
     if (tool === 'eraser') {
       commitEraserStroke(nodes)
       return
@@ -800,7 +827,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     } else if (tool === 'road' && roadBrush !== null) {
       applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, paintBiome, levelBrush, waterBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, levelsMap, interactablePools, interactableBiomePurity, interactableAllowHighContrast, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, waterBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, levelsMap, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulty, squadBiomePurity, squadPlaceResourceAbove, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -944,6 +971,44 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stopInteractablePainting = () => {
     setInteractableActive(false)
     setInteractableStaged(new Map())
+  }
+
+  // ── Encounter (issue #203) — squadActive/squadDifficulty/squadBiomePurity/
+  // squadPlaceResourceAbove declared earlier (near interactablePools) so
+  // applyRectangleFill's own 'squad' branch can reference them. Always
+  // exactly one tile per position, same as Landmark/Road — a random-squad
+  // guard is a single spawner, not an area brush. A node already staged
+  // this stroke keeps its first roll rather than re-rolling on every
+  // revisit, matching Interactable's own "first pick sticks" rule.
+  const squadPaintingRef = useRef(false)
+  const [squadStaged, setSquadStaged] = useState<Map<number, { requestedValue: number; fraction: string }>>(new Map())
+  const stageSquadNode = useCallback((node: number) => {
+    if (squadStaged.has(node)) return
+    const range = RANDOM_SQUAD_DIFFICULTY_RANGES.find((r) => r.label === squadDifficulty) ?? RANDOM_SQUAD_DIFFICULTY_RANGES[0]
+    const biome = tilesMap[node]
+    const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
+    setSquadStaged((prev) => {
+      const next = new Map(prev)
+      next.set(node, { requestedValue: randomInRange(range.min, range.max), fraction })
+      return next
+    })
+  }, [squadStaged, squadDifficulty, squadBiomePurity, tilesMap])
+  const commitSquadStroke = useCallback(() => {
+    if (squadStaged.size === 0) return
+    const additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
+    for (const [node, overrides] of squadStaged) {
+      additions.push({ node, sid: 'random-squad', randomSquadOverrides: overrides })
+      if (squadPlaceResourceAbove) {
+        const z = Math.floor(node / sizeX)
+        if (z < sizeZ - 1) additions.push({ node: node + sizeX, sid: 'random-res' })
+      }
+    }
+    setSquadStaged(new Map())
+    applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'place Encounter squads')
+  }, [squadStaged, squadPlaceResourceAbove, sizeX, sizeZ, applyEdit])
+  const stopSquadPainting = () => {
+    setSquadActive(false)
+    setSquadStaged(new Map())
   }
 
   // ── River (issue: roads/rivers investigation) — a single-mode tool (no
@@ -1169,6 +1234,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null) stageInteractableNode(node)
       return
     }
+    // Encounter — always exactly one tile per position, same as Landmark/Road.
+    if (squadActive) {
+      if (interactionMode === 'rectangle') {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) {
+          e.currentTarget.setPointerCapture(e.pointerId)
+          rectangleDragRef.current = { tool: 'squad', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+        }
+        return
+      }
+      squadPaintingRef.current = true
+      e.currentTarget.setPointerCapture(e.pointerId)
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageSquadNode(node)
+      return
+    }
     // River — ordered stroke capture, no Rectangle-mode/brush-radius (see
     // riverActive's own doc comment above).
     if (riverActive) {
@@ -1346,6 +1428,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setHoveredNode(node)
       return
     }
+    if (squadPaintingRef.current) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) stageSquadNode(node)
+      setHoveredNode(node)
+      return
+    }
     if (riverDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null && riverDragRef.current[riverDragRef.current.length - 1] !== node) {
@@ -1504,6 +1592,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       interactablePaintingRef.current = false
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
       commitInteractableStroke()
+      return
+    }
+    if (squadPaintingRef.current) {
+      squadPaintingRef.current = false
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      commitSquadStroke()
       return
     }
     if (riverDragRef.current) {
@@ -2512,6 +2606,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return icons
   }, [showIcons, interactableStaged, sizeX, sizeZ])
+  const stagedSquadIcons = useMemo(() => {
+    if (!showIcons || squadStaged.size === 0) return []
+    const icons: { key: string; left: number; top: number; sid: string }[] = []
+    for (const node of squadStaged.keys()) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      icons.push({ key: `squad${node}`, left: x * BASE_CELL_PX, top: (sizeZ - 1 - z) * BASE_CELL_PX, sid: 'random-squad' })
+      if (squadPlaceResourceAbove && z < sizeZ - 1) {
+        icons.push({ key: `squadres${node}`, left: x * BASE_CELL_PX, top: (sizeZ - 1 - (z + 1)) * BASE_CELL_PX, sid: 'random-res' })
+      }
+    }
+    return icons
+  }, [showIcons, squadStaged, squadPlaceResourceAbove, sizeX, sizeZ])
 
   // Staged Move destination — same real-icon treatment as a paint-object
   // addition above, so the preview shows where the object will actually
@@ -2525,7 +2632,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [showIcons, moveState, sizeX, sizeZ])
 
   useEffect(() => {
-    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive && !moveState)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -2551,6 +2658,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else if (roadBrush !== null) stopRoadPainting()
       else if (rampActive) stopRampPainting()
       else if (interactableActive) stopInteractablePainting()
+      else if (squadActive) stopSquadPainting()
       else if (riverActive) stopRiverPainting()
       else if (obstacleBrushActive) stopObstaclePainting()
       else if (treesActive) stopTreePainting()
@@ -2559,7 +2667,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, roadBrush, rampActive, interactableActive, riverActive, obstacleBrushActive, treesActive, eraserActive, moveState, paintObjectStaged])
+  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, roadBrush, rampActive, interactableActive, squadActive, riverActive, obstacleBrushActive, treesActive, eraserActive, moveState, paintObjectStaged])
 
   // Ctrl+Z / Cmd+Z undoes the last edit applied to the in-memory .map
   // document (issue #195 follow-up: useMapDocumentStore's own zundo
@@ -2775,10 +2883,69 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Landmark — places one randomly-picked interactable per
+                  tile (mines, shrines, camps, monuments, ...), always
+                  exactly one tile per position like Road. Biome-mix/high-
+                  contrast settings live in the same gear popover as
+                  Obstacles/Trees — see interactable-pool.ts's own doc
+                  comment for why city/barracks structures are excluded and
+                  most interactables have no biome association at all. */}
+              {interactableActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <Landmark className="h-3.5 w-3.5" />
+                    Drawing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopInteractablePainting}>
+                    Stop (Esc)
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Landmark — drag to place random interactables"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopRampPainting(); setInteractableActive(true) }}
+                >
+                  <Landmark className="h-3.5 w-3.5" />
+                  Landmark
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Encounter (issue #203) — places a random-squad guard
+                  encounter, always exactly one tile per position like
+                  Landmark/Road. Difficulty/biome-mix/place-resource-above
+                  settings live in the same gear popover as Obstacles/Trees/
+                  Landmark — see squad-pool.ts's own doc comment for why the
+                  biome-mix slider drives propRandomSquads.fraction here. */}
+              {squadActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <Swords className="h-3.5 w-3.5" />
+                    Drawing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopSquadPainting}>
+                    Stop (Esc)
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Encounter — drag to place random-squad guards"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSquadActive(true) }}
+                >
+                  <Swords className="h-3.5 w-3.5" />
+                  Encounter
                 </Button>
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -2840,7 +3007,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
                 >
                   <Paintbrush className="h-3.5 w-3.5" />
                   Terrain
@@ -2879,10 +3046,41 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint elevation level"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setLevelBrush(0) }}
                 >
                   <Layers className="h-3.5 w-3.5" />
                   Level
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* Ramp — toggles climbsMap, restricted to tiles that already
+                  border a strictly higher neighbor (isValidRampNode) — a
+                  ramp tile has no meaning anywhere else, confirmed by real
+                  sample map data (zero exceptions). Direction (up/down/
+                  left/right) is never chosen here — it's derived
+                  automatically from which neighbor is higher, via the same
+                  buildRampDirectionMap the existing arrow rendering
+                  already uses, now fed this tool's live-staged data too. */}
+              {rampActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <TrendingUpDown className="h-3.5 w-3.5" />
+                    Drawing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRampPainting}>
+                    Stop (Esc)
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Ramp — drag onto the lower side of a level boundary"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); stopSquadPainting();setRampActive(true) }}
+                >
+                  <TrendingUpDown className="h-3.5 w-3.5" />
+                  Ramp
                 </Button>
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -2921,10 +3119,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Flood-fill water (click a tile at level 0 or lower)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); setWaterBrush(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); setWaterBrush(1) }}
                 >
                   <Droplets className="h-3.5 w-3.5" />
                   Water
+                </Button>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {/* River — a single-mode tool, ordered-drag path tracing (see
+                  riverActive's own doc comment). Can freely cross an existing
+                  road tile (or vice versa) — no special handling needed,
+                  same as the road/river crossing case confirmed against
+                  real map data. */}
+              {riverActive ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
+                    <Waves className="h-3.5 w-3.5" />
+                    Drawing…
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting}>
+                    Stop (Esc)
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  title="Draw a river — drag to trace a path"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
+                >
+                  <Waves className="h-3.5 w-3.5" />
+                  River
                 </Button>
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -2965,99 +3191,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Paint a road (dirt or stone)"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); setRoadBrush(1) }}
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting();setRoadBrush(1) }}
                 >
                   <Milestone className="h-3.5 w-3.5" />
                   Road
-                </Button>
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* Ramp — toggles climbsMap, restricted to tiles that already
-                  border a strictly higher neighbor (isValidRampNode) — a
-                  ramp tile has no meaning anywhere else, confirmed by real
-                  sample map data (zero exceptions). Direction (up/down/
-                  left/right) is never chosen here — it's derived
-                  automatically from which neighbor is higher, via the same
-                  buildRampDirectionMap the existing arrow rendering
-                  already uses, now fed this tool's live-staged data too. */}
-              {rampActive ? (
-                <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <TrendingUpDown className="h-3.5 w-3.5" />
-                    Drawing…
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRampPainting}>
-                    Stop (Esc)
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
-                  title="Ramp — drag onto the lower side of a level boundary"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopInteractablePainting(); setRampActive(true) }}
-                >
-                  <TrendingUpDown className="h-3.5 w-3.5" />
-                  Ramp
-                </Button>
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* Landmark — places one randomly-picked interactable per
-                  tile (mines, shrines, camps, monuments, ...), always
-                  exactly one tile per position like Road. Biome-mix/high-
-                  contrast settings live in the same gear popover as
-                  Obstacles/Trees — see interactable-pool.ts's own doc
-                  comment for why city/barracks structures are excluded and
-                  most interactables have no biome association at all. */}
-              {interactableActive ? (
-                <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <Landmark className="h-3.5 w-3.5" />
-                    Drawing…
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopInteractablePainting}>
-                    Stop (Esc)
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
-                  title="Landmark — drag to place random interactables"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); stopRiverPainting(); stopRoadPainting(); stopRampPainting(); setInteractableActive(true) }}
-                >
-                  <Landmark className="h-3.5 w-3.5" />
-                  Landmark
-                </Button>
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {/* River — a single-mode tool, ordered-drag path tracing (see
-                  riverActive's own doc comment). Can freely cross an existing
-                  road tile (or vice versa) — no special handling needed,
-                  same as the road/river crossing case confirmed against
-                  real map data. */}
-              {riverActive ? (
-                <div className="flex items-center gap-1">
-                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
-                    <Waves className="h-3.5 w-3.5" />
-                    Drawing…
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting}>
-                    Stop (Esc)
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
-                  title="Draw a river — drag to trace a path"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setRiverActive(true) }}
-                >
-                  <Waves className="h-3.5 w-3.5" />
-                  River
                 </Button>
               )}
               {fuzzyObstaclePools && (
@@ -3087,7 +3224,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       className="h-6 text-xs gap-1"
                       title="Fuzzy obstacle brush — drag to scatter biome-appropriate obstacles/clutter"
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopTreePainting()
                         setObstacleBrushActive(true)
                       }}
                     >
@@ -3121,13 +3258,50 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       className="h-6 text-xs gap-1"
                       title="Tree brush — drag to scatter biome-appropriate trees"
                       onClick={() => {
-                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
+                        stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopEraser(); stopObstaclePainting()
                         setTreesActive(true)
                       }}
                     >
                       <Trees className="h-3.5 w-3.5" />
                       Trees
                     </Button>
+                  )}
+                </>
+              )}
+              {catalog && catalog.zoneTemplates.length > 0 && (
+                <>
+                  <div className="w-px h-4 bg-amber-500/30" />
+                  {/* Zones (issue #193 Phase 3) — thin wrapper on the
+                      already-fully-built addMarker write path. */}
+                  {placingZoneSid ? (
+                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
+                      <SquareDashed className="h-3.5 w-3.5" />
+                      Placing {placingZoneSid}…
+                    </Button>
+                  ) : (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" title="Place a zone marker">
+                          <SquareDashed className="h-3.5 w-3.5" />
+                          Zones
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-48 p-1 max-h-64 overflow-y-auto" data-nodrag>
+                        {catalog.zoneTemplates.map((z) => (
+                          <button
+                            key={z.id}
+                            className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                            onClick={() => {
+                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                              setPlacingZoneSid(z.id)
+                            }}
+                          >
+                            <span>{z.id}</span>
+                            <span className="text-muted-foreground">{z.sizeX}×{z.sizeZ}</span>
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </>
               )}
@@ -3154,7 +3328,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   className="h-6 text-xs gap-1"
                   title="Eraser — drag to delete objects/units/zones (not terrain)"
                   onClick={() => {
-                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting()
+                    stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting()
                     setEraserActive(true)
                   }}
                 >
@@ -3162,61 +3336,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   Eraser
                 </Button>
               )}
-              {catalog && catalog.zoneTemplates.length > 0 && (
-                <>
-                  <div className="w-px h-4 bg-amber-500/30" />
-                  {/* Zones (issue #193 Phase 3) — thin wrapper on the
-                      already-fully-built addMarker write path. */}
-                  {placingZoneSid ? (
-                    <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingZone} title="Click a tile to place">
-                      <SquareDashed className="h-3.5 w-3.5" />
-                      Placing {placingZoneSid}…
-                    </Button>
-                  ) : (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" title="Place a zone marker">
-                          <SquareDashed className="h-3.5 w-3.5" />
-                          Zones
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-48 p-1 max-h-64 overflow-y-auto" data-nodrag>
-                        {catalog.zoneTemplates.map((z) => (
-                          <button
-                            key={z.id}
-                            className="flex items-center justify-between gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                            onClick={() => {
-                              stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopRiverPainting(); stopObstaclePainting(); stopTreePainting(); stopEraser()
-                              setPlacingZoneSid(z.id)
-                            }}
-                          >
-                            <span>{z.id}</span>
-                            <span className="text-muted-foreground">{z.sizeX}×{z.sizeZ}</span>
-                          </button>
-                        ))}
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                </>
-              )}
               {/* Freehand/Rectangle interaction mode (issue #193 Phase 4) —
                   a shared toggle for Terrain/Level/Water, not a separate
                   top-level tool. Only shown once a relevant brush is active,
                   since it has nothing to modify otherwise. */}
-              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || obstacleBrushActive || treesActive || eraserActive) && (
+              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive) && (
                 <>
                   <div className="flex-1" />
-                  {(obstacleBrushActive || treesActive || interactableActive) && (
+                  {(obstacleBrushActive || treesActive || interactableActive || squadActive) && (
                     <ToolBrushSettingsPopover
-                      tool={obstacleBrushActive ? 'obstacles' : treesActive ? 'trees' : 'interactable'}
+                      tool={obstacleBrushActive ? 'obstacles' : treesActive ? 'trees' : squadActive ? 'squad' : 'interactable'}
                       mountainChance={obstacleMountainChance}
                       onMountainChanceChange={setObstacleMountainChance}
                       poolChance={obstaclePoolChance}
                       onPoolChanceChange={setObstaclePoolChance}
-                      biomePurity={obstacleBrushActive ? obstacleBiomePurity : treesActive ? treeBiomePurity : interactableBiomePurity}
-                      onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : treesActive ? setTreeBiomePurity : setInteractableBiomePurity}
+                      biomePurity={obstacleBrushActive ? obstacleBiomePurity : treesActive ? treeBiomePurity : squadActive ? squadBiomePurity : interactableBiomePurity}
+                      onBiomePurityChange={obstacleBrushActive ? setObstacleBiomePurity : treesActive ? setTreeBiomePurity : squadActive ? setSquadBiomePurity : setInteractableBiomePurity}
                       allowHighContrastBiomes={obstacleBrushActive ? obstacleAllowHighContrast : treesActive ? treeAllowHighContrast : interactableAllowHighContrast}
                       onAllowHighContrastBiomesChange={obstacleBrushActive ? setObstacleAllowHighContrast : treesActive ? setTreeAllowHighContrast : setInteractableAllowHighContrast}
+                      squadDifficulty={squadDifficulty}
+                      onSquadDifficultyChange={setSquadDifficulty}
+                      squadPlaceResourceAbove={squadPlaceResourceAbove}
+                      onSquadPlaceResourceAboveChange={setSquadPlaceResourceAbove}
                     />
                   )}
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Mode:</span>
@@ -3393,7 +3534,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               className={`absolute inset-0 touch-none select-none ${
                 isPanning || moveState
                   ? 'cursor-move'
-                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || riverActive || obstacleBrushActive || treesActive || eraserActive
+                  : placingSid || placingCreatureId || placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
@@ -3500,7 +3641,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || riverActive || obstacleBrushActive || treesActive || eraserActive
+                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive
                   // Staged-edit visual treatment (issue #195 Phase 1) — a
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
@@ -3528,7 +3669,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) selectNode(entry.clickNode) }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
                       {visual.kind === 'text' && (
@@ -3578,7 +3719,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     owner badge, no multi-tile bounds): these are transient
                     previews of edits that don't exist as PlacedObject rows
                     yet, not committed data going through the same pipeline. */}
-                {[...stagedObjectPaintIcons, ...stagedObstacleIcons, ...stagedTreeIcons, ...stagedInteractableIcons, ...(stagedMoveIcon ? [stagedMoveIcon] : [])].map((icon) => {
+                {[...stagedObjectPaintIcons, ...stagedObstacleIcons, ...stagedTreeIcons, ...stagedInteractableIcons, ...stagedSquadIcons, ...(stagedMoveIcon ? [stagedMoveIcon] : [])].map((icon) => {
                   const visual = resolveGridCellVisual(
                     { key: icon.key, type: 0, id: -1, sid: icon.sid, x: 0, z: 0, node: 0 },
                     catalog,

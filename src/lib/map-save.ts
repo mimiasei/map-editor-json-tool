@@ -79,7 +79,7 @@ export type MapSaveEdit =
   | { kind: 'paintRoad'; changes: { node: number; roadId: number }[] }
   | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
-  | { kind: 'paintObjects'; additions: { node: number; sid: string }[]; deletions: number[] }
+  | { kind: 'paintObjects'; additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
  *  swapSpawnerOwner/deleteObject/addObject/paintObjects/setHeroSid/setCitySpawnHero/
@@ -599,6 +599,7 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
   } else if (edit?.kind === 'paintObjects') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objects?: Array<{ sid?: string; ids?: number[]; nodes?: number[] }>
+      objectsProperties?: { propRandomSquads?: Array<{ type?: number | string; id?: number; requestedValue?: number; fraction?: string }> }
     }
     const groups = block2.objects ?? []
     for (const id of edit.deletions) {
@@ -606,10 +607,18 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
         throw new Error('Verification failed: painted-over instance still present in the rebuilt placement table')
       }
     }
-    for (const { node, sid } of edit.additions) {
+    for (const { node, sid, randomSquadOverrides } of edit.additions) {
       const group = groups.find((g) => g.sid === sid)
-      if (!(group?.nodes ?? []).includes(node)) {
+      const nodeIdx = (group?.nodes ?? []).indexOf(node)
+      if (nodeIdx === -1) {
         throw new Error('Verification failed: painted instance not reflected in the rebuilt placement table')
+      }
+      if (randomSquadOverrides) {
+        const newId = group?.ids?.[nodeIdx]
+        const row = (block2.objectsProperties?.propRandomSquads ?? []).find((r) => String(r.type) === '0' && r.id === newId)
+        if (!row || row.requestedValue !== randomSquadOverrides.requestedValue || row.fraction !== randomSquadOverrides.fraction) {
+          throw new Error('Verification failed: Encounter squad requestedValue/fraction not reflected in the rebuilt propRandomSquads row')
+        }
       }
     }
   }

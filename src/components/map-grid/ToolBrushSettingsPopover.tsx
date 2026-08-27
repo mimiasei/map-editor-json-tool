@@ -1,10 +1,10 @@
-// ─── Map Grid — Obstacles/Trees/Interactable brush settings popover ────────
+// ─── Map Grid — Obstacles/Trees/Interactable/Encounter brush settings popover ─
 // Same gear-icon-triggers-a-Popover-of-Sliders pattern as
 // MapGridSettingsDialog.tsx, placed to the left of "Mode: Freehand/
-// Rectangle" whenever the Obstacles, Trees, or Interactable brush is the
-// active tool. Content depends on which one triggered it — all three share
-// this one popover component rather than each getting its own, since only
-// one of them is ever active at a time.
+// Rectangle" whenever one of these brushes is the active tool. Content
+// depends on which one triggered it — all four share this one popover
+// component rather than each getting its own, since only one of them is
+// ever active at a time.
 
 import type { ReactNode } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -14,9 +14,10 @@ import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Settings } from 'lucide-react'
+import { RANDOM_SQUAD_DIFFICULTY_RANGES } from '@/lib/map-grid/squad-pool'
 
 interface Props {
-  tool: 'obstacles' | 'trees' | 'interactable'
+  tool: 'obstacles' | 'trees' | 'interactable' | 'squad'
   /** Obstacles only — chance an obstacle-role pick is specifically a
    *  mountain_* entry (0 = None, 1 = Always). */
   mountainChance: number
@@ -27,15 +28,26 @@ interface Props {
    *  see commitObstacleStroke in MapGridDialog.tsx). */
   poolChance: number
   onPoolChanceChange: (value: number) => void
-  /** All three tools — 0 mixes in other biomes freely, 1 only ever uses the
-   *  biome actually painted on. */
+  /** All four tools — 0 mixes in other biomes freely, 1 only ever uses the
+   *  biome actually painted on (for Encounter, "biome" means the
+   *  propRandomSquads.fraction its tile's biome maps to — see squad-pool.ts). */
   biomePurity: number
   onBiomePurityChange: (value: number) => void
-  /** All three tools — whether a cross-biome pick can land on a visually
-   *  jarring biome (Snow decorations on Grass, Lava objects anywhere else,
-   *  etc. — see areBiomesCompatible, fuzzy-obstacle.ts). */
+  /** Obstacles/Trees/Interactable only — whether a cross-biome pick can land
+   *  on a visually jarring biome (Snow decorations on Grass, Lava objects
+   *  anywhere else, etc. — see areBiomesCompatible, fuzzy-obstacle.ts). Not
+   *  applicable to Encounter — a faction roster mismatch isn't a visual
+   *  clash the same way, and issue #203 didn't ask for it. */
   allowHighContrastBiomes: boolean
   onAllowHighContrastBiomesChange: (value: boolean) => void
+  /** Encounter only — a RANDOM_SQUAD_DIFFICULTY_RANGES label (squad-pool.ts),
+   *  sampled for requestedValue at placement time. */
+  squadDifficulty: string
+  onSquadDifficultyChange: (label: string) => void
+  /** Encounter only — also place a random-res pickup on the tile directly
+   *  north of the squad (auto-generates a resource with a guard). */
+  squadPlaceResourceAbove: boolean
+  onSquadPlaceResourceAboveChange: (value: boolean) => void
 }
 
 function pctLabel(value: number, zeroLabel: string, oneLabel: string): string {
@@ -48,6 +60,7 @@ const TOOL_TITLES: Record<Props['tool'], string> = {
   obstacles: 'Obstacle brush settings',
   trees: 'Tree brush settings',
   interactable: 'Interactable brush settings',
+  squad: 'Encounter brush settings',
 }
 
 /** Every setting's description moved from an always-visible line of text to
@@ -82,6 +95,10 @@ export default function ToolBrushSettingsPopover({
   onBiomePurityChange,
   allowHighContrastBiomes,
   onAllowHighContrastBiomesChange,
+  squadDifficulty,
+  onSquadDifficultyChange,
+  squadPlaceResourceAbove,
+  onSquadPlaceResourceAboveChange,
 }: Props) {
   return (
     <Popover>
@@ -121,10 +138,32 @@ export default function ToolBrushSettingsPopover({
           </>
         )}
 
+        {tool === 'squad' && (
+          <div className="space-y-1.5">
+            <LabelWithTooltip tooltip="Total army value the game rolls a matching squad against — same ranges as the Value field's quick-pick buttons in Browse mode.">
+              Difficulty
+            </LabelWithTooltip>
+            <div className="flex flex-wrap gap-1">
+              {RANDOM_SQUAD_DIFFICULTY_RANGES.map(({ label }) => (
+                <Button
+                  key={label}
+                  type="button"
+                  variant={squadDifficulty === label ? 'secondary' : 'outline'}
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => onSquadDifficultyChange(label)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <LabelWithTooltip
-              tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : 'picks'} vary from other biomes vs. only the biome painted on.`}
+              tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : tool === 'squad' ? "a squad's faction" : 'picks'} vary from other biomes vs. only the biome painted on.`}
             >
               Biome mix
             </LabelWithTooltip>
@@ -139,19 +178,37 @@ export default function ToolBrushSettingsPopover({
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <LabelWithTooltip
-            htmlFor={`${tool}-high-contrast`}
-            tooltip="When off, a cross-biome pick only lands on a visually compatible biome — Grass/Sand/Autumn/Dirt mix freely with each other, but Snow, Lava, and Deathland never mix with any other biome."
-          >
-            Allow high-contrast biomes
-          </LabelWithTooltip>
-          <Switch
-            id={`${tool}-high-contrast`}
-            checked={allowHighContrastBiomes}
-            onCheckedChange={onAllowHighContrastBiomesChange}
-          />
-        </div>
+        {tool !== 'squad' && (
+          <div className="flex items-center justify-between">
+            <LabelWithTooltip
+              htmlFor={`${tool}-high-contrast`}
+              tooltip="When off, a cross-biome pick only lands on a visually compatible biome — Grass/Sand/Autumn/Dirt mix freely with each other, but Snow, Lava, and Deathland never mix with any other biome."
+            >
+              Allow high-contrast biomes
+            </LabelWithTooltip>
+            <Switch
+              id={`${tool}-high-contrast`}
+              checked={allowHighContrastBiomes}
+              onCheckedChange={onAllowHighContrastBiomesChange}
+            />
+          </div>
+        )}
+
+        {tool === 'squad' && (
+          <div className="flex items-center justify-between">
+            <LabelWithTooltip
+              htmlFor="squad-resource-above"
+              tooltip="Also places a random resource pickup on the tile directly north of the squad — an easy way to auto-generate a guarded resource."
+            >
+              Place resource on tile above
+            </LabelWithTooltip>
+            <Switch
+              id="squad-resource-above"
+              checked={squadPlaceResourceAbove}
+              onCheckedChange={onSquadPlaceResourceAboveChange}
+            />
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   )
