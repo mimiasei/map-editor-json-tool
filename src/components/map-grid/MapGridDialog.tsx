@@ -1640,17 +1640,40 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const hasH = dirs.includes('E') || dirs.includes('W')
       const hasV = dirs.includes('N') || dirs.includes('S')
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'
-      if (hasH) {
+      if (hasH && !hasV) {
+        // Pure horizontal (a straight run, or a single E/W dead-end) — one
+        // continuous strip across the whole span, including the center.
         const left = dirs.includes('W') ? baseX : baseX + OFFSET
         const right = dirs.includes('E') ? baseX + SUBPX : baseX + OFFSET + BAND
         ctx.fillRect(left, baseY + OFFSET, right - left, 1)
         ctx.fillRect(left, baseY + OFFSET + BAND - 1, right - left, 1)
-      }
-      if (hasV) {
+      } else if (hasV && !hasH) {
+        // Pure vertical — same as above, rotated.
         const top = dirs.includes('N') ? baseY : baseY + OFFSET
         const bottom = dirs.includes('S') ? baseY + SUBPX : baseY + OFFSET + BAND
         ctx.fillRect(baseX + OFFSET, top, 1, bottom - top)
         ctx.fillRect(baseX + OFFSET + BAND - 1, top, 1, bottom - top)
+      } else {
+        // Both axes present (a turn/join/cross) — a full-span strip on each
+        // axis would cross itself right through the shared center square
+        // (user-reported). Instead, shade each arm's own body only, never
+        // reaching into the center, so the two axes' strips never overlap.
+        if (dirs.includes('E')) {
+          ctx.fillRect(baseX + OFFSET + BAND, baseY + OFFSET, SUBPX - OFFSET - BAND, 1)
+          ctx.fillRect(baseX + OFFSET + BAND, baseY + OFFSET + BAND - 1, SUBPX - OFFSET - BAND, 1)
+        }
+        if (dirs.includes('W')) {
+          ctx.fillRect(baseX, baseY + OFFSET, OFFSET, 1)
+          ctx.fillRect(baseX, baseY + OFFSET + BAND - 1, OFFSET, 1)
+        }
+        if (dirs.includes('N')) {
+          ctx.fillRect(baseX + OFFSET, baseY, 1, OFFSET)
+          ctx.fillRect(baseX + OFFSET + BAND - 1, baseY, 1, OFFSET)
+        }
+        if (dirs.includes('S')) {
+          ctx.fillRect(baseX + OFFSET, baseY + OFFSET + BAND, 1, SUBPX - OFFSET - BAND)
+          ctx.fillRect(baseX + OFFSET + BAND - 1, baseY + OFFSET + BAND, 1, SUBPX - OFFSET - BAND)
+        }
       }
     }
 
@@ -1778,29 +1801,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
 
-  // ── Road "pending" indicator canvas — same outline technique as Level's
-  // above: the real color already renders via the road pass on the base
-  // canvasEl, so this only marks which tiles are unsaved.
-  const [paintRoadCanvasEl, setPaintRoadCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => {
-    if (!paintRoadCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const canvas = paintRoadCanvasEl
-    const SUBPX = 8
-    canvas.width = sizeX * SUBPX
-    canvas.height = sizeZ * SUBPX
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    if (paintRoadStaged.size === 0) return
-    ctx.strokeStyle = 'rgba(217, 119, 6, 0.9)'
-    ctx.lineWidth = 2
-    for (const node of paintRoadStaged.keys()) {
-      const x = node % sizeX
-      const z = Math.floor(node / sizeX)
-      const screenRow = sizeZ - 1 - z
-      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
-    }
-  }, [paintRoadCanvasEl, sizeX, sizeZ, paintRoadStaged])
+  // Road has no in-progress-stroke outline canvas (user-requested removal —
+  // it read as a distracting thick square border around every tile while
+  // painting) — the real color already renders live via lineFeatureCanvasEl
+  // above (paintRoadStaged merges straight into that), so there's nothing
+  // extra worth outlining, same reasoning Water already had.
 
   // Water has no in-progress-stroke outline canvas (unlike Terrain/Level/
   // Objects) — a click applies immediately, so there's nothing pending to
@@ -3491,18 +3496,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     Phase 2) — same stacking as the overlays above. */}
                 <canvas
                   ref={setPaintLevelCanvasEl}
-                  className="absolute top-0 left-0 pointer-events-none"
-                  style={{
-                    width: sizeX * BASE_CELL_PX,
-                    height: sizeZ * BASE_CELL_PX,
-                    imageRendering: 'pixelated',
-                  }}
-                />
-
-                {/* Road "pending" outline indicator — same stacking as the
-                    overlays above. */}
-                <canvas
-                  ref={setPaintRoadCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
                     width: sizeX * BASE_CELL_PX,
