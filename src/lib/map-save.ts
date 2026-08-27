@@ -81,7 +81,7 @@ export type MapSaveEdit =
   | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
-  | { kind: 'clearAll'; preserveObjectIds: number[] }
+  | { kind: 'clearAll' }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
  *  swapSpawnerOwner/deleteObject/addObject/paintObjects/setHeroSid/setCitySpawnHero/
@@ -101,7 +101,7 @@ export type MapSaveEdit =
  *  map-write.ts). */
 function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
   if (!edit) return new Set()
-  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'swapSpawnerOwner' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects' || edit.kind === 'setHeroSid' || edit.kind === 'setCitySpawnHero' || edit.kind === 'setCityFaction'
+  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'swapSpawnerOwner' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects' || edit.kind === 'setHeroSid' || edit.kind === 'setCitySpawnHero' || edit.kind === 'setCityFaction' || edit.kind === 'clearAll'
     ? new Set([0, 1])
     : new Set([1])
 }
@@ -233,7 +233,9 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[0] = result.block1Chunk
     newChunks[1] = result.block2Chunk
   } else if (edit?.kind === 'clearAll') {
-    newChunks[1] = clearAllObjects(newChunks[1], new Set(edit.preserveObjectIds))
+    const result = clearAllObjects(newChunks[0], newChunks[1])
+    newChunks[0] = result.block1Chunk
+    newChunks[1] = result.block2Chunk
   }
   const rebuilt: MapContainer = { ...container, chunks: newChunks }
   const rebuiltDecompressed = buildMapContainer(rebuilt)
@@ -626,6 +628,9 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       }
     }
   } else if (edit?.kind === 'clearAll') {
+    const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
+      spawns?: { playersCount?: number; spawns?: unknown[] }
+    }
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objects?: Array<{ ids?: number[] }>
       squads?: unknown[]
@@ -633,19 +638,18 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       rivers?: Array<{ nodes?: unknown[] }>
       tilesMap?: number[]
     }
-    const preserved = new Set(edit.preserveObjectIds)
     const survivingIds = (block2.objects ?? []).flatMap((g) => g.ids ?? [])
-    if (survivingIds.some((id) => !preserved.has(id)) || survivingIds.length !== preserved.size) {
-      throw new Error('Verification failed: clear-all left behind (or dropped) an unexpected set of preserved object ids')
-    }
-    if ((block2.squads?.length ?? 0) > 0 || (block2.markers?.length ?? 0) > 0) {
-      throw new Error('Verification failed: clear-all left squads/markers behind')
+    if (survivingIds.length > 0 || (block2.squads?.length ?? 0) > 0 || (block2.markers?.length ?? 0) > 0) {
+      throw new Error('Verification failed: clear-all left objects/squads/markers behind')
     }
     if ((block2.rivers?.[0]?.nodes?.length ?? 0) > 0) {
       throw new Error('Verification failed: clear-all left river nodes behind')
     }
     if ((block2.tilesMap ?? []).some((t) => t !== 1)) {
       throw new Error('Verification failed: clear-all left a non-Grass tile behind')
+    }
+    if ((block1.spawns?.spawns?.length ?? 0) > 0 || (block1.spawns?.playersCount ?? 0) !== 0) {
+      throw new Error('Verification failed: clear-all left Block 1 player-start spawns behind')
     }
   }
 

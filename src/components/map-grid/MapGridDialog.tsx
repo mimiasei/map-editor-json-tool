@@ -677,27 +677,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, applyEdit])
 
-  // ── Clear All — Eraser's whole-map sibling: wipes every object/squad/
-  // marker/river node in one atomic edit (clearAllObjects, map-write.ts),
-  // not a loop of per-object deletes (would re-parse Block 2 once per
-  // object on a map with thousands of them — see that function's own doc
-  // comment). Player-start spawners (city-spawner/hero-spawner) are kept,
-  // same reasoning as clearAllObjects: touching them would also mean
-  // rewriting Block 1, and nobody bulk-clearing decorations/encounters
-  // wants their player-start structure wiped out with it. A single click
-  // only arms a same-row confirm (Confirm/Cancel) — this has no undo beyond
-  // Ctrl+Z/the one-time .bak, same as every other edit here, but the blast
-  // radius is the whole map, so it gets the deliberate confirmation
-  // CLAUDE.md's own convention reserves for destructive actions.
+  // ── Clear All — Eraser's whole-map sibling: wipes absolutely everything
+  // (every object/squad/marker/river node, including player-start city-
+  // spawner/hero-spawner — explicit user decision, not just decorations/
+  // encounters) plus resets tilesMap to Grass, in one atomic edit
+  // (clearAllObjects, map-write.ts), not a loop of per-object deletes
+  // (would re-parse Block 1+2 once per object on a map with thousands of
+  // them — see that function's own doc comment). A single click only arms
+  // a same-row confirm (Confirm/Cancel) — this has no undo beyond Ctrl+Z/
+  // the one-time .bak, same as every other edit here, but the blast radius
+  // is the whole map, so it gets the deliberate confirmation CLAUDE.md's
+  // own convention reserves for destructive actions.
   const [clearAllConfirming, setClearAllConfirming] = useState(false)
   const stopClearAllConfirm = () => setClearAllConfirming(false)
   const commitClearAll = useCallback(() => {
-    const preserveObjectIds = placedObjects
-      .filter((o) => o.type === 0 && (o.spawnerInfo?.spawnPointType === 0 || o.spawnerInfo?.spawnPointType === 1))
-      .map((o) => o.id)
-    applyEdit({ kind: 'clearAll', preserveObjectIds }, 'clear all')
+    applyEdit({ kind: 'clearAll' }, 'clear all')
     setClearAllConfirming(false)
-  }, [placedObjects, applyEdit])
+  }, [applyEdit])
 
   const stopPainting = () => {
     setPaintBiome(null)
@@ -3357,7 +3353,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <ToolButton
                   icon={<Trash2 className="h-3.5 w-3.5" />}
                   label="Clear All"
-                  title="Delete every object, squad, zone, and river on the map and reset all terrain to Grass (player-start spawners kept)"
+                  title="Delete every object, squad, zone, river, and player-start spawner on the map, and reset all terrain to Grass"
                   onClick={() => {
                     stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
                     setClearAllConfirming(true)

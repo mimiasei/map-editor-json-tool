@@ -1611,94 +1611,81 @@ export function paintObjects(
 
 /** "Clear All" toolbar action (sibling to the Eraser tool, but for the
  *  whole map instead of a brushed area) — wipes every objects[]/squads[]/
- *  markers[] placement and every river node from Block 2, and resets every
+ *  markers[] placement (including player-start city-spawner/hero-spawner —
+ *  explicit user decision to clear absolutely everything, not just
+ *  decorations/encounters) and every river node from Block 2, resets every
  *  `tilesMap` tile to Grass (biome 1 — user-specified default; there is no
  *  field anywhere in the format recording "the biome chosen at map
  *  creation," since that value is only ever used once, to uniformly fill
- *  tilesMap at creation time, and never persisted separately), all in one
- *  atomic pass. Player-start spawners (city-spawner/hero-spawner, passed in
- *  `preserveObjectIds`) are deliberately kept: clearing them would also
- *  need to rewrite Block 1's spawns.spawns[] to stay in sync (see
- *  deleteObjectInstance's own step 4 auto-fix), and nobody bulk-clearing
- *  decorations/encounters actually wants their player-start structure
- *  wiped out with it — so Block 1 is never touched here at all. Sweeps
- *  every objectsProperties.* table generically (Object.keys, not a static
- *  list — same convention as deleteObjectInstance's own cleanup sweep)
- *  against whatever (type,id) pairs survived, so no orphaned rows are left
- *  for anything actually removed. Deliberately does not touch waterMap/
- *  levelsMap/climbsMap/roadsMap — only tilesMap was asked for.
+ *  tilesMap at creation time, and never persisted separately), and empties
+ *  Block 1's spawns.spawns[]/playersCount to match (no player-start object
+ *  survives to reference a slot, so 0 is the only consistent value — same
+ *  "owners are always the contiguous range 1..playersCount" invariant
+ *  deleteObjectInstance's own step 4 auto-fix maintains one spawner at a
+ *  time). Sweeps every objectsProperties.* table generically (Object.keys,
+ *  not a static list — same convention as deleteObjectInstance's own
+ *  cleanup sweep), emptying every array table since nothing survives.
+ *  Deliberately does not touch waterMap/levelsMap/climbsMap/roadsMap — only
+ *  tilesMap was asked for.
  *
  *  Deliberately its own function rather than looping deleteObjectInstance
- *  once per placement: that would re-parse/re-stringify all of Block 2 once
- *  per object, which on a map with thousands of placements (confirmed real
- *  — see CLAUDE.md's "up to 256x256/~17k objects") would be a real UI
+ *  once per placement: that would re-parse/re-stringify all of Block 1+2
+ *  once per object, which on a map with thousands of placements (confirmed
+ *  real — see CLAUDE.md's "up to 256x256/~17k objects") would be a real UI
  *  freeze. This does one JSON.parse/stringify pass per table instead. */
-export function clearAllObjects(block2Chunk: Uint8Array, preserveObjectIds: Set<number>): Uint8Array {
-  let text = new TextDecoder('utf-8').decode(block2Chunk)
-  const surviving = new Set<string>()
+export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
 
   {
-    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'tilesMap')
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'tilesMap')
     const tiles = JSON.parse(span) as number[]
-    text = text.slice(0, arrayOpen) + JSON.stringify(tiles.fill(1)) + text.slice(arrayClose + 1)
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(tiles.fill(1)) + text2.slice(arrayClose + 1)
   }
 
-  {
-    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'objects')
-    const groups = JSON.parse(span) as ObjectGroupEntry[]
-    const filtered: ObjectGroupEntry[] = []
-    for (const g of groups) {
-      const ids = g.ids ?? []
-      const keepIdx = ids.reduce<number[]>((acc, id, i) => (preserveObjectIds.has(id) ? [...acc, i] : acc), [])
-      if (keepIdx.length === 0) continue
-      for (const i of keepIdx) surviving.add(`0:${ids[i]}`)
-      filtered.push({
-        ...g,
-        ids: keepIdx.map((i) => ids[i]),
-        nodes: keepIdx.map((i) => g.nodes?.[i] as number),
-        rotations: g.rotations ? keepIdx.map((i) => g.rotations![i]) : g.rotations,
-        levels: g.levels ? keepIdx.map((i) => g.levels![i]) : g.levels,
-      })
-    }
-    text = text.slice(0, arrayOpen) + JSON.stringify(filtered) + text.slice(arrayClose + 1)
-  }
-
-  // squads[]/markers[] — fully cleared, nothing of type 1/2 is ever preserved.
-  for (const key of ['squads', 'markers']) {
+  // objects[]/squads[]/markers[] — fully cleared, no exceptions.
+  for (const key of ['objects', 'squads', 'markers']) {
     try {
-      const { arrayOpen, arrayClose } = findJsonArraySpan(text, key)
-      text = text.slice(0, arrayOpen) + '[]' + text.slice(arrayClose + 1)
+      const { arrayOpen, arrayClose } = findJsonArraySpan(text2, key)
+      text2 = text2.slice(0, arrayOpen) + '[]' + text2.slice(arrayClose + 1)
     } catch { /* table absent in this file */ }
   }
 
   // rivers[0].nodes — cleared; the single wrapper entry itself stays, same
   // "never invent/remove the wrapper" convention as paintRiverTiles.
   try {
-    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'rivers')
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'rivers')
     const rivers = JSON.parse(span) as Array<{ nodes?: unknown[] }>
     if (rivers[0]) rivers[0].nodes = []
-    text = text.slice(0, arrayOpen) + JSON.stringify(rivers) + text.slice(arrayClose + 1)
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(rivers) + text2.slice(arrayClose + 1)
   } catch { /* no rivers table in this file */ }
 
-  // Sweep every objectsProperties.* table generically, dropping any row not
-  // in the surviving set — only preserved spawners' own rows (propSpawns,
-  // propCities, etc.) match and stay; everything else is gone.
+  // Every objectsProperties.* table, generically — nothing survives, so
+  // every array-valued table becomes empty.
   {
-    const { objOpen, objClose, span } = findJsonObjectSpan(text, 'objectsProperties')
+    const { objOpen, objClose, span } = findJsonObjectSpan(text2, 'objectsProperties')
     const props = JSON.parse(span) as Record<string, unknown>
     for (const tableKey of Object.keys(props)) {
-      const table = props[tableKey]
-      if (!Array.isArray(table)) continue
-      props[tableKey] = table.filter((row) => {
-        if (!row || typeof row !== 'object') return true
-        const r = row as { type?: number | string; id?: number }
-        return surviving.has(`${r.type}:${r.id}`)
-      })
+      if (Array.isArray(props[tableKey])) props[tableKey] = []
     }
-    text = text.slice(0, objOpen) + JSON.stringify(props) + text.slice(objClose + 1)
+    text2 = text2.slice(0, objOpen) + JSON.stringify(props) + text2.slice(objClose + 1)
   }
 
-  return new TextEncoder().encode(text)
+  // Block 1 — no player-start object survives to hold a slot, so
+  // spawns.spawns[] empties and playersCount resets to 0 alongside it.
+  let text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  {
+    const { arrayOpen, arrayClose } = findJsonArraySpan(text1, 'spawns')
+    text1 = text1.slice(0, arrayOpen) + '[]' + text1.slice(arrayClose + 1)
+    const spawnsObjSpan = findJsonObjectSpan(text1, 'spawns')
+    const spawnsObj = JSON.parse(spawnsObjSpan.span) as { playersCount?: number }
+    spawnsObj.playersCount = 0
+    text1 = text1.slice(0, spawnsObjSpan.objOpen) + JSON.stringify(spawnsObj) + text1.slice(spawnsObjSpan.objClose + 1)
+  }
+
+  return {
+    block1Chunk: new TextEncoder().encode(text1),
+    block2Chunk: new TextEncoder().encode(text2),
+  }
 }
 
 // ─── Paint terrain / level / water (issue #167 Phase D, generalized #193
