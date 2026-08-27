@@ -1,7 +1,9 @@
 // ─── Create New Map ──────────────────────────────────────────────────────────
-// Tauri-only (needs real filesystem write access to produce a new .map file
-// from src-tauri/resources/template.map — see create-map.ts's own doc
-// comment for why this can't work purely as an in-browser feature). Picks a
+// Tauri-only (needs real filesystem read access to the bundled template at
+// src-tauri/resources/template.map — see create-map.ts's own doc comment
+// for why this can't work purely as an in-browser feature). Creation itself
+// doesn't write anything to disk — the resulting map lives entirely
+// in-memory until the user's first Save/Save As. Picks a
 // size and terrain biome and hands off to createNewMap() — always with zero
 // players. Deliberately no player-count/spawner UI here: adding a
 // city-spawner/hero-spawner already auto-grows spawns.playersCount and
@@ -30,20 +32,44 @@ interface Props {
   onCreated: (result: { name: string; warnings: string[] }) => void
 }
 
-const SIZE_PRESETS = [16, 32, 48, 64, 96, 128, 256]
+/** Every size this project's own map-format research confirms the real game
+ *  ships (not just squares — several real maps are rectangular). */
+const MAP_SIZE_PRESETS: { sizeX: number; sizeZ: number }[] = [
+  { sizeX: 16, sizeZ: 16 },
+  { sizeX: 32, sizeZ: 32 },
+  { sizeX: 48, sizeZ: 32 },
+  { sizeX: 48, sizeZ: 48 },
+  { sizeX: 64, sizeZ: 32 },
+  { sizeX: 64, sizeZ: 48 },
+  { sizeX: 64, sizeZ: 64 },
+  { sizeX: 80, sizeZ: 80 },
+  { sizeX: 96, sizeZ: 64 },
+  { sizeX: 96, sizeZ: 96 },
+  { sizeX: 128, sizeZ: 64 },
+  { sizeX: 128, sizeZ: 128 },
+  { sizeX: 256, sizeZ: 128 },
+  { sizeX: 256, sizeZ: 256 },
+]
+function presetKey(p: { sizeX: number; sizeZ: number }): string {
+  return `${p.sizeX}x${p.sizeZ}`
+}
+const DEFAULT_SIZE_KEY = presetKey({ sizeX: 64, sizeZ: 64 })
+
 const BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 
 export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
   const [mapName, setMapName] = useState('New Map')
-  const [size, setSize] = useState(64)
+  const [sizeKey, setSizeKey] = useState(DEFAULT_SIZE_KEY)
   const [biomeId, setBiomeId] = useState<BiomeId>(1)
   const [creating, setCreating] = useState(false)
+
+  const selectedSize = MAP_SIZE_PRESETS.find((p) => presetKey(p) === sizeKey) ?? MAP_SIZE_PRESETS[6]
 
   const handleCreate = async () => {
     setCreating(true)
     try {
-      const result = await createNewMap({ mapName, sizeX: size, sizeZ: size, biomeId, players: [] })
-      if (!result) return // cancelled, or not Tauri
+      const result = await createNewMap({ mapName, sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, biomeId, players: [] })
+      if (!result) return // not Tauri — no filesystem access to read the template
       logInfo(`Created new map: ${result.name}`)
       onCreated({ name: result.name, warnings: result.warnings })
       onOpenChange(false)
@@ -69,11 +95,11 @@ export default function NewMapDialog({ open, onOpenChange, onCreated }: Props) {
 
           <div className="space-y-1.5">
             <Label className="text-xs">Size</Label>
-            <Select value={String(size)} onValueChange={(v) => setSize(Number(v))}>
+            <Select value={sizeKey} onValueChange={setSizeKey}>
               <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {SIZE_PRESETS.map((s) => (
-                  <SelectItem key={s} value={String(s)}>{s} × {s}</SelectItem>
+                {MAP_SIZE_PRESETS.map((p) => (
+                  <SelectItem key={presetKey(p)} value={presetKey(p)}>{p.sizeX} × {p.sizeZ}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

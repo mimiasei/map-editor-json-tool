@@ -38,6 +38,8 @@ import {
   paintTerrainTiles,
   paintLevelTiles,
   paintWaterTiles,
+  paintRoadTiles,
+  paintRiverTiles,
   addObjectInstance,
   addMarkerInstance,
   deleteObjectInstance,
@@ -73,6 +75,8 @@ export type MapSaveEdit =
   | { kind: 'paintTerrain'; changes: { node: number; biomeId: number }[] }
   | { kind: 'paintLevel'; changes: { node: number; level: number }[] }
   | { kind: 'paintWater'; changes: { node: number; waterId: number }[] }
+  | { kind: 'paintRoad'; changes: { node: number; roadId: number }[] }
+  | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string }[]; deletions: number[] }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
@@ -214,6 +218,10 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = paintLevelTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintWater') {
     newChunks[1] = paintWaterTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintRoad') {
+    newChunks[1] = paintRoadTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintRiver') {
+    newChunks[1] = paintRiverTiles(newChunks[1], edit.changes, edit.deletions ?? [])
   } else if (edit?.kind === 'paintObjects') {
     const result = paintObjects(newChunks[0], newChunks[1], edit.additions, edit.deletions)
     newChunks[0] = result.block1Chunk
@@ -550,6 +558,30 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     for (const { node, waterId } of edit.changes) {
       if (water[node] !== waterId) {
         throw new Error('Verification failed: painted water not reflected in the rebuilt waterMap')
+      }
+    }
+  } else if (edit?.kind === 'paintRoad') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { roadsMap?: number[] }
+    const roads = block2.roadsMap ?? []
+    for (const { node, roadId } of edit.changes) {
+      if (roads[node] !== roadId) {
+        throw new Error('Verification failed: painted road not reflected in the rebuilt roadsMap')
+      }
+    }
+  } else if (edit?.kind === 'paintRiver') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      rivers?: Array<{ nodes?: Array<{ n: number; s: number }> }>
+    }
+    const nodes = block2.rivers?.[0]?.nodes ?? []
+    const byNode = new Map(nodes.map((n) => [n.n, n.s]))
+    for (const { node, s } of edit.changes) {
+      if (byNode.get(node) !== s) {
+        throw new Error('Verification failed: painted river node not reflected in the rebuilt rivers array')
+      }
+    }
+    for (const node of edit.deletions ?? []) {
+      if (byNode.has(node)) {
+        throw new Error('Verification failed: deleted river node still present in the rebuilt rivers array')
       }
     }
   } else if (edit?.kind === 'paintObjects') {

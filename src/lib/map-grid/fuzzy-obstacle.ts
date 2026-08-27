@@ -33,6 +33,15 @@
 //   into their own bucket and only offered when the stroke's own bounding
 //   box is at least 4x4 tiles — a small brush scattering a big pool reads
 //   as a mistake, not a feature.
+// - Trees/rivers follow-up: mountain_* entries are pulled into their own
+//   bucket too (previously mixed uniformly into `obstacles`) so a
+//   user-controlled "mountain chance" slider can bias toward/away from
+//   them independently, and pool_* eligibility is now a probability
+//   (`poolChance`) rather than a hard boolean, with its own required
+//   minimum brush size shrinking (4x4 -> 3x3) as the chance increases —
+//   see MapGridDialog.tsx's commitObstacleStroke for that brush-size math.
+//   Same follow-up adds buildTreePools(), a dedicated pool builder for a
+//   new "Trees" tool restricted to tree_*/pinetree_* entries only.
 
 import type { BiomeId } from './terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
@@ -61,19 +70,41 @@ function isNatureDecoration(id: string): boolean {
   return !id.startsWith('campaign_') && !NON_NATURE_ENVIRONMENT_IDS.has(id)
 }
 
+/** Confirmed against the real catalog (Core/DB/map/objects/1_environments.json):
+ *  every mountain_* entry across every biome (58 total, all 7 biomes
+ *  represented) follows this prefix with no exceptions. */
+function isMountainDecoration(id: string): boolean {
+  return id.startsWith('mountain_')
+}
+
+/** Confirmed against the real catalog: every tree entry is prefixed either
+ *  tree_ or pinetree_ (43 total), all solid blockers (nodes[] includes 1).
+ *  Sand/Desert has zero real tree entries (matches this project's existing
+ *  faction-biome finding that Desert is purely decorative, no natural
+ *  faction — see CLAUDE.md) — a Trees-tool stroke over Sand tiles is
+ *  expected to place nothing, not a bug to work around. */
+function isTreeDecoration(id: string): boolean {
+  return id.startsWith('tree_') || id.startsWith('pinetree_')
+}
+
 export interface FuzzyObstaclePool {
   obstacles: string[]
   clutter: string[]
+  /** mountain_* entries — pulled out of `obstacles` so a "mountain chance"
+   *  slider can bias toward/away from them independently (see
+   *  FuzzyObstacleOptions.mountainChance). */
+  mountains: string[]
   /** pool_* entries — a real decorative water pool, only sampled when the
-   *  stroke is large enough (see FuzzyObstacleOptions.poolsAllowed). */
+   *  stroke is large enough (see FuzzyObstacleOptions.poolChance). */
   pools: string[]
 }
 
 /** Buckets every real, nature `environments` catalog entry by biome and by
- *  obstacle/clutter/pool, once per catalog (cheap to memoize by the caller). */
+ *  obstacle/clutter/mountain/pool, once per catalog (cheap to memoize by
+ *  the caller). */
 export function buildFuzzyObstaclePools(mapObjects: CatalogMapObject[]): Record<BiomeId, FuzzyObstaclePool> {
   const pools = Object.fromEntries(
-    ALL_BIOME_IDS.map((id) => [id, { obstacles: [], clutter: [], pools: [] } as FuzzyObstaclePool]),
+    ALL_BIOME_IDS.map((id) => [id, { obstacles: [], clutter: [], mountains: [], pools: [] } as FuzzyObstaclePool]),
   ) as Record<BiomeId, FuzzyObstaclePool>
   const biomeIdByCatalogName = new Map<string, BiomeId>(
     ALL_BIOME_IDS.map((id) => [BIOME_ID_TO_CATALOG_BIOME[id], id]),
@@ -84,8 +115,32 @@ export function buildFuzzyObstaclePools(mapObjects: CatalogMapObject[]): Record<
     const biomeId = biomeIdByCatalogName.get(obj.biome)
     if (!biomeId) continue
     if (obj.id.startsWith('pool_')) pools[biomeId].pools.push(obj.id)
+    else if (isMountainDecoration(obj.id)) pools[biomeId].mountains.push(obj.id)
     else if ((obj.nodes ?? []).includes(1)) pools[biomeId].obstacles.push(obj.id)
     else pools[biomeId].clutter.push(obj.id)
+  }
+  return pools
+}
+
+/** Same idea as buildFuzzyObstaclePools, restricted to tree_ and pinetree_
+ *  prefixed entries only, for the dedicated "Trees" brush — a single-purpose tool,
+ *  so every match lands in `obstacles` (the "planted" role every real tree
+ *  entry's own solid nodes[] already confirms) with `mountains`/`clutter`/
+ *  `pools` left empty; the existing sampler's clutter/mountain/pool
+ *  fallback paths already degrade gracefully when a bucket is empty. */
+export function buildTreePools(mapObjects: CatalogMapObject[]): Record<BiomeId, FuzzyObstaclePool> {
+  const pools = Object.fromEntries(
+    ALL_BIOME_IDS.map((id) => [id, { obstacles: [], clutter: [], mountains: [], pools: [] } as FuzzyObstaclePool]),
+  ) as Record<BiomeId, FuzzyObstaclePool>
+  const biomeIdByCatalogName = new Map<string, BiomeId>(
+    ALL_BIOME_IDS.map((id) => [BIOME_ID_TO_CATALOG_BIOME[id], id]),
+  )
+  for (const obj of mapObjects) {
+    if (obj.category !== 'environments' || !obj.biome) continue
+    if (!isNatureDecoration(obj.id) || !isTreeDecoration(obj.id)) continue
+    const biomeId = biomeIdByCatalogName.get(obj.biome)
+    if (!biomeId) continue
+    pools[biomeId].obstacles.push(obj.id)
   }
   return pools
 }
@@ -144,16 +199,33 @@ export interface FuzzyObstacleOptions {
    *  0.7 — even at the furthest edge, a ~15% floor chance of a full
    *  obstacle remains (see pObstacleFloor), matching "not a hard rule." */
   edgeFalloff?: number
-  /** Chance any given node pulls from a different biome than its own tile. */
+  /** Chance any given node pulls from a different biome than its own tile.
+   *  0 = always the tile's own biome, 1 = always a different one — the
+   *  Trees tool's "biome mix" slider maps directly onto this (see
+   *  MapGridSettingsDialog-style popover in MapGridDialog.tsx). */
   crossBiomeChance?: number
-  /** Whether pool_* entries are eligible this stroke — the caller decides
-   *  based on the stroke's own bounding box (issue #195 follow-up:
-   *  user-requested — pools only look right at 4x4 tiles or larger).
-   *  Defaults to false (the conservative choice: a caller that doesn't
-   *  measure its stroke gets no pools rather than always getting them). */
-  poolsAllowed?: boolean
+  /** Of every node that gets an obstacle-role placement, the chance it's
+   *  specifically a mountain_* entry instead of a regular obstacle (0 =
+   *  none, 1 = always) — checked before poolChance (see below), so a high
+   *  mountainChance takes priority over a high poolChance on the same
+   *  node. Ignored (treated as 0) for a biome with no mountain entries. */
+  mountainChance?: number
+  /** Of every node that gets an obstacle-role placement, the chance it's
+   *  specifically a pool_* entry instead (0 = none/never, up to 1). The
+   *  caller decides eligibility (and how high this can go) based on the
+   *  stroke's own bounding box — issue #195 follow-up: pools only look
+   *  right at 4x4+ tiles; a later follow-up made the required minimum
+   *  shrink toward 3x3 as this chance increases (see commitObstacleStroke
+   *  in MapGridDialog.tsx). Defaults to 0 (no pools) — a caller that
+   *  doesn't measure its stroke gets no pools rather than always getting
+   *  them. */
+  poolChance?: number
   /** Injectable for deterministic tests; defaults to Math.random. */
   rng?: () => number
+}
+
+function pickRandom(list: string[], rng: () => number): string {
+  return list[Math.floor(rng() * list.length)]
 }
 
 /**
@@ -167,17 +239,9 @@ export function sampleFuzzyObstacles(
   pools: Record<BiomeId, FuzzyObstaclePool>,
   options: FuzzyObstacleOptions = {},
 ): { node: number; sid: string }[] {
-  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, poolsAllowed = false, rng = Math.random } = options
+  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, mountainChance = 0, poolChance = 0, rng = Math.random } = options
   const pObstacleFloor = 0.15
   const additions: { node: number; sid: string }[] = []
-  // Obstacles + pools (when allowed) merge into one weighted pick list per
-  // biome, computed once rather than per node — pools stay a small share of
-  // the combined list even when eligible (real catalog data: 1-3 pool_*
-  // entries per biome against a much larger obstacle pool), so this doesn't
-  // need its own separate probability, just inclusion.
-  const obstacleCandidatesByBiome = new Map<BiomeId, string[]>(
-    ALL_BIOME_IDS.map((id) => [id, poolsAllowed ? [...pools[id].obstacles, ...pools[id].pools] : pools[id].obstacles]),
-  )
 
   for (const [node, distance] of nodeDistances) {
     const ownBiome = tileBiome(node)
@@ -191,11 +255,27 @@ export function sampleFuzzyObstacles(
       if (candidates.length > 0) biomeId = candidates[Math.floor(rng() * candidates.length)]
     }
     const pool = pools[biomeId]
-    const obstacleCandidates = obstacleCandidatesByBiome.get(biomeId) ?? []
+    const hasAnyObstacleRole = pool.obstacles.length > 0 || pool.mountains.length > 0 || pool.pools.length > 0
 
     const pObstacle = Math.max(pObstacleFloor, 1 - distance * edgeFalloff)
-    if (obstacleCandidates.length > 0 && rng() < pObstacle) {
-      additions.push({ node, sid: obstacleCandidates[Math.floor(rng() * obstacleCandidates.length)] })
+    if (hasAnyObstacleRole && rng() < pObstacle) {
+      // Which obstacle-role sub-type: mountain > pool > regular obstacle,
+      // priority-ordered independent rolls (mutually exclusive — a single
+      // node holds one placement) — falls through to whichever bucket
+      // actually has entries for this biome (e.g. Desert has mountains but
+      // never pools_/trees never have mountains at all, per the real
+      // catalog — see isMountainDecoration/isTreeDecoration's own comments).
+      if (pool.mountains.length > 0 && rng() < mountainChance) {
+        additions.push({ node, sid: pickRandom(pool.mountains, rng) })
+      } else if (pool.pools.length > 0 && rng() < poolChance) {
+        additions.push({ node, sid: pickRandom(pool.pools, rng) })
+      } else if (pool.obstacles.length > 0) {
+        additions.push({ node, sid: pickRandom(pool.obstacles, rng) })
+      } else if (pool.mountains.length > 0) {
+        additions.push({ node, sid: pickRandom(pool.mountains, rng) })
+      } else {
+        additions.push({ node, sid: pickRandom(pool.pools, rng) })
+      }
       continue
     }
 
@@ -204,13 +284,16 @@ export function sampleFuzzyObstacles(
     const pClutter = 0.2 + distance * 0.3
     if (pool.clutter.length > 0 && rng() < pClutter) {
       additions.push({ node, sid: pool.clutter[Math.floor(rng() * pool.clutter.length)] })
-    } else if (pool.clutter.length === 0 && obstacleCandidates.length > 0) {
+    } else if (pool.clutter.length === 0 && hasAnyObstacleRole) {
       // Dirt biome's real, sparse case (2 clutter entries in real catalog
       // data) — documented fallback, not a silent degrade: a thin/absent
-      // clutter pool still gets an obstacle-only edge at a lower rate
-      // rather than nothing at all.
+      // clutter pool still gets an obstacle-role edge at a lower rate
+      // rather than nothing at all. Regular obstacles preferred over
+      // mountains/pools here — an edge tile is a poor spot for a big
+      // mountain or pool feature.
+      const fallbackCandidates = pool.obstacles.length > 0 ? pool.obstacles : pool.mountains.length > 0 ? pool.mountains : pool.pools
       if (rng() < pObstacle * 0.5) {
-        additions.push({ node, sid: obstacleCandidates[Math.floor(rng() * obstacleCandidates.length)] })
+        additions.push({ node, sid: pickRandom(fallbackCandidates, rng) })
       }
     }
     // else: nothing placed at this node this pass — a real, expected outcome

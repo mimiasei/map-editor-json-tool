@@ -47,6 +47,25 @@ export const WATER_TYPE_NAMES: Record<number, string> = {
   7: 'Water (Grass)',
 }
 
+/** Road type per DB/map/roads/roads.json (id 1 "test Road" bonus 0.20, id 2
+ *  "test Road2" bonus 0.30) — which id is "dirt" vs "stone" is NOT confirmed
+ *  by the game data (undescriptive placeholder names); this assumes id 2 =
+ *  Stone (the higher movement bonus) as a best guess pending real desktop-
+ *  build/GME testing (see RawMapBlock2.roadsMap's doc comment). */
+export const ROAD_TYPE_NAMES: Record<number, string> = {
+  1: 'Dirt Road',
+  2: 'Stone Road',
+}
+
+export const ROAD_BASE_COLORS: Record<number, string> = {
+  1: '#8a5a2b', // Dirt — brown
+  2: '#8c8c8c', // Stone — gray
+}
+
+/** River overlay — a distinct blue-family color from WATER_BASE_COLOR so the
+ *  two read as separate features even where they run near each other. */
+export const RIVER_BASE_COLOR = '#0b5db8'
+
 /** Fallback for an out-of-range/unknown tile id (shouldn't occur — every real map's
  *  tilesMap values were verified to fall in 1-7, but a malformed map could differ). */
 const UNKNOWN_BASE_COLOR = '#9a9a9a'

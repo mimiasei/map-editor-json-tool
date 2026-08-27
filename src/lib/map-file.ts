@@ -2,7 +2,7 @@
 // Ties together: open dialog → binary parse → sidecar JSON check → load stores.
 // This is the single entry point for "Open .map file".
 
-import { openMapFile, checkFileExists, readTextFileAt } from '@/lib/native-fs'
+import { openMapFile, checkFileExists, readTextFileAt, pickSavePath } from '@/lib/native-fs'
 import { parseMapFile } from '@/lib/map-parser'
 import { extractMapContext, extractScenario } from '@/lib/map-extract'
 import { importScenario } from '@/lib/import'
@@ -205,6 +205,43 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
     block4Used,
     warnings,
   }
+}
+
+/**
+ * Persist the in-memory .map document to disk, prompting for a save
+ * location first if none is known yet — a brand-new map created via "New
+ * Map" starts with no path at all (see create-map.ts), so its first real
+ * Save must behave exactly like Save As. No-op (returns true — nothing to
+ * do isn't a cancellation) if there's no unsaved .map document
+ * (`commitMapIfDirty`'s old plain-no-op-when-no-path behavior is what this
+ * replaces at both live Save/Save As call sites). On success, updates
+ * useScenarioStore's mapFilePath/sidecarPath so later saves go straight to
+ * disk without prompting again.
+ *
+ * Returns `false` only when a save-location prompt this call needed was
+ * cancelled — callers (AppShell.handleSave / Toolbar.handleExport) must
+ * check this and abort their own Save/Save As entirely rather than falling
+ * through to their scenario-JSON-saving logic, which would otherwise pop a
+ * SECOND, unrelated save dialog for the JSON sidecar right after the user
+ * just said "not now" to the first one.
+ */
+export async function commitMapWithPathPrompt(): Promise<boolean> {
+  const { mapIsDirty, commitToDisk } = useMapDocumentStore.getState()
+  if (!mapIsDirty) return true
+  const scenarioState = useScenarioStore.getState()
+  let mapPath = scenarioState.mapFilePath
+  if (!mapPath) {
+    const suggested = scenarioState.mapName || 'New Map'
+    const fileName = suggested.endsWith('.map') ? suggested : `${suggested}.map`
+    mapPath = await pickSavePath(fileName, { name: 'Map file', extensions: ['map'] }, 'Save map')
+    if (!mapPath) return false // user cancelled — leave the in-memory edits dirty
+  }
+  await commitToDisk(mapPath)
+  if (mapPath !== scenarioState.mapFilePath) {
+    const name = mapPath.replace(/\\/g, '/').split('/').pop() ?? mapPath
+    scenarioState.setMapFile(mapPath, sidecarPathFor(mapPath, name))
+  }
+  return true
 }
 
 /** Exposed for tests / consumers that need the sidecar path without opening a dialog. */

@@ -1592,7 +1592,7 @@ export function paintObjects(
 /** Overwrite `arrayKey`'s value at every `{node, value}` in `changes`. Shared
  *  by paintTerrainTiles/paintLevelTiles/paintWaterTiles below — the only
  *  thing that varies between them is which flat array they target. */
-function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap', changes: { node: number; value: number }[]): Uint8Array {
+function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap' | 'roadsMap', changes: { node: number; value: number }[]): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, arrayKey)
   const values = JSON.parse(span) as number[]
@@ -1656,6 +1656,45 @@ export function paintLevelTiles(chunk: Uint8Array, changes: { node: number; leve
  *  paintLevelTiles above. */
 export function paintWaterTiles(chunk: Uint8Array, changes: { node: number; waterId: number }[]): Uint8Array {
   return paintFlatArrayTiles(chunk, 'waterMap', changes.map(({ node, waterId }) => ({ node, value: waterId })))
+}
+
+/** Overwrite `roadsMap[node]` for every `{node, roadId}` in `changes`
+ *  (roadId 0 = none, 1/2 = the two road types in Core/DB/map/roads/
+ *  roads.json — see RawMapBlock2.roadsMap's own doc comment for the
+ *  unconfirmed dirt/stone mapping). No level/water side effects — real
+ *  sample data shows roads coexisting freely with both. */
+export function paintRoadTiles(chunk: Uint8Array, changes: { node: number; roadId: number }[]): Uint8Array {
+  return paintFlatArrayTiles(chunk, 'roadsMap', changes.map(({ node, roadId }) => ({ node, value: roadId })))
+}
+
+/** Upsert `{n, s, isWaterfall}` entries into `rivers[0].nodes` (add/update
+ *  every `{node, s}` in `changes`, drop every node in `deletions`). Unlike
+ *  paintFlatArrayTiles's dense per-tile arrays, `rivers[0].nodes` is SPARSE
+ *  (only tiles with river data) and — confirmed across every parseable real
+ *  sample map, and the blank-map template, always having exactly ONE
+ *  `rivers[]` entry for the whole map (never one per distinct river, never
+ *  more than one, never entirely absent) — this always upserts into
+ *  `rivers[0]`, never creates a second entry or invents a new sid. */
+export function paintRiverTiles(
+  chunk: Uint8Array,
+  changes: { node: number; s: number; isWaterfall?: boolean }[],
+  deletions: number[] = [],
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'rivers')
+  const entries = JSON.parse(span) as Array<{ sid?: string; randomSeed?: number; nodes?: Array<{ n: number; s: number; isWaterfall: boolean }> }>
+  if (entries.length === 0) {
+    entries.push({ sid: 'test', randomSeed: Math.floor(Math.random() * 0x7fffffff), nodes: [] })
+  }
+  const nodes = entries[0].nodes ?? (entries[0].nodes = [])
+  const byNode = new Map(nodes.map((n) => [n.n, n]))
+  for (const del of deletions) byNode.delete(del)
+  for (const { node, s, isWaterfall } of changes) byNode.set(node, { n: node, s, isWaterfall: isWaterfall ?? false })
+  entries[0].nodes = [...byNode.values()]
+
+  const patchedSpan = JSON.stringify(entries)
+  const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
 }
 
 // ─── Create a new blank map ──────────────────────────────────────────────────
