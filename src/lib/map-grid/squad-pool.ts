@@ -53,8 +53,8 @@ export function randomInRange(min: number, max: number, rng: () => number = Math
  *  consistent with what manually enabling e.g. just "Lethal" rolls —
  *  user-tuned weights, not derived from any game data. */
 const RANDOM_WEIGHTED_LABELS: { label: string; weight: number }[] = [
-  { label: 'Easy', weight: 35 },
-  { label: 'Normal', weight: 30 },
+  { label: 'Easy', weight: 40 },
+  { label: 'Normal', weight: 25 },
   { label: 'Difficult', weight: 20 },
   { label: 'Impossible', weight: 10 },
   { label: 'Lethal', weight: 5 },
