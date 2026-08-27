@@ -1,19 +1,20 @@
-// ─── Map Grid — Obstacles/Trees brush settings popover ──────────────────────
+// ─── Map Grid — Obstacles/Trees/Interactable brush settings popover ────────
 // Same gear-icon-triggers-a-Popover-of-Sliders pattern as
 // MapGridSettingsDialog.tsx, placed to the left of "Mode: Freehand/
-// Rectangle" whenever the Obstacles or Trees brush is the active tool.
-// Content depends on which of the two triggered it — the two tools share
+// Rectangle" whenever the Obstacles, Trees, or Interactable brush is the
+// active tool. Content depends on which one triggered it — all three share
 // this one popover component rather than each getting its own, since only
 // one of them is ever active at a time.
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Settings } from 'lucide-react'
 
 interface Props {
-  tool: 'obstacles' | 'trees'
+  tool: 'obstacles' | 'trees' | 'interactable'
   /** Obstacles only — chance an obstacle-role pick is specifically a
    *  mountain_* entry (0 = None, 1 = Always). */
   mountainChance: number
@@ -24,10 +25,15 @@ interface Props {
    *  see commitObstacleStroke in MapGridDialog.tsx). */
   poolChance: number
   onPoolChanceChange: (value: number) => void
-  /** Trees only — 0 mixes in other biomes freely, 1 only ever uses the
+  /** All three tools — 0 mixes in other biomes freely, 1 only ever uses the
    *  biome actually painted on. */
-  treeBiomePurity: number
-  onTreeBiomePurityChange: (value: number) => void
+  biomePurity: number
+  onBiomePurityChange: (value: number) => void
+  /** All three tools — whether a cross-biome pick can land on a visually
+   *  jarring biome (Snow decorations on Grass, Lava objects anywhere else,
+   *  etc. — see areBiomesCompatible, fuzzy-obstacle.ts). */
+  allowHighContrastBiomes: boolean
+  onAllowHighContrastBiomesChange: (value: boolean) => void
 }
 
 function pctLabel(value: number, zeroLabel: string, oneLabel: string): string {
@@ -36,24 +42,27 @@ function pctLabel(value: number, zeroLabel: string, oneLabel: string): string {
   return `${Math.round(value * 100)}%`
 }
 
+const TOOL_TITLES: Record<Props['tool'], string> = {
+  obstacles: 'Obstacle brush settings',
+  trees: 'Tree brush settings',
+  interactable: 'Interactable brush settings',
+}
+
 export default function ToolBrushSettingsPopover({
   tool,
   mountainChance,
   onMountainChanceChange,
   poolChance,
   onPoolChanceChange,
-  treeBiomePurity,
-  onTreeBiomePurityChange,
+  biomePurity,
+  onBiomePurityChange,
+  allowHighContrastBiomes,
+  onAllowHighContrastBiomesChange,
 }: Props) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          title={tool === 'obstacles' ? 'Obstacle brush settings' : 'Tree brush settings'}
-        >
+        <Button variant="ghost" size="icon" className="h-6 w-6" title={TOOL_TITLES[tool]}>
           <Settings className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
@@ -90,24 +99,38 @@ export default function ToolBrushSettingsPopover({
           </>
         )}
 
-        {tool === 'trees' && (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Biome mix</Label>
-              <span className="text-xs text-muted-foreground">
-                {treeBiomePurity >= 1 ? 'This biome only' : treeBiomePurity <= 0 ? 'All biomes' : `${Math.round(treeBiomePurity * 100)}% pure`}
-              </span>
-            </div>
-            <Slider
-              min={0} max={1} step={0.01}
-              value={[treeBiomePurity]}
-              onValueChange={([v]) => onTreeBiomePurityChange(v)}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              How much tree types vary from other biomes vs. only the biome painted on.
-            </p>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Biome mix</Label>
+            <span className="text-xs text-muted-foreground">
+              {biomePurity >= 1 ? 'This biome only' : biomePurity <= 0 ? 'All biomes' : `${Math.round(biomePurity * 100)}% pure`}
+            </span>
           </div>
-        )}
+          <Slider
+            min={0} max={1} step={0.01}
+            value={[biomePurity]}
+            onValueChange={([v]) => onBiomePurityChange(v)}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            How much {tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : 'picks'} vary from
+            other biomes vs. only the biome painted on.
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor={`${tool}-high-contrast`} className="text-xs cursor-pointer">Allow high-contrast biomes</Label>
+            <Switch
+              id={`${tool}-high-contrast`}
+              checked={allowHighContrastBiomes}
+              onCheckedChange={onAllowHighContrastBiomesChange}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            When off, a cross-biome pick only lands on a visually compatible biome — Grass/Sand/Autumn/Dirt mix
+            freely with each other, but Snow, Lava, and Deathland never mix with any other biome.
+          </p>
+        </div>
       </PopoverContent>
     </Popover>
   )
