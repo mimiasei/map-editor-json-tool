@@ -1592,7 +1592,7 @@ export function paintObjects(
 /** Overwrite `arrayKey`'s value at every `{node, value}` in `changes`. Shared
  *  by paintTerrainTiles/paintLevelTiles/paintWaterTiles below — the only
  *  thing that varies between them is which flat array they target. */
-function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap' | 'roadsMap', changes: { node: number; value: number }[]): Uint8Array {
+function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap' | 'roadsMap' | 'climbsMap', changes: { node: number; value: number }[]): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, arrayKey)
   const values = JSON.parse(span) as number[]
@@ -1665,6 +1665,19 @@ export function paintWaterTiles(chunk: Uint8Array, changes: { node: number; wate
  *  sample data shows roads coexisting freely with both. */
 export function paintRoadTiles(chunk: Uint8Array, changes: { node: number; roadId: number }[]): Uint8Array {
   return paintFlatArrayTiles(chunk, 'roadsMap', changes.map(({ node, roadId }) => ({ node, value: roadId })))
+}
+
+/** Overwrite `climbsMap[node]` for every `{node, climb}` in `changes`
+ *  (climb 0/1 — see CLAUDE.md's climbsMap doc comment: confirmed structural,
+ *  every real climb=1 tile sits on the LOWER side of a levelsMap boundary,
+ *  directly bordering the higher side). Doesn't touch levelsMap itself — the
+ *  Ramp tool only ever paints climb=1 onto a tile that already has a
+ *  strictly-higher neighbor (validity check lives in MapGridDialog.tsx's
+ *  commitRampStroke, matching every real sample map with zero exceptions —
+ *  no orphaned climb=1 tile with no higher neighbor exists anywhere in the
+ *  real data surveyed this session). */
+export function paintClimbTiles(chunk: Uint8Array, changes: { node: number; climb: 0 | 1 }[]): Uint8Array {
+  return paintFlatArrayTiles(chunk, 'climbsMap', changes.map(({ node, climb }) => ({ node, value: climb })))
 }
 
 /** Upsert `{n, s, isWaterfall}` entries into `rivers[0].nodes` (add/update

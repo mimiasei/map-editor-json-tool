@@ -19,14 +19,9 @@
 // noisier small value set (not this bitmask) — this module only derives `s`
 // for non-waterfall river tiles; isWaterfall authoring is out of scope.
 
-export type RiverDirection = 'N' | 'S' | 'E' | 'W'
+import { connectedDirections, type CardinalDirection } from './tile-connectivity'
 
-const NEIGHBOR_OFFSETS: [number, number, RiverDirection][] = [
-  [1, 0, 'E'],
-  [-1, 0, 'W'],
-  [0, 1, 'N'],
-  [0, -1, 'S'],
-]
+export type RiverDirection = CardinalDirection
 
 /** Bit weight per direction — see this module's own doc comment for how
  *  this was empirically confirmed against real map data. */
@@ -58,15 +53,7 @@ export function classifyRiverNode(
   sizeX: number,
   sizeZ: number,
 ): { role: RiverRole; dirs: RiverDirection[] } {
-  const x = node % sizeX
-  const z = Math.floor(node / sizeX)
-  const dirs: RiverDirection[] = []
-  for (const [dx, dz, dir] of NEIGHBOR_OFFSETS) {
-    const nx = x + dx
-    const nz = z + dz
-    if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
-    if (riverNodeSet.has(nz * sizeX + nx)) dirs.push(dir)
-  }
+  const dirs = connectedDirections(node, (n) => riverNodeSet.has(n), sizeX, sizeZ)
   return { role: classifyRole(dirs), dirs }
 }
 
