@@ -65,7 +65,10 @@ It is a companion to the map editor, not a replacement for it.
 
 **Map Grid** (desktop) — a live view of your actual map, not just the script, with two modes:
 - **Browse** — click any tile to inspect everything placed on it, safe to poke around without changing anything.
-- **Paint** — move, add, delete, and rotate objects; drag-paint terrain, roads, rivers, and ramps; flood-fill water, including into lowered terrain; erase anything with the Eraser tool. **Obstacles**, **Trees**, and **Landmarks** brushes scatter biome-appropriate scenery as you drag, each with its own settings popover — mountain/pool chance (Obstacles), and for all three how much cross-biome mixing to allow, plus a switch for whether jarring ("high-contrast") biome mixes are allowed at all. A blocked-tile overlay shows exactly what's walkable; place real creature squads (not just decorative wildlife) with hover tooltips for stats; assign which player starts where — city or hero. Nothing is written to disk until you explicitly save, and Ctrl+Z undoes staged edits before you do.
+- **Paint** — every edit is staged locally until you explicitly save (Ctrl+Z undoes staged edits before you do):
+  - **Objects** — move, add, delete, and rotate; place real creature squads (not just decorative wildlife) with hover tooltips for stats; assign which player starts where — city or hero.
+  - **Terrain & water** — drag-paint terrain, roads, rivers, and ramps; flood-fill water, including into lowered terrain; a blocked-tile overlay shows exactly what's walkable; erase anything with the Eraser tool.
+  - **Scatter brushes** — **Obstacles**, **Trees**, and **Landmarks** drop biome-appropriate scenery as you drag. Each has its own settings popover: mountain/pool chance (Obstacles), how much cross-biome mixing to allow (all three), and a switch for whether jarring ("high-contrast") biome mixes are allowed at all.
 
 **Dialog & localization** — a visual slide editor for branching NPC conversations: portraits, animations, voice lines, player choices, and per-slide map actions. Translate every dialog and quest name into any of the game's 16 languages side by side, with English as a safety-net fallback.
 
