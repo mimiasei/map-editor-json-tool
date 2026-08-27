@@ -3357,7 +3357,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <ToolButton
                   icon={<Trash2 className="h-3.5 w-3.5" />}
                   label="Clear All"
-                  title="Delete every object, squad, zone, and river on the map (player-start spawners kept)"
+                  title="Delete every object, squad, zone, and river on the map and reset all terrain to Grass (player-start spawners kept)"
                   onClick={() => {
                     stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
                     setClearAllConfirming(true)

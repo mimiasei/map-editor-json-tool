@@ -631,6 +631,7 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       squads?: unknown[]
       markers?: unknown[]
       rivers?: Array<{ nodes?: unknown[] }>
+      tilesMap?: number[]
     }
     const preserved = new Set(edit.preserveObjectIds)
     const survivingIds = (block2.objects ?? []).flatMap((g) => g.ids ?? [])
@@ -642,6 +643,9 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     }
     if ((block2.rivers?.[0]?.nodes?.length ?? 0) > 0) {
       throw new Error('Verification failed: clear-all left river nodes behind')
+    }
+    if ((block2.tilesMap ?? []).some((t) => t !== 1)) {
+      throw new Error('Verification failed: clear-all left a non-Grass tile behind')
     }
   }
 

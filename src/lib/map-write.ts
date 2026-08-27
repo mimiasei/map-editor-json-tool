@@ -1611,8 +1611,12 @@ export function paintObjects(
 
 /** "Clear All" toolbar action (sibling to the Eraser tool, but for the
  *  whole map instead of a brushed area) — wipes every objects[]/squads[]/
- *  markers[] placement and every river node from Block 2 in one atomic
- *  pass. Player-start spawners (city-spawner/hero-spawner, passed in
+ *  markers[] placement and every river node from Block 2, and resets every
+ *  `tilesMap` tile to Grass (biome 1 — user-specified default; there is no
+ *  field anywhere in the format recording "the biome chosen at map
+ *  creation," since that value is only ever used once, to uniformly fill
+ *  tilesMap at creation time, and never persisted separately), all in one
+ *  atomic pass. Player-start spawners (city-spawner/hero-spawner, passed in
  *  `preserveObjectIds`) are deliberately kept: clearing them would also
  *  need to rewrite Block 1's spawns.spawns[] to stay in sync (see
  *  deleteObjectInstance's own step 4 auto-fix), and nobody bulk-clearing
@@ -1621,7 +1625,8 @@ export function paintObjects(
  *  every objectsProperties.* table generically (Object.keys, not a static
  *  list — same convention as deleteObjectInstance's own cleanup sweep)
  *  against whatever (type,id) pairs survived, so no orphaned rows are left
- *  for anything actually removed.
+ *  for anything actually removed. Deliberately does not touch waterMap/
+ *  levelsMap/climbsMap/roadsMap — only tilesMap was asked for.
  *
  *  Deliberately its own function rather than looping deleteObjectInstance
  *  once per placement: that would re-parse/re-stringify all of Block 2 once
@@ -1631,6 +1636,12 @@ export function paintObjects(
 export function clearAllObjects(block2Chunk: Uint8Array, preserveObjectIds: Set<number>): Uint8Array {
   let text = new TextDecoder('utf-8').decode(block2Chunk)
   const surviving = new Set<string>()
+
+  {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'tilesMap')
+    const tiles = JSON.parse(span) as number[]
+    text = text.slice(0, arrayOpen) + JSON.stringify(tiles.fill(1)) + text.slice(arrayClose + 1)
+  }
 
   {
     const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'objects')
