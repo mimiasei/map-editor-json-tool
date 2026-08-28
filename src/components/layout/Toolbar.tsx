@@ -70,10 +70,12 @@ import {
   LayoutGrid,
   Wand2,
   UploadCloud,
+  FileInput,
 } from 'lucide-react'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
+import ImportH3mDialog from '@/components/common/ImportH3mDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
@@ -160,6 +162,7 @@ export default function Toolbar({
   const [updateMessage,       setUpdateMessage]       = useState<string | null>(null)
   const [aboutOpen,           setAboutOpen]           = useState(false)
   const [newMapOpen,          setNewMapOpen]          = useState(false)
+  const [importH3mOpen,       setImportH3mOpen]       = useState(false)
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -296,6 +299,21 @@ export default function Toolbar({
       if (!ok) return
     }
     setNewMapOpen(true)
+  }
+
+  // ── Import H3 Map — same unsaved-changes guard as New Map above, since a
+  // successful import discards the currently loaded map immediately (loads
+  // the converted result via loadParsedMapFile, unconditionally — see
+  // import-h3m-file.ts).
+  const handleImportH3mClick = async () => {
+    if (isDirty || mapIsDirty) {
+      const ok = await confirmDialog(
+        'You have unsaved changes. Import a Heroes 3 map anyway?',
+        'Import H3 Map',
+      )
+      if (!ok) return
+    }
+    setImportH3mOpen(true)
   }
 
   // ── Open .map file ────────────────────────────────────────────────────────────
@@ -796,6 +814,10 @@ export default function Toolbar({
                       </Badge>
                     )}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTimeout(handleImportH3mClick, 0)}>
+                    <FileInput className="h-4 w-4 mr-2" />
+                    Import H3 Map…
+                  </DropdownMenuItem>
                 </>
               )}
 
@@ -1090,6 +1112,13 @@ export default function Toolbar({
 
       {/* About works in both builds — the version row just reads "web build" on the web. */}
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+
+      {isTauri() && (
+        <ImportH3mDialog
+          open={importH3mOpen}
+          onOpenChange={setImportH3mOpen}
+        />
+      )}
 
       {isTauri() && (
         <NewMapDialog
