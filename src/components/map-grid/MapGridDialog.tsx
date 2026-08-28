@@ -727,17 +727,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Bucket-fill region (issue #193 Phase 3, extended #205 to Level/
   // Obstacles/Trees) — every tile contiguous with `node` sharing its current
-  // biome, optionally also stopping at a blocked tile (object footprint,
-  // elevation wall, water — see buildBlockedTileSet) when the
-  // bucketFillObjectsAsBoundary setting is on, so a mountain/building can
-  // act as a wall instead of being invisible to the fill. Shared by all four
-  // bucket tools below — only what they DO with the resulting region differs.
+  // biome AND its current elevation level (a lower/higher level is always a
+  // physical boundary, same as a real cliff edge — never optional, unlike
+  // the object-blocking check below), optionally also stopping at a blocked
+  // tile (object footprint, elevation wall, water — see buildBlockedTileSet)
+  // when the bucketFillObjectsAsBoundary setting is on, so a mountain/
+  // building can act as a wall instead of being invisible to the fill.
+  // Shared by all four bucket tools below — only what they DO with the
+  // resulting region differs.
   const bucketFillRegion = useCallback((node: number): number[] => {
     if (tilesMap[node] === undefined) return []
     const targetBiome = tilesMap[node]
+    const targetLevel = levelsMap[node]
     const objectsAsBoundary = settings.bucketFillObjectsAsBoundary
-    return floodFillRegion(node, sizeX, sizeZ, (n) => tilesMap[n] === targetBiome && (!objectsAsBoundary || !blockedTileSet.has(n)))
-  }, [tilesMap, sizeX, sizeZ, settings.bucketFillObjectsAsBoundary, blockedTileSet])
+    return floodFillRegion(node, sizeX, sizeZ, (n) => tilesMap[n] === targetBiome && levelsMap[n] === targetLevel && (!objectsAsBoundary || !blockedTileSet.has(n)))
+  }, [tilesMap, levelsMap, sizeX, sizeZ, settings.bucketFillObjectsAsBoundary, blockedTileSet])
 
   // Click a tile, flood-fill every contiguous tile of ITS CURRENT biome with
   // the newly chosen biome, and apply immediately (the whole region is known
