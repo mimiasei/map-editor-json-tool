@@ -18,11 +18,16 @@
 // requestedValue (neutral-strength.ts) and random-item rarity binning
 // (random-items.ts) — a monster with no known creature type/level is now
 // omitted rather than placed uncalibrated.
+// Phase 4 (issue #207): H3's WINSTANDARD ("defeat all enemies") victory
+// condition, emitted as a real QuestScript `MainQuest` (victory.ts) — the
+// one victory type common enough to be worth this round's effort; any
+// other H3 victory type (TAKEMINES, GATHERTROOP, ...) leaves no victory
+// quest at all (see `report.hasVictoryQuest`), a real gap, not a guess.
 //
 // Still deferred (tracked in `report.omittedReasonCounts`, not silently
 // dropped): heroes (identity folds into the city's spawn seat, matching the
-// reference project's own "no stock hero-identity path" approach), quests,
-// events, victory/loss conditions, and the structural validator (Phase 5).
+// reference project's own "no stock hero-identity path" approach), map
+// events, global timed events, and the structural validator (Phase 5).
 
 import type { MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -34,8 +39,9 @@ import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } fr
 import { assignOwnership, type CityCandidate } from './ownership'
 import { stockRandomSquadRequestedValue } from './neutral-strength'
 import { rarityForRandomArtifactObjectId } from './random-items'
+import { buildWinstandardQuest } from './victory'
+import { VICTORY_WINSTANDARD } from './h3m-format'
 
-const BLANK_BLOCK4 = '{"comment":"","aiRolesId":"","counters":[],"interruptions":[],"quests":[]}'
 
 export interface H3ImportReport {
   atlasWidth: number
@@ -58,6 +64,11 @@ export interface H3ImportReport {
    *  map envelope (H3 tolerates this for objects whose footprint extends
    *  inward from an edge-adjacent anchor) — not emitted this phase. */
   outOfEnvelopeCount: number
+  /** `true` when the H3 map's own victory condition was WINSTANDARD and a
+   *  real "defeat all enemies" quest was emitted; `false` for any other H3
+   *  victory type (TAKEMINES, GATHERTROOP, ...) or too few players — the
+   *  map has no working win condition this round (Phase 4 gap). */
+  hasVictoryQuest: boolean
 }
 
 export interface H3ImportResult {
@@ -201,6 +212,14 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
 
   const ownership = assignOwnership(parsed.header, cityCandidates)
 
+  // Phase 4: only H3's WINSTANDARD ("defeat all enemies") victory condition
+  // is supported this round — any other type leaves no victory quest at all
+  // (see victory.ts's own doc comment for why "no quest" is the honest
+  // choice for an unsupported type, rather than a guessed fallback).
+  const mainQuest = parsed.header.victory.type === VICTORY_WINSTANDARD && ownership.finalOwners.length >= 2
+    ? buildWinstandardQuest(title, ownership.humanFinalOwner, ownership.finalOwners)
+    : null
+
   const propCities: Record<string, unknown>[] = []
   const propOwners: Record<string, unknown>[] = []
   const propSpawns: Record<string, unknown>[] = []
@@ -236,6 +255,10 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     sizeX: atlas.atlasWidth,
     sizeZ: atlas.atlasHeight,
     spawns: { playersCount: ownership.finalOwners.length, spawns: block1Spawns, takenHeroes: [] as string[] },
+    startSettings: {
+      ...((templateB1.startSettings as Record<string, unknown>) ?? {}),
+      DefeatAllEnemiesEnabled: mainQuest !== null,
+    },
   }
 
   const templateViews = (templateB2.views as Array<Record<string, unknown>>) ?? []
@@ -269,6 +292,15 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     markersFreeId: 0,
     views,
     areas,
+    settings: {
+      ...((templateB2.settings as Record<string, unknown>) ?? {}),
+      mapWinConditions: [] as unknown[],
+      // Pairs with every propRandomSquads row's own isAutobatle:true —
+      // auto-battle is allowed against neutral/guard stacks, not against a
+      // real enemy hero's army (a real OE-format fact, not H3-specific —
+      // see CLAUDE.md's random-squad notes).
+      disableAutoBattleAgainstEnemyHeroes: true,
+    },
     // Start from the template's own ~29-table objectsProperties shape (every
     // other table stays a template-provided empty array — a real, freshly
     // opened map is expected to have all of them present, not just the ones
@@ -279,6 +311,15 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     },
   }
 
+  const templateB4 = template.chunks[3] ? JSON.parse(decoder.decode(template.chunks[3])) as Record<string, unknown> : {}
+  const b4 = {
+    comment: templateB4.comment ?? '',
+    aiRolesId: templateB4.aiRolesId ?? '',
+    counters: [] as unknown[],
+    interruptions: [] as unknown[],
+    quests: mainQuest ? [mainQuest] : [],
+  }
+
   const container: MapContainer = {
     hash: template.hash,
     version: template.version,
@@ -287,7 +328,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       new TextEncoder().encode(JSON.stringify(b1)),
       new TextEncoder().encode(JSON.stringify(b2)),
       new TextEncoder().encode(templateB3Text),
-      new TextEncoder().encode(BLANK_BLOCK4),
+      new TextEncoder().encode(JSON.stringify(b4)),
     ],
   }
 
@@ -297,7 +338,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       atlasWidth: atlas.atlasWidth, atlasHeight: atlas.atlasHeight, sourceSize: size, sourceLayers: layerCount,
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, unboundOrphanOwners: ownership.unboundOrphanOwners,
-      outOfEnvelopeCount,
+      outOfEnvelopeCount, hasVictoryQuest: mainQuest !== null,
     },
   }
 }
