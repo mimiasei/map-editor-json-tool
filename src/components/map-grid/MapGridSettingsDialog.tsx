@@ -60,6 +60,12 @@ export interface MapGridSettings {
   /** Advanced — how often Encounter's Random difficulty picks each named
    *  bucket (weighted, not a flat roll — see pickSquadRange). */
   squadRandomWeights: DifficultyWeight[]
+  /** Advanced — Terrain bucket-fill (issue #205) treats any blocked tile
+   *  (object footprint, unrampted elevation wall, water — see
+   *  buildBlockedTileSet) as a boundary in addition to the biome match,
+   *  so the flood-fill stops at a mountain/building instead of painting
+   *  underneath it. Off by default to preserve prior bucket-fill behavior. */
+  bucketFillObjectsAsBoundary: boolean
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
@@ -74,6 +80,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   lineFeatureShading: true,
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
   squadRandomWeights: DEFAULT_SQUAD_RANDOM_WEIGHTS,
+  bucketFillObjectsAsBoundary: false,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -218,6 +225,15 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
 
           {advancedOpen && (
             <div className="space-y-4 pt-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="grid-bucket-objects-boundary" className="text-xs cursor-pointer">Terrain bucket-fill stops at objects</Label>
+                <Switch
+                    id="grid-bucket-objects-boundary"
+                    checked={settings.bucketFillObjectsAsBoundary}
+                    onCheckedChange={(v) => update({ bucketFillObjectsAsBoundary: v })}
+                />
+              </div>
+
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Encounter — Random weights

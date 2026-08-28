@@ -434,8 +434,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Terrain bucket-fill (issue #193 Phase 3) — an alternate click-to-flood-
   // fill interaction for the same Terrain tool, reusing floodFillRegion the
   // same way Water does. Freehand (drag-stroke) stays the default, matching
-  // today's existing behavior unchanged.
+  // today's existing behavior unchanged. issue #205: the same Bucket mode
+  // (and its underlying flood-fill) is also offered for Level/Obstacles/
+  // Trees, each with its own independent toggle — a user filling in a lake
+  // basin's level, say, wants that without also being in Terrain's bucket
+  // mode.
   const [terrainBucketMode, setTerrainBucketMode] = useState(false)
+  const [levelBucketMode, setLevelBucketMode] = useState(false)
+  const [obstacleBucketMode, setObstacleBucketMode] = useState(false)
+  const [treeBucketMode, setTreeBucketMode] = useState(false)
 
   // Shared brush-size radius (issue #193 punch-list item, scoped in the
   // original plan but never wired up in any earlier phase) — applies to
@@ -456,7 +463,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'water' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
@@ -718,17 +725,54 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'paintTerrain', changes }, 'paint terrain')
   }, [paintStaged, applyEdit])
 
-  // Terrain bucket-fill (issue #193 Phase 3) — click a tile, flood-fill
-  // every contiguous tile of ITS CURRENT biome with the newly chosen biome,
-  // and apply immediately (the whole region is known synchronously from one
-  // click, same as Water's flood-fill — no drag to batch).
-  const applyBucketFill = useCallback((node: number, biomeId: BiomeId) => {
-    if (tilesMap[node] === undefined) return
+  // Bucket-fill region (issue #193 Phase 3, extended #205 to Level/
+  // Obstacles/Trees) — every tile contiguous with `node` sharing its current
+  // biome AND its current elevation level (a lower/higher level is always a
+  // physical boundary, same as a real cliff edge — never optional, unlike
+  // the object-blocking check below), optionally also stopping at a blocked
+  // tile (object footprint, elevation wall, water — see buildBlockedTileSet)
+  // when the bucketFillObjectsAsBoundary setting is on, so a mountain/
+  // building can act as a wall instead of being invisible to the fill.
+  // Shared by all four bucket tools below — only what they DO with the
+  // resulting region differs.
+  const bucketFillRegion = useCallback((node: number): number[] => {
+    if (tilesMap[node] === undefined) return []
     const targetBiome = tilesMap[node]
-    const region = floodFillRegion(node, sizeX, sizeZ, (n) => tilesMap[n] === targetBiome)
+    const targetLevel = levelsMap[node]
+    const objectsAsBoundary = settings.bucketFillObjectsAsBoundary
+    return floodFillRegion(node, sizeX, sizeZ, (n) => tilesMap[n] === targetBiome && levelsMap[n] === targetLevel && (!objectsAsBoundary || !blockedTileSet.has(n)))
+  }, [tilesMap, levelsMap, sizeX, sizeZ, settings.bucketFillObjectsAsBoundary, blockedTileSet])
+
+  // Click a tile, flood-fill every contiguous tile of ITS CURRENT biome with
+  // the newly chosen biome, and apply immediately (the whole region is known
+  // synchronously from one click, same as Water's flood-fill — no drag to
+  // batch).
+  const applyBucketFill = useCallback((node: number, biomeId: BiomeId) => {
+    const region = bucketFillRegion(node)
     if (region.length === 0) return
     applyEdit({ kind: 'paintTerrain', changes: region.map((n) => ({ node: n, biomeId })) }, 'bucket-fill terrain')
-  }, [tilesMap, sizeX, sizeZ, applyEdit])
+  }, [bucketFillRegion, applyEdit])
+
+  // Same idea for Level — flood-fill the biome region, set every tile's
+  // level in one edit.
+  const applyLevelBucketFill = useCallback((node: number, level: -1 | 0 | 1) => {
+    const region = bucketFillRegion(node)
+    if (region.length === 0) return
+    applyEdit({ kind: 'paintLevel', changes: region.map((n) => ({ node: n, level })) }, 'bucket-fill level')
+  }, [bucketFillRegion, applyEdit])
+
+  // Same idea for Obstacles/Trees — flood-fill the biome region, then feed
+  // it straight to the same commit function a freehand/Rectangle stroke
+  // already uses (both already accept an arbitrary node list).
+  const applyObstacleBucketFill = useCallback((node: number) => {
+    const region = bucketFillRegion(node)
+    if (region.length > 0) commitObstacleStroke(region)
+  }, [bucketFillRegion, commitObstacleStroke])
+
+  const applyTreeBucketFill = useCallback((node: number) => {
+    const region = bucketFillRegion(node)
+    if (region.length > 0) commitTreeStroke(region)
+  }, [bucketFillRegion, commitTreeStroke])
 
   // Interactable brush settings + pool — declared here (rather than
   // alongside the rest of the tool below) so applyRectangleFill's
@@ -791,7 +835,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return false
   }, [levelsMap, sizeX, sizeZ])
-  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'water' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser', bounds: RectangleBounds) => {
+  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser', bounds: RectangleBounds) => {
     const nodes = nodesInRectangle(bounds, sizeX)
     if (nodes.length === 0) return
     if (tool === 'ramp') {
@@ -848,18 +892,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       applyEdit({ kind: 'paintTerrain', changes: nodes.map((n) => ({ node: n, biomeId: paintBiome })) }, 'paint terrain')
     } else if (tool === 'level' && levelBrush !== null) {
       applyEdit({ kind: 'paintLevel', changes: nodes.map((n) => ({ node: n, level: levelBrush })) }, 'paint level')
-    } else if (tool === 'water' && waterBrush !== null) {
-      // Water only ever paints level -1 tiles (see applyWaterFill's doc
-      // comment) — a rectangle can span other levels too, so filter rather
-      // than assume the whole selection qualifies.
-      const waterableNodes = nodes.filter((n) => levelsMap[n] === -1)
-      if (waterableNodes.length > 0) {
-        applyEdit({ kind: 'paintWater', changes: waterableNodes.map((n) => ({ node: n, waterId: waterBrush })) }, 'paint water')
-      }
     } else if (tool === 'road' && roadBrush !== null) {
       applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, sizeZ, paintBiome, levelBrush, waterBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, levelsMap, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -1189,28 +1225,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         }
         return
       }
+      if (levelBucketMode) {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) applyLevelBucketFill(node, levelBrush)
+        return
+      }
       levelPaintingRef.current = true
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) stageLevelNode(node, levelBrush)
       return
     }
-    // Water is click-to-flood-fill, not a drag stroke — one pointerdown
-    // computes and applies the whole contiguous region in one action (see
-    // applyWaterFill's doc comment). Rectangle mode replaces that with a
-    // drag-a-rect-then-fill-every-enclosed-tile interaction instead — a
-    // genuinely different selection shape (not level-bounded), so it's
-    // offered as an alternative rather than folded into the click behavior.
+    // Water is always click-to-flood-fill, not a drag stroke or a rectangle
+    // selection (issue #205) — one pointerdown computes and applies the
+    // whole contiguous region in one action (see applyWaterFill's doc
+    // comment), ignoring interactionMode entirely so a 'rectangle' mode left
+    // over from a previously-active tool can't silently no-op Water.
     if (waterBrush !== null) {
-      if (interactionMode === 'rectangle') {
-        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null) {
-          e.currentTarget.setPointerCapture(e.pointerId)
-          rectangleDragRef.current = { tool: 'water', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
-          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
-        }
-        return
-      }
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) applyWaterFill(node, waterBrush)
       return
@@ -1309,6 +1340,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         }
         return
       }
+      if (obstacleBucketMode) {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) applyObstacleBucketFill(node)
+        return
+      }
       obstacleDragRef.current = new Set()
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -1330,6 +1366,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           rectangleDragRef.current = { tool: 'trees', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
           setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
         }
+        return
+      }
+      if (treeBucketMode) {
+        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+        if (node !== null) applyTreeBucketFill(node)
         return
       }
       treeDragRef.current = new Set()
@@ -2743,7 +2784,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // 5 -> at most ~69 tiles), a tiny cursor-following set, not a per-map-
   // tile render — doesn't reintroduce the one-DOM-node-per-map-tile
   // pattern this codebase avoids.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive)
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
     return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ)
@@ -3067,6 +3108,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       </button>
                     ))}
                   </div>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setLevelBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${levelBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to fill the contiguous same-biome region"
+                      onClick={() => setLevelBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
                   {paintLevelStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
                   )}
@@ -3227,6 +3284,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <Mountain className="h-3.5 w-3.5" />
                         Drawing…
                       </Button>
+                      <div className="flex items-center rounded border border-border overflow-hidden">
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${!obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Freehand brush — drag to scatter"
+                          onClick={() => setObstacleBucketMode(false)}
+                        >
+                          Brush
+                        </button>
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${obstacleBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Bucket fill — click to scatter across the contiguous same-biome region"
+                          onClick={() => setObstacleBucketMode(true)}
+                        >
+                          Bucket
+                        </button>
+                      </div>
                       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopObstaclePainting}>
                         Stop (Esc)
                       </Button>
@@ -3257,6 +3330,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <Trees className="h-3.5 w-3.5" />
                         Drawing…
                       </Button>
+                      <div className="flex items-center rounded border border-border overflow-hidden">
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${!treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Freehand brush — drag to scatter"
+                          onClick={() => setTreeBucketMode(false)}
+                        >
+                          Brush
+                        </button>
+                        <button
+                          className={`h-6 px-2 text-xs transition-colors ${treeBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                          title="Bucket fill — click to scatter across the contiguous same-biome region"
+                          onClick={() => setTreeBucketMode(true)}
+                        >
+                          Bucket
+                        </button>
+                      </div>
                       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopTreePainting}>
                         Stop (Esc)
                       </Button>
@@ -3361,10 +3450,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 />
               )}
               {/* Freehand/Rectangle interaction mode (issue #193 Phase 4) —
-                  a shared toggle for Terrain/Level/Water, not a separate
-                  top-level tool. Only shown once a relevant brush is active,
-                  since it has nothing to modify otherwise. */}
-              {(paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive) && (
+                  a shared toggle for Terrain/Level, not a separate top-level
+                  tool. Only shown once a relevant brush is active, since it
+                  has nothing to modify otherwise. Water deliberately excluded
+                  (issue #205) — it's always click-to-flood-fill; a stale
+                  'rectangle' mode left over from switching from another tool
+                  made Water look broken (a rectangle over ordinary ground
+                  matches no level-(-1) tile, so nothing visibly happens). */}
+              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive) && (
                 <>
                   <div className="flex-1" />
                   {(obstacleBrushActive || treesActive || interactableActive || squadActive) && (
@@ -3410,7 +3503,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   click-to-flood-fill regardless of interactionMode, and
                   Bucket/Rectangle already select their own explicit region,
                   so radius has nothing to modify for either. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive) && (
+              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
                   <Button
@@ -3423,14 +3516,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </Button>
-                  <span className="text-xs tabular-nums w-4 text-center">{brushRadius}</span>
+                  <span className="text-xs tabular-nums w-5 text-center">{brushRadius}</span>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6"
                     title="Bigger brush"
-                    disabled={brushRadius >= 5}
-                    onClick={() => setBrushRadius((r) => Math.min(5, r + 1))}
+                    disabled={brushRadius >= 15}
+                    onClick={() => setBrushRadius((r) => Math.min(15, r + 1))}
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </Button>
@@ -3653,7 +3746,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     fully covered the other regardless of actual position. */}
                 {showIcons && sortedIconEntries.map((entry) => {
                   const name = entry.pick.primary.displayName || entry.pick.primary.entitySid || entry.pick.primary.sid
-                  const visual = resolveGridCellVisual(entry.pick.primary, catalog)
+                  const visual = resolveGridCellVisual(entry.pick.primary, catalog, settings.squadDifficultyRanges)
                   const isSingleCell = entry.width === BASE_CELL_PX && entry.height === BASE_CELL_PX
                   const thisIconSize = isSingleCell
                     ? iconSize
@@ -3696,7 +3789,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       }}
                       onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) selectNode(entry.clickNode) }}
                     >
-                      {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className="shrink-0" />}
+                      {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className={`shrink-0 ${visual.colorClassName ?? ''}`} />}
                       {visual.kind === 'text' && (
                         <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
                       )}
