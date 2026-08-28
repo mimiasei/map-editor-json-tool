@@ -14,12 +14,15 @@
 // multi-faction city split, no gate-face rotation/access-clearing, so a
 // town's placement isn't guaranteed pathable/gate-aligned the way the
 // reference emitter's town_gate_align.py/gate_face.py guarantee).
+// Phase 3 (issue #207): neutral-strength-calibrated `random-squad`
+// requestedValue (neutral-strength.ts) and random-item rarity binning
+// (random-items.ts) — a monster with no known creature type/level is now
+// omitted rather than placed uncalibrated.
 //
 // Still deferred (tracked in `report.omittedReasonCounts`, not silently
 // dropped): heroes (identity folds into the city's spawn seat, matching the
 // reference project's own "no stock hero-identity path" approach), quests,
-// events, victory/loss conditions, neutral-strength-calibrated random-squad
-// values (Phase 3), and the structural validator (Phase 5).
+// events, victory/loss conditions, and the structural validator (Phase 5).
 
 import type { MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -29,6 +32,8 @@ import { buildEmptyAtlasArrays, projectLayerIntoAtlas, applyStockOceanBasinGeome
 import { resolveObjectSid } from './object-map'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import { assignOwnership, type CityCandidate } from './ownership'
+import { stockRandomSquadRequestedValue } from './neutral-strength'
+import { rarityForRandomArtifactObjectId } from './random-items'
 
 const BLANK_BLOCK4 = '{"comment":"","aiRolesId":"","counters":[],"interruptions":[],"quests":[]}'
 
@@ -105,6 +110,8 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const sceneryVariantCounts: Record<string, number> = {}
   const cityCandidates: CityCandidate[] = []
   const townEntries: TownEntry[] = []
+  const propRandomSquads: Record<string, unknown>[] = []
+  const propRandomItems: Record<string, unknown>[] = []
   let sceneryPlaced = 0
   let objectsPlaced = 0
   let outOfEnvelopeCount = 0
@@ -143,6 +150,34 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       continue
     }
 
+    if (resolution.kind === 'random_squad') {
+      // Neutral-strength calibration (issue #207 Phase 3) — an H3 monster
+      // with no known creature type/level has no stock SpawnsCreator
+      // budget to hand it; omit with a named reason rather than place an
+      // uncalibrated guard (which Phase 2 did as a documented simplification).
+      const count = typeof record.count === 'number' ? record.count : 0
+      const requestedValue = stockRandomSquadRequestedValue(record.templateAnimation, oid, record.templateSubtype, count)
+      if (requestedValue === null) {
+        const reason = `hota_or_unmapped_creature_type_${record.templateSubtype}_no_stock_squad_value`
+        omittedReasonCounts[reason] = (omittedReasonCounts[reason] ?? 0) + 1
+        continue
+      }
+      const objectId = placeObject(resolution.sid, node)
+      objectsPlaced += 1
+      // Exact shape as this repo's own RANDOM_SPAWNER_TABLE_DEFAULTS
+      // (map-write.ts) — tier:0 (auto-derive from value) and
+      // isAutobatle:true/fraction as a string are confirmed-real, hard-won
+      // facts from this project's own history, not reference-project
+      // guesses (see CLAUDE.md's random-squad "Hard-won lessons").
+      propRandomSquads.push({
+        type: 0, id: objectId, sids: [], requestedValue, fraction: '', tier: 0, isMainGuard: false,
+        reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
+        isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
+        isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
+      })
+      continue
+    }
+
     const objectId = placeObject(resolution.sid, node)
     objectsPlaced += 1
 
@@ -153,6 +188,14 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         index: cityCandidates.length - 1, objectId,
         factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
       })
+    } else if (resolution.kind === 'artifact') {
+      // Real H3 random-artifact-class ids (65-69) carry genuine rarity
+      // info; a specific named H3 artifact (object id 5, always lossily
+      // collapsed to random-item) has none — TSE's own confirmed real
+      // default for a freshly-placed random-item with no further identity
+      // is rarity 0 (see RANDOM_SPAWNER_TABLE_DEFAULTS in map-write.ts).
+      const rarity = rarityForRandomArtifactObjectId(oid) ?? 0
+      propRandomItems.push({ type: 0, id: objectId, rarity })
     }
   }
 
@@ -232,7 +275,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     // this phase populates) and override only what this phase actually fills.
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
-      propCities, propOwners, propSpawns,
+      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems,
     },
   }
 
