@@ -1642,6 +1642,17 @@ export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array
     text2 = text2.slice(0, arrayOpen) + JSON.stringify(tiles.fill(1)) + text2.slice(arrayClose + 1)
   }
 
+  // levelsMap/climbsMap/roadsMap/waterMap — issue #205: these four survived a
+  // prior Clear All untouched, leaving elevation, ramps, roads, and water in
+  // place even though every object/terrain-biome tile was wiped.
+  for (const key of ['levelsMap', 'climbsMap', 'roadsMap', 'waterMap'] as const) {
+    try {
+      const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, key)
+      const values = JSON.parse(span) as number[]
+      text2 = text2.slice(0, arrayOpen) + JSON.stringify(values.fill(0)) + text2.slice(arrayClose + 1)
+    } catch { /* table absent in this file */ }
+  }
+
   // objects[]/squads[]/markers[] — fully cleared, no exceptions.
   for (const key of ['objects', 'squads', 'markers']) {
     try {

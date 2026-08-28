@@ -15,11 +15,12 @@
 import { Castle, Shield, DoorOpen, SquareDashed, Building2, UserRound, Swords, Gem, Package, Users, type LucideIcon } from 'lucide-react'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
+import { randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import type { PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 
 export type GridCellVisual =
-  | { kind: 'icon'; Icon: LucideIcon }
+  | { kind: 'icon'; Icon: LucideIcon; colorClassName?: string }
   | { kind: 'text'; text: string }
   | { kind: 'catalog' }
   /** Real thumbnail, but under a different iconId/name than the item's own
@@ -50,7 +51,20 @@ const SID_ICON_OVERRIDES: Record<string, LucideIcon> = {
   'random-hire': Users,
 }
 
-export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog | null): GridCellVisual {
+/** issue #205: tints the random-squad Swords icon by rolled difficulty so it
+ *  reads at a glance without opening the tile inspector — colors chosen for
+ *  contrast against the spawners group's blue canvas swatch. Black (no
+ *  override, default currentColor) for a freshly Object-Browser-placed
+ *  instance with no propRandomSquads row yet (randomSquadValue undefined). */
+const SQUAD_DIFFICULTY_COLOR: Record<string, string> = {
+  Easy: 'text-green-400',
+  Normal: 'text-white',
+  Difficult: 'text-yellow-300',
+  Impossible: 'text-orange-400',
+  Lethal: 'text-red-500',
+}
+
+export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog | null, squadDifficultyRanges?: DifficultyRange[]): GridCellVisual {
   // Zones (markers) — an invisible scripting area, never has a real texture.
   if (item.type === 1) return { kind: 'icon', Icon: SquareDashed }
 
@@ -76,7 +90,13 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
   }
 
   const spawnerOverride = SID_ICON_OVERRIDES[item.sid]
-  if (spawnerOverride) return { kind: 'icon', Icon: spawnerOverride }
+  if (spawnerOverride) {
+    if (item.sid === 'random-squad' && item.randomSquadValue !== undefined) {
+      const label = randomSquadDifficultyLabel(item.randomSquadValue, squadDifficultyRanges)
+      return { kind: 'icon', Icon: spawnerOverride, colorClassName: SQUAD_DIFFICULTY_COLOR[label] }
+    }
+    return { kind: 'icon', Icon: spawnerOverride }
+  }
 
   // Portals — unconfirmed whether the game ships a real 2D icon for these
   // (may be animated scene prefabs with none at all), so prefer a real
