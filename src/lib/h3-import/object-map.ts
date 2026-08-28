@@ -343,6 +343,12 @@ export function resolveObjectSid(
     let kind: ObjectKind = sid.startsWith('portal') ? 'portal' : 'interactable'
     if (oid === h3obj.OBJECT_EVENT) kind = 'map_event'
     if (sid === 'random-squad') kind = 'random_squad'
+    // The 5 random-artifact-class ids (65-69) route through this same
+    // direct table (all resolving to 'random-item') — found missing by
+    // validate-map.ts's random-item<->propRandomItems bijection check,
+    // which flagged real converted maps with random-item instances that
+    // never got a rarity row because this fell through to 'interactable'.
+    if (sid === 'random-item') kind = 'artifact'
     if (sid === 'random-city') return { action: 'emit', sid, kind: 'town', factionSid: '', freeChoice: true, reason: 'direct_template_random_city_free_choice' }
     return { action: 'emit', sid, kind, reason: 'direct_template_sid' }
   }
