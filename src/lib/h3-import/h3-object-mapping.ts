@@ -28,6 +28,19 @@
 // being omitted — closest existing match to the other solid-decoration
 // roles (`rock`/`skull`/`stump`), a judgment call, easy to revise by editing
 // its one row.
+//
+// Second source, for ids VCMI's own registry has no entry for at all: GK's
+// `EdObjts.txt` (github.com/Shakajiub/HoMM3-maps, HotA-maintained) lists
+// every stock `.def` filename with its object id/subtype and a `// biome -
+// visual category` comment (e.g. "DIRT - TREES"). This resolved a handful
+// of ids VCMI has nothing for, and — for id 140 specifically — showed it's
+// a genuine multi-role class where SUBTYPE picks the visual role (rock vs.
+// tree vs. mountain vs. lake), cross-checked against real per-subtype
+// instance counts in `maps/H3_Maps/` before deciding which subtypes were
+// confident enough to map (`scenery-dispatch-subtype` below) versus left
+// omitted (subtypes 9/10 have real volume but an uncertain footprint/role;
+// 11/13 aren't in EdObjts.txt's own id-140 listing at all — real, disclosed
+// gaps, not guesses).
 
 import { H3ObjectMappingSchema, type ObjectRow, type SceneryRole, type OeBiome, type ObjectKind } from './h3-object-mapping-schema'
 import mappingData from './h3-object-mapping.json'
@@ -146,6 +159,14 @@ export function resolveObjectSid(
       const hit = row.exact[anim]
       if (!hit) return { action: 'omit', reason: `unmapped_template_object_id_${oid}` }
       return { action: 'emit', sid: hit.sid, kind: 'scenery', role: hit.role, reason: 'scenery_role_or_animation' }
+    }
+
+    case 'scenery-dispatch-subtype': {
+      const role = row.subtypes[String(subtype)]
+      if (!role) return { action: 'omit', reason: `unmapped_template_object_id_${oid}_subtype_${subtype}` }
+      const biome = H3_TERRAIN_BIOME[h3TerrainAtTile] ?? 'grass'
+      const sid = BIOME_ROLE_REPLACEMENTS[role][biome]
+      return { action: 'emit', sid, kind: 'scenery', role, reason: 'scenery_role_or_animation' }
     }
 
     case 'dispatch': {

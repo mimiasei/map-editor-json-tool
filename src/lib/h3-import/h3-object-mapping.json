@@ -1082,25 +1082,35 @@
     },
     {
       "h3Id": 139,
-      "h3Name": "Unidentified",
+      "h3Name": "Misc Scenery (highland/sand/snow/swamp/wasteland/water decorations)",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_139"
     },
     {
       "h3Id": 140,
-      "h3Name": "Unidentified",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_140"
+      "h3Name": "Misc Scenery (dirt/grass/highland/rough/sand/snow/swamp/wasteland stones & trees)",
+      "outcome": "scenery-dispatch-subtype",
+      "subtypes": {
+        "1": "rock",
+        "2": "tree",
+        "3": "rock",
+        "4": "rock",
+        "5": "mountain",
+        "6": "mountain",
+        "7": "tree",
+        "8": "pool",
+        "12": "tree"
+      }
     },
     {
       "h3Id": 141,
-      "h3Name": "Unidentified",
+      "h3Name": "Magical Terrain (cracked ice/dunes/fields of glory)",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_141"
     },
     {
       "h3Id": 142,
-      "h3Name": "Unidentified",
+      "h3Name": "Misc Active Object (resource generator)",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_142"
     },
@@ -1112,19 +1122,19 @@
     },
     {
       "h3Id": 144,
-      "h3Name": "Unidentified",
+      "h3Name": "Misc Active Object (highland/rough/snow/wasteland; stat boosts/schools)",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_144"
     },
     {
       "h3Id": 145,
-      "h3Name": "Unidentified",
+      "h3Name": "Water Treasure (resources)",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_145"
     },
     {
       "h3Id": 146,
-      "h3Name": "Unidentified",
+      "h3Name": "Misc Active Object (water; creature banks)",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_146"
     },
@@ -1172,7 +1182,7 @@
     },
     {
       "h3Id": 154,
-      "h3Name": "Unidentified",
+      "h3Name": "Wasteland Lake",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_154"
     },
@@ -1208,7 +1218,7 @@
     },
     {
       "h3Id": 160,
-      "h3Name": "Unidentified",
+      "h3Name": "Sand Decoration",
       "outcome": "omit",
       "reason": "unmapped_template_object_id_160"
     },

@@ -40,6 +40,19 @@ const SceneryDispatchRowSchema = z.object({
   exact: z.record(z.string(), z.object({ sid: z.string(), role: SceneryRoleSchema })),
 })
 
+/** A single H3 id whose subtype selects between genuinely different
+ *  scenery roles (e.g. id 140: subtype 2 is a tree, subtype 6 is a
+ *  mountain) — unlike the plain `scenery` shape's one fixed role. The
+ *  matched role is still resolved through the normal role+biome table by
+ *  the actual tile it's placed on (unlike `scenery-dispatch`'s fixed
+ *  per-entry sid), so it feeds the tree/mountain cluster-simulation path
+ *  the same as any other tree/mountain-role object. A subtype with no
+ *  entry omits, same reason as an unresolvable plain id. */
+const SceneryDispatchSubtypeRowSchema = z.object({
+  ...BaseRow, outcome: z.literal('scenery-dispatch-subtype'),
+  subtypes: z.record(z.string(), SceneryRoleSchema),
+})
+
 /** Everything resolved by subtype and/or `.def` animation (towns, mines,
  *  monoliths, resources, creature generators) — checked in a fixed order:
  *  `freeChoice` (if the subtype is in its list) → `subtypes` → `exact`
@@ -61,7 +74,7 @@ const DispatchRowSchema = z.object({
 })
 
 export const ObjectRowSchema = z.discriminatedUnion('outcome', [
-  OmitRowSchema, EmitRowSchema, SceneryRowSchema, SceneryDispatchRowSchema, DispatchRowSchema,
+  OmitRowSchema, EmitRowSchema, SceneryRowSchema, SceneryDispatchRowSchema, SceneryDispatchSubtypeRowSchema, DispatchRowSchema,
 ])
 
 export const H3ObjectMappingSchema = z.object({
