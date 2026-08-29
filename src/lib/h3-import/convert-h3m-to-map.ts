@@ -34,8 +34,12 @@ import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding } from './terrain-map'
-import { resolveObjectSid } from './object-map'
+import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS } from './object-map'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
+import {
+  footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster,
+  buildOakTreePool, mountainBigSid, randomDecorRotation,
+} from './scenery-clusters'
 import { assignOwnership, type CityCandidate } from './ownership'
 import { stockRandomSquadRequestedValue } from './neutral-strength'
 import { rarityForRandomArtifactObjectId } from './random-items'
@@ -64,6 +68,10 @@ export interface H3ImportReport {
    *  map envelope (H3 tolerates this for objects whose footprint extends
    *  inward from an edge-adjacent anchor) — not emitted this phase. */
   outOfEnvelopeCount: number
+  /** Individual tree/mountain cluster-fill cells (not whole objects) that
+   *  fell outside the source map envelope and were skipped — a multi-cell
+   *  H3 footprint can extend off-map even when its anchor doesn't. */
+  clusterCellsClipped: number
   /** `true` when the H3 map's own victory condition was WINSTANDARD and a
    *  real "defeat all enemies" quest was emitted; `false` for any other H3
    *  victory type (TAKEMINES, GATHERTROOP, ...) or too few players — the
@@ -100,17 +108,18 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   paintEnvelopePadding(out, atlas)
 
   const families = buildVariantFamilies(catalog.mapObjects)
+  const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
   const rng = createSeededRng(seed ?? seedFromString(title || 'h3-import'))
 
   const objectGroups = new Map<string, { ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }>()
   let nextId = 0
-  const placeObject = (sid: string, node: number): number => {
+  const placeObject = (sid: string, node: number, rotation = 0): number => {
     let group = objectGroups.get(sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(sid, group) }
     const id = nextId
     group.ids.push(id)
     group.nodes.push(node)
-    group.rotations.push(0)
+    group.rotations.push(rotation)
     group.levels.push(0)
     nextId += 1
     return id
@@ -125,6 +134,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   let sceneryPlaced = 0
   let objectsPlaced = 0
   let outOfEnvelopeCount = 0
+  let clusterCellsClipped = 0
 
   for (const record of parsed.records) {
     const oid = record.templateObjectId
@@ -153,9 +163,37 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     const node = atlas.targetNode(record.layer, record.x, record.y)
 
     if (resolution.kind === 'scenery') {
+      // Trees and mountains: H3's own multi-cell footprint often represents
+      // a cluster (a grove of trees, a mountain range) rather than one
+      // object — OE has no literal cluster sid for either, so simulate one
+      // by placing several small OE objects across the H3 footprint (see
+      // scenery-clusters.ts's own doc comment for why this is a genuine new
+      // feature, not a reference-project port).
+      if (resolution.role === 'tree' || resolution.role === 'mountain') {
+        const { cells, clippedCount } = footprintCellsInBounds(record.templateBlockMask, record.x, record.y, size)
+        clusterCellsClipped += clippedCount
+        const placements = resolution.role === 'tree'
+          ? pickTreeClusterPlacements(cells, resolution.sid, families, rng,
+              oid === H3_OAK_TREES_OBJECT_ID
+                ? buildOakTreePool(families, BIOME_ROLE_REPLACEMENTS.tree.grass, BIOME_ROLE_REPLACEMENTS.tree.dirt)
+                : undefined)
+          : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
+        for (const p of placements) {
+          const cellNode = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
+          placeObject(p.sid, cellNode, randomDecorRotation(rng))
+        }
+        sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placements.length
+        sceneryPlaced += placements.length
+        continue
+      }
+
+      // Every other scenery role (shrub/rock/pool/ruin/ground/
+      // water_decoration): unchanged single-object-at-anchor placement, but
+      // still randomly rotated — the "always randomize decorative rotation"
+      // hard rule applies to every decorative placement, not just clusters.
       const variantSid = pickVariant(resolution.sid, families, rng)
       sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + 1
-      placeObject(variantSid, node)
+      placeObject(variantSid, node, randomDecorRotation(rng))
       sceneryPlaced += 1
       continue
     }
@@ -337,7 +375,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       atlasWidth: atlas.atlasWidth, atlasHeight: atlas.atlasHeight, sourceSize: size, sourceLayers: layerCount,
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, unboundOrphanOwners: ownership.unboundOrphanOwners,
-      outOfEnvelopeCount, hasVictoryQuest: mainQuest !== null,
+      outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
     },
   }
 }

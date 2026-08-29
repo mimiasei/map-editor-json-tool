@@ -26,7 +26,7 @@ export const H3_TERRAIN_BIOME: Record<number, OeBiome> = {
   0: 'dirt', 1: 'sand', 2: 'grass', 3: 'snow', 4: 'dead', 5: 'grass', 6: 'dirt', 7: 'lava', 8: 'water', 9: 'dirt',
 }
 
-type SceneryRole = 'ground' | 'pool' | 'tree' | 'shrub' | 'pool_big' | 'water_decoration' | 'mountain' | 'rock' | 'ruin'
+export type SceneryRole = 'ground' | 'pool' | 'tree' | 'shrub' | 'pool_big' | 'water_decoration' | 'mountain' | 'rock' | 'ruin'
 
 /** H3 object-class-id → scenery role. */
 export const TERRAIN_OBJECT_ROLES: Record<number, SceneryRole> = {
@@ -37,6 +37,17 @@ export const TERRAIN_OBJECT_ROLES: Record<number, SceneryRole> = {
   207: 'rock', // OBJECT_UNKNOWN_SCENERY_207
   208: 'rock', 209: 'rock', 210: 'mountain', 211: 'rock',
 }
+
+/** H3's "Oak Trees" object — real name confirmed via VCMI's own community-
+ *  maintained `config/biomes.json`, which names this exact animation-prefix
+ *  pair `greenOakTrees` (`AVLSPTR*`) and `autumnOakTrees` (`avlautr*`/
+ *  `AVLAUTR*`), both filed under object class 135 (also confirmed against
+ *  `substitution_table.json`'s own per-animation rows for id 135). Given its
+ *  own broadleaf look (distinct from 137's `AVLPNTR*`/`AVLSNTR*` "Pine
+ *  Trees"), resolved with a genuine mix of OE's grass and dirt tree
+ *  families rather than the single per-biome sid every other tree object
+ *  gets — see `scenery-clusters.ts`'s `buildOakTreePool()`. */
+export const H3_OAK_TREES_OBJECT_ID = 135
 
 export const BIOME_ROLE_REPLACEMENTS: Record<SceneryRole, Record<OeBiome, string>> = {
   mountain: { grass: 'mountain_green_small_1', snow: 'mountain_snow_small_1', dirt: 'mountain_dirt_small_1', desert: 'mountain_dirt_small_1', dead: 'mountain_dead_small_1', lava: 'mountain_lava_small_1', water: 'mountain_water_small_1', sand: 'mountain_dirt_small_1' },
@@ -126,6 +137,7 @@ export interface SceneryResolution {
   /** Base sid before random-variant substitution (scenery-variants.ts). */
   sid: string
   footprintFillSid: string
+  role: SceneryRole
 }
 
 /** Resolve an H3 scenery object to a base OE sid + fallback 1x1 filler,
@@ -138,13 +150,19 @@ export function resolveSceneryObjectSid(templateObjectId: number, templateAnimat
   if (templateObjectId === 199) {
     const sid = OBJECT_199_ANIMATION_TO_SID[templateAnimation.toLowerCase()]
     if (!sid) return null
-    return { sid, footprintFillSid: fillSid }
+    // OBJECT_199_ANIMATION_TO_SID only ever resolves to 'tree_dirt_1'
+    // (tree-shaped) or 'dirt_rock_1'/'desert_cracked_stones_2' (rock-shaped)
+    // — the `tree` role gets the same per-cell cluster-fill treatment as
+    // 119/135/137 (see scenery-clusters.ts) since real object-199 tree
+    // instances are observed multi-cell just as often.
+    const role: SceneryRole = sid === 'tree_dirt_1' ? 'tree' : 'rock'
+    return { sid, footprintFillSid: fillSid, role }
   }
 
   const role = TERRAIN_OBJECT_ROLES[templateObjectId]
   if (!role) return null
   const sid = BIOME_ROLE_REPLACEMENTS[role][biome]
-  return { sid, footprintFillSid: fillSid }
+  return { sid, footprintFillSid: fillSid, role }
 }
 
 // ─── General (non-scenery) object resolution — issue #207 Phase 2 ───────────
@@ -279,7 +297,7 @@ export type ObjectKind = 'town' | 'portal' | 'resource' | 'mine' | 'dwelling' | 
 
 export type ObjectResolution =
   | { action: 'omit'; reason: string }
-  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean }
+  | { action: 'emit'; sid: string; kind: ObjectKind; reason: string; factionSid?: string; freeChoice?: boolean; role?: SceneryRole }
 
 /** Resolve any H3 object (not just scenery) to a stock OE sid, in the same
  *  priority order as the reference's `resolve_object_sid`: an explicit omit,
@@ -354,7 +372,7 @@ export function resolveObjectSid(
   }
 
   const scenery = resolveSceneryObjectSid(oid, anim, h3TerrainAtTile)
-  if (scenery) return { action: 'emit', sid: scenery.sid, kind: 'scenery', reason: 'scenery_role_or_animation' }
+  if (scenery) return { action: 'emit', sid: scenery.sid, kind: 'scenery', role: scenery.role, reason: 'scenery_role_or_animation' }
 
   return { action: 'omit', reason: `unmapped_template_object_id_${oid}` }
 }
