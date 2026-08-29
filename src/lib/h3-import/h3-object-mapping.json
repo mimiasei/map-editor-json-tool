@@ -776,8 +776,10 @@
     {
       "h3Id": 95,
       "h3Name": "Tavern",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_95"
+      "outcome": "emit",
+      "sid": "tavern",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 96,
