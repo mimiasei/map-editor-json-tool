@@ -25,19 +25,38 @@ export interface CityCandidate {
   sourceZ: number
 }
 
+/** A placed H3 Hero object (oid 34) — used to give a townless playable
+ *  owner a `hero-spawner` start instead of leaving them with no start at
+ *  all. Mirrors `CityCandidate`'s shape; heroes have no `mainTown`-style
+ *  position hint to disambiguate multiple, so the lowest-index one wins
+ *  (same deterministic tie-break convention as everywhere else in this
+ *  module). */
+export interface HeroCandidate {
+  index: number
+  h3Owner: number | null
+  sourceX: number
+  sourceY: number
+  sourceZ: number
+}
+
 export interface OwnershipResult {
   /** Final compact owner (1..N) per city candidate index, or `null` if the
    *  city stays neutral (never owned, or an orphan that couldn't be bound —
    *  see `unboundOrphanOwners`). */
   finalOwnerByCityIndex: Map<number, number>
+  /** Final compact owner per hero candidate index — only set for the one
+   *  hero (if any) chosen to back a townless owner's `hero-spawner`; every
+   *  other placed hero is unbound here (its real identity/army is still a
+   *  documented gap — see convert-h3m-to-map.ts). */
+  finalOwnerByHeroIndex: Map<number, number>
   /** 1..N compact owners in order; index 0 is always the human. */
   finalOwners: number[]
   humanFinalOwner: number
   /** 0 = human-capable (matches OE's `spawnType` convention), 1 = AI-only. */
   spawnTypeByFinalOwner: Map<number, number>
-  /** Playable H3 players that own no city and no neutral city was left to
-   *  bind them to — a real, reportable gap (that player simply has no
-   *  start this round), not a crash. */
+  /** Playable H3 players that own no city, no hero, and no neutral city was
+   *  left to bind them to — a real, reportable gap (that player simply has
+   *  no start this round), not a crash. */
   unboundOrphanOwners: number[]
 }
 
@@ -51,8 +70,18 @@ export interface OwnershipResult {
  * - `mainTown` position matching (H3 stores a town's entrance 2 cells left
  *   of its own placement anchor) is still ported, since it's cheap and
  *   meaningfully more correct when an owner has multiple towns.
+ *
+ * Priority per playable owner, matching real H3 semantics (a "hero starts
+ * without a town" player is a genuine, common H3 setup, not an edge case):
+ * 1. Owns a town -> bound to it (their `city-spawner`, see
+ *    convert-h3m-to-map.ts).
+ * 2. Owns no town but has >=1 placed Hero object -> bound to the lowest-
+ *    index one (their `hero-spawner`) instead of inventing a town they
+ *    never had.
+ * 3. Neither -> the pre-existing orphan fallback: claim a spare unclaimed
+ *    neutral town if one exists, else `unboundOrphanOwners` (no start).
  */
-export function assignOwnership(header: H3mScenarioHeader, cities: CityCandidate[]): OwnershipResult {
+export function assignOwnership(header: H3mScenarioHeader, cities: CityCandidate[], heroes: HeroCandidate[]): OwnershipResult {
   const playable = header.players.filter((p) => p.playable)
   const provisionalOwners = playable.map((p) => p.index + 1)
   const humanOwners = playable.filter((p) => p.canHuman).map((p) => p.index + 1).sort((a, b) => a - b)
@@ -70,8 +99,18 @@ export function assignOwnership(header: H3mScenarioHeader, cities: CityCandidate
   }
   neutralCities.sort((a, b) => a.index - b.index)
 
+  const heroesByOwner = new Map<number, HeroCandidate[]>()
+  for (const hero of heroes) {
+    if (hero.h3Owner === null) continue
+    const provisional = hero.h3Owner + 1
+    const list = heroesByOwner.get(provisional)
+    if (list) list.push(hero)
+    else heroesByOwner.set(provisional, [hero])
+  }
+
   const unboundOrphanOwners: number[] = []
-  const claimedByOwner = new Map<number, CityCandidate>()
+  const claimedCityByOwner = new Map<number, CityCandidate>()
+  const claimedHeroByOwner = new Map<number, HeroCandidate>()
   for (const provisional of provisionalOwners) {
     const owned = citiesByOwner.get(provisional) ?? []
     if (owned.length > 0) {
@@ -88,30 +127,40 @@ export function assignOwnership(header: H3mScenarioHeader, cities: CityCandidate
           chosen = [...owned].sort((a, b) => a.index - b.index)[0]
         }
       }
-      claimedByOwner.set(provisional, chosen)
+      claimedCityByOwner.set(provisional, chosen)
+      continue
+    }
+    const ownedHeroes = heroesByOwner.get(provisional) ?? []
+    if (ownedHeroes.length > 0) {
+      claimedHeroByOwner.set(provisional, [...ownedHeroes].sort((a, b) => a.index - b.index)[0])
       continue
     }
     // Orphan: claim the lowest-index unclaimed neutral city, if any remain.
     const next = neutralCities.shift()
-    if (next) claimedByOwner.set(provisional, next)
+    if (next) claimedCityByOwner.set(provisional, next)
     else unboundOrphanOwners.push(provisional)
   }
 
   // Compact renumber: human first, then every other provisional owner that
-  // actually got a city, in ascending provisional order.
+  // actually got a city or hero start, in ascending provisional order.
   const finalOwners: number[] = [humanProvisionalOwner]
   for (const provisional of [...provisionalOwners].sort((a, b) => a - b)) {
     if (provisional === humanProvisionalOwner) continue
-    if (claimedByOwner.has(provisional)) finalOwners.push(provisional)
+    if (claimedCityByOwner.has(provisional) || claimedHeroByOwner.has(provisional)) finalOwners.push(provisional)
   }
 
   const finalByProvisional = new Map<number, number>()
   finalOwners.forEach((provisional, i) => finalByProvisional.set(provisional, i + 1))
 
   const finalOwnerByCityIndex = new Map<number, number>()
-  for (const [provisional, city] of claimedByOwner) {
+  for (const [provisional, city] of claimedCityByOwner) {
     const final = finalByProvisional.get(provisional)
     if (final !== undefined) finalOwnerByCityIndex.set(city.index, final)
+  }
+  const finalOwnerByHeroIndex = new Map<number, number>()
+  for (const [provisional, hero] of claimedHeroByOwner) {
+    const final = finalByProvisional.get(provisional)
+    if (final !== undefined) finalOwnerByHeroIndex.set(hero.index, final)
   }
 
   const spawnTypeByFinalOwner = new Map<number, number>()
@@ -122,6 +171,7 @@ export function assignOwnership(header: H3mScenarioHeader, cities: CityCandidate
 
   return {
     finalOwnerByCityIndex,
+    finalOwnerByHeroIndex,
     finalOwners: finalOwners.map((_, i) => i + 1),
     humanFinalOwner: 1,
     spawnTypeByFinalOwner,

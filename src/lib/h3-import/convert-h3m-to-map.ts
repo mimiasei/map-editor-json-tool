@@ -9,11 +9,12 @@
 // Phase 1 (issue #207): terrain + scenery decoration.
 // Phase 2 (issue #207): every other object family (towns, monsters, mines,
 // resources, dwellings, portals, artifacts) via `object-map.ts`'s general
-// `resolveObjectSid`, plus player-seat ownership (towns only — see
-// `ownership.ts`'s own doc comment for what's simplified there: no AI
-// multi-faction city split, no gate-face rotation/access-clearing, so a
-// town's placement isn't guaranteed pathable/gate-aligned the way the
-// reference emitter's town_gate_align.py/gate_face.py guarantee).
+// `resolveObjectSid`, plus player-seat ownership (towns and townless-hero
+// players — see `ownership.ts`'s own doc comment for what's simplified
+// there: no AI multi-faction city split, no gate-face rotation/access-
+// clearing, so a spawner's placement isn't guaranteed pathable/gate-aligned
+// the way the reference emitter's town_gate_align.py/gate_face.py
+// guarantee).
 // Phase 3 (issue #207): neutral-strength-calibrated `random-squad`
 // requestedValue (neutral-strength.ts) and random-item rarity binning
 // (random-items.ts) — a monster with no known creature type/level is now
@@ -24,23 +25,38 @@
 // other H3 victory type (TAKEMINES, GATHERTROOP, ...) leaves no victory
 // quest at all (see `report.hasVictoryQuest`), a real gap, not a guess.
 //
+// Player starts (user-reported real bug, fixed this round): every H3 town
+// owned by a playable player becomes OE's own real player-start object,
+// `city-spawner` (never a direct `human_city`/etc. object — a direct town
+// object is a normal, capturable building, not a start point, and using one
+// as a "start" left the converted map non-functional). A playable player
+// who owns no town but has a placed Hero (or Random Hero) instead gets a
+// `hero-spawner` — a completely real, common H3 setup, not an edge case.
+// Only a player with neither gets the pre-existing orphan-neutral-city
+// fallback (or, failing that, no start at all — `report.unboundOrphanOwners`).
+// A town's own H3 custom name carries over to `city-spawner`'s
+// `customCityName`. Not attempted: resolving a *specific* OE hero identity
+// for `hero-spawner` (`propHeroes.heroSid` stays `'random'`) — this project
+// has no H3-hero-type -> OE-hero-sid table yet, matching the reference
+// project's own "no stock hero-identity path" precedent.
+//
 // Still deferred (tracked in `report.omittedReasonCounts`, not silently
-// dropped): heroes (identity folds into the city's spawn seat, matching the
-// reference project's own "no stock hero-identity path" approach), map
-// events, global timed events, and the structural validator (Phase 5).
+// dropped): map events, global timed events, and the structural validator
+// (Phase 5).
 
 import type { MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
-import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding } from './terrain-map'
+import { buildEmptyAtlasArrays, projectLayerIntoAtlas } from './terrain-map'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS } from './object-map'
+import { OBJECT_HERO, OBJECT_RANDOM_HERO } from './h3m-object-registry'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
   footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster,
   buildOakTreePool, mountainBigSid, randomDecorRotation,
 } from './scenery-clusters'
-import { assignOwnership, type CityCandidate } from './ownership'
+import { assignOwnership, type CityCandidate, type HeroCandidate } from './ownership'
 import { stockRandomSquadRequestedValue } from './neutral-strength'
 import { rarityForRandomArtifactObjectId } from './random-items'
 import { buildWinstandardQuest } from './victory'
@@ -61,9 +77,13 @@ export interface H3ImportReport {
   /** Every non-emitted object, grouped by the resolver's own named reason
    *  (e.g. `boat_no_stock_objectconfig`, `unmapped_template_object_id_84`). */
   omittedReasonCounts: Record<string, number>
-  /** Playable H3 players that own no town and no neutral town was left to
-   *  bind them to this round — they simply have no start (a real gap). */
+  /** Playable H3 players that own no town, have no placed hero, and no
+   *  neutral town was left to bind them to this round — they simply have
+   *  no start (a real gap). */
   unboundOrphanOwners: number[]
+  /** Playable H3 players who own no town but do have a placed Hero (or
+   *  Random Hero) — given a `hero-spawner` start instead of a `city-spawner`. */
+  heroOnlyPlayers: number
   /** Object instances whose own anchor position falls outside the source
    *  map envelope (H3 tolerates this for objects whose footprint extends
    *  inward from an edge-adjacent anchor) — not emitted this phase. */
@@ -84,11 +104,27 @@ export interface H3ImportResult {
   report: H3ImportReport
 }
 
+// Towns (and townless-hero players) are placed AFTER ownership is resolved,
+// not inline in the main record loop — which real OE object a town becomes
+// (a real `city-spawner` player start, vs. a plain capturable town building)
+// depends on who, if anyone, ends up owning it, and that's only known once
+// every record has been walked and `assignOwnership` has run.
 interface TownEntry {
   index: number
-  objectId: number
+  node: number
+  /** The direct stock city sid `resolveObjectSid` chose (e.g. `human_city`,
+   *  or `random-city` for an unmapped H3 subtype) — used only for the
+   *  neutral/unowned outcome; a player-owned town always becomes
+   *  `city-spawner` instead, regardless of this value. */
+  sid: string
   factionSid: string
   freeChoice: boolean
+  customCityName: string
+}
+
+interface HeroEntry {
+  index: number
+  node: number
 }
 
 /** `data` must already be decompressed (see `parse-h3m.ts`'s `gunzipH3mIfNeeded`
@@ -105,7 +141,16 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   for (let layer = 0; layer < layerCount; layer++) {
     projectLayerIntoAtlas(parsed.layers[layer], layer, atlas, out, size)
   }
-  paintEnvelopePadding(out, atlas)
+  // Deliberately NOT painting elevated/unclimbable Dirt into the sector-
+  // alignment margin around the real source rectangle (the reference
+  // project's own "envelope padding" pass) — user-reported real bug: it
+  // made real map objects placed near the H3 map's own edge unusable (an
+  // elevated wall immediately adjacent to a placement, or the padding
+  // itself overlapping a multi-cell footprint that extends past the H3
+  // edge). The margin is instead left as ordinary flat, walkable Grass
+  // (buildEmptyAtlasArrays's own default) — a real map's own edge already
+  // acts as the play-area boundary; an extra unclimbable wall ring outside
+  // it isn't needed and this codebase has no evidence real OE maps use one.
 
   const families = buildVariantFamilies(catalog.mapObjects)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
@@ -128,7 +173,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const omittedReasonCounts: Record<string, number> = {}
   const sceneryVariantCounts: Record<string, number> = {}
   const cityCandidates: CityCandidate[] = []
+  const heroCandidates: HeroCandidate[] = []
   const townEntries: TownEntry[] = []
+  const heroEntries: HeroEntry[] = []
   const propRandomSquads: Record<string, unknown>[] = []
   const propRandomItems: Record<string, unknown>[] = []
   let sceneryPlaced = 0
@@ -153,6 +200,27 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     const layerTiles = parsed.layers[record.layer]
     const tileIndex = record.y * size + record.x
     const h3Terrain = layerTiles?.[tileIndex]?.terrain ?? 0
+
+    // A placed Hero (or Random Hero) — never resolved via resolveObjectSid
+    // (it has no scenery/town/etc. sid of its own to give); captured here
+    // as a candidate `hero-spawner` for whichever owner ends up with no
+    // town at all. A hero belonging to an owner who DOES have a town is
+    // simply not emitted — their real start is that town's city-spawner,
+    // and this importer has no stock path to also carry the hero's own
+    // identity/army onto it (matches the pre-existing, documented "no stock
+    // hero-identity path" limitation).
+    if (oid === OBJECT_HERO || oid === OBJECT_RANDOM_HERO) {
+      const h3Owner = typeof record.owner === 'number' && record.owner !== 255 ? (record.owner as number) : null
+      if (h3Owner === null) {
+        omittedReasonCounts.hero_no_owner_omit = (omittedReasonCounts.hero_no_owner_omit ?? 0) + 1
+        continue
+      }
+      const node = atlas.targetNode(record.layer, record.x, record.y)
+      const index = heroCandidates.length
+      heroCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
+      heroEntries.push({ index, node })
+      continue
+    }
 
     const resolution = resolveObjectSid(oid, record.templateAnimation, record.templateSubtype, h3Terrain)
     if (resolution.action === 'omit') {
@@ -226,17 +294,26 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       continue
     }
 
+    if (resolution.kind === 'town') {
+      // Deferred — see the TownEntry doc comment above. Not placed here at
+      // all: a player-owned town becomes `city-spawner` (a different sid
+      // entirely), and even the neutral-town outcome needs to know it
+      // WASN'T claimed before choosing to place the direct sid.
+      const h3Owner = typeof record.owner === 'number' && record.owner !== 255 ? (record.owner as number) : null
+      const index = cityCandidates.length
+      cityCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
+      townEntries.push({
+        index, node, sid: resolution.sid,
+        factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
+        customCityName: typeof record.name === 'string' ? record.name : '',
+      })
+      continue
+    }
+
     const objectId = placeObject(resolution.sid, node)
     objectsPlaced += 1
 
-    if (resolution.kind === 'town') {
-      const h3Owner = typeof record.owner === 'number' && record.owner !== 255 ? (record.owner as number) : null
-      cityCandidates.push({ index: cityCandidates.length, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
-      townEntries.push({
-        index: cityCandidates.length - 1, objectId,
-        factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
-      })
-    } else if (resolution.kind === 'artifact') {
+    if (resolution.kind === 'artifact') {
       // Real H3 random-artifact-class ids (65-69) carry genuine rarity
       // info; a specific named H3 artifact (object id 5, always lossily
       // collapsed to random-item) has none — TSE's own confirmed real
@@ -247,7 +324,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     }
   }
 
-  const ownership = assignOwnership(parsed.header, cityCandidates)
+  const ownership = assignOwnership(parsed.header, cityCandidates, heroCandidates)
 
   // Phase 4: only H3's WINSTANDARD ("defeat all enemies") victory condition
   // is supported this round — any other type leaves no victory quest at all
@@ -260,24 +337,80 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const propCities: Record<string, unknown>[] = []
   const propOwners: Record<string, unknown>[] = []
   const propSpawns: Record<string, unknown>[] = []
+  const propGrowthUnits: Record<string, unknown>[] = []
+  const propHeroes: Record<string, unknown>[] = []
   const block1Spawns: Record<string, unknown>[] = []
+  let heroOnlyPlayers = 0
+
   for (const town of townEntries) {
     const finalOwner = ownership.finalOwnerByCityIndex.get(town.index)
-    propCities.push({
-      type: 0, id: town.objectId, isDefined: !town.freeChoice, factionSid: town.factionSid,
-      spawnHero: false, customCityName: '',
-    })
     if (finalOwner !== undefined) {
+      // Player-owned: the real OE player start is `city-spawner`, never the
+      // direct town object — see PLAYER_START_SPAWNER_DEFAULTS in
+      // map-write.ts for the exact same table/field shape TSE's own "Add"
+      // flow uses for a hand-placed city-spawner, mirrored here. An
+      // unmapped H3 town subtype (`town.freeChoice`) becomes an
+      // unconfigured city-spawner (factionSid:'', isDefined:false) rather
+      // than `random-city` — CLAUDE.md confirms city-spawner is fine
+      // starting unconfigured, unlike random-city (which needs a real
+      // faction to function and has no Block 1 spawn involvement at all).
+      const objectId = placeObject('city-spawner', town.node)
+      objectsPlaced += 1
       const spawnType = ownership.spawnTypeByFinalOwner.get(finalOwner) ?? 1
-      propSpawns.push({ type: 0, id: town.objectId, owner: finalOwner, spawnType, spawnPointType: 0, isLocked: false })
+      const isDefined = !town.freeChoice
+      propCities.push({
+        type: 0, id: objectId, isDefined, factionSid: town.factionSid, spawnHero: true,
+        buildingsConstructionSid: 'default_buildings_construction',
+        buildingsBanSid: 'default_buildings_ban',
+        buildingsSettingsSid: 'default_buildings_settings',
+        customCityName: town.customCityName,
+      })
+      propSpawns.push({ type: 0, id: objectId, owner: finalOwner, spawnType, spawnPointType: 0, isLocked: false })
+      propGrowthUnits.push({ type: 0, id: objectId, isConstantGrowth: true, countGrowth: 1 })
+      // Mirrors the random-squad `random_squad` branch above exactly (same
+      // real defaults) — every real city-spawner carries one of these rows
+      // too (confirmed against Stormlight.map), even with isMainGuard:false.
+      propRandomSquads.push({
+        type: 0, id: objectId, sids: [], requestedValue: 0, fraction: '', tier: 0, isMainGuard: false,
+        reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
+        isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
+        isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
+      })
       block1Spawns.push({
-        owner: finalOwner, spawnType, spawnPointType: 0,
-        isCityDefined: !town.freeChoice, factionSid: town.factionSid, isHeroDefined: false, heroSid: '',
+        owner: finalOwner, spawnType, spawnPointType: 0, playerId: '',
+        isCityDefined: isDefined, factionSid: town.factionSid, isHeroDefined: false, heroSid: '',
         colorId: -1, isAlive: true, isLocked: false,
       })
     } else {
-      propOwners.push({ type: 0, id: town.objectId })
+      // Neutral/unowned: unchanged from before this fix — a real,
+      // capturable town building, not a player start.
+      const objectId = placeObject(town.sid, town.node)
+      objectsPlaced += 1
+      propCities.push({
+        type: 0, id: objectId, isDefined: !town.freeChoice, factionSid: town.factionSid,
+        spawnHero: false, customCityName: town.customCityName,
+      })
+      propOwners.push({ type: 0, id: objectId })
     }
+  }
+
+  for (const hero of heroEntries) {
+    const finalOwner = ownership.finalOwnerByHeroIndex.get(hero.index)
+    if (finalOwner === undefined) continue // this hero wasn't the one chosen to back its owner's start
+    const objectId = placeObject('hero-spawner', hero.node)
+    objectsPlaced += 1
+    heroOnlyPlayers += 1
+    const spawnType = ownership.spawnTypeByFinalOwner.get(finalOwner) ?? 1
+    propSpawns.push({ type: 0, id: objectId, owner: finalOwner, spawnType, spawnPointType: 1, isLocked: false })
+    // No stock H3-hero-type -> OE-hero-sid table yet (see this file's own
+    // header comment) — 'random' is TSE's own confirmed real default for an
+    // unconfigured hero-spawner (map-write.ts's PLAYER_START_SPAWNER_DEFAULTS).
+    propHeroes.push({ type: 0, id: objectId, isDefined: false, heroSid: 'random' })
+    block1Spawns.push({
+      owner: finalOwner, spawnType, spawnPointType: 1, playerId: '',
+      isCityDefined: false, factionSid: '', isHeroDefined: false, heroSid: '',
+      colorId: -1, isAlive: true, isLocked: false,
+    })
   }
 
   const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
@@ -344,7 +477,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     // this phase populates) and override only what this phase actually fills.
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
-      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems,
+      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes,
     },
   }
 
@@ -374,7 +507,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     report: {
       atlasWidth: atlas.atlasWidth, atlasHeight: atlas.atlasHeight, sourceSize: size, sourceLayers: layerCount,
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
-      sceneryVariantCounts, omittedReasonCounts, unboundOrphanOwners: ownership.unboundOrphanOwners,
+      sceneryVariantCounts, omittedReasonCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
       outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
     },
   }

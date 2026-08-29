@@ -191,8 +191,6 @@ export const OMIT_OBJECT_IDS: Record<number, string> = {
   [h3obj.OBJECT_WITCH_HUT]: 'witch_hut_deferred',
   [h3obj.OBJECT_GARRISON]: 'garrison_army_payload_deferred',
   [h3obj.OBJECT_GARRISON2]: 'garrison_army_payload_deferred',
-  [h3obj.OBJECT_HERO]: 'placed_hero_identity_omit_use_city_spawns',
-  [h3obj.OBJECT_RANDOM_HERO]: 'random_hero_omit_use_city_spawns',
   [h3obj.OBJECT_SPELL_SCROLL]: 'spell_scroll_deferred',
   [h3obj.OBJECT_CORPSE]: 'corpse_deferred',
   [h3obj.OBJECT_LEAN_TO]: 'lean_to_deferred',
