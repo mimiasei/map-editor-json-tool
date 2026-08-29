@@ -123,6 +123,18 @@ export function projectLayerIntoAtlas(
       if (tile.river !== 0) throw new Error(`H3 water terrain with additional river overlay at layer=${layerIndex} ${x},${y}`)
       out.levelsMap[node] = NATIVE_OCEAN_BASIN_LEVEL
       out.climbsMap[node] = 0
+      // A depressed (levelsMap===-1) cell is NOT itself treated as water by
+      // this editor — passability.ts keys strictly off waterMap!==0, and
+      // real shipped maps confirm plenty of dry level-(-1) canyon/pit
+      // terrain exists (Gorges_of_Discord.map, Fun_and_Graves.map: zero
+      // water at any of their level-(-1) tiles). An H3 water tile must
+      // therefore also fill waterMap, or it silently renders as a dry,
+      // walkable pit. Real maps pairing tilesMap===2 (Sand, this stand-in
+      // tile) with levelsMap===-1 carry a nonzero waterMap 97% of the time,
+      // most commonly the same "Water (Sand)" flavor (id 2, 57% of that
+      // corpus) — reuse STOCK_OCEAN_TILE_ID for both rather than inventing
+      // a second constant for the same real-data-backed value.
+      out.waterMap[node] = STOCK_OCEAN_TILE_ID
     } else if (tile.terrain === H3_UNDERGROUND_ROCK_TERRAIN_ID) {
       out.levelsMap[node] = UNDERGROUND_ROCK_LEVEL
       out.climbsMap[node] = UNDERGROUND_ROCK_CLIMB
