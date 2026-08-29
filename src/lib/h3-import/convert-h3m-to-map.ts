@@ -33,7 +33,7 @@ import type { MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
-import { buildEmptyAtlasArrays, projectLayerIntoAtlas, applyStockOceanBasinGeometry, paintEnvelopePadding } from './terrain-map'
+import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding } from './terrain-map'
 import { resolveObjectSid } from './object-map'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import { assignOwnership, type CityCandidate } from './ownership'
@@ -97,7 +97,6 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   for (let layer = 0; layer < layerCount; layer++) {
     projectLayerIntoAtlas(parsed.layers[layer], layer, atlas, out, size)
   }
-  applyStockOceanBasinGeometry(out, atlas.atlasWidth, atlas.atlasHeight)
   paintEnvelopePadding(out, atlas)
 
   const families = buildVariantFamilies(catalog.mapObjects)

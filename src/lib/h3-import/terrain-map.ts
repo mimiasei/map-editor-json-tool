@@ -19,8 +19,6 @@ export const H3_UNDERGROUND_SUBTERRANEAN_TERRAIN_ID = 6
 export const H3_UNDERGROUND_ROCK_TERRAIN_ID = 9
 
 export const NATIVE_OCEAN_BASIN_LEVEL = -1
-export const NATIVE_OCEAN_BASIN_INTERIOR_CLIMB = 0
-export const NATIVE_OCEAN_BASIN_PERIMETER_CLIMB = 1
 export const UNDERGROUND_ROCK_LEVEL = 1
 export const UNDERGROUND_ROCK_CLIMB = 0
 
@@ -103,8 +101,20 @@ export function buildEmptyAtlasArrays(atlas: LayerAtlasLayout): AtlasArrays {
 
 /** Project one H3 layer's decoded tiles into the pre-sized atlas arrays
  *  (mutates `out` in place). Ocean/underground-rock get their special
- *  level/climb treatment; the perimeter climb-ramp pass runs separately,
- *  across the whole shared atlas at once (see `applyStockOceanBasinGeometry`). */
+ *  level/climb treatment. Every H3-water-derived basin cell is left at
+ *  `climbsMap=0` deliberately — ported from the reference project as a
+ *  perimeter-ramp stamp (every basin cell 8-adjacent to a non-basin cell or
+ *  the atlas edge got climbs=1) but confirmed WRONG against real shipped
+ *  maps (issue #207 Phase 5/6): a real basin's perimeter carries climbs=1 on
+ *  only a small, sparse, clearly hand-placed fraction of its edge (e.g.
+ *  11/199, 78/1425, 7/4826 across several real maps), and several
+ *  fully-water basins (Stormlight.map, Stormlight_squad.map, TheQuest.map)
+ *  have ZERO climb-1 tiles anywhere at all — water is already impassable via
+ *  the separate `waterMap!==0` rule (passability.ts), so a climb ramp out of
+ *  it serves no purpose and real maps evidently never bother placing one.
+ *  Stamping climbs on every coastline tile (the removed
+ *  `applyStockOceanBasinGeometry`) visibly over-produced ramps along every
+ *  water/land edge instead. */
 export function projectLayerIntoAtlas(
   layerTiles: H3mTile[], layerIndex: number, atlas: LayerAtlasLayout, out: AtlasArrays, size: number,
 ): void {
@@ -143,30 +153,6 @@ export function projectLayerIntoAtlas(
     }
 
     if (tile.road !== 0) out.roadsMap[node] = projectH3RoadCode(tile.road)
-  }
-}
-
-/** Stamp perimeter ramp climbs on every depressed (ocean-basin) atlas cell:
- *  8-neighbor contact with a non-basin cell or the atlas edge → climbs=1;
- *  fully interior basin cells → climbs=0. A real, hard-won OE-runtime rule
- *  (see CLAUDE.md's H3-import cross-cutting notes) — must run across the
- *  WHOLE shared atlas at once, not per source layer. */
-export function applyStockOceanBasinGeometry(out: AtlasArrays, width: number, height: number): void {
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const node = y * width + x
-      if (out.levelsMap[node] !== NATIVE_OCEAN_BASIN_LEVEL) continue
-      let isPerimeter = false
-      for (let dy = -1; dy <= 1 && !isPerimeter; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue
-          const nx = x + dx, ny = y + dy
-          if (nx < 0 || ny < 0 || nx >= width || ny >= height) { isPerimeter = true; break }
-          if (out.levelsMap[ny * width + nx] !== NATIVE_OCEAN_BASIN_LEVEL) { isPerimeter = true; break }
-        }
-      }
-      out.climbsMap[node] = isPerimeter ? NATIVE_OCEAN_BASIN_PERIMETER_CLIMB : NATIVE_OCEAN_BASIN_INTERIOR_CLIMB
-    }
   }
 }
 

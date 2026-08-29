@@ -31,11 +31,15 @@
 //   positions, not just the map edge this port's own terrain-map.ts
 //   already special-cased. Real Olden maps evidently don't follow the
 //   reference's specific climb convention for `levelsMap === -1` cells —
-//   flagging this here rather than silently dropping it, since
-//   `terrain-map.ts`'s `applyStockOceanBasinGeometry` (used by the actual
-//   H3 importer) still implements that same unconfirmed reference policy
-//   and may need revisiting once a real basin-containing converted map is
-//   tested in-game.
+//   confirmed by a follow-up survey (issue #207 Phase 6): real basin
+//   perimeters carry climbs=1 on only a small, sparse, hand-placed
+//   fraction of their edge, and several fully-water basins have ZERO
+//   climb-1 tiles anywhere at all (water is already impassable via the
+//   separate `waterMap!==0` rule, so a climb ramp out of it is pointless).
+//   `terrain-map.ts`'s `applyStockOceanBasinGeometry` — the H3 importer's
+//   own copy of this same reference policy, over-stamping a ramp on every
+//   coastline tile — has since been removed rather than left in place; no
+//   validator check is warranted here beyond that removal.
 
 export interface ValidationResult {
   errors: string[]
