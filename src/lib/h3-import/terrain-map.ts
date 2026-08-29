@@ -156,26 +156,13 @@ export function projectLayerIntoAtlas(
   }
 }
 
-/** Every atlas cell outside every real H3 layer's rectangle becomes elevated,
- *  unclimbable Dirt — stock OE has no invisible blocker / Void tile, so this
- *  is the only honest way to make padding around a side-by-side atlas
- *  unwalkable. */
-export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout): void {
-  const total = atlas.atlasWidth * atlas.atlasHeight
-  const sourceNodes = new Set<number>()
-  for (const layer of Object.keys(atlas.layers).map(Number)) {
-    for (let y = 0; y < atlas.sourceHeight; y++) {
-      for (let x = 0; x < atlas.sourceWidth; x++) {
-        sourceNodes.add(atlas.targetNode(layer, x, y))
-      }
-    }
-  }
-  for (let node = 0; node < total; node++) {
-    if (sourceNodes.has(node)) continue
-    out.tilesMap[node] = STOCK_ROCK_TILE_ID
-    out.levelsMap[node] = UNDERGROUND_ROCK_LEVEL
-    out.climbsMap[node] = UNDERGROUND_ROCK_CLIMB
-    out.waterMap[node] = 0
-    out.roadsMap[node] = 0
-  }
-}
+// A previous `paintEnvelopePadding()` here painted the sector-alignment
+// margin around the real H3 map rectangle as elevated, unclimbable Dirt
+// (ported from the reference project's own "envelope padding" pass).
+// Removed (issue #207, user-reported real bug): it made real objects placed
+// near the H3 map's own edge unusable — an elevated wall immediately
+// adjacent to a placement, or the padding itself overlapping a multi-cell
+// footprint that extends past the H3 edge. The margin is left as ordinary
+// flat, walkable Grass (`buildEmptyAtlasArrays`'s own default) instead —
+// this codebase has no evidence real OE maps use an unclimbable wall ring
+// around their own edge.
