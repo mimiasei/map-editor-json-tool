@@ -38,7 +38,15 @@ export type { SceneryRole, OeBiome, ObjectKind }
  *  from `terrain-map.ts`'s H3-terrain→OE-tile-id table — this one is purely
  *  about which scenery-variant bucket to pick from. Terrain-id data, not
  *  object-mapping data, so it stays a plain constant rather than living in
- *  the editable JSON (paralleling `terrain-map.ts`'s own terrain table). */
+ *  the editable JSON (paralleling `terrain-map.ts`'s own terrain table).
+ *
+ *  H3 terrain ids, for reference (same numbering `terrain-map.ts`'s own
+ *  `H3_TO_STOCK_TILE` table uses):
+ *  0 Dirt, 1 Sand, 2 Grass, 3 Snow, 4 Swamp, 5 Rough, 6 Subterranean,
+ *  7 Lava, 8 Water, 9 Rock. (10 Highlands and 11 Wasteland are HotA-only
+ *  additions with no entry here — a scenery object sitting on either falls
+ *  back to the `?? 'grass'` default below, same as any other unlisted id;
+ *  not separately verified against a real HotA highlands/wasteland sample.) */
 export const H3_TERRAIN_BIOME: Record<number, OeBiome> = {
   0: 'dirt', 1: 'sand', 2: 'grass', 3: 'snow', 4: 'dead', 5: 'grass', 6: 'dirt', 7: 'lava', 8: 'water', 9: 'dirt',
 }
