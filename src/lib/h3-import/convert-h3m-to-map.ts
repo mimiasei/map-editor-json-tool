@@ -48,7 +48,8 @@ import type { MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
-import { buildEmptyAtlasArrays, projectLayerIntoAtlas } from './terrain-map'
+import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding } from './terrain-map'
+import { clampFootprintToLayer } from './object-footprint-clamp'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS } from './object-map'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO } from './h3m-object-registry'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
@@ -141,16 +142,17 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   for (let layer = 0; layer < layerCount; layer++) {
     projectLayerIntoAtlas(parsed.layers[layer], layer, atlas, out, size)
   }
-  // Deliberately NOT painting elevated/unclimbable Dirt into the sector-
-  // alignment margin around the real source rectangle (the reference
-  // project's own "envelope padding" pass) — user-reported real bug: it
-  // made real map objects placed near the H3 map's own edge unusable (an
-  // elevated wall immediately adjacent to a placement, or the padding
-  // itself overlapping a multi-cell footprint that extends past the H3
-  // edge). The margin is instead left as ordinary flat, walkable Grass
-  // (buildEmptyAtlasArrays's own default) — a real map's own edge already
-  // acts as the play-area boundary; an extra unclimbable wall ring outside
-  // it isn't needed and this codebase has no evidence real OE maps use one.
+  // The elevated/unclimbable Dirt "wall" for the sector-alignment margin
+  // around the real source rectangle is painted at the very end of this
+  // function (`paintEnvelopePadding`), not here — every object placed via
+  // `placeObject` below is clamped to fit entirely inside its own layer's
+  // real rectangle first (`clampFootprintToLayer`), so by the time the wall
+  // is painted, nothing can be sitting on top of it. A previous version of
+  // this importer painted the wall up front and just removed it entirely
+  // after a user reported it breaking real objects near the H3 map's own
+  // edge (a multi-cell object's footprint extending past the true edge,
+  // landing partly under the wall) — the clamp is the actual fix; the wall
+  // itself was never the problem.
 
   const families = buildVariantFamilies(catalog.mapObjects)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
@@ -159,11 +161,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const objectGroups = new Map<string, { ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }>()
   let nextId = 0
   const placeObject = (sid: string, node: number, rotation = 0): number => {
+    const clampedNode = clampFootprintToLayer(node, sid, atlas, catalogById)
     let group = objectGroups.get(sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(sid, group) }
     const id = nextId
     group.ids.push(id)
-    group.nodes.push(node)
+    group.nodes.push(clampedNode)
     group.rotations.push(rotation)
     group.levels.push(0)
     nextId += 1
@@ -412,6 +415,11 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       colorId: -1, isAlive: true, isLocked: false,
     })
   }
+
+  // Every object (scenery, towns/spawners, everything else) has been placed
+  // and clamped clear of the envelope margin by this point — safe to paint
+  // the wall now.
+  paintEnvelopePadding(out, atlas)
 
   const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
 

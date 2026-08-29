@@ -164,13 +164,39 @@ export function projectLayerIntoAtlas(
   }
 }
 
-// A previous `paintEnvelopePadding()` here painted the sector-alignment
-// margin around the real H3 map rectangle as elevated, unclimbable Dirt
-// (ported from the reference project's own "envelope padding" pass).
-// Removed (issue #207, user-reported real bug): it made real objects placed
-// near the H3 map's own edge unusable — an elevated wall immediately
-// adjacent to a placement, or the padding itself overlapping a multi-cell
-// footprint that extends past the H3 edge. The margin is left as ordinary
-// flat, walkable Grass (`buildEmptyAtlasArrays`'s own default) instead —
-// this codebase has no evidence real OE maps use an unclimbable wall ring
-// around their own edge.
+/** Every atlas cell outside every real H3 layer's rectangle becomes elevated,
+ *  unclimbable Dirt — stock OE has no invisible blocker / Void tile, so this
+ *  is the only honest way to make padding around a side-by-side atlas
+ *  unwalkable.
+ *
+ *  MUST be called only after every object has been placed AND clamped to
+ *  fit entirely inside its own layer's real rectangle (see
+ *  `object-footprint-clamp.ts`'s `clampFootprintToLayer`) — this function
+ *  was previously removed (issue #207) because a multi-cell object (a
+ *  city-spawner, for one) anchored near the H3 map's own edge could have
+ *  part of its footprint land in this exact padding region, and this wall
+ *  would then render right on top of it — not just visually wrong but
+ *  passability-breaking (the "wall" rule in passability.ts blocks any tile
+ *  bordering a different, non-ramp-adjacent level, so a spawner partly
+ *  sitting on elevated Dirt could become partly unreachable). The real fix
+ *  is the clamp, not removing the wall — every object is now guaranteed
+ *  clear of this region by the time this paints it. */
+export function paintEnvelopePadding(out: AtlasArrays, atlas: LayerAtlasLayout): void {
+  const total = atlas.atlasWidth * atlas.atlasHeight
+  const sourceNodes = new Set<number>()
+  for (const layer of Object.keys(atlas.layers).map(Number)) {
+    for (let y = 0; y < atlas.sourceHeight; y++) {
+      for (let x = 0; x < atlas.sourceWidth; x++) {
+        sourceNodes.add(atlas.targetNode(layer, x, y))
+      }
+    }
+  }
+  for (let node = 0; node < total; node++) {
+    if (sourceNodes.has(node)) continue
+    out.tilesMap[node] = STOCK_ROCK_TILE_ID
+    out.levelsMap[node] = UNDERGROUND_ROCK_LEVEL
+    out.climbsMap[node] = UNDERGROUND_ROCK_CLIMB
+    out.waterMap[node] = 0
+    out.roadsMap[node] = 0
+  }
+}
