@@ -35,6 +35,13 @@
   fieldset.simple-fields { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3em; }
   .field-row { display: flex; align-items: center; gap: 0.4em; flex-wrap: wrap; }
   .field-row label { font-size: 0.85em; color: #555; min-width: 4.5em; }
+  .sid-wrap { position: relative; display: inline-block; }
+  .sid-suggestions { position: absolute; top: 100%; left: 0; z-index: 20; background: Canvas; border: 1px solid #888;
+    max-height: 14em; overflow-y: auto; width: max-content; max-width: 28em; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+  .sid-suggestions .suggestion { padding: 0.25em 0.5em; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
+  .sid-suggestions .suggestion:hover, .sid-suggestions .suggestion.active { background: #d8e8ff; }
+  .sid-suggestions .suggestion .cat { color: #777; margin-left: 0.5em; }
+  .sid-suggestions .suggestion-empty { padding: 0.25em 0.5em; font-size: 0.85em; color: #777; }
 </style>
 </head>
 <body>
@@ -260,6 +267,87 @@ function sidBadge(sid) {
   return span;
 }
 
+const SID_SUGGESTION_LIMIT = 30;
+
+// Wraps `input` in a positioned container with a live-filtered dropdown of
+// every catalog sid whose id contains the typed text (substring match,
+// case-insensitive — not a plain <datalist>, since native datalist filtering
+// is prefix-only in some browsers and this needs to search, not just
+// autocomplete a known start). Returns the wrapper element to insert in the
+// input's place. No-ops gracefully (empty dropdown) until Core.zip is loaded.
+function attachSidAutocomplete(input, onPick) {
+  const wrap = document.createElement('div');
+  wrap.className = 'sid-wrap';
+  wrap.appendChild(input);
+  const list = document.createElement('div');
+  list.className = 'sid-suggestions';
+  list.hidden = true;
+  wrap.appendChild(list);
+
+  let activeIndex = -1;
+
+  function render() {
+    list.innerHTML = '';
+    activeIndex = -1;
+    if (!catalog) { list.hidden = true; return; }
+    const q = input.value.trim().toLowerCase();
+    if (!q) { list.hidden = true; return; }
+    const matches = [];
+    for (const c of catalog.values()) {
+      if (c.id.toLowerCase().includes(q)) matches.push(c);
+      if (matches.length >= SID_SUGGESTION_LIMIT) break;
+    }
+    if (matches.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'suggestion-empty';
+      empty.textContent = 'no matching OE objects in Core.zip';
+      list.appendChild(empty);
+      list.hidden = false;
+      return;
+    }
+    for (const c of matches) {
+      const row = document.createElement('div');
+      row.className = 'suggestion';
+      row.textContent = c.id;
+      const cat = document.createElement('span');
+      cat.className = 'cat';
+      cat.textContent = `${c.category}, ${c.sizeX}x${c.sizeZ}${c.isInteractable ? ', interactable' : ''}`;
+      row.appendChild(cat);
+      // mousedown (not click) fires before the input's blur, so the
+      // dropdown-hide-on-blur handler below doesn't swallow the pick first.
+      row.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        input.value = c.id;
+        list.hidden = true;
+        onPick();
+      });
+      list.appendChild(row);
+    }
+    list.hidden = false;
+  }
+
+  input.addEventListener('input', render);
+  input.addEventListener('focus', render);
+  input.addEventListener('blur', () => { setTimeout(() => { list.hidden = true; }, 150); });
+  input.addEventListener('keydown', (e) => {
+    const items = list.querySelectorAll('.suggestion');
+    if (list.hidden || items.length === 0) return;
+    if (e.key === 'Escape') { list.hidden = true; return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[activeIndex]?.classList.remove('active');
+      activeIndex = e.key === 'ArrowDown' ? Math.min(activeIndex + 1, items.length - 1) : Math.max(activeIndex - 1, 0);
+      items[activeIndex].classList.add('active');
+      items[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault();
+      items[activeIndex].dispatchEvent(new Event('mousedown'));
+    }
+  });
+
+  return wrap;
+}
+
 // ─── Per-row "simple fields" (outcome-specific first-class inputs) ─────────
 // Everything else (scenery-dispatch's `exact`, scenery-dispatch-subtype's
 // `subtypes`, dispatch's nested tables) is edited as raw JSON in the "Extra"
@@ -294,9 +382,11 @@ function renderSimpleFields(row, container) {
     add('reason', reason);
   } else if (row.outcome === 'emit') {
     const sid = document.createElement('input');
-    sid.type = 'text'; sid.className = 'sid'; sid.value = row.sid || '';
+    sid.type = 'text'; sid.className = 'sid'; sid.value = row.sid || ''; sid.autocomplete = 'off';
+    sid.placeholder = 'search OE objects...';
     sid.oninput = () => { row.sid = sid.value; refreshRow(row); };
-    add('sid', sid);
+    const sidWrap = attachSidAutocomplete(sid, () => { row.sid = sid.value; refreshRow(row); });
+    add('sid', sidWrap);
 
     const kind = document.createElement('select');
     for (const k of OBJECT_KINDS) { const o = document.createElement('option'); o.value = k; o.textContent = k; kind.appendChild(o); }
