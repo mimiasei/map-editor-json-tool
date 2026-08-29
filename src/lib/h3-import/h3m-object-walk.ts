@@ -22,7 +22,17 @@ const SPELLS_BYTES = 9
 const BUILDINGS_BYTES = 6
 const CREATURE_SLOTS = 7
 const ARTIFACT_SLOTS_AB = 19
-const ARTIFACT_NONE_U16 = 0xFFFF
+/** RoE's plain (non-hero-equipment-slot) artifact/creature identifier width
+ *  is u8, not u16 — confirmed against VCMI's `MapReaderH3M::readArtifact()`/
+ *  `readCreature()` (`features.levelAB ? u16 : u8`), independent verification
+ *  of a real bug found this session (see `readArtifactId`/`readCreatureId`
+ *  below): every "granted/required artifact" and "reward creature" field in
+ *  a RoE map's Pandora's Box, Event, Monster-guard, and Seer Hut payloads
+ *  was being read 1 byte too wide, silently desyncing the object walk for
+ *  the rest of the file. Not to be confused with `readHeroArtifactSet`'s own
+ *  separate RoE/AB/SoD/HotA equipment-slot widths (18/18/19/19 slots of
+ *  u8/u16/u16/u32) — a different real field with its own real versioning. */
+const ARTIFACT_NONE_U8 = 0xFF
 
 export const H3M_VERSION_HOTA_MIN = 29
 export function isHotaMapVersion(version: number): boolean {
@@ -79,11 +89,28 @@ export class H3mWalker {
   skipResources(): void { this.skip(RESOURCES_COUNT * 4) }
   readResources(): number[] { return Array.from({ length: RESOURCES_COUNT }, () => this.readU32()) }
 
+  /** Plain (non-hero-equipment-slot) artifact identifier — RoE is u8,
+   *  AB+ is u16 (VCMI's `MapReaderH3M::readArtifact()`); never u32, even on
+   *  HotA (that width only applies to `readHeroArtifactSet`'s equipped/
+   *  backpack slots, a different field). Returns the raw id including
+   *  the "none" sentinel — callers compare against `ARTIFACT_NONE_U8`
+   *  themselves when they need to (that sentinel only applies to the RoE
+   *  u8 width; every real caller of this method that needs the check only
+   *  ever calls it in a RoE-only branch). */
+  readArtifactId(h3mVersion: number): number {
+    return h3mVersion < H3M_VERSION_AB ? this.readU8() : this.readU16()
+  }
+
+  /** Plain (non-inventory-slot) creature identifier — RoE is u8, AB+ is u16
+   *  (VCMI's `MapReaderH3M::readCreature()`). */
+  readCreatureId(h3mVersion: number): number {
+    return h3mVersion < H3M_VERSION_AB ? this.readU8() : this.readU16()
+  }
+
   readCreatureSet(h3mVersion: number): { slot: number; creatureType: number; count: number }[] {
-    const roe = h3mVersion < H3M_VERSION_AB
     const stacks: { slot: number; creatureType: number; count: number }[] = []
     for (let slot = 0; slot < CREATURE_SLOTS; slot++) {
-      const creatureType = roe ? this.readU8() : this.readU16()
+      const creatureType = this.readCreatureId(h3mVersion)
       const count = this.readU16()
       stacks.push({ slot, creatureType, count })
     }
@@ -141,15 +168,24 @@ export class H3mWalker {
     const skills = Array.from({ length: skillCount }, () => ({ skillId: this.readU8(), level: this.readU8() }))
     const artifactCount = this.readU8()
     if (artifactCount > 128) throw new Error(`Implausible box artifact reward count ${artifactCount}`)
-    const artifacts = h3mVersion === H3M_VERSION_HOTA
-      ? Array.from({ length: artifactCount }, () => this.readU32())
-      : Array.from({ length: artifactCount }, () => this.readU16())
+    // Plain readArtifact() width (RoE u8 / AB+ u16) — never u32, even on
+    // HotA. HotA instead appends a separate 2-byte scroll-spell id after
+    // EVERY artifact entry (VCMI's `features.levelHOTA5` branch), not a
+    // wider artifact-id field. Both were wrong here (a real bug, not a
+    // simplification): RoE maps were being over-read by 1 byte per granted
+    // artifact, HotA maps by 2 bytes per artifact plus a missing 2-byte
+    // scroll field — either desyncs every record after it in the file.
+    const artifacts = Array.from({ length: artifactCount }, () => {
+      const artifactId = this.readArtifactId(h3mVersion)
+      const scrollSpellId = h3mVersion === H3M_VERSION_HOTA ? this.readU16() : undefined
+      return { artifactId, scrollSpellId }
+    })
     const spellCount = this.readU8()
     if (spellCount > 128) throw new Error(`Implausible box spell reward count ${spellCount}`)
     const spells = Array.from({ length: spellCount }, () => this.readU8())
     const creatureCount = this.readU8()
     if (creatureCount > 64) throw new Error(`Implausible box creature reward count ${creatureCount}`)
-    const creatures = Array.from({ length: creatureCount }, () => ({ creatureType: this.readU16(), count: this.readU16() }))
+    const creatures = Array.from({ length: creatureCount }, () => ({ creatureType: this.readCreatureId(h3mVersion), count: this.readU16() }))
     this.skip(8)
     return {
       messageAndGuards,
@@ -239,7 +275,9 @@ function skipMonster(walker: H3mWalker, record: H3mObjectRecord): Record<string,
   if (hasMessage) {
     message = walker.readString()
     guardResources = walker.readResources()
-    artifact = walker.readU16()
+    // Plain readArtifact() width (RoE u8 / AB+ u16) — was hardcoded u16,
+    // over-reading every RoE monster's guard-artifact field by 1 byte.
+    artifact = walker.readArtifactId(record.h3mVersion)
   }
   const neverFlees = walker.readBool()
   const notGrowingTeam = walker.readBool()
@@ -395,9 +433,12 @@ function skipSeerReward(walker: H3mWalker, rewardType: number, h3mVersion: numbe
   else if (rewardType === 5) { walker.skip(1); walker.skip(4) }
   else if (rewardType === 6) walker.skip(2)
   else if (rewardType === 7) walker.skip(2)
-  else if (rewardType === 8) { walker.readU16(); if (h3mVersion === H3M_VERSION_HOTA) walker.skip(2) }
+  // rewardType 8 (ARTIFACT): plain readArtifact() width (RoE u8 / AB+ u16),
+  // was hardcoded u16 — over-read every RoE seer-hut artifact reward by 1
+  // byte. rewardType 10 (CREATURE): plain readCreature() width, same fix.
+  else if (rewardType === 8) { walker.readArtifactId(h3mVersion); if (h3mVersion === H3M_VERSION_HOTA) walker.skip(2) }
   else if (rewardType === 9) walker.skip(1)
-  else if (rewardType === 10) { walker.skip(2); walker.skip(2) }
+  else if (rewardType === 10) { walker.readCreatureId(h3mVersion); walker.skip(2) }
   else if (rewardType !== 0) throw new Error(`Unsupported seer hut reward type ${rewardType}`)
 }
 
@@ -444,8 +485,11 @@ function skipSeerHutQuest(walker: H3mWalker, record: H3mObjectRecord): Record<st
   if (record.h3mVersion >= H3M_VERSION_AB) {
     quest = skipQuest(walker, record)
   } else {
-    const artifactId = walker.readU16()
-    const missionType = artifactId !== ARTIFACT_NONE_U16 ? 5 : 0
+    // RoE-only branch (h3mVersion < AB), so the artifact id is always the
+    // u8 width — was read as u16 with the wrong (u16-width) "none" sentinel,
+    // over-reading by 1 byte on every RoE seer hut with this quest shape.
+    const artifactId = walker.readArtifactId(record.h3mVersion)
+    const missionType = artifactId !== ARTIFACT_NONE_U8 ? 5 : 0
     quest = { missionType, requiredArtifact: artifactId }
   }
   if (quest.missionType !== 0) {
