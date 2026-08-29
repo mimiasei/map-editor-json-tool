@@ -39,17 +39,25 @@ export const H3_TO_STOCK_TILE: Record<number, number> = {
 }
 
 /** H3 terrain+river code → stock OE waterMap id. River code 0 = none. */
+// River code 4 ("lava river" — a distinct H3 river texture usable on any
+// terrain, not itself tied to a lava biome) always maps to OE waterMap id 6
+// regardless of the underlying terrain — confirmed by the two terrains that
+// already carried a real `4` entry (sand and lava, both -> 6) before this
+// fix; a real HotA map this session ("The Devil Is in the Detail") hit the
+// same river code on grass terrain, which the table hadn't covered yet —
+// extended to every terrain for consistency with the already-evidenced
+// terrain-independent pattern, not guessed independently per terrain.
 export const H3_RIVER_TO_STOCK_WATER: Record<number, Record<number, number>> = {
-  0: { 1: 1, 2: 1, 3: 1 },
+  0: { 1: 1, 2: 1, 3: 1, 4: 6 },
   1: { 1: 2, 2: 2, 3: 2, 4: 6 },
-  2: { 1: 7, 2: 7, 3: 7 },
-  3: { 1: 4, 2: 4, 3: 4 },
-  4: { 1: 3, 2: 3, 3: 3 },
-  5: { 1: 7, 2: 7, 3: 7 },
-  6: { 1: 1, 2: 1, 3: 1 },
+  2: { 1: 7, 2: 7, 3: 7, 4: 6 },
+  3: { 1: 4, 2: 4, 3: 4, 4: 6 },
+  4: { 1: 3, 2: 3, 3: 3, 4: 6 },
+  5: { 1: 7, 2: 7, 3: 7, 4: 6 },
+  6: { 1: 1, 2: 1, 3: 1, 4: 6 },
   7: { 1: 1, 2: 1, 3: 1, 4: 6 },
-  10: { 1: 7, 2: 7, 3: 7 },
-  11: { 1: 3, 2: 3, 3: 3 },
+  10: { 1: 7, 2: 7, 3: 7, 4: 6 },
+  11: { 1: 3, 2: 3, 3: 3, 4: 6 },
 }
 
 /** H3 road code (0-3; 3 = cobblestone) → stock OE roadsMap id. Only 1 and 2

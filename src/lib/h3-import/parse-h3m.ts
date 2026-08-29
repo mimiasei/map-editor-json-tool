@@ -12,7 +12,7 @@
 // misparsed (see h3m-object-walk.ts's doc comment).
 
 import { BinaryReader } from './binary-reader'
-import { decodeH3mScenarioHeader, type H3mScenarioHeader, SUPPORTED_H3M_SIZES } from './h3m-format'
+import { decodeH3mScenarioHeader, readHotaHeaderExtension, type H3mScenarioHeader, isPlausibleH3mSize } from './h3m-format'
 import { parseH3mTemplate, type H3mTemplate } from './h3m-object-registry'
 import { decodeH3mLayerTiles, type H3mTile } from './h3m-terrain'
 import { walkH3mObjects, type H3mObjectRecord } from './h3m-object-walk'
@@ -97,22 +97,17 @@ export function summarizeH3mShape(data: Uint8Array): H3mShapeSummary {
 function decodeH3mScenarioHeaderPrefix(data: Uint8Array): { size: number; layers: number; title: string; description: string; difficulty: number } {
   const reader = new BinaryReader(data)
   const version = reader.readU32()
-  // Re-run the HotA extension read purely to advance the cursor correctly;
-  // its own validation already happened (or will happen) in
-  // decodeH3mScenarioHeader — duplicating it here is deliberate, not lossy.
-  if (version === 32) {
-    const formatLevel = reader.readU32()
-    if (formatLevel !== 9) throw new Error(`Unsupported HotA format level ${formatLevel}`)
-    reader.readU32(); reader.readU32(); reader.readU32() // release
-    reader.readBool(); reader.readBool() // mirror/arena
-    reader.readU32(); reader.readU32() // terrain/town type counts
-    reader.readU8() // allowed difficulties mask
-    reader.readBool(); reader.readBool() // canHireDefeatedHeroes / forceMatchingVersion
-    reader.readU32() // unknown
-  }
+  // Re-run the (shared, single-implementation) HotA extension read purely to
+  // advance the cursor correctly; its own validation already happened (or
+  // will happen) in decodeH3mScenarioHeader — duplicating the READ here is
+  // deliberate, not lossy. This used to be a hand-duplicated, unconditional
+  // field list (a real, separate copy of a bug once found in the shared
+  // function's own per-level gating) — now delegates to the one real
+  // implementation so a future fix there can't get out of sync here again.
+  readHotaHeaderExtension(reader, version)
   reader.readBool() // anyPlayers
   const size = reader.readU32()
-  if (!SUPPORTED_H3M_SIZES.has(size)) throw new Error(`Unsupported H3M map size ${size}`)
+  if (!isPlausibleH3mSize(size)) throw new Error(`Implausible H3M map size ${size}`)
   const hasUnderground = reader.readBool()
   const title = reader.readString(256)
   const description = reader.readString(4096)
@@ -145,8 +140,9 @@ export function parseH3mFile(data: Uint8Array): ParsedH3M {
     layers.push(decodeH3mLayerTiles(data, layerStart, shape.size))
   }
 
-  const walked = walkH3mObjects(data, shape.objectTableOffset, shape.objectCount, shape.version, shape.size, shape.layers, shape.templates)
-  const globalTimedEvents = readGlobalTimedEvents(data, walked.walkEndOffset, shape.version)
+  const formatLevel = header.hota?.formatLevel ?? 0
+  const walked = walkH3mObjects(data, shape.objectTableOffset, shape.objectCount, shape.version, shape.size, shape.layers, shape.templates, formatLevel)
+  const globalTimedEvents = readGlobalTimedEvents(data, walked.walkEndOffset, shape.version, formatLevel)
 
   return { header, shape, layers, records: walked.records, globalTimedEvents }
 }

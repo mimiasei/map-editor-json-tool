@@ -62,6 +62,13 @@ export interface H3mObjectRecord {
   templateObjectId: number
   templateSubtype: number
   h3mVersion: number
+  /** HotA's own feature-level counter (0 for non-HotA files) — see
+   *  h3m-format.ts's own doc comment on `H3M_HOTA_FORMAT_LEVEL_MIN/MAX`.
+   *  Needed because several HotA-only payload fields are gated on a
+   *  SPECIFIC level (e.g. `usesEventSystem` is format-level-9-only), not
+   *  just "is this any HotA file" — `h3mVersion === H3M_VERSION_HOTA`
+   *  alone can't distinguish level 7/8 from 9. */
+  formatLevel: number
   payloadKind?: string
   recordEndOffset?: number
   recordBytes?: number
@@ -193,7 +200,15 @@ export class H3mWalker {
     }
   }
 
-  skipEventCommon(h3mVersion: number): Record<string, unknown> {
+  /** Shared by town events and (via h3m-global-events.ts's own copy of this
+   *  same shape) global timed events (VCMI's `readEventCommon`).
+   *  `affectedDifficulties` (levelHOTA7) is always present for the format
+   *  levels 7-9 this importer accepts, but `usesEventSystem` (and its
+   *  dependents) are levelHOTA9-only — format level 7/8 town events have
+   *  neither field. Reading it unconditionally for "any HotA file" was a
+   *  real bug (same shape as `skipHotaBoxExtension`'s), desyncing every
+   *  later town event and everything the record's own tail reads after it. */
+  skipEventCommon(h3mVersion: number, formatLevel: number): Record<string, unknown> {
     const name = this.readString()
     const message = this.readString()
     const resources = this.readResources()
@@ -206,11 +221,13 @@ export class H3mWalker {
     const result: Record<string, unknown> = { name, message, resources, players, humanAffected, computerAffected, firstOccurrence, nextOccurrence }
     if (h3mVersion === H3M_VERSION_HOTA) {
       result.affectedDifficulties = this.readU32()
-      const usesEventSystem = this.readBool()
-      result.usesEventSystem = usesEventSystem
-      if (usesEventSystem) {
-        result.eventId = this.readI32()
-        result.synchronizeObjects = this.readBool()
+      if (formatLevel > 8) {
+        const usesEventSystem = this.readBool()
+        result.usesEventSystem = usesEventSystem
+        if (usesEventSystem) {
+          result.eventId = this.readI32()
+          result.synchronizeObjects = this.readBool()
+        }
       }
     }
     return result
@@ -347,13 +364,25 @@ function skipHotaFixedExtension(walker: H3mWalker, record: H3mObjectRecord, byte
   return { payloadKind, extensionData: walker.readBitmaskHex(byteCount) }
 }
 
-function skipHotaBoxExtension(walker: H3mWalker): Record<string, unknown> {
+/** Shared HotA tail for Pandora's Box AND Event (VCMI's `readBoxHotaContent`).
+ *  `movementMode`/`movementAmount` (levelHOTA5) and `affectedDifficulties`
+ *  (levelHOTA6) are always present for the format levels 7-9 this importer
+ *  accepts, but `usesEventSystem` (and its dependents) are levelHOTA9-only —
+ *  format level 7/8 files have NEITHER field at all. Reading it
+ *  unconditionally for "any HotA file" was a real bug: it silently consumed
+ *  an extra byte (or more) on every real format-level-7/8 Pandora's Box/
+ *  Event, desyncing every byte read after it — including the rest of the
+ *  object table. */
+function skipHotaBoxExtension(walker: H3mWalker, formatLevel: number): Record<string, unknown> {
   const movementMode = walker.readI32()
   const movementAmount = walker.readI32()
   const affectedDifficulties = walker.readU32()
-  const usesEventSystem = walker.readBool()
-  const result: Record<string, unknown> = { movementMode, movementAmount, affectedDifficulties, usesEventSystem }
-  if (usesEventSystem) { result.eventId = walker.readI32(); result.synchronizeObjects = walker.readBool() }
+  const result: Record<string, unknown> = { movementMode, movementAmount, affectedDifficulties }
+  if (formatLevel > 8) {
+    const usesEventSystem = walker.readBool()
+    result.usesEventSystem = usesEventSystem
+    if (usesEventSystem) { result.eventId = walker.readI32(); result.synchronizeObjects = walker.readBool() }
+  }
   return result
 }
 
@@ -367,7 +396,7 @@ function skipEvent(walker: H3mWalker, record: H3mObjectRecord): Record<string, u
   let hota: Record<string, unknown> | undefined
   if (record.h3mVersion === H3M_VERSION_HOTA) {
     humanActivate = walker.readBool()
-    hota = skipHotaBoxExtension(walker)
+    hota = skipHotaBoxExtension(walker, record.formatLevel)
   }
   return { payloadKind: 'event', boxContent, playersMask, computerActivate, humanActivate, removeAfterVisit, hota }
 }
@@ -377,7 +406,7 @@ function skipPandora(walker: H3mWalker, record: H3mObjectRecord): Record<string,
   let hota: Record<string, unknown> | undefined
   if (record.h3mVersion === H3M_VERSION_HOTA) {
     const unknown = walker.readU8()
-    hota = { unknown, ...skipHotaBoxExtension(walker) }
+    hota = { unknown, ...skipHotaBoxExtension(walker, record.formatLevel) }
   }
   return { payloadKind: 'pandoras_box', boxContent, hota }
 }
@@ -660,7 +689,7 @@ function readTownPayload(
   }
   const eventsCount = walker.readU32()
   if (eventsCount > 256) throw new Error(`Implausible town event count ${eventsCount}`)
-  const events = Array.from({ length: eventsCount }, () => ({ ...walker.skipEventCommon(record.h3mVersion), ...readTownEventTail(walker, record.h3mVersion) }))
+  const events = Array.from({ length: eventsCount }, () => ({ ...walker.skipEventCommon(record.h3mVersion, record.formatLevel), ...readTownEventTail(walker, record.h3mVersion) }))
   const alignment = hasAlignment ? walker.readU8() : null
   const tailZero = walker.readBytes(3)
   if (tailZero[0] !== 0 || tailZero[1] !== 0 || tailZero[2] !== 0) throw new Error('Nonzero town tail bytes')
@@ -697,7 +726,15 @@ function resolvePayloadSkipper(objectId: number, record: H3mObjectRecord): Skipp
     return (w, r) => skipHotaFixedExtension(w, r, byteCount, 'hota_custom_reward_1')
   }
   if (objectId === h3obj.OBJECT_HOTA_CUSTOM_2 && (record.templateSubtype || 0) === 0) return (w, r) => skipHotaFixedExtension(w, r, 8, 'hota_seafaring_academy')
-  if (objectId === h3obj.OBJECT_HOTA_CUSTOM_3 && (record.templateSubtype || 0) === 12) return (w, r) => skipHotaFixedExtension(w, r, 16, 'hota_trapper_lodge')
+  // Unlike every other skipHotaFixedExtension use below (all levelHOTA5 in
+  // VCMI, always present for the format levels 7-9 this importer accepts),
+  // the Trapper Lodge's own 16-byte payload is levelHOTA9-only — format
+  // level 7/8 maps have none of these bytes at all. A real, separate bug
+  // from the same "any HotA" over-generalization found elsewhere this
+  // session (skipHotaBoxExtension, skipEventCommon).
+  if (objectId === h3obj.OBJECT_HOTA_CUSTOM_3 && (record.templateSubtype || 0) === 12) {
+    return (w, r) => (r.formatLevel > 8 ? skipHotaFixedExtension(w, r, 16, 'hota_trapper_lodge') : skipGeneric(w, r))
+  }
   return SKIPPERS[objectId] ?? null
 }
 
@@ -728,7 +765,7 @@ for (const id of h3obj.GARRISON_OBJECT_IDS) SKIPPERS[id] = skipGarrison
 for (const id of h3obj.RANDOM_DWELLING_IDS) SKIPPERS[id] = skipRandomDwelling
 
 function parseObjectHeader(
-  walker: H3mWalker, size: number, layers: number, templates: h3obj.H3mTemplate[], index: number, h3mVersion: number,
+  walker: H3mWalker, size: number, layers: number, templates: h3obj.H3mTemplate[], index: number, h3mVersion: number, formatLevel: number,
 ): H3mObjectRecord {
   const offset = walker.tell()
   const x = walker.readU8(), y = walker.readU8(), z = walker.readU8()
@@ -746,7 +783,7 @@ function parseObjectHeader(
     index, recordOffset: offset, x, y, z, layer: z, key: `${z}:${x}:${y}`,
     templateIndex, templateAnimation: template.animation, templateBlockMask: template.blockMask,
     templateVisitMask: template.visitMask, templateObjectId: template.objectId, templateSubtype: template.subtype,
-    h3mVersion,
+    h3mVersion, formatLevel,
   }
 }
 
@@ -763,7 +800,7 @@ export interface WalkedObjects {
  *  first record with neither a decoder nor a no-payload allowlist entry. */
 export function walkH3mObjects(
   data: Uint8Array, objectTableOffset: number, declaredCount: number, h3mVersion: number,
-  size: number, layers: number, templates: h3obj.H3mTemplate[],
+  size: number, layers: number, templates: h3obj.H3mTemplate[], formatLevel = 0,
 ): WalkedObjects {
   const walker = new H3mWalker(data)
   walker.seek(objectTableOffset)
@@ -773,7 +810,7 @@ export function walkH3mObjects(
   const records: H3mObjectRecord[] = []
   for (let index = 0; index < declared; index++) {
     const start = walker.tell()
-    const record = parseObjectHeader(walker, size, layers, templates, index, h3mVersion)
+    const record = parseObjectHeader(walker, size, layers, templates, index, h3mVersion, formatLevel)
     const objectId = record.templateObjectId
     let skipper = resolvePayloadSkipper(objectId, record)
     if (skipper === null) {

@@ -9,10 +9,36 @@ export const H3M_VERSION_ROE = 14
 export const H3M_VERSION_AB = 21
 export const H3M_VERSION_SOD = 28
 export const H3M_VERSION_HOTA = 32
-export const H3M_HOTA_FORMAT_LEVEL_1_8 = 9
-export const H3M_HOTA_1_8_HERO_COUNT = 215
+/** HotA's own "format level" (a monotonic feature counter bundled with the
+ *  file, independent of the `version` field above, which stays 32 for every
+ *  HotA release) — confirmed against VCMI's own authoritative
+ *  `MapFormatFeaturesH3M::getFeaturesHOTA()` (lib/mapping/MapFeaturesH3M.cpp):
+ *  every level in this range shares the same `heroesCount=215`/27-byte
+ *  allowed-heroes-mask width this importer already assumes (widening to
+ *  levels 0-6 would additionally require different hero/artifact byte
+ *  widths this port hasn't implemented, so THOSE are still rejected).
+ *  Real, common HotA releases include ALL of 7/8/9 — hard-locking to
+ *  exactly 9 (the previous, overly narrow gate here) rejected real, live
+ *  maps at level 7/8 for no wire-format reason. */
+export const H3M_HOTA_FORMAT_LEVEL_MIN = 7
+export const H3M_HOTA_FORMAT_LEVEL_MAX = 9
+export const H3M_HOTA_HERO_COUNT = 215
 export const SUPPORTED_H3M_VERSIONS = new Set([H3M_VERSION_ROE, H3M_VERSION_AB, H3M_VERSION_SOD, H3M_VERSION_HOTA])
-export const SUPPORTED_H3M_SIZES = new Set([36, 72, 108, 144, 252])
+/** The 5 classic size presets (S/M/L/XL/Giant) are what the stock map editor
+ *  UI offers, but VCMI's own header reader places no such restriction on the
+ *  raw size field (`mapHeader->height = mapHeader->width =
+ *  reader->readInt32()` — no allowlist, no range check) — real HotA maps
+ *  confirm this: two real maps this session ("A New Day Tomorrow.h3m" size
+ *  180, "Daggerwin Valley.h3m"/"Barren Lands.h3m" size 216) use sizes
+ *  outside the classic 5-value preset list, using a custom/mod-provided map
+ *  size the editor's own preset dropdown doesn't offer but the format
+ *  itself never restricted. A hard allowlist here was a real bug (rejecting
+ *  legitimate, real files), not a meaningful validation — replaced with a
+ *  sane upper bound purely to fail closed on true corruption/garbage. */
+export const MAX_PLAUSIBLE_H3M_SIZE = 400
+export function isPlausibleH3mSize(size: number): boolean {
+  return Number.isInteger(size) && size > 0 && size <= MAX_PLAUSIBLE_H3M_SIZE
+}
 
 export const VICTORY_ARTIFACT = 0
 export const VICTORY_GATHERTROOP = 1
@@ -25,6 +51,12 @@ export const VICTORY_BEATMONSTER = 7
 export const VICTORY_TAKEDWELLINGS = 8
 export const VICTORY_TAKEMINES = 9
 export const VICTORY_TRANSPORTITEM = 10
+/** Confirmed against VCMI's own authoritative `EVictoryConditionType` enum
+ *  (lib/mapping/MapFormatH3M.h): both 11 and 12 are HotA-only additions
+ *  (`HOTA_ELIMINATE_ALL_MONSTERS`/`HOTA_SURVIVE_FOR_DAYS`) — classic H3
+ *  (RoE/AB/SoD) only ever produces victory types 0-10. 11 happens to read
+ *  the same shape our name assumed (0 extra bytes); 12 does NOT — see
+ *  the read site below. */
 export const VICTORY_DEFEAT_ALL_MONSTERS = 11
 export const VICTORY_SURVIVE_TIME = 12
 export const VICTORY_WINSTANDARD = 255
@@ -48,38 +80,65 @@ export interface HotaHeaderExtension {
   forceMatchingVersion: boolean
 }
 
-/** HotA 1.8 fields between the format id and the classic H3M header. Only
- *  format level 9 ("HotA 1.8") is supported — older HotA layouts have
- *  different feature widths and are rejected rather than misread as SoD. */
+/** HotA fields between the format id and the classic H3M header — each one
+ *  individually gated by `formatLevel`, matching VCMI's own progressive
+ *  `levelHOTA1/2/5/7/8/9` feature checks (`MapFormatH3M.cpp::readHeader()`)
+ *  EXACTLY rather than reading a fixed set of fields unconditionally. Only
+ *  format levels 7-9 are supported (see `H3M_HOTA_FORMAT_LEVEL_MIN/MAX`) —
+ *  every field below is present at level 7 except `release`/
+ *  `forceMatchingVersion` (level 8+ only) and the trailing `unknown` marker
+ *  (level 9 only). Getting any one of these gates wrong misaligns every
+ *  byte read after it — including the whole rest of the header (players,
+ *  victory/loss, teams) and, transitively, the terrain/object-table
+ *  location this importer's own scan-based `locateH3mTerrainAndObjects`
+ *  depends on. */
 function readHotaHeaderExtension(reader: BinaryReader, version: number): HotaHeaderExtension | null {
   if (version !== H3M_VERSION_HOTA) return null
 
   const formatLevel = reader.readU32()
-  if (formatLevel !== H3M_HOTA_FORMAT_LEVEL_1_8) {
-    throw new Error(`Unsupported HotA format level ${formatLevel}; expected ${H3M_HOTA_FORMAT_LEVEL_1_8} (HotA 1.8)`)
+  if (formatLevel < H3M_HOTA_FORMAT_LEVEL_MIN || formatLevel > H3M_HOTA_FORMAT_LEVEL_MAX) {
+    throw new Error(`Unsupported HotA format level ${formatLevel}; expected ${H3M_HOTA_FORMAT_LEVEL_MIN}-${H3M_HOTA_FORMAT_LEVEL_MAX}`)
   }
-  const release = { major: reader.readU32(), minor: reader.readU32(), patch: reader.readU32() }
-  if (release.major !== 1 || release.minor !== 8) {
-    throw new Error(`Unsupported HotA release ${release.major}.${release.minor}.${release.patch}`)
-  }
+
+  // levelHOTA8 (formatLevel > 7): release major/minor/patch, informational
+  // only (VCMI itself never validates it against a specific release).
+  const release = formatLevel > 7
+    ? { major: reader.readU32(), minor: reader.readU32(), patch: reader.readU32() }
+    : { major: 0, minor: 0, patch: 0 }
+
+  // levelHOTA1 (formatLevel > 0): always true in the 7-9 range we accept.
   const isMirrorMap = reader.readBool()
   const isArenaMap = reader.readBool()
   if (isMirrorMap || isArenaMap) {
     throw new Error(`Unsupported HotA map mode: ${[isMirrorMap && 'mirror', isArenaMap && 'arena'].filter(Boolean).join(', ')}`)
   }
+
+  // levelHOTA2 (formatLevel > 1): always true in the 7-9 range we accept.
+  // Not validated against an expected count — VCMI itself only *warns* on a
+  // mismatch here (never throws; its own source calls the terrain/town-type-
+  // count vs. real-catalog-count relationship "not related to factions?"),
+  // and real maps confirm it: two real HotA maps this session ("Scorched
+  // Earth", "The Devil Is in the Detail") both carry townTypesCount=11, not
+  // the naively-expected 12. Hard-failing on this was a real bug, not a
+  // legitimate validation — these fields exist here only to stay byte-
+  // aligned for what follows, same as VCMI's own tolerant read.
   const terrainTypesCount = reader.readU32()
+
+  // levelHOTA5 (formatLevel > 4): always true in the 7-9 range we accept.
   const townTypesCount = reader.readU32()
   const allowedDifficultiesMask = reader.readU8()
-  const canHireDefeatedHeroes = reader.readBool()
-  const forceMatchingVersion = reader.readBool()
-  const unknown = reader.readU32()
 
-  if (terrainTypesCount !== 12) throw new Error(`Unsupported HotA terrain type count ${terrainTypesCount}; expected 12`)
-  if (townTypesCount !== 12) throw new Error(`Unsupported HotA town type count ${townTypesCount}; expected 12`)
-  if (allowedDifficultiesMask !== 0 && allowedDifficultiesMask !== 31) {
-    throw new Error(`Unsupported HotA allowed difficulties mask 0x${allowedDifficultiesMask.toString(16)}`)
+  // levelHOTA7 (formatLevel > 6): always true in the 7-9 range we accept.
+  const canHireDefeatedHeroes = reader.readBool()
+
+  // levelHOTA8 (formatLevel > 7): level 8-9 only.
+  const forceMatchingVersion = formatLevel > 7 ? reader.readBool() : false
+
+  // levelHOTA9 (formatLevel > 8): level 9 only.
+  if (formatLevel > 8) {
+    const unknown = reader.readU32()
+    if (unknown !== 0) throw new Error(`Unsupported nonzero HotA format-9 header field ${unknown}`)
   }
-  if (unknown !== 0) throw new Error(`Unsupported nonzero HotA 1.8 header field ${unknown}`)
 
   return { formatLevel, release, isMirrorMap, isArenaMap, terrainTypesCount, townTypesCount, allowedDifficultiesMask, canHireDefeatedHeroes, forceMatchingVersion }
 }
@@ -149,7 +208,7 @@ export function decodeH3mScenarioHeader(data: Uint8Array): H3mScenarioHeader {
   const hota = readHotaHeaderExtension(reader, version)
   const anyPlayers = reader.readBool()
   const size = reader.readU32()
-  if (!SUPPORTED_H3M_SIZES.has(size)) throw new Error(`Unsupported H3M map size ${size}`)
+  if (!isPlausibleH3mSize(size)) throw new Error(`Implausible H3M map size ${size}`)
   const hasUnderground = reader.readBool()
   const title = reader.readString(256)
   const description = reader.readString(4096)
@@ -235,7 +294,15 @@ export function decodeH3mScenarioHeader(data: Uint8Array): H3mScenarioHeader {
       victorySpecial.artifactId = reader.readU8()
       victorySpecial.position = readInt3(reader)
     } else if (victoryType === VICTORY_SURVIVE_TIME) {
-      victorySpecial.days = reader.readU16()
+      // A real bug found this session: VCMI's actual HOTA_SURVIVE_FOR_DAYS
+      // reads `reader->readUInt32()` (4 bytes) — this codebase previously
+      // assumed a classic-H3-style 2-byte day count, which doesn't apply
+      // here since (per the enum doc comment above) this victory type is a
+      // HotA-only addition with its own real field width, confirmed against
+      // a real HotA map ("Beware of Demons!.h3m") whose header decoded to
+      // total garbage (teamsCount=198, heroesCount=2147202047) two bytes
+      // after this field — exactly the drift a 2-bytes-too-few read causes.
+      victorySpecial.days = reader.readU32()
     } else if (victoryType === VICTORY_DEFEAT_ALL_MONSTERS) {
       // no extra fields
     } else {
@@ -261,9 +328,17 @@ export function decodeH3mScenarioHeader(data: Uint8Array): H3mScenarioHeader {
     teams = Array.from(reader.readBytes(8))
   }
   if (version === H3M_VERSION_HOTA) {
+    // A real, in-file count, not a format-level-derived constant — VCMI's
+    // own `readBitmaskHeroesSized` reads this exact field and only asserts
+    // `heroesCount <= features.heroesCount` (a ceiling, matching whichever
+    // hero roster the format level supports), never an exact match. Two
+    // real format-level-8 maps this session ("Scorched Earth", "The Devil
+    // Is in the Detail") both carry 198 here (a legitimate, self-consistent
+    // earlier-roster value), not the naively-assumed 215 — hard-requiring
+    // exact equality was a real bug, not a legitimate validation.
     const heroesCount = reader.readU32()
-    if (heroesCount !== H3M_HOTA_1_8_HERO_COUNT) {
-      throw new Error(`Unsupported HotA hero count ${heroesCount}; expected ${H3M_HOTA_1_8_HERO_COUNT}`)
+    if (heroesCount > H3M_HOTA_HERO_COUNT) {
+      throw new Error(`Implausible HotA hero count ${heroesCount} (expected at most ${H3M_HOTA_HERO_COUNT})`)
     }
     heroesBytes = Math.ceil(heroesCount / 8)
   }

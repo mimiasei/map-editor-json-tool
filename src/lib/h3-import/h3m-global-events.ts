@@ -24,8 +24,11 @@ export interface H3mGlobalTimedEvent {
 
 /** Read the tail of timed-event records right after the object table ends
  *  (RoE/AB/SoD; HotA adds extra trailing fields per event). Returns an empty
- *  event list, not an error, when the walk consumed the whole file. */
-export function readGlobalTimedEvents(data: Uint8Array, walkEndOffset: number, h3mVersion: number): H3mGlobalTimedEvent[] {
+ *  event list, not an error, when the walk consumed the whole file.
+ *  `formatLevel` (0 for non-HotA) is HotA's own feature-level counter — see
+ *  h3m-format.ts's own doc comment; only format level 9 carries the
+ *  `usesEventSystem` tail (VCMI's `levelHOTA9`), levels 7-8 do not. */
+export function readGlobalTimedEvents(data: Uint8Array, walkEndOffset: number, h3mVersion: number, formatLevel = 0): H3mGlobalTimedEvent[] {
   if (walkEndOffset < 0 || walkEndOffset > data.length) throw new Error(`walkEndOffset out of range: ${walkEndOffset}`)
   const walker = new H3mWalker(data)
   walker.seek(walkEndOffset)
@@ -55,8 +58,19 @@ export function readGlobalTimedEvents(data: Uint8Array, walkEndOffset: number, h
       firstOccurrence, nextOccurrence, triggerDay: firstOccurrence + 1,
     }
     if (h3mVersion === H3M_VERSION_HOTA) {
+      // levelHOTA7 (always true for the format levels 7-9 this importer
+      // accepts): affectedDifficulties.
       const affectedDifficulties = walker.readU32()
-      const usesEventSystem = walker.readBool()
+      // levelHOTA9 (format level 9 ONLY — levels 7-8 have neither this
+      // field nor its dependents at all). Reading it unconditionally for
+      // "any HotA file" was a real bug: it silently consumed an extra byte
+      // (or more, if usesEventSystem happened to read true) on every real
+      // format-level-7/8 map with global timed events, desyncing every
+      // byte read after it.
+      let usesEventSystem = false
+      if (formatLevel > 8) {
+        usesEventSystem = walker.readBool()
+      }
       event.hota = { affectedDifficulties, usesEventSystem }
       if (usesEventSystem) {
         event.hota.eventId = walker.readI32()
@@ -78,9 +92,9 @@ export function readGlobalTimedEvents(data: Uint8Array, walkEndOffset: number, h
 /** Probe whether `walkEndOffset` really is the global-timed-events table —
  *  returns `null` on any decode failure instead of throwing, since callers
  *  use this to disambiguate real end-of-object-table from other tail shapes. */
-export function tryReadGlobalTimedEvents(data: Uint8Array, walkEndOffset: number, h3mVersion: number): H3mGlobalTimedEvent[] | null {
+export function tryReadGlobalTimedEvents(data: Uint8Array, walkEndOffset: number, h3mVersion: number, formatLevel = 0): H3mGlobalTimedEvent[] | null {
   try {
-    return readGlobalTimedEvents(data, walkEndOffset, h3mVersion)
+    return readGlobalTimedEvents(data, walkEndOffset, h3mVersion, formatLevel)
   } catch {
     return null
   }
