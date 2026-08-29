@@ -47,6 +47,24 @@
   table, then download the result and replace the file in the repo. Not part of TSE itself — this
   file only reads/writes local files you choose, nothing is sent anywhere.
 </p>
+<p class="hint">
+    <div><strong>How to use it:</strong></div>
+    <br>
+    <div>Open the file directly in a browser (double-click, or file:// works fine), load your Core.zip and src/lib/h3-import/h3-object-mapping.json via the two file pickers, edit away, then hit "Download edited JSON" and move the downloaded file over the real one in the repo.</div>
+    <br>
+    <div><strong>What it does:</strong></div>
+    <br>
+    <div>
+        <div>- Parses Core.zip's real object catalog (same 9 category files and interactable rules builder.ts uses) to give live green/red sid validation as you type or edit — the same check I did by hand for Tavern.</div>
+        <div>- Full first-class fields (sid with validation, kind, reason, role, etc.) for omit/emit/scenery rows — the common case of turning an omitted object into a real mapping.</div>
+        <div>- A JSON textarea for the rarer nested shapes (dispatch, scenery-dispatch, scenery-dispatch-subtype) rather than a fully dynamic editor, to keep it genuinely simple.</div>
+        <div>- Search box + outcome filter, and a running summary (row count, field errors, missing sids).</div>
+    </div>
+    <br>
+    <div>Verified with Playwright against your real Core.zip (858 objects loaded — matches the known catalog size) and real h3-object-mapping.json (232 rows, 0 errors): searched for Tavern and confirmed its green badge, flipped a row's outcome to emit with a bogus sid (got red "not found") then a real one (green), and confirmed the downloaded file round-trips through the actual h3-object-mapping-schema.ts Zod schema with zero validation errors. Zero console errors, and it doesn't touch or interfere with the TS build at all.</div>
+    <br>
+    <div>Came in near the low end of the estimate — one file, one verification pass, no rework needed.</div>
+</p>
 
 <div class="loaders">
   <label>Core.zip (for sid lookup/validation)
