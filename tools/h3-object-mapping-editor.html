@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>H3 &rarr; OE Object Mapping Editor</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 1.5rem; font-size: 14px; }
+  h1 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+  p.hint { color: #666; margin-top: 0; max-width: 70em; }
+  .loaders { display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; margin: 1rem 0; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px; }
+  .loaders label { display: flex; flex-direction: column; gap: 0.25rem; font-weight: 600; }
+  .status { font-weight: normal; font-size: 0.85em; }
+  .status.ok { color: #1a7f37; }
+  .status.err { color: #c00; }
+  .controls { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+  .controls input[type=search] { min-width: 20em; padding: 0.3em 0.5em; }
+  #summary { font-weight: 600; }
+  #summary .bad { color: #c00; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85em; }
+  thead th { position: sticky; top: 0; background: Canvas; border-bottom: 2px solid #888; padding: 0.4em; text-align: left; }
+  tbody td { border-bottom: 1px solid #ddd; padding: 0.35em 0.4em; vertical-align: top; }
+  tbody tr.hidden { display: none; }
+  input[type=text], select { padding: 0.2em 0.3em; font: inherit; }
+  input.small { width: 6em; }
+  input.name { width: 14em; }
+  input.sid { width: 12em; }
+  textarea.extra { width: 28em; height: 6em; font-family: ui-monospace, monospace; font-size: 0.85em; }
+  .sid-badge { display: inline-block; padding: 0.05em 0.4em; border-radius: 3px; font-size: 0.85em; margin-left: 0.3em; }
+  .sid-badge.found { background: #d3f5d3; color: #1a7f37; }
+  .sid-badge.missing { background: #fbdada; color: #c00; }
+  .sid-badge.unknown { background: #eee; color: #666; }
+  .row-errors { color: #c00; font-size: 0.85em; }
+  details.extra-json summary { cursor: pointer; color: #555; }
+  fieldset.simple-fields { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3em; }
+  .field-row { display: flex; align-items: center; gap: 0.4em; flex-wrap: wrap; }
+  .field-row label { font-size: 0.85em; color: #555; min-width: 4.5em; }
+</style>
+</head>
+<body>
+
+<h1>H3 &rarr; OE Object Mapping Editor</h1>
+<p class="hint">
+  Standalone editor for <code>src/lib/h3-import/h3-object-mapping.json</code> — the master table
+  that decides what each H3 object becomes when importing a <code>.h3m</code> map. Load your
+  <code>Core.zip</code> (to validate OE sids for real) and the mapping JSON below, edit rows in the
+  table, then download the result and replace the file in the repo. Not part of TSE itself — this
+  file only reads/writes local files you choose, nothing is sent anywhere.
+</p>
+
+<div class="loaders">
+  <label>Core.zip (for sid lookup/validation)
+    <input type="file" id="coreInput" accept=".zip">
+    <span id="coreStatus" class="status">not loaded</span>
+  </label>
+  <label>h3-object-mapping.json
+    <input type="file" id="mappingInput" accept=".json">
+    <span id="mappingStatus" class="status">not loaded</span>
+  </label>
+</div>
+
+<div class="controls" id="controls" style="display:none">
+  <input type="search" id="searchBox" placeholder="Search h3Id / name / sid / reason...">
+  <label>Outcome:
+    <select id="outcomeFilter">
+      <option value="">All</option>
+      <option value="omit">omit</option>
+      <option value="emit">emit</option>
+      <option value="scenery">scenery</option>
+      <option value="scenery-dispatch">scenery-dispatch</option>
+      <option value="scenery-dispatch-subtype">scenery-dispatch-subtype</option>
+      <option value="dispatch">dispatch</option>
+    </select>
+  </label>
+  <span id="summary"></span>
+  <button id="downloadBtn">Download edited JSON</button>
+</div>
+
+<table id="table" style="display:none">
+  <thead>
+    <tr>
+      <th>h3Id</th>
+      <th>h3Name</th>
+      <th>Outcome</th>
+      <th>Fields</th>
+      <th>Extra (JSON)</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+'use strict';
+
+// ─── Constants mirrored from src/lib/h3-import/h3-object-mapping-schema.ts ──
+// Keep these in sync by hand if that file's enums ever change — this tool is
+// intentionally a standalone duplicate, not a build-time import from it.
+const SCENERY_ROLES = ['ground', 'pool', 'tree', 'shrub', 'pool_big', 'water_decoration', 'mountain', 'rock', 'ruin'];
+const OBJECT_KINDS = ['town', 'portal', 'resource', 'mine', 'dwelling', 'artifact', 'random_squad', 'interactable', 'map_event', 'scenery'];
+const OUTCOMES = ['omit', 'emit', 'scenery', 'scenery-dispatch', 'scenery-dispatch-subtype', 'dispatch'];
+
+// ─── Core.zip catalog parsing ────────────────────────────────────────────────
+// Mirrors src/lib/catalog/builder.ts's MAP_OBJECT_FILES table (same 9 files,
+// same per-category isInteractable defaults) but skips name localization
+// (Core/Lang/.../mapObjects.json) entirely — this tool only needs "does this
+// sid exist, and what's its footprint," not a display name, so the real id
+// string is shown as-is rather than a resolved in-game name.
+const MAP_OBJECT_FILES = [
+  { file: 'DB/map/objects/1_environments.json', category: 'environments', isInteractable: false },
+  { file: 'DB/map/objects/2_animals.json', category: 'animals', isInteractable: false },
+  { file: 'DB/map/objects/3_resources.json', category: 'resources', isInteractable: false },
+  { file: 'DB/map/objects/4_interactables.json', category: 'interactables', isInteractable: true },
+  { file: 'DB/map/objects/5_fxs.json', category: 'fxs', isInteractable: false },
+  { file: 'DB/map/objects/6_artifacts.json', category: 'artifacts', isInteractable: true },
+  { file: 'DB/map/objects/7_spawns.json', category: 'spawns', isInteractable: false },
+  { file: 'DB/map/objects/8_test.json', category: 'test', isInteractable: false },
+  { file: 'DB/map/objects/9_blocks.json', category: 'blocks', isInteractable: false },
+];
+const PER_ENTRY_INTERACTABLE_CATEGORIES = new Set(['interactables', 'artifacts']);
+
+async function loadCoreZip(file) {
+  const zip = await JSZip.loadAsync(file);
+  const byId = new Map();
+  for (const { file: path, category, isInteractable: defaultInteractable } of MAP_OBJECT_FILES) {
+    const entry = zip.file(path);
+    if (!entry) continue;
+    const text = (await entry.async('string')).replace(/^﻿/, '');
+    let parsed;
+    try { parsed = JSON.parse(text); } catch (e) { console.warn('Could not parse', path, e); continue; }
+    const arr = Array.isArray(parsed.array) ? parsed.array : [];
+    for (const obj of arr) {
+      const id = obj && obj.id;
+      if (!id || byId.has(id)) continue;
+      const isInteractable = PER_ENTRY_INTERACTABLE_CATEGORIES.has(category) ? obj.isInteractable !== false : defaultInteractable;
+      byId.set(id, {
+        id, category, isInteractable,
+        sizeX: typeof obj.sizeX === 'number' ? obj.sizeX : 1,
+        sizeZ: typeof obj.sizeZ === 'number' ? obj.sizeZ : 1,
+        nodes: Array.isArray(obj.nodes) ? obj.nodes : null,
+      });
+    }
+  }
+  return byId;
+}
+
+// ─── State ────────────────────────────────────────────────────────────────
+let catalog = null; // Map<sid, {id, category, isInteractable, sizeX, sizeZ, nodes}> | null until loaded
+let mapping = null; // { objects: [...], sceneryRoleSids: {...} }
+const rowState = new Map(); // h3Id -> { tr, badgesEl, errorsEl, simpleFieldsEl, extraTextarea }
+
+// ─── Validation (mirrors h3-object-mapping-schema.ts's rules by hand) ───────
+function validateRow(row) {
+  const errors = [];
+  if (typeof row.h3Id !== 'number' || !Number.isInteger(row.h3Id)) errors.push('h3Id must be an integer');
+  if (typeof row.h3Name !== 'string' || !row.h3Name) errors.push('h3Name must be a non-empty string');
+
+  switch (row.outcome) {
+    case 'omit':
+      if (typeof row.reason !== 'string' || !row.reason) errors.push('reason is required');
+      break;
+    case 'emit':
+      if (typeof row.sid !== 'string' || !row.sid) errors.push('sid is required');
+      if (!OBJECT_KINDS.includes(row.kind)) errors.push('kind must be one of: ' + OBJECT_KINDS.join(', '));
+      if (typeof row.reason !== 'string' || !row.reason) errors.push('reason is required');
+      break;
+    case 'scenery':
+      if (!SCENERY_ROLES.includes(row.role)) errors.push('role must be one of: ' + SCENERY_ROLES.join(', '));
+      break;
+    case 'scenery-dispatch':
+      if (!row.exact || typeof row.exact !== 'object') { errors.push('exact is required (object)'); break; }
+      for (const [k, v] of Object.entries(row.exact)) {
+        if (!v || typeof v.sid !== 'string' || !SCENERY_ROLES.includes(v.role)) errors.push(`exact["${k}"] must be {sid, role}`);
+      }
+      break;
+    case 'scenery-dispatch-subtype':
+      if (!row.subtypes || typeof row.subtypes !== 'object') { errors.push('subtypes is required (object)'); break; }
+      for (const [k, v] of Object.entries(row.subtypes)) {
+        if (!SCENERY_ROLES.includes(v)) errors.push(`subtypes["${k}"] must be a valid role`);
+      }
+      break;
+    case 'dispatch':
+      if (!OBJECT_KINDS.includes(row.kind)) errors.push('kind must be one of: ' + OBJECT_KINDS.join(', '));
+      if (typeof row.reason !== 'string' || !row.reason) errors.push('reason is required');
+      if (row.subtypes) {
+        for (const [k, v] of Object.entries(row.subtypes)) {
+          if (!v || typeof v.sid !== 'string') errors.push(`subtypes["${k}"] must be {sid, factionSid?}`);
+        }
+      }
+      if (row.exact && typeof row.exact !== 'object') errors.push('exact must be an object of string->sid');
+      if (row.tokens && typeof row.tokens !== 'object') errors.push('tokens must be an object of string->sid');
+      if (row.default !== undefined && typeof row.default !== 'string') errors.push('default must be a string');
+      if (row.freeChoice) {
+        const fc = row.freeChoice;
+        if (!Array.isArray(fc.subtypes) || typeof fc.sid !== 'string' || typeof fc.reason !== 'string') {
+          errors.push('freeChoice must be {subtypes:number[], sid, reason}');
+        }
+      }
+      if (row.unmatchedReason !== undefined && typeof row.unmatchedReason !== 'string') errors.push('unmatchedReason must be a string');
+      break;
+    default:
+      errors.push('unknown outcome: ' + row.outcome);
+  }
+  return errors;
+}
+
+// Every OE sid this row references, wherever it appears in its shape.
+function rowSidsToCheck(row) {
+  const sids = [];
+  if (row.outcome === 'emit' && row.sid) sids.push(row.sid);
+  if (row.outcome === 'scenery-dispatch' && row.exact) {
+    for (const v of Object.values(row.exact)) if (v && v.sid) sids.push(v.sid);
+  }
+  if (row.outcome === 'dispatch') {
+    if (row.subtypes) for (const v of Object.values(row.subtypes)) if (v && v.sid) sids.push(v.sid);
+    if (row.exact) for (const v of Object.values(row.exact)) if (typeof v === 'string') sids.push(v);
+    if (row.tokens) for (const v of Object.values(row.tokens)) if (typeof v === 'string') sids.push(v);
+    if (typeof row.default === 'string') sids.push(row.default);
+    if (row.freeChoice && row.freeChoice.sid) sids.push(row.freeChoice.sid);
+  }
+  return sids;
+}
+
+function checkSid(sid) {
+  if (!catalog) return 'unknown';
+  return catalog.has(sid) ? 'found' : 'missing';
+}
+
+function sidBadge(sid) {
+  const state = checkSid(sid);
+  const span = document.createElement('span');
+  span.className = 'sid-badge ' + state;
+  if (state === 'found') {
+    const c = catalog.get(sid);
+    span.textContent = `✓ ${sid} (${c.category}, ${c.sizeX}x${c.sizeZ}${c.isInteractable ? ', interactable' : ''})`;
+  } else if (state === 'missing') {
+    span.textContent = `✗ ${sid} not found in Core.zip`;
+  } else {
+    span.textContent = sid + ' (load Core.zip to check)';
+  }
+  return span;
+}
+
+// ─── Per-row "simple fields" (outcome-specific first-class inputs) ─────────
+// Everything else (scenery-dispatch's `exact`, scenery-dispatch-subtype's
+// `subtypes`, dispatch's nested tables) is edited as raw JSON in the "Extra"
+// column instead — those shapes are rare to hand-edit and genuinely nested,
+// so a full dynamic key/value editor isn't worth the complexity for a "small
+// and very simple" tool. `omit`/`emit`/`scenery` — the overwhelming majority
+// of real edits (turning an omitted id into a real mapping) — get full
+// first-class fields with live sid validation.
+function extraFieldsFor(outcome) {
+  if (outcome === 'scenery-dispatch') return ['exact'];
+  if (outcome === 'scenery-dispatch-subtype') return ['subtypes'];
+  if (outcome === 'dispatch') return ['subtypes', 'exact', 'tokens', 'default', 'freeChoice', 'unmatchedReason'];
+  return [];
+}
+
+function renderSimpleFields(row, container) {
+  container.innerHTML = '';
+  const add = (labelText, el) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-row';
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    wrap.appendChild(label);
+    wrap.appendChild(el);
+    container.appendChild(wrap);
+  };
+
+  if (row.outcome === 'omit') {
+    const reason = document.createElement('input');
+    reason.type = 'text'; reason.className = 'sid'; reason.value = row.reason || '';
+    reason.oninput = () => { row.reason = reason.value; refreshRow(row); };
+    add('reason', reason);
+  } else if (row.outcome === 'emit') {
+    const sid = document.createElement('input');
+    sid.type = 'text'; sid.className = 'sid'; sid.value = row.sid || '';
+    sid.oninput = () => { row.sid = sid.value; refreshRow(row); };
+    add('sid', sid);
+
+    const kind = document.createElement('select');
+    for (const k of OBJECT_KINDS) { const o = document.createElement('option'); o.value = k; o.textContent = k; kind.appendChild(o); }
+    kind.value = OBJECT_KINDS.includes(row.kind) ? row.kind : 'interactable';
+    row.kind = kind.value;
+    kind.onchange = () => { row.kind = kind.value; refreshRow(row); };
+    add('kind', kind);
+
+    const reason = document.createElement('input');
+    reason.type = 'text'; reason.className = 'sid'; reason.value = row.reason || 'direct_template_sid';
+    row.reason = reason.value;
+    reason.oninput = () => { row.reason = reason.value; refreshRow(row); };
+    add('reason', reason);
+
+    const factionSid = document.createElement('input');
+    factionSid.type = 'text'; factionSid.className = 'sid'; factionSid.placeholder = '(town kind only)';
+    factionSid.value = row.factionSid || '';
+    factionSid.oninput = () => { row.factionSid = factionSid.value || undefined; refreshRow(row); };
+    add('factionSid', factionSid);
+
+    const freeChoiceWrap = document.createElement('label');
+    const freeChoice = document.createElement('input');
+    freeChoice.type = 'checkbox'; freeChoice.checked = !!row.freeChoice;
+    freeChoice.onchange = () => { row.freeChoice = freeChoice.checked || undefined; refreshRow(row); };
+    freeChoiceWrap.appendChild(freeChoice);
+    freeChoiceWrap.append(' freeChoice (town kind only)');
+    container.appendChild(freeChoiceWrap);
+  } else if (row.outcome === 'scenery') {
+    const role = document.createElement('select');
+    for (const r of SCENERY_ROLES) { const o = document.createElement('option'); o.value = r; o.textContent = r; role.appendChild(o); }
+    role.value = SCENERY_ROLES.includes(row.role) ? row.role : 'rock';
+    row.role = role.value;
+    role.onchange = () => { row.role = role.value; refreshRow(row); };
+    add('role', role);
+  } else if (row.outcome === 'dispatch') {
+    const kind = document.createElement('select');
+    for (const k of OBJECT_KINDS) { const o = document.createElement('option'); o.value = k; o.textContent = k; kind.appendChild(o); }
+    kind.value = OBJECT_KINDS.includes(row.kind) ? row.kind : 'interactable';
+    row.kind = kind.value;
+    kind.onchange = () => { row.kind = kind.value; refreshRow(row); };
+    add('kind', kind);
+
+    const reason = document.createElement('input');
+    reason.type = 'text'; reason.className = 'sid'; reason.value = row.reason || '';
+    reason.oninput = () => { row.reason = reason.value; refreshRow(row); };
+    add('reason', reason);
+  }
+  // scenery-dispatch / scenery-dispatch-subtype: no simple fields at all,
+  // everything lives in the Extra JSON column.
+}
+
+// Reset a row to a fresh, minimally-valid shape for a newly-chosen outcome —
+// deliberately wipes old outcome-specific fields rather than leaving stale
+// ones behind that wouldn't match the new shape.
+function resetRowForOutcome(row, outcome) {
+  const h3Id = row.h3Id, h3Name = row.h3Name;
+  for (const key of Object.keys(row)) {
+    if (key !== 'h3Id' && key !== 'h3Name') delete row[key];
+  }
+  row.h3Id = h3Id; row.h3Name = h3Name; row.outcome = outcome;
+  if (outcome === 'omit') row.reason = 'unmapped_template_object_id_' + h3Id;
+  else if (outcome === 'emit') { row.sid = ''; row.kind = 'interactable'; row.reason = 'direct_template_sid'; }
+  else if (outcome === 'scenery') row.role = 'rock';
+  else if (outcome === 'scenery-dispatch') row.exact = {};
+  else if (outcome === 'scenery-dispatch-subtype') row.subtypes = {};
+  else if (outcome === 'dispatch') { row.kind = 'interactable'; row.reason = ''; }
+}
+
+// ─── Row build/refresh ──────────────────────────────────────────────────────
+function buildRow(row) {
+  const tr = document.createElement('tr');
+
+  const tdId = document.createElement('td');
+  tdId.textContent = row.h3Id;
+  tr.appendChild(tdId);
+
+  const tdName = document.createElement('td');
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text'; nameInput.className = 'name'; nameInput.value = row.h3Name;
+  nameInput.oninput = () => { row.h3Name = nameInput.value; };
+  tdName.appendChild(nameInput);
+  tr.appendChild(tdName);
+
+  const tdOutcome = document.createElement('td');
+  const outcomeSelect = document.createElement('select');
+  for (const o of OUTCOMES) { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; outcomeSelect.appendChild(opt); }
+  outcomeSelect.value = row.outcome;
+  outcomeSelect.onchange = () => { resetRowForOutcome(row, outcomeSelect.value); renderSimpleFields(row, simpleFieldsEl); renderExtra(row, extraDetails, extraTextarea); refreshRow(row); };
+  tdOutcome.appendChild(outcomeSelect);
+  tr.appendChild(tdOutcome);
+
+  const tdSimple = document.createElement('td');
+  const simpleFieldsEl = document.createElement('div');
+  simpleFieldsEl.className = 'simple-fields';
+  tdSimple.appendChild(simpleFieldsEl);
+  tr.appendChild(tdSimple);
+
+  const tdExtra = document.createElement('td');
+  const extraDetails = document.createElement('details');
+  extraDetails.className = 'extra-json';
+  const extraSummary = document.createElement('summary');
+  extraDetails.appendChild(extraSummary);
+  const extraTextarea = document.createElement('textarea');
+  extraTextarea.className = 'extra';
+  extraTextarea.onblur = () => applyExtraJson(row, extraTextarea, extraSummary);
+  extraDetails.appendChild(extraTextarea);
+  tdExtra.appendChild(extraDetails);
+  tr.appendChild(tdExtra);
+
+  const tdStatus = document.createElement('td');
+  const badgesEl = document.createElement('div');
+  const errorsEl = document.createElement('div');
+  errorsEl.className = 'row-errors';
+  tdStatus.appendChild(badgesEl);
+  tdStatus.appendChild(errorsEl);
+  tr.appendChild(tdStatus);
+
+  renderSimpleFields(row, simpleFieldsEl);
+  renderExtra(row, extraDetails, extraTextarea);
+
+  rowState.set(row.h3Id, { tr, badgesEl, errorsEl, simpleFieldsEl, extraDetails, extraTextarea, extraSummary });
+  return tr;
+}
+
+function renderExtra(row, detailsEl, textareaEl) {
+  const fields = extraFieldsFor(row.outcome);
+  if (fields.length === 0) {
+    detailsEl.style.display = 'none';
+    return;
+  }
+  detailsEl.style.display = '';
+  const obj = {};
+  for (const f of fields) if (row[f] !== undefined) obj[f] = row[f];
+  textareaEl.value = JSON.stringify(obj, null, 2);
+  const state = rowState.get(row.h3Id);
+  if (state) state.extraSummary.textContent = 'Extra fields (JSON): ' + fields.join(', ');
+}
+
+function applyExtraJson(row, textareaEl, summaryEl) {
+  let parsed;
+  try {
+    parsed = textareaEl.value.trim() ? JSON.parse(textareaEl.value) : {};
+  } catch (e) {
+    summaryEl.textContent = 'Invalid JSON: ' + e.message;
+    summaryEl.style.color = '#c00';
+    return;
+  }
+  summaryEl.style.color = '';
+  for (const f of extraFieldsFor(row.outcome)) {
+    if (parsed[f] !== undefined) row[f] = parsed[f];
+    else delete row[f];
+  }
+  renderExtra(row, rowState.get(row.h3Id).extraDetails, textareaEl);
+  refreshRow(row);
+}
+
+function refreshRow(row) {
+  const state = rowState.get(row.h3Id);
+  if (!state) return;
+  const errors = validateRow(row);
+  state.errorsEl.textContent = errors.length ? '✗ ' + errors.join('; ') : '';
+
+  state.badgesEl.innerHTML = '';
+  const sids = rowSidsToCheck(row);
+  if (sids.length === 0) {
+    if (row.outcome === 'scenery' || row.outcome === 'scenery-dispatch' || row.outcome === 'scenery-dispatch-subtype' || row.outcome === 'omit') {
+      const span = document.createElement('span');
+      span.className = 'sid-badge found';
+      span.textContent = '– no sid to check (role/omit-only)';
+      state.badgesEl.appendChild(span);
+    }
+  } else {
+    for (const sid of sids) state.badgesEl.appendChild(sidBadge(sid));
+  }
+  updateSummary();
+}
+
+function refreshAllRows() {
+  for (const row of mapping.objects) refreshRow(row);
+}
+
+// ─── Search / filter ────────────────────────────────────────────────────────
+function rowSearchText(row) {
+  const sids = rowSidsToCheck(row).join(' ');
+  return [row.h3Id, row.h3Name, row.outcome, row.reason, row.sid, row.role, sids].filter(Boolean).join(' ').toLowerCase();
+}
+
+function applyFilter() {
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const outcomeFilter = document.getElementById('outcomeFilter').value;
+  for (const row of mapping.objects) {
+    const state = rowState.get(row.h3Id);
+    if (!state) continue;
+    const matchesSearch = !q || rowSearchText(row).includes(q);
+    const matchesOutcome = !outcomeFilter || row.outcome === outcomeFilter;
+    state.tr.classList.toggle('hidden', !(matchesSearch && matchesOutcome));
+  }
+}
+
+// ─── Summary ────────────────────────────────────────────────────────────────
+function updateSummary() {
+  let errorCount = 0, missingSidCount = 0;
+  const seenIds = new Map();
+  let dupeCount = 0;
+  for (const row of mapping.objects) {
+    errorCount += validateRow(row).length;
+    for (const sid of rowSidsToCheck(row)) if (checkSid(sid) === 'missing') missingSidCount++;
+    if (seenIds.has(row.h3Id)) dupeCount++;
+    seenIds.set(row.h3Id, true);
+  }
+  const el = document.getElementById('summary');
+  const parts = [`${mapping.objects.length} rows`];
+  parts.push(errorCount ? `<span class="bad">${errorCount} field errors</span>` : '0 field errors');
+  parts.push(missingSidCount ? `<span class="bad">${missingSidCount} sids not found in Core.zip</span>` : '0 missing sids');
+  if (dupeCount) parts.push(`<span class="bad">${dupeCount} duplicate h3Id</span>`);
+  el.innerHTML = parts.join(' · ');
+}
+
+// ─── Wiring ─────────────────────────────────────────────────────────────────
+document.getElementById('coreInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('coreStatus');
+  statusEl.textContent = 'loading...'; statusEl.className = 'status';
+  try {
+    catalog = await loadCoreZip(file);
+    statusEl.textContent = `loaded (${catalog.size} objects)`;
+    statusEl.className = 'status ok';
+    if (mapping) refreshAllRows();
+  } catch (err) {
+    statusEl.textContent = 'failed: ' + err.message;
+    statusEl.className = 'status err';
+  }
+});
+
+document.getElementById('mappingInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('mappingStatus');
+  statusEl.textContent = 'loading...'; statusEl.className = 'status';
+  try {
+    const text = await file.text();
+    mapping = JSON.parse(text);
+    if (!Array.isArray(mapping.objects)) throw new Error('missing "objects" array');
+    statusEl.textContent = `loaded (${mapping.objects.length} rows)`;
+    statusEl.className = 'status ok';
+    renderTable();
+  } catch (err) {
+    statusEl.textContent = 'failed: ' + err.message;
+    statusEl.className = 'status err';
+  }
+});
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  rowState.clear();
+  const sorted = [...mapping.objects].sort((a, b) => a.h3Id - b.h3Id);
+  const frag = document.createDocumentFragment();
+  for (const row of sorted) frag.appendChild(buildRow(row));
+  tbody.appendChild(frag);
+  refreshAllRows();
+  document.getElementById('controls').style.display = '';
+  document.getElementById('table').style.display = '';
+}
+
+document.getElementById('searchBox').addEventListener('input', applyFilter);
+document.getElementById('outcomeFilter').addEventListener('change', applyFilter);
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const out = { objects: [...mapping.objects].sort((a, b) => a.h3Id - b.h3Id), sceneryRoleSids: mapping.sceneryRoleSids };
+  const blob = new Blob([JSON.stringify(out, null, 2) + '\n'], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'h3-object-mapping.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
