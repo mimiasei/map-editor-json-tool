@@ -48,7 +48,7 @@ import type { MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
-import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding } from './terrain-map'
+import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO } from './h3m-object-registry'
@@ -126,6 +126,10 @@ export interface H3ImportReport {
    *  (e.g. sealed by real H3-matching terrain/water, not a removable
    *  decoration, and too far for the bounded nudge search). */
   accessibilityStillUnreachable: number
+  /** H3 river tiles converted to OE's own `rivers[0].nodes` data (real river
+   *  art, not impassable — previously these were wrongly stamped into
+   *  waterMap, making them look and behave like lake/ocean water). */
+  riverTilesConverted: number
 }
 
 export interface H3ImportResult {
@@ -505,6 +509,13 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     neighbors: [] as unknown[],
   }]
 
+  // OE's own river data is a separate sparse overlay (rivers[0].nodes) from
+  // tilesMap/waterMap — never a waterMap stand-in (see buildRiverNodesTable's
+  // doc comment for the real bug this fixes). Every real template map's own
+  // rivers[0] wrapper (sid/randomSeed) is kept verbatim; only nodes[] is ours.
+  const templateRiverEntry = (templateB2.rivers as Array<Record<string, unknown>>)?.[0] ?? {}
+  const rivers = [{ ...templateRiverEntry, nodes: buildRiverNodesTable(out.riverNodes, atlas.atlasWidth, atlas.atlasHeight) }]
+
   const b2 = {
     ...templateB2,
     sizeX_: atlas.atlasWidth,
@@ -514,6 +525,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     levelsMap: out.levelsMap,
     climbsMap: out.climbsMap,
     roadsMap: out.roadsMap,
+    rivers,
     objects,
     squads: [] as unknown[],
     markers: [] as unknown[],
@@ -573,6 +585,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,
       accessibilityTargetsNudged: accessibility.targetsNudged, accessibilityStillUnreachable: accessibility.stillUnreachable,
+      riverTilesConverted: out.riverNodes.size,
     },
   }
 }

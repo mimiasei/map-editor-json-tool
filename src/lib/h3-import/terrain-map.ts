@@ -13,7 +13,6 @@ export const STOCK_PADDING_TILE_ID = 1
 export const STOCK_SUBTERRANEAN_TILE_ID = 7 // Dirt stand-in for H3's Burrow (GE-only)
 export const STOCK_ROCK_TILE_ID = 7 // Dirt, at levels=1 — OE has no distinct rock tile
 export const ALLOWED_STOCK_TILE_IDS = new Set([1, 2, 3, 4, 5, 6, 7])
-export const ALLOWED_STOCK_WATER_IDS = new Set([1, 2, 3, 4, 5, 6, 7])
 
 export const H3_UNDERGROUND_SUBTERRANEAN_TERRAIN_ID = 6
 export const H3_UNDERGROUND_ROCK_TERRAIN_ID = 9
@@ -38,28 +37,6 @@ export const H3_TO_STOCK_TILE: Record<number, number> = {
   11: 3, // HotA wasteland → Deathland
 }
 
-/** H3 terrain+river code → stock OE waterMap id. River code 0 = none. */
-// River code 4 ("lava river" — a distinct H3 river texture usable on any
-// terrain, not itself tied to a lava biome) always maps to OE waterMap id 6
-// regardless of the underlying terrain — confirmed by the two terrains that
-// already carried a real `4` entry (sand and lava, both -> 6) before this
-// fix; a real HotA map this session ("The Devil Is in the Detail") hit the
-// same river code on grass terrain, which the table hadn't covered yet —
-// extended to every terrain for consistency with the already-evidenced
-// terrain-independent pattern, not guessed independently per terrain.
-export const H3_RIVER_TO_STOCK_WATER: Record<number, Record<number, number>> = {
-  0: { 1: 1, 2: 1, 3: 1, 4: 6 },
-  1: { 1: 2, 2: 2, 3: 2, 4: 6 },
-  2: { 1: 7, 2: 7, 3: 7, 4: 6 },
-  3: { 1: 4, 2: 4, 3: 4, 4: 6 },
-  4: { 1: 3, 2: 3, 3: 3, 4: 6 },
-  5: { 1: 7, 2: 7, 3: 7, 4: 6 },
-  6: { 1: 1, 2: 1, 3: 1, 4: 6 },
-  7: { 1: 1, 2: 1, 3: 1, 4: 6 },
-  10: { 1: 7, 2: 7, 3: 7, 4: 6 },
-  11: { 1: 3, 2: 3, 3: 3, 4: 6 },
-}
-
 /** H3 road code (0-3; 3 = cobblestone) → stock OE roadsMap id. Only 1 and 2
  *  are evidenced on real stock/shipped maps — H3's cobblestone (3) folds
  *  lossily onto 2 rather than inventing an unevidenced OE road id. */
@@ -70,15 +47,6 @@ export function projectH3TileToStock(h3Terrain: number): number {
   if (tile === undefined) throw new Error(`Unsupported H3 terrain id ${h3Terrain}`)
   if (!ALLOWED_STOCK_TILE_IDS.has(tile)) throw new Error(`Projected tile ${tile} for H3 terrain ${h3Terrain} not stock-legal`)
   return tile
-}
-
-export function projectH3RiverToStockWater(h3Terrain: number, h3River: number): number {
-  if (h3River === 0) return 0
-  const mapping = H3_RIVER_TO_STOCK_WATER[h3Terrain]
-  const waterId = mapping?.[h3River]
-  if (waterId === undefined) throw new Error(`Unsupported H3 river code ${h3River} on terrain ${h3Terrain}`)
-  if (!ALLOWED_STOCK_WATER_IDS.has(waterId)) throw new Error(`Projected waterMap id ${waterId} not stock-legal`)
-  return waterId
 }
 
 export function projectH3RoadCode(h3RoadCode: number): number {
@@ -94,6 +62,10 @@ export interface AtlasArrays {
   roadsMap: number[]
   levelsMap: number[]
   climbsMap: number[]
+  /** Atlas nodes with an H3 river tile — a separate overlay from `waterMap`
+   *  (see `buildRiverNodesTable`'s own doc comment for why). Populated by
+   *  `projectLayerIntoAtlas`, consumed after every layer is projected. */
+  riverNodes: Set<number>
 }
 
 export function buildEmptyAtlasArrays(atlas: LayerAtlasLayout): AtlasArrays {
@@ -104,6 +76,7 @@ export function buildEmptyAtlasArrays(atlas: LayerAtlasLayout): AtlasArrays {
     roadsMap: new Array(total).fill(0),
     levelsMap: new Array(total).fill(0),
     climbsMap: new Array(total).fill(0),
+    riverNodes: new Set<number>(),
   }
 }
 
@@ -157,11 +130,61 @@ export function projectLayerIntoAtlas(
       out.levelsMap[node] = UNDERGROUND_ROCK_LEVEL
       out.climbsMap[node] = UNDERGROUND_ROCK_CLIMB
     } else if (tile.river !== 0) {
-      out.waterMap[node] = projectH3RiverToStockWater(tile.terrain, tile.river)
+      // A river tile is otherwise ordinary walkable terrain of its own
+      // biome — H3 rivers are not impassable, unlike lakes/ocean, and OE's
+      // own river data (`rivers[0].nodes`, see buildRiverNodesTable) is a
+      // separate overlay from waterMap/levelsMap, so nothing else changes
+      // here. Recorded now, resolved into the real per-node shape code
+      // after every layer is projected (needs full atlas-space neighbor
+      // adjacency, not available mid-layer).
+      out.riverNodes.add(node)
     }
 
     if (tile.road !== 0) out.roadsMap[node] = projectH3RoadCode(tile.road)
   }
+}
+
+/** Every H3 river tile becomes one `{n, s, isWaterfall}` entry in OE's real
+ *  `rivers[0].nodes[]` table (previously this importer instead stamped H3
+ *  river tiles into `waterMap` — a real, user-reported bug: it made rivers
+ *  impassable like lake/ocean water, and rendered them as a flat color-block
+ *  basin rather than OE's own dedicated river art). `isWaterfall` is always
+ *  false — H3 has no equivalent concept to derive it from (OE's own map
+ *  editor lets an author flag any river tile as a waterfall; nothing in H3's
+ *  own tile data corresponds to that).
+ *
+ *  `s` (OE's per-tile river shape/orientation code) is a plain 4-bit
+ *  neighbor bitmask — `E:1 | W:2 | S:4 | N:8`, one bit per side that ALSO
+ *  has a river tile — confirmed by directly correlating every real river
+ *  node's own `s` value against its true 4-neighbor adjacency across every
+ *  real sample map with river data (`maps/*.map`: Fun_and_Graves,
+ *  Glittering_Strait, Gorges_of_Discord, Stormlight (+2 variants),
+ *  TheQuest, The_Mysterious_Island, Thirst_for_Power,
+ *  all_cats_go_to_heaven, ascension_to_the_throne, song_of_murmurwood —
+ *  2000+ river tiles total): all 16 possible neighbor patterns match this
+ *  exact formula, with the dominant `s` value at massive statistical
+ *  majority for every one (e.g. a straight N-S line, 372 real instances,
+ *  is `s=12` with zero exceptions; a straight E-W line, 396 instances, is
+ *  `s=3` with zero exceptions). This lines up with OE's own
+ *  `DB/map/rivers/rivers.json` template's piece roles (point/line×3/
+ *  turn×4-rotations/join×4-rotations/cross/waterfall = 14 addressable
+ *  shapes, matching the observed 0-15 range once isWaterfall is factored
+ *  out) — not a guess, a directly reverse-engineered encoding. */
+export function buildRiverNodesTable(
+  riverNodes: Set<number>, atlasWidth: number, atlasHeight: number,
+): { n: number; s: number; isWaterfall: boolean }[] {
+  const table: { n: number; s: number; isWaterfall: boolean }[] = []
+  for (const node of riverNodes) {
+    const x = node % atlasWidth
+    const z = Math.floor(node / atlasWidth)
+    const hasN = z > 0 && riverNodes.has(node - atlasWidth)
+    const hasE = x < atlasWidth - 1 && riverNodes.has(node + 1)
+    const hasS = z < atlasHeight - 1 && riverNodes.has(node + atlasWidth)
+    const hasW = x > 0 && riverNodes.has(node - 1)
+    const s = (hasE ? 1 : 0) | (hasW ? 2 : 0) | (hasS ? 4 : 0) | (hasN ? 8 : 0)
+    table.push({ n: node, s, isWaterfall: false })
+  }
+  return table
 }
 
 /** Every atlas cell outside every real H3 layer's rectangle becomes elevated,

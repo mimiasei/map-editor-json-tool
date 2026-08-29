@@ -145,6 +145,8 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <div className="text-foreground">{report.sceneryPlaced}</div>
               <div>Other objects placed</div>
               <div className="text-foreground">{report.objectsPlaced}</div>
+              <div>River tiles</div>
+              <div className="text-foreground">{report.riverTilesConverted}</div>
               <div>Victory quest</div>
               <div className="text-foreground">{report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}</div>
               <div>Portals linked</div>
