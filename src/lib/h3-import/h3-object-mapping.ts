@@ -34,17 +34,15 @@ import mappingData from './h3-object-mapping.json'
 
 export type { SceneryRole, OeBiome, ObjectKind }
 
-/** H3 terrain id → the biome bucket key `sceneryRoleSids` uses. Distinct
- *  from `terrain-map.ts`'s H3-terrain→OE-tile-id table — this one is purely
- *  about which scenery-variant bucket to pick from. Terrain-id data, not
- *  object-mapping data, so it stays a plain constant rather than living in
- *  the editable JSON (paralleling `terrain-map.ts`'s own terrain table).
+/** H3 terrain id → the biome bucket key `sceneryRoleSids` uses (real H3
+ *  terrain name in the comment above each entry, same numbering
+ *  `terrain-map.ts`'s own `H3_TO_STOCK_TILE` table uses). Distinct from
+ *  that table — this one is purely about which scenery-variant bucket to
+ *  pick from. Terrain-id data, not object-mapping data, so it stays a
+ *  plain constant rather than living in the editable JSON (paralleling
+ *  `terrain-map.ts`'s own terrain table).
  *
- *  H3 terrain ids, for reference (same numbering `terrain-map.ts`'s own
- *  `H3_TO_STOCK_TILE` table uses):
- *  0 Dirt, 1 Sand, 2 Grass, 3 Snow, 4 Swamp, 5 Rough, 6 Subterranean,
- *  7 Lava, 8 Water, 9 Rock, 10 Highlands (HotA), 11 Wasteland (HotA).
- *  10/11 mirror `terrain-map.ts`'s own `H3_TO_STOCK_TILE` treatment of
+ *  10/11 (both HotA-only) mirror `H3_TO_STOCK_TILE`'s own treatment of
  *  them (highlands → grass-like tile, wasteland → Deathland-like tile),
  *  for the same reason: real HotA maps place plenty of scenery on both
  *  (confirmed against the `maps/H3_Maps/` corpus — 25 maps carry
@@ -53,8 +51,30 @@ export type { SceneryRole, OeBiome, ObjectKind }
  *  every wasteland-tile scenery pick toward grass-family sids instead of
  *  the Deathland-appropriate ones. */
 export const H3_TERRAIN_BIOME: Record<number, OeBiome> = {
-  0: 'dirt', 1: 'sand', 2: 'grass', 3: 'snow', 4: 'dead', 5: 'grass', 6: 'dirt', 7: 'lava', 8: 'water', 9: 'dirt',
-  10: 'grass', 11: 'dead',
+    // H3: Dirt
+    0: 'dirt',
+    // H3: Sand
+    1: 'sand',
+    // H3: Grass
+    2: 'grass',
+    // H3: Snow
+    3: 'snow',
+    // H3: Swamp
+    4: 'dead',
+    // H3: Rough
+    5: 'dirt',
+    // H3: Subterranean
+    6: 'dirt',
+    // H3: Lava
+    7: 'lava',
+    // H3: Water
+    8: 'water',
+    // H3: Rock
+    9: 'dirt',
+    // H3: Highlands (HotA)
+    10: 'grass',
+    // H3: Wasteland (HotA)
+    11: 'dead',
 }
 
 /** H3's "Oak Trees" object — real name confirmed via VCMI's own community-
