@@ -62,6 +62,8 @@ import { stockRandomSquadRequestedValue } from './neutral-strength'
 import { rarityForRandomArtifactObjectId } from './random-items'
 import { buildWinstandardQuest } from './victory'
 import { VICTORY_WINSTANDARD } from './h3m-format'
+import { linkPortalPairs } from './portal-links'
+import { applyAccessibilityPass } from './accessibility-pass'
 
 
 export interface H3ImportReport {
@@ -98,6 +100,27 @@ export interface H3ImportReport {
    *  victory type (TAKEMINES, GATHERTROOP, ...) or too few players — the
    *  map has no working win condition this round (Phase 4 gap). */
   hasVictoryQuest: boolean
+  /** Two-way-monolith/subterranean-gate/whirlpool instances that received a
+   *  real `objectsProperties.propPortals` link (see `portal-links.ts`). */
+  portalsLinked: number
+  /** Portal instances placed alone, with no same-sid sibling to link to —
+   *  left unlinked, likely inert in-game; a real, disclosed gap. */
+  portalsUnpaired: number
+  /** Post-placement reachability pass (`accessibility-pass.ts`): placed
+   *  instances that must be walkable-to (pickable items/resources,
+   *  interactable entrances, player starts) that this importer's own object
+   *  placement had made unreachable. */
+  accessibilityTargetsChecked: number
+  /** Decorative (scenery-role) objects deleted because they were the only
+   *  thing sealing off a pocket containing an unreachable target. */
+  accessibilityDecorRemoved: number
+  /** Targets relocated a short distance to the nearest free, reachable tile
+   *  after decoration removal alone wasn't enough (or wasn't applicable). */
+  accessibilityTargetsNudged: number
+  /** Targets still unreachable after both fixes — a real, disclosed gap
+   *  (e.g. sealed by real H3-matching terrain/water, not a removable
+   *  decoration, and too far for the bounded nudge search). */
+  accessibilityStillUnreachable: number
 }
 
 export interface H3ImportResult {
@@ -172,6 +195,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     nextId += 1
     return id
   }
+
+  // Populated only at the two scenery-role `placeObject(...)` call sites
+  // below — every one of these sids is decorative (never carries an
+  // `objectsProperties.*` row), so `accessibility-pass.ts` can safely delete
+  // one to unseal a pocket without orphaning any table entry.
+  const decorativeIds = new Set<number>()
 
   const omittedReasonCounts: Record<string, number> = {}
   const sceneryVariantCounts: Record<string, number> = {}
@@ -251,7 +280,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
           : packMountainCluster(cells, resolution.sid, mountainBigSid(resolution.sid), families, catalogById, rng)
         for (const p of placements) {
           const cellNode = atlas.targetNode(record.layer, p.anchor.x, p.anchor.z)
-          placeObject(p.sid, cellNode, randomDecorRotation(rng))
+          decorativeIds.add(placeObject(p.sid, cellNode, randomDecorRotation(rng)))
         }
         sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placements.length
         sceneryPlaced += placements.length
@@ -264,7 +293,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // hard rule applies to every decorative placement, not just clusters.
       const variantSid = pickVariant(resolution.sid, families, rng)
       sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + 1
-      placeObject(variantSid, node, randomDecorRotation(rng))
+      decorativeIds.add(placeObject(variantSid, node, randomDecorRotation(rng)))
       sceneryPlaced += 1
       continue
     }
@@ -421,6 +450,16 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // the wall now.
   paintEnvelopePadding(out, atlas)
 
+  // Real portal linkage (propPortals was previously never emitted at all —
+  // see portal-links.ts's own header) must exist before the accessibility
+  // pass can treat underground-via-portal paths as reachable, rather than
+  // flagging every underground object on every 2-layer map as stranded.
+  const portalLinks = linkPortalPairs(objectGroups)
+  const accessibility = applyAccessibilityPass(
+    objectGroups, atlas.atlasWidth, atlas.atlasHeight, out, catalog, catalogById,
+    decorativeIds, portalLinks.adjacencyByObjectId,
+  )
+
   const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
 
   const decoder = new TextDecoder('utf-8')
@@ -486,6 +525,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
       propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes,
+      propPortals: portalLinks.propPortals,
     },
   }
 
@@ -517,6 +557,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
       sceneryVariantCounts, omittedReasonCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
       outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
+      portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
+      accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,
+      accessibilityTargetsNudged: accessibility.targetsNudged, accessibilityStillUnreachable: accessibility.stillUnreachable,
     },
   }
 }

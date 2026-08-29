@@ -134,7 +134,32 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <div className="text-foreground">{report.objectsPlaced}</div>
               <div>Victory quest</div>
               <div className="text-foreground">{report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}</div>
+              <div>Portals linked</div>
+              <div className="text-foreground">{report.portalsLinked}</div>
+              <div>Accessibility fixes</div>
+              <div className="text-foreground">{report.accessibilityDecorRemoved} removed, {report.accessibilityTargetsNudged} nudged</div>
             </div>
+
+            {report.portalsUnpaired > 0 && (
+              <Alert className="py-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="ml-2 text-xs">
+                  {report.portalsUnpaired} portal{report.portalsUnpaired !== 1 ? 's were' : ' was'} placed with no same-color partner to link to —
+                  {' '}likely inert in-game.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {report.accessibilityStillUnreachable > 0 && (
+              <Alert className="py-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="ml-2 text-xs">
+                  {report.accessibilityStillUnreachable} item/resource/interactable{report.accessibilityStillUnreachable !== 1 ? 's' : ''} could not
+                  be made reachable automatically — often because the source map guarded them with water, rock, or a gate/quest
+                  mechanic this importer doesn't yet emit. Worth checking manually with the Map Grid's blocked-tile overlay.
+                </AlertDescription>
+              </Alert>
+            )}
 
             {report.unboundOrphanOwners.length > 0 && (
               <Alert className="py-2">
