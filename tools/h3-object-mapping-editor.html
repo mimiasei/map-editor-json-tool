@@ -42,6 +42,14 @@
   .sid-suggestions .suggestion:hover, .sid-suggestions .suggestion.active { background: #d8e8ff; }
   .sid-suggestions .suggestion .cat { color: #777; margin-left: 0.5em; }
   .sid-suggestions .suggestion-empty { padding: 0.25em 0.5em; font-size: 0.85em; color: #777; }
+  .tabs { display: flex; gap: 0.5rem; margin: 1rem 0 0.5rem; border-bottom: 1px solid #ccc; }
+  .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 0.5em 0.8em; font: inherit; cursor: pointer; color: #666; }
+  .tab-btn.active { color: inherit; border-bottom-color: #4488ee; font-weight: 600; }
+  .h3-refs { margin: 0; padding-left: 1.1em; }
+  .h3-refs li { margin: 0.1em 0; }
+  .h3-refs .via { color: #777; font-size: 0.9em; }
+  .no-refs { color: #999; font-style: italic; }
+  td.wrap { max-width: 22em; }
 </style>
 </head>
 <body>
@@ -84,36 +92,101 @@
   </label>
 </div>
 
-<div class="controls" id="controls" style="display:none">
-  <input type="search" id="searchBox" placeholder="Search h3Id / name / sid / reason...">
-  <label>Outcome:
-    <select id="outcomeFilter">
-      <option value="">All</option>
-      <option value="omit">omit</option>
-      <option value="emit">emit</option>
-      <option value="scenery">scenery</option>
-      <option value="scenery-dispatch">scenery-dispatch</option>
-      <option value="scenery-dispatch-subtype">scenery-dispatch-subtype</option>
-      <option value="dispatch">dispatch</option>
-    </select>
-  </label>
-  <span id="summary"></span>
-  <button id="downloadBtn">Download edited JSON</button>
+<div class="tabs" id="tabs" style="display:none">
+  <button class="tab-btn active" id="tabEdit" data-tab="edit">Edit by H3 object</button>
+  <button class="tab-btn" id="tabBrowse" data-tab="browse">Browse by OE object</button>
 </div>
 
-<table id="table" style="display:none">
-  <thead>
-    <tr>
-      <th>h3Id</th>
-      <th>h3Name</th>
-      <th>Outcome</th>
-      <th>Fields</th>
-      <th>Extra (JSON)</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
-</table>
+<div id="editView">
+  <div class="controls" id="controls" style="display:none">
+    <input type="search" id="searchBox" placeholder="Search h3Id / name / sid / reason...">
+    <label>Outcome:
+      <select id="outcomeFilter">
+        <option value="">All</option>
+        <option value="omit">omit</option>
+        <option value="emit">emit</option>
+        <option value="scenery">scenery</option>
+        <option value="scenery-dispatch">scenery-dispatch</option>
+        <option value="scenery-dispatch-subtype">scenery-dispatch-subtype</option>
+        <option value="dispatch">dispatch</option>
+      </select>
+    </label>
+    <span id="summary"></span>
+    <button id="downloadBtn">Download edited JSON</button>
+  </div>
+
+  <table id="table" style="display:none">
+    <thead>
+      <tr>
+        <th>h3Id</th>
+        <th>h3Name</th>
+        <th>Outcome</th>
+        <th>Fields</th>
+        <th>Extra (JSON)</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div id="browseView" style="display:none">
+  <p class="hint">
+    Every OE object found in Core.zip (left) and which H3 object(s), if any, the loaded mapping
+    JSON converts <em>into</em> it (right) — the reverse of the Edit tab. Includes objects reached
+    indirectly through a <code>scenery</code>/<code>scenery-dispatch(-subtype)</code> row's role,
+    resolved per biome via <code>sceneryRoleSids</code>.
+  </p>
+  <div class="controls" id="browseControls" style="display:none">
+    <input type="search" id="browseSearchBox" placeholder="Search OE sid / H3 name...">
+    <label>Category:
+      <select id="categoryFilter">
+        <option value="">All</option>
+        <option value="dwelling">Dwellings</option>
+        <option value="decoration-blocking">Decorations (blocking)</option>
+        <option value="decoration-nonblocking">Decorations (non-blocking)</option>
+        <option value="interactable">Interactables</option>
+        <option value="animal">Animals</option>
+        <option value="resource">Resources</option>
+        <option value="artifact">Artifacts</option>
+        <option value="spawn">Spawn placeholders</option>
+        <option value="fx">FX</option>
+        <option value="other">Other/test</option>
+      </select>
+    </label>
+    <label>Biome:
+      <select id="biomeFilter">
+        <option value="">All</option>
+        <option value="Grass">Grass</option>
+        <option value="Desert">Sand (Desert)</option>
+        <option value="Deathland">Deathland</option>
+        <option value="Snow">Snow</option>
+        <option value="Autumn">Autumn</option>
+        <option value="Lava">Lava</option>
+        <option value="Dirt">Dirt</option>
+        <option value="__none__">None (terrain-agnostic)</option>
+      </select>
+    </label>
+    <label>
+      <input type="checkbox" id="unmappedOnly"> Unmapped only
+    </label>
+    <span id="browseSummary"></span>
+  </div>
+
+  <table id="browseTable" style="display:none">
+    <thead>
+      <tr>
+        <th>OE sid</th>
+        <th>Category</th>
+        <th>Biome</th>
+        <th>Size</th>
+        <th>Interactable</th>
+        <th>Mapped from H3</th>
+      </tr>
+    </thead>
+    <tbody id="browseTbody"></tbody>
+  </table>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
@@ -145,8 +218,70 @@ const MAP_OBJECT_FILES = [
 ];
 const PER_ENTRY_INTERACTABLE_CATEGORIES = new Set(['interactables', 'artifacts']);
 
+// A faction dwelling's sid uses "necropolis" (barracks_necropolis_1..7) while
+// the faction's own id is "undead" — mirrors src/lib/catalog/builder.ts's
+// FACTION_SID_ALIASES exactly (the one sid/id mismatch across all 6 factions).
+const FACTION_SID_ALIASES = { necropolis: 'undead' };
+const FRACTION_FILES = [
+  'DB/fractions/1_human.json', 'DB/fractions/2_undead.json', 'DB/fractions/3_dungeon.json',
+  'DB/fractions/4_nature.json', 'DB/fractions/5_demon.json', 'DB/fractions/6_unfrozen.json',
+];
+
+async function loadFactionBiomes(zip) {
+  const biomeByFactionId = new Map();
+  for (const path of FRACTION_FILES) {
+    const entry = zip.file(path);
+    if (!entry) continue;
+    const text = (await entry.async('string')).replace(/^﻿/, '');
+    let parsed;
+    try { parsed = JSON.parse(text); } catch (e) { console.warn('Could not parse', path, e); continue; }
+    for (const f of (Array.isArray(parsed.array) ? parsed.array : [])) {
+      if (f && f.id && f.biome) biomeByFactionId.set(f.id, f.biome);
+    }
+  }
+  return biomeByFactionId;
+}
+
+// Mirrors builder.ts's inferInteractableBiomes: interactables (dwellings,
+// city halls, ...) carry no biome field of their own, but their sid always
+// embeds the owning faction's id as an underscore token when one applies —
+// the ~90% that are genuinely terrain-agnostic (mines, markets, portals,
+// neutral dwellings) are correctly left without a biome rather than guessed.
+function inferBiome(id, category, rawBiome, biomeByFactionId) {
+  if (rawBiome) return rawBiome;
+  if (category !== 'interactables') return undefined;
+  for (const token of id.split('_')) {
+    const factionId = FACTION_SID_ALIASES[token] ?? token;
+    const biome = biomeByFactionId.get(factionId);
+    if (biome) return biome;
+  }
+  return undefined;
+}
+
+function isBlockingFootprint(nodes) {
+  return Array.isArray(nodes) && nodes.includes(1);
+}
+
+// The user-facing grouping asked for on the Browse tab (dwellings /
+// decorations split by blocking-or-not / interactables), extended with the
+// rest of Core.zip's own 9 raw category files so nothing is silently hidden
+// behind those three headline groups.
+function classifyCategory(category, id, nodes) {
+  if (category === 'interactables') return id.startsWith('barracks_') ? 'dwelling' : 'interactable';
+  if (category === 'environments' || category === 'blocks') {
+    return isBlockingFootprint(nodes) ? 'decoration-blocking' : 'decoration-nonblocking';
+  }
+  if (category === 'animals') return 'animal';
+  if (category === 'resources') return 'resource';
+  if (category === 'artifacts') return 'artifact';
+  if (category === 'spawns') return 'spawn';
+  if (category === 'fxs') return 'fx';
+  return 'other';
+}
+
 async function loadCoreZip(file) {
   const zip = await JSZip.loadAsync(file);
+  const biomeByFactionId = await loadFactionBiomes(zip);
   const byId = new Map();
   for (const { file: path, category, isInteractable: defaultInteractable } of MAP_OBJECT_FILES) {
     const entry = zip.file(path);
@@ -159,11 +294,14 @@ async function loadCoreZip(file) {
       const id = obj && obj.id;
       if (!id || byId.has(id)) continue;
       const isInteractable = PER_ENTRY_INTERACTABLE_CATEGORIES.has(category) ? obj.isInteractable !== false : defaultInteractable;
+      const nodes = Array.isArray(obj.nodes) ? obj.nodes : null;
       byId.set(id, {
         id, category, isInteractable,
         sizeX: typeof obj.sizeX === 'number' ? obj.sizeX : 1,
         sizeZ: typeof obj.sizeZ === 'number' ? obj.sizeZ : 1,
-        nodes: Array.isArray(obj.nodes) ? obj.nodes : null,
+        nodes,
+        biome: inferBiome(id, category, typeof obj.biome === 'string' ? obj.biome : undefined, biomeByFactionId),
+        uiCategory: classifyCategory(category, id, nodes),
       });
     }
   }
@@ -605,6 +743,171 @@ function updateSummary() {
   el.innerHTML = parts.join(' · ');
 }
 
+// ─── Browse-by-OE-object tab (reverse of the Edit tab) ─────────────────────
+// Every OE sid a mapping row can resolve to, and how: `emit`'s sid directly;
+// `scenery`/`scenery-dispatch-subtype`'s role resolved per-biome through
+// `sceneryRoleSids` (a role has no single sid — it's one per terrain biome,
+// so one row can point at up to 8 different OE objects this way);
+// `scenery-dispatch`'s per-animation exact sid+role (also biome-resolved);
+// `dispatch`'s subtypes/exact/tokens/default/freeChoice, each a direct sid.
+function buildReverseIndex() {
+  const bySid = new Map(); // sid -> [{h3Id, h3Name, via}]
+  const addRef = (sid, h3Id, h3Name, via) => {
+    if (!sid) return;
+    if (!bySid.has(sid)) bySid.set(sid, []);
+    bySid.get(sid).push({ h3Id, h3Name, via });
+  };
+  const addRoleRefs = (role, h3Id, h3Name, viaPrefix) => {
+    const byBiome = mapping.sceneryRoleSids?.[role];
+    if (!byBiome) return;
+    for (const [biome, sid] of Object.entries(byBiome)) addRef(sid, h3Id, h3Name, `${viaPrefix}/${biome}`);
+  };
+
+  if (!mapping) return bySid;
+  for (const row of mapping.objects) {
+    const { h3Id, h3Name } = row;
+    switch (row.outcome) {
+      case 'emit':
+        addRef(row.sid, h3Id, h3Name, 'emit');
+        break;
+      case 'scenery':
+        addRoleRefs(row.role, h3Id, h3Name, `scenery:${row.role}`);
+        break;
+      case 'scenery-dispatch':
+        for (const [anim, v] of Object.entries(row.exact || {})) addRef(v.sid, h3Id, h3Name, `anim "${anim}"`);
+        break;
+      case 'scenery-dispatch-subtype':
+        for (const [subtype, role] of Object.entries(row.subtypes || {})) addRoleRefs(role, h3Id, h3Name, `subtype ${subtype}:${role}`);
+        break;
+      case 'dispatch':
+        if (row.subtypes) for (const [k, v] of Object.entries(row.subtypes)) addRef(v.sid, h3Id, h3Name, `subtype ${k}`);
+        if (row.exact) for (const [k, v] of Object.entries(row.exact)) addRef(v, h3Id, h3Name, `anim "${k}"`);
+        if (row.tokens) for (const [k, v] of Object.entries(row.tokens)) addRef(v, h3Id, h3Name, `token "${k}"`);
+        if (row.default) addRef(row.default, h3Id, h3Name, 'default');
+        if (row.freeChoice?.sid) addRef(row.freeChoice.sid, h3Id, h3Name, 'freeChoice');
+        break;
+      // omit: contributes no OE sid.
+    }
+  }
+  return bySid;
+}
+
+function browseRowSearchText(c, refs) {
+  const refText = refs.map((r) => `${r.h3Id} ${r.h3Name}`).join(' ');
+  return [c.id, c.category, c.uiCategory, c.biome, refText].filter(Boolean).join(' ').toLowerCase();
+}
+
+function buildBrowseRow(c, refs) {
+  const tr = document.createElement('tr');
+
+  const tdSid = document.createElement('td');
+  tdSid.textContent = c.id;
+  tr.appendChild(tdSid);
+
+  const tdCat = document.createElement('td');
+  tdCat.textContent = c.uiCategory + (c.uiCategory !== c.category ? ` (${c.category})` : '');
+  tr.appendChild(tdCat);
+
+  const tdBiome = document.createElement('td');
+  tdBiome.textContent = c.biome || '—';
+  tr.appendChild(tdBiome);
+
+  const tdSize = document.createElement('td');
+  tdSize.textContent = `${c.sizeX}x${c.sizeZ}`;
+  tr.appendChild(tdSize);
+
+  const tdInteractable = document.createElement('td');
+  tdInteractable.textContent = c.isInteractable ? 'Yes' : '';
+  tr.appendChild(tdInteractable);
+
+  const tdRefs = document.createElement('td');
+  tdRefs.className = 'wrap';
+  if (refs.length === 0) {
+    tdRefs.innerHTML = '<span class="no-refs">— no H3 object maps to this —</span>';
+  } else {
+    const ul = document.createElement('ul');
+    ul.className = 'h3-refs';
+    for (const r of refs) {
+      const li = document.createElement('li');
+      li.textContent = `${r.h3Name} (id ${r.h3Id}) `;
+      const via = document.createElement('span');
+      via.className = 'via';
+      via.textContent = `[${r.via}]`;
+      li.appendChild(via);
+      ul.appendChild(li);
+    }
+    tdRefs.appendChild(ul);
+  }
+  tr.appendChild(tdRefs);
+
+  return tr;
+}
+
+function renderBrowseTable() {
+  const controlsEl = document.getElementById('browseControls');
+  const tableEl = document.getElementById('browseTable');
+  if (!catalog) {
+    controlsEl.style.display = 'none';
+    tableEl.style.display = 'none';
+    return;
+  }
+  controlsEl.style.display = '';
+  tableEl.style.display = '';
+
+  const bySid = buildReverseIndex();
+  const tbody = document.getElementById('browseTbody');
+  tbody.innerHTML = '';
+  const sorted = [...catalog.values()].sort((a, b) => a.id.localeCompare(b.id));
+  const frag = document.createDocumentFragment();
+  for (const c of sorted) frag.appendChild(buildBrowseRow(c, bySid.get(c.id) || []));
+  tbody.appendChild(frag);
+
+  applyBrowseFilter();
+}
+
+function applyBrowseFilter() {
+  const q = document.getElementById('browseSearchBox').value.trim().toLowerCase();
+  const categoryFilter = document.getElementById('categoryFilter').value;
+  const biomeFilter = document.getElementById('biomeFilter').value;
+  const unmappedOnly = document.getElementById('unmappedOnly').checked;
+  const bySid = buildReverseIndex();
+
+  const sorted = [...catalog.values()].sort((a, b) => a.id.localeCompare(b.id));
+  const rows = document.getElementById('browseTbody').children;
+  let shown = 0, unmapped = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    const c = sorted[i];
+    const refs = bySid.get(c.id) || [];
+    const tr = rows[i];
+    const matchesSearch = !q || browseRowSearchText(c, refs).includes(q);
+    const matchesCategory = !categoryFilter || c.uiCategory === categoryFilter;
+    const matchesBiome = !biomeFilter || (biomeFilter === '__none__' ? !c.biome : c.biome === biomeFilter);
+    const matchesUnmapped = !unmappedOnly || refs.length === 0;
+    const visible = matchesSearch && matchesCategory && matchesBiome && matchesUnmapped;
+    tr.classList.toggle('hidden', !visible);
+    if (visible) shown++;
+    if (refs.length === 0) unmapped++;
+  }
+  document.getElementById('browseSummary').innerHTML =
+    `${shown} of ${catalog.size} OE objects shown · <span class="${unmapped ? 'bad' : ''}">${unmapped} total have no H3 source</span>`;
+}
+
+document.getElementById('browseSearchBox').addEventListener('input', applyBrowseFilter);
+document.getElementById('categoryFilter').addEventListener('change', applyBrowseFilter);
+document.getElementById('biomeFilter').addEventListener('change', applyBrowseFilter);
+document.getElementById('unmappedOnly').addEventListener('change', applyBrowseFilter);
+
+document.getElementById('tabEdit').addEventListener('click', () => switchTab('edit'));
+document.getElementById('tabBrowse').addEventListener('click', () => switchTab('browse'));
+
+function switchTab(tab) {
+  document.getElementById('tabEdit').classList.toggle('active', tab === 'edit');
+  document.getElementById('tabBrowse').classList.toggle('active', tab === 'browse');
+  document.getElementById('editView').style.display = tab === 'edit' ? '' : 'none';
+  document.getElementById('browseView').style.display = tab === 'browse' ? '' : 'none';
+  if (tab === 'browse') renderBrowseTable();
+}
+
 // ─── Wiring ─────────────────────────────────────────────────────────────────
 document.getElementById('coreInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
@@ -616,6 +919,8 @@ document.getElementById('coreInput').addEventListener('change', async (e) => {
     statusEl.textContent = `loaded (${catalog.size} objects)`;
     statusEl.className = 'status ok';
     if (mapping) refreshAllRows();
+    document.getElementById('tabs').style.display = '';
+    if (document.getElementById('tabBrowse').classList.contains('active')) renderBrowseTable();
   } catch (err) {
     statusEl.textContent = 'failed: ' + err.message;
     statusEl.className = 'status err';
@@ -634,6 +939,8 @@ document.getElementById('mappingInput').addEventListener('change', async (e) => 
     statusEl.textContent = `loaded (${mapping.objects.length} rows)`;
     statusEl.className = 'status ok';
     renderTable();
+    document.getElementById('tabs').style.display = '';
+    if (document.getElementById('tabBrowse').classList.contains('active')) renderBrowseTable();
   } catch (err) {
     statusEl.textContent = 'failed: ' + err.message;
     statusEl.className = 'status err';
