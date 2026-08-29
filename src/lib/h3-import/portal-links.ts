@@ -45,7 +45,7 @@ export interface PortalLinkResult {
 /** `objectGroups` is the importer's own sid -> placement-group map (see
  *  `convert-h3m-to-map.ts`) — only sids starting with `portal` (this
  *  project's own existing convention for portal kind detection, see
- *  `object-map.ts`'s `resolveObjectSid`) are considered. */
+ *  `h3-object-mapping.ts`'s `resolveObjectSid`) are considered. */
 export function linkPortalPairs(objectGroups: Map<string, ObjectPlacementGroup>): PortalLinkResult {
   const propPortals: PortalLinkResult['propPortals'] = []
   const adjacencyByObjectId = new Map<number, number>()

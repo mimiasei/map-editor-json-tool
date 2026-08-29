@@ -50,7 +50,7 @@ import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
-import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS } from './object-map'
+import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO } from './h3m-object-registry'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
@@ -80,6 +80,11 @@ export interface H3ImportReport {
   /** Every non-emitted object, grouped by the resolver's own named reason
    *  (e.g. `boat_no_stock_objectconfig`, `unmapped_template_object_id_84`). */
   omittedReasonCounts: Record<string, number>
+  /** Every walked H3 object, grouped by `describeH3ObjectId()`'s own name
+   *  (e.g. `"Reef (id 161)"`), regardless of emit/omit outcome — a full
+   *  breakdown of every H3 object type in the source map, to cross-reference
+   *  against `omittedReasonCounts`/`sceneryVariantCounts` above. */
+  sourceObjectCounts: Record<string, number>
   /** Playable H3 players that own no town, have no placed hero, and no
    *  neutral town was left to bind them to this round — they simply have
    *  no start (a real gap). */
@@ -203,6 +208,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const decorativeIds = new Set<number>()
 
   const omittedReasonCounts: Record<string, number> = {}
+  // Every walked record's H3 object type, named via the mapping table's own
+  // VCMI-sourced names, regardless of emit/omit outcome — lets the report
+  // show "what H3 object types exist in this map, and how many," directly
+  // answering the original ask ("more info about each object... the
+  // better") without needing per-outcome bookkeeping of its own.
+  const sourceObjectCounts: Record<string, number> = {}
   const sceneryVariantCounts: Record<string, number> = {}
   const cityCandidates: CityCandidate[] = []
   const heroCandidates: HeroCandidate[] = []
@@ -217,6 +228,8 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
 
   for (const record of parsed.records) {
     const oid = record.templateObjectId
+    const sourceKey = describeH3ObjectId(oid)
+    sourceObjectCounts[sourceKey] = (sourceObjectCounts[sourceKey] ?? 0) + 1
     // H3's own header validation tolerates an object anchor up to `size+8`
     // (see h3m-object-walk.ts's parseObjectHeader) — a real, observed
     // authoring pattern for objects whose footprint extends inward from a
@@ -555,7 +568,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     report: {
       atlasWidth: atlas.atlasWidth, atlasHeight: atlas.atlasHeight, sourceSize: size, sourceLayers: layerCount,
       sourceTitle: title, sceneryPlaced, objectsPlaced, playersCount: ownership.finalOwners.length,
-      sceneryVariantCounts, omittedReasonCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
+      sceneryVariantCounts, omittedReasonCounts, sourceObjectCounts, unboundOrphanOwners: ownership.unboundOrphanOwners, heroOnlyPlayers,
       outOfEnvelopeCount, clusterCellsClipped, hasVictoryQuest: mainQuest !== null,
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,

@@ -67,7 +67,7 @@ export function footprintCellsInBounds(blockMask: number[], anchorX: number, anc
 
 /** H3's "Oak Trees" (object id 135) real-world look mixes OE's grass and
  *  dirt tree families rather than the single per-biome sid every other tree
- *  object resolves to (user-confirmed) — see object-map.ts's
+ *  object resolves to (user-confirmed) — see h3-object-mapping.ts's
  *  H3_OAK_TREES_OBJECT_ID doc comment for the naming evidence. Falls back to
  *  just `[sid]` for a family with no real siblings, same convention as
  *  `pickVariant`. */

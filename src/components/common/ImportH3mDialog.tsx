@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { importH3mFile, type ImportH3mResult } from '@/lib/h3-import/import-h3m-file'
+import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
 import { logError, logInfo } from '@/lib/logger'
 
 interface Props {
@@ -32,6 +33,17 @@ type Phase = 'idle' | 'running' | 'done' | 'error'
 
 function sortedCounts(counts: Record<string, number>): [string, number][] {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])
+}
+
+const UNMAPPED_ID_REASON = /^unmapped_template_object_id_(\d+)$/
+
+/** Every other omit reason is already a descriptive slug (`witch_hut_deferred`,
+ *  `boat_no_stock_objectconfig`, ...) — only the generic "no mapping table
+ *  entry at all" reason carries a bare numeric id, decoded here via the same
+ *  master table the converter itself resolves against. */
+function describeOmitReason(reason: string): string {
+  const match = UNMAPPED_ID_REASON.exec(reason)
+  return match ? `Unmapped: ${describeH3ObjectId(Number(match[1]))}` : reason
 }
 
 export default function ImportH3mDialog({ open, onOpenChange }: Props) {
@@ -69,6 +81,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
   const report = result?.report ?? null
   const omitted = report ? sortedCounts(report.omittedReasonCounts) : []
   const variants = report ? sortedCounts(report.sceneryVariantCounts) : []
+  const sourceObjects = report ? sortedCounts(report.sourceObjectCounts) : []
   const totalOmitted = omitted.reduce((sum, [, count]) => sum + count, 0)
 
   return (
@@ -215,7 +228,23 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                 <ul className="mt-1 space-y-0.5 pl-3">
                   {omitted.map(([reason, count]) => (
                     <li key={reason} className="flex justify-between gap-2">
-                      <span className="text-foreground truncate">{reason}</span>
+                      <span className="text-foreground truncate">{describeOmitReason(reason)}</span>
+                      <span className="text-muted-foreground shrink-0">{count}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+
+            {sourceObjects.length > 0 && (
+              <details className="text-xs">
+                <summary className="cursor-pointer text-muted-foreground">
+                  Source objects ({sourceObjects.length} kind{sourceObjects.length !== 1 ? 's' : ''} found in the H3 map)
+                </summary>
+                <ul className="mt-1 space-y-0.5 pl-3">
+                  {sourceObjects.map(([name, count]) => (
+                    <li key={name} className="flex justify-between gap-2">
+                      <span className="text-foreground truncate">{name}</span>
                       <span className="text-muted-foreground shrink-0">{count}</span>
                     </li>
                   ))}

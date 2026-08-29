@@ -1,0 +1,1935 @@
+{
+  "objects": [
+    {
+      "h3Id": 0,
+      "h3Name": "Nothing",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_0"
+    },
+    {
+      "h3Id": 1,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_1"
+    },
+    {
+      "h3Id": 2,
+      "h3Name": "Altar of Sacrifice",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_2"
+    },
+    {
+      "h3Id": 3,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_3"
+    },
+    {
+      "h3Id": 4,
+      "h3Name": "Arena",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_4"
+    },
+    {
+      "h3Id": 5,
+      "h3Name": "Artifact",
+      "outcome": "emit",
+      "sid": "random-item",
+      "kind": "artifact",
+      "reason": "lossy_specific_h3_artifact_to_stock_random_item"
+    },
+    {
+      "h3Id": 6,
+      "h3Name": "Pandora Box",
+      "outcome": "omit",
+      "reason": "pandoras_box_deferred"
+    },
+    {
+      "h3Id": 7,
+      "h3Name": "Black Market",
+      "outcome": "omit",
+      "reason": "black_market_deferred"
+    },
+    {
+      "h3Id": 8,
+      "h3Name": "Boat",
+      "outcome": "omit",
+      "reason": "boat_no_stock_objectconfig"
+    },
+    {
+      "h3Id": 9,
+      "h3Name": "Border Guard",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_9"
+    },
+    {
+      "h3Id": 10,
+      "h3Name": "Keymaster Tent",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_10"
+    },
+    {
+      "h3Id": 11,
+      "h3Name": "Buoy",
+      "outcome": "emit",
+      "sid": "quixs_path",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 12,
+      "h3Name": "Campfire",
+      "outcome": "emit",
+      "sid": "camp_fire",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 13,
+      "h3Name": "Cartographer",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_13"
+    },
+    {
+      "h3Id": 14,
+      "h3Name": "Swan Pond",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_14"
+    },
+    {
+      "h3Id": 15,
+      "h3Name": "Cover of Darkness",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_15"
+    },
+    {
+      "h3Id": 16,
+      "h3Name": "Creature Bank",
+      "outcome": "omit",
+      "reason": "creature_bank_deferred"
+    },
+    {
+      "h3Id": 17,
+      "h3Name": "Creature Generator Common",
+      "outcome": "dispatch",
+      "kind": "dwelling",
+      "reason": "creature_generator_animation_to_stock_barracks",
+      "exact": {
+        "avgpike0.def": "barracks_human_1",
+        "avgcros0.def": "barracks_human_2",
+        "avggrff0.def": "barracks_human_3",
+        "avgswor0.def": "barracks_human_4",
+        "avgmonk0.def": "barracks_human_5",
+        "avgcavl0.def": "barracks_human_6",
+        "avgangl0.def": "barracks_human_7"
+      },
+      "default": "barracks_human_1"
+    },
+    {
+      "h3Id": 18,
+      "h3Name": "Unidentified",
+      "outcome": "dispatch",
+      "kind": "dwelling",
+      "reason": "creature_generator_animation_to_stock_barracks",
+      "exact": {
+        "avgpike0.def": "barracks_human_1",
+        "avgcros0.def": "barracks_human_2",
+        "avggrff0.def": "barracks_human_3",
+        "avgswor0.def": "barracks_human_4",
+        "avgmonk0.def": "barracks_human_5",
+        "avgcavl0.def": "barracks_human_6",
+        "avgangl0.def": "barracks_human_7"
+      },
+      "default": "barracks_human_1"
+    },
+    {
+      "h3Id": 19,
+      "h3Name": "Unidentified",
+      "outcome": "dispatch",
+      "kind": "dwelling",
+      "reason": "creature_generator_animation_to_stock_barracks",
+      "exact": {
+        "avgpike0.def": "barracks_human_1",
+        "avgcros0.def": "barracks_human_2",
+        "avggrff0.def": "barracks_human_3",
+        "avgswor0.def": "barracks_human_4",
+        "avgmonk0.def": "barracks_human_5",
+        "avgcavl0.def": "barracks_human_6",
+        "avgangl0.def": "barracks_human_7"
+      },
+      "default": "barracks_human_1"
+    },
+    {
+      "h3Id": 20,
+      "h3Name": "Creature Generator Special",
+      "outcome": "dispatch",
+      "kind": "dwelling",
+      "reason": "creature_generator_animation_to_stock_barracks",
+      "exact": {
+        "avgpike0.def": "barracks_human_1",
+        "avgcros0.def": "barracks_human_2",
+        "avggrff0.def": "barracks_human_3",
+        "avgswor0.def": "barracks_human_4",
+        "avgmonk0.def": "barracks_human_5",
+        "avgcavl0.def": "barracks_human_6",
+        "avgangl0.def": "barracks_human_7"
+      },
+      "default": "barracks_human_1"
+    },
+    {
+      "h3Id": 21,
+      "h3Name": "Cursed Ground",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_21"
+    },
+    {
+      "h3Id": 22,
+      "h3Name": "Corpse",
+      "outcome": "omit",
+      "reason": "corpse_deferred"
+    },
+    {
+      "h3Id": 23,
+      "h3Name": "Marletto Tower",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_23"
+    },
+    {
+      "h3Id": 24,
+      "h3Name": "Derelict Ship",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_24"
+    },
+    {
+      "h3Id": 25,
+      "h3Name": "Dragon Utopia",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_25"
+    },
+    {
+      "h3Id": 26,
+      "h3Name": "Event",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_26"
+    },
+    {
+      "h3Id": 27,
+      "h3Name": "Eye of the Magi",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_27"
+    },
+    {
+      "h3Id": 28,
+      "h3Name": "Faerie Ring",
+      "outcome": "emit",
+      "sid": "fairy_ring",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 29,
+      "h3Name": "Flotsam",
+      "outcome": "omit",
+      "reason": "flotsam_water_travel_omit"
+    },
+    {
+      "h3Id": 30,
+      "h3Name": "Fountain of Fortune",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_30"
+    },
+    {
+      "h3Id": 31,
+      "h3Name": "Fountain of Youth",
+      "outcome": "emit",
+      "sid": "fountain",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 32,
+      "h3Name": "Garden of Revelation",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_32"
+    },
+    {
+      "h3Id": 33,
+      "h3Name": "Garrison Horizontal",
+      "outcome": "omit",
+      "reason": "garrison_army_payload_deferred"
+    },
+    {
+      "h3Id": 34,
+      "h3Name": "Hero",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_34"
+    },
+    {
+      "h3Id": 35,
+      "h3Name": "Hill Fort",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_35"
+    },
+    {
+      "h3Id": 36,
+      "h3Name": "Grail",
+      "outcome": "omit",
+      "reason": "grail_deferred"
+    },
+    {
+      "h3Id": 37,
+      "h3Name": "Hut of the Magi",
+      "outcome": "emit",
+      "sid": "watchtower",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 38,
+      "h3Name": "Idol of Fortune",
+      "outcome": "emit",
+      "sid": "fountain",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 39,
+      "h3Name": "Lean To",
+      "outcome": "omit",
+      "reason": "lean_to_deferred"
+    },
+    {
+      "h3Id": 40,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_40"
+    },
+    {
+      "h3Id": 41,
+      "h3Name": "Library of Enlightenment",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_41"
+    },
+    {
+      "h3Id": 42,
+      "h3Name": "Lighthouse",
+      "outcome": "emit",
+      "sid": "watchtower",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 43,
+      "h3Name": "Monolith One Way Entrance",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_43"
+    },
+    {
+      "h3Id": 44,
+      "h3Name": "Monolith One Way Exit",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_44"
+    },
+    {
+      "h3Id": 45,
+      "h3Name": "Monolith Two Way",
+      "outcome": "dispatch",
+      "kind": "portal",
+      "reason": "monolith_animation_exact",
+      "exact": {
+        "avxmn2g0.def": "portal_1",
+        "avxmn2o0.def": "portal_2",
+        "avxmn2p0.def": "portal_3",
+        "avxmn4b0.def": "portal_1",
+        "avxmn5b0.def": "portal_2",
+        "avxmn6b0.def": "portal_3",
+        "avxmn7b0.def": "portal_1",
+        "avxmn8b0.def": "portal_2",
+        "avxmn9bw.def": "portal_3",
+        "avxmn2pink0.def": "portal_1",
+        "avxmn2t0.def": "portal_2",
+        "avxmn2y0.def": "portal_3",
+        "avxmn2b0.def": "portal_1",
+        "avxmn9b0.def": "portal_2",
+        "avxmn10b.def": "portal_3",
+        "avxmn11b.def": "portal_1",
+        "avxmn12b.def": "portal_2",
+        "avxmn2bl.def": "portal_3",
+        "avxmn2rd.def": "portal_1",
+        "avxmn19p.def": "portal_2",
+        "avxmn20b.def": "portal_3",
+        "avxptw_0.def": "portal_1",
+        "avxptw_1.def": "portal_2",
+        "avxptw_2.def": "portal_3",
+        "avxptw_3.def": "portal_1"
+      },
+      "unmatchedReason": "unmapped_monolith_animation_{value}"
+    },
+    {
+      "h3Id": 46,
+      "h3Name": "Magic Plains",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_46"
+    },
+    {
+      "h3Id": 47,
+      "h3Name": "School of Magic",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_47"
+    },
+    {
+      "h3Id": 48,
+      "h3Name": "Magic Spring",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_48"
+    },
+    {
+      "h3Id": 49,
+      "h3Name": "Magic Well",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_49"
+    },
+    {
+      "h3Id": 50,
+      "h3Name": "Market of Time",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_50"
+    },
+    {
+      "h3Id": 51,
+      "h3Name": "Mercenary Camp",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_51"
+    },
+    {
+      "h3Id": 52,
+      "h3Name": "Mermaids",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_52"
+    },
+    {
+      "h3Id": 53,
+      "h3Name": "Mine",
+      "outcome": "dispatch",
+      "kind": "mine",
+      "reason": "mine_subtype_or_animation",
+      "subtypes": {
+        "0": {
+          "sid": "mine_wood"
+        },
+        "1": {
+          "sid": "mine_mercury"
+        },
+        "2": {
+          "sid": "mine_ore"
+        },
+        "3": {
+          "sid": "alchemy_lab"
+        },
+        "4": {
+          "sid": "mine_crystals"
+        },
+        "5": {
+          "sid": "mine_gemstones"
+        },
+        "6": {
+          "sid": "mine_gold"
+        }
+      },
+      "exact": {
+        "avmalch0.def": "alchemy_lab",
+        "avmalcs0.def": "alchemy_lab",
+        "avmsulf0.def": "alchemy_lab",
+        "avmorsb0.def": "mine_ore",
+        "avmorsn0.def": "mine_ore",
+        "avmore0.def": "mine_ore",
+        "avmsawg0.def": "mine_wood",
+        "avmsaws0.def": "mine_wood",
+        "avmwwhl0.def": "mine_wood",
+        "avmgold0.def": "mine_gold",
+        "avmgos0.def": "mine_gold",
+        "avmgems0.def": "mine_gemstones",
+        "avmcrys0.def": "mine_crystals",
+        "avmcrgr0.def": "mine_crystals"
+      },
+      "tokens": {
+        "gog": "mine_gold",
+        "gos": "mine_gold",
+        "god": "mine_gold",
+        "gold": "mine_gold",
+        "ors": "mine_ore",
+        "ord": "mine_ore",
+        "ore": "mine_ore",
+        "saw": "mine_wood",
+        "wwh": "mine_wood",
+        "crys": "mine_crystals",
+        "crgr": "mine_crystals",
+        "crdr": "mine_crystals",
+        "crsu": "mine_crystals",
+        "gem": "mine_gemstones",
+        "ger": "mine_gemstones",
+        "ged": "mine_gemstones",
+        "sulf": "alchemy_lab",
+        "alc": "alchemy_lab"
+      },
+      "unmatchedReason": "unmapped_mine_subtype_{value}"
+    },
+    {
+      "h3Id": 54,
+      "h3Name": "Monster",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 55,
+      "h3Name": "Mystical Garden",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_55"
+    },
+    {
+      "h3Id": 56,
+      "h3Name": "Oasis",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_56"
+    },
+    {
+      "h3Id": 57,
+      "h3Name": "Obelisk",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_57"
+    },
+    {
+      "h3Id": 58,
+      "h3Name": "Redwood Observatory",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_58"
+    },
+    {
+      "h3Id": 59,
+      "h3Name": "Ocean Bottle",
+      "outcome": "omit",
+      "reason": "ocean_bottle_omit"
+    },
+    {
+      "h3Id": 60,
+      "h3Name": "Pillar of Fire",
+      "outcome": "emit",
+      "sid": "watchtower",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 61,
+      "h3Name": "Star Axis",
+      "outcome": "emit",
+      "sid": "altar_of_magic_1",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 62,
+      "h3Name": "Prison",
+      "outcome": "omit",
+      "reason": "prison_payload_deferred"
+    },
+    {
+      "h3Id": 63,
+      "h3Name": "Pyramid",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_63"
+    },
+    {
+      "h3Id": 64,
+      "h3Name": "Rally Flag",
+      "outcome": "emit",
+      "sid": "quixs_path",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 65,
+      "h3Name": "Random Artifact",
+      "outcome": "emit",
+      "sid": "random-item",
+      "kind": "artifact",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 66,
+      "h3Name": "Random Artifact Treasure",
+      "outcome": "emit",
+      "sid": "random-item",
+      "kind": "artifact",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 67,
+      "h3Name": "Random Artifact Minor",
+      "outcome": "emit",
+      "sid": "random-item",
+      "kind": "artifact",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 68,
+      "h3Name": "Random Artifact Major",
+      "outcome": "emit",
+      "sid": "random-item",
+      "kind": "artifact",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 69,
+      "h3Name": "Random Artifact Relic",
+      "outcome": "emit",
+      "sid": "random-item",
+      "kind": "artifact",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 70,
+      "h3Name": "Random Hero",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_70"
+    },
+    {
+      "h3Id": 71,
+      "h3Name": "Random Monster",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 72,
+      "h3Name": "Random Monster Level 1",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 73,
+      "h3Name": "Random Monster Level 2",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 74,
+      "h3Name": "Random Monster Level 3",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 75,
+      "h3Name": "Random Monster Level 4",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 76,
+      "h3Name": "Random Resource",
+      "outcome": "emit",
+      "sid": "random-res",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 77,
+      "h3Name": "Random Town",
+      "outcome": "emit",
+      "sid": "random-city",
+      "kind": "town",
+      "factionSid": "",
+      "freeChoice": true,
+      "reason": "direct_template_random_city_free_choice"
+    },
+    {
+      "h3Id": 78,
+      "h3Name": "Refugee Camp",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_78"
+    },
+    {
+      "h3Id": 79,
+      "h3Name": "Resource",
+      "outcome": "dispatch",
+      "kind": "resource",
+      "reason": "resource_animation_token",
+      "tokens": {
+        "gold": "resource_gold",
+        "wood": "resource_wood",
+        "ore": "resource_ore",
+        "crys": "resource_crystals",
+        "merc": "resource_mercury",
+        "gems": "resource_gemstones",
+        "sulf": "resource_dust"
+      },
+      "default": "resource_gold"
+    },
+    {
+      "h3Id": 80,
+      "h3Name": "Sanctuary",
+      "outcome": "emit",
+      "sid": "altar_of_magic_1",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 81,
+      "h3Name": "Scholar",
+      "outcome": "omit",
+      "reason": "scholar_deferred"
+    },
+    {
+      "h3Id": 82,
+      "h3Name": "Sea Chest",
+      "outcome": "omit",
+      "reason": "sea_chest_water_travel_omit"
+    },
+    {
+      "h3Id": 83,
+      "h3Name": "Seer Hut",
+      "outcome": "omit",
+      "reason": "seer_hut_omitted_no_stock_interactable"
+    },
+    {
+      "h3Id": 84,
+      "h3Name": "Crypt",
+      "outcome": "omit",
+      "reason": "crypt_bank_deferred"
+    },
+    {
+      "h3Id": 85,
+      "h3Name": "Shipwreck",
+      "outcome": "omit",
+      "reason": "shipwreck_water_bank_omit"
+    },
+    {
+      "h3Id": 86,
+      "h3Name": "Shipwreck Survivor",
+      "outcome": "omit",
+      "reason": "shipwreck_survivor_omit"
+    },
+    {
+      "h3Id": 87,
+      "h3Name": "Shipyard",
+      "outcome": "omit",
+      "reason": "shipyard_requires_boat_omit"
+    },
+    {
+      "h3Id": 88,
+      "h3Name": "Shrine of Magic Level 1",
+      "outcome": "emit",
+      "sid": "scroll_box",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 89,
+      "h3Name": "Shrine of Magic Level 2",
+      "outcome": "emit",
+      "sid": "enchanted_scroll_box",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 90,
+      "h3Name": "Shrine of Magic Level 3",
+      "outcome": "emit",
+      "sid": "mythic_scroll_box",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 91,
+      "h3Name": "Sign",
+      "outcome": "omit",
+      "reason": "sign_message_deferred"
+    },
+    {
+      "h3Id": 92,
+      "h3Name": "Sirens",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_92"
+    },
+    {
+      "h3Id": 93,
+      "h3Name": "Spell Scroll",
+      "outcome": "omit",
+      "reason": "spell_scroll_deferred"
+    },
+    {
+      "h3Id": 94,
+      "h3Name": "Stables",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_94"
+    },
+    {
+      "h3Id": 95,
+      "h3Name": "Tavern",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_95"
+    },
+    {
+      "h3Id": 96,
+      "h3Name": "Temple",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_96"
+    },
+    {
+      "h3Id": 97,
+      "h3Name": "Den of Thieves",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_97"
+    },
+    {
+      "h3Id": 98,
+      "h3Name": "Town",
+      "outcome": "dispatch",
+      "kind": "town",
+      "reason": "lossy_h3_town_subtype_to_stock_city",
+      "subtypes": {
+        "0": {
+          "sid": "human_city",
+          "factionSid": "human"
+        },
+        "1": {
+          "sid": "nature_city",
+          "factionSid": "nature"
+        },
+        "3": {
+          "sid": "demon_city",
+          "factionSid": "demon"
+        },
+        "4": {
+          "sid": "undead_city",
+          "factionSid": "undead"
+        },
+        "5": {
+          "sid": "dungeon_city",
+          "factionSid": "dungeon"
+        }
+      },
+      "freeChoice": {
+        "subtypes": [
+          2,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "sid": "random-city",
+        "reason": "unmapped_h3_town_subtype_free_choice"
+      },
+      "unmatchedReason": "unsupported_town_subtype_{value}"
+    },
+    {
+      "h3Id": 99,
+      "h3Name": "Trading Post",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_99"
+    },
+    {
+      "h3Id": 100,
+      "h3Name": "Learning Stone",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_100"
+    },
+    {
+      "h3Id": 101,
+      "h3Name": "Treasure Chest",
+      "outcome": "emit",
+      "sid": "chest",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 102,
+      "h3Name": "Tree of Knowledge",
+      "outcome": "omit",
+      "reason": "tree_of_knowledge_deferred"
+    },
+    {
+      "h3Id": 103,
+      "h3Name": "Subterranean Gate",
+      "outcome": "emit",
+      "sid": "portal_5",
+      "kind": "portal",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 104,
+      "h3Name": "University",
+      "outcome": "omit",
+      "reason": "university_deferred"
+    },
+    {
+      "h3Id": 105,
+      "h3Name": "Wagon",
+      "outcome": "omit",
+      "reason": "wagon_deferred"
+    },
+    {
+      "h3Id": 106,
+      "h3Name": "War Machine Factory",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_106"
+    },
+    {
+      "h3Id": 107,
+      "h3Name": "School of War",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_107"
+    },
+    {
+      "h3Id": 108,
+      "h3Name": "Warrior Tomb",
+      "outcome": "omit",
+      "reason": "warriors_tomb_deferred"
+    },
+    {
+      "h3Id": 109,
+      "h3Name": "Water Wheel",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_109"
+    },
+    {
+      "h3Id": 110,
+      "h3Name": "Watering Hole",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_110"
+    },
+    {
+      "h3Id": 111,
+      "h3Name": "Whirlpool",
+      "outcome": "emit",
+      "sid": "portal_magic",
+      "kind": "portal",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 112,
+      "h3Name": "Windmill",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_112"
+    },
+    {
+      "h3Id": 113,
+      "h3Name": "Witch Hut",
+      "outcome": "omit",
+      "reason": "witch_hut_deferred"
+    },
+    {
+      "h3Id": 114,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_114"
+    },
+    {
+      "h3Id": 115,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_115"
+    },
+    {
+      "h3Id": 116,
+      "h3Name": "Cactus",
+      "outcome": "scenery",
+      "role": "ground"
+    },
+    {
+      "h3Id": 117,
+      "h3Name": "Canyon",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_117"
+    },
+    {
+      "h3Id": 118,
+      "h3Name": "Crater",
+      "outcome": "scenery",
+      "role": "pool"
+    },
+    {
+      "h3Id": 119,
+      "h3Name": "Dead Vegetation",
+      "outcome": "scenery",
+      "role": "tree"
+    },
+    {
+      "h3Id": 120,
+      "h3Name": "Flowers",
+      "outcome": "scenery",
+      "role": "shrub"
+    },
+    {
+      "h3Id": 121,
+      "h3Name": "Frozen Lake",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_121"
+    },
+    {
+      "h3Id": 122,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_122"
+    },
+    {
+      "h3Id": 123,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_123"
+    },
+    {
+      "h3Id": 124,
+      "h3Name": "Hole",
+      "outcome": "scenery",
+      "role": "pool"
+    },
+    {
+      "h3Id": 125,
+      "h3Name": "Kelp",
+      "outcome": "scenery",
+      "role": "water_decoration"
+    },
+    {
+      "h3Id": 126,
+      "h3Name": "Lake",
+      "outcome": "scenery",
+      "role": "pool"
+    },
+    {
+      "h3Id": 127,
+      "h3Name": "Lava Flow",
+      "outcome": "scenery",
+      "role": "pool_big"
+    },
+    {
+      "h3Id": 128,
+      "h3Name": "Lava Lake",
+      "outcome": "scenery",
+      "role": "pool"
+    },
+    {
+      "h3Id": 129,
+      "h3Name": "Mushrooms",
+      "outcome": "scenery",
+      "role": "mountain"
+    },
+    {
+      "h3Id": 130,
+      "h3Name": "Log",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_130"
+    },
+    {
+      "h3Id": 131,
+      "h3Name": "Mandrake",
+      "outcome": "scenery",
+      "role": "mountain"
+    },
+    {
+      "h3Id": 132,
+      "h3Name": "Moss",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_132"
+    },
+    {
+      "h3Id": 133,
+      "h3Name": "Mound",
+      "outcome": "scenery",
+      "role": "mountain"
+    },
+    {
+      "h3Id": 134,
+      "h3Name": "Mountain",
+      "outcome": "scenery",
+      "role": "mountain"
+    },
+    {
+      "h3Id": 135,
+      "h3Name": "Oak Trees",
+      "outcome": "scenery",
+      "role": "tree"
+    },
+    {
+      "h3Id": 136,
+      "h3Name": "Outcropping",
+      "outcome": "scenery",
+      "role": "pool"
+    },
+    {
+      "h3Id": 137,
+      "h3Name": "Pine Trees",
+      "outcome": "scenery",
+      "role": "tree"
+    },
+    {
+      "h3Id": 138,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_138"
+    },
+    {
+      "h3Id": 139,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_139"
+    },
+    {
+      "h3Id": 140,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_140"
+    },
+    {
+      "h3Id": 141,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_141"
+    },
+    {
+      "h3Id": 142,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_142"
+    },
+    {
+      "h3Id": 143,
+      "h3Name": "River Delta",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_143"
+    },
+    {
+      "h3Id": 144,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_144"
+    },
+    {
+      "h3Id": 145,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_145"
+    },
+    {
+      "h3Id": 146,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_146"
+    },
+    {
+      "h3Id": 147,
+      "h3Name": "Rock",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 148,
+      "h3Name": "Sand Dune",
+      "outcome": "scenery",
+      "role": "ruin"
+    },
+    {
+      "h3Id": 149,
+      "h3Name": "Sand Pit",
+      "outcome": "scenery",
+      "role": "pool_big"
+    },
+    {
+      "h3Id": 150,
+      "h3Name": "Shrub",
+      "outcome": "scenery",
+      "role": "shrub"
+    },
+    {
+      "h3Id": 151,
+      "h3Name": "Skull",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 152,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_152"
+    },
+    {
+      "h3Id": 153,
+      "h3Name": "Stump",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 154,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_154"
+    },
+    {
+      "h3Id": 155,
+      "h3Name": "Trees",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_155"
+    },
+    {
+      "h3Id": 156,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_156"
+    },
+    {
+      "h3Id": 157,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_157"
+    },
+    {
+      "h3Id": 158,
+      "h3Name": "Volcano",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_158"
+    },
+    {
+      "h3Id": 159,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_159"
+    },
+    {
+      "h3Id": 160,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_160"
+    },
+    {
+      "h3Id": 161,
+      "h3Name": "Reef",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 162,
+      "h3Name": "Random Monster Level 5",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 163,
+      "h3Name": "Random Monster Level 6",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 164,
+      "h3Name": "Random Monster Level 7",
+      "outcome": "emit",
+      "sid": "random-squad",
+      "kind": "random_squad",
+      "reason": "direct_template_sid"
+    },
+    {
+      "h3Id": 165,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_165"
+    },
+    {
+      "h3Id": 166,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_166"
+    },
+    {
+      "h3Id": 167,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_167"
+    },
+    {
+      "h3Id": 168,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_168"
+    },
+    {
+      "h3Id": 169,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_169"
+    },
+    {
+      "h3Id": 170,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_170"
+    },
+    {
+      "h3Id": 171,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_171"
+    },
+    {
+      "h3Id": 172,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_172"
+    },
+    {
+      "h3Id": 173,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_173"
+    },
+    {
+      "h3Id": 174,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_174"
+    },
+    {
+      "h3Id": 175,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_175"
+    },
+    {
+      "h3Id": 176,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_176"
+    },
+    {
+      "h3Id": 177,
+      "h3Name": "Lake",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_177"
+    },
+    {
+      "h3Id": 178,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_178"
+    },
+    {
+      "h3Id": 179,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_179"
+    },
+    {
+      "h3Id": 180,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_180"
+    },
+    {
+      "h3Id": 181,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_181"
+    },
+    {
+      "h3Id": 182,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_182"
+    },
+    {
+      "h3Id": 183,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_183"
+    },
+    {
+      "h3Id": 184,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_184"
+    },
+    {
+      "h3Id": 185,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_185"
+    },
+    {
+      "h3Id": 186,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_186"
+    },
+    {
+      "h3Id": 187,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_187"
+    },
+    {
+      "h3Id": 188,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_188"
+    },
+    {
+      "h3Id": 189,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_189"
+    },
+    {
+      "h3Id": 190,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_190"
+    },
+    {
+      "h3Id": 191,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_191"
+    },
+    {
+      "h3Id": 192,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_192"
+    },
+    {
+      "h3Id": 193,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_193"
+    },
+    {
+      "h3Id": 194,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_194"
+    },
+    {
+      "h3Id": 195,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_195"
+    },
+    {
+      "h3Id": 196,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_196"
+    },
+    {
+      "h3Id": 197,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_197"
+    },
+    {
+      "h3Id": 198,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_198"
+    },
+    {
+      "h3Id": 199,
+      "h3Name": "Trees",
+      "outcome": "scenery-dispatch",
+      "exact": {
+        "avlswt00.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt01.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt02.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt03.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt04.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt05.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt06.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt07.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt08.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt09.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt10.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt11.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt12.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt13.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt14.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt16.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt17.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt18.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswt19.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avlswtr0.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr1.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr2.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr3.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr4.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr5.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr6.def": {
+          "sid": "desert_cracked_stones_2",
+          "role": "rock"
+        },
+        "avlswtr7.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr8.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avlswtr9.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avltro00.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro01.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro03.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro04.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro05.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro06.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro07.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro08.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro09.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro10.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro11.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltro12.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltrro0.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avltrro2.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avltrro3.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avltrro4.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avltrro5.def": {
+          "sid": "dirt_rock_1",
+          "role": "rock"
+        },
+        "avltrro6.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        },
+        "avltrro7.def": {
+          "sid": "tree_dirt_1",
+          "role": "tree"
+        }
+      }
+    },
+    {
+      "h3Id": 200,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_200"
+    },
+    {
+      "h3Id": 201,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_201"
+    },
+    {
+      "h3Id": 202,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_202"
+    },
+    {
+      "h3Id": 203,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_203"
+    },
+    {
+      "h3Id": 204,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_204"
+    },
+    {
+      "h3Id": 205,
+      "h3Name": "Unidentified",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_205"
+    },
+    {
+      "h3Id": 206,
+      "h3Name": "Desert Hills",
+      "outcome": "scenery",
+      "role": "mountain"
+    },
+    {
+      "h3Id": 207,
+      "h3Name": "Dirt Hills",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 208,
+      "h3Name": "Grass Hills",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 209,
+      "h3Name": "Rough Hills",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 210,
+      "h3Name": "Subterranean Rocks",
+      "outcome": "scenery",
+      "role": "mountain"
+    },
+    {
+      "h3Id": 211,
+      "h3Name": "Swamp Foliage",
+      "outcome": "scenery",
+      "role": "rock"
+    },
+    {
+      "h3Id": 212,
+      "h3Name": "Border Gate",
+      "outcome": "omit",
+      "reason": "border_gate_deferred"
+    },
+    {
+      "h3Id": 213,
+      "h3Name": "Freelancers Guild",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_213"
+    },
+    {
+      "h3Id": 214,
+      "h3Name": "Hero Placeholder",
+      "outcome": "omit",
+      "reason": "hero_placeholder_deferred"
+    },
+    {
+      "h3Id": 215,
+      "h3Name": "Quest Guard",
+      "outcome": "omit",
+      "reason": "quest_guard_payload_deferred"
+    },
+    {
+      "h3Id": 216,
+      "h3Name": "Random Dwelling",
+      "outcome": "omit",
+      "reason": "random_dwelling_decoder_unsupported"
+    },
+    {
+      "h3Id": 217,
+      "h3Name": "Random Dwelling Lvl",
+      "outcome": "omit",
+      "reason": "random_dwelling_lvl_unsupported"
+    },
+    {
+      "h3Id": 218,
+      "h3Name": "Random Dwelling Faction",
+      "outcome": "omit",
+      "reason": "random_dwelling_faction_unsupported"
+    },
+    {
+      "h3Id": 219,
+      "h3Name": "Garrison Vertical",
+      "outcome": "omit",
+      "reason": "garrison_army_payload_deferred"
+    },
+    {
+      "h3Id": 220,
+      "h3Name": "Abandoned Mine",
+      "outcome": "emit",
+      "sid": "campaign_M2_empty_mine",
+      "kind": "mine",
+      "reason": "abandoned_mine_stock_empty_mine"
+    },
+    {
+      "h3Id": 221,
+      "h3Name": "Trading Post",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_221"
+    },
+    {
+      "h3Id": 222,
+      "h3Name": "Clover Field",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_222"
+    },
+    {
+      "h3Id": 223,
+      "h3Name": "Cursed Ground",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_223"
+    },
+    {
+      "h3Id": 224,
+      "h3Name": "Evil Fog",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_224"
+    },
+    {
+      "h3Id": 225,
+      "h3Name": "Favorable Winds",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_225"
+    },
+    {
+      "h3Id": 226,
+      "h3Name": "Fiery Fields",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_226"
+    },
+    {
+      "h3Id": 227,
+      "h3Name": "Holy Ground",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_227"
+    },
+    {
+      "h3Id": 228,
+      "h3Name": "Lucid Pools",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_228"
+    },
+    {
+      "h3Id": 229,
+      "h3Name": "Magic Clouds",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_229"
+    },
+    {
+      "h3Id": 230,
+      "h3Name": "Magic Plains",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_230"
+    },
+    {
+      "h3Id": 231,
+      "h3Name": "Rocklands",
+      "outcome": "omit",
+      "reason": "unmapped_template_object_id_231"
+    }
+  ],
+  "sceneryRoleSids": {
+    "mountain": {
+      "grass": "mountain_green_small_1",
+      "snow": "mountain_snow_small_1",
+      "dirt": "mountain_dirt_small_1",
+      "desert": "mountain_dirt_small_1",
+      "dead": "mountain_dead_small_1",
+      "lava": "mountain_lava_small_1",
+      "water": "mountain_water_small_1",
+      "sand": "mountain_dirt_small_1"
+    },
+    "pool": {
+      "grass": "pool_small",
+      "snow": "pool_snow_small_1",
+      "dirt": "pool_dirt_small_1",
+      "desert": "pool_desert_small_1",
+      "dead": "pool_dead_small_1",
+      "lava": "pool_lava_small_1",
+      "water": "water_reed_1",
+      "sand": "pool_desert_small_1"
+    },
+    "pool_big": {
+      "grass": "pool_big",
+      "snow": "pool_snow_big_1",
+      "dirt": "pool_dirt_big_1",
+      "desert": "pool_desert_big_1",
+      "dead": "pool_dead_big_1",
+      "lava": "pool_lava_big_1",
+      "water": "water_reed_1",
+      "sand": "pool_desert_big_1"
+    },
+    "tree": {
+      "grass": "pinetree_1",
+      "snow": "pinetree_snow_1",
+      "dirt": "tree_dirt_1",
+      "desert": "grass_desert_1",
+      "dead": "tree_dead_1",
+      "lava": "tree_lava_1",
+      "water": "water_reed_1",
+      "sand": "grass_desert_1"
+    },
+    "shrub": {
+      "grass": "grass_1",
+      "snow": "grass_snow_1",
+      "dirt": "dirt_strange_flower",
+      "desert": "grass_desert_1",
+      "dead": "grass_death_1",
+      "lava": "lava_stones_1",
+      "water": "water_reed_1",
+      "sand": "grass_desert_1"
+    },
+    "rock": {
+      "grass": "grass_stones_1",
+      "snow": "snow_stones_1",
+      "dirt": "dirt_rock_1",
+      "desert": "desert_stones_1",
+      "dead": "dead_stones_1",
+      "lava": "lava_stones_1",
+      "water": "water_reed_1",
+      "sand": "desert_stones_1"
+    },
+    "ground": {
+      "grass": "grass_stones_1",
+      "snow": "snow_stones_1",
+      "dirt": "dirt_stones_1",
+      "desert": "desert_dune_1",
+      "dead": "dead_meadow",
+      "lava": "lava_stones_1",
+      "water": "water_reed_1",
+      "sand": "desert_dune_1"
+    },
+    "ruin": {
+      "grass": "rocks_1",
+      "snow": "snow_rock_hill_1",
+      "dirt": "dirt_rock_1",
+      "desert": "ruins_desert_1",
+      "dead": "dead_sculls_bones_hill",
+      "lava": "dirt_volcanic_rock",
+      "water": "water_reed_1",
+      "sand": "ruins_desert_1"
+    },
+    "water_decoration": {
+      "grass": "water_reed_1",
+      "snow": "water_reed_1",
+      "dirt": "water_reed_1",
+      "desert": "water_reed_1",
+      "dead": "water_reed_1",
+      "lava": "water_reed_1",
+      "water": "water_reed_1",
+      "sand": "water_reed_1"
+    }
+  }
+}

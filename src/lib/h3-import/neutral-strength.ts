@@ -3,7 +3,7 @@
 // `vanilla_stock/stock_neutral_strength.py` + its baked
 // `h3_neutral_strength_model.json`, used with the author's explicit
 // permission. The data below is generated directly from that JSON (not
-// hand-transcribed — see object-map.ts's own doc comment on why that
+// hand-transcribed — see h3-object-mapping.ts's own doc comment on why that
 // matters), trimmed to the fields this port actually uses.
 //
 // Formula: `requestedValue = round_half_up(count_or_nominal * squadValue, 50)`.
