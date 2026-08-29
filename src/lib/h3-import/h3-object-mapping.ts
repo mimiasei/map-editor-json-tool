@@ -43,12 +43,18 @@ export type { SceneryRole, OeBiome, ObjectKind }
  *  H3 terrain ids, for reference (same numbering `terrain-map.ts`'s own
  *  `H3_TO_STOCK_TILE` table uses):
  *  0 Dirt, 1 Sand, 2 Grass, 3 Snow, 4 Swamp, 5 Rough, 6 Subterranean,
- *  7 Lava, 8 Water, 9 Rock. (10 Highlands and 11 Wasteland are HotA-only
- *  additions with no entry here — a scenery object sitting on either falls
- *  back to the `?? 'grass'` default below, same as any other unlisted id;
- *  not separately verified against a real HotA highlands/wasteland sample.) */
+ *  7 Lava, 8 Water, 9 Rock, 10 Highlands (HotA), 11 Wasteland (HotA).
+ *  10/11 mirror `terrain-map.ts`'s own `H3_TO_STOCK_TILE` treatment of
+ *  them (highlands → grass-like tile, wasteland → Deathland-like tile),
+ *  for the same reason: real HotA maps place plenty of scenery on both
+ *  (confirmed against the `maps/H3_Maps/` corpus — 25 maps carry
+ *  highlands tiles, 17 carry wasteland), so leaving them unmapped and
+ *  falling through to the generic `?? 'grass'` default silently biased
+ *  every wasteland-tile scenery pick toward grass-family sids instead of
+ *  the Deathland-appropriate ones. */
 export const H3_TERRAIN_BIOME: Record<number, OeBiome> = {
   0: 'dirt', 1: 'sand', 2: 'grass', 3: 'snow', 4: 'dead', 5: 'grass', 6: 'dirt', 7: 'lava', 8: 'water', 9: 'dirt',
+  10: 'grass', 11: 'dead',
 }
 
 /** H3's "Oak Trees" object — real name confirmed via VCMI's own community-
