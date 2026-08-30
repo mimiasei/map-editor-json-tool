@@ -794,7 +794,8 @@ function refreshAllRows() {
 // ─── Search / filter ────────────────────────────────────────────────────────
 function rowSearchText(row) {
   const sids = rowSidsToCheck(row).join(' ');
-  return [row.h3Id, row.h3Name, row.outcome, row.reason, row.sid, row.role, sids].filter(Boolean).join(' ').toLowerCase();
+  const defName = H3_OBJECT_DEF_NAME[row.h3Id];
+  return [row.h3Id, row.h3Name, row.outcome, row.reason, row.sid, row.role, sids, defName].filter(Boolean).join(' ').toLowerCase();
 }
 
 function applyFilter() {
