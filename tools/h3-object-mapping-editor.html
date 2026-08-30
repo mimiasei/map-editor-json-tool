@@ -50,6 +50,10 @@
   .h3-refs .via { color: #777; font-size: 0.9em; }
   .no-refs { color: #999; font-style: italic; }
   td.wrap { max-width: 22em; }
+  .h3-sid { color: #666; font-size: 0.9em; margin-left: 0.3em; }
+  .sprite-btn { border: 1px solid #999; background: Canvas; border-radius: 3px; cursor: pointer;
+    font-size: 0.85em; padding: 0 0.3em; margin-left: 0.3em; line-height: 1.4; }
+  .sprite-btn:hover { background: #d8e8ff; }
 </style>
 </head>
 <body>
@@ -198,6 +202,87 @@
 const SCENERY_ROLES = ['ground', 'pool', 'tree', 'shrub', 'pool_big', 'water_decoration', 'mountain', 'rock', 'ruin'];
 const OBJECT_KINDS = ['town', 'portal', 'resource', 'mine', 'dwelling', 'artifact', 'random_squad', 'interactable', 'map_event', 'scenery'];
 const OUTCOMES = ['omit', 'emit', 'scenery', 'scenery-dispatch', 'scenery-dispatch-subtype', 'dispatch'];
+
+// ─── H3 object id -> real .def sprite filename ──────────────────────────────
+// Derived empirically from every real, shipped .h3m map in maps/H3_Maps/ (221
+// files spanning all four format versions) — for each h3Id, the most common
+// `animation` filename seen across every real object template using it in
+// that whole corpus (ties broken alphabetically; extension stripped). A
+// single h3Id can have dozens of real per-terrain/subtype .def variants —
+// this is just one representative "canonical" filename, good enough to link
+// to that object's sprite on a wiki reference. Ids absent here never showed
+// up as a real template in any of the 221 sample maps (either genuinely
+// unused, or just never observed).
+const H3_OBJECT_DEF_NAME = {
+  2: "AvXAltar", 4: "AVSarna0", 5: "AVA0007", 6: "AVA0128", 7: "AVXmktb0", 8: "AVXboat2", 9: "AVXbor00",
+  10: "AVXkey00", 11: "AVSbuoy0", 12: "adcfra", 13: "AVXmapw0", 14: "AVSclvg0", 15: "AVXcovr0", 16: "AVXbnk20",
+  17: "AVGelf0", 20: "AVGgolm0", 21: "AVXcrsd0", 22: "AVXskds0", 23: "AvSMarl", 24: "AVAdlic0", 25: "AVSutop0",
+  26: "AVZevnt0", 27: "AVXeyem0", 28: "AVSring0", 29: "AVAflot0", 30: "AVSfntn0", 31: "AVXfyth0", 32: "AVSgrdn0",
+  33: "AVCgar10", 34: "ah00_e", 35: "AVXhilg0", 36: "AVZgrail", 37: "AVXhutm0", 38: "AVSidol0", 39: "AVMlean0",
+  40: "Portu", 41: "AVSlibr0", 42: "AVXlths0", 43: "AVXmn1r0", 44: "AVXmx1r0", 45: "AVXmn2g0", 46: "AVXplns0",
+  47: "AVSschm0", 48: "AVXmags0", 49: "AVXwelr0", 50: "AVXmktt0", 51: "AVSmerc0", 52: "AVXmerm0", 53: "AVMsulf0",
+  54: "AVWelmw0", 55: "AVTmyst0", 56: "AVXosis0", 57: "AvXOblW", 58: "AvXRedW", 59: "AVXbttl0", 60: "AVXpllr0",
+  61: "AVSaxis0", 62: "AVXprsn0", 63: "AVXprmd0", 64: "AVXrlly0", 65: "AVArand", 66: "AVArnd1", 67: "AVArnd2",
+  68: "AVArnd3", 69: "AVArnd4", 70: "ahrandom", 71: "AVWmrnd0", 72: "AVWmon1", 73: "AVWmon2", 74: "AVWmon3",
+  75: "AVWmon4", 76: "AVTrndm0", 77: "AVCranx0", 78: "AVGrefg0", 79: "AVTwood0", 80: "AVXsanc0", 81: "AVXschl0",
+  82: "AVXccht0", 83: "AVXseeb0", 84: "AVXgyne0", 85: "AVAwrek0", 86: "AVAsurv0", 87: "AVXshyd0", 88: "AVXl1sh0",
+  89: "AVXl2sh0", 90: "AVXl3sh0", 91: "AVXsndg0", 92: "AVXsirn0", 93: "AVA0001", 94: "AVXstbl0", 95: "AVXtvrn0",
+  96: "AVStmpl0", 97: "AvXDenT", 98: "AVCcasx0", 99: "AVXpost0", 100: "AVSgzbo0", 101: "AVTchst0", 102: "AVXtrek0",
+  103: "AvTCave", 104: "AVSuniv0", 105: "AVTwagn0", 106: "AVGsieg0", 107: "AVSwar20", 108: "AVXtomb0", 109: "AVMwwhl0",
+  110: "AVXwtrh0", 111: "AVXwhrl0", 112: "AVMwndd0", 113: "AVSwtch0", 114: "AVgflh03", 115: "AVLsh4g0", 116: "AVLca100",
+  117: "AVLglly0", 118: "AVLct3g0", 119: "AVLdead0", 120: "AVLf12g0", 121: "AVLflk20", 122: "AVLsh2g0", 124: "AVLholg0",
+  125: "AVLklp20", 126: "AVLlk2g0", 127: "AVLlav70", 128: "AVLlav10", 129: "AVLms020", 130: "AvLdlog", 131: "AVLman30",
+  132: "AVLmoss0", 133: "AVLmd1d0", 134: "AVLmtgr4", 135: "AVLSPTR0", 136: "AVLoc3g0", 137: "AVLPNTR0", 138: "AVLs06s0",
+  139: "AVLct4g0", 140: "avlswtr2", 141: "Zsand05", 142: "avwrhssf", 143: "clrdelt1", 144: "AVSmgarn", 145: "AVAbrrlw",
+  146: "avxwobs", 147: "AVLrk1w0", 148: "AVLdun20", 149: "AVLspit0", 150: "avlsh9r0", 151: "AVLskul0", 152: "AVLr11u0",
+  153: "AvLStm2", 154: "AVLwloi4", 155: "AVLtr2d0", 157: "AVLvol20", 158: "AVLvol50", 159: "AVLwlw10", 160: "AVLyuc10",
+  161: "AVLref20", 162: "AVWmon5", 163: "AVWmon6", 164: "AVWmon7", 177: "AVLlk1r", 199: "AVLtrRo0", 204: "AVLyuc60",
+  206: "avlxds04", 207: "avlxdt00", 208: "avlxgr01", 209: "avlxro03", 210: "avlxsu10", 211: "avlxsw01", 212: "avxbgt20",
+  213: "avxfgld", 215: "avxbor80", 216: "avrcgen0", 217: "avrcgen1", 218: "avrcgn00", 219: "AVCvgr", 220: "AVXamDs",
+  221: "AVXpsSn", 222: "AVXcf5", 223: "AVXcg5", 224: "AVXef5", 225: "zwat05", 226: "AVXff5", 227: "AVXhg6",
+  228: "AVXlp3", 229: "AVXmc5", 230: "AVXmp5", 231: "AVXrk5",
+};
+
+// The one confirmed real example (Campfire, h3Id 12 -> "adcfra") uses this
+// exact page+query URL shape. Unverified for ids outside what's been checked
+// by hand — this site sits behind Cloudflare's bot challenge, which blocks
+// any automated check from here, so if a link 404s or lands on the wrong
+// gallery page, that's real signal worth reporting back rather than something
+// to silently work around.
+const H3_SPRITE_WIKI_PAGE = 'https://homm.fandom.com/wiki/Extracted/Sprites/AdventureObjects1';
+function h3SpriteUrl(defName) {
+  return `${H3_SPRITE_WIKI_PAGE}?file=${encodeURIComponent(defName + '.png')}`;
+}
+
+// A real <img> pointed at that page would just show a broken image (it's an
+// HTML gallery page behind Cloudflare, not a raw image endpoint) — so this
+// opens the actual wiki page in a new tab instead of trying to embed
+// anything here. No sprite bytes are fetched, cached, or stored by this
+// tool; the browser navigates the user's own tab to view Fandom's own
+// hosted copy, same as clicking a plain link would.
+function makeSpriteButton(defName) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'sprite-btn';
+  btn.textContent = '\u{1F5BC}️';
+  btn.title = `View ${defName}.png on the Heroes 3 wiki (opens in a new tab)`;
+  btn.onclick = (e) => { e.preventDefault(); window.open(h3SpriteUrl(defName), '_blank', 'noopener'); };
+  return btn;
+}
+
+function h3IdWithSid(h3Id) {
+  const frag = document.createDocumentFragment();
+  frag.appendChild(document.createTextNode(String(h3Id)));
+  const defName = H3_OBJECT_DEF_NAME[h3Id];
+  if (defName) {
+    const sid = document.createElement('span');
+    sid.className = 'h3-sid';
+    sid.textContent = `'${defName}'`;
+    frag.appendChild(sid);
+    frag.appendChild(makeSpriteButton(defName));
+  }
+  return frag;
+}
 
 // ─── Core.zip catalog parsing ────────────────────────────────────────────────
 // Mirrors src/lib/catalog/builder.ts's MAP_OBJECT_FILES table (same 9 files,
@@ -598,7 +683,7 @@ function buildRow(row) {
   const tr = document.createElement('tr');
 
   const tdId = document.createElement('td');
-  tdId.textContent = row.h3Id;
+  tdId.appendChild(h3IdWithSid(row.h3Id));
   tr.appendChild(tdId);
 
   const tdName = document.createElement('td');
@@ -829,10 +914,13 @@ function buildBrowseRow(c, refs) {
     ul.className = 'h3-refs';
     for (const r of refs) {
       const li = document.createElement('li');
-      li.textContent = `${r.h3Name} (id ${r.h3Id}) `;
+      const defName = H3_OBJECT_DEF_NAME[r.h3Id];
+      const idPart = defName ? `id ${r.h3Id}, '${defName}'` : `id ${r.h3Id}`;
+      li.appendChild(document.createTextNode(`${r.h3Name} (${idPart}) `));
+      if (defName) li.appendChild(makeSpriteButton(defName));
       const via = document.createElement('span');
       via.className = 'via';
-      via.textContent = `[${r.via}]`;
+      via.textContent = ` [${r.via}]`;
       li.appendChild(via);
       ul.appendChild(li);
     }
