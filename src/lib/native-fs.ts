@@ -175,6 +175,103 @@ export async function openMapFile(): Promise<{
   })
 }
 
+// ─── Open .h3m file (binary) ───────────────────────────────────────────────────
+
+/**
+ * Open a Heroes of Might and Magic 3 .h3m file. Shows a native dialog in
+ * Tauri, or an invisible <input> in the browser. Returns null if the user
+ * cancels. The importer feature that consumes this is Tauri-only anyway (it
+ * needs real filesystem read access to the bundled blank-map template), but
+ * the picker itself follows the same dual-mode shape as openMapFile() for
+ * consistency.
+ */
+export async function openH3mFile(): Promise<{
+  name: string
+  path: string
+  buffer: ArrayBuffer
+} | null> {
+  if (isTauri()) {
+    const { open } = await import('@tauri-apps/plugin-dialog')
+    const { readFile } = await import('@tauri-apps/plugin-fs')
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: 'Heroes 3 Map', extensions: ['h3m'] }],
+    })
+    if (!selected || typeof selected !== 'string') return null
+    const bytes = await readFile(selected)
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+    const name = selected.replace(/\\/g, '/').split('/').pop() ?? selected
+    logInfo(`Opened H3 map: ${name}`)
+    return { name, path: selected, buffer }
+  }
+
+  // Browser: hidden <input type="file">
+  return new Promise((resolve) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.h3m'
+    input.addEventListener('cancel', () => resolve(null), { once: true })
+    input.onchange = () => {
+      const file = input.files?.[0]
+      if (!file) { resolve(null); return }
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        resolve({ name: file.name, path: '', buffer: e.target?.result as ArrayBuffer })
+      }
+      reader.onerror = () => resolve(null)
+      reader.readAsArrayBuffer(file)
+    }
+    input.click()
+  })
+}
+
+// ─── Open an image file (binary) ───────────────────────────────────────────────
+
+/**
+ * Open an image file for use as the Map Grid's background reference layer.
+ * Shows a native dialog in Tauri, or an invisible <input> in the browser.
+ * Returns null if the user cancels. Same dual-mode shape as openMapFile().
+ */
+export async function openImageFile(): Promise<{
+  name: string
+  path: string
+  buffer: ArrayBuffer
+} | null> {
+  if (isTauri()) {
+    const { open } = await import('@tauri-apps/plugin-dialog')
+    const { readFile } = await import('@tauri-apps/plugin-fs')
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: 'Image', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }],
+    })
+    if (!selected || typeof selected !== 'string') return null
+    const bytes = await readFile(selected)
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+    const name = selected.replace(/\\/g, '/').split('/').pop() ?? selected
+    logInfo(`Opened image: ${name}`)
+    return { name, path: selected, buffer }
+  }
+
+  // Browser: hidden <input type="file">
+  return new Promise((resolve) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.addEventListener('cancel', () => resolve(null), { once: true })
+    input.onchange = () => {
+      const file = input.files?.[0]
+      if (!file) { resolve(null); return }
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        resolve({ name: file.name, path: '', buffer: e.target?.result as ArrayBuffer })
+      }
+      reader.onerror = () => resolve(null)
+      reader.readAsArrayBuffer(file)
+    }
+    input.click()
+  })
+}
+
 // ─── Read a binary file by path (Tauri only) ──────────────────────────────────
 
 /**

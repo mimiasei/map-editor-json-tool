@@ -66,6 +66,17 @@ export interface MapGridSettings {
    *  so the flood-fill stops at a mountain/building instead of painting
    *  underneath it. Off by default to preserve prior bucket-fill behavior. */
   bucketFillObjectsAsBoundary: boolean
+  /** On/off for the optional user-loaded background reference image (see
+   *  MapGridDialog's backgroundImage state). The loaded image itself is
+   *  never persisted here — only this toggle and its opacity below — an
+   *  image can be several MB as a data/object URL, a poor fit for the
+   *  shared localStorage blob every other setting here lives in. */
+  backgroundImageVisible: boolean
+  /** 0-1 opacity of the background reference image, independent of
+   *  terrainOpacity above — the two are meant to be tuned separately
+   *  (e.g. full terrain opacity with a faint reference image, or vice
+   *  versa). */
+  backgroundImageOpacity: number
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
@@ -81,6 +92,8 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
   squadRandomWeights: DEFAULT_SQUAD_RANDOM_WEIGHTS,
   bucketFillObjectsAsBoundary: false,
+  backgroundImageVisible: true,
+  backgroundImageOpacity: 0.5,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -100,9 +113,17 @@ export function saveMapGridSettings(settings: MapGridSettings): void {
 interface Props {
   settings: MapGridSettings
   onChange: (next: MapGridSettings) => void
+  /** Whether a background reference image is currently loaded (session-only
+   *  state owned by MapGridDialog, not part of `settings` — see that field's
+   *  own doc comment above). */
+  hasBackgroundImage: boolean
+  onLoadBackgroundImage: () => void
+  onRemoveBackgroundImage: () => void
 }
 
-export default function MapGridSettingsDialog({ settings, onChange }: Props) {
+export default function MapGridSettingsDialog({
+  settings, onChange, hasBackgroundImage, onLoadBackgroundImage, onRemoveBackgroundImage,
+}: Props) {
   const update = (patch: Partial<MapGridSettings>) => onChange({ ...settings, ...patch })
   // Not persisted — purely a "did the user open this section" UI state,
   // same as every other popover's own open/closed state.
@@ -210,6 +231,45 @@ export default function MapGridSettingsDialog({ settings, onChange }: Props) {
             value={[settings.cellBorderThickness]}
             onValueChange={([v]) => update({ cellBorderThickness: v })}
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Background image</Label>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 text-xs px-2"
+              onClick={hasBackgroundImage ? onRemoveBackgroundImage : onLoadBackgroundImage}
+            >
+              {hasBackgroundImage ? 'Remove' : 'Load…'}
+            </Button>
+          </div>
+
+          {hasBackgroundImage && (
+            <>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="grid-bg-image-visible" className="text-xs cursor-pointer">Show background image</Label>
+                <Switch
+                  id="grid-bg-image-visible"
+                  checked={settings.backgroundImageVisible}
+                  onCheckedChange={(v) => update({ backgroundImageVisible: v })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Background image opacity</Label>
+                  <span className="text-xs text-muted-foreground">{Math.round(settings.backgroundImageOpacity * 100)}%</span>
+                </div>
+                <Slider
+                  min={0} max={1} step={0.01}
+                  value={[settings.backgroundImageOpacity]}
+                  onValueChange={([v]) => update({ backgroundImageOpacity: v })}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="pt-1 border-t border-border">

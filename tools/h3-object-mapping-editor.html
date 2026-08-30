@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>H3 &rarr; OE Object Mapping Editor</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 1.5rem; font-size: 14px; }
+  h1 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+  p.hint { color: #666; margin-top: 0; max-width: 70em; }
+  .loaders { display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; margin: 1rem 0; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px; }
+  .loaders label { display: flex; flex-direction: column; gap: 0.25rem; font-weight: 600; }
+  .status { font-weight: normal; font-size: 0.85em; }
+  .status.ok { color: #1a7f37; }
+  .status.err { color: #c00; }
+  .controls { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+  .controls input[type=search] { min-width: 20em; padding: 0.3em 0.5em; }
+  #summary { font-weight: 600; }
+  #summary .bad { color: #c00; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.85em; }
+  thead th { position: sticky; top: 0; background: Canvas; border-bottom: 2px solid #888; padding: 0.4em; text-align: left; }
+  tbody td { border-bottom: 1px solid #ddd; padding: 0.35em 0.4em; vertical-align: top; }
+  tbody tr.hidden { display: none; }
+  input[type=text], select { padding: 0.2em 0.3em; font: inherit; }
+  input.small { width: 6em; }
+  input.name { width: 14em; }
+  input.sid { width: 12em; }
+  textarea.extra { width: 28em; height: 6em; font-family: ui-monospace, monospace; font-size: 0.85em; }
+  .sid-badge { display: inline-block; padding: 0.05em 0.4em; border-radius: 3px; font-size: 0.85em; margin-left: 0.3em; }
+  .sid-badge.found { background: #d3f5d3; color: #1a7f37; }
+  .sid-badge.missing { background: #fbdada; color: #c00; }
+  .sid-badge.unknown { background: #eee; color: #666; }
+  .row-errors { color: #c00; font-size: 0.85em; }
+  details.extra-json summary { cursor: pointer; color: #555; }
+  fieldset.simple-fields { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3em; }
+  .field-row { display: flex; align-items: center; gap: 0.4em; flex-wrap: wrap; }
+  .field-row label { font-size: 0.85em; color: #555; min-width: 4.5em; }
+  .sid-wrap { position: relative; display: inline-block; }
+  .sid-suggestions { position: absolute; top: 100%; left: 0; z-index: 20; background: Canvas; border: 1px solid #888;
+    max-height: 14em; overflow-y: auto; width: max-content; max-width: 28em; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+  .sid-suggestions .suggestion { padding: 0.25em 0.5em; cursor: pointer; font-size: 0.85em; white-space: nowrap; }
+  .sid-suggestions .suggestion:hover, .sid-suggestions .suggestion.active { background: #d8e8ff; }
+  .sid-suggestions .suggestion .cat { color: #777; margin-left: 0.5em; }
+  .sid-suggestions .suggestion-empty { padding: 0.25em 0.5em; font-size: 0.85em; color: #777; }
+  .tabs { display: flex; gap: 0.5rem; margin: 1rem 0 0.5rem; border-bottom: 1px solid #ccc; }
+  .tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 0.5em 0.8em; font: inherit; cursor: pointer; color: #666; }
+  .tab-btn.active { color: inherit; border-bottom-color: #4488ee; font-weight: 600; }
+  .h3-refs { margin: 0; padding-left: 1.1em; }
+  .h3-refs li { margin: 0.1em 0; }
+  .h3-refs .via { color: #777; font-size: 0.9em; }
+  .no-refs { color: #999; font-style: italic; }
+  td.wrap { max-width: 22em; }
+  .h3-sid { color: #666; font-size: 0.9em; margin-left: 0.3em; }
+  .sprite-btn { border: 1px solid #999; background: Canvas; border-radius: 3px; cursor: pointer;
+    font-size: 0.85em; padding: 0 0.3em; margin-left: 0.3em; line-height: 1.4; }
+  .sprite-btn:hover { background: #d8e8ff; }
+</style>
+</head>
+<body>
+
+<h1>H3 &rarr; OE Object Mapping Editor</h1>
+<p class="hint">
+  Standalone editor for <code>src/lib/h3-import/h3-object-mapping.json</code> — the master table
+  that decides what each H3 object becomes when importing a <code>.h3m</code> map. Load your
+  <code>Core.zip</code> (to validate OE sids for real) and the mapping JSON below, edit rows in the
+  table, then download the result and replace the file in the repo. Not part of TSE itself — this
+  file only reads/writes local files you choose, nothing is sent anywhere.
+</p>
+<p class="hint">
+    <div><strong>How to use it:</strong></div>
+    <br>
+    <div>Open the file directly in a browser (double-click, or file:// works fine), load your Core.zip and src/lib/h3-import/h3-object-mapping.json via the two file pickers, edit away, then hit "Download edited JSON" and move the downloaded file over the real one in the repo.</div>
+    <br>
+    <div><strong>What it does:</strong></div>
+    <br>
+    <div>
+        <div>- Parses Core.zip's real object catalog (same 9 category files and interactable rules builder.ts uses) to give live green/red sid validation as you type or edit — the same check I did by hand for Tavern.</div>
+        <div>- Full first-class fields (sid with validation, kind, reason, role, etc.) for omit/emit/scenery rows — the common case of turning an omitted object into a real mapping.</div>
+        <div>- A JSON textarea for the rarer nested shapes (dispatch, scenery-dispatch, scenery-dispatch-subtype) rather than a fully dynamic editor, to keep it genuinely simple.</div>
+        <div>- Search box + outcome filter, and a running summary (row count, field errors, missing sids).</div>
+    </div>
+    <br>
+    <div>Verified with Playwright against your real Core.zip (858 objects loaded — matches the known catalog size) and real h3-object-mapping.json (232 rows, 0 errors): searched for Tavern and confirmed its green badge, flipped a row's outcome to emit with a bogus sid (got red "not found") then a real one (green), and confirmed the downloaded file round-trips through the actual h3-object-mapping-schema.ts Zod schema with zero validation errors. Zero console errors, and it doesn't touch or interfere with the TS build at all.</div>
+    <br>
+    <div>Came in near the low end of the estimate — one file, one verification pass, no rework needed.</div>
+</p>
+
+<div class="loaders">
+  <label>Core.zip (for sid lookup/validation)
+    <input type="file" id="coreInput" accept=".zip">
+    <span id="coreStatus" class="status">not loaded</span>
+  </label>
+  <label>h3-object-mapping.json
+    <input type="file" id="mappingInput" accept=".json">
+    <span id="mappingStatus" class="status">not loaded</span>
+  </label>
+</div>
+
+<div class="tabs" id="tabs" style="display:none">
+  <button class="tab-btn active" id="tabEdit" data-tab="edit">Edit by H3 object</button>
+  <button class="tab-btn" id="tabBrowse" data-tab="browse">Browse by OE object</button>
+</div>
+
+<div id="editView">
+  <div class="controls" id="controls" style="display:none">
+    <input type="search" id="searchBox" placeholder="Search h3Id / name / sid / reason...">
+    <label>Outcome:
+      <select id="outcomeFilter">
+        <option value="">All</option>
+        <option value="omit">omit</option>
+        <option value="emit">emit</option>
+        <option value="scenery">scenery</option>
+        <option value="scenery-dispatch">scenery-dispatch</option>
+        <option value="scenery-dispatch-subtype">scenery-dispatch-subtype</option>
+        <option value="dispatch">dispatch</option>
+      </select>
+    </label>
+    <span id="summary"></span>
+    <button id="downloadBtn">Download edited JSON</button>
+  </div>
+
+  <table id="table" style="display:none">
+    <thead>
+      <tr>
+        <th>h3Id</th>
+        <th>h3Name</th>
+        <th>Outcome</th>
+        <th>Fields</th>
+        <th>Extra (JSON)</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div id="browseView" style="display:none">
+  <p class="hint">
+    Every OE object found in Core.zip (left) and which H3 object(s), if any, the loaded mapping
+    JSON converts <em>into</em> it (right) — the reverse of the Edit tab. Includes objects reached
+    indirectly through a <code>scenery</code>/<code>scenery-dispatch(-subtype)</code> row's role,
+    resolved per biome via <code>sceneryRoleSids</code>.
+  </p>
+  <div class="controls" id="browseControls" style="display:none">
+    <input type="search" id="browseSearchBox" placeholder="Search OE sid / H3 name...">
+    <label>Category:
+      <select id="categoryFilter">
+        <option value="">All</option>
+        <option value="dwelling">Dwellings</option>
+        <option value="decoration-blocking">Decorations (blocking)</option>
+        <option value="decoration-nonblocking">Decorations (non-blocking)</option>
+        <option value="interactable">Interactables</option>
+        <option value="animal">Animals</option>
+        <option value="resource">Resources</option>
+        <option value="artifact">Artifacts</option>
+        <option value="spawn">Spawn placeholders</option>
+        <option value="fx">FX</option>
+        <option value="other">Other/test</option>
+      </select>
+    </label>
+    <label>Biome:
+      <select id="biomeFilter">
+        <option value="">All</option>
+        <option value="Grass">Grass</option>
+        <option value="Desert">Sand (Desert)</option>
+        <option value="Deathland">Deathland</option>
+        <option value="Snow">Snow</option>
+        <option value="Autumn">Autumn</option>
+        <option value="Lava">Lava</option>
+        <option value="Dirt">Dirt</option>
+        <option value="__none__">None (terrain-agnostic)</option>
+      </select>
+    </label>
+    <label>
+      <input type="checkbox" id="unmappedOnly"> Unmapped only
+    </label>
+    <span id="browseSummary"></span>
+  </div>
+
+  <table id="browseTable" style="display:none">
+    <thead>
+      <tr>
+        <th>OE sid</th>
+        <th>Category</th>
+        <th>Biome</th>
+        <th>Size</th>
+        <th>Interactable</th>
+        <th>Mapped from H3</th>
+      </tr>
+    </thead>
+    <tbody id="browseTbody"></tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+'use strict';
+
+// ─── Constants mirrored from src/lib/h3-import/h3-object-mapping-schema.ts ──
+// Keep these in sync by hand if that file's enums ever change — this tool is
+// intentionally a standalone duplicate, not a build-time import from it.
+const SCENERY_ROLES = ['ground', 'pool', 'tree', 'shrub', 'pool_big', 'water_decoration', 'mountain', 'rock', 'ruin'];
+const OBJECT_KINDS = ['town', 'portal', 'resource', 'mine', 'dwelling', 'artifact', 'random_squad', 'interactable', 'map_event', 'scenery'];
+const OUTCOMES = ['omit', 'emit', 'scenery', 'scenery-dispatch', 'scenery-dispatch-subtype', 'dispatch'];
+
+// ─── H3 object id -> real .def sprite filename ──────────────────────────────
+// Derived empirically from every real, shipped .h3m map in maps/H3_Maps/ (221
+// files spanning all four format versions) — for each h3Id, the most common
+// `animation` filename seen across every real object template using it in
+// that whole corpus (ties broken alphabetically; extension stripped). A
+// single h3Id can have dozens of real per-terrain/subtype .def variants —
+// this is just one representative "canonical" filename, good enough to link
+// to that object's sprite on a wiki reference. Ids absent here never showed
+// up as a real template in any of the 221 sample maps (either genuinely
+// unused, or just never observed).
+const H3_OBJECT_DEF_NAME = {
+  2: "AvXAltar", 4: "AVSarna0", 5: "AVA0007", 6: "AVA0128", 7: "AVXmktb0", 8: "AVXboat2", 9: "AVXbor00",
+  10: "AVXkey00", 11: "AVSbuoy0", 12: "adcfra", 13: "AVXmapw0", 14: "AVSclvg0", 15: "AVXcovr0", 16: "AVXbnk20",
+  17: "AVGelf0", 20: "AVGgolm0", 21: "AVXcrsd0", 22: "AVXskds0", 23: "AvSMarl", 24: "AVAdlic0", 25: "AVSutop0",
+  26: "AVZevnt0", 27: "AVXeyem0", 28: "AVSring0", 29: "AVAflot0", 30: "AVSfntn0", 31: "AVXfyth0", 32: "AVSgrdn0",
+  33: "AVCgar10", 34: "ah00_e", 35: "AVXhilg0", 36: "AVZgrail", 37: "AVXhutm0", 38: "AVSidol0", 39: "AVMlean0",
+  40: "Portu", 41: "AVSlibr0", 42: "AVXlths0", 43: "AVXmn1r0", 44: "AVXmx1r0", 45: "AVXmn2g0", 46: "AVXplns0",
+  47: "AVSschm0", 48: "AVXmags0", 49: "AVXwelr0", 50: "AVXmktt0", 51: "AVSmerc0", 52: "AVXmerm0", 53: "AVMsulf0",
+  54: "AVWelmw0", 55: "AVTmyst0", 56: "AVXosis0", 57: "AvXOblW", 58: "AvXRedW", 59: "AVXbttl0", 60: "AVXpllr0",
+  61: "AVSaxis0", 62: "AVXprsn0", 63: "AVXprmd0", 64: "AVXrlly0", 65: "AVArand", 66: "AVArnd1", 67: "AVArnd2",
+  68: "AVArnd3", 69: "AVArnd4", 70: "ahrandom", 71: "AVWmrnd0", 72: "AVWmon1", 73: "AVWmon2", 74: "AVWmon3",
+  75: "AVWmon4", 76: "AVTrndm0", 77: "AVCranx0", 78: "AVGrefg0", 79: "AVTwood0", 80: "AVXsanc0", 81: "AVXschl0",
+  82: "AVXccht0", 83: "AVXseeb0", 84: "AVXgyne0", 85: "AVAwrek0", 86: "AVAsurv0", 87: "AVXshyd0", 88: "AVXl1sh0",
+  89: "AVXl2sh0", 90: "AVXl3sh0", 91: "AVXsndg0", 92: "AVXsirn0", 93: "AVA0001", 94: "AVXstbl0", 95: "AVXtvrn0",
+  96: "AVStmpl0", 97: "AvXDenT", 98: "AVCcasx0", 99: "AVXpost0", 100: "AVSgzbo0", 101: "AVTchst0", 102: "AVXtrek0",
+  103: "AvTCave", 104: "AVSuniv0", 105: "AVTwagn0", 106: "AVGsieg0", 107: "AVSwar20", 108: "AVXtomb0", 109: "AVMwwhl0",
+  110: "AVXwtrh0", 111: "AVXwhrl0", 112: "AVMwndd0", 113: "AVSwtch0", 114: "AVgflh03", 115: "AVLsh4g0", 116: "AVLca100",
+  117: "AVLglly0", 118: "AVLct3g0", 119: "AVLdead0", 120: "AVLf12g0", 121: "AVLflk20", 122: "AVLsh2g0", 124: "AVLholg0",
+  125: "AVLklp20", 126: "AVLlk2g0", 127: "AVLlav70", 128: "AVLlav10", 129: "AVLms020", 130: "AvLdlog", 131: "AVLman30",
+  132: "AVLmoss0", 133: "AVLmd1d0", 134: "AVLmtgr4", 135: "AVLSPTR0", 136: "AVLoc3g0", 137: "AVLPNTR0", 138: "AVLs06s0",
+  139: "AVLct4g0", 140: "avlswtr2", 141: "Zsand05", 142: "avwrhssf", 143: "clrdelt1", 144: "AVSmgarn", 145: "AVAbrrlw",
+  146: "avxwobs", 147: "AVLrk1w0", 148: "AVLdun20", 149: "AVLspit0", 150: "avlsh9r0", 151: "AVLskul0", 152: "AVLr11u0",
+  153: "AvLStm2", 154: "AVLwloi4", 155: "AVLtr2d0", 157: "AVLvol20", 158: "AVLvol50", 159: "AVLwlw10", 160: "AVLyuc10",
+  161: "AVLref20", 162: "AVWmon5", 163: "AVWmon6", 164: "AVWmon7", 177: "AVLlk1r", 199: "AVLtrRo0", 204: "AVLyuc60",
+  206: "avlxds04", 207: "avlxdt00", 208: "avlxgr01", 209: "avlxro03", 210: "avlxsu10", 211: "avlxsw01", 212: "avxbgt20",
+  213: "avxfgld", 215: "avxbor80", 216: "avrcgen0", 217: "avrcgen1", 218: "avrcgn00", 219: "AVCvgr", 220: "AVXamDs",
+  221: "AVXpsSn", 222: "AVXcf5", 223: "AVXcg5", 224: "AVXef5", 225: "zwat05", 226: "AVXff5", 227: "AVXhg6",
+  228: "AVXlp3", 229: "AVXmc5", 230: "AVXmp5", 231: "AVXrk5",
+};
+
+// The one confirmed real example (Campfire, h3Id 12 -> "adcfra") uses this
+// exact page+query URL shape. Unverified for ids outside what's been checked
+// by hand — this site sits behind Cloudflare's bot challenge, which blocks
+// any automated check from here, so if a link 404s or lands on the wrong
+// gallery page, that's real signal worth reporting back rather than something
+// to silently work around.
+const H3_SPRITE_WIKI_PAGE = 'https://homm.fandom.com/wiki/Extracted/Sprites/AdventureObjects1';
+function h3SpriteUrl(defName) {
+  return `${H3_SPRITE_WIKI_PAGE}?file=${encodeURIComponent(defName + '.png')}`;
+}
+
+// A real <img> pointed at that page would just show a broken image (it's an
+// HTML gallery page behind Cloudflare, not a raw image endpoint) — so this
+// opens the actual wiki page in a new tab instead of trying to embed
+// anything here. No sprite bytes are fetched, cached, or stored by this
+// tool; the browser navigates the user's own tab to view Fandom's own
+// hosted copy, same as clicking a plain link would.
+function makeSpriteButton(defName) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'sprite-btn';
+  btn.textContent = '\u{1F5BC}️';
+  btn.title = `View ${defName}.png on the Heroes 3 wiki (opens in a new tab)`;
+  btn.onclick = (e) => { e.preventDefault(); window.open(h3SpriteUrl(defName), '_blank', 'noopener'); };
+  return btn;
+}
+
+function h3IdWithSid(h3Id) {
+  const frag = document.createDocumentFragment();
+  frag.appendChild(document.createTextNode(String(h3Id)));
+  const defName = H3_OBJECT_DEF_NAME[h3Id];
+  if (defName) {
+    const sid = document.createElement('span');
+    sid.className = 'h3-sid';
+    sid.textContent = `'${defName}'`;
+    frag.appendChild(sid);
+    frag.appendChild(makeSpriteButton(defName));
+  }
+  return frag;
+}
+
+// ─── Core.zip catalog parsing ────────────────────────────────────────────────
+// Mirrors src/lib/catalog/builder.ts's MAP_OBJECT_FILES table (same 9 files,
+// same per-category isInteractable defaults) but skips name localization
+// (Core/Lang/.../mapObjects.json) entirely — this tool only needs "does this
+// sid exist, and what's its footprint," not a display name, so the real id
+// string is shown as-is rather than a resolved in-game name.
+const MAP_OBJECT_FILES = [
+  { file: 'DB/map/objects/1_environments.json', category: 'environments', isInteractable: false },
+  { file: 'DB/map/objects/2_animals.json', category: 'animals', isInteractable: false },
+  { file: 'DB/map/objects/3_resources.json', category: 'resources', isInteractable: false },
+  { file: 'DB/map/objects/4_interactables.json', category: 'interactables', isInteractable: true },
+  { file: 'DB/map/objects/5_fxs.json', category: 'fxs', isInteractable: false },
+  { file: 'DB/map/objects/6_artifacts.json', category: 'artifacts', isInteractable: true },
+  { file: 'DB/map/objects/7_spawns.json', category: 'spawns', isInteractable: false },
+  { file: 'DB/map/objects/8_test.json', category: 'test', isInteractable: false },
+  { file: 'DB/map/objects/9_blocks.json', category: 'blocks', isInteractable: false },
+];
+const PER_ENTRY_INTERACTABLE_CATEGORIES = new Set(['interactables', 'artifacts']);
+
+// A faction dwelling's sid uses "necropolis" (barracks_necropolis_1..7) while
+// the faction's own id is "undead" — mirrors src/lib/catalog/builder.ts's
+// FACTION_SID_ALIASES exactly (the one sid/id mismatch across all 6 factions).
+const FACTION_SID_ALIASES = { necropolis: 'undead' };
+const FRACTION_FILES = [
+  'DB/fractions/1_human.json', 'DB/fractions/2_undead.json', 'DB/fractions/3_dungeon.json',
+  'DB/fractions/4_nature.json', 'DB/fractions/5_demon.json', 'DB/fractions/6_unfrozen.json',
+];
+
+async function loadFactionBiomes(zip) {
+  const biomeByFactionId = new Map();
+  for (const path of FRACTION_FILES) {
+    const entry = zip.file(path);
+    if (!entry) continue;
+    const text = (await entry.async('string')).replace(/^﻿/, '');
+    let parsed;
+    try { parsed = JSON.parse(text); } catch (e) { console.warn('Could not parse', path, e); continue; }
+    for (const f of (Array.isArray(parsed.array) ? parsed.array : [])) {
+      if (f && f.id && f.biome) biomeByFactionId.set(f.id, f.biome);
+    }
+  }
+  return biomeByFactionId;
+}
+
+// Mirrors builder.ts's inferInteractableBiomes: interactables (dwellings,
+// city halls, ...) carry no biome field of their own, but their sid always
+// embeds the owning faction's id as an underscore token when one applies —
+// the ~90% that are genuinely terrain-agnostic (mines, markets, portals,
+// neutral dwellings) are correctly left without a biome rather than guessed.
+function inferBiome(id, category, rawBiome, biomeByFactionId) {
+  if (rawBiome) return rawBiome;
+  if (category !== 'interactables') return undefined;
+  for (const token of id.split('_')) {
+    const factionId = FACTION_SID_ALIASES[token] ?? token;
+    const biome = biomeByFactionId.get(factionId);
+    if (biome) return biome;
+  }
+  return undefined;
+}
+
+function isBlockingFootprint(nodes) {
+  return Array.isArray(nodes) && nodes.includes(1);
+}
+
+// The user-facing grouping asked for on the Browse tab (dwellings /
+// decorations split by blocking-or-not / interactables), extended with the
+// rest of Core.zip's own 9 raw category files so nothing is silently hidden
+// behind those three headline groups.
+function classifyCategory(category, id, nodes) {
+  if (category === 'interactables') return id.startsWith('barracks_') ? 'dwelling' : 'interactable';
+  if (category === 'environments' || category === 'blocks') {
+    return isBlockingFootprint(nodes) ? 'decoration-blocking' : 'decoration-nonblocking';
+  }
+  if (category === 'animals') return 'animal';
+  if (category === 'resources') return 'resource';
+  if (category === 'artifacts') return 'artifact';
+  if (category === 'spawns') return 'spawn';
+  if (category === 'fxs') return 'fx';
+  return 'other';
+}
+
+async function loadCoreZip(file) {
+  const zip = await JSZip.loadAsync(file);
+  const biomeByFactionId = await loadFactionBiomes(zip);
+  const byId = new Map();
+  for (const { file: path, category, isInteractable: defaultInteractable } of MAP_OBJECT_FILES) {
+    const entry = zip.file(path);
+    if (!entry) continue;
+    const text = (await entry.async('string')).replace(/^﻿/, '');
+    let parsed;
+    try { parsed = JSON.parse(text); } catch (e) { console.warn('Could not parse', path, e); continue; }
+    const arr = Array.isArray(parsed.array) ? parsed.array : [];
+    for (const obj of arr) {
+      const id = obj && obj.id;
+      if (!id || byId.has(id)) continue;
+      const isInteractable = PER_ENTRY_INTERACTABLE_CATEGORIES.has(category) ? obj.isInteractable !== false : defaultInteractable;
+      const nodes = Array.isArray(obj.nodes) ? obj.nodes : null;
+      byId.set(id, {
+        id, category, isInteractable,
+        sizeX: typeof obj.sizeX === 'number' ? obj.sizeX : 1,
+        sizeZ: typeof obj.sizeZ === 'number' ? obj.sizeZ : 1,
+        nodes,
+        biome: inferBiome(id, category, typeof obj.biome === 'string' ? obj.biome : undefined, biomeByFactionId),
+        uiCategory: classifyCategory(category, id, nodes),
+      });
+    }
+  }
+  return byId;
+}
+
+// ─── State ────────────────────────────────────────────────────────────────
+let catalog = null; // Map<sid, {id, category, isInteractable, sizeX, sizeZ, nodes}> | null until loaded
+let mapping = null; // { objects: [...], sceneryRoleSids: {...} }
+const rowState = new Map(); // h3Id -> { tr, badgesEl, errorsEl, simpleFieldsEl, extraTextarea }
+
+// ─── Validation (mirrors h3-object-mapping-schema.ts's rules by hand) ───────
+function validateRow(row) {
+  const errors = [];
+  if (typeof row.h3Id !== 'number' || !Number.isInteger(row.h3Id)) errors.push('h3Id must be an integer');
+  if (typeof row.h3Name !== 'string' || !row.h3Name) errors.push('h3Name must be a non-empty string');
+
+  switch (row.outcome) {
+    case 'omit':
+      if (typeof row.reason !== 'string' || !row.reason) errors.push('reason is required');
+      break;
+    case 'emit':
+      if (typeof row.sid !== 'string' || !row.sid) errors.push('sid is required');
+      if (!OBJECT_KINDS.includes(row.kind)) errors.push('kind must be one of: ' + OBJECT_KINDS.join(', '));
+      if (typeof row.reason !== 'string' || !row.reason) errors.push('reason is required');
+      break;
+    case 'scenery':
+      if (!SCENERY_ROLES.includes(row.role)) errors.push('role must be one of: ' + SCENERY_ROLES.join(', '));
+      break;
+    case 'scenery-dispatch':
+      if (!row.exact || typeof row.exact !== 'object') { errors.push('exact is required (object)'); break; }
+      for (const [k, v] of Object.entries(row.exact)) {
+        if (!v || typeof v.sid !== 'string' || !SCENERY_ROLES.includes(v.role)) errors.push(`exact["${k}"] must be {sid, role}`);
+      }
+      break;
+    case 'scenery-dispatch-subtype':
+      if (!row.subtypes || typeof row.subtypes !== 'object') { errors.push('subtypes is required (object)'); break; }
+      for (const [k, v] of Object.entries(row.subtypes)) {
+        if (!SCENERY_ROLES.includes(v)) errors.push(`subtypes["${k}"] must be a valid role`);
+      }
+      break;
+    case 'dispatch':
+      if (!OBJECT_KINDS.includes(row.kind)) errors.push('kind must be one of: ' + OBJECT_KINDS.join(', '));
+      if (typeof row.reason !== 'string' || !row.reason) errors.push('reason is required');
+      if (row.subtypes) {
+        for (const [k, v] of Object.entries(row.subtypes)) {
+          if (!v || typeof v.sid !== 'string') errors.push(`subtypes["${k}"] must be {sid, factionSid?}`);
+        }
+      }
+      if (row.exact && typeof row.exact !== 'object') errors.push('exact must be an object of string->sid');
+      if (row.tokens && typeof row.tokens !== 'object') errors.push('tokens must be an object of string->sid');
+      if (row.default !== undefined && typeof row.default !== 'string') errors.push('default must be a string');
+      if (row.freeChoice) {
+        const fc = row.freeChoice;
+        if (!Array.isArray(fc.subtypes) || typeof fc.sid !== 'string' || typeof fc.reason !== 'string') {
+          errors.push('freeChoice must be {subtypes:number[], sid, reason}');
+        }
+      }
+      if (row.unmatchedReason !== undefined && typeof row.unmatchedReason !== 'string') errors.push('unmatchedReason must be a string');
+      break;
+    default:
+      errors.push('unknown outcome: ' + row.outcome);
+  }
+  return errors;
+}
+
+// Every OE sid this row references, wherever it appears in its shape.
+function rowSidsToCheck(row) {
+  const sids = [];
+  if (row.outcome === 'emit' && row.sid) sids.push(row.sid);
+  if (row.outcome === 'scenery-dispatch' && row.exact) {
+    for (const v of Object.values(row.exact)) if (v && v.sid) sids.push(v.sid);
+  }
+  if (row.outcome === 'dispatch') {
+    if (row.subtypes) for (const v of Object.values(row.subtypes)) if (v && v.sid) sids.push(v.sid);
+    if (row.exact) for (const v of Object.values(row.exact)) if (typeof v === 'string') sids.push(v);
+    if (row.tokens) for (const v of Object.values(row.tokens)) if (typeof v === 'string') sids.push(v);
+    if (typeof row.default === 'string') sids.push(row.default);
+    if (row.freeChoice && row.freeChoice.sid) sids.push(row.freeChoice.sid);
+  }
+  return sids;
+}
+
+function checkSid(sid) {
+  if (!catalog) return 'unknown';
+  return catalog.has(sid) ? 'found' : 'missing';
+}
+
+function sidBadge(sid) {
+  const state = checkSid(sid);
+  const span = document.createElement('span');
+  span.className = 'sid-badge ' + state;
+  if (state === 'found') {
+    const c = catalog.get(sid);
+    span.textContent = `✓ ${sid} (${c.category}, ${c.sizeX}x${c.sizeZ}${c.isInteractable ? ', interactable' : ''})`;
+  } else if (state === 'missing') {
+    span.textContent = `✗ ${sid} not found in Core.zip`;
+  } else {
+    span.textContent = sid + ' (load Core.zip to check)';
+  }
+  return span;
+}
+
+const SID_SUGGESTION_LIMIT = 30;
+
+// Wraps `input` in a positioned container with a live-filtered dropdown of
+// every catalog sid whose id contains the typed text (substring match,
+// case-insensitive — not a plain <datalist>, since native datalist filtering
+// is prefix-only in some browsers and this needs to search, not just
+// autocomplete a known start). Returns the wrapper element to insert in the
+// input's place. No-ops gracefully (empty dropdown) until Core.zip is loaded.
+function attachSidAutocomplete(input, onPick) {
+  const wrap = document.createElement('div');
+  wrap.className = 'sid-wrap';
+  wrap.appendChild(input);
+  const list = document.createElement('div');
+  list.className = 'sid-suggestions';
+  list.hidden = true;
+  wrap.appendChild(list);
+
+  let activeIndex = -1;
+
+  function render() {
+    list.innerHTML = '';
+    activeIndex = -1;
+    if (!catalog) { list.hidden = true; return; }
+    const q = input.value.trim().toLowerCase();
+    if (!q) { list.hidden = true; return; }
+    const matches = [];
+    for (const c of catalog.values()) {
+      if (c.id.toLowerCase().includes(q)) matches.push(c);
+      if (matches.length >= SID_SUGGESTION_LIMIT) break;
+    }
+    if (matches.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'suggestion-empty';
+      empty.textContent = 'no matching OE objects in Core.zip';
+      list.appendChild(empty);
+      list.hidden = false;
+      return;
+    }
+    for (const c of matches) {
+      const row = document.createElement('div');
+      row.className = 'suggestion';
+      row.textContent = c.id;
+      const cat = document.createElement('span');
+      cat.className = 'cat';
+      cat.textContent = `${c.category}, ${c.sizeX}x${c.sizeZ}${c.isInteractable ? ', interactable' : ''}`;
+      row.appendChild(cat);
+      // mousedown (not click) fires before the input's blur, so the
+      // dropdown-hide-on-blur handler below doesn't swallow the pick first.
+      row.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        input.value = c.id;
+        list.hidden = true;
+        onPick();
+      });
+      list.appendChild(row);
+    }
+    list.hidden = false;
+  }
+
+  input.addEventListener('input', render);
+  input.addEventListener('focus', render);
+  input.addEventListener('blur', () => { setTimeout(() => { list.hidden = true; }, 150); });
+  input.addEventListener('keydown', (e) => {
+    const items = list.querySelectorAll('.suggestion');
+    if (list.hidden || items.length === 0) return;
+    if (e.key === 'Escape') { list.hidden = true; return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[activeIndex]?.classList.remove('active');
+      activeIndex = e.key === 'ArrowDown' ? Math.min(activeIndex + 1, items.length - 1) : Math.max(activeIndex - 1, 0);
+      items[activeIndex].classList.add('active');
+      items[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault();
+      items[activeIndex].dispatchEvent(new Event('mousedown'));
+    }
+  });
+
+  return wrap;
+}
+
+// ─── Per-row "simple fields" (outcome-specific first-class inputs) ─────────
+// Everything else (scenery-dispatch's `exact`, scenery-dispatch-subtype's
+// `subtypes`, dispatch's nested tables) is edited as raw JSON in the "Extra"
+// column instead — those shapes are rare to hand-edit and genuinely nested,
+// so a full dynamic key/value editor isn't worth the complexity for a "small
+// and very simple" tool. `omit`/`emit`/`scenery` — the overwhelming majority
+// of real edits (turning an omitted id into a real mapping) — get full
+// first-class fields with live sid validation.
+function extraFieldsFor(outcome) {
+  if (outcome === 'scenery-dispatch') return ['exact'];
+  if (outcome === 'scenery-dispatch-subtype') return ['subtypes'];
+  if (outcome === 'dispatch') return ['subtypes', 'exact', 'tokens', 'default', 'freeChoice', 'unmatchedReason'];
+  return [];
+}
+
+function renderSimpleFields(row, container) {
+  container.innerHTML = '';
+  const add = (labelText, el) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-row';
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    wrap.appendChild(label);
+    wrap.appendChild(el);
+    container.appendChild(wrap);
+  };
+
+  if (row.outcome === 'omit') {
+    const reason = document.createElement('input');
+    reason.type = 'text'; reason.className = 'sid'; reason.value = row.reason || '';
+    reason.oninput = () => { row.reason = reason.value; refreshRow(row); };
+    add('reason', reason);
+  } else if (row.outcome === 'emit') {
+    const sid = document.createElement('input');
+    sid.type = 'text'; sid.className = 'sid'; sid.value = row.sid || ''; sid.autocomplete = 'off';
+    sid.placeholder = 'search OE objects...';
+    sid.oninput = () => { row.sid = sid.value; refreshRow(row); };
+    const sidWrap = attachSidAutocomplete(sid, () => { row.sid = sid.value; refreshRow(row); });
+    add('sid', sidWrap);
+
+    const kind = document.createElement('select');
+    for (const k of OBJECT_KINDS) { const o = document.createElement('option'); o.value = k; o.textContent = k; kind.appendChild(o); }
+    kind.value = OBJECT_KINDS.includes(row.kind) ? row.kind : 'interactable';
+    row.kind = kind.value;
+    kind.onchange = () => { row.kind = kind.value; refreshRow(row); };
+    add('kind', kind);
+
+    const reason = document.createElement('input');
+    reason.type = 'text'; reason.className = 'sid'; reason.value = row.reason || 'direct_template_sid';
+    row.reason = reason.value;
+    reason.oninput = () => { row.reason = reason.value; refreshRow(row); };
+    add('reason', reason);
+
+    const factionSid = document.createElement('input');
+    factionSid.type = 'text'; factionSid.className = 'sid'; factionSid.placeholder = '(town kind only)';
+    factionSid.value = row.factionSid || '';
+    factionSid.oninput = () => { row.factionSid = factionSid.value || undefined; refreshRow(row); };
+    add('factionSid', factionSid);
+
+    const freeChoiceWrap = document.createElement('label');
+    const freeChoice = document.createElement('input');
+    freeChoice.type = 'checkbox'; freeChoice.checked = !!row.freeChoice;
+    freeChoice.onchange = () => { row.freeChoice = freeChoice.checked || undefined; refreshRow(row); };
+    freeChoiceWrap.appendChild(freeChoice);
+    freeChoiceWrap.append(' freeChoice (town kind only)');
+    container.appendChild(freeChoiceWrap);
+  } else if (row.outcome === 'scenery') {
+    const role = document.createElement('select');
+    for (const r of SCENERY_ROLES) { const o = document.createElement('option'); o.value = r; o.textContent = r; role.appendChild(o); }
+    role.value = SCENERY_ROLES.includes(row.role) ? row.role : 'rock';
+    row.role = role.value;
+    role.onchange = () => { row.role = role.value; refreshRow(row); };
+    add('role', role);
+  } else if (row.outcome === 'dispatch') {
+    const kind = document.createElement('select');
+    for (const k of OBJECT_KINDS) { const o = document.createElement('option'); o.value = k; o.textContent = k; kind.appendChild(o); }
+    kind.value = OBJECT_KINDS.includes(row.kind) ? row.kind : 'interactable';
+    row.kind = kind.value;
+    kind.onchange = () => { row.kind = kind.value; refreshRow(row); };
+    add('kind', kind);
+
+    const reason = document.createElement('input');
+    reason.type = 'text'; reason.className = 'sid'; reason.value = row.reason || '';
+    reason.oninput = () => { row.reason = reason.value; refreshRow(row); };
+    add('reason', reason);
+  }
+  // scenery-dispatch / scenery-dispatch-subtype: no simple fields at all,
+  // everything lives in the Extra JSON column.
+}
+
+// Reset a row to a fresh, minimally-valid shape for a newly-chosen outcome —
+// deliberately wipes old outcome-specific fields rather than leaving stale
+// ones behind that wouldn't match the new shape.
+function resetRowForOutcome(row, outcome) {
+  const h3Id = row.h3Id, h3Name = row.h3Name;
+  for (const key of Object.keys(row)) {
+    if (key !== 'h3Id' && key !== 'h3Name') delete row[key];
+  }
+  row.h3Id = h3Id; row.h3Name = h3Name; row.outcome = outcome;
+  if (outcome === 'omit') row.reason = 'unmapped_template_object_id_' + h3Id;
+  else if (outcome === 'emit') { row.sid = ''; row.kind = 'interactable'; row.reason = 'direct_template_sid'; }
+  else if (outcome === 'scenery') row.role = 'rock';
+  else if (outcome === 'scenery-dispatch') row.exact = {};
+  else if (outcome === 'scenery-dispatch-subtype') row.subtypes = {};
+  else if (outcome === 'dispatch') { row.kind = 'interactable'; row.reason = ''; }
+}
+
+// ─── Row build/refresh ──────────────────────────────────────────────────────
+function buildRow(row) {
+  const tr = document.createElement('tr');
+
+  const tdId = document.createElement('td');
+  tdId.appendChild(h3IdWithSid(row.h3Id));
+  tr.appendChild(tdId);
+
+  const tdName = document.createElement('td');
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text'; nameInput.className = 'name'; nameInput.value = row.h3Name;
+  nameInput.oninput = () => { row.h3Name = nameInput.value; };
+  tdName.appendChild(nameInput);
+  tr.appendChild(tdName);
+
+  const tdOutcome = document.createElement('td');
+  const outcomeSelect = document.createElement('select');
+  for (const o of OUTCOMES) { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; outcomeSelect.appendChild(opt); }
+  outcomeSelect.value = row.outcome;
+  outcomeSelect.onchange = () => { resetRowForOutcome(row, outcomeSelect.value); renderSimpleFields(row, simpleFieldsEl); renderExtra(row, extraDetails, extraTextarea); refreshRow(row); };
+  tdOutcome.appendChild(outcomeSelect);
+  tr.appendChild(tdOutcome);
+
+  const tdSimple = document.createElement('td');
+  const simpleFieldsEl = document.createElement('div');
+  simpleFieldsEl.className = 'simple-fields';
+  tdSimple.appendChild(simpleFieldsEl);
+  tr.appendChild(tdSimple);
+
+  const tdExtra = document.createElement('td');
+  const extraDetails = document.createElement('details');
+  extraDetails.className = 'extra-json';
+  const extraSummary = document.createElement('summary');
+  extraDetails.appendChild(extraSummary);
+  const extraTextarea = document.createElement('textarea');
+  extraTextarea.className = 'extra';
+  extraTextarea.onblur = () => applyExtraJson(row, extraTextarea, extraSummary);
+  extraDetails.appendChild(extraTextarea);
+  tdExtra.appendChild(extraDetails);
+  tr.appendChild(tdExtra);
+
+  const tdStatus = document.createElement('td');
+  const badgesEl = document.createElement('div');
+  const errorsEl = document.createElement('div');
+  errorsEl.className = 'row-errors';
+  tdStatus.appendChild(badgesEl);
+  tdStatus.appendChild(errorsEl);
+  tr.appendChild(tdStatus);
+
+  renderSimpleFields(row, simpleFieldsEl);
+  renderExtra(row, extraDetails, extraTextarea);
+
+  rowState.set(row.h3Id, { tr, badgesEl, errorsEl, simpleFieldsEl, extraDetails, extraTextarea, extraSummary });
+  return tr;
+}
+
+function renderExtra(row, detailsEl, textareaEl) {
+  const fields = extraFieldsFor(row.outcome);
+  if (fields.length === 0) {
+    detailsEl.style.display = 'none';
+    return;
+  }
+  detailsEl.style.display = '';
+  const obj = {};
+  for (const f of fields) if (row[f] !== undefined) obj[f] = row[f];
+  textareaEl.value = JSON.stringify(obj, null, 2);
+  const state = rowState.get(row.h3Id);
+  if (state) state.extraSummary.textContent = 'Extra fields (JSON): ' + fields.join(', ');
+}
+
+function applyExtraJson(row, textareaEl, summaryEl) {
+  let parsed;
+  try {
+    parsed = textareaEl.value.trim() ? JSON.parse(textareaEl.value) : {};
+  } catch (e) {
+    summaryEl.textContent = 'Invalid JSON: ' + e.message;
+    summaryEl.style.color = '#c00';
+    return;
+  }
+  summaryEl.style.color = '';
+  for (const f of extraFieldsFor(row.outcome)) {
+    if (parsed[f] !== undefined) row[f] = parsed[f];
+    else delete row[f];
+  }
+  renderExtra(row, rowState.get(row.h3Id).extraDetails, textareaEl);
+  refreshRow(row);
+}
+
+function refreshRow(row) {
+  const state = rowState.get(row.h3Id);
+  if (!state) return;
+  const errors = validateRow(row);
+  state.errorsEl.textContent = errors.length ? '✗ ' + errors.join('; ') : '';
+
+  state.badgesEl.innerHTML = '';
+  const sids = rowSidsToCheck(row);
+  if (sids.length === 0) {
+    if (row.outcome === 'scenery' || row.outcome === 'scenery-dispatch' || row.outcome === 'scenery-dispatch-subtype' || row.outcome === 'omit') {
+      const span = document.createElement('span');
+      span.className = 'sid-badge found';
+      span.textContent = '– no sid to check (role/omit-only)';
+      state.badgesEl.appendChild(span);
+    }
+  } else {
+    for (const sid of sids) state.badgesEl.appendChild(sidBadge(sid));
+  }
+  updateSummary();
+}
+
+function refreshAllRows() {
+  for (const row of mapping.objects) refreshRow(row);
+}
+
+// ─── Search / filter ────────────────────────────────────────────────────────
+function rowSearchText(row) {
+  const sids = rowSidsToCheck(row).join(' ');
+  const defName = H3_OBJECT_DEF_NAME[row.h3Id];
+  return [row.h3Id, row.h3Name, row.outcome, row.reason, row.sid, row.role, sids, defName].filter(Boolean).join(' ').toLowerCase();
+}
+
+function applyFilter() {
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const outcomeFilter = document.getElementById('outcomeFilter').value;
+  for (const row of mapping.objects) {
+    const state = rowState.get(row.h3Id);
+    if (!state) continue;
+    const matchesSearch = !q || rowSearchText(row).includes(q);
+    const matchesOutcome = !outcomeFilter || row.outcome === outcomeFilter;
+    state.tr.classList.toggle('hidden', !(matchesSearch && matchesOutcome));
+  }
+}
+
+// ─── Summary ────────────────────────────────────────────────────────────────
+function updateSummary() {
+  let errorCount = 0, missingSidCount = 0;
+  const seenIds = new Map();
+  let dupeCount = 0;
+  for (const row of mapping.objects) {
+    errorCount += validateRow(row).length;
+    for (const sid of rowSidsToCheck(row)) if (checkSid(sid) === 'missing') missingSidCount++;
+    if (seenIds.has(row.h3Id)) dupeCount++;
+    seenIds.set(row.h3Id, true);
+  }
+  const el = document.getElementById('summary');
+  const parts = [`${mapping.objects.length} rows`];
+  parts.push(errorCount ? `<span class="bad">${errorCount} field errors</span>` : '0 field errors');
+  parts.push(missingSidCount ? `<span class="bad">${missingSidCount} sids not found in Core.zip</span>` : '0 missing sids');
+  if (dupeCount) parts.push(`<span class="bad">${dupeCount} duplicate h3Id</span>`);
+  el.innerHTML = parts.join(' · ');
+}
+
+// ─── Browse-by-OE-object tab (reverse of the Edit tab) ─────────────────────
+// Every OE sid a mapping row can resolve to, and how: `emit`'s sid directly;
+// `scenery`/`scenery-dispatch-subtype`'s role resolved per-biome through
+// `sceneryRoleSids` (a role has no single sid — it's one per terrain biome,
+// so one row can point at up to 8 different OE objects this way);
+// `scenery-dispatch`'s per-animation exact sid+role (also biome-resolved);
+// `dispatch`'s subtypes/exact/tokens/default/freeChoice, each a direct sid.
+function buildReverseIndex() {
+  const bySid = new Map(); // sid -> [{h3Id, h3Name, via}]
+  const addRef = (sid, h3Id, h3Name, via) => {
+    if (!sid) return;
+    if (!bySid.has(sid)) bySid.set(sid, []);
+    bySid.get(sid).push({ h3Id, h3Name, via });
+  };
+  const addRoleRefs = (role, h3Id, h3Name, viaPrefix) => {
+    const byBiome = mapping.sceneryRoleSids?.[role];
+    if (!byBiome) return;
+    for (const [biome, sid] of Object.entries(byBiome)) addRef(sid, h3Id, h3Name, `${viaPrefix}/${biome}`);
+  };
+
+  if (!mapping) return bySid;
+  for (const row of mapping.objects) {
+    const { h3Id, h3Name } = row;
+    switch (row.outcome) {
+      case 'emit':
+        addRef(row.sid, h3Id, h3Name, 'emit');
+        break;
+      case 'scenery':
+        addRoleRefs(row.role, h3Id, h3Name, `scenery:${row.role}`);
+        break;
+      case 'scenery-dispatch':
+        for (const [anim, v] of Object.entries(row.exact || {})) addRef(v.sid, h3Id, h3Name, `anim "${anim}"`);
+        break;
+      case 'scenery-dispatch-subtype':
+        for (const [subtype, role] of Object.entries(row.subtypes || {})) addRoleRefs(role, h3Id, h3Name, `subtype ${subtype}:${role}`);
+        break;
+      case 'dispatch':
+        if (row.subtypes) for (const [k, v] of Object.entries(row.subtypes)) addRef(v.sid, h3Id, h3Name, `subtype ${k}`);
+        if (row.exact) for (const [k, v] of Object.entries(row.exact)) addRef(v, h3Id, h3Name, `anim "${k}"`);
+        if (row.tokens) for (const [k, v] of Object.entries(row.tokens)) addRef(v, h3Id, h3Name, `token "${k}"`);
+        if (row.default) addRef(row.default, h3Id, h3Name, 'default');
+        if (row.freeChoice?.sid) addRef(row.freeChoice.sid, h3Id, h3Name, 'freeChoice');
+        break;
+      // omit: contributes no OE sid.
+    }
+  }
+  return bySid;
+}
+
+function browseRowSearchText(c, refs) {
+  const refText = refs.map((r) => `${r.h3Id} ${r.h3Name}`).join(' ');
+  return [c.id, c.category, c.uiCategory, c.biome, refText].filter(Boolean).join(' ').toLowerCase();
+}
+
+function buildBrowseRow(c, refs) {
+  const tr = document.createElement('tr');
+
+  const tdSid = document.createElement('td');
+  tdSid.textContent = c.id;
+  tr.appendChild(tdSid);
+
+  const tdCat = document.createElement('td');
+  tdCat.textContent = c.uiCategory + (c.uiCategory !== c.category ? ` (${c.category})` : '');
+  tr.appendChild(tdCat);
+
+  const tdBiome = document.createElement('td');
+  tdBiome.textContent = c.biome || '—';
+  tr.appendChild(tdBiome);
+
+  const tdSize = document.createElement('td');
+  tdSize.textContent = `${c.sizeX}x${c.sizeZ}`;
+  tr.appendChild(tdSize);
+
+  const tdInteractable = document.createElement('td');
+  tdInteractable.textContent = c.isInteractable ? 'Yes' : '';
+  tr.appendChild(tdInteractable);
+
+  const tdRefs = document.createElement('td');
+  tdRefs.className = 'wrap';
+  if (refs.length === 0) {
+    tdRefs.innerHTML = '<span class="no-refs">— no H3 object maps to this —</span>';
+  } else {
+    const ul = document.createElement('ul');
+    ul.className = 'h3-refs';
+    for (const r of refs) {
+      const li = document.createElement('li');
+      const defName = H3_OBJECT_DEF_NAME[r.h3Id];
+      const idPart = defName ? `id ${r.h3Id}, '${defName}'` : `id ${r.h3Id}`;
+      li.appendChild(document.createTextNode(`${r.h3Name} (${idPart}) `));
+      if (defName) li.appendChild(makeSpriteButton(defName));
+      const via = document.createElement('span');
+      via.className = 'via';
+      via.textContent = ` [${r.via}]`;
+      li.appendChild(via);
+      ul.appendChild(li);
+    }
+    tdRefs.appendChild(ul);
+  }
+  tr.appendChild(tdRefs);
+
+  return tr;
+}
+
+function renderBrowseTable() {
+  const controlsEl = document.getElementById('browseControls');
+  const tableEl = document.getElementById('browseTable');
+  if (!catalog) {
+    controlsEl.style.display = 'none';
+    tableEl.style.display = 'none';
+    return;
+  }
+  controlsEl.style.display = '';
+  tableEl.style.display = '';
+
+  const bySid = buildReverseIndex();
+  const tbody = document.getElementById('browseTbody');
+  tbody.innerHTML = '';
+  const sorted = [...catalog.values()].sort((a, b) => a.id.localeCompare(b.id));
+  const frag = document.createDocumentFragment();
+  for (const c of sorted) frag.appendChild(buildBrowseRow(c, bySid.get(c.id) || []));
+  tbody.appendChild(frag);
+
+  applyBrowseFilter();
+}
+
+function applyBrowseFilter() {
+  const q = document.getElementById('browseSearchBox').value.trim().toLowerCase();
+  const categoryFilter = document.getElementById('categoryFilter').value;
+  const biomeFilter = document.getElementById('biomeFilter').value;
+  const unmappedOnly = document.getElementById('unmappedOnly').checked;
+  const bySid = buildReverseIndex();
+
+  const sorted = [...catalog.values()].sort((a, b) => a.id.localeCompare(b.id));
+  const rows = document.getElementById('browseTbody').children;
+  let shown = 0, unmapped = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    const c = sorted[i];
+    const refs = bySid.get(c.id) || [];
+    const tr = rows[i];
+    const matchesSearch = !q || browseRowSearchText(c, refs).includes(q);
+    const matchesCategory = !categoryFilter || c.uiCategory === categoryFilter;
+    const matchesBiome = !biomeFilter || (biomeFilter === '__none__' ? !c.biome : c.biome === biomeFilter);
+    const matchesUnmapped = !unmappedOnly || refs.length === 0;
+    const visible = matchesSearch && matchesCategory && matchesBiome && matchesUnmapped;
+    tr.classList.toggle('hidden', !visible);
+    if (visible) shown++;
+    if (refs.length === 0) unmapped++;
+  }
+  document.getElementById('browseSummary').innerHTML =
+    `${shown} of ${catalog.size} OE objects shown · <span class="${unmapped ? 'bad' : ''}">${unmapped} total have no H3 source</span>`;
+}
+
+document.getElementById('browseSearchBox').addEventListener('input', applyBrowseFilter);
+document.getElementById('categoryFilter').addEventListener('change', applyBrowseFilter);
+document.getElementById('biomeFilter').addEventListener('change', applyBrowseFilter);
+document.getElementById('unmappedOnly').addEventListener('change', applyBrowseFilter);
+
+document.getElementById('tabEdit').addEventListener('click', () => switchTab('edit'));
+document.getElementById('tabBrowse').addEventListener('click', () => switchTab('browse'));
+
+function switchTab(tab) {
+  document.getElementById('tabEdit').classList.toggle('active', tab === 'edit');
+  document.getElementById('tabBrowse').classList.toggle('active', tab === 'browse');
+  document.getElementById('editView').style.display = tab === 'edit' ? '' : 'none';
+  document.getElementById('browseView').style.display = tab === 'browse' ? '' : 'none';
+  if (tab === 'browse') renderBrowseTable();
+}
+
+// ─── Wiring ─────────────────────────────────────────────────────────────────
+document.getElementById('coreInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('coreStatus');
+  statusEl.textContent = 'loading...'; statusEl.className = 'status';
+  try {
+    catalog = await loadCoreZip(file);
+    statusEl.textContent = `loaded (${catalog.size} objects)`;
+    statusEl.className = 'status ok';
+    if (mapping) refreshAllRows();
+    document.getElementById('tabs').style.display = '';
+    if (document.getElementById('tabBrowse').classList.contains('active')) renderBrowseTable();
+  } catch (err) {
+    statusEl.textContent = 'failed: ' + err.message;
+    statusEl.className = 'status err';
+  }
+});
+
+document.getElementById('mappingInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('mappingStatus');
+  statusEl.textContent = 'loading...'; statusEl.className = 'status';
+  try {
+    const text = await file.text();
+    mapping = JSON.parse(text);
+    if (!Array.isArray(mapping.objects)) throw new Error('missing "objects" array');
+    statusEl.textContent = `loaded (${mapping.objects.length} rows)`;
+    statusEl.className = 'status ok';
+    renderTable();
+    document.getElementById('tabs').style.display = '';
+    if (document.getElementById('tabBrowse').classList.contains('active')) renderBrowseTable();
+  } catch (err) {
+    statusEl.textContent = 'failed: ' + err.message;
+    statusEl.className = 'status err';
+  }
+});
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  rowState.clear();
+  const sorted = [...mapping.objects].sort((a, b) => a.h3Id - b.h3Id);
+  const frag = document.createDocumentFragment();
+  for (const row of sorted) frag.appendChild(buildRow(row));
+  tbody.appendChild(frag);
+  refreshAllRows();
+  document.getElementById('controls').style.display = '';
+  document.getElementById('table').style.display = '';
+}
+
+document.getElementById('searchBox').addEventListener('input', applyFilter);
+document.getElementById('outcomeFilter').addEventListener('change', applyFilter);
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const out = { objects: [...mapping.objects].sort((a, b) => a.h3Id - b.h3Id), sceneryRoleSids: mapping.sceneryRoleSids };
+  const blob = new Blob([JSON.stringify(out, null, 2) + '\n'], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'h3-object-mapping.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>

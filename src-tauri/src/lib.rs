@@ -185,6 +185,11 @@ pub fn run() {
             // already were) — this gives it a native home instead of removing the
             // capability. No accelerator: Ctrl+O is already "Open" (scenario JSON).
             let open_map_item = MenuItemBuilder::with_id("open-map", "Open Map...").build(app)?;
+            // Same rationale as open_map_item above: gives the "More" dropdown's
+            // existing Import H3 Map action (Toolbar.tsx) a second, native home
+            // rather than replacing it.
+            let import_h3m_item =
+                MenuItemBuilder::with_id("import-h3m", "Import H3 Map...").build(app)?;
             let save_item = MenuItemBuilder::with_id("save", "Save")
                 .accelerator("CmdOrCtrl+S")
                 .build(app)?;
@@ -206,6 +211,7 @@ pub fn run() {
                 .item(&new_item)
                 .item(&open_item)
                 .item(&open_map_item)
+                .item(&import_h3m_item)
                 .separator()
                 .item(&save_item)
                 .item(&save_as_item)

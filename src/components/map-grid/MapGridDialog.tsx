@@ -63,7 +63,7 @@ import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
-import { isTauri } from '@/lib/native-fs'
+import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
@@ -290,6 +290,41 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const updateSettings = (next: typeof settings) => {
     setSettings(next)
     saveMapGridSettings(next)
+  }
+
+  // Optional background reference image (session-only — see
+  // MapGridSettings.backgroundImageVisible's own doc comment for why the
+  // image bytes themselves are never persisted, only the toggle/opacity).
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null)
+  const backgroundImageUrlRef = useRef<string | null>(null)
+  useEffect(() => {
+    backgroundImageUrlRef.current = backgroundImageUrl
+  }, [backgroundImageUrl])
+  useEffect(() => () => {
+    if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
+  }, [])
+  const handleLoadBackgroundImage = async () => {
+    const picked = await openImageFile()
+    if (!picked) return
+    // A Blob with no `type` renders fine as an <img src="blob:..."> in
+    // Chromium (it sniffs the bytes regardless), but Tauri's desktop webview
+    // (WKWebView on macOS) does not — it silently shows nothing without the
+    // real MIME type, confirmed the hard way after this looked fine under a
+    // plain browser Playwright check.
+    const ext = picked.name.split('.').pop()?.toLowerCase()
+    const mime = ext === 'png' ? 'image/png'
+      : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+      : ext === 'webp' ? 'image/webp'
+      : ext === 'gif' ? 'image/gif'
+      : ext === 'bmp' ? 'image/bmp'
+      : ''
+    const url = URL.createObjectURL(new Blob([picked.buffer], { type: mime }))
+    if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
+    setBackgroundImageUrl(url)
+  }
+  const handleRemoveBackgroundImage = () => {
+    if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
+    setBackgroundImageUrl(null)
   }
 
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
@@ -2927,7 +2962,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <Ban className="h-3.5 w-3.5" />
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
-              <MapGridSettingsDialog settings={settings} onChange={updateSettings} />
+              <MapGridSettingsDialog
+                settings={settings}
+                onChange={updateSettings}
+                hasBackgroundImage={!!backgroundImageUrl}
+                onLoadBackgroundImage={() => { void handleLoadBackgroundImage() }}
+                onRemoveBackgroundImage={handleRemoveBackgroundImage}
+              />
             </div>
           </div>
 
@@ -3713,7 +3754,30 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   transformOrigin: '0 0',
                 }}
               >
-                {/* Overview swatch layer — always present, cheap regardless of map size */}
+                {/* Optional background reference image — first child so it
+                    sits behind every other layer (stacking here is DOM-order
+                    only, no z-index), sized to the full map so it shares the
+                    same pan/zoom transform as everything else. */}
+                {backgroundImageUrl && settings.backgroundImageVisible && (
+                  <img
+                    src={backgroundImageUrl}
+                    alt=""
+                    className="absolute top-0 left-0 pointer-events-none"
+                    style={{
+                      width: sizeX * BASE_CELL_PX,
+                      height: sizeZ * BASE_CELL_PX,
+                      opacity: settings.backgroundImageOpacity,
+                      objectFit: 'fill',
+                    }}
+                  />
+                )}
+
+                {/* Overview swatch layer — always present, cheap regardless of map size.
+                    terrainFillColor() paints a fully opaque rgb(...) (blended toward
+                    white, not real alpha) — settings.terrainOpacity never makes this
+                    canvas itself see-through. A background image sitting behind it
+                    needs actual CSS opacity here to ever be visible; only applied
+                    while that feature is active so it can't affect anyone else. */}
                 <canvas
                   ref={setCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
@@ -3721,6 +3785,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     width: sizeX * BASE_CELL_PX,
                     height: sizeZ * BASE_CELL_PX,
                     imageRendering: 'pixelated',
+                    opacity: backgroundImageUrl && settings.backgroundImageVisible
+                      ? 1 - settings.backgroundImageOpacity
+                      : 1,
                   }}
                 />
 

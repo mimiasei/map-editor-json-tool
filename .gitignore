@@ -55,3 +55,7 @@ maps/
 plans/
 Core/
 /CLAUDE.md
+
+# Reference-only external repos copied in for local lookup (issue #207) —
+# read-only reference material, never part of this project's own source.
+/reference/
