@@ -3772,7 +3772,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   />
                 )}
 
-                {/* Overview swatch layer — always present, cheap regardless of map size */}
+                {/* Overview swatch layer — always present, cheap regardless of map size.
+                    terrainFillColor() paints a fully opaque rgb(...) (blended toward
+                    white, not real alpha) — settings.terrainOpacity never makes this
+                    canvas itself see-through. A background image sitting behind it
+                    needs actual CSS opacity here to ever be visible; only applied
+                    while that feature is active so it can't affect anyone else. */}
                 <canvas
                   ref={setCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
@@ -3780,6 +3785,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     width: sizeX * BASE_CELL_PX,
                     height: sizeZ * BASE_CELL_PX,
                     imageRendering: 'pixelated',
+                    opacity: backgroundImageUrl && settings.backgroundImageVisible
+                      ? 1 - settings.backgroundImageOpacity
+                      : 1,
                   }}
                 />
 
