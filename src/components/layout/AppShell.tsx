@@ -525,6 +525,7 @@ export default function AppShell() {
           case 'new':      handleNew(); break
           case 'open':     window.dispatchEvent(new Event('oe:open')); break
           case 'open-map': window.dispatchEvent(new Event('oe:open-map')); break
+          case 'import-h3m': window.dispatchEvent(new Event('oe:import-h3m')); break
           case 'save':     handleSave(); break
           case 'save-as':  window.dispatchEvent(new Event('oe:save-as')); break
           case 'undo':

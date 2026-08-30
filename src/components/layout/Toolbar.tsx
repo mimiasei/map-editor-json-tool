@@ -446,31 +446,34 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleImport, handleOpenMap, handleSave, handleExport, handleCheckForUpdates })
-  handlersRef.current = { handleImport, handleOpenMap, handleSave, handleExport, handleCheckForUpdates }
+  const handlersRef = useRef({ handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates })
+  handlersRef.current = { handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates }
 
   useEffect(() => {
-    const onOpen    = () => { handlersRef.current.handleImport() }
-    const onOpenMap = () => { handlersRef.current.handleOpenMap() }
-    const onSave    = () => { handlersRef.current.handleSave() }
-    const onSaveAs  = () => { handlersRef.current.handleExport() }
+    const onOpen      = () => { handlersRef.current.handleImport() }
+    const onOpenMap   = () => { handlersRef.current.handleOpenMap() }
+    const onImportH3m = () => { void handlersRef.current.handleImportH3mClick() }
+    const onSave      = () => { handlersRef.current.handleSave() }
+    const onSaveAs    = () => { handlersRef.current.handleExport() }
 
     const onAbout   = () => { setAboutOpen(true) }
     const onUpdates = () => { void handlersRef.current.handleCheckForUpdates() }
 
     window.addEventListener('oe:about',         onAbout)
     window.addEventListener('oe:check-updates', onUpdates)
-    window.addEventListener('oe:open',     onOpen)
-    window.addEventListener('oe:open-map', onOpenMap)
-    window.addEventListener('oe:save',     onSave)
-    window.addEventListener('oe:save-as',  onSaveAs)
+    window.addEventListener('oe:open',       onOpen)
+    window.addEventListener('oe:open-map',   onOpenMap)
+    window.addEventListener('oe:import-h3m', onImportH3m)
+    window.addEventListener('oe:save',       onSave)
+    window.addEventListener('oe:save-as',    onSaveAs)
     return () => {
       window.removeEventListener('oe:about',         onAbout)
       window.removeEventListener('oe:check-updates', onUpdates)
-      window.removeEventListener('oe:open',     onOpen)
-      window.removeEventListener('oe:open-map', onOpenMap)
-      window.removeEventListener('oe:save',     onSave)
-      window.removeEventListener('oe:save-as',  onSaveAs)
+      window.removeEventListener('oe:open',       onOpen)
+      window.removeEventListener('oe:open-map',   onOpenMap)
+      window.removeEventListener('oe:import-h3m', onImportH3m)
+      window.removeEventListener('oe:save',       onSave)
+      window.removeEventListener('oe:save-as',    onSaveAs)
     }
   }, [])
 
