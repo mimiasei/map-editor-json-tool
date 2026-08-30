@@ -63,7 +63,7 @@ import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
-import { isTauri } from '@/lib/native-fs'
+import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
@@ -290,6 +290,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const updateSettings = (next: typeof settings) => {
     setSettings(next)
     saveMapGridSettings(next)
+  }
+
+  // Optional background reference image (session-only — see
+  // MapGridSettings.backgroundImageVisible's own doc comment for why the
+  // image bytes themselves are never persisted, only the toggle/opacity).
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null)
+  const backgroundImageUrlRef = useRef<string | null>(null)
+  useEffect(() => {
+    backgroundImageUrlRef.current = backgroundImageUrl
+  }, [backgroundImageUrl])
+  useEffect(() => () => {
+    if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
+  }, [])
+  const handleLoadBackgroundImage = async () => {
+    const picked = await openImageFile()
+    if (!picked) return
+    const url = URL.createObjectURL(new Blob([picked.buffer]))
+    if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
+    setBackgroundImageUrl(url)
+  }
+  const handleRemoveBackgroundImage = () => {
+    if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
+    setBackgroundImageUrl(null)
   }
 
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
@@ -2927,7 +2950,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <Ban className="h-3.5 w-3.5" />
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
-              <MapGridSettingsDialog settings={settings} onChange={updateSettings} />
+              <MapGridSettingsDialog
+                settings={settings}
+                onChange={updateSettings}
+                hasBackgroundImage={!!backgroundImageUrl}
+                onLoadBackgroundImage={() => { void handleLoadBackgroundImage() }}
+                onRemoveBackgroundImage={handleRemoveBackgroundImage}
+              />
             </div>
           </div>
 
@@ -3713,6 +3742,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   transformOrigin: '0 0',
                 }}
               >
+                {/* Optional background reference image — first child so it
+                    sits behind every other layer (stacking here is DOM-order
+                    only, no z-index), sized to the full map so it shares the
+                    same pan/zoom transform as everything else. */}
+                {backgroundImageUrl && settings.backgroundImageVisible && (
+                  <img
+                    src={backgroundImageUrl}
+                    alt=""
+                    className="absolute top-0 left-0 pointer-events-none"
+                    style={{
+                      width: sizeX * BASE_CELL_PX,
+                      height: sizeZ * BASE_CELL_PX,
+                      opacity: settings.backgroundImageOpacity,
+                      objectFit: 'fill',
+                    }}
+                  />
+                )}
+
                 {/* Overview swatch layer — always present, cheap regardless of map size */}
                 <canvas
                   ref={setCanvasEl}
