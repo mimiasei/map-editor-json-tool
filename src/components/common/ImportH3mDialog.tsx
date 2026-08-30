@@ -88,19 +88,29 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Import Heroes 3 Map</DialogTitle>
+          <DialogTitle>Import Heroes of Might & Magic III Map</DialogTitle>
         </DialogHeader>
 
         {/* ── Idle ── */}
         {(phase === 'idle' || phase === 'error') && (
-          <div className="space-y-3">
+          <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
-              Convert a Heroes of Might and Magic 3 (.h3m) map into a new Olden Era map:
+              Convert a Heroes of Might and Magic III (.h3m) map into a new Olden Era map:
               terrain, decoration (with randomized visual variety), towns, monsters,
               resources, and — where the source map's win condition is supported —
               a working victory quest. The result opens as a new, unsaved map here in TSE;
               save it wherever you like afterward.
             </p>
+            <hr />
+            <p className="text-sm text-muted-foreground">
+              <span>Credit goes to </span>
+              <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie">Levi Ritchie</a>
+              <span> for his work on the </span>
+              <a className="text-foreground hover:underline" target="_blank" href="https://github.com/leviritchie/homm3-olden-stock-translator">homm3-olden-stock-translator</a>
+              <span> which has been a great reference and inspiration for this tool.</span>
+            </p>
+            <p className="text-center">Thank you! 🙏</p>
+            <hr />
 
             {!catalog && (
               <Alert className="py-2">
