@@ -306,7 +306,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const handleLoadBackgroundImage = async () => {
     const picked = await openImageFile()
     if (!picked) return
-    const url = URL.createObjectURL(new Blob([picked.buffer]))
+    // A Blob with no `type` renders fine as an <img src="blob:..."> in
+    // Chromium (it sniffs the bytes regardless), but Tauri's desktop webview
+    // (WKWebView on macOS) does not — it silently shows nothing without the
+    // real MIME type, confirmed the hard way after this looked fine under a
+    // plain browser Playwright check.
+    const ext = picked.name.split('.').pop()?.toLowerCase()
+    const mime = ext === 'png' ? 'image/png'
+      : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+      : ext === 'webp' ? 'image/webp'
+      : ext === 'gif' ? 'image/gif'
+      : ext === 'bmp' ? 'image/bmp'
+      : ''
+    const url = URL.createObjectURL(new Blob([picked.buffer], { type: mime }))
     if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
     setBackgroundImageUrl(url)
   }
