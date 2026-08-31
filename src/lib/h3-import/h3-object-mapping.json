@@ -15,8 +15,10 @@
     {
       "h3Id": 2,
       "h3Name": "Altar of Sacrifice",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_2"
+      "outcome": "emit",
+      "sid": "sacrificial_shrine",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 3,
@@ -27,8 +29,10 @@
     {
       "h3Id": 4,
       "h3Name": "Arena",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_4"
+      "outcome": "emit",
+      "sid": "arena",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 5,
@@ -41,14 +45,16 @@
     {
       "h3Id": 6,
       "h3Name": "Pandora Box",
-      "outcome": "omit",
-      "reason": "pandoras_box_deferred"
+      "outcome": "emit",
+      "sid": "pandora_box",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 7,
       "h3Name": "Black Market",
       "outcome": "omit",
-      "reason": "black_market_deferred"
+      "reason": "unmapped_template_object_id_7"
     },
     {
       "h3Id": 8,
@@ -185,8 +191,10 @@
     {
       "h3Id": 22,
       "h3Name": "Corpse",
-      "outcome": "omit",
-      "reason": "corpse_deferred"
+      "outcome": "emit",
+      "sid": "abandoned_corpse",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 23,
@@ -203,8 +211,10 @@
     {
       "h3Id": 25,
       "h3Name": "Dragon Utopia",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_25"
+      "outcome": "emit",
+      "sid": "dragon_utopia",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 26,
@@ -235,8 +245,10 @@
     {
       "h3Id": 30,
       "h3Name": "Fountain of Fortune",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_30"
+      "outcome": "emit",
+      "sid": "fountain",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 31,
@@ -386,8 +398,10 @@
     {
       "h3Id": 49,
       "h3Name": "Magic Well",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_49"
+      "outcome": "emit",
+      "sid": "mana_well",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 50,
@@ -770,8 +784,10 @@
     {
       "h3Id": 94,
       "h3Name": "Stables",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_94"
+      "outcome": "emit",
+      "sid": "stables",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 95,
@@ -845,8 +861,10 @@
     {
       "h3Id": 100,
       "h3Name": "Learning Stone",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_100"
+      "outcome": "emit",
+      "sid": "learning_stone",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 101,
@@ -859,8 +877,10 @@
     {
       "h3Id": 102,
       "h3Name": "Tree of Knowledge",
-      "outcome": "omit",
-      "reason": "tree_of_knowledge_deferred"
+      "outcome": "emit",
+      "sid": "tree_of_knowledge",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 103,
@@ -873,14 +893,18 @@
     {
       "h3Id": 104,
       "h3Name": "University",
-      "outcome": "omit",
-      "reason": "university_deferred"
+      "outcome": "emit",
+      "sid": "university",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 105,
       "h3Name": "Wagon",
-      "outcome": "omit",
-      "reason": "wagon_deferred"
+      "outcome": "emit",
+      "sid": "peasant_cart",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 106,
@@ -923,8 +947,10 @@
     {
       "h3Id": 112,
       "h3Name": "Windmill",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_112"
+      "outcome": "emit",
+      "sid": "windmill",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 113,
@@ -1031,8 +1057,10 @@
     {
       "h3Id": 130,
       "h3Name": "Log",
-      "outcome": "omit",
-      "reason": "unmapped_template_object_id_130"
+      "outcome": "emit",
+      "sid": "grass_log_1",
+      "kind": "interactable",
+      "reason": "direct_template_sid"
     },
     {
       "h3Id": 131,
