@@ -122,6 +122,30 @@ export function h3DisplayName(id: number): string {
   return !row || row.h3Name === 'Unidentified' ? 'Unidentified' : row.h3Name
 }
 
+/** This H3 id's `ObjectKind` category, straight from the mapping table's
+ *  own data — `null` when genuinely unknown (no row at all, e.g. an id
+ *  with no mapping table entry; or an `omit` row, which carries no `kind`
+ *  field in the schema at all — see `h3-object-mapping-schema.ts`'s
+ *  `OmitRowSchema`). Never guessed: an `omit` row's real family (is a
+ *  deferred witch hut an interactable? a resource?) simply isn't captured
+ *  anywhere in this table today, so returning a category for it would be
+ *  fabricated, not derived. */
+export function h3ObjectCategory(id: number): string | null {
+  const row = objectsById.get(id)
+  if (!row) return null
+  switch (row.outcome) {
+    case 'emit':
+    case 'dispatch':
+      return row.kind
+    case 'scenery':
+    case 'scenery-dispatch':
+    case 'scenery-dispatch-subtype':
+      return 'scenery'
+    case 'omit':
+      return null
+  }
+}
+
 function animationTokenMatch(animation: string, table: Record<string, string>): string | null {
   for (const [token, sid] of Object.entries(table)) {
     if (animation.includes(token)) return sid

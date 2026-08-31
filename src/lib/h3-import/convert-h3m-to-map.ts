@@ -50,7 +50,7 @@ import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
-import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName } from './h3-object-mapping'
+import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO } from './h3m-object-registry'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
@@ -161,6 +161,9 @@ export interface H3ImportDetailRow {
   /** VCMI-sourced display name (`h3DisplayName()`), no "(id N)" suffix —
    *  `h3Id` above already carries the id as its own field. */
   h3Name: string
+  /** This H3 id's `ObjectKind` category (`h3ObjectCategory()`), or `null`
+   *  when the mapping table genuinely doesn't know one — never guessed. */
+  category: string | null
   /** `.def` sprite/animation filename, e.g. `"AVLrfx0"` — the field that
    *  disambiguates two objects that otherwise share h3Id+subId+h3Name. */
   defName: string
@@ -270,7 +273,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // better") without needing per-outcome bookkeeping of its own.
   const sourceObjectCounts: Record<string, number> = {}
   const sceneryVariantCounts: Record<string, number> = {}
-  interface DetailInstance { h3Id: number; subId: number; h3Name: string; defName: string; mappedSid: string | null; note: string }
+  interface DetailInstance { h3Id: number; subId: number; h3Name: string; defName: string; category: string | null; mappedSid: string | null; note: string }
   const detailInstances: DetailInstance[] = []
   // Parallel to townEntries/heroCandidates below — a town/hero's final
   // outcome (city-spawner vs. a neutral town's own sid; hero-spawner vs.
@@ -298,6 +301,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     const subId = record.templateSubtype
     const defName = record.templateAnimation
     const h3Name = h3DisplayName(oid)
+    const category = h3ObjectCategory(oid)
     // H3's own header validation tolerates an object anchor up to `size+8`
     // (see h3m-object-walk.ts's parseObjectHeader) — a real, observed
     // authoring pattern for objects whose footprint extends inward from a
@@ -308,7 +312,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     // envelope" behavior.
     if (record.x >= size || record.y >= size) {
       outOfEnvelopeCount += 1
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'Outside map bounds (skipped)' })
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Outside map bounds (skipped)' })
       continue
     }
     const layerTiles = parsed.layers[record.layer]
@@ -327,14 +331,14 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       const h3Owner = typeof record.owner === 'number' && record.owner !== 255 ? (record.owner as number) : null
       if (h3Owner === null) {
         omittedReasonCounts.hero_no_owner_omit = (omittedReasonCounts.hero_no_owner_omit ?? 0) + 1
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'No owner (skipped)' })
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'No owner (skipped)' })
         continue
       }
       const node = atlas.targetNode(record.layer, record.x, record.y)
       const index = heroCandidates.length
       heroCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
       heroEntries.push({ index, node })
-      const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'Pending hero start resolution' }
+      const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending hero start resolution' }
       detailInstances.push(heroDetail)
       heroDetailByIndex.push(heroDetail)
       continue
@@ -343,7 +347,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     const resolution = resolveObjectSid(oid, record.templateAnimation, record.templateSubtype, h3Terrain)
     if (resolution.action === 'omit') {
       omittedReasonCounts[resolution.reason] = (omittedReasonCounts[resolution.reason] ?? 0) + 1
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: `Omitted: ${resolution.reason}` })
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: resolution.reason })
       continue
     }
 
@@ -371,7 +375,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         }
         sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placements.length
         sceneryPlaced += placements.length
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Scenery (${resolution.role} cluster, ${placements.length} placed)` })
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role} cluster, ${placements.length} placed)` })
         continue
       }
 
@@ -383,7 +387,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + 1
       decorativeIds.add(placeObject(variantSid, node, randomDecorRotation(rng)))
       sceneryPlaced += 1
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Scenery (${resolution.role ?? 'decor'})` })
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Scenery (${resolution.role ?? 'decor'})` })
       continue
     }
 
@@ -397,12 +401,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       if (requestedValue === null) {
         const reason = `hota_or_unmapped_creature_type_${record.templateSubtype}_no_stock_squad_value`
         omittedReasonCounts[reason] = (omittedReasonCounts[reason] ?? 0) + 1
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: `Omitted: ${reason}` })
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: reason })
         continue
       }
       const objectId = placeObject(resolution.sid, node)
       objectsPlaced += 1
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Neutral guard squad (value ${requestedValue})` })
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Neutral guard squad (value ${requestedValue})` })
       // Exact shape as this repo's own RANDOM_SPAWNER_TABLE_DEFAULTS
       // (map-write.ts) — tier:0 (auto-derive from value) and
       // isAutobatle:true/fraction as a string are confirmed-real, hard-won
@@ -430,7 +434,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
         customCityName: typeof record.name === 'string' ? record.name : '',
       })
-      const townDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'Pending town ownership resolution' }
+      const townDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending town ownership resolution' }
       detailInstances.push(townDetail)
       townDetailByIndex.push(townDetail)
       continue
@@ -447,9 +451,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // is rarity 0 (see RANDOM_SPAWNER_TABLE_DEFAULTS in map-write.ts).
       const rarity = rarityForRandomArtifactObjectId(oid) ?? 0
       propRandomItems.push({ type: 0, id: objectId, rarity })
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Artifact (rarity ${rarity})` })
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Artifact (rarity ${rarity})` })
     } else {
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
     }
   }
 
@@ -680,7 +684,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     let row = detailGroups.get(key)
     if (!row) {
       row = {
-        h3Id: inst.h3Id, subId: inst.subId, h3Name: inst.h3Name, defName: inst.defName,
+        h3Id: inst.h3Id, subId: inst.subId, h3Name: inst.h3Name, defName: inst.defName, category: inst.category,
         count: 0, mappedSid: inst.mappedSid,
         mappedName: inst.mappedSid ? (catalogById.get(inst.mappedSid)?.name ?? null) : null,
         note: inst.note,

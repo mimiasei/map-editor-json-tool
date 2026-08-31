@@ -164,12 +164,13 @@ function csvField(value: string | number): string {
  *  object detail" section, but importable into SQLite/DuckDB/Postgres/
  *  Excel for real querying rather than only grep/eyeballing a text file. */
 function buildDetailCsv(result: ImportH3mResult): string {
-  const header = ['h3Id', 'subId', 'h3Name', 'defName', 'count', 'mappedSid', 'mappedName', 'note']
+  const header = ['h3Id', 'subId', 'h3Name', 'defName', 'count', 'category', 'omitted', 'mappedSid', 'mappedName', 'note']
   const lines = [header.join(',')]
   for (const row of result.report.detailRows) {
     lines.push([
-      row.h3Id, row.subId, csvField(row.h3Name), csvField(row.defName), row.count,
-      row.mappedSid ?? '', row.mappedName ? csvField(row.mappedName) : '', csvField(row.note),
+      row.h3Id, row.subId, csvField(row.h3Name), csvField(row.defName), row.count, row.category ?? '',
+      row.mappedSid === null ? 'true' : 'false', row.mappedSid ?? '',
+      row.mappedName ? csvField(row.mappedName) : '', csvField(row.note),
     ].join(','))
   }
   return lines.join('\r\n') + '\r\n'
