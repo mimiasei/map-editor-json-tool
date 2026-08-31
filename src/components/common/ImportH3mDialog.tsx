@@ -152,6 +152,34 @@ function reportFileName(result: ImportH3mResult): string {
   return `${result.name.replace(/\.map$/i, '')}-import-report.txt`
 }
 
+/** RFC 4180: only quote a field when it needs it, doubling any internal
+ *  quote — most fields here (ids, sids) never need quoting, only h3Name/
+ *  defName/note occasionally contain a comma. */
+function csvField(value: string | number): string {
+  const s = String(value)
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+/** `report.detailRows` as CSV — the same data as buildReportText()'s "Full
+ *  object detail" section, but importable into SQLite/DuckDB/Postgres/
+ *  Excel for real querying rather than only grep/eyeballing a text file. */
+function buildDetailCsv(result: ImportH3mResult): string {
+  const header = ['h3Id', 'subId', 'h3Name', 'defName', 'count', 'mappedSid', 'mappedName', 'note']
+  const lines = [header.join(',')]
+  for (const row of result.report.detailRows) {
+    lines.push([
+      row.h3Id, row.subId, csvField(row.h3Name), csvField(row.defName), row.count,
+      row.mappedSid ?? '', row.mappedName ? csvField(row.mappedName) : '', csvField(row.note),
+    ].join(','))
+  }
+  return lines.join('\r\n') + '\r\n'
+}
+
+/** `<map-name>-import-detail.csv`. */
+function detailCsvFileName(result: ImportH3mResult): string {
+  return `${result.name.replace(/\.map$/i, '')}-import-detail.csv`
+}
+
 export default function ImportH3mDialog({ open, onOpenChange }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
 
@@ -429,6 +457,19 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
             )}
             {phase === 'done' && result && (
               <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void saveFile(
+                      buildDetailCsv(result),
+                      detailCsvFileName(result),
+                      { name: 'CSV', extensions: ['csv'] },
+                      'text/csv',
+                    )
+                  }}
+                >
+                  Save detail (CSV)…
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
