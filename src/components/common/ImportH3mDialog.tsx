@@ -78,6 +78,12 @@ function buildReportText(result: ImportH3mResult): string {
   lines.push(`Victory quest: ${report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}`)
   lines.push(`Portals linked: ${report.portalsLinked}`)
   lines.push(`Accessibility fixes: ${report.accessibilityDecorRemoved} removed, ${report.accessibilityTargetsNudged} nudged`)
+  lines.push(`Ground-truth floor fixes: ${report.groundTruthDecorRemoved} removed (of ${report.groundTruthTilesChecked} floor tiles checked against the source map's own passability)`)
+
+  if (report.groundTruthStillBlocked > 0) {
+    lines.push('')
+    lines.push(`WARNING: ${report.groundTruthStillBlocked} tile${report.groundTruthStillBlocked !== 1 ? 's' : ''} the source map's own data says should be walkable floor remain${report.groundTruthStillBlocked === 1 ? 's' : ''} unreachable — no decorative object was found nearby to safely remove, often a genuine diagonal-only pinch point in a narrow tunnel.`)
+  }
 
   if (report.portalsUnpaired > 0) {
     lines.push('')
@@ -277,6 +283,8 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               <div className="text-foreground">{report.portalsLinked}</div>
               <div>Accessibility fixes</div>
               <div className="text-foreground">{report.accessibilityDecorRemoved} removed, {report.accessibilityTargetsNudged} nudged</div>
+              <div>Ground-truth floor fixes</div>
+              <div className="text-foreground">{report.groundTruthDecorRemoved} removed</div>
             </div>
 
             {report.portalsUnpaired > 0 && (
@@ -296,6 +304,17 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                   {report.accessibilityStillUnreachable} item/resource/interactable{report.accessibilityStillUnreachable !== 1 ? 's' : ''} could not
                   be made reachable automatically — often because the source map guarded them with water, rock, or a gate/quest
                   mechanic this importer doesn't yet emit. Worth checking manually with the Map Grid's blocked-tile overlay.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {report.groundTruthStillBlocked > 0 && (
+              <Alert className="py-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="ml-2 text-xs">
+                  {report.groundTruthStillBlocked} tile{report.groundTruthStillBlocked !== 1 ? 's' : ''} the source map's own data says
+                  {' '}should be walkable floor {report.groundTruthStillBlocked !== 1 ? 'remain' : 'remains'} unreachable — no decorative
+                  {' '}object was found nearby to safely remove, often a genuine diagonal-only pinch point in a narrow tunnel.
                 </AlertDescription>
               </Alert>
             )}

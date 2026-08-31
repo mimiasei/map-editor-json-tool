@@ -64,6 +64,7 @@ import { buildWinstandardQuest } from './victory'
 import { VICTORY_WINSTANDARD } from './h3m-format'
 import { linkPortalPairs } from './portal-links'
 import { applyAccessibilityPass } from './accessibility-pass'
+import { buildGroundTruthWalkableSet } from './ground-truth-passability'
 
 
 export interface H3ImportReport {
@@ -126,6 +127,15 @@ export interface H3ImportReport {
    *  (e.g. sealed by real H3-matching terrain/water, not a removable
    *  decoration, and too far for the bounded nudge search). */
   accessibilityStillUnreachable: number
+  /** Plain H3 floor tiles (not water/rock, not covered by any real H3
+   *  object's own footprint — `ground-truth-passability.ts`) that this
+   *  importer's own decoration turned out to seal off, with no declared
+   *  target of its own inside to trigger the checks above. */
+  groundTruthTilesChecked: number
+  groundTruthDecorRemoved: number
+  /** Ground-truth-walkable tiles still unreached after decor removal — a
+   *  real, disclosed gap (see accessibility-pass.ts's own doc comment). */
+  groundTruthStillBlocked: number
   /** H3 river tiles converted to OE's own `rivers[0].nodes` data (real river
    *  art, not impassable — previously these were wrongly stamped into
    *  waterMap, making them look and behave like lake/ocean water). */
@@ -556,9 +566,10 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // pass can treat underground-via-portal paths as reachable, rather than
   // flagging every underground object on every 2-layer map as stranded.
   const portalLinks = linkPortalPairs(objectGroups)
+  const groundTruthWalkable = buildGroundTruthWalkableSet(parsed, atlas)
   const accessibility = applyAccessibilityPass(
     objectGroups, atlas.atlasWidth, atlas.atlasHeight, out, catalog, catalogById,
-    decorativeIds, portalLinks.adjacencyByObjectId,
+    decorativeIds, portalLinks.adjacencyByObjectId, groundTruthWalkable,
   )
 
   const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
@@ -690,6 +701,8 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       portalsLinked: portalLinks.linkedCount, portalsUnpaired: portalLinks.unpairedCount,
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,
       accessibilityTargetsNudged: accessibility.targetsNudged, accessibilityStillUnreachable: accessibility.stillUnreachable,
+      groundTruthTilesChecked: accessibility.groundTruthTilesChecked, groundTruthDecorRemoved: accessibility.groundTruthDecorRemoved,
+      groundTruthStillBlocked: accessibility.groundTruthStillBlocked,
       riverTilesConverted: out.riverNodes.size,
       detailRows,
     },
