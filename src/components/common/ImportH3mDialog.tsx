@@ -8,7 +8,7 @@
 // always knows what was approximated or dropped rather than silently
 // guessing at a "looks fine" map.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
@@ -37,6 +39,11 @@ function sortedCounts(counts: Record<string, number>): [string, number][] {
 }
 
 const UNMAPPED_ID_REASON = /^unmapped_template_object_id_(\d+)$/
+
+/** Same bare-localStorage-key "don't show this again" convention as
+ *  SetupDialog.tsx's `'oe-setup-shown'` — checked on open to skip straight
+ *  to the file picker instead of the intro/credits screen. */
+const INTRO_SHOWN_KEY = 'oe-import-h3m-intro-shown'
 
 /** Every other omit reason is already a descriptive slug (`witch_hut_deferred`,
  *  `boat_no_stock_objectconfig`, ...) — only the generic "no mapping table
@@ -145,8 +152,21 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [result, setResult] = useState<ImportH3mResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [dontShowAgain, setDontShowAgain] = useState(false)
+
+  // Skip the intro/credits screen straight to the file picker when the user
+  // previously checked "Don't show this again" — but only once Game Data is
+  // loaded, since the intro screen is also where the "Load Game Data first"
+  // alert lives; without a catalog, showing that alert is more useful than
+  // auto-triggering an import that will immediately fail.
+  useEffect(() => {
+    if (!open || phase !== 'idle' || !catalog) return
+    if (localStorage.getItem(INTRO_SHOWN_KEY) === '1') void handleImport()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, catalog])
 
   const handleImport = async () => {
+    if (dontShowAgain) localStorage.setItem(INTRO_SHOWN_KEY, '1')
     setPhase('running')
     setErrorMsg('')
     try {
@@ -165,6 +185,7 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
 
   const handleClose = () => {
     if (phase === 'running') return
+    if (dontShowAgain) localStorage.setItem(INTRO_SHOWN_KEY, '1')
     setPhase('idle')
     setResult(null)
     setErrorMsg('')
@@ -359,39 +380,53 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="mt-2 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           {(phase === 'idle' || phase === 'error') && (
-            <>
-              <Button variant="ghost" onClick={handleClose}>Cancel</Button>
-              <Button onClick={handleImport} disabled={!catalog}>
-                Choose File &amp; Import…
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="import-h3m-dont-show"
+                checked={dontShowAgain}
+                onCheckedChange={(v) => setDontShowAgain(!!v)}
+              />
+              <Label htmlFor="import-h3m-dont-show" className="text-xs text-muted-foreground cursor-pointer">
+                Don't show this again
+              </Label>
+            </div>
+          )}
+          <div className="flex gap-2 sm:ml-auto">
+            {(phase === 'idle' || phase === 'error') && (
+              <>
+                <Button variant="ghost" onClick={handleClose}>Cancel</Button>
+                <Button onClick={handleImport} disabled={!catalog}>
+                  Choose File &amp; Import…
+                </Button>
+              </>
+            )}
+            {phase === 'running' && (
+              <Button variant="ghost" disabled>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Converting…
               </Button>
-            </>
-          )}
-          {phase === 'running' && (
-            <Button variant="ghost" disabled>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Converting…
-            </Button>
-          )}
-          {phase === 'done' && result && (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  void saveFile(
-                    buildReportText(result),
-                    reportFileName(result),
-                    { name: 'Text', extensions: ['txt'] },
-                    'text/plain',
-                  )
-                }}
-              >
-                Save report…
-              </Button>
-              <Button onClick={handleClose}>Close</Button>
-            </>
-          )}
+            )}
+            {phase === 'done' && result && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void saveFile(
+                      buildReportText(result),
+                      reportFileName(result),
+                      { name: 'Text', extensions: ['txt'] },
+                      'text/plain',
+                    )
+                  }}
+                >
+                  Save report…
+                </Button>
+                <Button onClick={handleClose}>Close</Button>
+              </>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
