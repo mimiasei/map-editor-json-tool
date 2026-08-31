@@ -50,8 +50,8 @@ import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
-import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory } from './h3-object-mapping'
-import { OBJECT_HERO, OBJECT_RANDOM_HERO } from './h3m-object-registry'
+import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName } from './h3-object-mapping'
+import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
   footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster,
@@ -300,7 +300,14 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     sourceObjectCounts[sourceKey] = (sourceObjectCounts[sourceKey] ?? 0) + 1
     const subId = record.templateSubtype
     const defName = record.templateAnimation
-    const h3Name = h3DisplayName(oid)
+    // A specific-monster/specific-artifact placement's generic H3-object-
+    // class name ("Monster"/"Artifact") is far less useful than its real
+    // creature/artifact identity — prefer that when this session's sourced
+    // name table actually covers the subtype, falling back to the generic
+    // class name for anything not yet covered (never a guess).
+    const h3Name = oid === OBJECT_MONSTER ? (h3CreatureName(subId) ?? h3DisplayName(oid))
+      : oid === OBJECT_ARTIFACT ? (h3ArtifactName(subId) ?? h3DisplayName(oid))
+      : h3DisplayName(oid)
     const category = h3ObjectCategory(oid)
     // H3's own header validation tolerates an object anchor up to `size+8`
     // (see h3m-object-walk.ts's parseObjectHeader) — a real, observed

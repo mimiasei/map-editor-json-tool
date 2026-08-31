@@ -80,6 +80,14 @@ export const ObjectRowSchema = z.discriminatedUnion('outcome', [
 export const H3ObjectMappingSchema = z.object({
   objects: z.array(ObjectRowSchema),
   sceneryRoleSids: z.record(z.string(), z.record(z.string(), z.string())),
+  /** Real H3 creature-type index (object id 54's `subtype`) -> real
+   *  creature name, e.g. `"4": "Griffin"` — only the ids actually sourced
+   *  and cross-verified (see h3-object-mapping.ts's own doc comment);
+   *  never a full 0-N table with guessed gaps. */
+  creatureNames: z.record(z.string(), z.string()).optional(),
+  /** Real H3 specific-artifact id (object id 5's `subtype`) -> real
+   *  artifact name, same sourcing caveat as `creatureNames`. */
+  artifactNames: z.record(z.string(), z.string()).optional(),
 })
 
 export type ObjectRow = z.infer<typeof ObjectRowSchema>

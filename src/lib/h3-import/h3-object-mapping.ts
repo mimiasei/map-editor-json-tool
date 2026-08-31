@@ -130,6 +130,26 @@ export function h3DisplayName(id: number): string {
  *  deferred witch hut an interactable? a resource?) simply isn't captured
  *  anywhere in this table today, so returning a category for it would be
  *  fabricated, not derived. */
+const creatureNames: Record<string, string> = mapping.creatureNames ?? {}
+const artifactNames: Record<string, string> = mapping.artifactNames ?? {}
+
+/** Real H3 creature name for object id 54's `subtype` — e.g. `4` -> "Griffin"
+ *  — sourced from VCMI's own creature config (HotA ids cross-checked
+ *  against a second independent source), never a guessed fallback. `null`
+ *  for a subtype this table hasn't been filled in for (currently HotA's
+ *  Factory-town creatures, ids 172+ — no reliable id/name pairing was
+ *  found for those; see this session's own sourcing notes). Callers should
+ *  fall back to the generic `h3DisplayName(54)` ("Monster") in that case. */
+export function h3CreatureName(subtype: number): string | null {
+  return creatureNames[String(subtype)] ?? null
+}
+
+/** Real H3 artifact name for object id 5's `subtype` — same sourcing/
+ *  fallback contract as `h3CreatureName`. */
+export function h3ArtifactName(subtype: number): string | null {
+  return artifactNames[String(subtype)] ?? null
+}
+
 export function h3ObjectCategory(id: number): string | null {
   const row = objectsById.get(id)
   if (!row) return null
