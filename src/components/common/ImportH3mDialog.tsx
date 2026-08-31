@@ -23,6 +23,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { importH3mFile, type ImportH3mResult } from '@/lib/h3-import/import-h3m-file'
 import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
 import { logError, logInfo } from '@/lib/logger'
+import { saveFile } from '@/lib/native-fs'
 
 interface Props {
   open: boolean
@@ -44,6 +45,78 @@ const UNMAPPED_ID_REASON = /^unmapped_template_object_id_(\d+)$/
 function describeOmitReason(reason: string): string {
   const match = UNMAPPED_ID_REASON.exec(reason)
   return match ? `Unmapped: ${describeH3ObjectId(Number(match[1]))}` : reason
+}
+
+/** Same information as the "done" screen below, as plain text — for the
+ *  "Save report…" button. Deliberately its own file rather than mixed into
+ *  Tauri's own app log (tauri-plugin-log's rotating file): that log is a
+ *  diagnostic trail for every feature, not a per-import artifact a user
+ *  would want to find, keep, or attach to a bug report on its own. */
+function buildReportText(result: ImportH3mResult): string {
+  const { report } = result
+  const omitted = sortedCounts(report.omittedReasonCounts)
+  const variants = sortedCounts(report.sceneryVariantCounts)
+  const sourceObjects = sortedCounts(report.sourceObjectCounts)
+  const totalOmitted = omitted.reduce((sum, [, count]) => sum + count, 0)
+
+  const lines: string[] = []
+  lines.push(`H3 map import report`)
+  lines.push(`Imported "${report.sourceTitle || result.name}" -> ${result.name}`)
+  lines.push('')
+  lines.push(`Map size: ${report.atlasWidth} x ${report.atlasHeight} (source ${report.sourceSize}, ${report.sourceLayers} layer${report.sourceLayers !== 1 ? 's' : ''})`)
+  lines.push(`Players: ${report.playersCount}`)
+  lines.push(`Scenery placed: ${report.sceneryPlaced}`)
+  lines.push(`Other objects placed: ${report.objectsPlaced}`)
+  lines.push(`River tiles: ${report.riverTilesConverted}`)
+  lines.push(`Victory quest: ${report.hasVictoryQuest ? 'Yes (defeat all enemies)' : 'None (unsupported win condition)'}`)
+  lines.push(`Portals linked: ${report.portalsLinked}`)
+  lines.push(`Accessibility fixes: ${report.accessibilityDecorRemoved} removed, ${report.accessibilityTargetsNudged} nudged`)
+
+  if (report.portalsUnpaired > 0) {
+    lines.push('')
+    lines.push(`WARNING: ${report.portalsUnpaired} portal${report.portalsUnpaired !== 1 ? 's were' : ' was'} placed with no same-color partner to link to — likely inert in-game.`)
+  }
+  if (report.accessibilityStillUnreachable > 0) {
+    lines.push('')
+    lines.push(`WARNING: ${report.accessibilityStillUnreachable} item/resource/interactable${report.accessibilityStillUnreachable !== 1 ? 's' : ''} could not be made reachable automatically — often because the source map guarded them with water, rock, or a gate/quest mechanic this importer doesn't yet emit. Worth checking manually with the Map Grid's blocked-tile overlay.`)
+  }
+  if (report.unboundOrphanOwners.length > 0) {
+    lines.push('')
+    lines.push(`WARNING: ${report.unboundOrphanOwners.length} player${report.unboundOrphanOwners.length !== 1 ? 's' : ''} had no town to bind to a start — they have no start point on the converted map.`)
+  }
+  if (report.outOfEnvelopeCount > 0) {
+    lines.push('')
+    lines.push(`WARNING: ${report.outOfEnvelopeCount} object${report.outOfEnvelopeCount !== 1 ? 's' : ''} sat outside the source map's own bounds and were skipped.`)
+  }
+  if (result.validationErrors.length > 0) {
+    lines.push('')
+    lines.push(`${result.validationErrors.length} structural validation issue${result.validationErrors.length !== 1 ? 's' : ''} found in the converted map:`)
+    for (const e of result.validationErrors) lines.push(`  - ${e}`)
+  }
+
+  if (variants.length > 0) {
+    lines.push('')
+    lines.push(`Scenery variety (${variants.length} kind${variants.length !== 1 ? 's' : ''}):`)
+    for (const [sid, count] of variants) lines.push(`  ${sid}: ${count}`)
+  }
+  if (omitted.length > 0) {
+    lines.push('')
+    lines.push(`Not converted (${totalOmitted} object${totalOmitted !== 1 ? 's' : ''}, ${omitted.length} reason${omitted.length !== 1 ? 's' : ''}):`)
+    for (const [reason, count] of omitted) lines.push(`  ${describeOmitReason(reason)}: ${count}`)
+  }
+  if (sourceObjects.length > 0) {
+    lines.push('')
+    lines.push(`Source objects (${sourceObjects.length} kind${sourceObjects.length !== 1 ? 's' : ''} found in the H3 map):`)
+    for (const [name, count] of sourceObjects) lines.push(`  ${name}: ${count}`)
+  }
+
+  return lines.join('\n') + '\n'
+}
+
+/** `<map-name>-import-report.txt`, stripping the extension the importer
+ *  already appended (`result.name` is always "<stem>.map"). */
+function reportFileName(result: ImportH3mResult): string {
+  return `${result.name.replace(/\.map$/i, '')}-import-report.txt`
 }
 
 export default function ImportH3mDialog({ open, onOpenChange }: Props) {
@@ -281,8 +354,23 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               Converting…
             </Button>
           )}
-          {phase === 'done' && (
-            <Button onClick={handleClose}>Close</Button>
+          {phase === 'done' && result && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  void saveFile(
+                    buildReportText(result),
+                    reportFileName(result),
+                    { name: 'Text', extensions: ['txt'] },
+                    'text/plain',
+                  )
+                }}
+              >
+                Save report…
+              </Button>
+              <Button onClick={handleClose}>Close</Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
