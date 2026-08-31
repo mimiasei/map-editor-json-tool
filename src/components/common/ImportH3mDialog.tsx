@@ -110,6 +110,26 @@ function buildReportText(result: ImportH3mResult): string {
     for (const [name, count] of sourceObjects) lines.push(`  ${name}: ${count}`)
   }
 
+  // Full per-instance detail — every distinct group of (h3Id, subId, .def
+  // name, outcome), file-only (not shown on screen): the whole reason this
+  // report exists as its own downloadable file rather than just the on-
+  // screen summary above. See H3ImportReport.detailRows's own doc comment
+  // for why outcome is part of the group key (the same h3Id/subId/defName
+  // can resolve differently depending on placement biome).
+  if (report.detailRows.length > 0) {
+    lines.push('')
+    lines.push('='.repeat(70))
+    lines.push(`Full object detail (${report.detailRows.length} distinct group${report.detailRows.length !== 1 ? 's' : ''}, one line per H3 id + subId + .def name + outcome):`)
+    lines.push('')
+    for (const row of report.detailRows) {
+      const source = `H3 id ${row.h3Id}, subId ${row.subId}, "${row.h3Name}", def "${row.defName}"`
+      const outcome = row.mappedSid
+        ? `-> OE "${row.mappedSid}"${row.mappedName ? ` ("${row.mappedName}")` : ''} [${row.note}]`
+        : `-> SKIPPED [${row.note}]`
+      lines.push(`  x${row.count}  ${source}  ${outcome}`)
+    }
+  }
+
   return lines.join('\n') + '\n'
 }
 

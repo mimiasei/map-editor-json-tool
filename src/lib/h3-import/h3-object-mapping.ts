@@ -114,6 +114,14 @@ export function describeH3ObjectId(id: number): string {
   return `${row.h3Name} (id ${id})`
 }
 
+/** Just the name portion of {@link describeH3ObjectId}, with no "(id N)"
+ *  suffix — for callers (the detailed import report) that already carry the
+ *  numeric id as its own field and don't want it duplicated inline. */
+export function h3DisplayName(id: number): string {
+  const row = objectsById.get(id)
+  return !row || row.h3Name === 'Unidentified' ? 'Unidentified' : row.h3Name
+}
+
 function animationTokenMatch(animation: string, table: Record<string, string>): string | null {
   for (const [token, sid] of Object.entries(table)) {
     if (animation.includes(token)) return sid

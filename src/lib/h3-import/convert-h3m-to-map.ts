@@ -50,7 +50,7 @@ import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
-import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId } from './h3-object-mapping'
+import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO } from './h3m-object-registry'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
@@ -130,6 +130,39 @@ export interface H3ImportReport {
    *  art, not impassable — previously these were wrongly stamped into
    *  waterMap, making them look and behave like lake/ocean water). */
   riverTilesConverted: number
+  /** Full per-instance detail, grouped by (h3Id, subId, defName, outcome) —
+   *  deliberately finer-grained than `sourceObjectCounts` above, since many
+   *  real H3 objects share an h3Id/subId/display-name but differ by `.def`
+   *  sprite (different scenery variants of "Mountain", etc.), and even the
+   *  exact same h3Id/subId/defName triple can resolve to a different OE
+   *  object depending on the biome it was placed on (scenery role/biome
+   *  dispatch in `resolveObjectSid`) — so the outcome is part of the group
+   *  key, not just an annotation on top of it. Sorted by count descending
+   *  by the report consumer (`ImportH3mDialog`'s "Save report…"), not here. */
+  detailRows: H3ImportDetailRow[]
+}
+
+/** One row of the detailed (file-only) import report — see
+ *  `H3ImportReport.detailRows`'s own doc comment for why the group key is
+ *  (h3Id, subId, defName, outcome) rather than just h3Id. */
+export interface H3ImportDetailRow {
+  h3Id: number
+  subId: number
+  /** VCMI-sourced display name (`h3DisplayName()`), no "(id N)" suffix —
+   *  `h3Id` above already carries the id as its own field. */
+  h3Name: string
+  /** `.def` sprite/animation filename, e.g. `"AVLrfx0"` — the field that
+   *  disambiguates two objects that otherwise share h3Id+subId+h3Name. */
+  defName: string
+  /** How many source instances fell into this exact group. */
+  count: number
+  /** The OE object this group resolved to, or `null` when omitted/skipped. */
+  mappedSid: string | null
+  /** OE catalog display name for `mappedSid`, or `null` alongside it. */
+  mappedName: string | null
+  /** Short human-readable outcome description — an omit/skip reason, or a
+   *  kind label (`"scenery (tree)"`, `"town (player start)"`, ...). */
+  note: string
 }
 
 export interface H3ImportResult {
@@ -158,6 +191,14 @@ interface TownEntry {
 interface HeroEntry {
   index: number
   node: number
+}
+
+/** Human-readable label for a `detailRows` group's `note`, by `ObjectKind` —
+ *  everything that isn't scenery/town/random_squad/artifact (each of which
+ *  gets its own more specific note built inline where it's resolved). */
+const OBJECT_KIND_LABELS: Record<string, string> = {
+  town: 'Town', portal: 'Portal', resource: 'Resource', mine: 'Mine', dwelling: 'Dwelling',
+  artifact: 'Artifact', random_squad: 'Neutral guard', interactable: 'Interactable', map_event: 'Map event', scenery: 'Scenery',
 }
 
 /** `data` must already be decompressed (see `parse-h3m.ts`'s `gunzipH3mIfNeeded`
@@ -219,6 +260,16 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // better") without needing per-outcome bookkeeping of its own.
   const sourceObjectCounts: Record<string, number> = {}
   const sceneryVariantCounts: Record<string, number> = {}
+  interface DetailInstance { h3Id: number; subId: number; h3Name: string; defName: string; mappedSid: string | null; note: string }
+  const detailInstances: DetailInstance[] = []
+  // Parallel to townEntries/heroCandidates below — a town/hero's final
+  // outcome (city-spawner vs. a neutral town's own sid; hero-spawner vs.
+  // "not carried over") is only known once `assignOwnership` runs, well
+  // after this loop — these placeholders get mutated in place once that's
+  // resolved (see the townEntries/heroEntries loops further down), rather
+  // than re-deriving the same decision twice.
+  const townDetailByIndex: DetailInstance[] = []
+  const heroDetailByIndex: DetailInstance[] = []
   const cityCandidates: CityCandidate[] = []
   const heroCandidates: HeroCandidate[] = []
   const townEntries: TownEntry[] = []
@@ -234,6 +285,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     const oid = record.templateObjectId
     const sourceKey = describeH3ObjectId(oid)
     sourceObjectCounts[sourceKey] = (sourceObjectCounts[sourceKey] ?? 0) + 1
+    const subId = record.templateSubtype
+    const defName = record.templateAnimation
+    const h3Name = h3DisplayName(oid)
     // H3's own header validation tolerates an object anchor up to `size+8`
     // (see h3m-object-walk.ts's parseObjectHeader) — a real, observed
     // authoring pattern for objects whose footprint extends inward from a
@@ -244,6 +298,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     // envelope" behavior.
     if (record.x >= size || record.y >= size) {
       outOfEnvelopeCount += 1
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'Outside map bounds (skipped)' })
       continue
     }
     const layerTiles = parsed.layers[record.layer]
@@ -262,18 +317,23 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       const h3Owner = typeof record.owner === 'number' && record.owner !== 255 ? (record.owner as number) : null
       if (h3Owner === null) {
         omittedReasonCounts.hero_no_owner_omit = (omittedReasonCounts.hero_no_owner_omit ?? 0) + 1
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'No owner (skipped)' })
         continue
       }
       const node = atlas.targetNode(record.layer, record.x, record.y)
       const index = heroCandidates.length
       heroCandidates.push({ index, h3Owner, sourceX: record.x, sourceY: record.y, sourceZ: record.z })
       heroEntries.push({ index, node })
+      const heroDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'Pending hero start resolution' }
+      detailInstances.push(heroDetail)
+      heroDetailByIndex.push(heroDetail)
       continue
     }
 
     const resolution = resolveObjectSid(oid, record.templateAnimation, record.templateSubtype, h3Terrain)
     if (resolution.action === 'omit') {
       omittedReasonCounts[resolution.reason] = (omittedReasonCounts[resolution.reason] ?? 0) + 1
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: `Omitted: ${resolution.reason}` })
       continue
     }
 
@@ -301,6 +361,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         }
         sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + placements.length
         sceneryPlaced += placements.length
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Scenery (${resolution.role} cluster, ${placements.length} placed)` })
         continue
       }
 
@@ -312,6 +373,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       sceneryVariantCounts[resolution.sid] = (sceneryVariantCounts[resolution.sid] ?? 0) + 1
       decorativeIds.add(placeObject(variantSid, node, randomDecorRotation(rng)))
       sceneryPlaced += 1
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Scenery (${resolution.role ?? 'decor'})` })
       continue
     }
 
@@ -325,10 +387,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       if (requestedValue === null) {
         const reason = `hota_or_unmapped_creature_type_${record.templateSubtype}_no_stock_squad_value`
         omittedReasonCounts[reason] = (omittedReasonCounts[reason] ?? 0) + 1
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: null, note: `Omitted: ${reason}` })
         continue
       }
       const objectId = placeObject(resolution.sid, node)
       objectsPlaced += 1
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Neutral guard squad (value ${requestedValue})` })
       // Exact shape as this repo's own RANDOM_SPAWNER_TABLE_DEFAULTS
       // (map-write.ts) — tier:0 (auto-derive from value) and
       // isAutobatle:true/fraction as a string are confirmed-real, hard-won
@@ -356,6 +420,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
         customCityName: typeof record.name === 'string' ? record.name : '',
       })
+      const townDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, mappedSid: null, note: 'Pending town ownership resolution' }
+      detailInstances.push(townDetail)
+      townDetailByIndex.push(townDetail)
       continue
     }
 
@@ -370,6 +437,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // is rarity 0 (see RANDOM_SPAWNER_TABLE_DEFAULTS in map-write.ts).
       const rarity = rarityForRandomArtifactObjectId(oid) ?? 0
       propRandomItems.push({ type: 0, id: objectId, rarity })
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: `Artifact (rarity ${rarity})` })
+    } else {
+      detailInstances.push({ h3Id: oid, subId, h3Name, defName, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
     }
   }
 
@@ -407,6 +477,9 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       objectsPlaced += 1
       const spawnType = ownership.spawnTypeByFinalOwner.get(finalOwner) ?? 1
       const isDefined = !town.freeChoice
+      const townDetail = townDetailByIndex[town.index]
+      townDetail.mappedSid = 'city-spawner'
+      townDetail.note = 'Town (player start)'
       propCities.push({
         type: 0, id: objectId, isDefined, factionSid: town.factionSid, spawnHero: true,
         buildingsConstructionSid: 'default_buildings_construction',
@@ -440,15 +513,26 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         spawnHero: false, customCityName: town.customCityName,
       })
       propOwners.push({ type: 0, id: objectId })
+      const townDetail = townDetailByIndex[town.index]
+      townDetail.mappedSid = town.sid
+      townDetail.note = 'Town (neutral, unclaimed)'
     }
   }
 
   for (const hero of heroEntries) {
     const finalOwner = ownership.finalOwnerByHeroIndex.get(hero.index)
-    if (finalOwner === undefined) continue // this hero wasn't the one chosen to back its owner's start
+    if (finalOwner === undefined) {
+      // This hero wasn't the one chosen to back its owner's start — most
+      // often because that owner already has a town (city-spawner wins).
+      heroDetailByIndex[hero.index].note = 'Not carried over (player start already covered by a town)'
+      continue
+    }
     const objectId = placeObject('hero-spawner', hero.node)
     objectsPlaced += 1
     heroOnlyPlayers += 1
+    const heroDetail = heroDetailByIndex[hero.index]
+    heroDetail.mappedSid = 'hero-spawner'
+    heroDetail.note = 'Hero (player start)'
     const spawnType = ownership.spawnTypeByFinalOwner.get(finalOwner) ?? 1
     propSpawns.push({ type: 0, id: objectId, owner: finalOwner, spawnType, spawnPointType: 1, isLocked: false })
     // No stock H3-hero-type -> OE-hero-sid table yet (see this file's own
@@ -575,6 +659,27 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     ],
   }
 
+  // Group every per-instance DetailInstance (including the town/hero ones
+  // just mutated above with their now-final outcome) by the full identity
+  // tuple — see H3ImportReport.detailRows's own doc comment for why outcome
+  // is part of the key, not just h3Id/subId/defName.
+  const detailGroups = new Map<string, H3ImportDetailRow>()
+  for (const inst of detailInstances) {
+    const key = `${inst.h3Id}|${inst.subId}|${inst.defName}|${inst.mappedSid ?? ''}|${inst.note}`
+    let row = detailGroups.get(key)
+    if (!row) {
+      row = {
+        h3Id: inst.h3Id, subId: inst.subId, h3Name: inst.h3Name, defName: inst.defName,
+        count: 0, mappedSid: inst.mappedSid,
+        mappedName: inst.mappedSid ? (catalogById.get(inst.mappedSid)?.name ?? null) : null,
+        note: inst.note,
+      }
+      detailGroups.set(key, row)
+    }
+    row.count += 1
+  }
+  const detailRows = Array.from(detailGroups.values()).sort((a, b) => b.count - a.count)
+
   return {
     container,
     report: {
@@ -586,6 +691,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       accessibilityTargetsChecked: accessibility.targetsChecked, accessibilityDecorRemoved: accessibility.decorRemoved,
       accessibilityTargetsNudged: accessibility.targetsNudged, accessibilityStillUnreachable: accessibility.stillUnreachable,
       riverTilesConverted: out.riverNodes.size,
+      detailRows,
     },
   }
 }
