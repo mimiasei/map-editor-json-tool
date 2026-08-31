@@ -50,7 +50,7 @@ import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
 import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, buildRiverNodesTable } from './terrain-map'
 import { clampFootprintToLayer } from './object-footprint-clamp'
-import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName } from './h3-object-mapping'
+import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
@@ -259,6 +259,30 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     return id
   }
 
+  // `squads[]` — a SEPARATE id-namespace from `objects[]` (type 2, not 0),
+  // for a fixed/named-creature guard with no host object of its own. A
+  // creature sid (e.g. "griffin") is a roster-only `GameCatalog.creatures`
+  // entry, never a placeable `mapObjects` template — it can only ever be
+  // referenced from `propSquads.unitProps[].sid`, never placed directly via
+  // `placeObject`. Every real sample map's own non-random `squads[]` entry
+  // uses a generic neutral template sid here (`squad_neutral_one_unit_t1_1`,
+  // confirmed in `plans/olden_era_map_format.md` §3.3 and independently in
+  // a real shipped map this session) — the template's own nominal
+  // composition is irrelevant since `propSquads.unitProps` supplies the
+  // real one, so every placement here reuses that same real, confirmed sid.
+  const SQUAD_TEMPLATE_SID = 'squad_neutral_one_unit_t1_1'
+  const squadGroups = new Map<string, { ids: number[]; nodes: number[] }>()
+  let nextSquadId = 0
+  const placeSquad = (node: number): number => {
+    let group = squadGroups.get(SQUAD_TEMPLATE_SID)
+    if (!group) { group = { ids: [], nodes: [] }; squadGroups.set(SQUAD_TEMPLATE_SID, group) }
+    const id = nextSquadId
+    group.ids.push(id)
+    group.nodes.push(node)
+    nextSquadId += 1
+    return id
+  }
+
   // Populated only at the two scenery-role `placeObject(...)` call sites
   // below — every one of these sids is decorative (never carries an
   // `objectsProperties.*` row), so `accessibility-pass.ts` can safely delete
@@ -289,6 +313,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const heroEntries: HeroEntry[] = []
   const propRandomSquads: Record<string, unknown>[] = []
   const propRandomItems: Record<string, unknown>[] = []
+  const propSquads: Record<string, unknown>[] = []
   let sceneryPlaced = 0
   let objectsPlaced = 0
   let outOfEnvelopeCount = 0
@@ -399,6 +424,29 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     }
 
     if (resolution.kind === 'random_squad') {
+      // A specific-monster placement (object id 54) with a real nearest-OE
+      // equivalent (creatureEquivalents, this session's own sourced/matched
+      // table) is placed as that ACTUAL creature — a `squads[]` (type 2)
+      // entry carrying a `propSquads` row, the real "fixed/named-creature
+      // guard" mechanism confirmed against `plans/olden_era_map_format.md`
+      // §3.3 and real shipped-map data this session (NOT a `random-squad`
+      // object with the creature's sid — a creature sid is roster-only,
+      // never a placeable object template). Falls through to the existing
+      // calibrated-random-squad path for the generic "Random Monster Level
+      // N" placeholders (which have no real creature type at all) and any
+      // id-54 subtype with no sourced equivalent.
+      const equivSid = oid === OBJECT_MONSTER ? h3CreatureEquivalent(record.templateSubtype) : null
+      if (equivSid) {
+        const unitCount = typeof record.count === 'number' && record.count > 0 ? record.count : 1
+        const squadId = placeSquad(node)
+        propSquads.push({
+          type: 2, id: squadId, isMainGuard: true, isStartBattleImmediately: false,
+          reactionType: 2, weeklyIncrementBonus: 0, unitProps: [{ sid: equivSid, count: unitCount }],
+        })
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: equivSid, note: `Specific unit guard (${unitCount}x)` })
+        continue
+      }
+
       // Neutral-strength calibration (issue #207 Phase 3) — an H3 monster
       // with no known creature type/level has no stock SpawnsCreator
       // budget to hand it; omit with a named reason rather than place an
@@ -447,21 +495,38 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       continue
     }
 
-    const objectId = placeObject(resolution.sid, node)
-    objectsPlaced += 1
-
     if (resolution.kind === 'artifact') {
-      // Real H3 random-artifact-class ids (65-69) carry genuine rarity
-      // info; a specific named H3 artifact (object id 5, always lossily
-      // collapsed to random-item) has none — TSE's own confirmed real
-      // default for a freshly-placed random-item with no further identity
-      // is rarity 0 (see RANDOM_SPAWNER_TABLE_DEFAULTS in map-write.ts).
-      const rarity = rarityForRandomArtifactObjectId(oid) ?? 0
-      propRandomItems.push({ type: 0, id: objectId, rarity })
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Artifact (rarity ${rarity})` })
-    } else {
-      detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
+      // A specific named H3 artifact (object id 5) with a real nearest-OE
+      // equivalent (artifactEquivalents, this session's own sourced/matched
+      // table) is placed as that real OE artifact object directly — a
+      // genuine catalog map-object template in its own right (confirmed:
+      // Core/DB/map/objects/6_artifacts.json), unlike a creature sid, so no
+      // extra objectsProperties row is needed, same as any other plain
+      // object. Falls back to the pre-existing random-item/rarity path
+      // (real H3 random-artifact-class ids 65-69, or no equivalent found).
+      const equivSid = oid === OBJECT_ARTIFACT ? h3ArtifactEquivalent(subId) : null
+      if (equivSid) {
+        placeObject(equivSid, node)
+        objectsPlaced += 1
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: equivSid, note: 'Specific artifact' })
+      } else {
+        const objectId = placeObject(resolution.sid, node)
+        objectsPlaced += 1
+        // Real H3 random-artifact-class ids (65-69) carry genuine rarity
+        // info; a specific named H3 artifact with no sourced equivalent
+        // has none — TSE's own confirmed real default for a freshly-placed
+        // random-item with no further identity is rarity 0 (see
+        // RANDOM_SPAWNER_TABLE_DEFAULTS in map-write.ts).
+        const rarity = rarityForRandomArtifactObjectId(oid) ?? 0
+        propRandomItems.push({ type: 0, id: objectId, rarity })
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: `Artifact (rarity ${rarity})` })
+      }
+      continue
     }
+
+    placeObject(resolution.sid, node)
+    objectsPlaced += 1
+    detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: resolution.sid, note: OBJECT_KIND_LABELS[resolution.kind] ?? resolution.kind })
   }
 
   const ownership = assignOwnership(parsed.header, cityCandidates, heroCandidates)
@@ -584,6 +649,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   )
 
   const objects = Array.from(objectGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
+  const squads = Array.from(squadGroups.entries()).map(([sid, g]) => ({ sid, ...g }))
 
   const decoder = new TextDecoder('utf-8')
   const templateB1 = JSON.parse(decoder.decode(template.chunks[0])) as Record<string, unknown>
@@ -633,10 +699,10 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     roadsMap: out.roadsMap,
     rivers,
     objects,
-    squads: [] as unknown[],
+    squads,
     markers: [] as unknown[],
     objectsFreeId: nextId,
-    squadsFreeId: 0,
+    squadsFreeId: nextSquadId,
     markersFreeId: 0,
     views,
     areas,
@@ -655,7 +721,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     // this phase populates) and override only what this phase actually fills.
     objectsProperties: {
       ...((templateB2.objectsProperties as Record<string, unknown>) ?? {}),
-      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes,
+      propCities, propOwners, propSpawns, propRandomSquads, propRandomItems, propGrowthUnits, propHeroes, propSquads,
       propPortals: portalLinks.propPortals,
     },
   }

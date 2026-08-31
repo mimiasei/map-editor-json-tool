@@ -122,6 +122,24 @@ export function h3DisplayName(id: number): string {
   return !row || row.h3Name === 'Unidentified' ? 'Unidentified' : row.h3Name
 }
 
+const creatureEquivalents: Record<string, string> = mapping.creatureEquivalents ?? {}
+const artifactEquivalents: Record<string, string> = mapping.artifactEquivalents ?? {}
+
+/** Nearest-`squadValue` real OE creature sid for object id 54's `subtype`
+ *  (this session's own `creatureEquivalents` table — see its own doc
+ *  comment in h3-object-mapping-schema.ts for the exact matching rule).
+ *  `null` for a subtype with no known H3 squad value (HotA-only ids this
+ *  session couldn't source) — never a guess. */
+export function h3CreatureEquivalent(subtype: number): string | null {
+  return creatureEquivalents[String(subtype)] ?? null
+}
+
+/** Nearest real OE artifact sid (by slot then rarity) for object id 5's
+ *  `subtype` — same fallback contract as `h3CreatureEquivalent`. */
+export function h3ArtifactEquivalent(subtype: number): string | null {
+  return artifactEquivalents[String(subtype)] ?? null
+}
+
 /** This H3 id's `ObjectKind` category, straight from the mapping table's
  *  own data — `null` when genuinely unknown (no row at all, e.g. an id
  *  with no mapping table entry; or an `omit` row, which carries no `kind`
