@@ -69,6 +69,18 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
   const raw = await parseMapFile(buffer)
   logInfo(`Parsed .map: ${name}`)
 
+  // Full reset before loading anything new — every field this touches gets
+  // explicitly overwritten again below (setScenario/setCurrentFile/
+  // setMapFile/setMapName), so this is safe to call unconditionally. Without
+  // it, `dialogs`/`localization`/`customHeroes`/`customMapObjects`/
+  // `customArtifacts`/`customBuffs` (the only fields NOT explicitly
+  // overwritten below — they're populated via merge-only setters) would
+  // still hold the PREVIOUS map's data, silently merged with the new map's
+  // own subset instead of replaced (confirmed real: this is the shared load
+  // path for New Map, Import H3 Map, and Open Map alike). Must run before
+  // `setContext()` below, since this also clears `useMapContextStore`.
+  useScenarioStore.getState().resetScenario()
+
   // ── In-memory document (issue #195 follow-up) ────────────────────────────
   // A second, independent parse of the same bytes via map-write.ts's own
   // reader — deliberately duplicated rather than shared with parseMapFile
