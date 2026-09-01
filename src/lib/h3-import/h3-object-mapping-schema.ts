@@ -80,6 +80,30 @@ export const ObjectRowSchema = z.discriminatedUnion('outcome', [
 export const H3ObjectMappingSchema = z.object({
   objects: z.array(ObjectRowSchema),
   sceneryRoleSids: z.record(z.string(), z.record(z.string(), z.string())),
+  /** Real H3 creature-type index (object id 54's `subtype`) -> real
+   *  creature name, e.g. `"4": "Griffin"` — only the ids actually sourced
+   *  and cross-verified (see h3-object-mapping.ts's own doc comment);
+   *  never a full 0-N table with guessed gaps. */
+  creatureNames: z.record(z.string(), z.string()).optional(),
+  /** Real H3 specific-artifact id (object id 5's `subtype`) -> real
+   *  artifact name, same sourcing caveat as `creatureNames`. */
+  artifactNames: z.record(z.string(), z.string()).optional(),
+  /** Real H3 creature-type index -> nearest-`squadValue` OE creature sid
+   *  (see `neutral-strength.ts`'s own `CREATURE_TYPE_SQUAD_VALUE` for the
+   *  H3-side value each entry was matched against, and this session's own
+   *  notes for the exact matching rule: user-specified OE faction pools
+   *  for several id ranges, explicit named pairs for a handful of ids with
+   *  no clean nearest-value candidate, full-OE-roster nearest-`squadValue`
+   *  otherwise — OE's `unfrozen` faction and every `_alt` upgrade variant
+   *  are excluded from every candidate pool). Only ids with a real H3
+   *  `squadValue` are present; never a guess for the rest. */
+  creatureEquivalents: z.record(z.string(), z.string()).optional(),
+  /** Real H3 artifact id -> nearest OE artifact sid, matched by real
+   *  equipment slot (hard constraint) then nearest rarity tier (H3's
+   *  Treasure/Minor/Major/Relic -> OE's common/rare/epic/legendary) —
+   *  see this session's own notes for the exact slot-translation table.
+   *  Only ids with a verified real H3 slot+class are present. */
+  artifactEquivalents: z.record(z.string(), z.string()).optional(),
 })
 
 export type ObjectRow = z.infer<typeof ObjectRowSchema>

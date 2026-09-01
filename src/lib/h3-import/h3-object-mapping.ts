@@ -114,6 +114,76 @@ export function describeH3ObjectId(id: number): string {
   return `${row.h3Name} (id ${id})`
 }
 
+/** Just the name portion of {@link describeH3ObjectId}, with no "(id N)"
+ *  suffix — for callers (the detailed import report) that already carry the
+ *  numeric id as its own field and don't want it duplicated inline. */
+export function h3DisplayName(id: number): string {
+  const row = objectsById.get(id)
+  return !row || row.h3Name === 'Unidentified' ? 'Unidentified' : row.h3Name
+}
+
+const creatureEquivalents: Record<string, string> = mapping.creatureEquivalents ?? {}
+const artifactEquivalents: Record<string, string> = mapping.artifactEquivalents ?? {}
+
+/** Nearest-`squadValue` real OE creature sid for object id 54's `subtype`
+ *  (this session's own `creatureEquivalents` table — see its own doc
+ *  comment in h3-object-mapping-schema.ts for the exact matching rule).
+ *  `null` for a subtype with no known H3 squad value (HotA-only ids this
+ *  session couldn't source) — never a guess. */
+export function h3CreatureEquivalent(subtype: number): string | null {
+  return creatureEquivalents[String(subtype)] ?? null
+}
+
+/** Nearest real OE artifact sid (by slot then rarity) for object id 5's
+ *  `subtype` — same fallback contract as `h3CreatureEquivalent`. */
+export function h3ArtifactEquivalent(subtype: number): string | null {
+  return artifactEquivalents[String(subtype)] ?? null
+}
+
+/** This H3 id's `ObjectKind` category, straight from the mapping table's
+ *  own data — `null` when genuinely unknown (no row at all, e.g. an id
+ *  with no mapping table entry; or an `omit` row, which carries no `kind`
+ *  field in the schema at all — see `h3-object-mapping-schema.ts`'s
+ *  `OmitRowSchema`). Never guessed: an `omit` row's real family (is a
+ *  deferred witch hut an interactable? a resource?) simply isn't captured
+ *  anywhere in this table today, so returning a category for it would be
+ *  fabricated, not derived. */
+const creatureNames: Record<string, string> = mapping.creatureNames ?? {}
+const artifactNames: Record<string, string> = mapping.artifactNames ?? {}
+
+/** Real H3 creature name for object id 54's `subtype` — e.g. `4` -> "Griffin"
+ *  — sourced from VCMI's own creature config (HotA ids cross-checked
+ *  against a second independent source), never a guessed fallback. `null`
+ *  for a subtype this table hasn't been filled in for (currently HotA's
+ *  Factory-town creatures, ids 172+ — no reliable id/name pairing was
+ *  found for those; see this session's own sourcing notes). Callers should
+ *  fall back to the generic `h3DisplayName(54)` ("Monster") in that case. */
+export function h3CreatureName(subtype: number): string | null {
+  return creatureNames[String(subtype)] ?? null
+}
+
+/** Real H3 artifact name for object id 5's `subtype` — same sourcing/
+ *  fallback contract as `h3CreatureName`. */
+export function h3ArtifactName(subtype: number): string | null {
+  return artifactNames[String(subtype)] ?? null
+}
+
+export function h3ObjectCategory(id: number): string | null {
+  const row = objectsById.get(id)
+  if (!row) return null
+  switch (row.outcome) {
+    case 'emit':
+    case 'dispatch':
+      return row.kind
+    case 'scenery':
+    case 'scenery-dispatch':
+    case 'scenery-dispatch-subtype':
+      return 'scenery'
+    case 'omit':
+      return null
+  }
+}
+
 function animationTokenMatch(animation: string, table: Record<string, string>): string | null {
   for (const [token, sid] of Object.entries(table)) {
     if (animation.includes(token)) return sid

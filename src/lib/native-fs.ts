@@ -71,16 +71,21 @@ export async function saveToPath(path: string, content: string): Promise<void> {
 /**
  * Save As: shows a native save dialog (Tauri) or triggers a browser download.
  * Returns the saved file path in Tauri, null in browser or on cancel.
+ * `filter`/`mimeType` default to JSON for existing callers (scenario export) —
+ * pass a different pair (e.g. `{ name: 'Text', extensions: ['txt'] }`,
+ * `'text/plain'`) for a non-JSON report.
  */
 export async function saveFile(
   content: string,
   suggestedName = 'scenario.json',
+  filter: { name: string; extensions: string[] } = { name: 'JSON', extensions: ['json'] },
+  mimeType = 'application/json',
 ): Promise<string | null> {
   if (isTauri()) {
     const { save } = await import('@tauri-apps/plugin-dialog')
     const { writeTextFile } = await import('@tauri-apps/plugin-fs')
     const path = await save({
-      filters: [{ name: 'JSON', extensions: ['json'] }],
+      filters: [filter],
       defaultPath: suggestedName,
     })
     if (!path) return null
@@ -90,7 +95,7 @@ export async function saveFile(
   }
 
   // Browser: trigger download
-  const blob = new Blob([content], { type: 'application/json' })
+  const blob = new Blob([content], { type: mimeType })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement('a')
   a.href     = url

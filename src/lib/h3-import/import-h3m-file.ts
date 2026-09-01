@@ -15,6 +15,7 @@ import { readMapContainer, buildMapContainer, gzipBytes, gunzipBytes } from '@/l
 import { loadParsedMapFile } from '@/lib/map-file'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useScenarioStore } from '@/store/useScenarioStore'
 import { gunzipH3mIfNeeded } from './parse-h3m'
 import { convertH3mToMap, type H3ImportReport } from './convert-h3m-to-map'
 import { validateMapStructure } from '@/lib/map-grid/validate-map'
@@ -56,7 +57,7 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
-  const { container, report } = convertH3mToMap(data, catalog, templateContainer)
+  const { container, report, localizationTokens, dialogFlows } = convertH3mToMap(data, catalog, templateContainer)
 
   const decoder = new TextDecoder('utf-8')
   const b1 = JSON.parse(decoder.decode(container.chunks[0])) as Record<string, unknown>
@@ -73,6 +74,19 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   // create-map.ts's own createNewMap(): the dirty-dot/exit-guard must
   // reflect that immediately rather than only after the user's first edit.
   useMapDocumentStore.setState({ mapIsDirty: true })
+  // Register every generated display-name SID's real text (custom H3 town
+  // names — see convertH3mToMap's own H3ImportResult doc comment) into the
+  // live scenario's localization store, same mechanism SetDisplayNameDialog
+  // uses. Skipped entirely when empty so a map with no custom-named towns
+  // doesn't get needlessly flagged dirty.
+  if (Object.keys(localizationTokens).length > 0) {
+    useScenarioStore.getState().setLocalizationBatch(localizationTokens)
+  }
+  // Same for dialog flows built from H3 global timed events (the "day 1"
+  // map-opening message, etc.) — no bulk setter exists for these, so loop.
+  for (const flow of Object.values(dialogFlows)) {
+    useScenarioStore.getState().setDialogFlow(flow.id, flow)
+  }
 
   return { name, report, validationErrors }
 }

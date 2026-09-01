@@ -48,6 +48,17 @@ export interface AccessibilityReport {
   decorRemoved: number
   targetsNudged: number
   stillUnreachable: number
+  /** `mustBeReachable`'s own size — see its own param doc comment. */
+  groundTruthTilesChecked: number
+  /** Decorative objects removed specifically because they sealed off a
+   *  ground-truth-walkable tile with no target of its own inside it (the
+   *  existing `decorRemoved` above only ever fires for a declared target). */
+  groundTruthDecorRemoved: number
+  /** Ground-truth-walkable tiles still unreached after decor removal — a
+   *  real, disclosed gap (e.g. a diagonal-only pinch point under this
+   *  importer's strictly-4-neighbor connectivity model, or nothing
+   *  decorative standing in the way to safely remove). */
+  groundTruthStillBlocked: number
 }
 
 const PLAYER_START_SIDS = new Set(['city-spawner', 'hero-spawner'])
@@ -131,6 +142,11 @@ export function applyAccessibilityPass(
   catalogById: Map<string, CatalogMapObject>,
   decorativeIds: Set<number>,
   portalAdjacencyByObjectId: Map<number, number>,
+  /** Every atlas node the H3 source map's own terrain/objects say is plain
+   *  walkable floor (`ground-truth-passability.ts`) — protected the same
+   *  way a declared target is, so a stretch of open H3 floor with no
+   *  interactable in it isn't invisible to this pass. */
+  mustBeReachable: Set<number>,
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -178,8 +194,12 @@ export function applyAccessibilityPass(
     }
   }
 
-  const report: AccessibilityReport = { targetsChecked: targets.length, decorRemoved: 0, targetsNudged: 0, stillUnreachable: 0 }
-  if (seeds.length === 0 || targets.length === 0) return report
+  const report: AccessibilityReport = {
+    targetsChecked: targets.length, decorRemoved: 0, targetsNudged: 0, stillUnreachable: 0,
+    groundTruthTilesChecked: mustBeReachable.size, groundTruthDecorRemoved: 0, groundTruthStillBlocked: 0,
+  }
+  if (seeds.length === 0) return report
+  if (targets.length === 0 && mustBeReachable.size === 0) return report
 
   const passContext = { sizeX: atlasWidth, sizeZ: atlasHeight, levelsMap: out.levelsMap, climbsMap: out.climbsMap, waterMap: out.waterMap }
   let blocked = buildBlockedTileSet({ ...passContext, placedObjects: buildFlatPlaced() }, catalog)
@@ -188,7 +208,8 @@ export function applyAccessibilityPass(
 
   const isReachable = (t: TargetInfo) => t.accessNodes.some((n) => reachable.has(n))
   let unreachable = targets.filter((t) => !isReachable(t))
-  if (unreachable.length === 0) return report
+  let unreachedGroundTruth = [...mustBeReachable].filter((n) => !reachable.has(n))
+  if (unreachable.length === 0 && unreachedGroundTruth.length === 0) return report
 
   // Blocking-cell ownership index (value===1 footprint cells only — the same
   // cells `buildBlockedTileSet`'s own source 1 rule contributes) so a
@@ -260,7 +281,20 @@ export function applyAccessibilityPass(
   }
 
   const reachableSet = reachable
-  const toDelete = new Set<number>()
+  // Walk `cameFrom`/`viaDeleteIds` back from a node to the reachable
+  // frontier, folding every decorative id along the way into `into`.
+  const collectDeleteIds = (start: number, into: Set<number>) => {
+    let cur = start
+    while (!reachableSet.has(cur)) {
+      const ids = viaDeleteIds.get(cur)
+      if (ids) for (const id of ids) into.add(id)
+      const parent = cameFrom.get(cur)
+      if (parent === undefined) break
+      cur = parent
+    }
+  }
+
+  const targetToDelete = new Set<number>()
   for (const target of unreachable) {
     let best: number | null = null
     for (const n of target.accessNodes) {
@@ -268,16 +302,19 @@ export function applyAccessibilityPass(
       if (d !== undefined && (best === null || d < (dist.get(best) as number))) best = n
     }
     if (best === null) continue // no bridgeable path — handled by the nudge phase below
-    let cur = best
-    while (!reachableSet.has(cur)) {
-      const ids = viaDeleteIds.get(cur)
-      if (ids) for (const id of ids) toDelete.add(id)
-      const parent = cameFrom.get(cur)
-      if (parent === undefined) break
-      cur = parent
-    }
+    collectDeleteIds(best, targetToDelete)
   }
 
+  // Same 0-1 BFS result, consumed a second time for plain ground-truth-
+  // walkable floor that has no target of its own — the whole reason this
+  // pass now takes `mustBeReachable` at all (see this file's own header
+  // comment).
+  const groundTruthToDelete = new Set<number>()
+  for (const node of unreachedGroundTruth) {
+    if (dist.has(node)) collectDeleteIds(node, groundTruthToDelete)
+  }
+
+  const toDelete = new Set<number>([...targetToDelete, ...groundTruthToDelete])
   for (const id of toDelete) {
     const sid = idToSid.get(id)
     if (sid === undefined) continue
@@ -290,7 +327,8 @@ export function applyAccessibilityPass(
     group.rotations.splice(index, 1)
     group.levels.splice(index, 1)
   }
-  report.decorRemoved = toDelete.size
+  report.decorRemoved = targetToDelete.size
+  report.groundTruthDecorRemoved = [...groundTruthToDelete].filter((id) => !targetToDelete.has(id)).length
 
   if (toDelete.size > 0) {
     blocked = buildBlockedTileSet({ ...passContext, placedObjects: buildFlatPlaced() }, catalog)
@@ -298,6 +336,8 @@ export function applyAccessibilityPass(
     floodFill(seeds, blocked, atlasWidth, atlasHeight, portalNodeAdjacency, reachable)
     unreachable = unreachable.filter((t) => !isReachable(t))
   }
+  unreachedGroundTruth = unreachedGroundTruth.filter((n) => !reachable.has(n))
+  report.groundTruthStillBlocked = unreachedGroundTruth.length
   if (unreachable.length === 0) return report
 
   // Nudge phase: relocate each still-stuck target to the nearest free,
