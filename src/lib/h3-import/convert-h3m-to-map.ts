@@ -61,7 +61,7 @@ import {
   buildOakTreePool, mountainBigSid, randomDecorRotation,
 } from './scenery-clusters'
 import { assignOwnership, type CityCandidate, type HeroCandidate } from './ownership'
-import { stockRandomSquadRequestedValue } from './neutral-strength'
+import { stockRandomSquadRequestedValue, NOMINAL_STACK_COUNT_BY_LEVEL, CREATURE_TYPE_SQUAD_VALUE } from './neutral-strength'
 import { rarityForRandomArtifactObjectId } from './random-items'
 import { buildWinstandardQuest } from './victory'
 import { VICTORY_WINSTANDARD } from './h3m-format'
@@ -484,7 +484,19 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       const equivSidCandidate = oid === OBJECT_MONSTER ? h3CreatureEquivalent(record.templateSubtype) : null
       const equivSid = equivSidCandidate && placeableCreatureSids.has(equivSidCandidate) ? equivSidCandidate : null
       if (equivSid) {
-        const unitCount = typeof record.count === 'number' && record.count > 0 ? record.count : 1
+        // A real, common H3 authoring pattern, not an edge case: confirmed
+        // against real shipped maps this session that the vast majority of
+        // specific-monster placements leave `count` unset (0) — H3 itself
+        // treats 0 as "use a nominal amount for this creature's tier," the
+        // exact same sentinel the pre-existing random-squad calibration
+        // above already handles via this same NOMINAL_STACK_COUNT_BY_LEVEL
+        // table. Defaulting to a flat 1 here (the original version of this
+        // code) turned ~96% of one real map's monster guards into
+        // single-unit stacks — a real gameplay-balance regression, not
+        // cosmetic.
+        const nominalTier = CREATURE_TYPE_SQUAD_VALUE[record.templateSubtype]?.tier
+        const nominalCount = nominalTier !== undefined ? NOMINAL_STACK_COUNT_BY_LEVEL[nominalTier] : undefined
+        const unitCount = typeof record.count === 'number' && record.count > 0 ? record.count : (nominalCount ?? 1)
         const squadId = placeSquad(node)
         propSquads.push({
           type: 2, id: squadId, isMainGuard: true, isStartBattleImmediately: false,
