@@ -52,6 +52,7 @@ import { buildEmptyAtlasArrays, projectLayerIntoAtlas, paintEnvelopePadding, bui
 import { clampFootprintToLayer } from './object-footprint-clamp'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
+import { generateDisplayNameSid } from '@/lib/slugify'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
   footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster,
@@ -181,6 +182,15 @@ export interface H3ImportDetailRow {
 export interface H3ImportResult {
   container: MapContainer
   report: H3ImportReport
+  /** Generated display-name SID -> real text (currently just custom H3
+   *  town names — see `generateTownNameSid`'s own doc comment for why this
+   *  can't just be written into the map container directly). The caller
+   *  must register these into the live scenario's localization store
+   *  (`useScenarioStore`'s `setLocalizationBatch`) — `convertH3mToMap`
+   *  itself stays a pure function with no store access, so it can keep
+   *  running standalone the way this project's own verification scripts
+   *  already rely on. */
+  localizationTokens: Record<string, string>
 }
 
 // Towns (and townless-hero players) are placed AFTER ownership is resolved,
@@ -198,6 +208,11 @@ interface TownEntry {
   sid: string
   factionSid: string
   freeChoice: boolean
+  /** A generated localization SID (or '' for an unnamed town), never the
+   *  raw H3 name text directly — `propCities.customCityName` is a
+   *  localization SID lookup in-game, not literal text (see
+   *  `generateDisplayNameSid()`'s own doc comment); writing the name
+   *  straight into this field renders as `LOC:<name>` in-game. */
   customCityName: string
 }
 
@@ -324,6 +339,19 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const propRandomSquads: Record<string, unknown>[] = []
   const propRandomItems: Record<string, unknown>[] = []
   const propSquads: Record<string, unknown>[] = []
+  // Every generated display-name SID so far in this import (so two
+  // custom-named H3 towns never collide), and the real text each one
+  // resolves to — returned to the caller to register into the live
+  // scenario's localization store (see convertH3mToMap's own return
+  // shape doc comment for why this stays out of this pure function).
+  const generatedNameSids: string[] = []
+  const localizationTokens: Record<string, string> = {}
+  const generateTownNameSid = (name: string): string => {
+    const sid = generateDisplayNameSid(name, generatedNameSids)
+    generatedNameSids.push(sid)
+    localizationTokens[sid] = name
+    return sid
+  }
   let sceneryPlaced = 0
   let objectsPlaced = 0
   let outOfEnvelopeCount = 0
@@ -503,7 +531,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       townEntries.push({
         index, node, sid: resolution.sid,
         factionSid: resolution.factionSid ?? '', freeChoice: resolution.freeChoice ?? false,
-        customCityName: typeof record.name === 'string' ? record.name : '',
+        customCityName: typeof record.name === 'string' && record.name.trim() ? generateTownNameSid(record.name.trim()) : '',
       })
       const townDetail: DetailInstance = { h3Id: oid, subId, h3Name, defName, category, mappedSid: null, note: 'Pending town ownership resolution' }
       detailInstances.push(townDetail)
@@ -799,5 +827,6 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       riverTilesConverted: out.riverNodes.size,
       detailRows,
     },
+    localizationTokens,
   }
 }
