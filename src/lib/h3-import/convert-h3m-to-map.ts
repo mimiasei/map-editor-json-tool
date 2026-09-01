@@ -53,6 +53,8 @@ import { clampFootprintToLayer } from './object-footprint-clamp'
 import { resolveObjectSid, H3_OAK_TREES_OBJECT_ID, BIOME_ROLE_REPLACEMENTS, describeH3ObjectId, h3DisplayName, h3ObjectCategory, h3CreatureName, h3ArtifactName, h3CreatureEquivalent, h3ArtifactEquivalent } from './h3-object-mapping'
 import { OBJECT_HERO, OBJECT_RANDOM_HERO, OBJECT_MONSTER, OBJECT_ARTIFACT } from './h3m-object-registry'
 import { generateDisplayNameSid } from '@/lib/slugify'
+import { buildGlobalEventQuest, type GlobalEventQuest } from './global-events'
+import type { DialogFlow } from '@/types/dialog'
 import { buildVariantFamilies, pickVariant, createSeededRng, seedFromString } from './scenery-variants'
 import {
   footprintCellsInBounds, pickTreeClusterPlacements, packMountainCluster,
@@ -191,6 +193,12 @@ export interface H3ImportResult {
    *  running standalone the way this project's own verification scripts
    *  already rely on. */
   localizationTokens: Record<string, string>
+  /** Dialog flows built for H3 global timed events (the "day 1" map-opening
+   *  message, or similar) — see `localizationTokens`' own doc comment for
+   *  why this can't be written into the map container directly; the
+   *  caller must also register these into the live scenario's dialog
+   *  store (`useScenarioStore`'s `setDialogFlow`). */
+  dialogFlows: Record<string, DialogFlow>
 }
 
 // Towns (and townless-hero players) are placed AFTER ownership is resolved,
@@ -583,6 +591,21 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     ? buildWinstandardQuest(title, ownership.humanFinalOwner, ownership.finalOwners)
     : null
 
+  // H3's "Specify Timed Events" — the mechanism behind the message many
+  // maps open with on day 1 (see global-events.ts's own doc comment for
+  // the full conversion — one quest+dialog per event, first occurrence
+  // only). Fully parsed already; previously collected then dropped.
+  const globalEventQuests: GlobalEventQuest[] = []
+  const dialogFlows: Record<string, DialogFlow> = {}
+  for (const event of parsed.globalTimedEvents) {
+    const conversion = buildGlobalEventQuest(event, generatedNameSids)
+    if (!conversion) continue
+    globalEventQuests.push(conversion.quest)
+    dialogFlows[conversion.dialogFlow.id] = conversion.dialogFlow
+    Object.assign(localizationTokens, conversion.localizationTokens)
+    generatedNameSids.push(...Object.keys(conversion.localizationTokens))
+  }
+
   const propCities: Record<string, unknown>[] = []
   const propOwners: Record<string, unknown>[] = []
   const propSpawns: Record<string, unknown>[] = []
@@ -776,7 +799,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     aiRolesId: templateB4.aiRolesId ?? '',
     counters: [] as unknown[],
     interruptions: [] as unknown[],
-    quests: mainQuest ? [mainQuest] : [],
+    quests: [...(mainQuest ? [mainQuest] : []), ...globalEventQuests],
   }
 
   const container: MapContainer = {
@@ -828,5 +851,6 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       detailRows,
     },
     localizationTokens,
+    dialogFlows,
   }
 }

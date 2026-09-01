@@ -57,7 +57,7 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
-  const { container, report, localizationTokens } = convertH3mToMap(data, catalog, templateContainer)
+  const { container, report, localizationTokens, dialogFlows } = convertH3mToMap(data, catalog, templateContainer)
 
   const decoder = new TextDecoder('utf-8')
   const b1 = JSON.parse(decoder.decode(container.chunks[0])) as Record<string, unknown>
@@ -81,6 +81,11 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   // doesn't get needlessly flagged dirty.
   if (Object.keys(localizationTokens).length > 0) {
     useScenarioStore.getState().setLocalizationBatch(localizationTokens)
+  }
+  // Same for dialog flows built from H3 global timed events (the "day 1"
+  // map-opening message, etc.) — no bulk setter exists for these, so loop.
+  for (const flow of Object.values(dialogFlows)) {
+    useScenarioStore.getState().setDialogFlow(flow.id, flow)
   }
 
   return { name, report, validationErrors }
