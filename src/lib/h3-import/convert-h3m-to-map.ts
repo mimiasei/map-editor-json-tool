@@ -454,7 +454,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
           type: 2, id: squadId, isMainGuard: true, isStartBattleImmediately: false,
           reactionType: 2, weeklyIncrementBonus: 0, unitProps: [{ sid: equivSid, count: unitCount }],
         })
-        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category, mappedSid: equivSid, note: `Specific unit guard (${unitCount}x)` })
+        // Category override: the mapping table's own `kind` for id 54 is
+        // "random_squad" (matching resolveObjectSid's generic classification
+        // for the whole object id), but a specific-unit placement like this
+        // one is never actually random — "squad" is the real, distinct
+        // category so the CSV can tell the two outcomes apart.
+        detailInstances.push({ h3Id: oid, subId, h3Name, defName, category: 'squad', mappedSid: equivSid, note: `Specific unit guard (${unitCount}x)` })
         continue
       }
 
