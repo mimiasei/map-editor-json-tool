@@ -2309,7 +2309,7 @@
     "26": "phoenix",
     "27": "phoenix_upg",
     "28": "trogl",
-    "29": "gnat",
+    "29": "esquire",
     "30": "twinkle",
     "31": "ent",
     "32": "griffin",
@@ -2421,9 +2421,9 @@
     "142": "griffin_upg",
     "143": "assassin_upg",
     "144": "druid_upg",
-    "169": "undead_peasant",
-    "167": "hierophant_upg",
-    "170": "minotaur_upg"
+    "169": "peasant_normal",
+    "167": "graverobber",
+    "170": "graverobber"
   },
   "artifactEquivalents": {
     "7": "duelists_pride_buckler_artifact",

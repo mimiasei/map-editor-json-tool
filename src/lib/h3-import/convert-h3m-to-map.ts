@@ -242,6 +242,16 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
 
   const families = buildVariantFamilies(catalog.mapObjects)
   const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
+  // A creature sid is only actually placeable as a `propSquads.unitProps[].sid`
+  // guard if it appears in at least one real squad template — real-data
+  // confirmed gap: a roster-only sid with zero squad-template references
+  // (e.g. "gnat") loads fine here but can never actually be added to a map
+  // in-game. `creatureEquivalents` is sourced/verified against this same
+  // constraint, but this is checked again at use time as a defensive
+  // backstop against any future bad entry (hand-edited or otherwise) —
+  // falls back to the existing calibrated-random-squad path rather than
+  // silently emitting an unplaceable guard.
+  const placeableCreatureSids = new Set(catalog.squadTemplates.flatMap((t) => t.unitSids))
   const rng = createSeededRng(seed ?? seedFromString(title || 'h3-import'))
 
   const objectGroups = new Map<string, { ids: number[]; nodes: number[]; rotations: number[]; levels: number[] }>()
@@ -435,7 +445,8 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // calibrated-random-squad path for the generic "Random Monster Level
       // N" placeholders (which have no real creature type at all) and any
       // id-54 subtype with no sourced equivalent.
-      const equivSid = oid === OBJECT_MONSTER ? h3CreatureEquivalent(record.templateSubtype) : null
+      const equivSidCandidate = oid === OBJECT_MONSTER ? h3CreatureEquivalent(record.templateSubtype) : null
+      const equivSid = equivSidCandidate && placeableCreatureSids.has(equivSidCandidate) ? equivSidCandidate : null
       if (equivSid) {
         const unitCount = typeof record.count === 'number' && record.count > 0 ? record.count : 1
         const squadId = placeSquad(node)
