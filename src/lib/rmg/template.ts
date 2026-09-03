@@ -43,6 +43,13 @@ export interface RandomMapTemplate {
    *  `forcePortal` concept — generate-random-map.ts's own doc comment has
    *  the full rationale). Independent of `waterContent`. */
   usePortals: boolean
+  /** 0-1 — Penrose-tiling zone-boundary jaggedness (generate-random-map.ts's
+   *  own doc comment has the exact scale mapping). 0.5 (the default)
+   *  reproduces this generator's original hardcoded shape exactly. */
+  zoneJaggedness: number
+  /** Multiplier on zone spread/spacing (generate-random-map.ts's own doc
+   *  comment). 1 (the default) reproduces prior behavior exactly. */
+  zoneSpread: number
   /** Fixed RNG seed for reproducible generation (mulberry32 — seeded-rng.ts). Omitted = a fresh random seed every time. */
   seed?: number
 }
@@ -50,17 +57,19 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   obstacleDensity: 0.12,
   treasureDensity: 1,
   objectVariety: 0.4,
   usePortals: false,
+  zoneJaggedness: 0.5,
+  zoneSpread: 1,
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -72,6 +81,8 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     treasureDensity,
     objectVariety,
     usePortals,
+    zoneJaggedness,
+    zoneSpread,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -107,6 +118,8 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     treasureDensity: typeof data.treasureDensity === 'number' ? data.treasureDensity : DEFAULT_TEMPLATE_OVERRIDES.treasureDensity,
     objectVariety: typeof data.objectVariety === 'number' ? data.objectVariety : DEFAULT_TEMPLATE_OVERRIDES.objectVariety,
     usePortals: typeof data.usePortals === 'boolean' ? data.usePortals : DEFAULT_TEMPLATE_OVERRIDES.usePortals,
+    zoneJaggedness: typeof data.zoneJaggedness === 'number' ? data.zoneJaggedness : DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness,
+    zoneSpread: typeof data.zoneSpread === 'number' ? data.zoneSpread : DEFAULT_TEMPLATE_OVERRIDES.zoneSpread,
     seed: typeof data.seed === 'number' ? data.seed : undefined,
   }
 }

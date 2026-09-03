@@ -91,6 +91,11 @@ export function layoutZoneCenters(sizeX: number, sizeZ: number, graph: ZoneGraph
  * annealing (a cooling "temperature" cap on each step's movement) settles
  * the system rather than letting it oscillate forever. Positions stay
  * clamped to the same inset bounds `layoutZoneCenters` itself respects.
+ * `radiusMultiplier` (default 1 — unchanged prior behavior) scales every
+ * zone's own equilibrium "soft sphere" radius uniformly: below 1 packs
+ * zones tighter (denser, more crowded interiors), above 1 spreads them
+ * further apart (more open space per zone) — generate-random-map.ts's own
+ * user-facing `zoneSpread` option.
  */
 export function relaxZoneCenters(
   sizeX: number,
@@ -99,12 +104,13 @@ export function relaxZoneCenters(
   initialCenters: ZoneCenter[],
   rng: () => number,
   iterations = 300,
+  radiusMultiplier = 1,
 ): ZoneCenter[] {
   const n = initialCenters.length
   if (n <= 1) return initialCenters
 
   const zoneById = new Map(graph.zones.map((z) => [z.id, z]))
-  const baseRadius = Math.sqrt((sizeX * sizeZ) / n) * 0.35
+  const baseRadius = Math.sqrt((sizeX * sizeZ) / n) * 0.35 * radiusMultiplier
   const radius = initialCenters.map((c) => baseRadius * Math.sqrt(zoneById.get(c.zoneId)?.size ?? 1))
 
   const insetX = Math.max(1, Math.floor(sizeX * 0.1))

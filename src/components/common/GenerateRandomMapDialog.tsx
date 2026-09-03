@@ -62,6 +62,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
   const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
   const [usePortals, setUsePortals] = useState(DEFAULT_TEMPLATE_OVERRIDES.usePortals)
+  const [zoneJaggedness, setZoneJaggedness] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
+  const [zoneSpread, setZoneSpread] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -84,6 +86,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         treasureDensity,
         objectVariety,
         usePortals,
+        zoneJaggedness,
+        zoneSpread,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -110,6 +114,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       treasureDensity,
       objectVariety,
       usePortals,
+      zoneJaggedness,
+      zoneSpread,
       seed: seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined,
     }
     await saveFile(stringifyRandomMapTemplate(template), 'rmg-template.json')
@@ -133,6 +139,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setTreasureDensity(template.treasureDensity)
       setObjectVariety(template.objectVariety)
       setUsePortals(template.usePortals)
+      setZoneJaggedness(template.zoneJaggedness)
+      setZoneSpread(template.zoneSpread)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
       logInfo(`Loaded RMG template: ${file.name}`)
@@ -189,6 +197,26 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           {advancedOpen && (
             <div className="space-y-4 pl-1">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones.">
+                    Zone jaggedness
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.05} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads.">
+                    Zone spread
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
+                </div>
+                <Slider min={0.5} max={1.8} step={0.05} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} />
+              </div>
+
               <div className="space-y-1.5">
                 <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
                   Water content

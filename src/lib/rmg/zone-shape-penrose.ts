@@ -27,9 +27,13 @@ import { generatePenroseTiling, randomPentagridOffsets, type RhombusTile } from 
 import type { ZoneCenter } from './zone-layout'
 import type { ZoneSpec } from './zone-graph'
 
-/** Tiles per pentagrid unit — tunes Penrose vertex density. Lower = finer,
- *  more jagged boundaries (more compute); higher = coarser, blockier. */
-const SCALE = 4
+/** Default tiles-per-pentagrid-unit — tunes Penrose vertex density. Lower =
+ *  finer, more jagged boundaries (more compute); higher = coarser,
+ *  blockier. Callers can override via `assignTilesToZonesPenrose`'s own
+ *  `scale` param (generate-random-map.ts's `zoneJaggedness` option maps a
+ *  user-facing 0-1 slider onto this same range — see that file's own doc
+ *  comment for the exact mapping). */
+const DEFAULT_SCALE = 4
 
 /** Every unique vertex across `tiles`, deduped by rounded coordinate (many
  *  rhombi share a vertex), converted from pentagrid units into map tile
@@ -55,15 +59,16 @@ export function assignTilesToZonesPenrose(
   centers: ZoneCenter[],
   zones: ZoneSpec[],
   rng: () => number,
+  scale = DEFAULT_SCALE,
 ): { zoneIdByNode: number[]; tilesByZone: Map<number, number[]> } {
   const cx = (sizeX - 1) / 2
   const cz = (sizeZ - 1) / 2
   const maxExtent = Math.max(sizeX, sizeZ)
-  const gridRange = Math.ceil(maxExtent / 2 / SCALE) + Math.ceil(6 / SCALE) + 4
+  const gridRange = Math.ceil(maxExtent / 2 / scale) + Math.ceil(6 / scale) + 4
 
   const gammas = randomPentagridOffsets(rng)
   const tiles = generatePenroseTiling(gammas, gridRange)
-  const vertices = collectVertices(tiles, SCALE, cx, cz)
+  const vertices = collectVertices(tiles, scale, cx, cz)
 
   // Each vertex -> nearest (size-weighted) zone center. Same weighting
   // convention zone-layout.ts's own Voronoi assignment uses.
@@ -88,7 +93,7 @@ export function assignTilesToZonesPenrose(
   // Spatially bucket vertices for fast approximate-nearest-vertex lookup
   // per map tile — a plain O(tiles × vertices) scan would be too slow at
   // thousands of vertices × tens of thousands of tiles.
-  const bucketSize = Math.max(2, SCALE)
+  const bucketSize = Math.max(2, scale)
   const bucketCols = Math.max(1, Math.ceil(sizeX / bucketSize))
   const bucketRows = Math.max(1, Math.ceil(sizeZ / bucketSize))
   const buckets = new Map<number, number[]>()

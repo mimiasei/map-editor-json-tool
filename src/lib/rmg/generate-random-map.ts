@@ -96,8 +96,32 @@ export interface GenerateRandomMapOptions {
    *  water-crossing use of the same mechanic. User-toggleable per the
    *  user's own request; defaults to `false`. */
   usePortals?: boolean
+  /** 0-1 — controls the Penrose-tiling zone-shaping pass's own vertex
+   *  density (zone-shape-penrose.ts's `scale` param): 0 = coarse, blockier
+   *  zone boundaries; 1 = fine, highly jagged boundaries. Maps onto that
+   *  module's real `scale` range (7 down to 1) so the default 0.5 lands
+   *  exactly on its own prior hardcoded value (4) — leaving this option
+   *  untouched reproduces every map this generator made before it existed.
+   *  User-requested control over "the shape of the landscape". */
+  zoneJaggedness?: number
+  /** Multiplier (default 1, unchanged prior behavior) on every zone's own
+   *  Fruchterman-Reingold equilibrium radius (zone-layout.ts's
+   *  `relaxZoneCenters` `radiusMultiplier` param): below 1 packs zones
+   *  tighter (denser interiors, more obstacle/road crowding), above 1
+   *  spreads them further apart (more open space, generally cleaner roads
+   *  — see this generator's own Milestone 5 fix for why crowding matters
+   *  there). User-requested control over "the shape of the landscape". */
+  zoneSpread?: number
   /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
+}
+
+/** `zoneJaggedness`'s 0-1 UI range onto zone-shape-penrose.ts's real
+ *  `scale` parameter (7 = coarsest it supports down to 1 = finest) — solved
+ *  so the option's own default (0.5) reproduces that module's prior
+ *  hardcoded constant (4) exactly. */
+function jaggednessToPenroseScale(jaggedness: number): number {
+  return 7 - jaggedness * 6
 }
 
 /**
@@ -109,7 +133,7 @@ export interface GenerateRandomMapOptions {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -133,8 +157,8 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // a real verification sweep: every zone still comes out as a single
   // connected tile region (not fragmented by the jagged vertex-based
   // boundary) across every tested map size/player count.
-  const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng)
-  const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng)
+  const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
+  const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
   const zoneBiome = assignZoneBiomes(graph.zones)
 
   // Islands: shrink chosen neutral zones' own tile pool to a compact
