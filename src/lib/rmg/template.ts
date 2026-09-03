@@ -20,7 +20,14 @@ export interface RandomMapTemplate {
   sizeZ: number
   playerCount: number
   playerSpawnerSid: 'city-spawner' | 'hero-spawner'
-  /** 0-1 chance any given eligible neutral zone gets a lake (zone-water.ts). */
+  /** Overall water geography — VCMI's own `allowedWaterContent` concept.
+   *  `'none'`: no water at all. `'normal'`: in-zone lakes (zone-water.ts).
+   *  `'islands'`: some neutral zones fully water-locked, reconnected by a
+   *  portal pair instead of a boat (zone-islands.ts — no naval-travel
+   *  mechanic exists in Olden Era). */
+  waterContent: 'none' | 'normal' | 'islands'
+  /** Overall water amount, 0-1 — lake prevalence/size in `'normal'` mode,
+   *  island count/land-vs-water ratio in `'islands'` mode. */
   waterChance: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). */
   obstacleDensity: number
@@ -33,19 +40,21 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterChance' | 'obstacleDensity' | 'treasureDensity'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity'> = {
+  waterContent: 'normal',
   waterChance: 0.4,
   obstacleDensity: 0.12,
   treasureDensity: 1,
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterChance, obstacleDensity, treasureDensity, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, seed } = template
   return {
     sizeX,
     sizeZ,
     playerCount,
     playerSpawnerSid,
+    waterContent,
     waterChance,
     obstacleDensity,
     treasureDensity,
@@ -69,12 +78,16 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
   if (data.playerSpawnerSid !== 'city-spawner' && data.playerSpawnerSid !== 'hero-spawner') {
     throw new Error('RMG template playerSpawnerSid must be "city-spawner" or "hero-spawner"')
   }
+  if (data.waterContent !== undefined && data.waterContent !== 'none' && data.waterContent !== 'normal' && data.waterContent !== 'islands') {
+    throw new Error('RMG template waterContent must be "none", "normal", or "islands"')
+  }
   return {
     version: RMG_TEMPLATE_VERSION,
     sizeX: data.sizeX,
     sizeZ: data.sizeZ,
     playerCount: data.playerCount,
     playerSpawnerSid: data.playerSpawnerSid,
+    waterContent: data.waterContent ?? DEFAULT_TEMPLATE_OVERRIDES.waterContent,
     waterChance: typeof data.waterChance === 'number' ? data.waterChance : DEFAULT_TEMPLATE_OVERRIDES.waterChance,
     obstacleDensity: typeof data.obstacleDensity === 'number' ? data.obstacleDensity : DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity,
     treasureDensity: typeof data.treasureDensity === 'number' ? data.treasureDensity : DEFAULT_TEMPLATE_OVERRIDES.treasureDensity,

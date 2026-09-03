@@ -116,3 +116,20 @@ export function assignTilesToZones(
 
   return { zoneIdByNode, tilesByZone }
 }
+
+/** The tile within `tiles` closest to `center` — used to pick a zone's own
+ *  real "anchor" tile (player spawn node, a road/river endpoint, or an
+ *  island landmass's own growth seed) from its own assigned tiles, since a
+ *  zone's raw layout center coordinate can itself belong to a neighboring
+ *  zone (or, for an island zone, its own flooded portion) at a boundary. */
+export function nearestTile(tiles: number[], sizeX: number, center: ZoneCenter): number {
+  let best = tiles[0]
+  let bestDist = Infinity
+  for (const node of tiles) {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    const dist = (x - center.x) ** 2 + (z - center.z) ** 2
+    if (dist < bestDist) { bestDist = dist; best = node }
+  }
+  return best
+}

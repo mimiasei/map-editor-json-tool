@@ -32,6 +32,7 @@ import {
   paintWaterTiles,
   setAreas,
   setCityFaction,
+  upsertPropPortals,
   BLANK_MAP_BIOME_NAMES,
   type BlankMapPlayer,
   type MapContainer,
@@ -43,20 +44,31 @@ import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
 import { buildZoneGraph, zoneDistanceMatrix } from './zone-graph'
-import { assignTilesToZones, layoutZoneCenters, type ZoneCenter } from './zone-layout'
-import { assignZoneBiomes, createPlacementState, populateZones, ZONE_BIOMES, type ZonePlacement } from './zone-population'
+import { assignTilesToZones, layoutZoneCenters, nearestTile } from './zone-layout'
+import { assignZoneBiomes, createPlacementState, populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
 import { shortestPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
+import { computeIslandZones, nearestPlayerZone, PORTAL_SIDS } from './zone-islands'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
   sizeZ: number
   playerCount: number
   playerSpawnerSid: 'city-spawner' | 'hero-spawner'
-  /** 0-1 chance any given eligible neutral zone gets a lake (zone-water.ts). Defaults to that module's own default. */
+  /** Overall water geography — VCMI's own `allowedWaterContent` concept
+   *  (issue #210's research notes): `'none'` generates no water at all,
+   *  `'normal'` (the default) is Milestone 3's original in-zone-lake
+   *  behavior (zone-water.ts), `'islands'` fully water-locks a subset of
+   *  neutral zones and reconnects each via a portal pair instead of a boat
+   *  (zone-islands.ts — see its own header comment for why: no naval-
+   *  travel mechanic exists in Olden Era). */
+  waterContent?: 'none' | 'normal' | 'islands'
+  /** Overall water amount, 0-1. In `'normal'` mode: per-zone lake chance
+   *  and size (zone-water.ts). In `'islands'` mode: how many zones become
+   *  islands and how little land each keeps. Defaults to 0.4. */
   waterChance?: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
   obstacleDensity?: number
@@ -64,23 +76,6 @@ export interface GenerateRandomMapOptions {
   treasureDensity?: number
   /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
-}
-
-/** The tile within `tiles` closest to `(cx, cz)` — used to pick each zone's
- *  own real "anchor" tile (player spawn node, or a neutral zone's road/river
- *  endpoint) from its own Voronoi-assigned tiles, since a zone's raw layout
- *  center coordinate can itself belong to a neighboring zone at a
- *  boundary. */
-function nearestTile(tiles: number[], sizeX: number, center: ZoneCenter): number {
-  let best = tiles[0]
-  let bestDist = Infinity
-  for (const node of tiles) {
-    const x = node % sizeX
-    const z = Math.floor(node / sizeX)
-    const dist = (x - center.x) ** 2 + (z - center.z) ** 2
-    if (dist < bestDist) { bestDist = dist; best = node }
-  }
-  return best
 }
 
 /**
@@ -92,7 +87,7 @@ function nearestTile(tiles: number[], sizeX: number, center: ZoneCenter): number
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterChance, obstacleDensity, treasureDensity, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -111,6 +106,26 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const centers = layoutZoneCenters(sizeX, sizeZ, graph)
   const { zoneIdByNode, tilesByZone } = assignTilesToZones(sizeX, sizeZ, centers, graph.zones)
   const zoneBiome = assignZoneBiomes(graph.zones)
+
+  // Islands: shrink chosen neutral zones' own tile pool to a compact
+  // landmass BEFORE anchors/population are computed, so a dwelling/mine/
+  // guard placed "in this zone" naturally clusters within the landmass
+  // rather than potentially landing in what's about to become open water.
+  // `waterChance` doubles as "how island-y": more/bigger islands, less
+  // land kept per island, at higher settings.
+  let islandFloodNodes = new Set<number>()
+  const islandLandmassByZone = new Map<number, number[]>()
+  if (waterContent === 'islands') {
+    const neutralZoneCount = graph.zones.filter((z) => z.kind === 'neutral').length
+    const maxIslands = Math.max(1, Math.round(neutralZoneCount * waterChance))
+    const landmassFraction = 0.6 - waterChance * 0.4 // 0.6 at chance→0 down to 0.2 at chance=1
+    const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, landmassFraction)
+    for (const [zoneId, landmass] of islandResult.landmassByZone) {
+      tilesByZone.set(zoneId, landmass)
+      islandLandmassByZone.set(zoneId, landmass)
+    }
+    islandFloodNodes = islandResult.floodNodes
+  }
 
   // Every zone's own real anchor tile — a player zone's spawn point, and
   // every zone's own road/river endpoint (zone-connections.ts below).
@@ -203,34 +218,82 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
 
-  // Water — modest in-zone lakes for a subset of neutral zones (see
-  // zone-water.ts's own header comment for why this stops short of true
-  // separate water zones/islands). Shares the same collision state so
-  // nothing else can ever land on a lake, before or after this point.
-  const waterResult = scatterZoneWater({
-    sizeX, sizeZ, zones: graph.zones, tilesByZone,
-    excludedNodes: new Set([...roadNodes, ...riverNodes]),
-    blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
-  })
-  if (waterResult.waterChanges.length > 0) {
-    block2 = paintWaterTiles(block2, waterResult.waterChanges)
-    block2 = paintLevelTiles(block2, waterResult.levelChanges)
-    for (const node of waterResult.waterNodes) {
+  // Water. `'normal'` = modest in-zone lakes for a subset of neutral zones
+  // (zone-water.ts). `'islands'` = the flood computed above around each
+  // island zone's landmass, reconnected via a portal pair per island
+  // (zone-islands.ts's own header comment on why a portal, not a boat).
+  // `'none'` does nothing. Whichever ran, everything downstream shares the
+  // same collision state so nothing else can ever land on the water.
+  let waterNodesAll = new Set<number>()
+  let waterChangesAll: { node: number; waterId: number }[] = []
+  let levelChangesAll: { node: number; level: number }[] = []
+  const portalPlacements: ZonePlacement[] = []
+  const portalAdjacency = new Map<number, number>()
+
+  if (waterContent === 'normal') {
+    const waterResult = scatterZoneWater({
+      sizeX, sizeZ, zones: graph.zones, tilesByZone,
+      excludedNodes: new Set([...roadNodes, ...riverNodes]),
+      blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
+    })
+    waterNodesAll = waterResult.waterNodes
+    waterChangesAll = waterResult.waterChanges
+    levelChangesAll = waterResult.levelChanges
+  } else if (waterContent === 'islands') {
+    for (const node of islandFloodNodes) {
+      waterNodesAll.add(node)
+      waterChangesAll.push({ node, waterId: 1 })
+      levelChangesAll.push({ node, level: -1 })
+    }
+
+    // One portal pair per island zone: one end on the island's own
+    // landmass, the other on its graph-nearest player zone — every player
+    // zone stays fully land-connected (computeIslandZones never turns one
+    // into an island), so this always gives a real, walkable mainland end.
+    let portalColorIndex = 0
+    for (const islandZoneId of islandLandmassByZone.keys()) {
+      const mainlandZoneId = nearestPlayerZone(islandZoneId, graph.zones, zoneDistances)
+      if (mainlandZoneId === null) continue
+      const portalSid = PORTAL_SIDS[portalColorIndex % PORTAL_SIDS.length]
+      portalColorIndex += 1
+
+      const islandTiles = tilesByZone.get(islandZoneId) ?? []
+      const mainlandTiles = tilesByZone.get(mainlandZoneId) ?? []
+      const islandNode = tryPlace(portalSid, islandTiles, sizeX, sizeZ, catalogById, state, rng)
+      const mainlandNode = tryPlace(portalSid, mainlandTiles, sizeX, sizeZ, catalogById, state, rng)
+      if (islandNode === null || mainlandNode === null) {
+        logWarn(`Random map generation: an island's portal pair (${portalSid}) couldn't be placed — that island may be unreachable`)
+        continue
+      }
+
+      const islandTempId = state.nextTempId++
+      const mainlandTempId = state.nextTempId++
+      portalPlacements.push({ tempId: islandTempId, sid: portalSid, node: islandNode })
+      portalPlacements.push({ tempId: mainlandTempId, sid: portalSid, node: mainlandNode })
+      portalAdjacency.set(islandTempId, mainlandTempId)
+      portalAdjacency.set(mainlandTempId, islandTempId)
+    }
+  }
+
+  if (waterChangesAll.length > 0) {
+    block2 = paintWaterTiles(block2, waterChangesAll)
+    block2 = paintLevelTiles(block2, levelChangesAll)
+    for (const node of waterNodesAll) {
       state.blocked.add(node)
       state.usedAnchors.add(node)
     }
   }
   const levelsMapFinal = new Array(tileCount).fill(0)
   const waterMapFinal = new Array(tileCount).fill(0)
-  for (const { node, waterId } of waterResult.waterChanges) waterMapFinal[node] = waterId
-  for (const { node, level } of waterResult.levelChanges) levelsMapFinal[node] = level
+  for (const { node, waterId } of waterChangesAll) waterMapFinal[node] = waterId
+  for (const { node, level } of levelChangesAll) levelsMapFinal[node] = level
 
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,
-  // the river, or a lake.
+  // the river, or the water.
   const obstaclePlacements = scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
-    mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterResult.waterNodes]), state, rng,
+    mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity,
   })
 
@@ -243,7 +306,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const objectGroups = new Map<string, ObjectPlacementGroup>([[playerSpawnerSid, spawnerGroup]])
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
-  for (const placement of [...placements, ...obstaclePlacements]) {
+  for (const placement of [...placements, ...obstaclePlacements, ...portalPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
@@ -262,7 +325,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     catalog,
     catalogById,
     decorativeIds,
-    new Map(),
+    portalAdjacency,
     new Set(),
   )
   if (report.stillUnreachable > 0) {
@@ -270,18 +333,38 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
 
   const additions: { sid: string; node: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
+  const additionTempIds: number[] = [] // parallel to additions — needed to remap portal temp ids to real ids below
   for (const [sid, group] of objectGroups) {
     if (sid === playerSpawnerSid) continue // already committed to the container by buildBlankMap
     for (let i = 0; i < group.ids.length; i++) {
-      const placement = tempIdToPlacement.get(group.ids[i])
+      const tempId = group.ids[i]
+      const placement = tempIdToPlacement.get(tempId)
       if (!placement) continue
       additions.push({ sid, node: group.nodes[i], randomSquadOverrides: placement.randomSquadOverrides })
+      additionTempIds.push(tempId)
     }
   }
 
-  const { block2Chunk } = addObjectInstances(block2, additions)
+  const { block2Chunk, newIds } = addObjectInstances(block2, additions)
   let finalBlock1 = container.chunks[0]
   let finalBlock2 = block2Chunk
+
+  // Portal linkage — real propPortals rows, reusing the exact same
+  // adjacency `applyAccessibilityPass` above already validated reachability
+  // against, remapped from temp ids to the real ids `addObjectInstances`
+  // just assigned (a placed-but-unlinked portal is very likely inert
+  // in-game — see portal-links.ts's own header comment on why this isn't
+  // optional).
+  if (portalAdjacency.size > 0) {
+    const tempIdToFinalId = new Map<number, number>()
+    newIds.forEach((finalId, i) => tempIdToFinalId.set(additionTempIds[i], finalId))
+    for (const [fromTempId, toTempId] of portalAdjacency) {
+      const fromId = tempIdToFinalId.get(fromTempId)
+      const toId = tempIdToFinalId.get(toTempId)
+      if (fromId === undefined || toId === undefined) continue
+      finalBlock2 = upsertPropPortals(finalBlock2, 0, fromId, { targetIdx: toId, isActive: true })
+    }
+  }
 
   // Town/faction matching — a player zone's own biome determines its
   // city-spawner's real faction, rather than leaving it unconfigured.
@@ -317,9 +400,18 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // chase a specific placed object's id through the accessibility pass's
   // own possible nudges (see zone-areas.ts's own doc comment on how
   // sparse real `keyObjectId` usage already is).
+  //
+  // Deliberately rebuilds each zone's own FULL tile list from `zoneIdByNode`
+  // here rather than reusing `tilesByZone` — islands mode shrinks that map's
+  // entries to just each island's landmass (for population purposes), and
+  // every real sample map's own areas[] cover 100% of tiles with no gaps;
+  // reusing the shrunk version would silently orphan every flooded tile
+  // from any area at all.
+  const tilesByZoneFull = new Map<number, number[]>(graph.zones.map((z) => [z.id, []]))
+  for (let node = 0; node < tileCount; node++) tilesByZoneFull.get(zoneIdByNode[node])!.push(node)
   const zoneBiomeName = new Map<number, string>()
   for (const [zoneId, biomeId] of zoneBiome) zoneBiomeName.set(zoneId, BLANK_MAP_BIOME_NAMES[biomeId] ?? 'Grass')
-  const areas = computeZoneAreas(sizeX, sizeZ, zoneIdByNode, tilesByZone, zoneAnchorNode, zoneBiomeName, playerZoneIndex)
+  const areas = computeZoneAreas(sizeX, sizeZ, zoneIdByNode, tilesByZoneFull, zoneAnchorNode, zoneBiomeName, playerZoneIndex)
   finalBlock2 = setAreas(finalBlock2, areas)
 
   const finalChunks = container.chunks.slice()

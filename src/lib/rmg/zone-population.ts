@@ -132,8 +132,9 @@ export function tryPlaceAt(
 /** Try up to `maxAttempts` random tiles from `zoneTiles` for `sid`'s anchor,
  *  accepting the first `tryPlaceAt` accepts. Returns `null` if nothing fits
  *  within `maxAttempts` — a disclosed degrade for a small/crowded zone, not
- *  a silent invariant violation. */
-function tryPlace(
+ *  a silent invariant violation. Exported for zone-islands.ts's own portal
+ *  placement — same "somewhere in this zone" need, different sid. */
+export function tryPlace(
   sid: string,
   zoneTiles: number[],
   sizeX: number,

@@ -55,6 +55,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [mapName, setMapName] = useState('Random Map')
   const [sizeKey, setSizeKey] = useState(DEFAULT_SIZE_KEY)
   const [playerCount, setPlayerCount] = useState(2)
+  const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
@@ -74,6 +75,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         sizeZ: selectedSize.sizeZ,
         playerCount,
         playerSpawnerSid: 'city-spawner',
+        waterContent,
         waterChance,
         obstacleDensity,
         treasureDensity,
@@ -97,6 +99,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       sizeZ: selectedSize.sizeZ,
       playerCount,
       playerSpawnerSid: 'city-spawner',
+      waterContent,
       waterChance,
       obstacleDensity,
       treasureDensity,
@@ -117,6 +120,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       const size = matchedPreset ?? closestPreset(template.sizeX, template.sizeZ)
       setSizeKey(presetKey(size))
       setPlayerCount(template.playerCount)
+      setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
       setObstacleDensity(template.obstacleDensity)
       setTreasureDensity(template.treasureDensity)
@@ -177,12 +181,37 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           {advancedOpen && (
             <div className="space-y-4 pl-1">
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Water</Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(waterChance)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.05} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} />
+                <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
+                  Water content
+                </Label>
+                <Select value={waterContent} onValueChange={(v) => setWaterContent(v as 'none' | 'normal' | 'islands')}>
+                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="islands">Islands</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {waterContent !== 'none' && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      className="text-xs"
+                      title={
+                        waterContent === 'islands'
+                          ? 'How many neutral zones become islands, and how little land each keeps. Player zones are never islands.'
+                          : 'How much of each neutral zone\'s free area becomes a lake, and how likely a zone is to get one at all. Player zones never get water.'
+                      }
+                    >
+                      {waterContent === 'islands' ? 'Island amount' : 'Water amount'}
+                    </Label>
+                    <span className="text-xs text-muted-foreground">{pctLabel(waterChance)}</span>
+                  </div>
+                  <Slider min={0} max={1} step={0.05} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} />
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
@@ -227,9 +256,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             with its own biome/faction, roads connecting every zone, one
             river, and biome-appropriate scenery. Player zones get a
             faction-matched starting dwelling, mine, and guard; neutral
-            zones get a mine (guarded to its own real economic value),
-            scaled treasure, and sometimes a lake. No zone-shape variety yet
-            — see issue #210 for the full roadmap.
+            zones get a mine (guarded to its own real economic value) and
+            scaled treasure. No zone-shape variety yet — see issue #210 for
+            the full roadmap.
           </p>
         </div>
 
