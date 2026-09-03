@@ -24,13 +24,12 @@ import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import {
   BIOME_FACTION,
-  DEFAULT_SQUAD_DIFFICULTY_RANGES,
-  DEFAULT_SQUAD_RANDOM_WEIGHTS,
   pickSquadRange,
   randomInRange,
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
-import { collectArtifactSids, pickSquadTemplate, STORAGE_SIDS } from './object-variety'
+import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
+import { collectArtifactSids, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
 
@@ -248,21 +247,24 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  (`object-variety.ts`) — the user-reported "only random items" gap. */
   const placeTreasure = (tiles: number[]): void => {
     if (catalog && rng() < objectVariety) {
-      const concrete = artifactSids.length > 0 && rng() < 0.5 ? artifactSids[Math.floor(rng() * artifactSids.length)] : STORAGE_SIDS[Math.floor(rng() * STORAGE_SIDS.length)]
+      const concretePool = rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS
+      const concrete = artifactSids.length > 0 && rng() < 0.5 ? artifactSids[Math.floor(rng() * artifactSids.length)] : concretePool[Math.floor(rng() * concretePool.length)]
       place(concrete, tiles)
       return
     }
     place('random-item', tiles)
   }
 
-  /** A guard slot: usually `random-squad`, but with `objectVariety`
-   *  probability places a real, pre-composed `squads[]` army instead,
-   *  picked by `pickSquadTemplate` to roughly match `requestedValue`/
-   *  `fraction` the same way a `random-squad` roll would have. Falls back
-   *  to `random-squad` if no matching template exists or the zone has no
-   *  free tile left for it. */
+  /** A guard slot: usually `random-squad`, but with a heavily-scaled-down
+   *  `objectVariety` chance (`GUARD_CONCRETE_SQUAD_CHANCE_SCALE` —
+   *  guard-value-bands.ts's own doc comment has the real-map evidence) places
+   *  a real, pre-composed `squads[]` army instead, picked by
+   *  `pickSquadTemplate` to roughly match `requestedValue`/`fraction` the
+   *  same way a `random-squad` roll would have. Falls back to `random-squad`
+   *  if no matching template exists or the zone has no free tile left for
+   *  it. */
   const placeGuard = (tiles: number[], requestedValue: number, fraction: string): void => {
-    if (catalog && rng() < objectVariety) {
+    if (catalog && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
       if (template) {
         const node = pickFreeTile(tiles, state, rng)
@@ -283,9 +285,34 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
 
     if (zone.kind === 'player') {
       place(`barracks_${dwellingFactionToken(biome)}_1`, tiles)
-      place(mineIndex % 2 === 0 ? 'mine_wood' : 'mine_ore', tiles)
-      mineIndex += 1
-      const range = pickSquadRange(['Easy'], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
+
+      // Every player start needs its own wood + ore mine (this game's real
+      // "wood + ore" building-cost pair — there is no `mine_stone`), a gold
+      // mine, and a dust source (required to upgrade troops) — confirmed by
+      // measuring real spawn-to-nearest-mine distance across all three
+      // analyzed maps: EVERY player spawn in Broken_Alliance.map,
+      // Prisoners.map, and The_Mysterious_Island.map has a wood mine and an
+      // ore mine within 3-17 tiles, and a dust source within 2-10 tiles
+      // (`resource_dust`, or `storage_dust` on the largest map) — this used
+      // to place only ONE mine, alternating wood/ore by an incrementing
+      // index, so roughly half of all generated starts got no wood mine (or
+      // no ore mine) and none ever got a guaranteed gold mine or dust
+      // source at all. Gold is guaranteed too (present in real maps, though
+      // consistently farther out than wood/ore — 7-45 tiles — matching a
+      // real, less-adjacent economic role rather than a starter resource).
+      // Mercury/crystals/gemstones need no such guarantee — real maps show
+      // no consistent near-spawn pattern for them, matching their own
+      // "nice to have" framing; they still come from bordering neutral
+      // zones unforced. Deliberately still just ONE shared light guard for
+      // the whole player zone (unchanged from before this fix) rather than
+      // one per resource — a real regeneration/stats pass found that
+      // guarding each of the 4 resources separately (at Easy strength)
+      // diluted the map-wide guard-value median on small maps just from
+      // sheer guard-count volume, and the user's own request was about
+      // resource PRESENCE at player start, not guard density there.
+      for (const mineSid of ['mine_wood', 'mine_ore', 'mine_gold']) place(mineSid, tiles)
+      place('resource_dust', tiles)
+      const range = pickSquadRange(['Easy'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
       placeGuard(tiles, randomInRange(range.min, range.max, rng), sampleFraction(biome, 0.8, rng))
     } else {
       const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
@@ -319,12 +346,13 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       for (let i = 0; i < treasureCount; i++) placeTreasure(tiles)
 
       // The guard's value comes from the mine's own real guard-value data
-      // when available (value-model.ts) — not a flat difficulty-band roll —
-      // so a gold mine (guard value 3000) is defended harder than a wood
-      // mine (2000), matching the real game's own economic weighting,
-      // falling back to the same flat roll Milestone 1 always used only if
-      // this Core.zip has no matching objects_logic entry for some reason.
-      const fallbackRange = pickSquadRange(['Random'], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
+      // when available (value-model.ts, scaled up to real hand-crafted maps'
+      // own median guard-value band — see that file's own doc comment) —
+      // not a flat difficulty-band roll — so a gold mine is still defended
+      // harder than a wood mine, matching the real game's own economic
+      // weighting, falling back to the same flat roll only if this Core.zip
+      // has no matching objects_logic entry for some reason.
+      const fallbackRange = pickSquadRange(['Random'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
       const requestedValue = mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
       placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng))
     }

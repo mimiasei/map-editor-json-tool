@@ -18,6 +18,17 @@ import { TIER_MEDIAN_SQUAD_VALUE } from '@/lib/h3-import/neutral-strength'
  *  own existing backfill default for these sids. */
 export const STORAGE_SIDS = ['storage_gold', 'storage_wood', 'storage_ore', 'storage_mercury', 'storage_crystals', 'storage_gemstones', 'storage_dust']
 
+/** Real, concrete resource-PICKUP sids (Core/DB/map/objects/3_resources.json)
+ *  — a genuinely distinct object family from `STORAGE_SIDS` above (tag
+ *  `"Resource"`, not `"Interact"`), confirmed present alongside storage piles
+ *  in every real sample map surveyed this session. Needs a `propResParams`
+ *  row (`map-write.ts`'s `RESOURCE_PICKUP_TABLE_DEFAULT`) unlike `STORAGE_SIDS`,
+ *  which needs no extra config at all — real surveyed `value` fields are
+ *  overwhelmingly `0` (the majority pattern across all three analyzed maps,
+ *  meaning "use the object's own built-in default amount"), so that's the
+ *  safe default `addObjectInstances` backfills. */
+export const RESOURCE_SIDS = ['resource_gold', 'resource_wood', 'resource_ore', 'resource_mercury', 'resource_crystals', 'resource_gemstones', 'resource_dust']
+
 /** Every real artifact pickup sid in the loaded catalog, excluding the
  *  handful of "Shadow of Death"-prefixed items confirmed (via a real
  *  sample-map survey — 4 instances across 2 maps, always with a

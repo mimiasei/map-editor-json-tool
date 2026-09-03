@@ -30,7 +30,13 @@ export interface RandomMapTemplate {
   /** Overall water amount, 0-1 — lake prevalence/size in `'normal'` mode,
    *  island count/land-vs-water ratio in `'islands'` mode. */
   waterChance: number
-  /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). */
+  /** 0-1 fraction of each zone's own tiles considered for obstacle scattering
+   *  (zone-decoration.ts). 0.35 default — real hand-crafted maps run 17-40%
+   *  actual decoration tile coverage; this isn't a 1:1 proxy for that (candidates
+   *  go through fuzzy-obstacle.ts's own probabilistic falloff), so the default
+   *  was tuned empirically (a real regeneration/stats pass) to land around
+   *  21% actual coverage — the middle of that range — rather than porting the
+   *  percentage directly. */
   obstacleDensity: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts) — 1 = the generator's own default zone-size scaling, 2 = double, 0 = none. */
   treasureDensity: number
@@ -56,7 +62,10 @@ export interface RandomMapTemplate {
    *  `'none'` (the default) skips it entirely. */
   boundaryGuardStrength: BoundaryGuardStrength
   /** 0-1 chance a real mine/dwelling/resource/artifact gets an extra nearby
-   *  guard (zone-guard-scatter.ts's own doc comment). 0.15 default. */
+   *  guard (zone-guard-scatter.ts's own doc comment). 0.45 default —
+   *  real hand-crafted maps show 64-100% of guardable objects within 6
+   *  tiles of some guard (this pass is only one of several contributors to
+   *  that coverage, so it doesn't need to hit those percentages alone). */
   squadDensity: number
   /** Road/river winding amplitude in tiles (generate-random-map.ts's own doc
    *  comment). 3 is the default, tuned default. */
@@ -75,14 +84,14 @@ export interface RandomMapTemplate {
 export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength'> = {
   waterContent: 'normal',
   waterChance: 0.4,
-  obstacleDensity: 0.12,
+  obstacleDensity: 0.35,
   treasureDensity: 1,
   objectVariety: 0.4,
   usePortals: false,
   zoneJaggedness: 0.5,
   zoneSpread: 1,
   boundaryGuardStrength: 'strong',
-  squadDensity: 0.15,
+  squadDensity: 0.45,
   roadWindingAmplitude: 3,
   roadWindingWavelength: 50,
 }

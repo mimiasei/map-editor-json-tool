@@ -58,7 +58,7 @@ function zoneNodeDistances(candidateTiles: number[], sizeX: number, center: Zone
 }
 
 export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, centers, tilesByZone, zoneBiome, catalogById, mapObjects, excludedNodes, state, rng, density = 0.12 } = options
+  const { sizeX, sizeZ, zones, centers, tilesByZone, zoneBiome, catalogById, mapObjects, excludedNodes, state, rng, density = 0.35 } = options
   const pools = buildFuzzyObstaclePools(mapObjects)
   const placements: ZonePlacement[] = []
 

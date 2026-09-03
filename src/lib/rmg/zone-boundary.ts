@@ -44,12 +44,11 @@ import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
 import {
-  DEFAULT_SQUAD_DIFFICULTY_RANGES,
-  DEFAULT_SQUAD_RANDOM_WEIGHTS,
   pickSquadRange,
   randomInRange,
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
+import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { pickSquadTemplate } from './object-variety'
 import {
   tryPlaceAt,
@@ -246,14 +245,14 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
 
       const depth = depthByZone.get(crossing.enteringZone) ?? 0
       const difficultyLabel = depthToDifficultyLabel(depth)
-      const range = pickSquadRange([difficultyLabel], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
+      const range = pickSquadRange([difficultyLabel], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
       const requestedValue = Math.round(randomInRange(range.min, range.max, rng) * multiplier)
 
       const guardNode = crossing.enteringNode
       const biome = zoneBiome.get(crossing.enteringZone) ?? ZONE_BIOMES[0]
       const fraction = sampleFraction(biome, 0.7, rng)
 
-      if (catalog && objectVariety !== undefined && rng() < objectVariety) {
+      if (catalog && objectVariety !== undefined && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
         const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
         if (template && !state.usedAnchors.has(guardNode)) {
           state.usedAnchors.add(guardNode)

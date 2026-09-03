@@ -1162,6 +1162,22 @@ const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: n
   },
 }
 
+/** Real resource-pickup sids (`resource_gold`/`resource_wood`/`resource_ore`/
+ *  `resource_mercury`/`resource_crystals`/`resource_gemstones`/`resource_dust`
+ *  — Core/DB/map/objects/3_resources.json) need a `propResParams` row to
+ *  function, unlike the visually-similar `storage_*` piles (no config at
+ *  all — see STORAGE_SIDS's own doc comment in object-variety.ts).
+ *  `value: 0` is the dominant real pattern surveyed across every instance in
+ *  maps/Broken_Alliance.map, maps/Prisoners.map, and
+ *  maps/The_Mysterious_Island.map (the large majority of rows, with only a
+ *  minority carrying an explicit nonzero override) — read as "use the
+ *  object's own built-in default amount", the same 0-as-default-sentinel
+ *  convention this file already follows elsewhere (e.g. random-squad's own
+ *  historical requestedValue:0 pitfall, `randomSquadDefaultValue`'s own doc
+ *  comment). */
+const RESOURCE_PICKUP_SIDS = new Set(['resource_gold', 'resource_wood', 'resource_ore', 'resource_mercury', 'resource_crystals', 'resource_gemstones', 'resource_dust'])
+const RESOURCE_PICKUP_TABLE_DEFAULT = { table: 'propResParams', row: (id: number) => ({ type: 0, id, value: 0 }) }
+
 /** Which sids get a `propVariants` and/or `propRewardParams` row on a fresh
  *  placement — confirmed by surveying every `city-spawner`/interactable/
  *  decoration instance across every real map in `maps/*.map` (677 distinct
@@ -1246,6 +1262,9 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
   const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
   if (randomSpawnerDefault) {
     tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId, randomSquadDefaultValue()))
+  }
+  if (RESOURCE_PICKUP_SIDS.has(sid)) {
+    tryAppendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(newId))
   }
   return text
 }
@@ -1758,6 +1777,9 @@ export function addObjectInstances(
       const row = randomSpawnerDefault.row(id, randomSquadOverrides?.requestedValue ?? randomSquadDefaultValue())
       if (sid === 'random-squad' && randomSquadOverrides) row.fraction = randomSquadOverrides.fraction
       appendRow(randomSpawnerDefault.table, row)
+    }
+    if (RESOURCE_PICKUP_SIDS.has(sid)) {
+      appendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(id))
     }
   }
 

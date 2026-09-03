@@ -15,13 +15,12 @@
 
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import {
-  DEFAULT_SQUAD_DIFFICULTY_RANGES,
-  DEFAULT_SQUAD_RANDOM_WEIGHTS,
   pickSquadRange,
   randomInRange,
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { STORAGE_SIDS, collectArtifactSids, pickSquadTemplate } from './object-variety'
 import {
   tryPlaceAt,
@@ -43,13 +42,18 @@ function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
 
 /** A free tile within a small radius of `node` — the candidate's own
  *  footprint is already claimed, so the guard stands just outside it
- *  rather than on top. */
+ *  rather than on top. Radius 4 (was 2) — real maps show guard-to-object
+ *  distance typically 3-6 tiles, and a tighter radius silently suppressed
+ *  placements (no free tile found) even on a successful `squadDensity`
+ *  roll. */
+const NEARBY_GUARD_RADIUS = 4
+
 function nearbyFreeTile(node: number, sizeX: number, sizeZ: number, state: PlacementState, rng: () => number): number | null {
   const cx = node % sizeX
   const cz = Math.floor(node / sizeX)
   const offsets: [number, number][] = []
-  for (let dz = -2; dz <= 2; dz++) {
-    for (let dx = -2; dx <= 2; dx++) {
+  for (let dz = -NEARBY_GUARD_RADIUS; dz <= NEARBY_GUARD_RADIUS; dz++) {
+    for (let dx = -NEARBY_GUARD_RADIUS; dx <= NEARBY_GUARD_RADIUS; dx++) {
       if (dx === 0 && dz === 0) continue
       offsets.push([dx, dz])
     }
@@ -131,12 +135,12 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
     const zoneId = zoneIdByNode[candidate.node]
     const depth = depthOf(zoneId)
     const labels = difficultyLabelsForDepth(depth)
-    const range = pickSquadRange(labels, DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
+    const range = pickSquadRange(labels, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
     const requestedValue = randomInRange(range.min, range.max, rng)
     const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
     const fraction = sampleFraction(biome, 0.7, rng)
 
-    if (catalog && objectVariety !== undefined && rng() < objectVariety) {
+    if (catalog && objectVariety !== undefined && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
       if (template) {
         state.usedAnchors.add(guardNode)
