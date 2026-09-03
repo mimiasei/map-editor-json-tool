@@ -54,7 +54,7 @@ import { layoutZoneCenters, nearestTile, relaxZoneCenters } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
-import { createWindingCost, shortestPath } from './zone-connections'
+import { createWindingCost, shortestPath, smoothPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
@@ -341,7 +341,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     const from = zoneAnchorNode.get(a) as number
     const to = zoneAnchorNode.get(b) as number
     const path = shortestPath(sizeX, sizeZ, from, to, state.blocked, createWindingCost(sizeX, from, to, rng))
-    if (path) for (const node of path) roadNodes.add(node)
+    if (path) for (const node of smoothPath(path, sizeX, state.blocked)) roadNodes.add(node)
   }
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
@@ -364,7 +364,8 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     const [a, b] = riverEndpoints
     const riverFrom = zoneAnchorNode.get(a) as number
     const riverTo = zoneAnchorNode.get(b) as number
-    const path = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng))
+    const rawPath = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng))
+    const path = rawPath && rawPath.length > 1 ? smoothPath(rawPath, sizeX, state.blocked) : rawPath
     if (path && path.length > 1) {
       riverNodes = new Set(path)
       const changes = path.map((node) => {
@@ -374,6 +375,22 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       block2 = paintRiverTiles(block2, changes)
     }
   }
+
+  // Road/river tiles join `state.blocked` here (water already did, right
+  // after it was painted above) — a real bug found this session's own
+  // validation sweep: `scatterZoneObstacles`'s `excludedNodes` only ever
+  // filtered a CANDIDATE's anchor tile before the anchor was even chosen,
+  // so a multi-tile obstacle (a real mountain/tree-cluster footprint, not a
+  // 1-tile placeholder) could still land with a NON-anchor cell overlapping
+  // a road/river tile — confirmed on a real generated map (dead_shadowy_
+  // hill, mountain_lava_big_2, dirt_rock_1, and others, each with an
+  // off-road anchor but an on-road secondary cell). Adding these nodes to
+  // `state.blocked` itself makes `tryPlaceAt`'s own existing full-footprint
+  // check (already used for every other collision kind) cover this too,
+  // rather than adding a second parallel check. Deliberately doesn't affect
+  // the road/river computation above (each already ran before this point).
+  for (const node of roadNodes) state.blocked.add(node)
+  for (const node of riverNodes) state.blocked.add(node)
 
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,
@@ -414,6 +431,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     decorativeIds,
     portalAdjacency,
     new Set(),
+    new Set([...roadNodes, ...riverNodes]),
   )
   if (report.stillUnreachable > 0) {
     logWarn(`Random map generation: ${report.stillUnreachable} placed object(s) remained unreachable after the accessibility pass`)

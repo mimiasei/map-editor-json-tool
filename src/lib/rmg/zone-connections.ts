@@ -77,6 +77,101 @@ export function createWindingCost(
   }
 }
 
+/**
+ * The nodes of an "L-shaped" orthogonal connector from `a` to `b` — ALL of
+ * the x movement first, then ALL of the z movement (`xFirst`), or the
+ * reverse. This is deliberately NOT an evenly-interleaved diagonal-ish
+ * stepping (a Bresenham-style line) — this codebase's own road/river
+ * rendering (`MapGridDialog.tsx`'s `drawBand`/`connectedDirections`) draws a
+ * sharp 90° elbow at every single tile where the path's direction changes,
+ * so an evenly-interleaved line (a turn on nearly every tile) is the WORST
+ * possible shape here, not the smoothest — it's the literal "ladder"/
+ * staircase-of-teeth artifact a real user report flagged (see `smoothPath`'s
+ * own doc comment). One long straight run in each axis, joined by exactly
+ * one turn, is what actually renders as a clean diagonal-ish sweep.
+ */
+function lPathNodes(a: number, b: number, sizeX: number, xFirst: boolean): number[] {
+  const ax = a % sizeX
+  const az = Math.floor(a / sizeX)
+  const bx = b % sizeX
+  const bz = Math.floor(b / sizeX)
+  const nodes: number[] = [a]
+  if (xFirst) {
+    const stepX = Math.sign(bx - ax)
+    for (let x = ax + stepX; stepX !== 0 && (stepX > 0 ? x <= bx : x >= bx); x += stepX) nodes.push(az * sizeX + x)
+    const stepZ = Math.sign(bz - az)
+    for (let z = az + stepZ; stepZ !== 0 && (stepZ > 0 ? z <= bz : z >= bz); z += stepZ) nodes.push(z * sizeX + bx)
+  } else {
+    const stepZ = Math.sign(bz - az)
+    for (let z = az + stepZ; stepZ !== 0 && (stepZ > 0 ? z <= bz : z >= bz); z += stepZ) nodes.push(z * sizeX + ax)
+    const stepX = Math.sign(bx - ax)
+    for (let x = ax + stepX; stepX !== 0 && (stepX > 0 ? x <= bx : x >= bx); x += stepX) nodes.push(bz * sizeX + x)
+  }
+  return nodes
+}
+
+function lPathClear(a: number, b: number, sizeX: number, blocked: Set<number>, exempt: Set<number>, xFirst: boolean): boolean {
+  for (const node of lPathNodes(a, b, sizeX, xFirst)) {
+    if (blocked.has(node) && !exempt.has(node)) return false
+  }
+  return true
+}
+
+/**
+ * A real, user-reported "second pass" cleanup for a road/river's own raw
+ * `shortestPath` output (issue #210's Milestone 5): the winding-cost search
+ * above minimizes cumulative deviation-from-sine-wave cost, not visual
+ * turn count, so on a crowded map (a real report showed this getting worse
+ * at 4+ players, where zones — and the mine/dwelling footprints inside
+ * them — are smaller and packed tighter) it can produce long *bursty*
+ * runs of alternating single-tile jogs around real obstacles: a "ladder" of
+ * many 90° elbows in a row, since every direction change renders as one
+ * (see `lPathNodes`'s own doc comment on why this codebase's rendering
+ * makes that specific shape look bad, not just "a bit jagged").
+ *
+ * This walks the raw path greedily, and within a `windowSize` lookahead,
+ * replaces the tightest run of small turns it can with a single L-shaped
+ * 2-segment reconnection (`lPathNodes`) wherever a straight L route between
+ * two path points doesn't cross any REAL obstacle (`blocked` — the same set
+ * `shortestPath` itself already respected, so this can never introduce a
+ * new collision, only remove already-safe detours the cost-minimizing
+ * search didn't know were removable). `windowSize` is deliberately small
+ * relative to `createWindingCost`'s own wave period (tens of tiles) so this
+ * only cleans up LOCAL zigzag noise — the intentional large-scale organic
+ * S-curve a real prior fix added is preserved, just traced with long clean
+ * treads instead of a fine zigzag. Falls back to the original single-step
+ * hop wherever no window-bounded shortcut is possible (a real, expected
+ * case in a tightly obstacle-packed corridor — exactly where fine-grained
+ * navigation is actually needed).
+ */
+export function smoothPath(path: number[], sizeX: number, blocked: Set<number>, windowSize = 12): number[] {
+  if (path.length <= 2) return path
+  const exempt = new Set([path[0], path[path.length - 1]])
+  const result: number[] = [path[0]]
+  let i = 0
+  while (i < path.length - 1) {
+    let bestJ = i + 1
+    let bestXFirst = true
+    const jMax = Math.min(path.length - 1, i + windowSize)
+    for (let j = i + 2; j <= jMax; j++) {
+      const clearXFirst = lPathClear(path[i], path[j], sizeX, blocked, exempt, true)
+      const clearZFirst = lPathClear(path[i], path[j], sizeX, blocked, exempt, false)
+      if (clearXFirst || clearZFirst) {
+        bestJ = j
+        bestXFirst = clearXFirst
+      }
+    }
+    if (bestJ === i + 1) {
+      result.push(path[i + 1])
+    } else {
+      const segment = lPathNodes(path[i], path[bestJ], sizeX, bestXFirst)
+      for (let k = 1; k < segment.length; k++) result.push(segment[k])
+    }
+    i = bestJ
+  }
+  return result
+}
+
 /** Binary min-heap keyed by a numeric priority — Dijkstra's own priority
  *  queue. Small, local, and only ever used here (no existing shared heap
  *  utility in this codebase to reuse). */

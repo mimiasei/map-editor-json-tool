@@ -147,6 +147,16 @@ export function applyAccessibilityPass(
    *  way a declared target is, so a stretch of open H3 floor with no
    *  interactable in it isn't invisible to this pass. */
   mustBeReachable: Set<number>,
+  /** Nodes the nudge phase should never relocate a target onto — purely
+   *  cosmetic, not a passability concern (roads/rivers aren't blocking
+   *  terrain, so `nudgeBlocked` itself doesn't know about them), added for
+   *  the RMG's own road/river tiles: without this, a nudge can (and,
+   *  confirmed on real generated maps, does) relocate an object's solid
+   *  footprint cell right on top of an already-painted road tile, which
+   *  renders as an icon sitting on the road. Defaults to empty — the H3
+   *  import call site doesn't pass this, so its own nudge behavior is
+   *  unchanged. */
+  avoidNodes: Set<number> = new Set(),
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -379,6 +389,7 @@ export function applyAccessibilityPass(
           const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
           if (n === null) { valid = false; break }
           if (cell.value === 1 && nudgeBlocked.has(n) && !ownNodes.has(n)) { valid = false; break }
+          if (cell.value === 1 && avoidNodes.has(n)) { valid = false; break }
         }
         if (!valid) continue
         const candidateAccess = NON_BLOCKING_SPAWNER_SIDS.has(sid)
