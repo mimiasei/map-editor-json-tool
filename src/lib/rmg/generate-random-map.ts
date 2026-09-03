@@ -54,7 +54,7 @@ import { layoutZoneCenters, nearestTile, relaxZoneCenters } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
-import { createWindingCost, shortestPath, smoothPath } from './zone-connections'
+import { createWindingCost, shortestPath, smoothPath, smoothRoadNetwork } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
@@ -359,14 +359,27 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // field (a real user-reported fix — a plain shortest path between two
   // open-ground points is almost always a dead-straight line, which reads
   // as obviously artificial once painted), so a long stretch curves
-  // organically instead of repeating one unbroken straight segment.
-  const roadNodes = new Set<number>()
+  // organically instead of repeating one unbroken straight segment. Each
+  // edge is smoothed on its own RAW path first (`smoothPath` — deliberately
+  // BEFORE merging: raw, unsmoothed zigzag paths are "thicker" and touch
+  // each other far more often than smoothed ones, so running the network
+  // pass on raw data fragments what should be one long smoothable run into
+  // many short ones at spurious near-miss junctions, making things WORSE,
+  // not better — confirmed by direct comparison against a real generated
+  // map's own ladder-pair count). `smoothRoadNetwork` below then runs ONE
+  // more cleanup pass over the whole ALREADY-SMOOTHED merged network — a
+  // real follow-up user report: per-edge smoothing alone still left a
+  // "ladder" wherever two independently-generated (and independently
+  // ALREADY-smooth) roads ran close together and interleaved, which is
+  // invisible to a pass that only ever sees one edge's own path.
+  const roadNodesStage1 = new Set<number>()
   for (const [a, b] of graph.edges) {
     const from = zoneAnchorNode.get(a) as number
     const to = zoneAnchorNode.get(b) as number
     const path = shortestPath(sizeX, sizeZ, from, to, state.blocked, createWindingCost(sizeX, from, to, rng))
-    if (path) for (const node of smoothPath(path, sizeX, state.blocked)) roadNodes.add(node)
+    if (path) for (const node of smoothPath(path, sizeX, state.blocked)) roadNodesStage1.add(node)
   }
+  const roadNodes = smoothRoadNetwork(roadNodesStage1, sizeX, sizeZ, state.blocked, new Set(zoneAnchorNode.values()))
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
   }

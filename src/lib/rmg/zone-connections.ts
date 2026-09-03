@@ -172,6 +172,106 @@ export function smoothPath(path: number[], sizeX: number, blocked: Set<number>, 
   return result
 }
 
+/**
+ * Decomposes a MERGED road (or river) tile network into simple polylines
+ * ("chains") between fixed points — the network's own branch/cross points
+ * (any tile with 3+ road-neighbors), dead ends (1 road-neighbor), and every
+ * node in `fixedNodes` (real zone anchors, pinned regardless of their own
+ * degree). `smoothPath` above only ever sees ONE edge's own raw path in
+ * isolation — a real, user-reported gap: at 4+ players there are more
+ * zone-graph edges sharing the same crowded map, so two independently
+ * generated roads (each individually smooth per `smoothPath`) can still
+ * run close together and interleave, producing a "ladder" that only exists
+ * in how the two paths relate to EACH OTHER, invisible to a per-edge pass.
+ * Each returned chain is a plain node array in the same shape `smoothPath`
+ * already consumes, so `smoothRoadNetwork` below can re-run the identical
+ * cleanup on the network's true topology instead of on each edge alone.
+ */
+function extractChains(network: Set<number>, sizeX: number, sizeZ: number, fixedNodes: Set<number>): number[][] {
+  const neighborsOf = (node: number): number[] => {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    const result: number[] = []
+    if (x > 0 && network.has(node - 1)) result.push(node - 1)
+    if (x < sizeX - 1 && network.has(node + 1)) result.push(node + 1)
+    if (z > 0 && network.has(node - sizeX)) result.push(node - sizeX)
+    if (z < sizeZ - 1 && network.has(node + sizeX)) result.push(node + sizeX)
+    return result
+  }
+
+  const pinned = new Set<number>(fixedNodes)
+  for (const node of network) {
+    if (neighborsOf(node).length !== 2) pinned.add(node)
+  }
+
+  const edgeKey = (a: number, b: number): string => (a < b ? `${a}:${b}` : `${b}:${a}`)
+  const visitedEdges = new Set<string>()
+  const chains: number[][] = []
+
+  for (const start of pinned) {
+    for (const firstStep of neighborsOf(start)) {
+      const key = edgeKey(start, firstStep)
+      if (visitedEdges.has(key)) continue
+      visitedEdges.add(key)
+      const chain = [start, firstStep]
+      let prev = start
+      let cur = firstStep
+      while (!pinned.has(cur)) {
+        const neighbors = neighborsOf(cur)
+        const next = neighbors[0] === prev ? neighbors[1] : neighbors[0]
+        if (next === undefined) break
+        visitedEdges.add(edgeKey(cur, next))
+        chain.push(next)
+        prev = cur
+        cur = next
+      }
+      chains.push(chain)
+    }
+  }
+
+  // A tile no chain above ever reached is a pure cycle with no branch or
+  // fixed point anywhere on it (two edges' own paths closing a loop with
+  // no real junction) — vanishingly unlikely given every edge is
+  // independently computed point-to-point, but kept as its own untouched
+  // single-tile chain per node rather than silently dropped from the
+  // network if it ever happens.
+  const covered = new Set<number>()
+  for (const chain of chains) for (const node of chain) covered.add(node)
+  for (const node of network) {
+    if (!covered.has(node)) chains.push([node])
+  }
+
+  return chains
+}
+
+/**
+ * Re-smooths a COMPLETE merged road (or river) tile set — not just one
+ * edge's own path in isolation, which is all `smoothPath` alone can see.
+ * Decomposes the real network topology into chains (`extractChains`),
+ * re-runs the same windowed L-shortcut cleanup on each, then reassembles.
+ * Junctions/branches/real fixed anchors are never chain interior nodes, so
+ * this can never disconnect anything the raw network already connected —
+ * two independently-generated roads that happen to run close together and
+ * interleave (this file's own header comment has the real user report)
+ * come out the other side straightened relative to EACH OTHER, not just
+ * relative to their own individual cost-search noise.
+ */
+export function smoothRoadNetwork(
+  network: Set<number>,
+  sizeX: number,
+  sizeZ: number,
+  blocked: Set<number>,
+  fixedNodes: Set<number>,
+  windowSize = 12,
+): Set<number> {
+  const chains = extractChains(network, sizeX, sizeZ, fixedNodes)
+  const result = new Set<number>()
+  for (const chain of chains) {
+    for (const node of smoothPath(chain, sizeX, blocked, windowSize)) result.add(node)
+  }
+  return result
+}
+
 /** Binary min-heap keyed by a numeric priority — Dijkstra's own priority
  *  queue. Small, local, and only ever used here (no existing shared heap
  *  utility in this codebase to reuse). */
