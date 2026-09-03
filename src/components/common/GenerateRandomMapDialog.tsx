@@ -64,6 +64,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [usePortals, setUsePortals] = useState(DEFAULT_TEMPLATE_OVERRIDES.usePortals)
   const [zoneJaggedness, setZoneJaggedness] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
   const [zoneSpread, setZoneSpread] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
+  const [boundaryGuardStrength, setBoundaryGuardStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength)
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -88,6 +89,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         usePortals,
         zoneJaggedness,
         zoneSpread,
+        boundaryGuardStrength,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -116,6 +118,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       usePortals,
       zoneJaggedness,
       zoneSpread,
+      boundaryGuardStrength,
       seed: seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined,
     }
     await saveFile(stringifyRandomMapTemplate(template), 'rmg-template.json')
@@ -141,6 +144,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setUsePortals(template.usePortals)
       setZoneJaggedness(template.zoneJaggedness)
       setZoneSpread(template.zoneSpread)
+      setBoundaryGuardStrength(template.boundaryGuardStrength)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
       logInfo(`Loaded RMG template: ${file.name}`)
@@ -281,6 +285,20 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   Use portals
                 </Label>
                 <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs" title="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints. 'Strong' guards are 1.5x as tough as 'Normal'.">
+                  Boundary guards
+                </Label>
+                <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong')}>
+                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="strong">Strong</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">

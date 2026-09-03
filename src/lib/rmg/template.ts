@@ -11,6 +11,7 @@
 
 import { createSeededRng } from './seeded-rng'
 import type { GenerateRandomMapOptions } from './generate-random-map'
+import type { BoundaryGuardStrength } from './zone-boundary'
 
 export const RMG_TEMPLATE_VERSION = 1
 
@@ -50,6 +51,10 @@ export interface RandomMapTemplate {
   /** Multiplier on zone spread/spacing (generate-random-map.ts's own doc
    *  comment). 1 (the default) reproduces prior behavior exactly. */
   zoneSpread: number
+  /** VCMI-style zone-to-zone guarded chokepoints (issue #210 Milestone 6 —
+   *  generate-random-map.ts's own doc comment has the full design).
+   *  `'none'` (the default) skips it entirely. */
+  boundaryGuardStrength: BoundaryGuardStrength
   /** Fixed RNG seed for reproducible generation (mulberry32 — seeded-rng.ts). Omitted = a fresh random seed every time. */
   seed?: number
 }
@@ -57,7 +62,7 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   obstacleDensity: 0.12,
@@ -66,10 +71,11 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   usePortals: false,
   zoneJaggedness: 0.5,
   zoneSpread: 1,
+  boundaryGuardStrength: 'none',
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -83,6 +89,7 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     usePortals,
     zoneJaggedness,
     zoneSpread,
+    boundaryGuardStrength,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -106,6 +113,9 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
   if (data.waterContent !== undefined && data.waterContent !== 'none' && data.waterContent !== 'normal' && data.waterContent !== 'islands') {
     throw new Error('RMG template waterContent must be "none", "normal", or "islands"')
   }
+  if (data.boundaryGuardStrength !== undefined && data.boundaryGuardStrength !== 'none' && data.boundaryGuardStrength !== 'normal' && data.boundaryGuardStrength !== 'strong') {
+    throw new Error('RMG template boundaryGuardStrength must be "none", "normal", or "strong"')
+  }
   return {
     version: RMG_TEMPLATE_VERSION,
     sizeX: data.sizeX,
@@ -120,6 +130,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     usePortals: typeof data.usePortals === 'boolean' ? data.usePortals : DEFAULT_TEMPLATE_OVERRIDES.usePortals,
     zoneJaggedness: typeof data.zoneJaggedness === 'number' ? data.zoneJaggedness : DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness,
     zoneSpread: typeof data.zoneSpread === 'number' ? data.zoneSpread : DEFAULT_TEMPLATE_OVERRIDES.zoneSpread,
+    boundaryGuardStrength: data.boundaryGuardStrength ?? DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength,
     seed: typeof data.seed === 'number' ? data.seed : undefined,
   }
 }

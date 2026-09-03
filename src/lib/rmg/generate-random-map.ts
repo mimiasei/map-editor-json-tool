@@ -59,6 +59,7 @@ import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { computeIslandZones, nearestPlayerZone, PORTAL_SIDS } from './zone-islands'
+import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
@@ -112,6 +113,16 @@ export interface GenerateRandomMapOptions {
    *  — see this generator's own Milestone 5 fix for why crowding matters
    *  there). User-requested control over "the shape of the landscape". */
   zoneSpread?: number
+  /** VCMI-style zone-to-zone guarded chokepoints (issue #210 Milestone 6,
+   *  researched directly from VCMI's own `ConnectionsPlacer.cpp`/
+   *  `ObjectManager.cpp::chooseGuard`) — `'none'` (the default) skips this
+   *  entirely; `'normal'`/`'strong'` wall every zone-to-zone boundary tile
+   *  solid except at each connection's own real road-crossing gate, and
+   *  place one guard at each gate sized by connection depth (`'strong'` is
+   *  a 1.5x value multiplier on `'normal'`) — see zone-boundary.ts's own
+   *  header comment for the full design and why it's opt-in (walling zone
+   *  boundaries is a real structural change to every zone's own shape). */
+  boundaryGuardStrength?: BoundaryGuardStrength
   /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
 }
@@ -133,7 +144,7 @@ function jaggednessToPenroseScale(jaggedness: number): number {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'none', rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -383,6 +394,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // generated roads running close together and interleaving (more likely
   // at higher player counts, with more edges sharing the same map).
   const roadNodes = new Set<number>()
+  const roadPathsByEdge = new Map<string, number[]>()
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_AVOIDANCE_STRENGTH = 1.5
   for (const [a, b] of graph.edges) {
@@ -392,7 +404,11 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
     const windingCost = createWindingCost(sizeX, from, to, rng)
     const path = shortestPath(sizeX, sizeZ, from, to, state.blocked, (x, z) => windingCost(x, z) + avoidanceCost(x, z))
-    if (path) for (const node of smoothPath(path, sizeX, state.blocked)) roadNodes.add(node)
+    if (path) {
+      const smoothed = smoothPath(path, sizeX, state.blocked)
+      roadPathsByEdge.set(`${a}:${b}`, smoothed)
+      for (const node of smoothed) roadNodes.add(node)
+    }
   }
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
@@ -443,6 +459,19 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   for (const node of roadNodes) state.blocked.add(node)
   for (const node of riverNodes) state.blocked.add(node)
 
+  // Guarded zone boundaries (issue #210 Milestone 6) — runs BEFORE the
+  // density-based interior obstacle scattering below so its own wall
+  // placements claim their border tiles first; `scatterZoneObstacles`'s own
+  // `tryPlaceAt` collision check then naturally skips them, same as any
+  // other already-placed object. See zone-boundary.ts's own header comment
+  // for the full design; a no-op (empty results) when `boundaryGuardStrength`
+  // is `'none'` (the default).
+  const boundaryResult = fortifyZoneBoundaries({
+    sizeX, sizeZ, zones: graph.zones, edges: graph.edges, zoneIdByNode, zoneBiome,
+    roadPathsByEdge, zoneDistances, catalogById, mapObjects: catalog.mapObjects,
+    catalog, objectVariety, strength: boundaryGuardStrength, state, rng,
+  })
+
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,
   // the river, or the water.
@@ -461,7 +490,8 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const objectGroups = new Map<string, ObjectPlacementGroup>([[playerSpawnerSid, spawnerGroup]])
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
-  for (const placement of [...placements, ...obstaclePlacements, ...portalPlacements]) {
+  const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads]
+  for (const placement of [...placements, ...obstaclePlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
@@ -471,6 +501,11 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     group.levels.push(0)
   }
   for (const placement of obstaclePlacements) decorativeIds.add(placement.tempId)
+  // Wall obstacles are decorative too (deletable if one seals off a real
+  // target) — gate GUARDS are deliberately NOT, matching every other real
+  // guard this generator places (a dwelling/mine/treasure guard is never
+  // decorative either).
+  for (const placement of boundaryResult.wallPlacements) decorativeIds.add(placement.tempId)
 
   const report = applyAccessibilityPass(
     objectGroups,
@@ -481,7 +516,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     catalogById,
     decorativeIds,
     portalAdjacency,
-    new Set(),
+    boundaryResult.gateNodes,
     new Set([...roadNodes, ...riverNodes]),
   )
   if (report.stillUnreachable > 0) {
@@ -505,15 +540,16 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   let finalBlock1 = container.chunks[0]
   let finalBlock2 = block2Chunk
 
-  // Concrete-squad guards (zone-population.ts's `placeGuard` variety roll) —
-  // real `squads[]` (entityType 2) army placements, written one at a time
-  // via `addObjectInstance` since `addObjectInstances`'s bulk path is
+  // Concrete-squad guards (zone-population.ts's `placeGuard` variety roll,
+  // plus zone-boundary.ts's own gate-guard variety roll) — real `squads[]`
+  // (entityType 2) army placements, written one at a time via
+  // `addObjectInstance` since `addObjectInstances`'s bulk path is
   // `objectsFreeId`/type-0-only. These never went through `objectGroups`/
   // the accessibility pass above (squads aren't terrain in this codebase's
   // own passability model, so they have nothing for that pass to nudge or
   // check), so they're added here, after it, exactly like `setCityFaction`
   // and `upsertPropPortals` below are.
-  for (const squad of concreteSquads) {
+  for (const squad of allConcreteSquads) {
     const result = addObjectInstance(finalBlock1, finalBlock2, 2, squad.sid, squad.node)
     finalBlock1 = result.block1Chunk
     finalBlock2 = result.block2Chunk
