@@ -1,27 +1,36 @@
-// ─── Random Map Generator — Milestone 1 (issue #210) ────────────────────────
-// Builds on Milestone 0's "does the pipeline work at all" skeleton with the
-// first real zone graph: one player zone + one neutral "treasure" zone per
-// player, laid out and shaped via zone-graph.ts/zone-layout.ts (see their own
-// header comments for how this differs from — and deliberately simplifies —
-// VCMI's own Fruchterman-Reingold layout + Penrose tiling), each zone
-// painted its own biome and populated with a starting dwelling/mine/guard
-// (player zones) or a mine/random-item/guard (neutral zones) via
-// zone-population.ts's collision-aware placement. A final reachability pass
-// (this project's own accessibility-pass.ts, built for H3 import — reused
-// verbatim here) guarantees every placed object stays reachable from every
-// player start even if two zones' scattered objects land close together.
+// ─── Random Map Generator — Milestone 2 (issue #210) ────────────────────────
+// Builds on Milestone 1's zone graph with: real roads along every zone-graph
+// connection and one river across the map's most graph-distant zone pair
+// (zone-connections.ts, plain BFS pathfinding avoiding placed-object
+// footprints), biome-appropriate obstacle scattering filling each zone's
+// remaining free tiles (zone-decoration.ts, composed with real collision
+// checking — reusing this codebase's existing Obstacles-brush sampler), and
+// a real per-mine guard-value model (value-model.ts) replacing Milestone
+// 1's flat difficulty-band roll for neutral-zone guards, plus zone-size-
+// scaled treasure-pile density.
 //
-// Still no real terrain-shape fractalization, obstacles, rivers, roads, or
-// treasure-value economy — those are Milestone 2/3 (issue #210).
+// Obstacle placements are marked decorative for the reachability pass
+// (accessibility-pass.ts), so — unlike Milestone 1, where nothing was ever
+// sacrificial — the pass can now actually delete a scattered rock/tree if
+// it turns out to be the only thing sealing off a real target, not just
+// nudge the target itself.
+//
+// Still no Penrose-tiling zone shapes, Fruchterman-Reingold layout
+// optimization, water zones, or RMG template authoring — those are
+// Milestone 3 (issue #210).
 
-import { addObjectInstances, buildBlankMap, paintTerrainTiles, type BlankMapPlayer, type MapContainer } from '@/lib/map-write'
+import { addObjectInstances, buildBlankMap, paintRiverTiles, paintRoadTiles, paintTerrainTiles, type BlankMapPlayer, type MapContainer } from '@/lib/map-write'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
 import { buildZoneGraph, zoneDistanceMatrix } from './zone-graph'
-import { assignTilesToZones, layoutZoneCenters } from './zone-layout'
-import { assignZoneBiomes, populateZones, ZONE_BIOMES, type ZonePlacement } from './zone-population'
+import { assignTilesToZones, layoutZoneCenters, type ZoneCenter } from './zone-layout'
+import { assignZoneBiomes, createPlacementState, populateZones, ZONE_BIOMES, type ZonePlacement } from './zone-population'
+import { scatterZoneObstacles } from './zone-decoration'
+import { shortestPath } from './zone-connections'
+import { buildObjectLogicsIndex } from './value-model'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
@@ -32,17 +41,18 @@ export interface GenerateRandomMapOptions {
   rng?: () => number
 }
 
-/** The tile within `tiles` closest to `(cx, cz)` — used to pick each player
- *  zone's actual spawn tile from its own Voronoi-assigned tiles, since the
- *  zone's raw layout center coordinate can itself belong to a neighboring
- *  zone at a boundary. */
-function nearestTile(tiles: number[], sizeX: number, cx: number, cz: number): number {
+/** The tile within `tiles` closest to `(cx, cz)` — used to pick each zone's
+ *  own real "anchor" tile (player spawn node, or a neutral zone's road/river
+ *  endpoint) from its own Voronoi-assigned tiles, since a zone's raw layout
+ *  center coordinate can itself belong to a neighboring zone at a
+ *  boundary. */
+function nearestTile(tiles: number[], sizeX: number, center: ZoneCenter): number {
   let best = tiles[0]
   let bestDist = Infinity
   for (const node of tiles) {
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
-    const dist = (x - cx) ** 2 + (z - cz) ** 2
+    const dist = (x - center.x) ** 2 + (z - center.z) ** 2
     if (dist < bestDist) { bestDist = dist; best = node }
   }
   return best
@@ -58,7 +68,9 @@ function nearestTile(tiles: number[], sizeX: number, cx: number, cz: number): nu
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
   const { sizeX, sizeZ, playerCount, playerSpawnerSid, rng = Math.random } = options
+  const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
+  const objectLogicsById = buildObjectLogicsIndex(catalog)
 
   const graph = buildZoneGraph(playerCount)
   // buildZoneGraph's own doc comment claims every ring it builds is fully
@@ -75,31 +87,33 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const { zoneIdByNode, tilesByZone } = assignTilesToZones(sizeX, sizeZ, centers, graph.zones)
   const zoneBiome = assignZoneBiomes(graph.zones)
 
-  const players: BlankMapPlayer[] = []
+  // Every zone's own real anchor tile — a player zone's spawn point, and
+  // every zone's own road/river endpoint (zone-connections.ts below).
+  const zoneAnchorNode = new Map<number, number>()
   for (const zone of graph.zones) {
-    if (zone.kind !== 'player') continue
-    const center = centers[zone.id]
     const tiles = tilesByZone.get(zone.id) ?? []
-    const node = tiles.length > 0 ? nearestTile(tiles, sizeX, center.x, center.z) : center.z * sizeX + center.x
-    players.push({ sid: playerSpawnerSid, node })
+    const center = centers[zone.id]
+    zoneAnchorNode.set(zone.id, tiles.length > 0 ? nearestTile(tiles, sizeX, center) : center.z * sizeX + center.x)
   }
+
+  const players: BlankMapPlayer[] = graph.zones
+    .filter((zone) => zone.kind === 'player')
+    .map((zone) => ({ sid: playerSpawnerSid, node: zoneAnchorNode.get(zone.id) as number }))
 
   let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
 
   // Overwrite the uniform fill from buildBlankMap with each zone's own
   // biome — one bulk pass, same paintTerrainTiles bulk writer the Terrain
   // brush/bucket-fill use.
-  const tileCount = sizeX * sizeZ
   const terrainChanges: { node: number; biomeId: number }[] = new Array(tileCount)
   for (let node = 0; node < tileCount; node++) {
     terrainChanges[node] = { node, biomeId: zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0] }
   }
-  const paintedChunks = container.chunks.slice()
-  paintedChunks[1] = paintTerrainTiles(paintedChunks[1], terrainChanges)
-  container = { ...container, chunks: paintedChunks }
+  let block2 = paintTerrainTiles(container.chunks[1], terrainChanges)
 
-  // Seed the collision state with the player spawners just placed, so
-  // zone-population.ts's scattering never overlaps one.
+  // Seed the collision state with the player spawners just placed, so every
+  // later placement pass (mines/dwellings/guards, then obstacles) never
+  // overlaps one.
   const seedBlocked = new Set<number>()
   const seedAnchors = new Set<number>()
   const spawnerGroup: ObjectPlacementGroup = { ids: [], nodes: [], rotations: [], levels: [] }
@@ -114,24 +128,74 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       if (cell.value === 1) seedBlocked.add(cell.z * sizeX + cell.x)
     }
   })
+  const state = createPlacementState(seedBlocked, seedAnchors)
 
   const placements = populateZones({
-    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, seedBlocked, seedAnchors, rng,
+    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng,
   })
-  const skipped = graph.zones.length * 3 - placements.length // populateZones always attempts exactly 3 objects per zone
-  if (skipped > 0) {
-    logWarn(`Random map generation: ${skipped} scatter object(s) skipped — no free tile found in a crowded zone`)
+  const skippedScatter = graph.zones.length * 3 - placements.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall)
+  if (skippedScatter > 0) {
+    logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
   }
+
+  // Roads — one per zone-graph edge, connecting each pair's own anchor
+  // tiles, routed around whatever's already placed (buildZoneGraph's ring
+  // guarantees the underlying zone graph is connected; a specific road can
+  // still fail to route around a crowded zone's own objects, which is why
+  // this is a real BFS search with a real "not found" case, not an
+  // assumed-successful straight line).
+  const roadNodes = new Set<number>()
+  for (const [a, b] of graph.edges) {
+    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
+    if (path) for (const node of path) roadNodes.add(node)
+  }
+  if (roadNodes.size > 0) {
+    block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
+  }
+
+  // One river across the map's most graph-distant zone pair — a real
+  // BFS path (same pathfinding as roads), then the real per-node
+  // connectivity-bitmask shape codes river-shape.ts derives from actual
+  // sample-map data, not a guessed texture id.
+  let riverNodes = new Set<number>()
+  let bestDistance = -1
+  let riverEndpoints: [number, number] | null = null
+  for (let a = 0; a < graph.zones.length; a++) {
+    for (let b = a + 1; b < graph.zones.length; b++) {
+      if (zoneDistances[a][b] > bestDistance) { bestDistance = zoneDistances[a][b]; riverEndpoints = [a, b] }
+    }
+  }
+  if (riverEndpoints) {
+    const [a, b] = riverEndpoints
+    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
+    if (path && path.length > 1) {
+      riverNodes = new Set(path)
+      const changes = path.map((node) => {
+        const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
+        return { node, s: deriveRealShapeCode(dirs) }
+      })
+      block2 = paintRiverTiles(block2, changes)
+    }
+  }
+
+  // Obstacle scattering — fills whatever each zone has left over, sharing
+  // the same collision state so it never overlaps a real object, a road,
+  // or the river.
+  const obstaclePlacements = scatterZoneObstacles({
+    sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
+    mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state, rng,
+  })
 
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain
   // carving" milestone item) — reuses the H3-import accessibility pass
   // verbatim rather than inventing a second flood-fill repair algorithm.
-  // `decorativeIds` is deliberately empty: nothing this generator places is
-  // sacrificial decoration, so the pass can only ever nudge a stuck object
-  // to a nearby free tile, never delete one.
+  // Obstacle placements are marked decorative (deletable if they seal off a
+  // real target); every dwelling/mine/guard/item/spawner is not, so the
+  // pass can only ever nudge one of those, never delete it.
   const objectGroups = new Map<string, ObjectPlacementGroup>([[playerSpawnerSid, spawnerGroup]])
   const tempIdToPlacement = new Map<number, ZonePlacement>()
-  for (const placement of placements) {
+  const decorativeIds = new Set<number>()
+  for (const placement of [...placements, ...obstaclePlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
@@ -140,6 +204,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     group.rotations.push(0)
     group.levels.push(0)
   }
+  for (const placement of obstaclePlacements) decorativeIds.add(placement.tempId)
 
   const report = applyAccessibilityPass(
     objectGroups,
@@ -148,7 +213,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     { levelsMap: new Array(tileCount).fill(0), climbsMap: new Array(tileCount).fill(0), waterMap: new Array(tileCount).fill(0) },
     catalog,
     catalogById,
-    new Set(),
+    decorativeIds,
     new Map(),
     new Set(),
   )
@@ -166,7 +231,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
 
-  const { block2Chunk } = addObjectInstances(container.chunks[1], additions)
+  const { block2Chunk } = addObjectInstances(block2, additions)
   const finalChunks = container.chunks.slice()
   finalChunks[1] = block2Chunk
   return { ...container, chunks: finalChunks }

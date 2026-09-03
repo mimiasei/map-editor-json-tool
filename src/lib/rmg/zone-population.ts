@@ -1,4 +1,4 @@
-// ─── RMG zone population (issue #210, Milestone 1) ──────────────────────────
+// ─── RMG zone population (issue #210, Milestones 1-2) ───────────────────────
 // Collision-aware object scattering per zone — the composition issue #210
 // flagged as missing entirely: none of this codebase's existing scatter
 // samplers (fuzzy-obstacle.ts, interactable-pool.ts) consult a real
@@ -6,18 +6,19 @@
 // does: every candidate anchor is checked against the same `nodes[]`
 // footprint data footprint.ts/passability.ts already use for real placed
 // objects, and accepted only if its solid (`value===1`) cells don't overlap
-// anything already placed this generation pass.
+// anything already placed this generation pass. `PlacementState`/
+// `tryPlaceAt` are exported so zone-decoration.ts's obstacle scattering
+// (Milestone 2) shares the exact same running collision state.
 //
 // Each player zone gets a starting dwelling (its own faction's tier-1
 // creature) + a home resource mine (wood/ore, alternating) + one light
-// guard. Each neutral zone gets a resource mine (cycling through all 6
-// real resource types) + a random-item pickup + one guard rolled from the
-// full difficulty spread — the "treasure zone" VCMI's own template format
-// calls this same role. Deliberately modest per-zone content (1-3 objects)
-// for this milestone; a real value-budget economy is Milestone 2's job
-// (issue #210).
+// guard. Each neutral zone gets a resource mine (cycling through all 6 real
+// resource types) + a size-scaled number of random-item treasure piles +
+// one guard sized from that mine's own real guard-value data
+// (value-model.ts) rather than a flat difficulty pick — the "treasure zone"
+// VCMI's own template format calls this same role.
 
-import type { CatalogMapObject } from '@/lib/catalog/types'
+import type { CatalogMapObject, CatalogObjectLogic } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
@@ -29,6 +30,7 @@ import {
   randomInRange,
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
+import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
 
 /** Dwelling sids use `necropolis`, not `undead`, as undead's faction token
@@ -83,22 +85,54 @@ export interface ZonePlacement {
   randomSquadOverrides?: { requestedValue: number; fraction: string }
 }
 
-interface PlacementState {
+export interface PlacementState {
   blocked: Set<number>
   usedAnchors: Set<number>
   nextTempId: number
 }
 
+export function createPlacementState(seedBlocked: Set<number>, seedAnchors: Set<number>): PlacementState {
+  return { blocked: new Set(seedBlocked), usedAnchors: new Set(seedAnchors), nextTempId: 0 }
+}
+
+/** Check `sid`'s footprint at this EXACT `node` and, if it fits (in bounds,
+ *  no solid-cell overlap with anything already claimed), commit it into
+ *  `state` and return true. No retry/resampling — callers that already
+ *  picked a specific candidate node (zone-decoration.ts's obstacle
+ *  scattering, driven by fuzzy-obstacle.ts's own distance/biome rolls) use
+ *  this directly; `tryPlace` below (an unconstrained "anywhere in this
+ *  zone" placement) is built on top of it. */
+export function tryPlaceAt(
+  sid: string,
+  node: number,
+  sizeX: number,
+  sizeZ: number,
+  catalogById: Map<string, CatalogMapObject>,
+  state: PlacementState,
+): boolean {
+  if (state.usedAnchors.has(node)) return false
+  const template = catalogById.get(sid)
+  const nonBlocking = NON_BLOCKING_SPAWNER_SIDS.has(sid)
+  const x = node % sizeX
+  const z = Math.floor(node / sizeX)
+  const cells = computeFootprintTiles(template, x, z)
+  for (const cell of cells) {
+    if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) return false
+    if (!nonBlocking && cell.value === 1 && state.blocked.has(cell.z * sizeX + cell.x)) return false
+  }
+  state.usedAnchors.add(node)
+  if (!nonBlocking) {
+    for (const cell of cells) {
+      if (cell.value === 1) state.blocked.add(cell.z * sizeX + cell.x)
+    }
+  }
+  return true
+}
+
 /** Try up to `maxAttempts` random tiles from `zoneTiles` for `sid`'s anchor,
- *  accepting the first whose footprint (a) stays in map bounds and (b), for
- *  a normally-blocking sid, doesn't overlap any solid cell already claimed
- *  this pass. `random-squad`/`random-item`/`random-res` are walked-onto-to-
- *  interact placeholders (`NON_BLOCKING_SPAWNER_SIDS`, same rule
- *  passability.ts's real blocked-tile computation uses) so their own solid
- *  cells never block a later placement — but they still claim their own
- *  anchor tile so two objects never land exactly on top of each other.
- *  Returns `null` if nothing fits within `maxAttempts` — a disclosed
- *  degrade for a small/crowded zone, not a silent invariant violation. */
+ *  accepting the first `tryPlaceAt` accepts. Returns `null` if nothing fits
+ *  within `maxAttempts` — a disclosed degrade for a small/crowded zone, not
+ *  a silent invariant violation. */
 function tryPlace(
   sid: string,
   zoneTiles: number[],
@@ -110,27 +144,9 @@ function tryPlace(
   maxAttempts = 60,
 ): number | null {
   if (zoneTiles.length === 0) return null
-  const template = catalogById.get(sid)
-  const nonBlocking = NON_BLOCKING_SPAWNER_SIDS.has(sid)
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const node = zoneTiles[Math.floor(rng() * zoneTiles.length)]
-    if (state.usedAnchors.has(node)) continue
-    const x = node % sizeX
-    const z = Math.floor(node / sizeX)
-    const cells = computeFootprintTiles(template, x, z)
-    let ok = true
-    for (const cell of cells) {
-      if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) { ok = false; break }
-      if (!nonBlocking && cell.value === 1 && state.blocked.has(cell.z * sizeX + cell.x)) { ok = false; break }
-    }
-    if (!ok) continue
-    state.usedAnchors.add(node)
-    if (!nonBlocking) {
-      for (const cell of cells) {
-        if (cell.value === 1) state.blocked.add(cell.z * sizeX + cell.x)
-      }
-    }
-    return node
+    if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) return node
   }
   return null
 }
@@ -142,11 +158,12 @@ export interface PopulateZonesOptions {
   tilesByZone: Map<number, number[]>
   zoneBiome: Map<number, BiomeId>
   catalogById: Map<string, CatalogMapObject>
-  /** Anchors/footprint cells already claimed before population starts (the
-   *  player spawners placed via `buildBlankMap`) — seeded in so scatter
-   *  placement never lands on top of them. */
-  seedBlocked: Set<number>
-  seedAnchors: Set<number>
+  objectLogicsById: Map<string, CatalogObjectLogic>
+  /** Shared collision state — mutated in place, seeded by the caller with
+   *  the player spawners `buildBlankMap` already placed. Also handed to
+   *  zone-decoration.ts's obstacle scattering afterward so decoration never
+   *  overlaps anything placed here. */
+  state: PlacementState
   rng: () => number
 }
 
@@ -156,8 +173,7 @@ export interface PopulateZonesOptions {
  *  overlap a neighboring neutral zone's mine even where Voronoi boundaries
  *  run close together. */
 export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, seedBlocked, seedAnchors, rng } = options
-  const state: PlacementState = { blocked: new Set(seedBlocked), usedAnchors: new Set(seedAnchors), nextTempId: 0 }
+  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng } = options
   const placements: ZonePlacement[] = []
 
   const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides']): void => {
@@ -182,12 +198,27 @@ export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
         fraction: sampleFraction(biome, 0.8, rng),
       })
     } else {
-      place(MINE_SIDS[mineIndex % MINE_SIDS.length], tiles)
+      const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
+      place(mineSid, tiles)
       mineIndex += 1
-      place('random-item', tiles)
-      const range = pickSquadRange(['Random'], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
+
+      // Per-zone treasure density: bigger Voronoi regions (more tiles) get
+      // proportionally more treasure piles, capped so a huge zone doesn't
+      // spend an unreasonable number of placement attempts — issue #210's
+      // own "per-zone treasure density tuning" milestone item.
+      const treasureCount = Math.min(5, 1 + Math.floor(tiles.length / 150))
+      for (let i = 0; i < treasureCount; i++) place('random-item', tiles)
+
+      // The guard's value comes from the mine's own real guard-value data
+      // when available (value-model.ts) — not a flat difficulty-band roll —
+      // so a gold mine (guard value 3000) is defended harder than a wood
+      // mine (2000), matching the real game's own economic weighting,
+      // falling back to the same flat roll Milestone 1 always used only if
+      // this Core.zip has no matching objects_logic entry for some reason.
+      const fallbackRange = pickSquadRange(['Random'], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
+      const requestedValue = mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
       place('random-squad', tiles, {
-        requestedValue: randomInRange(range.min, range.max, rng),
+        requestedValue,
         fraction: sampleFraction(biome, 0.5, rng),
       })
     }
