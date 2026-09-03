@@ -8,25 +8,37 @@
 // (Penrose-tiling vertex assignment, not a template-authored topology)
 // doesn't guarantee every zone-graph EDGE pair is even geometrically
 // adjacent — a third zone can sit between two graph-connected zones' own
-// centers. So rather than deriving a "gate" from an abstract edge the way
-// VCMI's own `getBorderOutside()` does, this derives it from the REAL,
-// already-computed road path for that edge: wherever the road actually
-// crosses from one zone's tiles into the other's is the gate, guaranteed
-// self-consistent with the real geometry by construction (a road that never
-// crosses cleanly between exactly those two zones just gets no gate/guard
-// for that edge — a real, disclosed degrade, not a crash).
+// centers.
+//
+// A first version of this file derived one "gate" per abstract graph EDGE,
+// requiring that edge's own road path to cross DIRECTLY between its two
+// declared zones. Real-map measurement (a user report: "the guard at the
+// opening is missing most of the time") found this failed on 50-80%+ of
+// real edges — organic winding roads (a real, separately-fixed user
+// request) very commonly drift through a third zone's corner on the way
+// from A to B, which a strict "A steps directly to B" check never matches,
+// even though the road demonstrably connects both zones just fine.
+//
+// This version derives gates from EVERY real zone-boundary crossing any
+// edge's own road path actually makes, whichever zones are on either side —
+// not just crossings that happen to match a declared edge's own endpoints.
+// Each such crossing becomes a real gate (and, per zone entered, a guard),
+// so a road that legitimately passes through zone C on its way from A to B
+// gets C's own entrance guarded too, exactly as real as A's or B's — a
+// strictly MORE complete picture of "where can this map actually be
+// entered", not an approximation of the original per-edge idea.
 //
 // Every OTHER zone-to-zone boundary tile on the whole map (adjacent zone
-// pairs with no road crossing there, or the rest of a guarded edge's own
-// shared border outside the gate buffer) gets walled solid with a real,
-// biome-appropriate blocking obstacle — a zone's only intended entrances are
-// its own road connections. Guard strength scales with the connection's own
-// "depth" (hop distance from the nearest player zone) via the SAME
-// difficulty-band/value machinery `zone-population.ts` already uses for
-// player/neutral-zone guards, and the SAME object-variety concrete-squad
-// roll (`object-variety.ts`) `zone-population.ts`'s own `placeGuard` uses —
-// deliberately not reinventing VCMI's own `chooseGuard` formula, since this
-// codebase already has an equivalent value-to-squad pipeline.
+// pairs no road ever actually crosses) gets walled solid with a real,
+// biome-appropriate blocking obstacle — a zone's only real entrances are
+// wherever a real road actually enters it. Guard strength scales with the
+// entered zone's own "depth" (hop distance from the nearest player zone)
+// via the SAME difficulty-band/value machinery `zone-population.ts` already
+// uses for player/neutral-zone guards, and the SAME object-variety
+// concrete-squad roll (`object-variety.ts`) `zone-population.ts`'s own
+// `placeGuard` uses — deliberately not reinventing VCMI's own `chooseGuard`
+// formula, since this codebase already has an equivalent value-to-squad
+// pipeline.
 
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -67,18 +79,32 @@ function computeAllBoundaryTiles(zoneIdByNode: number[], sizeX: number, sizeZ: n
   return boundary
 }
 
-/** The first point along `path` where it actually crosses from `zoneA`'s
- *  own tiles into `zoneB`'s (or the reverse) — `null` if the path never
- *  does (a real, disclosed case: Penrose-tiling zone shaping doesn't
- *  guarantee a graph-edge pair's own road path crosses cleanly between
- *  exactly those two zones, e.g. if a third zone's territory intrudes). */
-function findCrossing(path: number[], zoneIdByNode: number[], zoneA: number, zoneB: number): [number, number] | null {
+export interface PathCrossing {
+  /** The zone `path` steps INTO at this crossing. */
+  enteringZone: number
+  /** The tile just inside `enteringZone` — where a guard for this crossing
+   *  would stand. */
+  enteringNode: number
+  /** The tile just inside the zone `path` is LEAVING — the other half of
+   *  the gate buffer (a gate needs clearance on both sides). */
+  exitingNode: number
+}
+
+/** Every real zone-to-zone crossing `path` makes, in path order — not just
+ *  ones matching a specific declared (zoneA, zoneB) pair (see this file's
+ *  own header comment on why that was too strict: a winding road commonly
+ *  drifts through a third zone on the way from its own start to its own
+ *  end, and that third zone's own entrance is just as real a gate as the
+ *  path's declared endpoints). */
+function findCrossings(path: number[], zoneIdByNode: number[]): PathCrossing[] {
+  const crossings: PathCrossing[] = []
   for (let i = 1; i < path.length; i++) {
     const za = zoneIdByNode[path[i - 1]]
     const zb = zoneIdByNode[path[i]]
-    if ((za === zoneA && zb === zoneB) || (za === zoneB && zb === zoneA)) return [path[i - 1], path[i]]
+    if (za === zb) continue
+    crossings.push({ enteringZone: zb, enteringNode: path[i], exitingNode: path[i - 1] })
   }
-  return null
+  return crossings
 }
 
 /** Every tile within Chebyshev `radius` of any of `nodes` — the "keep this
@@ -134,16 +160,16 @@ export interface FortifyZoneBoundariesOptions {
   sizeX: number
   sizeZ: number
   zones: ZoneSpec[]
-  edges: [number, number][]
   zoneIdByNode: number[]
   zoneBiome: Map<number, BiomeId>
-  /** Each edge's own already-computed, already-smoothed road path (keyed
-   *  `"${a}:${b}"`, matching `edges`' own tuple order) — the gate is
-   *  derived from where this REAL path crosses zones, not from `edges`
-   *  alone (see this file's own header comment on why). */
-  roadPathsByEdge: Map<string, number[]>
+  /** Every road's own already-computed, already-smoothed path (roads AND
+   *  the river — a river crossing a zone boundary is just as real a gate
+   *  as a road doing it). Gates are derived from every REAL crossing any
+   *  of these paths makes, not from the abstract zone-graph edge list (see
+   *  this file's own header comment on why). */
+  roadPaths: number[][]
   /** All-pairs zone-graph hop distance (`zoneDistanceMatrix`'s own output)
-   *  — used to compute each connection's own "depth" (how far from the
+   *  — used to compute each entered zone's own "depth" (how far from the
    *  nearest player zone) for guard-strength scaling. */
   zoneDistances: number[][]
   catalogById: Map<string, CatalogMapObject>
@@ -174,9 +200,9 @@ export interface FortifyZoneBoundariesResult {
 const GATE_BUFFER_RADIUS = 2
 
 /**
- * Walls every zone-to-zone boundary tile not part of a real road's own
- * gate, and places one value-budgeted guard per connection that has a real
- * gate — see this file's own header comment for the full design. Returns
+ * Walls every zone-to-zone boundary tile no real road/river ever crosses,
+ * and places one value-budgeted guard at every real crossing any of them
+ * make — see this file's own header comment for the full design. Returns
  * empty results immediately if `strength === 'none'` (the default), so a
  * caller doesn't need its own separate opt-out branch.
  */
@@ -185,7 +211,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   if (options.strength === 'none') return empty
 
   const {
-    sizeX, sizeZ, zones, edges, zoneIdByNode, zoneBiome, roadPathsByEdge, zoneDistances,
+    sizeX, sizeZ, zones, zoneIdByNode, zoneBiome, roadPaths, zoneDistances,
     catalogById, mapObjects, catalog, objectVariety, strength, state, rng,
   } = options
 
@@ -202,42 +228,42 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   const guardPlacements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
   const multiplier = DIFFICULTY_MULTIPLIER[strength]
+  const guardedNodes = new Set<number>()
 
-  for (const [a, b] of edges) {
-    const path = roadPathsByEdge.get(`${a}:${b}`)
-    if (!path) continue
-    const crossing = findCrossing(path, zoneIdByNode, a, b)
-    if (!crossing) continue
+  for (const path of roadPaths) {
+    for (const crossing of findCrossings(path, zoneIdByNode)) {
+      for (const n of gateBuffer([crossing.enteringNode, crossing.exitingNode], sizeX, sizeZ, GATE_BUFFER_RADIUS)) gateBufferAll.add(n)
+      gateNodes.add(crossing.enteringNode)
+      gateNodes.add(crossing.exitingNode)
 
-    for (const n of gateBuffer(crossing, sizeX, sizeZ, GATE_BUFFER_RADIUS)) gateBufferAll.add(n)
-    gateNodes.add(crossing[0])
-    gateNodes.add(crossing[1])
+      // One guard per distinct crossing TILE — a zone with two real
+      // connections (the common case in this generator's own ring
+      // topology) gets guarded at both, and a zone a road merely passes
+      // through on the way elsewhere gets its own entrance guarded too,
+      // exactly as real a chokepoint as any other.
+      if (guardedNodes.has(crossing.enteringNode)) continue
+      guardedNodes.add(crossing.enteringNode)
 
-    const depthA = depthByZone.get(a) ?? 0
-    const depthB = depthByZone.get(b) ?? 0
-    const depth = Math.max(depthA, depthB)
-    const difficultyLabel = depthToDifficultyLabel(depth)
-    const range = pickSquadRange([difficultyLabel], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
-    const requestedValue = Math.round(randomInRange(range.min, range.max, rng) * multiplier)
+      const depth = depthByZone.get(crossing.enteringZone) ?? 0
+      const difficultyLabel = depthToDifficultyLabel(depth)
+      const range = pickSquadRange([difficultyLabel], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
+      const requestedValue = Math.round(randomInRange(range.min, range.max, rng) * multiplier)
 
-    // The guard sits on the DEEPER zone's own side of the crossing — the
-    // side a player reaches only after already fighting through the
-    // shallower one, matching a real chokepoint's own defensive logic.
-    const guardZoneId = depthA >= depthB ? a : b
-    const guardNode = depthA >= depthB ? crossing[0] : crossing[1]
-    const biome = zoneBiome.get(guardZoneId) ?? ZONE_BIOMES[0]
-    const fraction = sampleFraction(biome, 0.7, rng)
+      const guardNode = crossing.enteringNode
+      const biome = zoneBiome.get(crossing.enteringZone) ?? ZONE_BIOMES[0]
+      const fraction = sampleFraction(biome, 0.7, rng)
 
-    if (catalog && objectVariety !== undefined && rng() < objectVariety) {
-      const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
-      if (template && !state.usedAnchors.has(guardNode)) {
-        state.usedAnchors.add(guardNode)
-        concreteSquads.push({ tempId: state.nextTempId++, sid: template.id, node: guardNode })
-        continue
+      if (catalog && objectVariety !== undefined && rng() < objectVariety) {
+        const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
+        if (template && !state.usedAnchors.has(guardNode)) {
+          state.usedAnchors.add(guardNode)
+          concreteSquads.push({ tempId: state.nextTempId++, sid: template.id, node: guardNode })
+          continue
+        }
       }
-    }
-    if (tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
-      guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction } })
+      if (tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
+        guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction } })
+      }
     }
   }
 
@@ -246,13 +272,26 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   // zone's only intended entrances are its own road connections regardless
   // of which other zones it happens to be geometrically adjacent to) that
   // isn't inside a gate's own buffer and isn't already claimed by anything
-  // else this generation pass placed.
+  // else this generation pass placed. Never walls a zone smaller than
+  // `MIN_ZONE_SIZE_TO_WALL` tiles at all — real testing on a genuinely
+  // tiny 16×16/2-player map found a zone that small can be almost entirely
+  // consumed by its own mine+dwelling+guard footprints, leaving so little
+  // free boundary that walling it risks sealing it in with nothing
+  // removable left for `repairSealedZones` (zone-validation.ts) to fix
+  // afterward — cheaper to just not wall a zone that fragile in the first
+  // place than to rely on repair catching every such case.
+  const MIN_ZONE_SIZE_TO_WALL = 40
+  const zoneTileCounts = new Map<number, number>()
+  for (const zoneId of zoneIdByNode) zoneTileCounts.set(zoneId, (zoneTileCounts.get(zoneId) ?? 0) + 1)
+
   const pools = buildFuzzyObstaclePools(mapObjects)
   const wallPlacements: ZonePlacement[] = []
   for (const node of computeAllBoundaryTiles(zoneIdByNode, sizeX, sizeZ)) {
     if (gateBufferAll.has(node)) continue
     if (state.blocked.has(node) || state.usedAnchors.has(node)) continue
-    const biome = zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0]
+    const nodeZoneId = zoneIdByNode[node]
+    if ((zoneTileCounts.get(nodeZoneId) ?? 0) < MIN_ZONE_SIZE_TO_WALL) continue
+    const biome = zoneBiome.get(nodeZoneId) ?? ZONE_BIOMES[0]
     const pool = pools[biome]
     const candidates = pool.obstacles.length > 0 ? pool.obstacles : pool.mountains
     if (candidates.length === 0) continue

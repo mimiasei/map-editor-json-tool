@@ -60,6 +60,7 @@ import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { computeIslandZones, nearestPlayerZone, PORTAL_SIDS } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
+import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
@@ -123,6 +124,21 @@ export interface GenerateRandomMapOptions {
    *  header comment for the full design and why it's opt-in (walling zone
    *  boundaries is a real structural change to every zone's own shape). */
   boundaryGuardStrength?: BoundaryGuardStrength
+  /** Road/river winding amplitude, in tiles — how far the organic S-curve
+   *  swings away from the direct line (`createWindingCost`'s own `amplitude`
+   *  param). Defaults to 3 (this generator's own tuned default — see
+   *  `createWindingCost`'s doc comment for how that value was reached).
+   *  User-requested direct control over "how organic" roads/rivers look,
+   *  after a real user report that the tuned default still wasn't windy
+   *  enough for their taste on some maps. */
+  roadWindingAmplitude?: number
+  /** Road/river winding wavelength, in tiles per S-curve cycle — how often
+   *  it curves (`createWindingCost`'s own `wavelength` param). Defaults to
+   *  50. Lower = more frequent curves (more organic-looking, but pushed too
+   *  low this is exactly the "ladder" artifact a real prior fix addressed —
+   *  see `createWindingCost`'s own doc comment); higher = fewer, broader
+   *  sweeps (straighter-reading overall). */
+  roadWindingWavelength?: number
   /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
 }
@@ -144,7 +160,7 @@ function jaggednessToPenroseScale(jaggedness: number): number {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'none', rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'none', roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -395,19 +411,66 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // at higher player counts, with more edges sharing the same map).
   const roadNodes = new Set<number>()
   const roadPathsByEdge = new Map<string, number[]>()
+  const reclaimedWaterNodes = new Set<number>()
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_AVOIDANCE_STRENGTH = 1.5
+  let unroutableEdges = 0
   for (const [a, b] of graph.edges) {
     const from = zoneAnchorNode.get(a) as number
     const to = zoneAnchorNode.get(b) as number
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
     const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
-    const windingCost = createWindingCost(sizeX, from, to, rng)
-    const path = shortestPath(sizeX, sizeZ, from, to, state.blocked, (x, z) => windingCost(x, z) + avoidanceCost(x, z))
+    const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+    const combinedCost = (x: number, z: number): number => windingCost(x, z) + avoidanceCost(x, z)
+    let path = shortestPath(sizeX, sizeZ, from, to, state.blocked, combinedCost)
+
+    // Water-partition repair: a real, user-reported "impossible case" —
+    // large organic lakes (zone-water.ts, up to 60% of a zone's own tiles)
+    // can, especially with several adjacent zones each rolling their own,
+    // combine into a genuine full partition of the plain tile-adjacency
+    // graph, leaving NO route between two zone anchors at all (confirmed:
+    // a plain uniform-cost search fails too, not just the winding-cost
+    // one — this isn't a cost-function artifact). Retrying with water
+    // excluded from `blocked` almost always finds a route (mine/dwelling
+    // footprints alone essentially never fully partition a zone graph
+    // `zoneDistanceMatrix` already proved connected), and every water tile
+    // that specific route needed gets reclaimed back to land — a real
+    // "land bridge" carved exactly where required, rather than the road
+    // crossing open water (CLAUDE.md's own standing rule this session
+    // already fixed once: roads can never cross water).
+    if (!path && waterNodesAll.size > 0) {
+      const blockedWithoutWater = new Set([...state.blocked].filter((n) => !waterNodesAll.has(n)))
+      const repairPath = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWater, combinedCost)
+      if (repairPath) {
+        for (const node of repairPath) {
+          if (waterNodesAll.has(node)) {
+            waterNodesAll.delete(node)
+            reclaimedWaterNodes.add(node)
+            state.blocked.delete(node)
+            state.usedAnchors.delete(node)
+          }
+        }
+        path = repairPath
+      }
+    }
+
     if (path) {
       const smoothed = smoothPath(path, sizeX, state.blocked)
       roadPathsByEdge.set(`${a}:${b}`, smoothed)
       for (const node of smoothed) roadNodes.add(node)
+    } else {
+      unroutableEdges += 1
+    }
+  }
+  if (unroutableEdges > 0) {
+    logWarn(`Random map generation: ${unroutableEdges} zone connection(s) could not be routed at all — those two zones have no road between them (a genuine blocked-tile partition even after the water-repair pass; extremely crowded/watery map)`)
+  }
+  if (reclaimedWaterNodes.size > 0) {
+    block2 = paintWaterTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, waterId: 0 })))
+    block2 = paintLevelTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, level: 0 })))
+    for (const node of reclaimedWaterNodes) {
+      waterMapFinal[node] = 0
+      levelsMapFinal[node] = 0
     }
   }
   if (roadNodes.size > 0) {
@@ -420,6 +483,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // connectivity-bitmask shape codes river-shape.ts derives from actual
   // sample-map data, not a guessed texture id.
   let riverNodes = new Set<number>()
+  let riverPath: number[] | null = null
   let bestDistance = -1
   let riverEndpoints: [number, number] | null = null
   for (let a = 0; a < graph.zones.length; a++) {
@@ -431,10 +495,11 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     const [a, b] = riverEndpoints
     const riverFrom = zoneAnchorNode.get(a) as number
     const riverTo = zoneAnchorNode.get(b) as number
-    const rawPath = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng))
+    const rawPath = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng, roadWindingAmplitude, 0.5, roadWindingWavelength))
     const path = rawPath && rawPath.length > 1 ? smoothPath(rawPath, sizeX, state.blocked) : rawPath
     if (path && path.length > 1) {
       riverNodes = new Set(path)
+      riverPath = path
       const changes = path.map((node) => {
         const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
         return { node, s: deriveRealShapeCode(dirs) }
@@ -467,8 +532,9 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // for the full design; a no-op (empty results) when `boundaryGuardStrength`
   // is `'none'` (the default).
   const boundaryResult = fortifyZoneBoundaries({
-    sizeX, sizeZ, zones: graph.zones, edges: graph.edges, zoneIdByNode, zoneBiome,
-    roadPathsByEdge, zoneDistances, catalogById, mapObjects: catalog.mapObjects,
+    sizeX, sizeZ, zones: graph.zones, zoneIdByNode, zoneBiome,
+    roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
+    zoneDistances, catalogById, mapObjects: catalog.mapObjects,
     catalog, objectVariety, strength: boundaryGuardStrength, state, rng,
   })
 
@@ -521,6 +587,37 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   )
   if (report.stillUnreachable > 0) {
     logWarn(`Random map generation: ${report.stillUnreachable} placed object(s) remained unreachable after the accessibility pass`)
+  }
+
+  // Post-generation validation & repair (real user report: "the validation
+  // pass must really look for impossible cases... quality over speed") —
+  // see zone-validation.ts's own header comment for the full design. Runs
+  // here, after every placement/nudge decision is final but BEFORE anything
+  // is committed to the real container, so a repair is just "don't place
+  // this after all" rather than needing to edit an already-serialized chunk.
+  const allZoneIds = graph.zones.map((z) => z.id)
+  const sealedResult = repairSealedZones({
+    sizeX, sizeZ, zoneIds: allZoneIds, zoneIdByNode, objectGroups,
+    decorativePlacements: [...obstaclePlacements, ...boundaryResult.wallPlacements],
+    spawnerSid: playerSpawnerSid,
+    catalog, catalogById, levelsMap: levelsMapFinal, waterMap: waterMapFinal,
+  })
+  if (sealedResult.sealedZoneIds.length > 0) {
+    logWarn(`Random map generation: ${sealedResult.sealedZoneIds.length} zone(s) had no reachable opening at all — repaired by removing bordering decorative obstacles`)
+  }
+  if (sealedResult.stillSealedZoneIds.length > 0) {
+    logWarn(`Random map generation: ${sealedResult.stillSealedZoneIds.length} zone(s) remained sealed even after decorative-obstacle removal (nothing removable bordered them — a real, non-decorative placement is the blocker) — a genuinely degenerate case`)
+  }
+
+  const waterCollisionResult = reclaimWaterCollisions({
+    objectGroups, concreteSquads: allConcreteSquads, waterNodes: waterNodesAll,
+  })
+  if (waterCollisionResult.reclaimedNodes.size > 0) {
+    logWarn(`Random map generation: ${waterCollisionResult.reclaimedNodes.size} placed object/squad(s) ended up on a water tile — reclaimed that tile back to land`)
+    for (const node of waterCollisionResult.reclaimedNodes) {
+      waterMapFinal[node] = 0
+      levelsMapFinal[node] = 0
+    }
   }
 
   const additions: { sid: string; node: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
@@ -596,6 +693,17 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       finalBlock1 = result.block1Chunk
       finalBlock2 = result.block2Chunk
     }
+  }
+
+  // Patch the real container with any water tile the validation pass above
+  // reclaimed back to land (`waterMapFinal`/`levelsMapFinal` were already
+  // updated at the point of reclaim — this just makes the actual `.map`
+  // bytes agree with them, same two-call pattern the road generator's own
+  // water-partition repair already uses).
+  if (waterCollisionResult.reclaimedNodes.size > 0) {
+    const reclaimed = [...waterCollisionResult.reclaimedNodes]
+    finalBlock2 = paintWaterTiles(finalBlock2, reclaimed.map((node) => ({ node, waterId: 0 })))
+    finalBlock2 = paintLevelTiles(finalBlock2, reclaimed.map((node) => ({ node, level: 0 })))
   }
 
   // areas[] recomputation — each zone becomes a real region (issue #210's

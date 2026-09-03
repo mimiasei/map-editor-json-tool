@@ -65,6 +65,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [zoneJaggedness, setZoneJaggedness] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
   const [zoneSpread, setZoneSpread] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
   const [boundaryGuardStrength, setBoundaryGuardStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength)
+  const [roadWindingAmplitude, setRoadWindingAmplitude] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
+  const [roadWindingWavelength, setRoadWindingWavelength] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -90,6 +92,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         zoneJaggedness,
         zoneSpread,
         boundaryGuardStrength,
+        roadWindingAmplitude,
+        roadWindingWavelength,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -119,6 +123,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       zoneJaggedness,
       zoneSpread,
       boundaryGuardStrength,
+      roadWindingAmplitude,
+      roadWindingWavelength,
       seed: seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined,
     }
     await saveFile(stringifyRandomMapTemplate(template), 'rmg-template.json')
@@ -145,6 +151,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setZoneJaggedness(template.zoneJaggedness)
       setZoneSpread(template.zoneSpread)
       setBoundaryGuardStrength(template.boundaryGuardStrength)
+      setRoadWindingAmplitude(template.roadWindingAmplitude)
+      setRoadWindingWavelength(template.roadWindingWavelength)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
       logInfo(`Loaded RMG template: ${file.name}`)
@@ -299,6 +307,26 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     <SelectItem value="strong">Strong</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="How far roads/rivers swing away from a straight line, in tiles.">
+                    Road/river winding amplitude
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{roadWindingAmplitude.toFixed(1)}</span>
+                </div>
+                <Slider min={0} max={6} step={0.5} value={[roadWindingAmplitude]} onValueChange={([v]) => setRoadWindingAmplitude(v)} />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="How often roads/rivers curve, in tiles per curve. Lower = more frequent curves (can look jagged if pushed too low); higher = fewer, broader sweeps.">
+                    Road/river winding wavelength
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{roadWindingWavelength}</span>
+                </div>
+                <Slider min={20} max={100} step={5} value={[roadWindingWavelength]} onValueChange={([v]) => setRoadWindingWavelength(v)} />
               </div>
 
               <div className="space-y-1.5">

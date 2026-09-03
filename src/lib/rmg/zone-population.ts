@@ -294,12 +294,28 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
 
       // Per-zone treasure density: bigger Voronoi regions (more tiles) get
       // proportionally more treasure piles, scaled again by the template's
-      // own `treasureDensity` multiplier and capped so a huge zone/high
-      // multiplier doesn't spend an unreasonable number of placement
-      // attempts — issue #210's own "per-zone treasure density tuning"
-      // milestone item.
+      // own `treasureDensity` multiplier — issue #210's own "per-zone
+      // treasure density tuning" milestone item. The cap here used to be a
+      // flat 10, tuned against a typical ~64x64/4-player zone (a few
+      // hundred tiles) — a real user report ("hardly any resources despite
+      // cranking density to max") traced to that cap silently dominating on
+      // a LARGER map: this generator's own zone COUNT depends only on
+      // player count (`buildZoneGraph`), never map size, so a big map at a
+      // low player count has proportionally huge zones the old cap-of-10
+      // choked down to the same handful of items a much smaller zone got.
+      // Verified against real sample maps (`maps/*.map`, 12 files with
+      // treasure data): real density ranges ~100-800 tiles per treasure
+      // item. Removing the low cap (raised instead to a generous safety
+      // ceiling, not a tuning target) and keeping the same per-150-tiles
+      // base rate reproduces that real range at both ends — a 256x256/
+      // 2-player map's own ~13,000-tile neutral zones land at ~372
+      // tiles/item at treasureDensity=1 and ~124 at treasureDensity=3,
+      // matching real maps The_Mysterious_Island.map (386) and
+      // Fun_and_Graves.map (123) almost exactly — while a typical smaller
+      // zone's own count is unchanged (the cap essentially never fired for
+      // realistic zone sizes anyway).
       const baseTreasureCount = 1 + Math.floor(tiles.length / 150)
-      const treasureCount = Math.max(0, Math.min(10, Math.round(baseTreasureCount * treasureDensity)))
+      const treasureCount = Math.max(0, Math.min(200, Math.round(baseTreasureCount * treasureDensity)))
       for (let i = 0; i < treasureCount; i++) placeTreasure(tiles)
 
       // The guard's value comes from the mine's own real guard-value data

@@ -55,6 +55,13 @@ export interface RandomMapTemplate {
    *  generate-random-map.ts's own doc comment has the full design).
    *  `'none'` (the default) skips it entirely. */
   boundaryGuardStrength: BoundaryGuardStrength
+  /** Road/river winding amplitude in tiles (generate-random-map.ts's own doc
+   *  comment). 3 is the default, tuned default. */
+  roadWindingAmplitude: number
+  /** Road/river winding wavelength, tiles per curve cycle (generate-random-
+   *  map.ts's own doc comment — pushed too low this reproduces the "ladder"
+   *  artifact a real prior fix addressed). 50 is the tuned default. */
+  roadWindingWavelength: number
   /** Fixed RNG seed for reproducible generation (mulberry32 — seeded-rng.ts). Omitted = a fresh random seed every time. */
   seed?: number
 }
@@ -62,7 +69,7 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'roadWindingAmplitude' | 'roadWindingWavelength'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   obstacleDensity: 0.12,
@@ -72,10 +79,12 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   zoneJaggedness: 0.5,
   zoneSpread: 1,
   boundaryGuardStrength: 'none',
+  roadWindingAmplitude: 3,
+  roadWindingWavelength: 50,
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, roadWindingAmplitude, roadWindingWavelength, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -90,6 +99,8 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     zoneJaggedness,
     zoneSpread,
     boundaryGuardStrength,
+    roadWindingAmplitude,
+    roadWindingWavelength,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -131,6 +142,8 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     zoneJaggedness: typeof data.zoneJaggedness === 'number' ? data.zoneJaggedness : DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness,
     zoneSpread: typeof data.zoneSpread === 'number' ? data.zoneSpread : DEFAULT_TEMPLATE_OVERRIDES.zoneSpread,
     boundaryGuardStrength: data.boundaryGuardStrength ?? DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength,
+    roadWindingAmplitude: typeof data.roadWindingAmplitude === 'number' ? data.roadWindingAmplitude : DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude,
+    roadWindingWavelength: typeof data.roadWindingWavelength === 'number' ? data.roadWindingWavelength : DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength,
     seed: typeof data.seed === 'number' ? data.seed : undefined,
   }
 }
