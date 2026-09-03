@@ -55,6 +55,9 @@ export interface RandomMapTemplate {
    *  generate-random-map.ts's own doc comment has the full design).
    *  `'none'` (the default) skips it entirely. */
   boundaryGuardStrength: BoundaryGuardStrength
+  /** 0-1 chance a real mine/dwelling/resource/artifact gets an extra nearby
+   *  guard (zone-guard-scatter.ts's own doc comment). 0.15 default. */
+  squadDensity: number
   /** Road/river winding amplitude in tiles (generate-random-map.ts's own doc
    *  comment). 3 is the default, tuned default. */
   roadWindingAmplitude: number
@@ -69,7 +72,7 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'roadWindingAmplitude' | 'roadWindingWavelength'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   obstacleDensity: 0.12,
@@ -78,13 +81,14 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   usePortals: false,
   zoneJaggedness: 0.5,
   zoneSpread: 1,
-  boundaryGuardStrength: 'none',
+  boundaryGuardStrength: 'strong',
+  squadDensity: 0.15,
   roadWindingAmplitude: 3,
   roadWindingWavelength: 50,
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, roadWindingAmplitude, roadWindingWavelength, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -99,6 +103,7 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     zoneJaggedness,
     zoneSpread,
     boundaryGuardStrength,
+    squadDensity,
     roadWindingAmplitude,
     roadWindingWavelength,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
@@ -124,8 +129,8 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
   if (data.waterContent !== undefined && data.waterContent !== 'none' && data.waterContent !== 'normal' && data.waterContent !== 'islands') {
     throw new Error('RMG template waterContent must be "none", "normal", or "islands"')
   }
-  if (data.boundaryGuardStrength !== undefined && data.boundaryGuardStrength !== 'none' && data.boundaryGuardStrength !== 'normal' && data.boundaryGuardStrength !== 'strong') {
-    throw new Error('RMG template boundaryGuardStrength must be "none", "normal", or "strong"')
+  if (data.boundaryGuardStrength !== undefined && !['none', 'normal', 'strong', 'very strong'].includes(data.boundaryGuardStrength)) {
+    throw new Error('RMG template boundaryGuardStrength must be "none", "normal", "strong", or "very strong"')
   }
   return {
     version: RMG_TEMPLATE_VERSION,
@@ -142,6 +147,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     zoneJaggedness: typeof data.zoneJaggedness === 'number' ? data.zoneJaggedness : DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness,
     zoneSpread: typeof data.zoneSpread === 'number' ? data.zoneSpread : DEFAULT_TEMPLATE_OVERRIDES.zoneSpread,
     boundaryGuardStrength: data.boundaryGuardStrength ?? DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength,
+    squadDensity: typeof data.squadDensity === 'number' ? data.squadDensity : DEFAULT_TEMPLATE_OVERRIDES.squadDensity,
     roadWindingAmplitude: typeof data.roadWindingAmplitude === 'number' ? data.roadWindingAmplitude : DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude,
     roadWindingWavelength: typeof data.roadWindingWavelength === 'number' ? data.roadWindingWavelength : DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength,
     seed: typeof data.seed === 'number' ? data.seed : undefined,

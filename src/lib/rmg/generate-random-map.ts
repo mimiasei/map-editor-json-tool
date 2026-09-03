@@ -60,6 +60,7 @@ import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { computeIslandZones, nearestPlayerZone, PORTAL_SIDS } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
+import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
 
 export interface GenerateRandomMapOptions {
@@ -124,6 +125,14 @@ export interface GenerateRandomMapOptions {
    *  header comment for the full design and why it's opt-in (walling zone
    *  boundaries is a real structural change to every zone's own shape). */
   boundaryGuardStrength?: BoundaryGuardStrength
+  /** 0-1 chance a given real mine/dwelling/resource/artifact
+   *  `populateZones` placed gets an extra nearby guard, on top of that
+   *  zone's own single mine/treasure guard (zone-guard-scatter.ts's own
+   *  header comment has the full design — a real user request, including
+   *  the ordering: this runs as its own pass right after resources/
+   *  artifacts exist to guard). Defaults to 0.15 — `'none'` (0) fully
+   *  disables it. */
+  squadDensity?: number
   /** Road/river winding amplitude, in tiles — how far the organic S-curve
    *  swings away from the direct line (`createWindingCost`'s own `amplitude`
    *  param). Defaults to 3 (this generator's own tuned default — see
@@ -160,7 +169,7 @@ function jaggednessToPenroseScale(jaggedness: number): number {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'none', roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.15, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -255,6 +264,18 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
+
+  // Proximity guards (real user request) — a random chance of a guard next
+  // to a real mine/dwelling/resource/artifact `populateZones` just placed,
+  // ON TOP OF that zone's own single mine/treasure guard. Deliberately a
+  // SEPARATE pass run right here, immediately after resources/artifacts
+  // exist to guard (the user's own explicit ordering), not folded into
+  // `populateZones` itself.
+  const playerZoneIds = graph.zones.filter((z) => z.kind === 'player').map((z) => z.id)
+  const proximityGuards = scatterProximityGuards({
+    sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
+    catalogById, catalog, objectVariety, squadDensity, state, rng,
+  })
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
   }
@@ -414,6 +435,19 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const reclaimedWaterNodes = new Set<number>()
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_AVOIDANCE_STRENGTH = 1.5
+  // `smoothPath`'s own window was a flat 12 tiles — real ASCII-rendered
+  // comparison (a follow-up user report: "roads end up fairly straight and
+  // unorganic... they were much better earlier") found that window
+  // aggressively flattens the INTENDED sine-wave curve, not just genuine
+  // local zigzag noise — at the default wavelength (50) it collapsed a
+  // real multi-bend S-curve down to a single long L-turn, and pushing
+  // `roadWindingWavelength` even lower (for MORE visible winding) made no
+  // difference at all, since window=12 flattened that even harder. Scaling
+  // the window down with wavelength (a real fraction of one wave's own
+  // quarter-period, not an arbitrary constant) lets `roadWindingWavelength`
+  // actually control the visible result, while still cleaning up real
+  // short zigzags the same way it always did.
+  const roadSmoothWindow = Math.max(4, Math.round(roadWindingWavelength / 10))
   let unroutableEdges = 0
   for (const [a, b] of graph.edges) {
     const from = zoneAnchorNode.get(a) as number
@@ -455,7 +489,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
 
     if (path) {
-      const smoothed = smoothPath(path, sizeX, state.blocked)
+      const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
       roadPathsByEdge.set(`${a}:${b}`, smoothed)
       for (const node of smoothed) roadNodes.add(node)
     } else {
@@ -496,7 +530,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     const riverFrom = zoneAnchorNode.get(a) as number
     const riverTo = zoneAnchorNode.get(b) as number
     const rawPath = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng, roadWindingAmplitude, 0.5, roadWindingWavelength))
-    const path = rawPath && rawPath.length > 1 ? smoothPath(rawPath, sizeX, state.blocked) : rawPath
+    const path = rawPath && rawPath.length > 1 ? smoothPath(rawPath, sizeX, state.blocked, roadSmoothWindow) : rawPath
     if (path && path.length > 1) {
       riverNodes = new Set(path)
       riverPath = path
@@ -556,8 +590,8 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const objectGroups = new Map<string, ObjectPlacementGroup>([[playerSpawnerSid, spawnerGroup]])
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
-  const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads]
-  for (const placement of [...placements, ...obstaclePlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements]) {
+  const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads, ...proximityGuards.concreteSquads]
+  for (const placement of [...placements, ...obstaclePlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }

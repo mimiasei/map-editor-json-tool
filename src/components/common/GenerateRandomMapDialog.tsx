@@ -65,6 +65,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [zoneJaggedness, setZoneJaggedness] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
   const [zoneSpread, setZoneSpread] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
   const [boundaryGuardStrength, setBoundaryGuardStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength)
+  const [squadDensity, setSquadDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
   const [roadWindingAmplitude, setRoadWindingAmplitude] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
   const [roadWindingWavelength, setRoadWindingWavelength] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
   const [seedText, setSeedText] = useState('')
@@ -92,6 +93,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         zoneJaggedness,
         zoneSpread,
         boundaryGuardStrength,
+        squadDensity,
         roadWindingAmplitude,
         roadWindingWavelength,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
@@ -123,6 +125,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       zoneJaggedness,
       zoneSpread,
       boundaryGuardStrength,
+      squadDensity,
       roadWindingAmplitude,
       roadWindingWavelength,
       seed: seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined,
@@ -151,6 +154,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setZoneJaggedness(template.zoneJaggedness)
       setZoneSpread(template.zoneSpread)
       setBoundaryGuardStrength(template.boundaryGuardStrength)
+      setSquadDensity(template.squadDensity)
       setRoadWindingAmplitude(template.roadWindingAmplitude)
       setRoadWindingWavelength(template.roadWindingWavelength)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
@@ -209,26 +213,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           {advancedOpen && (
             <div className="space-y-4 pl-1">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones.">
-                    Zone jaggedness
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.05} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads.">
-                    Zone spread
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
-                </div>
-                <Slider min={0.5} max={1.8} step={0.05} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} />
-              </div>
-
               <div className="space-y-1.5">
                 <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
                   Water content
@@ -296,17 +280,48 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs" title="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints. 'Strong' guards are 1.5x as tough as 'Normal'.">
+                <Label className="text-xs" title="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints, each at least Impossible difficulty. 'Strong'/'Very strong' scale that value up further.">
                   Boundary guards
                 </Label>
-                <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong')}>
+                <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong' | 'very strong')}>
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="strong">Strong</SelectItem>
+                    <SelectItem value="very strong">Very strong</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty.">
+                    Squad density
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.05} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones.">
+                    Zone jaggedness
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.05} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads.">
+                    Zone spread
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
+                </div>
+                <Slider min={0.5} max={1.8} step={0.05} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} />
               </div>
 
               <div className="space-y-1.5">

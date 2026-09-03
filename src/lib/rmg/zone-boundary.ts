@@ -136,23 +136,23 @@ function gateBuffer(nodes: number[], sizeX: number, sizeZ: number, radius: numbe
  *  no gate guards) — the safe, conservative default, since walling zone
  *  boundaries is a real structural change to every zone's own shape, not
  *  just a decoration density tweak. */
-export type BoundaryGuardStrength = 'none' | 'normal' | 'strong'
+export type BoundaryGuardStrength = 'none' | 'normal' | 'strong' | 'very strong'
 
-const DIFFICULTY_MULTIPLIER: Record<BoundaryGuardStrength, number> = { none: 0, normal: 1, strong: 1.5 }
+const DIFFICULTY_MULTIPLIER: Record<BoundaryGuardStrength, number> = { none: 0, normal: 1, strong: 1.5, 'very strong': 2.5 }
 
-/** Hop-distance-from-nearest-player-zone → the existing `squad-pool.ts`
- *  difficulty band it maps to — depth 0/1 (touches, or one hop from, a
- *  player zone) is `Easy`, climbing to `Lethal` for the deepest connections
- *  a ring topology produces at real player counts (2-8 players → depth
- *  0-4ish). Not derived from real game data (there's no per-connection
- *  "guard" field to read the way VCMI's own template format has) — a
- *  reasonable topology-driven default, same spirit as `zone-population.ts`'s
- *  own flat-roll fallback for a mine with no real guard-value data. */
+/** A zone boundary's own gate is a mandatory chokepoint on the way to
+ *  anything past it — a real user request: it should never be trivial,
+ *  regardless of how close to a player start it sits, so unlike a mine or
+ *  treasure guard (see zone-guard-scatter.ts's own distance-scaled
+ *  difficulty) this floors at `Impossible` rather than starting at `Easy`.
+ *  Still climbs to `Lethal` for the deepest connections a ring topology
+ *  produces at real player counts (2-8 players → depth 0-4ish). Not
+ *  derived from real game data (there's no per-connection "guard" field to
+ *  read the way VCMI's own template format has) — a reasonable
+ *  topology-driven default, same spirit as `zone-population.ts`'s own
+ *  flat-roll fallback for a mine with no real guard-value data. */
 function depthToDifficultyLabel(depth: number): string {
-  if (depth <= 1) return 'Easy'
-  if (depth === 2) return 'Normal'
-  if (depth === 3) return 'Difficult'
-  if (depth === 4) return 'Impossible'
+  if (depth <= 3) return 'Impossible'
   return 'Lethal'
 }
 
