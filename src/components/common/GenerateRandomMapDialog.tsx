@@ -1,4 +1,4 @@
-// ─── Generate Random Map (issue #210, Milestone 1) ──────────────────────────
+// ─── Generate Random Map (issue #210, Milestone 2) ──────────────────────────
 // Tauri-only, same reasoning as NewMapDialog: needs real filesystem read
 // access to the bundled template.map resource (plus a loaded GameCatalog —
 // see generate-map-file.ts). Deliberately minimal UI for this milestone —
@@ -94,11 +94,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Milestone 1: one zone per player plus a neutral zone between each
-            pair, each with its own biome/faction, a starting dwelling and
-            mine (player zones) or a mine and treasure (neutral zones), and a
-            guard. No obstacles, rivers, roads, or a real value economy yet —
-            see issue #210 for the full roadmap.
+            Milestone 2: one zone per player plus a neutral zone between each
+            pair, each with its own biome/faction, roads connecting every
+            zone, one river, and biome-appropriate scenery. Player zones get
+            a starting dwelling, mine, and guard; neutral zones get a mine
+            (guarded to its own real economic value) and scaled treasure.
+            No zone-shape variety or a full RMG template yet — see issue
+            #210 for the full roadmap.
           </p>
         </div>
 
