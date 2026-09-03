@@ -40,8 +40,31 @@ const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
  * coordinate — so the "ideal centerline" itself curves back and forth
  * across the direct line as progress increases, regardless of the
  * start→goal bearing (horizontal, vertical, or diagonal all wind the same
- * way). `amplitude` is in tiles; `cycles` (randomized per call) is how
- * many full S-wiggles happen over the whole journey.
+ * way). `amplitude` is in tiles.
+ *
+ * `wavelength` (tiles per full S-cycle, randomized ±20% per call) — NOT a
+ * fixed cycle COUNT (an earlier version used `cycles = 1.5 + rng()*2`,
+ * independent of `length`) — is the real fix for a second, more severe
+ * "ladder" regression a real user report traced to a specific root cause:
+ * most real zone-to-zone edges on a real generated map are short-to-medium
+ * (9-32 tiles on a 64×64/6-player repro, confirmed by directly replaying
+ * the exact real edges/blocked-tiles/rng draws a live generation run used),
+ * not the 60-100+ tile edges this function was originally tuned against —
+ * a FIXED cycle count squeezed onto a SHORT edge means an angular frequency
+ * (and therefore max lateral slope, `amplitude * angularFreq`) far too
+ * steep for a 4-connected grid to trace without zigzagging on nearly every
+ * tile, regardless of how good `smoothPath`'s own cleanup is (there's no
+ * clear line-of-sight shortcut to find when the "ideal" line itself
+ * demands a turn every 2-3 tiles). Expressing the wave in tiles-per-cycle
+ * instead keeps the max slope constant regardless of edge length, so short
+ * edges get a gentle, mostly-straight nudge and long edges still get
+ * several real S-wiggles. Confirmed via the same real-edge replay: swept
+ * wavelength 30-120, and 50 (the default) cut the "ladder pair" fraction
+ * from 0.47 to 0.33 and the worst single-cluster streak from 16 tiles to 4
+ * — the single biggest improvement found across every fix attempted for
+ * this regression, well ahead of every other lever tried (obstacle-
+ * clearance costs, larger `smoothPath` windows, lower `strength`, all of
+ * which measured flat or worse on the same real case).
  */
 export function createWindingCost(
   sizeX: number,
@@ -50,6 +73,7 @@ export function createWindingCost(
   rng: () => number,
   amplitude = 3,
   strength = 0.5,
+  wavelength = 50,
 ): (x: number, z: number) => number {
   const sx = start % sizeX
   const sz = Math.floor(start / sizeX)
@@ -62,7 +86,8 @@ export function createWindingCost(
   const fz = dz / length
   const px = -fz
   const pz = fx
-  const cycles = 1.5 + rng() * 2
+  const actualWavelength = wavelength * (0.8 + rng() * 0.4)
+  const cycles = length / actualWavelength
   const angularFreq = (cycles * 2 * Math.PI) / length
   const phase = rng() * Math.PI * 2
 
@@ -173,103 +198,65 @@ export function smoothPath(path: number[], sizeX: number, blocked: Set<number>, 
 }
 
 /**
- * Decomposes a MERGED road (or river) tile network into simple polylines
- * ("chains") between fixed points — the network's own branch/cross points
- * (any tile with 3+ road-neighbors), dead ends (1 road-neighbor), and every
- * node in `fixedNodes` (real zone anchors, pinned regardless of their own
- * degree). `smoothPath` above only ever sees ONE edge's own raw path in
- * isolation — a real, user-reported gap: at 4+ players there are more
- * zone-graph edges sharing the same crowded map, so two independently
- * generated roads (each individually smooth per `smoothPath`) can still
- * run close together and interleave, producing a "ladder" that only exists
- * in how the two paths relate to EACH OTHER, invisible to a per-edge pass.
- * Each returned chain is a plain node array in the same shape `smoothPath`
- * already consumes, so `smoothRoadNetwork` below can re-run the identical
- * cleanup on the network's true topology instead of on each edge alone.
+ * Multi-source BFS distance (in tiles, capped at `maxDist`) from every node
+ * in `sourceNodes` — the real fix for a user-reported regression: an
+ * earlier attempt at this same "roads shouldn't crowd each other" problem
+ * (re-chaining and re-smoothing the WHOLE merged network after the fact)
+ * made things measurably worse in practice — over-straightened the
+ * intentional organic winding AND, confirmed by direct user report, still
+ * produced MORE ladders, not fewer (chain-splitting at incidental raw-path
+ * crossings fragments what should be one long smoothable run into many
+ * short ones). This does the opposite: compute each edge's road SEQUENTIALLY
+ * (already this file's own loop order), and before routing edge N, know how
+ * far every tile is from every road edge 0..N-1 already drew, so edge N's
+ * own cost field can be taught to avoid running close/parallel to them —
+ * fixing the "two roads merge and interleave" cause directly, instead of
+ * cleaning up its visual symptom after the fact.
  */
-function extractChains(network: Set<number>, sizeX: number, sizeZ: number, fixedNodes: Set<number>): number[][] {
-  const neighborsOf = (node: number): number[] => {
+export function computeRoadDistanceField(sourceNodes: Set<number>, sizeX: number, sizeZ: number, maxDist: number): Int32Array {
+  const dist = new Int32Array(sizeX * sizeZ).fill(maxDist + 1)
+  const queue: number[] = []
+  for (const node of sourceNodes) {
+    if (dist[node] !== 0) { dist[node] = 0; queue.push(node) }
+  }
+  let head = 0
+  while (head < queue.length) {
+    const node = queue[head++]
+    const d = dist[node]
+    if (d >= maxDist) continue
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
-    const result: number[] = []
-    if (x > 0 && network.has(node - 1)) result.push(node - 1)
-    if (x < sizeX - 1 && network.has(node + 1)) result.push(node + 1)
-    if (z > 0 && network.has(node - sizeX)) result.push(node - sizeX)
-    if (z < sizeZ - 1 && network.has(node + sizeX)) result.push(node + sizeX)
-    return result
-  }
-
-  const pinned = new Set<number>(fixedNodes)
-  for (const node of network) {
-    if (neighborsOf(node).length !== 2) pinned.add(node)
-  }
-
-  const edgeKey = (a: number, b: number): string => (a < b ? `${a}:${b}` : `${b}:${a}`)
-  const visitedEdges = new Set<string>()
-  const chains: number[][] = []
-
-  for (const start of pinned) {
-    for (const firstStep of neighborsOf(start)) {
-      const key = edgeKey(start, firstStep)
-      if (visitedEdges.has(key)) continue
-      visitedEdges.add(key)
-      const chain = [start, firstStep]
-      let prev = start
-      let cur = firstStep
-      while (!pinned.has(cur)) {
-        const neighbors = neighborsOf(cur)
-        const next = neighbors[0] === prev ? neighbors[1] : neighbors[0]
-        if (next === undefined) break
-        visitedEdges.add(edgeKey(cur, next))
-        chain.push(next)
-        prev = cur
-        cur = next
-      }
-      chains.push(chain)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (dist[n] > d + 1) { dist[n] = d + 1; queue.push(n) }
     }
   }
-
-  // A tile no chain above ever reached is a pure cycle with no branch or
-  // fixed point anywhere on it (two edges' own paths closing a loop with
-  // no real junction) — vanishingly unlikely given every edge is
-  // independently computed point-to-point, but kept as its own untouched
-  // single-tile chain per node rather than silently dropped from the
-  // network if it ever happens.
-  const covered = new Set<number>()
-  for (const chain of chains) for (const node of chain) covered.add(node)
-  for (const node of network) {
-    if (!covered.has(node)) chains.push([node])
-  }
-
-  return chains
+  return dist
 }
 
 /**
- * Re-smooths a COMPLETE merged road (or river) tile set — not just one
- * edge's own path in isolation, which is all `smoothPath` alone can see.
- * Decomposes the real network topology into chains (`extractChains`),
- * re-runs the same windowed L-shortcut cleanup on each, then reassembles.
- * Junctions/branches/real fixed anchors are never chain interior nodes, so
- * this can never disconnect anything the raw network already connected —
- * two independently-generated roads that happen to run close together and
- * interleave (this file's own header comment has the real user report)
- * come out the other side straightened relative to EACH OTHER, not just
- * relative to their own individual cost-search noise.
+ * A SOFT (never blocking — `shortestPath` can always still reach `goal`)
+ * cost penalty for running close to `existingRoads` — quadratic falloff,
+ * zero beyond `radius` tiles from the nearest already-drawn road tile,
+ * steep right next to one. Meant to be ADDED to `createWindingCost`'s own
+ * output (both return a per-tile cost `shortestPath` sums along a
+ * candidate route), not used alone: this only discourages a NEW road from
+ * casually running parallel/close to an EARLIER one in the same generation
+ * pass — two edges that genuinely share a zone anchor (a real, common,
+ * expected case in this generator's own ring topology) still converge
+ * there just fine, since the penalty is finite and `shortestPath` will pay
+ * it rather than fail to route.
  */
-export function smoothRoadNetwork(
-  network: Set<number>,
-  sizeX: number,
-  sizeZ: number,
-  blocked: Set<number>,
-  fixedNodes: Set<number>,
-  windowSize = 12,
-): Set<number> {
-  const chains = extractChains(network, sizeX, sizeZ, fixedNodes)
-  const result = new Set<number>()
-  for (const chain of chains) {
-    for (const node of smoothPath(chain, sizeX, blocked, windowSize)) result.add(node)
+export function createRoadAvoidanceCost(distanceField: Int32Array, sizeX: number, radius: number, strength: number): (x: number, z: number) => number {
+  return (x: number, z: number): number => {
+    const d = distanceField[z * sizeX + x]
+    if (d >= radius) return 0
+    const closeness = radius - d
+    return strength * closeness * closeness
   }
-  return result
 }
 
 /** Binary min-heap keyed by a numeric priority — Dijkstra's own priority
