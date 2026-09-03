@@ -38,6 +38,11 @@ export interface RandomMapTemplate {
    *  instead of a `random-item`/`random-squad` placeholder
    *  (zone-population.ts/object-variety.ts). */
   objectVariety: number
+  /** Adds one bonus portal-pair shortcut across the map's most graph-distant
+   *  zone pair, on top of every normal road/river connection (VCMI's own
+   *  `forcePortal` concept — generate-random-map.ts's own doc comment has
+   *  the full rationale). Independent of `waterContent`. */
+  usePortals: boolean
   /** Fixed RNG seed for reproducible generation (mulberry32 — seeded-rng.ts). Omitted = a fresh random seed every time. */
   seed?: number
 }
@@ -45,16 +50,17 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   obstacleDensity: 0.12,
   treasureDensity: 1,
   objectVariety: 0.4,
+  usePortals: false,
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, usePortals, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -65,6 +71,7 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     obstacleDensity,
     treasureDensity,
     objectVariety,
+    usePortals,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -99,6 +106,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     obstacleDensity: typeof data.obstacleDensity === 'number' ? data.obstacleDensity : DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity,
     treasureDensity: typeof data.treasureDensity === 'number' ? data.treasureDensity : DEFAULT_TEMPLATE_OVERRIDES.treasureDensity,
     objectVariety: typeof data.objectVariety === 'number' ? data.objectVariety : DEFAULT_TEMPLATE_OVERRIDES.objectVariety,
+    usePortals: typeof data.usePortals === 'boolean' ? data.usePortals : DEFAULT_TEMPLATE_OVERRIDES.usePortals,
     seed: typeof data.seed === 'number' ? data.seed : undefined,
   }
 }

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
@@ -60,6 +61,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
   const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
+  const [usePortals, setUsePortals] = useState(DEFAULT_TEMPLATE_OVERRIDES.usePortals)
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -81,6 +83,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         obstacleDensity,
         treasureDensity,
         objectVariety,
+        usePortals,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -106,6 +109,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       obstacleDensity,
       treasureDensity,
       objectVariety,
+      usePortals,
       seed: seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined,
     }
     await saveFile(stringifyRandomMapTemplate(template), 'rmg-template.json')
@@ -128,6 +132,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setObstacleDensity(template.obstacleDensity)
       setTreasureDensity(template.treasureDensity)
       setObjectVariety(template.objectVariety)
+      setUsePortals(template.usePortals)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
       logInfo(`Loaded RMG template: ${file.name}`)
@@ -241,6 +246,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.05} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="rmg-use-portals" className="text-xs" title="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement.">
+                  Use portals
+                </Label>
+                <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} />
               </div>
 
               <div className="space-y-1.5">

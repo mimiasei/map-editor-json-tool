@@ -86,6 +86,16 @@ export interface GenerateRandomMapOptions {
    *  `placeTreasure`/`placeGuard`) instead of a `random-item`/`random-squad`
    *  placeholder. Defaults to 0.4. */
   objectVariety?: number
+  /** Adds ONE bonus portal-pair shortcut connecting the single most
+   *  graph-distant zone pair that isn't already a direct road edge — VCMI's
+   *  own `forcePortal` connection concept ("connect zone to itself using
+   *  pair of portals"), additional to every normal road/river connection,
+   *  never a replacement for one. Independent of `waterContent` — works (or
+   *  not) the same regardless of water mode, since portals are a real
+   *  shortcut across any terrain, not just Islands mode's own
+   *  water-crossing use of the same mechanic. User-toggleable per the
+   *  user's own request; defaults to `false`. */
+  usePortals?: boolean
   /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
 }
@@ -99,7 +109,7 @@ export interface GenerateRandomMapOptions {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -257,6 +267,46 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       portalPlacements.push({ tempId: mainlandTempId, sid: portalSid, node: mainlandNode })
       portalAdjacency.set(islandTempId, mainlandTempId)
       portalAdjacency.set(mainlandTempId, islandTempId)
+    }
+  }
+
+  // Optional bonus portal shortcut (VCMI's own `forcePortal` connection
+  // concept, see this option's own doc comment above) — the single most
+  // graph-distant zone pair that ISN'T already a direct road edge, so the
+  // portal actually shortens something instead of duplicating an edge that
+  // already has a road. Independent of `waterContent`/the islands portal
+  // logic above (a different portal pair, on a fresh color/temp-id pair —
+  // reusing a color across separate pairs is safe, see zone-islands.ts's
+  // own `PORTAL_SIDS` doc comment on why OE's `propPortals` link doesn't
+  // rely on same-color auto-connect the way H3 does).
+  if (usePortals) {
+    const edgeKey = (a: number, b: number): string => `${Math.min(a, b)}:${Math.max(a, b)}`
+    const roadEdgeSet = new Set(graph.edges.map(([a, b]) => edgeKey(a, b)))
+    let bonusPair: [number, number] | null = null
+    let bonusDistance = -1
+    for (let a = 0; a < graph.zones.length; a++) {
+      for (let b = a + 1; b < graph.zones.length; b++) {
+        if (roadEdgeSet.has(edgeKey(a, b))) continue
+        if (zoneDistances[a][b] > bonusDistance) { bonusDistance = zoneDistances[a][b]; bonusPair = [a, b] }
+      }
+    }
+    if (bonusPair) {
+      const [a, b] = bonusPair
+      const portalSid = PORTAL_SIDS[Math.floor(rng() * PORTAL_SIDS.length)]
+      const tilesA = tilesByZone.get(graph.zones[a].id) ?? []
+      const tilesB = tilesByZone.get(graph.zones[b].id) ?? []
+      const nodeA = tryPlace(portalSid, tilesA, sizeX, sizeZ, catalogById, state, rng)
+      const nodeB = tryPlace(portalSid, tilesB, sizeX, sizeZ, catalogById, state, rng)
+      if (nodeA !== null && nodeB !== null) {
+        const tempIdA = state.nextTempId++
+        const tempIdB = state.nextTempId++
+        portalPlacements.push({ tempId: tempIdA, sid: portalSid, node: nodeA })
+        portalPlacements.push({ tempId: tempIdB, sid: portalSid, node: nodeB })
+        portalAdjacency.set(tempIdA, tempIdB)
+        portalAdjacency.set(tempIdB, tempIdA)
+      } else {
+        logWarn('Random map generation: the bonus portal shortcut could not be placed — no free tile in one of its zones')
+      }
     }
   }
 
