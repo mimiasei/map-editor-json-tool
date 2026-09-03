@@ -1975,7 +1975,7 @@ export interface BlankMapOptions {
 // string, which uses "Sand" not the catalog's own "Desert"; kept as a
 // local, self-contained copy here rather than importing the UI-layer
 // terrain-colors.ts module from this low-level writer).
-const BLANK_MAP_BIOME_NAMES: Record<number, string> = {
+export const BLANK_MAP_BIOME_NAMES: Record<number, string> = {
   1: 'Grass', 2: 'Sand', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt',
 }
 
@@ -2082,6 +2082,23 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
   }
 
   return container
+}
+
+/** Overwrite Block 2's whole `areas[]` region index in one pass — the RMG's
+ *  own real-region recomputation (issue #210, Milestone 3; see
+ *  `src/lib/rmg/zone-areas.ts`), replacing `buildBlankMap`'s single
+ *  whole-map placeholder region with each zone's own real tile partition.
+ *  Every entry must carry `id`/`keyObjectId`/`rootNode`/`nodes`/
+ *  `neighbors`/`biome` — the exact shape confirmed against real sample
+ *  maps' own `areas[]` entries (see zone-areas.ts's own doc comment). */
+export function setAreas(
+  chunk: Uint8Array,
+  areas: { id: number; keyObjectId: number; rootNode: number; nodes: number[]; neighbors: number[]; biome: string }[],
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose } = findJsonArraySpan(text, 'areas')
+  const patchedText = text.slice(0, arrayOpen) + JSON.stringify(areas) + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
 }
 
 // ─── Byte equality (verification) ───────────────────────────────────────────

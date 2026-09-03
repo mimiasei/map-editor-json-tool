@@ -1,27 +1,44 @@
-// ─── Random Map Generator — Milestone 2 (issue #210) ────────────────────────
-// Builds on Milestone 1's zone graph with: real roads along every zone-graph
-// connection and one river across the map's most graph-distant zone pair
-// (zone-connections.ts, plain BFS pathfinding avoiding placed-object
-// footprints), biome-appropriate obstacle scattering filling each zone's
-// remaining free tiles (zone-decoration.ts, composed with real collision
-// checking — reusing this codebase's existing Obstacles-brush sampler), and
-// a real per-mine guard-value model (value-model.ts) replacing Milestone
-// 1's flat difficulty-band roll for neutral-zone guards, plus zone-size-
-// scaled treasure-pile density.
+// ─── Random Map Generator — Milestone 3 (issue #210) ────────────────────────
+// Builds on Milestone 2's economy/roads/rivers/obstacles with the
+// "practical parity items" split out from the original Milestone 3 (see
+// issue #210, 2026-09-03 — Penrose tiling + Fruchterman-Reingold layout
+// optimization moved to a new Milestone 4 instead):
 //
-// Obstacle placements are marked decorative for the reachability pass
-// (accessibility-pass.ts), so — unlike Milestone 1, where nothing was ever
-// sacrificial — the pass can now actually delete a scattered rock/tree if
-// it turns out to be the only thing sealing off a real target, not just
-// nudge the target itself.
+// - Town/faction matching: a player zone's city-spawner gets a real,
+//   zone-biome-matched faction (propCities.factionSid/isDefined:true) —
+//   previously left "unconfigured" like a freshly Add-object-ed one, an
+//   editor-tolerated state CLAUDE.md's own "hard-won lessons" flag as never
+//   proven at real game runtime (every real shipped map's own player-start
+//   spawners are always fully configured before release).
+// - `areas[]` recomputation (zone-areas.ts): each zone becomes a real
+//   region (nodes/neighbors/biome), replacing `buildBlankMap`'s single
+//   whole-map placeholder — a known, previously-flagged gap.
+// - Water features (zone-water.ts): modest in-zone lakes for a subset of
+//   neutral zones, real per real-sample-map convention (level -1 +
+//   waterMap), routed through the SAME accessibility pass so a lake can
+//   never silently seal off a real target.
 //
 // Still no Penrose-tiling zone shapes, Fruchterman-Reingold layout
-// optimization, water zones, or RMG template authoring — those are
-// Milestone 3 (issue #210).
+// optimization, or a real RMG template JSON format/authoring UI beyond
+// today's size/player-count dialog — those are Milestones 4/5 (issue #210).
 
-import { addObjectInstances, buildBlankMap, paintRiverTiles, paintRoadTiles, paintTerrainTiles, type BlankMapPlayer, type MapContainer } from '@/lib/map-write'
+import {
+  addObjectInstances,
+  buildBlankMap,
+  paintLevelTiles,
+  paintRiverTiles,
+  paintRoadTiles,
+  paintTerrainTiles,
+  paintWaterTiles,
+  setAreas,
+  setCityFaction,
+  BLANK_MAP_BIOME_NAMES,
+  type BlankMapPlayer,
+  type MapContainer,
+} from '@/lib/map-write'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
+import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
@@ -31,13 +48,21 @@ import { assignZoneBiomes, createPlacementState, populateZones, ZONE_BIOMES, typ
 import { scatterZoneObstacles } from './zone-decoration'
 import { shortestPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
+import { computeZoneAreas } from './zone-areas'
+import { scatterZoneWater } from './zone-water'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
   sizeZ: number
   playerCount: number
   playerSpawnerSid: 'city-spawner' | 'hero-spawner'
-  /** Injectable for deterministic tests; defaults to `Math.random`. */
+  /** 0-1 chance any given eligible neutral zone gets a lake (zone-water.ts). Defaults to that module's own default. */
+  waterChance?: number
+  /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
+  obstacleDensity?: number
+  /** Multiplier on neutral-zone treasure-pile count (zone-population.ts). Defaults to 1. */
+  treasureDensity?: number
+  /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
 }
 
@@ -67,7 +92,7 @@ function nearestTile(tiles: number[], sizeX: number, center: ZoneCenter): number
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterChance, obstacleDensity, treasureDensity, rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -131,7 +156,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const state = createPlacementState(seedBlocked, seedAnchors)
 
   const placements = populateZones({
-    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng,
+    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall)
   if (skippedScatter > 0) {
@@ -178,12 +203,35 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
 
+  // Water — modest in-zone lakes for a subset of neutral zones (see
+  // zone-water.ts's own header comment for why this stops short of true
+  // separate water zones/islands). Shares the same collision state so
+  // nothing else can ever land on a lake, before or after this point.
+  const waterResult = scatterZoneWater({
+    sizeX, sizeZ, zones: graph.zones, tilesByZone,
+    excludedNodes: new Set([...roadNodes, ...riverNodes]),
+    blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
+  })
+  if (waterResult.waterChanges.length > 0) {
+    block2 = paintWaterTiles(block2, waterResult.waterChanges)
+    block2 = paintLevelTiles(block2, waterResult.levelChanges)
+    for (const node of waterResult.waterNodes) {
+      state.blocked.add(node)
+      state.usedAnchors.add(node)
+    }
+  }
+  const levelsMapFinal = new Array(tileCount).fill(0)
+  const waterMapFinal = new Array(tileCount).fill(0)
+  for (const { node, waterId } of waterResult.waterChanges) waterMapFinal[node] = waterId
+  for (const { node, level } of waterResult.levelChanges) levelsMapFinal[node] = level
+
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,
-  // or the river.
+  // the river, or a lake.
   const obstaclePlacements = scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
-    mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state, rng,
+    mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterResult.waterNodes]), state, rng,
+    density: obstacleDensity,
   })
 
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain
@@ -210,7 +258,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     objectGroups,
     sizeX,
     sizeZ,
-    { levelsMap: new Array(tileCount).fill(0), climbsMap: new Array(tileCount).fill(0), waterMap: new Array(tileCount).fill(0) },
+    { levelsMap: levelsMapFinal, climbsMap: new Array(tileCount).fill(0), waterMap: waterMapFinal },
     catalog,
     catalogById,
     decorativeIds,
@@ -232,7 +280,50 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
 
   const { block2Chunk } = addObjectInstances(block2, additions)
+  let finalBlock1 = container.chunks[0]
+  let finalBlock2 = block2Chunk
+
+  // Town/faction matching — a player zone's own biome determines its
+  // city-spawner's real faction, rather than leaving it unconfigured.
+  // hero-spawner has no equivalent (picking a specific real hero identity
+  // needs a hero-catalog lookup this milestone doesn't attempt — CLAUDE.md
+  // already documents "random" as GME's own real default for an
+  // unconfigured hero-spawner, unlike city-spawner's unconfigured state).
+  const playerZoneIndex = new Map<number, number>()
+  {
+    let index = 0
+    for (const zone of graph.zones) {
+      if (zone.kind !== 'player') continue
+      playerZoneIndex.set(zone.id, index)
+      index += 1
+    }
+  }
+  if (playerSpawnerSid === 'city-spawner') {
+    for (const [zoneId, playerId] of playerZoneIndex) {
+      const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
+      const faction = BIOME_FACTION[biome]
+      if (!faction) continue
+      const result = setCityFaction(finalBlock1, finalBlock2, 0, playerId, faction)
+      finalBlock1 = result.block1Chunk
+      finalBlock2 = result.block2Chunk
+    }
+  }
+
+  // areas[] recomputation — each zone becomes a real region (issue #210's
+  // own flagged gap), replacing buildBlankMap's single whole-map
+  // placeholder. Player zones get their own spawner as `keyObjectId` (a
+  // real, already-known id — buildBlankMap assigns city/hero-spawner ids
+  // 0..playerCount-1 in player order); neutral zones stay -1 rather than
+  // chase a specific placed object's id through the accessibility pass's
+  // own possible nudges (see zone-areas.ts's own doc comment on how
+  // sparse real `keyObjectId` usage already is).
+  const zoneBiomeName = new Map<number, string>()
+  for (const [zoneId, biomeId] of zoneBiome) zoneBiomeName.set(zoneId, BLANK_MAP_BIOME_NAMES[biomeId] ?? 'Grass')
+  const areas = computeZoneAreas(sizeX, sizeZ, zoneIdByNode, tilesByZone, zoneAnchorNode, zoneBiomeName, playerZoneIndex)
+  finalBlock2 = setAreas(finalBlock2, areas)
+
   const finalChunks = container.chunks.slice()
-  finalChunks[1] = block2Chunk
+  finalChunks[0] = finalBlock1
+  finalChunks[1] = finalBlock2
   return { ...container, chunks: finalChunks }
 }

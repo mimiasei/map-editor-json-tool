@@ -165,6 +165,10 @@ export interface PopulateZonesOptions {
    *  overlaps anything placed here. */
   state: PlacementState
   rng: () => number
+  /** Multiplier on neutral-zone treasure-pile count — 1 = this function's
+   *  own default zone-size scaling, 2 = double, 0 = none. Template-driven
+   *  (see template.ts), defaults to 1 for callers that don't care. */
+  treasureDensity?: number
 }
 
 /** Scatter each zone's own objects (see this file's header comment for what
@@ -173,7 +177,7 @@ export interface PopulateZonesOptions {
  *  overlap a neighboring neutral zone's mine even where Voronoi boundaries
  *  run close together. */
 export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng } = options
+  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1 } = options
   const placements: ZonePlacement[] = []
 
   const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides']): void => {
@@ -203,10 +207,13 @@ export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
       mineIndex += 1
 
       // Per-zone treasure density: bigger Voronoi regions (more tiles) get
-      // proportionally more treasure piles, capped so a huge zone doesn't
-      // spend an unreasonable number of placement attempts — issue #210's
-      // own "per-zone treasure density tuning" milestone item.
-      const treasureCount = Math.min(5, 1 + Math.floor(tiles.length / 150))
+      // proportionally more treasure piles, scaled again by the template's
+      // own `treasureDensity` multiplier and capped so a huge zone/high
+      // multiplier doesn't spend an unreasonable number of placement
+      // attempts — issue #210's own "per-zone treasure density tuning"
+      // milestone item.
+      const baseTreasureCount = 1 + Math.floor(tiles.length / 150)
+      const treasureCount = Math.max(0, Math.min(10, Math.round(baseTreasureCount * treasureDensity)))
       for (let i = 0; i < treasureCount; i++) place('random-item', tiles)
 
       // The guard's value comes from the mine's own real guard-value data
