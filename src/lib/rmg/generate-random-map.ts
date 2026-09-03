@@ -53,7 +53,7 @@ import { layoutZoneCenters, nearestTile, relaxZoneCenters } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
-import { shortestPath } from './zone-connections'
+import { createWindingCost, shortestPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
@@ -272,23 +272,30 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // already in `state.blocked` by this point, so a road can never cross
   // open water — buildZoneGraph's ring guarantees the underlying zone
   // graph is connected, but a specific road can still fail to route
-  // around a crowded/watery zone, which is why this is a real BFS search
-  // with a real "not found" case, not an assumed-successful straight
-  // line — an island zone's own road edges are expected to fail this way,
-  // since the only way in is the portal).
+  // around a crowded/watery zone, which is why this is a real search with
+  // a real "not found" case, not an assumed-successful straight line — an
+  // island zone's own road edges are expected to fail this way, since the
+  // only way in is the portal). Each edge gets its own `createWindingCost`
+  // field (a real user-reported fix — a plain shortest path between two
+  // open-ground points is almost always a dead-straight line, which reads
+  // as obviously artificial once painted), so a long stretch curves
+  // organically instead of repeating one unbroken straight segment.
   const roadNodes = new Set<number>()
   for (const [a, b] of graph.edges) {
-    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
+    const from = zoneAnchorNode.get(a) as number
+    const to = zoneAnchorNode.get(b) as number
+    const path = shortestPath(sizeX, sizeZ, from, to, state.blocked, createWindingCost(sizeX, from, to, rng))
     if (path) for (const node of path) roadNodes.add(node)
   }
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
   }
 
-  // One river across the map's most graph-distant zone pair — a real
-  // BFS path (same pathfinding as roads, so it also can't cross water),
-  // then the real per-node connectivity-bitmask shape codes river-shape.ts
-  // derives from actual sample-map data, not a guessed texture id.
+  // One river across the map's most graph-distant zone pair — same
+  // winding pathfinding as roads (so it also can't cross water, and winds
+  // organically instead of a dead-straight line), then the real per-node
+  // connectivity-bitmask shape codes river-shape.ts derives from actual
+  // sample-map data, not a guessed texture id.
   let riverNodes = new Set<number>()
   let bestDistance = -1
   let riverEndpoints: [number, number] | null = null
@@ -299,7 +306,9 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
   if (riverEndpoints) {
     const [a, b] = riverEndpoints
-    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
+    const riverFrom = zoneAnchorNode.get(a) as number
+    const riverTo = zoneAnchorNode.get(b) as number
+    const path = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng))
     if (path && path.length > 1) {
       riverNodes = new Set(path)
       const changes = path.map((node) => {
