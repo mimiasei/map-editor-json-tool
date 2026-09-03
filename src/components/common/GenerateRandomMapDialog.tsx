@@ -1,10 +1,11 @@
-// ─── Generate Random Map (issue #210, Milestone 0) ──────────────────────────
+// ─── Generate Random Map (issue #210, Milestone 1) ──────────────────────────
 // Tauri-only, same reasoning as NewMapDialog: needs real filesystem read
-// access to the bundled template.map resource. Deliberately minimal UI for
-// this first milestone — size, terrain biome, and player count only. No
-// zone/template authoring yet (that's Milestone 3's "RMG template format +
-// UI" item in issue #210) — every generated map today is a single flat
-// zone with perimeter-spread player starts and four fixed quadrant guards.
+// access to the bundled template.map resource (plus a loaded GameCatalog —
+// see generate-map-file.ts). Deliberately minimal UI for this milestone —
+// size and player count only; terrain is now zone-driven (each zone gets
+// its own biome, see zone-population.ts) so there's no single map-wide
+// biome to pick anymore. No zone/template authoring yet (that's Milestone
+// 3's "RMG template format + UI" item in issue #210).
 
 import { useState } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
@@ -13,7 +14,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { BIOME_NAMES, BIOME_BASE_COLORS, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile } from '@/lib/rmg/generate-map-file'
 import { logError, logInfo } from '@/lib/logger'
@@ -25,13 +25,11 @@ interface Props {
 }
 
 const DEFAULT_SIZE_KEY = presetKey({ sizeX: 64, sizeZ: 64 })
-const BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 const PLAYER_COUNT_OPTIONS = [2, 3, 4, 5, 6, 7, 8]
 
 export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerated }: Props) {
   const [mapName, setMapName] = useState('Random Map')
   const [sizeKey, setSizeKey] = useState(DEFAULT_SIZE_KEY)
-  const [biomeId, setBiomeId] = useState<BiomeId>(1)
   const [playerCount, setPlayerCount] = useState(2)
   const [generating, setGenerating] = useState(false)
 
@@ -44,7 +42,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         mapName,
         sizeX: selectedSize.sizeX,
         sizeZ: selectedSize.sizeZ,
-        biomeId,
         playerCount,
         playerSpawnerSid: 'city-spawner',
       })
@@ -61,7 +58,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={400} minWidth={360} minHeight={360} storageKey="generate-random-map">
+      <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={360} minWidth={360} minHeight={320} storageKey="generate-random-map">
         <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
           <DialogTitle className="text-sm font-semibold">Generate Random Map</DialogTitle>
         </DraggableDialogDragHandle>
@@ -85,24 +82,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Terrain biome</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {BIOME_ORDER.map((b) => (
-                <button
-                  key={b}
-                  onClick={() => setBiomeId(b)}
-                  className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded border transition-colors ${
-                    biomeId === b ? 'border-foreground bg-accent' : 'border-border hover:bg-accent/50'
-                  }`}
-                >
-                  <span className="inline-block w-2.5 h-2.5 rounded-full border border-border/50" style={{ backgroundColor: BIOME_BASE_COLORS[b] }} />
-                  {BIOME_NAMES[b]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
             <Label className="text-xs">Players</Label>
             <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))}>
               <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
@@ -115,9 +94,11 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Milestone 0: a single flat zone, city-spawners spread around the
-            map, and four quadrant guards. No zone layout, terrain variety, or
-            treasure economy yet — see issue #210 for the full roadmap.
+            Milestone 1: one zone per player plus a neutral zone between each
+            pair, each with its own biome/faction, a starting dwelling and
+            mine (player zones) or a mine and treasure (neutral zones), and a
+            guard. No obstacles, rivers, roads, or a real value economy yet —
+            see issue #210 for the full roadmap.
           </p>
         </div>
 

@@ -1,132 +1,173 @@
-// ─── Random Map Generator — Milestone 0 (issue #210) ────────────────────────
-// The first, deliberately minimal slice of a much larger planned effort (see
-// issue #210 for the full VCMI-research-driven milestone list). No zone
-// graph, no terrain shaping, no treasure economy yet — just enough to prove
-// the "generate a whole .map container in memory → loadContainer() once →
-// save → open in-game" path end-to-end: a single flat, uniform-biome
-// rectangle (via the existing buildBlankMap), N player-start spawners spread
-// around the map's perimeter so no two start adjacent to each other, and one
-// random-squad guard per map quadrant (skipped if a spawner already claimed
-// that quadrant's center) using the same value/fraction model the Encounter
-// brush already uses (squad-pool.ts). Later milestones replace the
-// perimeter-spread and fixed-quadrant placement with real zone-graph-driven
-// layout — this is intentionally the "does the pipeline work at all" step,
-// not a balanced or varied map.
+// ─── Random Map Generator — Milestone 1 (issue #210) ────────────────────────
+// Builds on Milestone 0's "does the pipeline work at all" skeleton with the
+// first real zone graph: one player zone + one neutral "treasure" zone per
+// player, laid out and shaped via zone-graph.ts/zone-layout.ts (see their own
+// header comments for how this differs from — and deliberately simplifies —
+// VCMI's own Fruchterman-Reingold layout + Penrose tiling), each zone
+// painted its own biome and populated with a starting dwelling/mine/guard
+// (player zones) or a mine/random-item/guard (neutral zones) via
+// zone-population.ts's collision-aware placement. A final reachability pass
+// (this project's own accessibility-pass.ts, built for H3 import — reused
+// verbatim here) guarantees every placed object stays reachable from every
+// player start even if two zones' scattered objects land close together.
+//
+// Still no real terrain-shape fractalization, obstacles, rivers, roads, or
+// treasure-value economy — those are Milestone 2/3 (issue #210).
 
-import { addObjectInstances, buildBlankMap, type BlankMapPlayer, type MapContainer } from '@/lib/map-write'
-import {
-  DEFAULT_SQUAD_DIFFICULTY_RANGES,
-  DEFAULT_SQUAD_RANDOM_WEIGHTS,
-  pickSquadRange,
-  randomInRange,
-  sampleFraction,
-} from '@/lib/map-grid/squad-pool'
-import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import { addObjectInstances, buildBlankMap, paintTerrainTiles, type BlankMapPlayer, type MapContainer } from '@/lib/map-write'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
+import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
+import { logWarn } from '@/lib/logger'
+import { buildZoneGraph, zoneDistanceMatrix } from './zone-graph'
+import { assignTilesToZones, layoutZoneCenters } from './zone-layout'
+import { assignZoneBiomes, populateZones, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
   sizeZ: number
-  /** Biome id 1-7 (BIOME_NAMES in terrain-colors.ts) — fills the whole map,
-   *  same single-biome limitation as `buildBlankMap` until terrain shaping
-   *  (Milestone 1) exists. */
-  biomeId: BiomeId
   playerCount: number
   playerSpawnerSid: 'city-spawner' | 'hero-spawner'
   /** Injectable for deterministic tests; defaults to `Math.random`. */
   rng?: () => number
 }
 
-/** Spread `count` player-start nodes evenly around an inset ellipse centered
- *  on the map, so N players start maximally (and evenly) far apart on a
- *  single flat zone. Not zone-graph placement (see Milestone 1) — just
- *  enough separation that spawners can't land adjacent to each other on any
- *  supported map size/player count. */
-function spreadPlayerNodes(sizeX: number, sizeZ: number, count: number): number[] {
-  const insetX = Math.max(1, Math.floor(sizeX * 0.15))
-  const insetZ = Math.max(1, Math.floor(sizeZ * 0.15))
-  const cx = (sizeX - 1) / 2
-  const cz = (sizeZ - 1) / 2
-  const rx = cx - insetX
-  const rz = cz - insetZ
-  const nodes: number[] = []
-  for (let i = 0; i < count; i++) {
-    const angle = (2 * Math.PI * i) / count - Math.PI / 2
-    const x = Math.min(sizeX - 1, Math.max(0, Math.round(cx + rx * Math.cos(angle))))
-    const z = Math.min(sizeZ - 1, Math.max(0, Math.round(cz + rz * Math.sin(angle))))
-    nodes.push(z * sizeX + x)
+/** The tile within `tiles` closest to `(cx, cz)` — used to pick each player
+ *  zone's actual spawn tile from its own Voronoi-assigned tiles, since the
+ *  zone's raw layout center coordinate can itself belong to a neighboring
+ *  zone at a boundary. */
+function nearestTile(tiles: number[], sizeX: number, cx: number, cz: number): number {
+  let best = tiles[0]
+  let bestDist = Infinity
+  for (const node of tiles) {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    const dist = (x - cx) ** 2 + (z - cz) ** 2
+    if (dist < bestDist) { bestDist = dist; best = node }
   }
-  return nodes
-}
-
-/** Center of each of the map's four quadrants, as a `(fractionX, fractionZ)`
- *  pair — fixed placeholder zones until Milestone 1's real zone graph. */
-const QUADRANT_CENTERS: [number, number][] = [
-  [0.25, 0.25],
-  [0.75, 0.25],
-  [0.25, 0.75],
-  [0.75, 0.75],
-]
-
-/** Find the nearest free tile to `(x, z)` by searching outward ring by ring
- *  (Chebyshev distance), up to `maxRadius`. A quadrant's exact center tile
- *  can coincide with a perimeter-spread player spawner node for some
- *  size/player-count combinations (confirmed real: an 8-player 256×256 map
- *  landed all 4 quadrant centers exactly on diagonal spawner positions,
- *  silently producing zero guards) — nudging to the nearest free tile
- *  instead of skipping keeps every quadrant guarded in the near-total
- *  majority of cases, rather than only in the ones where no coincidence
- *  happens to occur. Returns null in the (now rare) case nothing is free
- *  within `maxRadius`. */
-function findNearbyFreeNode(sizeX: number, sizeZ: number, x: number, z: number, claimed: Set<number>, maxRadius: number): number | null {
-  for (let r = 0; r <= maxRadius; r++) {
-    for (let dx = -r; dx <= r; dx++) {
-      for (let dz = -r; dz <= r; dz++) {
-        if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue // ring perimeter only — r=0 covers the center itself
-        const nx = x + dx
-        const nz = z + dz
-        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
-        const node = nz * sizeX + nx
-        if (!claimed.has(node)) return node
-      }
-    }
-  }
-  return null
+  return best
 }
 
 /**
  * Build a brand-new random `.map` container from `template` (expected to be
  * `template.map`'s already-parsed container, exactly like `buildBlankMap`
- * itself expects — see `create-map.ts` for where that's read).
+ * itself expects — see `create-map.ts` for where that's read) and a loaded
+ * `GameCatalog` (needed for real object footprints — mines/dwellings are
+ * 3×3 real map objects, not 1-tile placeholders, so placement must know
+ * their actual solid cells to avoid overlap).
  */
-export function generateRandomMap(template: MapContainer, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, biomeId, playerCount, playerSpawnerSid, rng = Math.random } = options
+export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, rng = Math.random } = options
+  const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
-  const playerNodes = spreadPlayerNodes(sizeX, sizeZ, playerCount)
-  const players: BlankMapPlayer[] = playerNodes.map((node) => ({ sid: playerSpawnerSid, node }))
-  const container = buildBlankMap(template, { sizeX, sizeZ, biomeId, players })
+  const graph = buildZoneGraph(playerCount)
+  // buildZoneGraph's own doc comment claims every ring it builds is fully
+  // connected by construction — verified here via the real Dijkstra
+  // distance graph (issue #210's own research notes) rather than trusted
+  // blindly, since zone-layout.ts's BFS-order placement silently produces a
+  // nonsensical layout (not a loud failure) if that claim were ever wrong.
+  const zoneDistances = zoneDistanceMatrix(graph)
+  if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
+    throw new Error('RMG zone graph is disconnected — buildZoneGraph should never produce this')
+  }
 
-  const claimedNodes = new Set(playerNodes)
-  const searchRadius = Math.max(2, Math.floor(Math.min(sizeX, sizeZ) * 0.05))
-  const additions: { sid: string; node: number; randomSquadOverrides: { requestedValue: number; fraction: string } }[] = []
-  for (const [fx, fz] of QUADRANT_CENTERS) {
-    const centerX = Math.round(fx * (sizeX - 1))
-    const centerZ = Math.round(fz * (sizeZ - 1))
-    const node = findNearbyFreeNode(sizeX, sizeZ, centerX, centerZ, claimedNodes, searchRadius)
-    if (node === null) continue // every tile within the search radius is already claimed — skip this quadrant's guard
-    claimedNodes.add(node)
-    const range = pickSquadRange(['Random'], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
-    additions.push({
-      sid: 'random-squad',
-      node,
-      randomSquadOverrides: {
-        requestedValue: randomInRange(range.min, range.max, rng),
-        fraction: sampleFraction(biomeId, 0.7, rng),
-      },
-    })
+  const centers = layoutZoneCenters(sizeX, sizeZ, graph)
+  const { zoneIdByNode, tilesByZone } = assignTilesToZones(sizeX, sizeZ, centers, graph.zones)
+  const zoneBiome = assignZoneBiomes(graph.zones)
+
+  const players: BlankMapPlayer[] = []
+  for (const zone of graph.zones) {
+    if (zone.kind !== 'player') continue
+    const center = centers[zone.id]
+    const tiles = tilesByZone.get(zone.id) ?? []
+    const node = tiles.length > 0 ? nearestTile(tiles, sizeX, center.x, center.z) : center.z * sizeX + center.x
+    players.push({ sid: playerSpawnerSid, node })
+  }
+
+  let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
+
+  // Overwrite the uniform fill from buildBlankMap with each zone's own
+  // biome — one bulk pass, same paintTerrainTiles bulk writer the Terrain
+  // brush/bucket-fill use.
+  const tileCount = sizeX * sizeZ
+  const terrainChanges: { node: number; biomeId: number }[] = new Array(tileCount)
+  for (let node = 0; node < tileCount; node++) {
+    terrainChanges[node] = { node, biomeId: zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0] }
+  }
+  const paintedChunks = container.chunks.slice()
+  paintedChunks[1] = paintTerrainTiles(paintedChunks[1], terrainChanges)
+  container = { ...container, chunks: paintedChunks }
+
+  // Seed the collision state with the player spawners just placed, so
+  // zone-population.ts's scattering never overlaps one.
+  const seedBlocked = new Set<number>()
+  const seedAnchors = new Set<number>()
+  const spawnerGroup: ObjectPlacementGroup = { ids: [], nodes: [], rotations: [], levels: [] }
+  const spawnerTemplate = catalogById.get(playerSpawnerSid)
+  players.forEach((p, i) => {
+    spawnerGroup.ids.push(i)
+    spawnerGroup.nodes.push(p.node)
+    spawnerGroup.rotations.push(0)
+    spawnerGroup.levels.push(0)
+    seedAnchors.add(p.node)
+    for (const cell of computeFootprintTiles(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX))) {
+      if (cell.value === 1) seedBlocked.add(cell.z * sizeX + cell.x)
+    }
+  })
+
+  const placements = populateZones({
+    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, seedBlocked, seedAnchors, rng,
+  })
+  const skipped = graph.zones.length * 3 - placements.length // populateZones always attempts exactly 3 objects per zone
+  if (skipped > 0) {
+    logWarn(`Random map generation: ${skipped} scatter object(s) skipped — no free tile found in a crowded zone`)
+  }
+
+  // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain
+  // carving" milestone item) — reuses the H3-import accessibility pass
+  // verbatim rather than inventing a second flood-fill repair algorithm.
+  // `decorativeIds` is deliberately empty: nothing this generator places is
+  // sacrificial decoration, so the pass can only ever nudge a stuck object
+  // to a nearby free tile, never delete one.
+  const objectGroups = new Map<string, ObjectPlacementGroup>([[playerSpawnerSid, spawnerGroup]])
+  const tempIdToPlacement = new Map<number, ZonePlacement>()
+  for (const placement of placements) {
+    tempIdToPlacement.set(placement.tempId, placement)
+    let group = objectGroups.get(placement.sid)
+    if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
+    group.ids.push(placement.tempId)
+    group.nodes.push(placement.node)
+    group.rotations.push(0)
+    group.levels.push(0)
+  }
+
+  const report = applyAccessibilityPass(
+    objectGroups,
+    sizeX,
+    sizeZ,
+    { levelsMap: new Array(tileCount).fill(0), climbsMap: new Array(tileCount).fill(0), waterMap: new Array(tileCount).fill(0) },
+    catalog,
+    catalogById,
+    new Set(),
+    new Map(),
+    new Set(),
+  )
+  if (report.stillUnreachable > 0) {
+    logWarn(`Random map generation: ${report.stillUnreachable} placed object(s) remained unreachable after the accessibility pass`)
+  }
+
+  const additions: { sid: string; node: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
+  for (const [sid, group] of objectGroups) {
+    if (sid === playerSpawnerSid) continue // already committed to the container by buildBlankMap
+    for (let i = 0; i < group.ids.length; i++) {
+      const placement = tempIdToPlacement.get(group.ids[i])
+      if (!placement) continue
+      additions.push({ sid, node: group.nodes[i], randomSquadOverrides: placement.randomSquadOverrides })
+    }
   }
 
   const { block2Chunk } = addObjectInstances(container.chunks[1], additions)
-  const chunks = container.chunks.slice()
-  chunks[1] = block2Chunk
-  return { ...container, chunks }
+  const finalChunks = container.chunks.slice()
+  finalChunks[1] = block2Chunk
+  return { ...container, chunks: finalChunks }
 }
