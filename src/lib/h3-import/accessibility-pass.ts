@@ -354,8 +354,17 @@ export function applyAccessibilityPass(
     const anchorX = anchorNode % atlasWidth
     const anchorZ = Math.floor(anchorNode / atlasWidth)
     const ownCells = computeFootprintTiles(template, anchorX, anchorZ)
+    // Only the OLD position's SOLID (value===1) cells ever contributed to
+    // `blocked`/`nudgeBlocked` in the first place (buildBlockedTileSet's
+    // own rule) — excluding the target's non-solid cells too was a real
+    // bug (confirmed via a real generated map): if a target's old
+    // walkable/interaction cell happened to land on the SAME node as an
+    // unrelated object's real solid footprint, that node got waved through
+    // as "just my own old space" for the new candidate's check, letting
+    // the nudge land right on top of the other object.
     const ownNodes = new Set<number>()
     for (const cell of ownCells) {
+      if (cell.value !== 1) continue
       const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
       if (n !== null) ownNodes.add(n)
     }
