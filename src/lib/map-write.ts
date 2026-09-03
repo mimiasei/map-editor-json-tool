@@ -1699,6 +1699,103 @@ export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array
   }
 }
 
+/** Bulk-add many type-0 `objects[]` placements in a single JSON.parse/
+ *  stringify pass over `objects[]` plus every `objectsProperties.*` table
+ *  any of them touch (`propVariants`/`propRewardParams`/the random-spawner
+ *  tables) — the RMG-scale sibling of `addObjectInstance`/`paintObjects`,
+ *  both of which are single-object-granularity looped and re-decode/
+ *  re-encode all of Block 2 per call (an already-flagged perf risk at
+ *  "thousands of placements" — see `clearAllObjects`'s own doc comment
+ *  above, which solved the equivalent problem for delete-all but not
+ *  bulk-add). A random map generator placing hundreds/thousands of objects
+ *  in one generation pass needs this instead of looping `addObjectInstance`.
+ *
+ *  Player-start spawner sids (`city-spawner`/`hero-spawner`) are
+ *  deliberately unsupported here (throws) — they need
+ *  `backfillPlayerStartSpawner`'s serial player-slot bookkeeping in Block 1,
+ *  and there are only ever a handful of them per map, so the existing
+ *  per-item `addObjectInstance` path's cost is negligible for those. */
+export function addObjectInstances(
+  block2Chunk: Uint8Array,
+  additions: { sid: string; node: number; rotation?: number; level?: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[],
+): { block2Chunk: Uint8Array; newIds: number[] } {
+  if (additions.length === 0) return { block2Chunk, newIds: [] }
+  const playerStartSid = additions.find(({ sid }) => PLAYER_START_SPAWNER_DEFAULTS[sid])
+  if (playerStartSid) {
+    throw new Error(`addObjectInstances does not support player-start spawner sid "${playerStartSid.sid}" — use addObjectInstance instead`)
+  }
+
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  let nextId = findTopLevelScalarSpan(text2, 'objectsFreeId').value
+  const newIds: number[] = []
+
+  const groupsBySid = new Map<string, ObjectGroupEntry>()
+  const propRowsByTable = new Map<string, Record<string, unknown>[]>()
+  const appendRow = (table: string, row: Record<string, unknown>): void => {
+    const rows = propRowsByTable.get(table)
+    if (rows) rows.push(row)
+    else propRowsByTable.set(table, [row])
+  }
+
+  for (const { sid, node, rotation, level, randomSquadOverrides } of additions) {
+    const id = nextId++
+    newIds.push(id)
+    let group = groupsBySid.get(sid)
+    if (!group) { group = { sid, ids: [], nodes: [], rotations: [], levels: [] }; groupsBySid.set(sid, group) }
+    group.ids!.push(id)
+    group.nodes!.push(node)
+    group.rotations!.push(rotation ?? 0)
+    group.levels!.push(level ?? 0)
+
+    if (SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_VARIANTS_ONLY.has(sid)) {
+      appendRow('propVariants', { type: 0, id, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
+    }
+    if (SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_REWARD_PARAMS_ONLY.has(sid)) {
+      appendRow('propRewardParams', { type: 0, id, parameters: [] })
+    }
+    const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
+    if (randomSpawnerDefault) {
+      const row = randomSpawnerDefault.row(id, randomSquadOverrides?.requestedValue ?? randomSquadDefaultValue())
+      if (sid === 'random-squad' && randomSquadOverrides) row.fraction = randomSquadOverrides.fraction
+      appendRow(randomSpawnerDefault.table, row)
+    }
+  }
+
+  // objects[] — one pass, merging into any pre-existing same-sid group
+  // exactly like addObjectInstance does per-call.
+  {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'objects')
+    const existingGroups = JSON.parse(span) as ObjectGroupEntry[]
+    for (const group of groupsBySid.values()) {
+      const existing = existingGroups.find((g) => g.sid === group.sid)
+      if (existing) {
+        existing.ids = [...(existing.ids ?? []), ...group.ids!]
+        existing.nodes = [...(existing.nodes ?? []), ...group.nodes!]
+        if (existing.rotations) existing.rotations = [...existing.rotations, ...group.rotations!]
+        if (existing.levels) existing.levels = [...existing.levels, ...group.levels!]
+      } else {
+        existingGroups.push(group)
+      }
+    }
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(existingGroups) + text2.slice(arrayClose + 1)
+  }
+
+  // Each touched objectsProperties.* table — one parse/append/stringify pass
+  // per table touched, not per new object (same "skip a table silently if
+  // it isn't present" convention as backfillNewObjectPropertiesDefaults).
+  for (const [table, rows] of propRowsByTable) {
+    try {
+      const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, table)
+      const entries = JSON.parse(span) as unknown[]
+      entries.push(...rows)
+      text2 = text2.slice(0, arrayOpen) + JSON.stringify(entries) + text2.slice(arrayClose + 1)
+    } catch { /* table absent in this file */ }
+  }
+
+  const finalBlock2Chunk = patchTopLevelScalar(new TextEncoder().encode(text2), 'objectsFreeId', nextId)
+  return { block2Chunk: finalBlock2Chunk, newIds }
+}
+
 // ─── Paint terrain / level / water (issue #167 Phase D, generalized #193
 // Phase 2) — `tilesMap`/`levelsMap`/`waterMap` are all flat number[] arrays,
 // one entry per tile, same row-major indexing (see CLAUDE.md's "Object

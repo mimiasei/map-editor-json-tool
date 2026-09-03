@@ -71,11 +71,13 @@ import {
   Wand2,
   UploadCloud,
   FileInput,
+  Dices,
 } from 'lucide-react'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ImportH3mDialog from '@/components/common/ImportH3mDialog'
+import GenerateRandomMapDialog from '@/components/common/GenerateRandomMapDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
@@ -163,6 +165,7 @@ export default function Toolbar({
   const [aboutOpen,           setAboutOpen]           = useState(false)
   const [newMapOpen,          setNewMapOpen]          = useState(false)
   const [importH3mOpen,       setImportH3mOpen]       = useState(false)
+  const [generateMapOpen,     setGenerateMapOpen]     = useState(false)
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -314,6 +317,21 @@ export default function Toolbar({
       if (!ok) return
     }
     setImportH3mOpen(true)
+  }
+
+  // ── Generate Random Map — same unsaved-changes guard as New Map/Import H3
+  // Map above, since a successful generation discards the currently loaded
+  // map immediately (loads the generated result via loadParsedMapFile,
+  // unconditionally — see generate-map-file.ts).
+  const handleGenerateMapClick = async () => {
+    if (isDirty || mapIsDirty) {
+      const ok = await confirmDialog(
+        'You have unsaved changes. Generate a random map anyway?',
+        'Generate Random Map',
+      )
+      if (!ok) return
+    }
+    setGenerateMapOpen(true)
   }
 
   // ── Open .map file ────────────────────────────────────────────────────────────
@@ -821,6 +839,10 @@ export default function Toolbar({
                     <FileInput className="h-4 w-4 mr-2" />
                     Import H3 Map…
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTimeout(handleGenerateMapClick, 0)}>
+                    <Dices className="h-4 w-4 mr-2" />
+                    Generate Random Map…
+                  </DropdownMenuItem>
                 </>
               )}
 
@@ -1128,6 +1150,19 @@ export default function Toolbar({
           open={newMapOpen}
           onOpenChange={setNewMapOpen}
           onCreated={({ warnings }) => {
+            if (warnings.length > 0) {
+              setImportWarnings(warnings)
+              setImportFeedbackOpen(true)
+            }
+          }}
+        />
+      )}
+
+      {isTauri() && (
+        <GenerateRandomMapDialog
+          open={generateMapOpen}
+          onOpenChange={setGenerateMapOpen}
+          onGenerated={({ warnings }) => {
             if (warnings.length > 0) {
               setImportWarnings(warnings)
               setImportFeedbackOpen(true)
