@@ -13,10 +13,15 @@
 // - `areas[]` recomputation (zone-areas.ts): each zone becomes a real
 //   region (nodes/neighbors/biome), replacing `buildBlankMap`'s single
 //   whole-map placeholder — a known, previously-flagged gap.
-// - Water features (zone-water.ts): modest in-zone lakes for a subset of
-//   neutral zones, real per real-sample-map convention (level -1 +
-//   waterMap), routed through the SAME accessibility pass so a lake can
-//   never silently seal off a real target.
+// - Water features (zone-water.ts/zone-islands.ts): modest in-zone lakes,
+//   or fully water-locked "island" zones reconnected by a portal, per real
+//   sample-map convention (level -1 + waterMap), routed through the SAME
+//   accessibility pass so water can never silently seal off a real target.
+//   Water is placed BEFORE roads/rivers (not after) specifically so their
+//   own pathfinding already treats it as blocked — confirmed the hard way:
+//   an earlier version placed water last, so a road could (and did, per a
+//   real user report) get routed straight across open ocean to an island,
+//   since nothing had told the road's own BFS that water was coming.
 //
 // Still no Penrose-tiling zone shapes, Fruchterman-Reingold layout
 // optimization, or a real RMG template JSON format/authoring UI beyond
@@ -178,52 +183,17 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
   }
 
-  // Roads — one per zone-graph edge, connecting each pair's own anchor
-  // tiles, routed around whatever's already placed (buildZoneGraph's ring
-  // guarantees the underlying zone graph is connected; a specific road can
-  // still fail to route around a crowded zone's own objects, which is why
-  // this is a real BFS search with a real "not found" case, not an
-  // assumed-successful straight line).
-  const roadNodes = new Set<number>()
-  for (const [a, b] of graph.edges) {
-    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
-    if (path) for (const node of path) roadNodes.add(node)
-  }
-  if (roadNodes.size > 0) {
-    block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
-  }
-
-  // One river across the map's most graph-distant zone pair — a real
-  // BFS path (same pathfinding as roads), then the real per-node
-  // connectivity-bitmask shape codes river-shape.ts derives from actual
-  // sample-map data, not a guessed texture id.
-  let riverNodes = new Set<number>()
-  let bestDistance = -1
-  let riverEndpoints: [number, number] | null = null
-  for (let a = 0; a < graph.zones.length; a++) {
-    for (let b = a + 1; b < graph.zones.length; b++) {
-      if (zoneDistances[a][b] > bestDistance) { bestDistance = zoneDistances[a][b]; riverEndpoints = [a, b] }
-    }
-  }
-  if (riverEndpoints) {
-    const [a, b] = riverEndpoints
-    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
-    if (path && path.length > 1) {
-      riverNodes = new Set(path)
-      const changes = path.map((node) => {
-        const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
-        return { node, s: deriveRealShapeCode(dirs) }
-      })
-      block2 = paintRiverTiles(block2, changes)
-    }
-  }
-
-  // Water. `'normal'` = modest in-zone lakes for a subset of neutral zones
-  // (zone-water.ts). `'islands'` = the flood computed above around each
-  // island zone's landmass, reconnected via a portal pair per island
-  // (zone-islands.ts's own header comment on why a portal, not a boat).
-  // `'none'` does nothing. Whichever ran, everything downstream shares the
-  // same collision state so nothing else can ever land on the water.
+  // Water. Deliberately computed BEFORE roads/rivers (see this file's own
+  // header comment) so their own BFS pathfinding already treats it as
+  // blocked, instead of discovering it after the fact. `'normal'` = modest
+  // in-zone lakes for a subset of neutral zones (zone-water.ts) — every
+  // zone's own anchor is excluded from lake eligibility so a lake can never
+  // flood the exact point roads/river are about to target. `'islands'` =
+  // the flood computed above around each island zone's landmass, plus a
+  // portal pair per island reconnecting it to its graph-nearest player
+  // zone (zone-islands.ts's own header comment on why a portal, not a
+  // boat). `'none'` does nothing. Whichever ran, everything downstream
+  // shares the same collision state so nothing else can ever land on it.
   let waterNodesAll = new Set<number>()
   let waterChangesAll: { node: number; waterId: number }[] = []
   let levelChangesAll: { node: number; level: number }[] = []
@@ -233,7 +203,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   if (waterContent === 'normal') {
     const waterResult = scatterZoneWater({
       sizeX, sizeZ, zones: graph.zones, tilesByZone,
-      excludedNodes: new Set([...roadNodes, ...riverNodes]),
+      excludedNodes: new Set(zoneAnchorNode.values()),
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
     })
     waterNodesAll = waterResult.waterNodes
@@ -287,6 +257,49 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const waterMapFinal = new Array(tileCount).fill(0)
   for (const { node, waterId } of waterChangesAll) waterMapFinal[node] = waterId
   for (const { node, level } of levelChangesAll) levelsMapFinal[node] = level
+
+  // Roads — one per zone-graph edge, connecting each pair's own anchor
+  // tiles, routed around whatever's already placed OR flooded (water is
+  // already in `state.blocked` by this point, so a road can never cross
+  // open water — buildZoneGraph's ring guarantees the underlying zone
+  // graph is connected, but a specific road can still fail to route
+  // around a crowded/watery zone, which is why this is a real BFS search
+  // with a real "not found" case, not an assumed-successful straight
+  // line — an island zone's own road edges are expected to fail this way,
+  // since the only way in is the portal).
+  const roadNodes = new Set<number>()
+  for (const [a, b] of graph.edges) {
+    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
+    if (path) for (const node of path) roadNodes.add(node)
+  }
+  if (roadNodes.size > 0) {
+    block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
+  }
+
+  // One river across the map's most graph-distant zone pair — a real
+  // BFS path (same pathfinding as roads, so it also can't cross water),
+  // then the real per-node connectivity-bitmask shape codes river-shape.ts
+  // derives from actual sample-map data, not a guessed texture id.
+  let riverNodes = new Set<number>()
+  let bestDistance = -1
+  let riverEndpoints: [number, number] | null = null
+  for (let a = 0; a < graph.zones.length; a++) {
+    for (let b = a + 1; b < graph.zones.length; b++) {
+      if (zoneDistances[a][b] > bestDistance) { bestDistance = zoneDistances[a][b]; riverEndpoints = [a, b] }
+    }
+  }
+  if (riverEndpoints) {
+    const [a, b] = riverEndpoints
+    const path = shortestPath(sizeX, sizeZ, zoneAnchorNode.get(a) as number, zoneAnchorNode.get(b) as number, state.blocked)
+    if (path && path.length > 1) {
+      riverNodes = new Set(path)
+      const changes = path.map((node) => {
+        const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
+        return { node, s: deriveRealShapeCode(dirs) }
+      })
+      block2 = paintRiverTiles(block2, changes)
+    }
+  }
 
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,

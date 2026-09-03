@@ -59,8 +59,11 @@ export interface ScatterZoneWaterOptions {
   sizeZ: number
   zones: { id: number; kind: 'player' | 'neutral' }[]
   tilesByZone: Map<number, number[]>
-  /** Anchors/road/river tiles ineligible for water — never a spawn point,
-   *  a road, or the river itself. */
+  /** Tiles ineligible for water — every zone's own anchor (generate-
+   *  random-map.ts calls this BEFORE roads/rivers are computed
+   *  specifically so their own pathfinding already sees the water as
+   *  blocked, so a lake must never flood the exact point a road/river is
+   *  about to target). */
   excludedNodes: Set<number>
   /** Already-claimed solid footprint cells and anchors — never flood a
    *  mine/dwelling/guard's own tile. */
