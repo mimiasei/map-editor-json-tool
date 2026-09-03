@@ -28,6 +28,7 @@
 // today's size/player-count dialog — those are Milestones 4/5 (issue #210).
 
 import {
+  addObjectInstance,
   addObjectInstances,
   buildBlankMap,
   paintLevelTiles,
@@ -80,6 +81,11 @@ export interface GenerateRandomMapOptions {
   obstacleDensity?: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts). Defaults to 1. */
   treasureDensity?: number
+  /** 0-1 chance a given treasure/guard slot places a real, concrete object
+   *  (resource pile/artifact/pre-composed army — zone-population.ts's
+   *  `placeTreasure`/`placeGuard`) instead of a `random-item`/`random-squad`
+   *  placeholder. Defaults to 0.4. */
+  objectVariety?: number
   /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
 }
@@ -93,7 +99,7 @@ export interface GenerateRandomMapOptions {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, rng = Math.random } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const objectLogicsById = buildObjectLogicsIndex(catalog)
@@ -184,10 +190,10 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   })
   const state = createPlacementState(seedBlocked, seedAnchors)
 
-  const placements = populateZones({
-    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity,
+  const { placements, concreteSquads } = populateZones({
+    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety,
   })
-  const skippedScatter = graph.zones.length * 3 - placements.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall)
+  const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
   }
@@ -379,6 +385,20 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const { block2Chunk, newIds } = addObjectInstances(block2, additions)
   let finalBlock1 = container.chunks[0]
   let finalBlock2 = block2Chunk
+
+  // Concrete-squad guards (zone-population.ts's `placeGuard` variety roll) —
+  // real `squads[]` (entityType 2) army placements, written one at a time
+  // via `addObjectInstance` since `addObjectInstances`'s bulk path is
+  // `objectsFreeId`/type-0-only. These never went through `objectGroups`/
+  // the accessibility pass above (squads aren't terrain in this codebase's
+  // own passability model, so they have nothing for that pass to nudge or
+  // check), so they're added here, after it, exactly like `setCityFaction`
+  // and `upsertPropPortals` below are.
+  for (const squad of concreteSquads) {
+    const result = addObjectInstance(finalBlock1, finalBlock2, 2, squad.sid, squad.node)
+    finalBlock1 = result.block1Chunk
+    finalBlock2 = result.block2Chunk
+  }
 
   // Portal linkage — real propPortals rows, reusing the exact same
   // adjacency `applyAccessibilityPass` above already validated reachability

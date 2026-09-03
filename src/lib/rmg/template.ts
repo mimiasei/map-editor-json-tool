@@ -33,6 +33,11 @@ export interface RandomMapTemplate {
   obstacleDensity: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts) — 1 = the generator's own default zone-size scaling, 2 = double, 0 = none. */
   treasureDensity: number
+  /** 0-1 chance a given treasure/guard slot places a real, concrete object
+   *  (a resource pile/artifact, or a real pre-composed `squads[]` army)
+   *  instead of a `random-item`/`random-squad` placeholder
+   *  (zone-population.ts/object-variety.ts). */
+  objectVariety: number
   /** Fixed RNG seed for reproducible generation (mulberry32 — seeded-rng.ts). Omitted = a fresh random seed every time. */
   seed?: number
 }
@@ -40,15 +45,16 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   obstacleDensity: 0.12,
   treasureDensity: 1,
+  objectVariety: 0.4,
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, obstacleDensity, treasureDensity, objectVariety, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -58,6 +64,7 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     waterChance,
     obstacleDensity,
     treasureDensity,
+    objectVariety,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -91,6 +98,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     waterChance: typeof data.waterChance === 'number' ? data.waterChance : DEFAULT_TEMPLATE_OVERRIDES.waterChance,
     obstacleDensity: typeof data.obstacleDensity === 'number' ? data.obstacleDensity : DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity,
     treasureDensity: typeof data.treasureDensity === 'number' ? data.treasureDensity : DEFAULT_TEMPLATE_OVERRIDES.treasureDensity,
+    objectVariety: typeof data.objectVariety === 'number' ? data.objectVariety : DEFAULT_TEMPLATE_OVERRIDES.objectVariety,
     seed: typeof data.seed === 'number' ? data.seed : undefined,
   }
 }

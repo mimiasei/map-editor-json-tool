@@ -18,7 +18,7 @@
 // (value-model.ts) rather than a flat difficulty pick — the "treasure zone"
 // VCMI's own template format calls this same role.
 
-import type { CatalogMapObject, CatalogObjectLogic } from '@/lib/catalog/types'
+import type { CatalogMapObject, CatalogObjectLogic, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
@@ -30,6 +30,7 @@ import {
   randomInRange,
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
+import { collectArtifactSids, pickSquadTemplate, STORAGE_SIDS } from './object-variety'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
 
@@ -85,6 +86,20 @@ export interface ZonePlacement {
   randomSquadOverrides?: { requestedValue: number; fraction: string }
 }
 
+/** A concrete, pre-composed army (`squads[]`, entityType 2 — structurally
+ *  separate from a `random-squad` type-0 placeholder, see this repo's own
+ *  `objects[]`/`squads[]`/`markers[]` id-namespace notes). Squad templates
+ *  have no `catalog.mapObjects` footprint entry and, per this codebase's own
+ *  passability model, aren't terrain at all (no blocking/footprint), so
+ *  these can't go through `tryPlaceAt`/the accessibility pass's
+ *  type-0-only `objectGroups` model — the caller places them with a plain
+ *  `addObjectInstance(..., 2, sid, node)` after that pass completes. */
+export interface ConcreteSquadPlacement {
+  tempId: number
+  sid: string
+  node: number
+}
+
 export interface PlacementState {
   blocked: Set<number>
   usedAnchors: Set<number>
@@ -129,6 +144,24 @@ export function tryPlaceAt(
   return true
 }
 
+/** Claim one free tile from `zoneTiles` for a concrete `squads[]` placement
+ *  — NOT `tryPlaceAt` (no footprint template exists for a squad-template
+ *  sid to check), just "not already some other placement's anchor tile".
+ *  Doesn't add the claimed node to `state.blocked`, matching the same
+ *  "squads aren't terrain" rule `tryPlaceAt` itself never applies to
+ *  squads — but it DOES claim `usedAnchors` so two concrete squads (or a
+ *  squad and an object) can't land on the exact same tile. */
+function pickFreeTile(zoneTiles: number[], state: PlacementState, rng: () => number, maxAttempts = 30): number | null {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const node = zoneTiles[Math.floor(rng() * zoneTiles.length)]
+    if (!state.usedAnchors.has(node)) {
+      state.usedAnchors.add(node)
+      return node
+    }
+  }
+  return null
+}
+
 /** Try up to `maxAttempts` random tiles from `zoneTiles` for `sid`'s anchor,
  *  accepting the first `tryPlaceAt` accepts. Returns `null` if nothing fits
  *  within `maxAttempts` — a disclosed degrade for a small/crowded zone, not
@@ -170,6 +203,19 @@ export interface PopulateZonesOptions {
    *  own default zone-size scaling, 2 = double, 0 = none. Template-driven
    *  (see template.ts), defaults to 1 for callers that don't care. */
   treasureDensity?: number
+  /** Needed for object-variety.ts's concrete-alternative pools (real
+   *  artifact sids, squad templates) — omit to keep every treasure/guard a
+   *  `random-item`/`random-squad` placeholder (this function's original
+   *  behavior), matching how `catalogById` alone is enough for everything
+   *  else this function does. */
+  catalog?: GameCatalog
+  /** 0-1 chance that a given treasure/guard slot rolls a concrete, specific
+   *  object (a real resource pile/artifact, or a real pre-composed army)
+   *  instead of a `random-item`/`random-squad` placeholder — a real,
+   *  user-reported gap ("currently it looks like there are only random
+   *  items/artifacts, treasures and squads placed"). No effect if `catalog`
+   *  is omitted. Defaults to 0.4. */
+  objectVariety?: number
 }
 
 /** Scatter each zone's own objects (see this file's header comment for what
@@ -177,14 +223,56 @@ export interface PopulateZonesOptions {
  *  goes — not just within one zone — so a player zone's dwelling can never
  *  overlap a neighboring neutral zone's mine even where Voronoi boundaries
  *  run close together. */
-export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1 } = options
+export interface PopulateZonesResult {
+  placements: ZonePlacement[]
+  /** Guard slots that rolled a concrete army instead of `random-squad` —
+   *  see `ConcreteSquadPlacement`'s own doc comment for why these are kept
+   *  separate rather than folded into `placements`. */
+  concreteSquads: ConcreteSquadPlacement[]
+}
+
+export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
+  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4 } = options
   const placements: ZonePlacement[] = []
+  const concreteSquads: ConcreteSquadPlacement[] = []
+  const artifactSids = catalog ? collectArtifactSids(catalog) : []
 
   const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides']): void => {
     const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, rng)
     if (node === null) return
     placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides })
+  }
+
+  /** A treasure slot: usually `random-item`, but with `objectVariety`
+   *  probability places a real resource pile or a real artifact instead
+   *  (`object-variety.ts`) — the user-reported "only random items" gap. */
+  const placeTreasure = (tiles: number[]): void => {
+    if (catalog && rng() < objectVariety) {
+      const concrete = artifactSids.length > 0 && rng() < 0.5 ? artifactSids[Math.floor(rng() * artifactSids.length)] : STORAGE_SIDS[Math.floor(rng() * STORAGE_SIDS.length)]
+      place(concrete, tiles)
+      return
+    }
+    place('random-item', tiles)
+  }
+
+  /** A guard slot: usually `random-squad`, but with `objectVariety`
+   *  probability places a real, pre-composed `squads[]` army instead,
+   *  picked by `pickSquadTemplate` to roughly match `requestedValue`/
+   *  `fraction` the same way a `random-squad` roll would have. Falls back
+   *  to `random-squad` if no matching template exists or the zone has no
+   *  free tile left for it. */
+  const placeGuard = (tiles: number[], requestedValue: number, fraction: string): void => {
+    if (catalog && rng() < objectVariety) {
+      const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
+      if (template) {
+        const node = pickFreeTile(tiles, state, rng)
+        if (node !== null) {
+          concreteSquads.push({ tempId: state.nextTempId++, sid: template.id, node })
+          return
+        }
+      }
+    }
+    place('random-squad', tiles, { requestedValue, fraction })
   }
 
   let mineIndex = 0
@@ -198,10 +286,7 @@ export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
       place(mineIndex % 2 === 0 ? 'mine_wood' : 'mine_ore', tiles)
       mineIndex += 1
       const range = pickSquadRange(['Easy'], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
-      place('random-squad', tiles, {
-        requestedValue: randomInRange(range.min, range.max, rng),
-        fraction: sampleFraction(biome, 0.8, rng),
-      })
+      placeGuard(tiles, randomInRange(range.min, range.max, rng), sampleFraction(biome, 0.8, rng))
     } else {
       const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
       place(mineSid, tiles)
@@ -215,7 +300,7 @@ export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
       // milestone item.
       const baseTreasureCount = 1 + Math.floor(tiles.length / 150)
       const treasureCount = Math.max(0, Math.min(10, Math.round(baseTreasureCount * treasureDensity)))
-      for (let i = 0; i < treasureCount; i++) place('random-item', tiles)
+      for (let i = 0; i < treasureCount; i++) placeTreasure(tiles)
 
       // The guard's value comes from the mine's own real guard-value data
       // when available (value-model.ts) — not a flat difficulty-band roll —
@@ -225,12 +310,9 @@ export function populateZones(options: PopulateZonesOptions): ZonePlacement[] {
       // this Core.zip has no matching objects_logic entry for some reason.
       const fallbackRange = pickSquadRange(['Random'], DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, rng)
       const requestedValue = mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
-      place('random-squad', tiles, {
-        requestedValue,
-        fraction: sampleFraction(biome, 0.5, rng),
-      })
+      placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng))
     }
   }
 
-  return placements
+  return { placements, concreteSquads }
 }

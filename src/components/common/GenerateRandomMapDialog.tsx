@@ -59,6 +59,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
+  const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -79,6 +80,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         waterChance,
         obstacleDensity,
         treasureDensity,
+        objectVariety,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -103,6 +105,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       waterChance,
       obstacleDensity,
       treasureDensity,
+      objectVariety,
       seed: seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined,
     }
     await saveFile(stringifyRandomMapTemplate(template), 'rmg-template.json')
@@ -124,6 +127,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setWaterChance(template.waterChance)
       setObstacleDensity(template.obstacleDensity)
       setTreasureDensity(template.treasureDensity)
+      setObjectVariety(template.objectVariety)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
       logInfo(`Loaded RMG template: ${file.name}`)
@@ -227,6 +231,16 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   <span className="text-xs text-muted-foreground">{treasureDensity.toFixed(1)}×</span>
                 </div>
                 <Slider min={0} max={3} step={0.1} value={[treasureDensity]} onValueChange={([v]) => setTreasureDensity(v)} />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="Chance a given treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random placeholder.">
+                    Object variety
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.05} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} />
               </div>
 
               <div className="space-y-1.5">
