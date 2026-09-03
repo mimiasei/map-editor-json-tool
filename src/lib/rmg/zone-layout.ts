@@ -1,18 +1,18 @@
-// ─── RMG zone layout + shaping (issue #210, Milestone 1) ────────────────────
-// Two steps, both deliberately simpler substitutes for VCMI's own
-// Fruchterman-Reingold layout relaxation + Penrose-tiling zone shaping (see
-// issue #210's own risk note — those are the least essential-to-gameplay,
-// most algorithmically involved pieces of VCMI's real RMG, worth revisiting
-// once this simpler version's actual pain points are known):
-//
-// 1. `layoutZoneCenters` places zone centers evenly around a ring, ordered
-//    by a breadth-first walk of the zone graph rather than raw declaration
-//    order — so graph-adjacent zones end up geometrically adjacent too,
-//    without needing real force-directed physics.
-// 2. `assignTilesToZones` is a multiplicative-weighted Voronoi tessellation
-//    (distance to center, divided by each zone's own size weight) — gives
-//    every zone an irregular, organically-sized region without porting
-//    VCMI's specific Penrose subdivision geometry.
+// ─── RMG zone layout + shaping (issue #210, Milestones 1 & 4) ───────────────
+// `layoutZoneCenters` places zone centers evenly around a ring (a BFS walk
+// of the zone graph, so graph-adjacent zones start geometrically adjacent
+// too) as the SEED configuration, then `relaxZoneCenters` runs a real
+// Fruchterman-Reingold force-directed relaxation on top of it — connected
+// zones attract, every pair repels as a "soft sphere" sized by each zone's
+// own `size` (VCMI's own description), so zones with different sizes
+// actually claim proportionally different amounts of space rather than
+// sitting on a perfectly uniform ring. `assignTilesToZones` (the plain
+// weighted-Voronoi tessellation) is kept for callers that don't need real
+// Penrose-tiling zone shapes; `zone-shape-penrose.ts`'s
+// `assignTilesToZonesPenrose` (Milestone 4) is what the real generator
+// pipeline uses now — see that file's own header comment for why a real
+// de Bruijn pentagrid tiling was worth the implementation risk this
+// project's own plan originally flagged it for.
 
 import type { ZoneGraph, ZoneSpec } from './zone-graph'
 
@@ -77,6 +77,93 @@ export function layoutZoneCenters(sizeX: number, sizeZ: number, graph: ZoneGraph
     centers[zoneId] = { zoneId, x, z }
   })
   return centers
+}
+
+/**
+ * Fruchterman-Reingold force-directed relaxation (issue #210's own research
+ * notes on VCMI's real algorithm) starting from `initialCenters` (normally
+ * `layoutZoneCenters`'s own ring seed, matching VCMI's "N×N grid seed, then
+ * relax" structure). Every zone is a "soft sphere" — its own effective
+ * radius is `baseRadius * sqrt(zone.size)`, so two zones' natural
+ * equilibrium spacing is the SUM of their own radii, not a single map-wide
+ * constant — connected zones (graph edges) attract toward that spacing,
+ * every pair (connected or not) repels away from it, and simulated
+ * annealing (a cooling "temperature" cap on each step's movement) settles
+ * the system rather than letting it oscillate forever. Positions stay
+ * clamped to the same inset bounds `layoutZoneCenters` itself respects.
+ */
+export function relaxZoneCenters(
+  sizeX: number,
+  sizeZ: number,
+  graph: ZoneGraph,
+  initialCenters: ZoneCenter[],
+  rng: () => number,
+  iterations = 300,
+): ZoneCenter[] {
+  const n = initialCenters.length
+  if (n <= 1) return initialCenters
+
+  const zoneById = new Map(graph.zones.map((z) => [z.id, z]))
+  const baseRadius = Math.sqrt((sizeX * sizeZ) / n) * 0.35
+  const radius = initialCenters.map((c) => baseRadius * Math.sqrt(zoneById.get(c.zoneId)?.size ?? 1))
+
+  const insetX = Math.max(1, Math.floor(sizeX * 0.1))
+  const insetZ = Math.max(1, Math.floor(sizeZ * 0.1))
+  const minX = insetX
+  const maxX = sizeX - 1 - insetX
+  const minZ = insetZ
+  const maxZ = sizeZ - 1 - insetZ
+
+  const posX = initialCenters.map((c) => c.x)
+  const posZ = initialCenters.map((c) => c.z)
+  let temperature = Math.max(sizeX, sizeZ) * 0.08
+
+  for (let iter = 0; iter < iterations; iter++) {
+    const dispX = new Array(n).fill(0)
+    const dispZ = new Array(n).fill(0)
+
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        let dx = posX[i] - posX[j]
+        let dz = posZ[i] - posZ[j]
+        let dist = Math.hypot(dx, dz)
+        if (dist < 0.01) {
+          dx = rng() - 0.5
+          dz = rng() - 0.5
+          dist = Math.max(0.01, Math.hypot(dx, dz))
+        }
+        const k = radius[i] + radius[j]
+        const force = (k * k) / dist
+        const fx = (dx / dist) * force
+        const fz = (dz / dist) * force
+        dispX[i] += fx; dispZ[i] += fz
+        dispX[j] -= fx; dispZ[j] -= fz
+      }
+    }
+
+    for (const [a, b] of graph.edges) {
+      const dx = posX[a] - posX[b]
+      const dz = posZ[a] - posZ[b]
+      const dist = Math.max(0.01, Math.hypot(dx, dz))
+      const k = radius[a] + radius[b]
+      const force = (dist * dist) / k
+      const fx = (dx / dist) * force
+      const fz = (dz / dist) * force
+      dispX[a] -= fx; dispZ[a] -= fz
+      dispX[b] += fx; dispZ[b] += fz
+    }
+
+    for (let i = 0; i < n; i++) {
+      const dist = Math.max(0.01, Math.hypot(dispX[i], dispZ[i]))
+      const capped = Math.min(dist, temperature)
+      posX[i] = Math.min(maxX, Math.max(minX, posX[i] + (dispX[i] / dist) * capped))
+      posZ[i] = Math.min(maxZ, Math.max(minZ, posZ[i] + (dispZ[i] / dist) * capped))
+    }
+
+    temperature *= 0.97
+  }
+
+  return initialCenters.map((c, i) => ({ zoneId: c.zoneId, x: Math.round(posX[i]), z: Math.round(posZ[i]) }))
 }
 
 /**

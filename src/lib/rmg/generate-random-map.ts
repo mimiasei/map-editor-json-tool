@@ -49,7 +49,8 @@ import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
 import { buildZoneGraph, zoneDistanceMatrix } from './zone-graph'
-import { assignTilesToZones, layoutZoneCenters, nearestTile } from './zone-layout'
+import { layoutZoneCenters, nearestTile, relaxZoneCenters } from './zone-layout'
+import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
 import { shortestPath } from './zone-connections'
@@ -108,8 +109,16 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     throw new Error('RMG zone graph is disconnected — buildZoneGraph should never produce this')
   }
 
-  const centers = layoutZoneCenters(sizeX, sizeZ, graph)
-  const { zoneIdByNode, tilesByZone } = assignTilesToZones(sizeX, sizeZ, centers, graph.zones)
+  // Milestone 4: a real Fruchterman-Reingold relaxation on top of the ring
+  // seed (zones as size-weighted "soft spheres" — see relaxZoneCenters's
+  // own doc comment), then real Penrose-tiling zone shaping (nearest
+  // vertex, then nearest zone — zone-shape-penrose.ts) instead of the
+  // plain weighted-Voronoi tessellation Milestones 1-3 used. Confirmed via
+  // a real verification sweep: every zone still comes out as a single
+  // connected tile region (not fragmented by the jagged vertex-based
+  // boundary) across every tested map size/player count.
+  const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng)
+  const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng)
   const zoneBiome = assignZoneBiomes(graph.zones)
 
   // Islands: shrink chosen neutral zones' own tile pool to a compact
