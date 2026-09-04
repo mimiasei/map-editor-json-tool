@@ -104,6 +104,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [playerCount, setPlayerCount] = useState(2)
   const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
+  const [islandsIncludePlayerZones, setIslandsIncludePlayerZones] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
   const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
@@ -172,7 +173,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             if (seed === undefined) return // handleTogglePreview always fills a seed in before entering 'terrain'
             const result = await previewTerrain({
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
-              waterContent, waterChance, zoneJaggedness, zoneSpread,
+              waterContent, waterChance, islandsIncludePlayerZones, zoneJaggedness, zoneSpread,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true,
             })
             if (!result) return // not Tauri
@@ -196,7 +197,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, zoneJaggedness, zoneSpread, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, zoneJaggedness, zoneSpread, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -224,6 +225,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         playerSpawnerSid: 'city-spawner',
         waterContent,
         waterChance,
+        islandsIncludePlayerZones,
         obstacleDensity,
         treasureDensity,
         objectVariety,
@@ -269,6 +271,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       playerSpawnerSid: 'city-spawner',
       waterContent,
       waterChance,
+      islandsIncludePlayerZones,
       obstacleDensity,
       treasureDensity,
       objectVariety,
@@ -298,6 +301,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setPlayerCount(template.playerCount)
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
+      setIslandsIncludePlayerZones(template.islandsIncludePlayerZones)
       setObstacleDensity(template.obstacleDensity)
       setTreasureDensity(template.treasureDensity)
       setObjectVariety(template.objectVariety)
@@ -427,7 +431,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                       className="text-xs"
                       title={
                         waterContent === 'islands'
-                          ? 'How many neutral zones become islands, and how little land each keeps. Player zones are never islands.'
+                          ? 'How many zones become islands, and how little land each keeps — more islands means each is smaller, to leave room for a real moat between them; fewer means each is bigger.'
                           : 'How much of each neutral zone\'s free area becomes a lake, and how likely a zone is to get one at all. Player zones never get water.'
                       }
                     >
@@ -436,6 +440,15 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     <span className="text-xs text-muted-foreground">{pctLabel(waterChance)}</span>
                   </div>
                   <Slider min={0} max={1} step={0.05} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} disabled={terrainLocked} />
+                </div>
+              )}
+
+              {waterContent === 'islands' && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="rmg-islands-players" className="text-xs" title="Off (default): every player's own start always stays on real, land-connected ground — only neutral zones can become islands. On: a player's own start can be an island too, reachable only by its own portal — at high Island amount the whole map can end up looking flooded, with islands scattered across it instead of a mostly-solid mainland. Either way, an island is ALWAYS reached by portal, never a road, even if Use portals is off.">
+                    Player zones can be islands
+                  </Label>
+                  <Switch id="rmg-islands-players" checked={islandsIncludePlayerZones} onCheckedChange={setIslandsIncludePlayerZones} disabled={terrainLocked} />
                 </div>
               )}
 

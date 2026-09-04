@@ -76,6 +76,20 @@ export interface GenerateTerrainOptions {
   zoneJaggedness?: number
   zoneSpread?: number
   rng?: () => number
+  /** A real user request: override `zone-islands.ts`'s own default (every
+   *  player's own start stays land-connected, only neutral "treasure"
+   *  zones become islands) so a player's own start can be an island too —
+   *  "the whole map looks like it was flooded, then random-sized islands
+   *  spread around" instead of a mostly-solid mainland with a few carved-
+   *  out neutral islands. `waterChance` ("Island amount") still controls
+   *  both count and size the same way either way (more islands = smaller
+   *  each, to leave room for a real moat between them; fewer = bigger) —
+   *  this only widens which zones are ELIGIBLE to become one. Always
+   *  leaves at least one zone non-island (see the `maxIslands` cap below)
+   *  so there's a guaranteed real "mainland" every island can portal to —
+   *  without that, an all-islands map would have nothing for any portal to
+   *  connect to at all. Defaults to false (today's original behavior). */
+  islandsIncludePlayerZones?: boolean
   /** false for the "terrain only" final mode (no spawners at all — the map
    *  maker places everything themselves) and for the real generator's own
    *  initial phase when its own `terrainOnly` option is set; true for the
@@ -137,7 +151,7 @@ export function generateTerrain(
   const {
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
-    includeSpawners, playerSpawnerSid, computeWater = false,
+    islandsIncludePlayerZones = false, includeSpawners, playerSpawnerSid, computeWater = false,
   } = options
   const tileCount = sizeX * sizeZ
 
@@ -154,10 +168,17 @@ export function generateTerrain(
   let islandFloodNodes = new Set<number>()
   const islandLandmassByZone = new Map<number, number[]>()
   if (waterContent === 'islands') {
-    const neutralZoneCount = graph.zones.filter((z) => z.kind === 'neutral').length
-    const maxIslands = Math.max(1, Math.round(neutralZoneCount * waterChance))
+    const eligibleZoneCount = islandsIncludePlayerZones ? graph.zones.length : graph.zones.filter((z) => z.kind === 'neutral').length
+    let maxIslands = Math.max(1, Math.round(eligibleZoneCount * waterChance))
+    // Only needed once player zones are eligible too — the original
+    // neutral-only mode already always has every player zone left over as
+    // a real non-island "mainland" (nothing else guarantees that once
+    // players themselves can become islands, so cap one short of "every
+    // eligible zone" here specifically). See `nearestNonIslandZone`'s own
+    // doc comment (zone-islands.ts) for why at least one must survive.
+    if (islandsIncludePlayerZones) maxIslands = Math.min(maxIslands, graph.zones.length - 1)
     const landmassFraction = 0.6 - waterChance * 0.4
-    const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, landmassFraction)
+    const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, landmassFraction, islandsIncludePlayerZones)
     for (const [zoneId, landmass] of islandResult.landmassByZone) {
       tilesByZone.set(zoneId, landmass)
       islandLandmassByZone.set(zoneId, landmass)

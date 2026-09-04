@@ -52,7 +52,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, s
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
-import { nearestPlayerZone, PORTAL_SIDS } from './zone-islands'
+import { nearestNonIslandZone, PORTAL_SIDS } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
@@ -74,6 +74,12 @@ export interface GenerateRandomMapOptions {
    *  and size (zone-water.ts). In `'islands'` mode: how many zones become
    *  islands and how little land each keeps. Defaults to 0.4. */
   waterChance?: number
+  /** A real user request: in `'islands'` mode, let a player's own start be
+   *  one of the islands too, instead of every player always staying
+   *  land-connected (this module's own original default) — see
+   *  generate-terrain.ts's own doc comment on this same option for the
+   *  full rationale. No effect for `'none'`/`'normal'` water content. */
+  islandsIncludePlayerZones?: boolean
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
   obstacleDensity?: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts). Defaults to 1. */
@@ -162,7 +168,7 @@ export interface GenerateRandomMapOptions {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -178,7 +184,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // since it returns immediately after this) to have generateTerrain
   // compute water itself.
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, zoneJaggedness, zoneSpread, rng,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, zoneJaggedness, zoneSpread, rng,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly,
   })
@@ -188,6 +194,12 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const { graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state } = terrain
   let container = terrain.container
   let block2 = container.chunks[1]
+  // A hard rule (zone-islands.ts's own header comment has the full
+  // rationale): an island is reachable ONLY by portal, never a road — the
+  // road loop below consults this set to skip every edge touching one
+  // entirely, rather than let its usual water-partition-repair fallback
+  // silently pave through the moat.
+  const islandZoneIds = new Set(islandLandmassByZone.keys())
 
   // `objectGroups`' own spawner entry — same shape as before this
   // extraction, just sourced from the players `generateTerrain` already
@@ -254,12 +266,13 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
 
     // One portal pair per island zone: one end on the island's own
-    // landmass, the other on its graph-nearest player zone — every player
-    // zone stays fully land-connected (computeIslandZones never turns one
-    // into an island), so this always gives a real, walkable mainland end.
+    // landmass, the other on its graph-nearest NON-island zone — generate-
+    // terrain.ts's own `maxIslands` cap always leaves at least one such
+    // zone, so this always finds a real, walkable "mainland" end even once
+    // player zones are eligible to be islands too (islandsIncludePlayerZones).
     let portalColorIndex = 0
     for (const islandZoneId of islandLandmassByZone.keys()) {
-      const mainlandZoneId = nearestPlayerZone(islandZoneId, graph.zones, zoneDistances)
+      const mainlandZoneId = nearestNonIslandZone(islandZoneId, graph.zones, zoneDistances, islandZoneIds)
       if (mainlandZoneId === null) continue
       const portalSid = PORTAL_SIDS[portalColorIndex % PORTAL_SIDS.length]
       portalColorIndex += 1
@@ -390,6 +403,16 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const roadSmoothWindow = Math.max(4, Math.round(roadWindingWavelength / 10))
   let unroutableEdges = 0
   for (const [a, b] of graph.edges) {
+    // Hard rule (zone-islands.ts's own header comment): an island is
+    // reachable ONLY by portal. Never even attempt a road here — the
+    // water-partition-repair fallback below doesn't know "island" is a
+    // deliberately unreachable-by-land moat, not an incidental large lake,
+    // and would otherwise happily reclaim moat tiles back to land for
+    // whichever of an island's edges didn't already get the one portal
+    // placed earlier. Each island already gets its own guaranteed portal
+    // connection regardless of `usePortals` (that toggle only gates the
+    // separate bonus-shortcut portal, never an island's own).
+    if (islandZoneIds.has(a) || islandZoneIds.has(b)) continue
     const from = zoneAnchorNode.get(a) as number
     const to = zoneAnchorNode.get(b) as number
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
@@ -461,7 +484,9 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   let bestDistance = -1
   let riverEndpoints: [number, number] | null = null
   for (let a = 0; a < graph.zones.length; a++) {
+    if (islandZoneIds.has(a)) continue // an island has no land route in at all — never a useful river endpoint
     for (let b = a + 1; b < graph.zones.length; b++) {
+      if (islandZoneIds.has(b)) continue
       if (zoneDistances[a][b] > bestDistance) { bestDistance = zoneDistances[a][b]; riverEndpoints = [a, b] }
     }
   }
