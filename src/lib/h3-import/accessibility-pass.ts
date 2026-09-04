@@ -355,7 +355,21 @@ export function applyAccessibilityPass(
   // post-deletion blocked set and is kept in sync as each successful nudge
   // vacates its old cells and occupies its new ones, so two targets in the
   // same pocket never land on top of each other.
+  //
+  // `nudgeBlocked` alone only ever records SOLID (value===1) footprint
+  // cells (the same rule `buildBlockedTileSet` itself follows) — it has no
+  // idea a tile is already some other object's anchor if that object has
+  // no solid cell there (every `NON_BLOCKING_SPAWNER_SIDS` placement —
+  // random-res/-squad/-item — and plenty of ordinary resource piles whose
+  // whole footprint is a walk-onto-anywhere interaction cell). A real RMG
+  // regeneration surfaced this concretely: a nudge nonetheless picked such
+  // a tile as "free" and relocated a target's anchor exactly onto an
+  // already-placed `resource_mercury`, producing two live game objects on
+  // one node. `occupiedAnchors` is every object's own anchor node — checked
+  // in ADDITION to `nudgeBlocked`, independent of solid/non-solid, and kept
+  // in sync the same way as each nudge succeeds.
   const nudgeBlocked = new Set(blocked)
+  const occupiedAnchors = new Set(idToNode.values())
   for (const target of unreachable) {
     const sid = target.sid
     const template = catalogById.get(sid)
@@ -383,6 +397,8 @@ export function applyAccessibilityPass(
     for (let radius = 1; radius <= MAX_NUDGE_RADIUS && !placed; radius++) {
       for (const [cx, cz] of ringOffsets(anchorX, anchorZ, radius)) {
         if (cx < 0 || cx >= atlasWidth || cz < 0 || cz >= atlasHeight) continue
+        const candidateAnchorNode = cz * atlasWidth + cx
+        if (occupiedAnchors.has(candidateAnchorNode) && candidateAnchorNode !== anchorNode) continue
         const candidateCells = computeFootprintTiles(template, cx, cz)
         let valid = true
         for (const cell of candidateCells) {
@@ -403,6 +419,8 @@ export function applyAccessibilityPass(
           const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
           if (n !== null) nudgeBlocked.add(n)
         }
+        occupiedAnchors.delete(anchorNode)
+        occupiedAnchors.add(candidateAnchorNode)
         const group = objectGroups.get(sid)
         if (group) {
           const index = group.ids.indexOf(target.id)
