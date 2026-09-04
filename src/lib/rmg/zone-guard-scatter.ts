@@ -20,7 +20,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
+import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { STORAGE_SIDS, collectArtifactSids, pickSquadTemplate } from './object-variety'
 import {
   tryPlaceAt,
@@ -137,6 +137,7 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
     const labels = difficultyLabelsForDepth(depth)
     const range = pickSquadRange(labels, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
     const requestedValue = randomInRange(range.min, range.max, rng)
+    if (requestedValue < GUARD_VALUE_CUTOFF) continue
     const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
     const fraction = sampleFraction(biome, 0.7, rng)
 

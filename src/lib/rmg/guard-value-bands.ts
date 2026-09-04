@@ -63,3 +63,36 @@ export const RMG_GUARD_RANDOM_WEIGHTS: DifficultyWeight[] = [
  *  resource/artifact placements are unaffected — real maps do mix in
  *  concrete objects there. */
 export const GUARD_CONCRETE_SQUAD_CHANCE_SCALE = 0.1
+
+/** Olden Era's own real RMG templates (`maps/templates/*.rmg.json`) have a
+ *  per-zone `guardCutoffValue` (1500-2500 seen) below which a candidate
+ *  simply goes unguarded rather than rolling a near-worthless guard — a
+ *  mechanic this generator had no equivalent of before. NOT ported at that
+ *  same absolute number, though: real templates' cutoff prunes THEIR OWN
+ *  lowest content tier, which can resolve far below 1500; our own `Easy`
+ *  band already has a deliberately-tuned floor of 400 (squad-pool.ts's own
+ *  doc comment: `requestedValue:0` makes a guard invisible in-game, 400 is
+ *  the chosen safe minimum) — a real regeneration/stats pass this session
+ *  confirmed that reusing the real templates' own 1500 here gutted this
+ *  generator's own already-tuned near-player-start guard coverage (Easy's
+ *  400-2000 band mostly falls under 1500, so most Easy rolls got silently
+ *  skipped instead of a genuine minority). Set to 400 instead — Easy's own
+ *  floor — so this stays a true defensive floor (never fires against a
+ *  normal difficulty-band roll) while still meaningfully pruning
+ *  `zone-population.ts`'s player-zone guard once `PLAYER_ZONE_GUARD_
+ *  MULTIPLIER` softens it (some of that softened range now genuinely dips
+ *  below 400, a real minority-skip, not a near-total one). Applied at every
+ *  guard-placement call site (zone-population.ts, zone-guard-scatter.ts) —
+ *  not zone-boundary.ts's mandatory gate guards, which already floor at
+ *  `Impossible` (20000+) and so never dip this low anyway. */
+export const GUARD_VALUE_CUTOFF = 400
+
+/** Real templates also show a per-zone-role `guardMultiplier` (spawn zones
+ *  0.5-0.84, treasure/center zones 1.2-2.0) applied on top of a guard's
+ *  base rolled value. Only the player-zone softening half is adopted here
+ *  (0.7, mid-range of the real spawn-zone values) — neutral/treasure zones
+ *  are deliberately left unscaled since their guard values were already
+ *  carefully calibrated against real maps' own median/max last session
+ *  (see `value-model.ts`'s `MINE_GUARD_VALUE_SCALE`); adding a second
+ *  multiplier on top risked re-breaking that tuning for an untested gain. */
+export const PLAYER_ZONE_GUARD_MULTIPLIER = 0.7

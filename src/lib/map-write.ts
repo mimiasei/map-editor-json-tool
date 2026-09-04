@@ -1736,7 +1736,19 @@ export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array
  *  per-item `addObjectInstance` path's cost is negligible for those. */
 export function addObjectInstances(
   block2Chunk: Uint8Array,
-  additions: { sid: string; node: number; rotation?: number; level?: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[],
+  additions: {
+    sid: string
+    node: number
+    rotation?: number
+    level?: number
+    randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }
+    /** Real Olden Era RMG templates show `propRandomItems.rarity` (0-3) is
+     *  real, shipped, and varied — a real-map survey this session
+     *  (`maps/*.map`'s own `propRandomItems.rarity`, 140 rows) confirmed
+     *  0/1/2/3 all occur, ~63/21/14/2% respectively, not the flat `rarity: 0`
+     *  every prior placement used. Omit to keep the previous flat-0 default. */
+    randomItemOverrides?: { rarity: number }
+  }[],
 ): { block2Chunk: Uint8Array; newIds: number[] } {
   if (additions.length === 0) return { block2Chunk, newIds: [] }
   const playerStartSid = additions.find(({ sid }) => PLAYER_START_SPAWNER_DEFAULTS[sid])
@@ -1756,7 +1768,7 @@ export function addObjectInstances(
     else propRowsByTable.set(table, [row])
   }
 
-  for (const { sid, node, rotation, level, randomSquadOverrides } of additions) {
+  for (const { sid, node, rotation, level, randomSquadOverrides, randomItemOverrides } of additions) {
     const id = nextId++
     newIds.push(id)
     let group = groupsBySid.get(sid)
@@ -1775,7 +1787,11 @@ export function addObjectInstances(
     const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
     if (randomSpawnerDefault) {
       const row = randomSpawnerDefault.row(id, randomSquadOverrides?.requestedValue ?? randomSquadDefaultValue())
-      if (sid === 'random-squad' && randomSquadOverrides) row.fraction = randomSquadOverrides.fraction
+      if (sid === 'random-squad' && randomSquadOverrides) {
+        row.fraction = randomSquadOverrides.fraction
+        if (randomSquadOverrides.weeklyIncrementBonus !== undefined) row.weeklyIncrementBonus = randomSquadOverrides.weeklyIncrementBonus
+      }
+      if (sid === 'random-item' && randomItemOverrides) row.rarity = randomItemOverrides.rarity
       appendRow(randomSpawnerDefault.table, row)
     }
     if (RESOURCE_PICKUP_SIDS.has(sid)) {

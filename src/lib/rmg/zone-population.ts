@@ -28,7 +28,7 @@ import {
   randomInRange,
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
-import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
+import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { collectArtifactSids, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
@@ -82,7 +82,11 @@ export interface ZonePlacement {
   tempId: number
   sid: string
   node: number
-  randomSquadOverrides?: { requestedValue: number; fraction: string }
+  randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }
+  /** See `map-write.ts`'s own doc comment on `addObjectInstances`'
+   *  `randomItemOverrides` param — real maps vary `propRandomItems.rarity`
+   *  (0-3), unlike this generator's old flat 0. */
+  randomItemOverrides?: { rarity: number }
 }
 
 /** A concrete, pre-composed army (`squads[]`, entityType 2 — structurally
@@ -236,23 +240,73 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const concreteSquads: ConcreteSquadPlacement[] = []
   const artifactSids = catalog ? collectArtifactSids(catalog) : []
 
-  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides']): void => {
+  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides']): void => {
     const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, rng)
     if (node === null) return
-    placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides })
+    placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides })
   }
 
-  /** A treasure slot: usually `random-item`, but with `objectVariety`
-   *  probability places a real resource pile or a real artifact instead
-   *  (`object-variety.ts`) — the user-reported "only random items" gap. */
-  const placeTreasure = (tiles: number[]): void => {
-    if (catalog && rng() < objectVariety) {
-      const concretePool = rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS
-      const concrete = artifactSids.length > 0 && rng() < 0.5 ? artifactSids[Math.floor(rng() * artifactSids.length)] : concretePool[Math.floor(rng() * concretePool.length)]
-      place(concrete, tiles)
-      return
+  /** `random-item.rarity` "cost" table for the value-budget treasure loop
+   *  below — weights are the exact real distribution surveyed this session
+   *  (`maps/*.map`'s own `propRandomItems.rarity`, 140 rows: 88/30/19/3 for
+   *  rarity 0/1/2/3), matching Olden Era's own real RMG templates'
+   *  "spend a value budget on progressively rarer things" shape
+   *  (`guardedContentValue`/`resourcesValue` in `maps/templates/*.rmg.json`)
+   *  instead of this generator's old flat `rarity: 0` for every placement.
+   *  `cost` itself is a synthetic increasing scale (not real data — there's
+   *  no real per-rarity "value" field to read) chosen only so pricier
+   *  rarities are rolled less often, same spirit as `zone-boundary.ts`'s own
+   *  `depthToDifficultyLabel` doc comment on synthetic-but-reasonable
+   *  defaults. */
+  const RARITY_TABLE = [
+    { rarity: 0, weight: 88, cost: 1 },
+    { rarity: 1, weight: 30, cost: 2 },
+    { rarity: 2, weight: 19, cost: 4 },
+    { rarity: 3, weight: 3, cost: 10 },
+  ]
+  const RARITY_TOTAL_WEIGHT = RARITY_TABLE.reduce((sum, r) => sum + r.weight, 0)
+  /** Expected cost of one `pickRarity` roll — used as every OTHER treasure
+   *  kind's (concrete pile/artifact) budget cost too, so which branch a given
+   *  budget iteration takes doesn't itself skew the loop's average
+   *  iteration count away from the real density this generator already
+   *  calibrated last session (see `baseTreasureCount`'s own doc comment). */
+  const RARITY_AVERAGE_COST = RARITY_TABLE.reduce((sum, r) => sum + (r.weight / RARITY_TOTAL_WEIGHT) * r.cost, 0)
+  const pickRarity = (): { rarity: number; cost: number } => {
+    let roll = rng() * RARITY_TOTAL_WEIGHT
+    for (const r of RARITY_TABLE) {
+      if (roll < r.weight) return r
+      roll -= r.weight
     }
-    place('random-item', tiles)
+    return RARITY_TABLE[0]
+  }
+
+  /** A treasure slot: usually `random-item` (now with a real, varied
+   *  `rarity` roll instead of a flat 0 — see `RARITY_TABLE`'s own doc
+   *  comment), but with `objectVariety` probability places a real resource
+   *  pile or a real artifact instead (`object-variety.ts`) — the
+   *  user-reported "only random items" gap. Returns the budget cost this
+   *  placement spent, for the value-budget loop below. `usedArtifactSids`
+   *  (per-zone) mirrors Olden Era's own real RMG templates'
+   *  `contentCountLimits` `maxCount: 1` pattern for named/notable objects —
+   *  a specific artifact can't repeat within one zone purely by chance;
+   *  ordinary storage/resource piles are NOT capped, matching how real
+   *  templates only cap notable objects, not plain resources. */
+  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>): number => {
+    if (catalog && rng() < objectVariety) {
+      const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid))
+      if (availableArtifacts.length > 0 && rng() < 0.5) {
+        const sid = availableArtifacts[Math.floor(rng() * availableArtifacts.length)]
+        usedArtifactSids.add(sid)
+        place(sid, tiles)
+        return RARITY_AVERAGE_COST
+      }
+      const concretePool = rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS
+      place(concretePool[Math.floor(rng() * concretePool.length)], tiles)
+      return RARITY_AVERAGE_COST
+    }
+    const { rarity, cost } = pickRarity()
+    place('random-item', tiles, undefined, { rarity })
+    return cost
   }
 
   /** A guard slot: usually `random-squad`, but with a heavily-scaled-down
@@ -262,8 +316,11 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  `pickSquadTemplate` to roughly match `requestedValue`/`fraction` the
    *  same way a `random-squad` roll would have. Falls back to `random-squad`
    *  if no matching template exists or the zone has no free tile left for
-   *  it. */
+   *  it. Below `GUARD_VALUE_CUTOFF` (Olden Era's own real RMG templates'
+   *  `guardCutoffValue` concept), no guard is placed at all — the resource
+   *  stays free rather than getting a near-worthless guard. */
   const placeGuard = (tiles: number[], requestedValue: number, fraction: string): void => {
+    if (requestedValue < GUARD_VALUE_CUTOFF) return
     if (catalog && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
       if (template) {
@@ -313,7 +370,11 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       for (const mineSid of ['mine_wood', 'mine_ore', 'mine_gold']) place(mineSid, tiles)
       place('resource_dust', tiles)
       const range = pickSquadRange(['Easy'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
-      placeGuard(tiles, randomInRange(range.min, range.max, rng), sampleFraction(biome, 0.8, rng))
+      // PLAYER_ZONE_GUARD_MULTIPLIER: real RMG templates' own spawn-zone
+      // guardMultiplier (0.5-0.84) softens guards in the player's own start
+      // zone specifically — guard-value-bands.ts's own doc comment has the
+      // full rationale.
+      placeGuard(tiles, randomInRange(range.min, range.max, rng) * PLAYER_ZONE_GUARD_MULTIPLIER, sampleFraction(biome, 0.8, rng))
     } else {
       const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
       place(mineSid, tiles)
@@ -342,8 +403,27 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // zone's own count is unchanged (the cap essentially never fired for
       // realistic zone sizes anyway).
       const baseTreasureCount = 1 + Math.floor(tiles.length / 150)
-      const treasureCount = Math.max(0, Math.min(200, Math.round(baseTreasureCount * treasureDensity)))
-      for (let i = 0; i < treasureCount; i++) placeTreasure(tiles)
+
+      // Value-budget spend-down (Olden Era's own real RMG templates' own
+      // `guardedContentValue`/`resourcesValue` + `*PerArea` concept —
+      // guard-value-bands.ts's sibling doc comment... see RARITY_TABLE
+      // above): rather than looping a FIXED item count, spend a budget sized
+      // so the EXPECTED iteration count matches this generator's own already
+      // real-map-calibrated density (`baseTreasureCount`'s own doc comment
+      // above still holds — this is the same target, spent probabilistically
+      // instead of deterministically) — `RARITY_AVERAGE_COST` is exactly the
+      // expected cost of one `placeTreasure` call, so `budget /
+      // RARITY_AVERAGE_COST` reproduces `baseTreasureCount * treasureDensity`
+      // on average, while richer zones now more often roll a few pricier
+      // (rarer) items instead of only ever adding more identical ones.
+      const treasureBudget = Math.max(0, baseTreasureCount * treasureDensity) * RARITY_AVERAGE_COST
+      const usedArtifactSids = new Set<string>()
+      let spent = 0
+      let iterations = 0
+      while (spent < treasureBudget && iterations < 400) {
+        spent += placeTreasure(tiles, usedArtifactSids)
+        iterations++
+      }
 
       // The guard's value comes from the mine's own real guard-value data
       // when available (value-model.ts, scaled up to real hand-crafted maps'

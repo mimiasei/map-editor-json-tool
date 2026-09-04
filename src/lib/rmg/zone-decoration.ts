@@ -69,7 +69,14 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     if (biome === undefined) continue
     const center = centers[zone.id]
 
-    const candidateTiles = tiles.filter((node) => !excludedNodes.has(node) && rng() < density)
+    // Real Olden Era RMG templates vary obstaclesFill by zone role (spawn
+    // zones lower than treasure/center zones) via named zoneLayouts, not one
+    // flat global value — `scatterZoneWater` already skips player zones
+    // entirely for the same reason (buildability); this is the obstacle-
+    // density equivalent, softer than a full skip since some scenery still
+    // reads as a lived-in start.
+    const zoneDensity = zone.kind === 'player' ? density * 0.6 : density
+    const candidateTiles = tiles.filter((node) => !excludedNodes.has(node) && rng() < zoneDensity)
     if (candidateTiles.length === 0) continue
     const nodeDistances = zoneNodeDistances(candidateTiles, sizeX, center, tiles.length)
 

@@ -261,7 +261,21 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
         }
       }
       if (tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
-        guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction } })
+        // A mandatory chokepoint should get harder if a player dawdles
+        // rather than rushing it — real Olden Era RMG templates' own
+        // `guardWeeklyIncrement` (0.10-0.20, seen repeatedly on treasure/
+        // center zone connections) and a real `.map` survey this session
+        // (`propRandomSquads.weeklyIncrementBonus` across `maps/*.map`,
+        // 1339 rows: mostly 0, but a real ~7.5% minority uses 0.05-0.30)
+        // both confirm this is real, shipped behavior this generator never
+        // wrote before. A flat 50% roll (not every gate guard) — gate
+        // guards are already a comparatively small slice of a map's total
+        // guards, but a real regeneration/stats pass this session found
+        // "every gate guard" still pushed the map-wide nonzero rate to
+        // 45-75%, nowhere near the real minority — this roll brings it back
+        // toward a genuine minority without losing the mechanic entirely.
+        const weeklyIncrementBonus = rng() < 0.5 ? 0.15 : undefined
+        guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction, weeklyIncrementBonus } })
       }
     }
   }
