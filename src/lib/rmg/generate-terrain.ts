@@ -168,15 +168,15 @@ export function generateTerrain(
   let islandFloodNodes = new Set<number>()
   const islandLandmassByZone = new Map<number, number[]>()
   if (waterContent === 'islands') {
+    // "Island amount" is a real 0-100% of the eligible zones — at 100% (
+    // `waterChance` 1), EVERY eligible zone becomes an island, including
+    // every player's own start once `islandsIncludePlayerZones` is on (no
+    // "always leave one non-island mainland" cap here: generate-random-
+    // map.ts's own road loop places one portal per island-touching
+    // zone-graph edge, so full connectivity holds via portals even when
+    // nothing is left non-island at all — see that loop's own comment).
     const eligibleZoneCount = islandsIncludePlayerZones ? graph.zones.length : graph.zones.filter((z) => z.kind === 'neutral').length
-    let maxIslands = Math.max(1, Math.round(eligibleZoneCount * waterChance))
-    // Only needed once player zones are eligible too — the original
-    // neutral-only mode already always has every player zone left over as
-    // a real non-island "mainland" (nothing else guarantees that once
-    // players themselves can become islands, so cap one short of "every
-    // eligible zone" here specifically). See `nearestNonIslandZone`'s own
-    // doc comment (zone-islands.ts) for why at least one must survive.
-    if (islandsIncludePlayerZones) maxIslands = Math.min(maxIslands, graph.zones.length - 1)
+    const maxIslands = Math.max(1, Math.round(eligibleZoneCount * waterChance))
     const landmassFraction = 0.6 - waterChance * 0.4
     const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, landmassFraction, islandsIncludePlayerZones)
     for (const [zoneId, landmass] of islandResult.landmassByZone) {

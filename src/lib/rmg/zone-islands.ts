@@ -20,21 +20,27 @@
 //
 // A real, hard rule (not just this module's own default): an island tile
 // is reachable ONLY by portal, never a road — `generate-random-map.ts`'s
-// own road loop must skip every zone-graph edge touching an island zone
-// entirely rather than let its usual "no road found, retry excluding
-// water, reclaim whatever water the repair path needed" fallback quietly
-// pave a land bridge through the deliberate moat (a real bug this session
-// found: that fallback doesn't know "island" is a special kind of
-// unreachable, so it happily reclaims moat tiles back to land for
-// whichever of an island's graph edges didn't already get the one portal
-// `generate-random-map.ts` places per island). This holds independent of
-// the separate `usePortals` bonus-shortcut toggle — turning that off only
-// stops the extra forced-portal shortcut elsewhere, never an island's own
-// mandatory portal connection.
+// own road loop places one portal pair per zone-graph EDGE that touches an
+// island (exactly mirroring how a non-island edge gets one road) instead
+// of ever attempting a road there, rather than let its usual "no road
+// found, retry excluding water, reclaim whatever water the repair path
+// needed" fallback quietly pave a land bridge through the deliberate moat
+// (a real bug this session found: that fallback doesn't know "island" is a
+// special kind of unreachable). This holds independent of the separate
+// `usePortals` bonus-shortcut toggle — turning that off only stops the
+// extra forced-portal shortcut elsewhere, never an island's own mandatory
+// portal connections.
 //
 // `includePlayerZones` (a real user request) lets a player's own start be
 // one of these islands too, not just neutral "treasure" zones — the
 // original, still-default behavior keeps every player land-connected.
+// "Island amount" (`waterChance` below) is a real 0-100% of the eligible
+// zone count either way — at 100%, EVERY eligible zone becomes an island
+// (every player's own start too, once `includePlayerZones` is on), leaving
+// no "mainland" at all. That's only safe because connectivity here is
+// per-EDGE (see above), not "each island finds some nearest non-island
+// zone" (an earlier version of this design, replaced once 100% could mean
+// zero non-island zones exist for that model to find at all).
 //
 // Known limitation, confirmed via a 35-seed verification sweep: at
 // aggressive settings (most neutral zones turned into small islands, e.g.
@@ -154,31 +160,6 @@ export function computeIslandZones(
   }
 
   return { landmassByZone, floodNodes }
-}
-
-/** The graph-closest zone to `zoneId` (via the real Dijkstra distance
- *  matrix, zone-graph.ts) that is NOT itself an island — the portal's
- *  "mainland" end for an island zone, so the pairing at least loosely
- *  follows the zone graph's own topology rather than an arbitrary fixed
- *  reference zone. Generalized from an earlier "nearest PLAYER zone"
- *  version once `includePlayerZones` made it possible for a player's own
- *  start to be an island too — at that point "nearest player zone" could
- *  itself resolve to another island, which is never a valid portal
- *  endpoint (an island's other end must be real, walkable land).
- *  `generate-terrain.ts`'s own island-count cap guarantees at least one
- *  non-island zone always exists to find here. */
-export function nearestNonIslandZone(zoneId: number, zones: ZoneSpec[], zoneDistances: number[][], islandZoneIds: Set<number>): number | null {
-  let best: number | null = null
-  let bestDist = Infinity
-  for (const zone of zones) {
-    if (islandZoneIds.has(zone.id)) continue
-    const dist = zoneDistances[zoneId][zone.id]
-    if (dist < bestDist) {
-      bestDist = dist
-      best = zone.id
-    }
-  }
-  return best
 }
 
 /** Real portal base sids (Core/DB/map/objects/4_interactables.json) —

@@ -52,7 +52,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, s
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
-import { nearestNonIslandZone, PORTAL_SIDS } from './zone-islands'
+import { PORTAL_SIDS } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
@@ -238,10 +238,11 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // in-zone lakes for a subset of neutral zones (zone-water.ts) — every
   // zone's own anchor is excluded from lake eligibility so a lake can never
   // flood the exact point roads/river are about to target. `'islands'` =
-  // the flood computed above around each island zone's landmass, plus a
-  // portal pair per island reconnecting it to its graph-nearest player
-  // zone (zone-islands.ts's own header comment on why a portal, not a
-  // boat). `'none'` does nothing. Whichever ran, everything downstream
+  // the flood computed above around each island zone's landmass; the road
+  // loop below places one portal pair per zone-graph edge that touches an
+  // island, instead of a road (zone-islands.ts's own header comment on why
+  // a portal, not a boat, and why this is per-edge). `'none'` does
+  // nothing. Whichever ran, everything downstream
   // shares the same collision state so nothing else can ever land on it.
   let waterNodesAll = new Set<number>()
   let waterChangesAll: { node: number; waterId: number }[] = []
@@ -264,35 +265,13 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       waterChangesAll.push({ node, waterId: 1 })
       levelChangesAll.push({ node, level: -1 })
     }
-
-    // One portal pair per island zone: one end on the island's own
-    // landmass, the other on its graph-nearest NON-island zone — generate-
-    // terrain.ts's own `maxIslands` cap always leaves at least one such
-    // zone, so this always finds a real, walkable "mainland" end even once
-    // player zones are eligible to be islands too (islandsIncludePlayerZones).
-    let portalColorIndex = 0
-    for (const islandZoneId of islandLandmassByZone.keys()) {
-      const mainlandZoneId = nearestNonIslandZone(islandZoneId, graph.zones, zoneDistances, islandZoneIds)
-      if (mainlandZoneId === null) continue
-      const portalSid = PORTAL_SIDS[portalColorIndex % PORTAL_SIDS.length]
-      portalColorIndex += 1
-
-      const islandTiles = tilesByZone.get(islandZoneId) ?? []
-      const mainlandTiles = tilesByZone.get(mainlandZoneId) ?? []
-      const islandNode = tryPlace(portalSid, islandTiles, sizeX, sizeZ, catalogById, state, rng)
-      const mainlandNode = tryPlace(portalSid, mainlandTiles, sizeX, sizeZ, catalogById, state, rng)
-      if (islandNode === null || mainlandNode === null) {
-        logWarn(`Random map generation: an island's portal pair (${portalSid}) couldn't be placed — that island may be unreachable`)
-        continue
-      }
-
-      const islandTempId = state.nextTempId++
-      const mainlandTempId = state.nextTempId++
-      portalPlacements.push({ tempId: islandTempId, sid: portalSid, node: islandNode })
-      portalPlacements.push({ tempId: mainlandTempId, sid: portalSid, node: mainlandNode })
-      portalAdjacency.set(islandTempId, mainlandTempId)
-      portalAdjacency.set(mainlandTempId, islandTempId)
-    }
+    // Per-edge portal placement (one island-touching zone-graph edge = one
+    // portal pair, exactly mirroring how a non-island edge gets one road)
+    // happens inside the road loop below, not here — see that loop's own
+    // comment for why: it needs to replace "one portal per island to some
+    // nearest mainland" (which breaks once EVERY zone, including every
+    // player's, can be an island — "100% island amount" — leaving no
+    // mainland at all for that model to fall back to).
   }
 
   // Optional bonus portal shortcut (VCMI's own `forcePortal` connection
@@ -402,17 +381,38 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // short zigzags the same way it always did.
   const roadSmoothWindow = Math.max(4, Math.round(roadWindingWavelength / 10))
   let unroutableEdges = 0
+  // Islands: one portal pair PER ZONE-GRAPH EDGE that touches an island —
+  // exactly mirroring how a non-island edge gets one road, just below in
+  // this same loop. A real, hard rule (zone-islands.ts's own header comment
+  // has the full story): an island is reachable ONLY by portal, never a
+  // road, regardless of the separate `usePortals` bonus-shortcut toggle.
+  // This per-EDGE design (rather than "one portal per island to some
+  // nearest non-island zone") is what makes "Island amount" a real 0-100%
+  // of the whole map: at 100%, EVERY zone (including every player's) can be
+  // an island, leaving no "mainland" left at all for a nearest-non-island
+  // fallback to find — but the zone graph's own edges (already proven fully
+  // connected, buildZoneGraph's own guarantee) still give every zone a real
+  // portal-based path to every other, exactly as roads would if none of
+  // this were water.
+  let islandPortalColorIndex = 0
   for (const [a, b] of graph.edges) {
-    // Hard rule (zone-islands.ts's own header comment): an island is
-    // reachable ONLY by portal. Never even attempt a road here — the
-    // water-partition-repair fallback below doesn't know "island" is a
-    // deliberately unreachable-by-land moat, not an incidental large lake,
-    // and would otherwise happily reclaim moat tiles back to land for
-    // whichever of an island's edges didn't already get the one portal
-    // placed earlier. Each island already gets its own guaranteed portal
-    // connection regardless of `usePortals` (that toggle only gates the
-    // separate bonus-shortcut portal, never an island's own).
-    if (islandZoneIds.has(a) || islandZoneIds.has(b)) continue
+    if (islandZoneIds.has(a) || islandZoneIds.has(b)) {
+      const portalSid = PORTAL_SIDS[islandPortalColorIndex % PORTAL_SIDS.length]
+      islandPortalColorIndex += 1
+      const nodeA = tryPlace(portalSid, tilesByZone.get(a) ?? [], sizeX, sizeZ, catalogById, state, rng)
+      const nodeB = tryPlace(portalSid, tilesByZone.get(b) ?? [], sizeX, sizeZ, catalogById, state, rng)
+      if (nodeA === null || nodeB === null) {
+        logWarn(`Random map generation: an island connection's portal pair (${portalSid}) couldn't be placed — that side may be unreachable`)
+        continue
+      }
+      const tempIdA = state.nextTempId++
+      const tempIdB = state.nextTempId++
+      portalPlacements.push({ tempId: tempIdA, sid: portalSid, node: nodeA })
+      portalPlacements.push({ tempId: tempIdB, sid: portalSid, node: nodeB })
+      portalAdjacency.set(tempIdA, tempIdB)
+      portalAdjacency.set(tempIdB, tempIdA)
+      continue
+    }
     const from = zoneAnchorNode.get(a) as number
     const to = zoneAnchorNode.get(b) as number
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
