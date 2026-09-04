@@ -105,6 +105,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
   const [islandsIncludePlayerZones, setIslandsIncludePlayerZones] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
+  const [islandLandRatio, setIslandLandRatio] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
   const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
@@ -134,17 +135,25 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
   const selectedSize = MAP_SIZE_PRESETS.find((p) => presetKey(p) === sizeKey) ?? MAP_SIZE_PRESETS[6]
   const previewActive = previewPhase !== 'off'
-  // Terrain-defining controls are editable in 'terrain' (still being tuned)
-  // and 'all' (one last adjustment allowed) but locked while 'roads' is
-  // being tuned specifically, so a roads-phase preview always reflects the
-  // terrain the user actually confirmed.
-  const terrainLocked = previewPhase === 'roads'
+  // Terrain-defining controls (Size/Players/water/zone/seed) are only ever
+  // editable during the 'terrain' stage itself — once confirmed (moving to
+  // 'roads' or 'all'), they stay locked for the rest of the flow (a real
+  // user request: no reason to keep adjusting something already
+  // confirmed), matching those same controls' own sliders being hidden
+  // rather than just disabled from that point on (see `showTerrainSliders`
+  // below).
+  const terrainLocked = previewPhase === 'roads' || previewPhase === 'all'
   // Visibility (not just enablement) — a real user request: while live
   // preview is running, only show sliders relevant to the CURRENT stage;
   // outside live preview, "Advanced" reveals everything at once, same as
   // before this feature existed.
-  const showTerrainSliders = previewPhase === 'off' ? advancedOpen : (previewPhase === 'terrain' || previewPhase === 'all')
-  const showRoadSliders = previewPhase === 'off' ? advancedOpen : (previewPhase === 'roads' || previewPhase === 'all')
+  // Each stage shows ONLY its own relevant sliders, strictly — once
+  // terrain (or roads) is confirmed, there's no reason to keep adjusting
+  // it, so the 'all' stage (a real user request) only ever shows the
+  // object/guard/decoration sliders, not a "one more pass" reopening of
+  // the earlier stages' own controls.
+  const showTerrainSliders = previewPhase === 'off' ? advancedOpen : previewPhase === 'terrain'
+  const showRoadSliders = previewPhase === 'off' ? advancedOpen : previewPhase === 'roads'
   const showObjectSliders = previewPhase === 'off' ? advancedOpen : previewPhase === 'all'
 
   const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], roadNodes?: Set<number>) => {
@@ -173,7 +182,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             if (seed === undefined) return // handleTogglePreview always fills a seed in before entering 'terrain'
             const result = await previewTerrain({
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
-              waterContent, waterChance, islandsIncludePlayerZones, zoneJaggedness, zoneSpread,
+              waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true,
             })
             if (!result) return // not Tauri
@@ -197,7 +206,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, zoneJaggedness, zoneSpread, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -226,6 +235,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         waterContent,
         waterChance,
         islandsIncludePlayerZones,
+        islandLandRatio,
         obstacleDensity,
         treasureDensity,
         objectVariety,
@@ -272,6 +282,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       waterContent,
       waterChance,
       islandsIncludePlayerZones,
+      islandLandRatio,
       obstacleDensity,
       treasureDensity,
       objectVariety,
@@ -302,6 +313,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
       setIslandsIncludePlayerZones(template.islandsIncludePlayerZones)
+      setIslandLandRatio(template.islandLandRatio)
       setObstacleDensity(template.obstacleDensity)
       setTreasureDensity(template.treasureDensity)
       setObjectVariety(template.objectVariety)
@@ -392,7 +404,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   ? 'Tune terrain below, then confirm to move on.'
                   : previewPhase === 'roads'
                     ? 'Tune road/river winding below, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
-                    : 'Adjust anything else you\'d like — including one more pass at terrain/roads — then Generate.'}
+                    : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else below, then Generate.'}
               </p>
             </div>
           )}
@@ -431,7 +443,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                       className="text-xs"
                       title={
                         waterContent === 'islands'
-                          ? 'How many zones become islands, and how little land each keeps — more islands means each is smaller, to leave room for a real moat between them; fewer means each is bigger.'
+                          ? 'How many zones become islands (their individual size is the separate Land/water ratio slider below).'
                           : 'How much of each neutral zone\'s free area becomes a lake, and how likely a zone is to get one at all. Player zones never get water.'
                       }
                     >
@@ -449,6 +461,18 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     Player zones can be islands
                   </Label>
                   <Switch id="rmg-islands-players" checked={islandsIncludePlayerZones} onCheckedChange={setIslandsIncludePlayerZones} disabled={terrainLocked} />
+                </div>
+              )}
+
+              {waterContent === 'islands' && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs" title="Independent from Island amount (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water.">
+                      Land/water ratio
+                    </Label>
+                    <span className="text-xs text-muted-foreground">{Math.round(islandLandRatio * 100)}% land</span>
+                  </div>
+                  <Slider min={0} max={1} step={0.05} value={[islandLandRatio]} onValueChange={([v]) => setIslandLandRatio(v)} disabled={terrainLocked} />
                 </div>
               )}
 

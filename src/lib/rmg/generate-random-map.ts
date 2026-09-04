@@ -52,7 +52,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, s
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
-import { PORTAL_SIDS } from './zone-islands'
+import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
@@ -80,6 +80,11 @@ export interface GenerateRandomMapOptions {
    *  generate-terrain.ts's own doc comment on this same option for the
    *  full rationale. No effect for `'none'`/`'normal'` water content. */
   islandsIncludePlayerZones?: boolean
+  /** `'islands'` mode only — 0-1, decoupled from `waterChance` (a real user
+   *  request): 0 = mostly water, each island small; 1 = mostly land, each
+   *  island large. See generate-terrain.ts's own doc comment on this same
+   *  option for the full rationale. Defaults to 0.4. */
+  islandLandRatio?: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
   obstacleDensity?: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts). Defaults to 1. */
@@ -168,7 +173,7 @@ export interface GenerateRandomMapOptions {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -184,7 +189,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // since it returns immediately after this) to have generateTerrain
   // compute water itself.
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, zoneJaggedness, zoneSpread, rng,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, rng,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly,
   })
@@ -381,36 +386,57 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // short zigzags the same way it always did.
   const roadSmoothWindow = Math.max(4, Math.round(roadWindingWavelength / 10))
   let unroutableEdges = 0
-  // Islands: one portal pair PER ZONE-GRAPH EDGE that touches an island —
-  // exactly mirroring how a non-island edge gets one road, just below in
-  // this same loop. A real, hard rule (zone-islands.ts's own header comment
-  // has the full story): an island is reachable ONLY by portal, never a
-  // road, regardless of the separate `usePortals` bonus-shortcut toggle.
-  // This per-EDGE design (rather than "one portal per island to some
-  // nearest non-island zone") is what makes "Island amount" a real 0-100%
-  // of the whole map: at 100%, EVERY zone (including every player's) can be
-  // an island, leaving no "mainland" left at all for a nearest-non-island
-  // fallback to find — but the zone graph's own edges (already proven fully
-  // connected, buildZoneGraph's own guarantee) still give every zone a real
-  // portal-based path to every other, exactly as roads would if none of
-  // this were water.
+  // Islands: a real, hard rule (zone-islands.ts's own header comment has
+  // the full story) — an island is reachable ONLY by portal, never a road,
+  // regardless of the separate `usePortals` bonus-shortcut toggle. Every
+  // zone-graph edge touching an island is a CANDIDATE portal connection,
+  // but `selectIslandConnections` reduces that down to the real minimum
+  // each island actually needs (1 normally, 2 for a "large" one — a real
+  // user report that naively portaling every candidate edge left small
+  // islands with 4+ portal objects) while a real connectivity check keeps
+  // the whole zone graph from ever fragmenting (see that function's own
+  // doc comment for why a naive "1 per island" rule alone isn't safe on a
+  // ring topology).
+  // "Large" is relative to what THIS generation actually produced (the
+  // average island landmass size this run), not a fixed fraction of the
+  // whole map — a fixed map-wide percentage miscalibrated badly across
+  // player counts/map sizes in real testing (at typical settings on a
+  // modest player count, EVERY island's own landmass already exceeded a
+  // naive "5% of the whole map" bar, so nearly every island got 2 portals
+  // instead of the intended "usually 1, occasionally 2" split). Only an
+  // island MEANINGFULLY bigger than this run's own typical one gets 2.
+  const islandSizes = [...islandLandmassByZone.values()].map((l) => l.length)
+  const avgIslandSize = islandSizes.length > 0 ? islandSizes.reduce((sum, n) => sum + n, 0) / islandSizes.length : 0
+  const desiredPortalCount = (zoneId: number): number => ((islandLandmassByZone.get(zoneId)?.length ?? 0) > avgIslandSize * 1.5 ? 2 : 1)
+  const selectedPortalEdges = new Set(
+    selectIslandConnections(graph.zones, graph.edges, islandZoneIds, desiredPortalCount).map(([a, b]) => `${a}:${b}`),
+  )
+  const islandGotPortal = new Set<number>()
   let islandPortalColorIndex = 0
+  const placeIslandPortal = (a: number, b: number): boolean => {
+    const portalSid = PORTAL_SIDS[islandPortalColorIndex % PORTAL_SIDS.length]
+    islandPortalColorIndex += 1
+    const nodeA = tryPlace(portalSid, tilesByZone.get(a) ?? [], sizeX, sizeZ, catalogById, state, rng)
+    const nodeB = tryPlace(portalSid, tilesByZone.get(b) ?? [], sizeX, sizeZ, catalogById, state, rng)
+    if (nodeA === null || nodeB === null) return false
+    const tempIdA = state.nextTempId++
+    const tempIdB = state.nextTempId++
+    portalPlacements.push({ tempId: tempIdA, sid: portalSid, node: nodeA })
+    portalPlacements.push({ tempId: tempIdB, sid: portalSid, node: nodeB })
+    portalAdjacency.set(tempIdA, tempIdB)
+    portalAdjacency.set(tempIdB, tempIdA)
+    if (islandZoneIds.has(a)) islandGotPortal.add(a)
+    if (islandZoneIds.has(b)) islandGotPortal.add(b)
+    return true
+  }
   for (const [a, b] of graph.edges) {
     if (islandZoneIds.has(a) || islandZoneIds.has(b)) {
-      const portalSid = PORTAL_SIDS[islandPortalColorIndex % PORTAL_SIDS.length]
-      islandPortalColorIndex += 1
-      const nodeA = tryPlace(portalSid, tilesByZone.get(a) ?? [], sizeX, sizeZ, catalogById, state, rng)
-      const nodeB = tryPlace(portalSid, tilesByZone.get(b) ?? [], sizeX, sizeZ, catalogById, state, rng)
-      if (nodeA === null || nodeB === null) {
-        logWarn(`Random map generation: an island connection's portal pair (${portalSid}) couldn't be placed — that side may be unreachable`)
-        continue
-      }
-      const tempIdA = state.nextTempId++
-      const tempIdB = state.nextTempId++
-      portalPlacements.push({ tempId: tempIdA, sid: portalSid, node: nodeA })
-      portalPlacements.push({ tempId: tempIdB, sid: portalSid, node: nodeB })
-      portalAdjacency.set(tempIdA, tempIdB)
-      portalAdjacency.set(tempIdB, tempIdA)
+      // Only place a portal for edges `selectIslandConnections` actually
+      // kept — every OTHER island-touching edge is real, deliberate
+      // redundancy (the ring's own topology still lists it, but it's not
+      // needed for connectivity once its island already has a portal
+      // elsewhere) and gets neither a road nor a portal.
+      if (selectedPortalEdges.has(`${a}:${b}`)) placeIslandPortal(a, b)
       continue
     }
     const from = zoneAnchorNode.get(a) as number
@@ -462,6 +488,32 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   if (unroutableEdges > 0) {
     logWarn(`Random map generation: ${unroutableEdges} zone connection(s) could not be routed at all — those two zones have no road between them (a genuine blocked-tile partition even after the water-repair pass; extremely crowded/watery map)`)
   }
+
+  // Failsafe (a real user report: "I see islands with no portal at all") —
+  // an island can end up here with zero portals if `selectIslandConnections`
+  // gave it none of its own edges (should only happen if every one of its
+  // edges was safely redundant, i.e. it already has a portal from THIS
+  // pass — but guard against it anyway) or if its one selected edge's
+  // `tryPlace` genuinely failed (no free tile on either side). Every
+  // island MUST have at least one way in — try every other zone in the
+  // whole map, nearest first, until one placement succeeds.
+  for (const islandZoneId of islandZoneIds) {
+    if (islandGotPortal.has(islandZoneId)) continue
+    const candidates = graph.zones
+      .map((z) => z.id)
+      .filter((id) => id !== islandZoneId)
+      .sort((x, y) => zoneDistances[islandZoneId][x] - zoneDistances[islandZoneId][y])
+    let rescued = false
+    for (const candidateId of candidates) {
+      if (placeIslandPortal(islandZoneId, candidateId)) { rescued = true; break }
+    }
+    if (rescued) {
+      logWarn(`Random map generation: zone ${islandZoneId} (an island) needed its failsafe portal — its own zone-graph edge(s) couldn't place one`)
+    } else {
+      logWarn(`Random map generation: zone ${islandZoneId} (an island) has NO portal anywhere on the map — it is completely unreachable. This is a genuinely degenerate case (every other zone's own tile pool was full)`)
+    }
+  }
+
   if (reclaimedWaterNodes.size > 0) {
     block2 = paintWaterTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, waterId: 0 })))
     block2 = paintLevelTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, level: 0 })))

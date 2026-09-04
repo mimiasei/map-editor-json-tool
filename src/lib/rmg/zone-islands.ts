@@ -162,6 +162,92 @@ export function computeIslandZones(
   return { landmassByZone, floodNodes }
 }
 
+/**
+ * Which zone-graph edges should get a portal, given every edge touching an
+ * island is a CANDIDATE (generate-random-map.ts's road loop would
+ * otherwise portal literally every one of them — confirmed the hard way:
+ * on the ring topology every zone has degree exactly 2, so an island zone
+ * always ends up with 2 full portal PAIRS — 4 portal objects — since BOTH
+ * of its own edges touch an island (itself), a real user report that this
+ * is simply too many; a small island only needs one way in and out, a
+ * large one at most two).
+ *
+ * Greedily drops candidate edges that are provably redundant — checked via
+ * a real connectivity test on the ABSTRACT zone graph (a Union-Find over
+ * `zones`/`edges`, not the tile grid; this graph is tiny, at most
+ * `2×playerCount` nodes, so this is cheap regardless of map size) — never
+ * dropping an edge if doing so would disconnect any zone from any other,
+ * and never dropping an island's own edge below `desiredPortalCount(zoneId)`
+ * connections. This is why a naive "just keep 1 edge per island, drop the
+ * rest" rule doesn't work on its own: on a ring, TWO adjacent islands each
+ * independently dropping "their" redundant edge can silently cut the ring
+ * into two disconnected halves (confirmed by hand-tracing a real 2-player
+ * case) — only a real connectivity check catches that.
+ */
+export function selectIslandConnections(
+  zones: ZoneSpec[],
+  edges: [number, number][],
+  islandZoneIds: Set<number>,
+  desiredPortalCount: (zoneId: number) => number,
+): [number, number][] {
+  const portalEdgeIndices: number[] = []
+  const roadEdgeIndices: number[] = []
+  edges.forEach((edge, i) => {
+    if (islandZoneIds.has(edge[0]) || islandZoneIds.has(edge[1])) portalEdgeIndices.push(i)
+    else roadEdgeIndices.push(i)
+  })
+
+  const kept = new Set(portalEdgeIndices)
+
+  const isConnectedWithout = (excludeIdx: number): boolean => {
+    const parent = new Map<number, number>(zones.map((z) => [z.id, z.id]))
+    const find = (x: number): number => {
+      while (parent.get(x) !== x) x = parent.get(x) as number
+      return x
+    }
+    const union = (a: number, b: number): void => {
+      const ra = find(a)
+      const rb = find(b)
+      if (ra !== rb) parent.set(ra, rb)
+    }
+    for (const i of roadEdgeIndices) union(edges[i][0], edges[i][1])
+    for (const i of kept) {
+      if (i === excludeIdx) continue
+      union(edges[i][0], edges[i][1])
+    }
+    const roots = new Set(zones.map((z) => find(z.id)))
+    return roots.size === 1
+  }
+
+  const portalCountByZone = new Map<number, number>()
+  const bump = (zoneId: number, delta: number): void => {
+    if (!islandZoneIds.has(zoneId)) return
+    portalCountByZone.set(zoneId, (portalCountByZone.get(zoneId) ?? 0) + delta)
+  }
+  for (const i of portalEdgeIndices) {
+    bump(edges[i][0], 1)
+    bump(edges[i][1], 1)
+  }
+
+  for (const i of portalEdgeIndices) {
+    const [a, b] = edges[i]
+    const aOver = islandZoneIds.has(a) && (portalCountByZone.get(a) ?? 0) > desiredPortalCount(a)
+    const bOver = islandZoneIds.has(b) && (portalCountByZone.get(b) ?? 0) > desiredPortalCount(b)
+    // Only a candidate for removal if at least one island endpoint has
+    // more connections than it needs — never drop an island's own sole
+    // required connection just because the OTHER endpoint happens to be
+    // over quota (that endpoint has its own other edge to fall back on;
+    // this one might not).
+    if (!aOver && !bOver) continue
+    if (!isConnectedWithout(i)) continue
+    kept.delete(i)
+    bump(a, -1)
+    bump(b, -1)
+  }
+
+  return [...kept].map((i) => edges[i])
+}
+
 /** Real portal base sids (Core/DB/map/objects/4_interactables.json) —
  *  cycled per island so multiple islands read as visually distinct portal
  *  networks. Safe to reuse a color across more than 5 islands: OE's own

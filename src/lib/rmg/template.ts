@@ -28,7 +28,7 @@ export interface RandomMapTemplate {
    *  mechanic exists in Olden Era). */
   waterContent: 'none' | 'normal' | 'islands'
   /** Overall water amount, 0-1 — lake prevalence/size in `'normal'` mode,
-   *  island count/land-vs-water ratio in `'islands'` mode. */
+   *  ISLAND COUNT (not size — see `islandLandRatio`) in `'islands'` mode. */
   waterChance: number
   /** `'islands'` mode only: let a player's own start be one of the islands
    *  too, instead of every player always staying land-connected
@@ -38,6 +38,11 @@ export interface RandomMapTemplate {
    *  mostly-solid mainland with a few carved-out neutral ones. Defaults to
    *  false. No effect for `'none'`/`'normal'` water content. */
   islandsIncludePlayerZones: boolean
+  /** `'islands'` mode only — a real user request to decouple "how many
+   *  islands" (`waterChance`) from "how big is each one": 0 = mostly
+   *  water, each island small (this mode's original, still-default look);
+   *  1 = mostly land, each island large. Defaults to 0.4. */
+  islandLandRatio: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering
    *  (zone-decoration.ts). 0.35 default — real hand-crafted maps run 17-40%
    *  actual decoration tile coverage; this isn't a 1:1 proxy for that (candidates
@@ -89,10 +94,11 @@ export interface RandomMapTemplate {
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   islandsIncludePlayerZones: false,
+  islandLandRatio: 0.4,
   obstacleDensity: 0.35,
   treasureDensity: 1,
   objectVariety: 0.4,
@@ -106,7 +112,7 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -115,6 +121,7 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     waterContent,
     waterChance,
     islandsIncludePlayerZones,
+    islandLandRatio,
     obstacleDensity,
     treasureDensity,
     objectVariety,
@@ -160,6 +167,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     waterContent: data.waterContent ?? DEFAULT_TEMPLATE_OVERRIDES.waterContent,
     waterChance: typeof data.waterChance === 'number' ? data.waterChance : DEFAULT_TEMPLATE_OVERRIDES.waterChance,
     islandsIncludePlayerZones: typeof data.islandsIncludePlayerZones === 'boolean' ? data.islandsIncludePlayerZones : DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones,
+    islandLandRatio: typeof data.islandLandRatio === 'number' ? data.islandLandRatio : DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio,
     obstacleDensity: typeof data.obstacleDensity === 'number' ? data.obstacleDensity : DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity,
     treasureDensity: typeof data.treasureDensity === 'number' ? data.treasureDensity : DEFAULT_TEMPLATE_OVERRIDES.treasureDensity,
     objectVariety: typeof data.objectVariety === 'number' ? data.objectVariety : DEFAULT_TEMPLATE_OVERRIDES.objectVariety,

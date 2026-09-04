@@ -82,14 +82,32 @@ export interface GenerateTerrainOptions {
    *  "the whole map looks like it was flooded, then random-sized islands
    *  spread around" instead of a mostly-solid mainland with a few carved-
    *  out neutral islands. `waterChance` ("Island amount") still controls
-   *  both count and size the same way either way (more islands = smaller
-   *  each, to leave room for a real moat between them; fewer = bigger) —
-   *  this only widens which zones are ELIGIBLE to become one. Always
-   *  leaves at least one zone non-island (see the `maxIslands` cap below)
-   *  so there's a guaranteed real "mainland" every island can portal to —
-   *  without that, an all-islands map would have nothing for any portal to
-   *  connect to at all. Defaults to false (today's original behavior). */
+   *  ISLAND COUNT the same way either way (more = more islands) — this
+   *  only widens which zones are ELIGIBLE to become one; per-island SIZE
+   *  is `islandLandRatio`'s own, independent concern (see its doc comment).
+   *  At `waterChance` 1 (100%), every eligible zone — including every
+   *  player's own start once this is on — becomes an island, leaving no
+   *  "mainland" at all; connectivity still holds because
+   *  generate-random-map.ts's own road loop places one portal per
+   *  island-touching zone-graph edge rather than routing every island to
+   *  some nearest non-island zone. Defaults to false (today's original
+   *  behavior). */
   islandsIncludePlayerZones?: boolean
+  /** `'islands'` mode only — a real user request to decouple "how many
+   *  islands" (`waterChance`) from "how big is each one." 0 = mostly
+   *  water, each island small ("dead space" ocean with small islands
+   *  dotted around — this mode's original, still-default look); 1 = mostly
+   *  land, each island large (little open water beyond a thin moat).
+   *  Maps directly onto `computeIslandZones`'s own `landmassFraction`
+   *  param (the fraction of each chosen zone's own tile pool that stays
+   *  land) — previously derived from `waterChance` itself
+   *  (`0.6 - waterChance * 0.4`), which meant there was no way to have
+   *  MANY small islands or a FEW large ones independently of each other;
+   *  now genuinely independent. Defaults to 0.4, close to that old
+   *  formula's own default-`waterChance` result, so a template that never
+   *  sets this explicitly still looks like it did before this option
+   *  existed. */
+  islandLandRatio?: number
   /** false for the "terrain only" final mode (no spawners at all — the map
    *  maker places everything themselves) and for the real generator's own
    *  initial phase when its own `terrainOnly` option is set; true for the
@@ -151,7 +169,7 @@ export function generateTerrain(
   const {
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
-    islandsIncludePlayerZones = false, includeSpawners, playerSpawnerSid, computeWater = false,
+    islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
   } = options
   const tileCount = sizeX * sizeZ
 
@@ -177,8 +195,7 @@ export function generateTerrain(
     // nothing is left non-island at all — see that loop's own comment).
     const eligibleZoneCount = islandsIncludePlayerZones ? graph.zones.length : graph.zones.filter((z) => z.kind === 'neutral').length
     const maxIslands = Math.max(1, Math.round(eligibleZoneCount * waterChance))
-    const landmassFraction = 0.6 - waterChance * 0.4
-    const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, landmassFraction, islandsIncludePlayerZones)
+    const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, islandLandRatio, islandsIncludePlayerZones)
     for (const [zoneId, landmass] of islandResult.landmassByZone) {
       tilesByZone.set(zoneId, landmass)
       islandLandmassByZone.set(zoneId, landmass)
