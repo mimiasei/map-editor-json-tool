@@ -30,35 +30,29 @@
 import {
   addObjectInstance,
   addObjectInstances,
-  buildBlankMap,
   paintLevelTiles,
   paintRiverTiles,
   paintRoadTiles,
-  paintTerrainTiles,
   paintWaterTiles,
   setAreas,
   setCityFaction,
   upsertPropPortals,
   BLANK_MAP_BIOME_NAMES,
-  type BlankMapPlayer,
   type MapContainer,
 } from '@/lib/map-write'
-import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
 import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
-import { buildZoneGraph, zoneDistanceMatrix } from './zone-graph'
-import { layoutZoneCenters, nearestTile, relaxZoneCenters } from './zone-layout'
-import { assignTilesToZonesPenrose } from './zone-shape-penrose'
-import { assignZoneBiomes, createPlacementState, populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
+import { generateTerrain } from './generate-terrain'
+import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
-import { computeIslandZones, nearestPlayerZone, PORTAL_SIDS } from './zone-islands'
+import { nearestPlayerZone, PORTAL_SIDS } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
@@ -150,14 +144,13 @@ export interface GenerateRandomMapOptions {
   roadWindingWavelength?: number
   /** Injectable for deterministic tests, or a template's fixed seed (see template.ts's `createSeededRng`); defaults to `Math.random`. */
   rng?: () => number
-}
-
-/** `zoneJaggedness`'s 0-1 UI range onto zone-shape-penrose.ts's real
- *  `scale` parameter (7 = coarsest it supports down to 1 = finest) — solved
- *  so the option's own default (0.5) reproduces that module's prior
- *  hardcoded constant (4) exactly. */
-function jaggednessToPenroseScale(jaggedness: number): number {
-  return 7 - jaggedness * 6
+  /** "Terrain only" mode (a real user request): produce just the tile
+   *  arrays (biome/water/elevation) — no player spawners, no roads/rivers,
+   *  no objects/guards/decoration at all — for a map maker who wants the
+   *  random fractal terrain shape but places everything else themselves.
+   *  Returns immediately after `generate-terrain.ts`'s own terrain phase.
+   *  Defaults to `false` (normal full generation). */
+  terrainOnly?: boolean
 }
 
 /**
@@ -169,96 +162,43 @@ function jaggednessToPenroseScale(jaggedness: number): number {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
+
+  // Zone graph → Fruchterman-Reingold layout → Penrose-tiling zone shaping →
+  // biome assignment (Milestone 4 — see generate-terrain.ts's own header
+  // comment for why this is a shared, extracted function: byte-identical
+  // terrain for the same seed whether called standalone for a preview/
+  // terrain-only map or as this real pipeline's own first phase).
+  // `computeWater: terrainOnly` — a real full generation computes its own
+  // water itself, below, AFTER object population (so lakes still avoid
+  // overlapping a real object, exactly as before this extraction); a
+  // terrain-only run has no objects to avoid, so it's fine (and necessary,
+  // since it returns immediately after this) to have generateTerrain
+  // compute water itself.
+  const terrain = generateTerrain(template, catalogById, {
+    sizeX, sizeZ, playerCount, waterContent, waterChance, zoneJaggedness, zoneSpread, rng,
+    includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
+    computeWater: terrainOnly,
+  })
+  if (terrainOnly) return terrain.container
+
   const objectLogicsById = buildObjectLogicsIndex(catalog)
+  const { graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state } = terrain
+  let container = terrain.container
+  let block2 = container.chunks[1]
 
-  const graph = buildZoneGraph(playerCount)
-  // buildZoneGraph's own doc comment claims every ring it builds is fully
-  // connected by construction — verified here via the real Dijkstra
-  // distance graph (issue #210's own research notes) rather than trusted
-  // blindly, since zone-layout.ts's BFS-order placement silently produces a
-  // nonsensical layout (not a loud failure) if that claim were ever wrong.
-  const zoneDistances = zoneDistanceMatrix(graph)
-  if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
-    throw new Error('RMG zone graph is disconnected — buildZoneGraph should never produce this')
-  }
-
-  // Milestone 4: a real Fruchterman-Reingold relaxation on top of the ring
-  // seed (zones as size-weighted "soft spheres" — see relaxZoneCenters's
-  // own doc comment), then real Penrose-tiling zone shaping (nearest
-  // vertex, then nearest zone — zone-shape-penrose.ts) instead of the
-  // plain weighted-Voronoi tessellation Milestones 1-3 used. Confirmed via
-  // a real verification sweep: every zone still comes out as a single
-  // connected tile region (not fragmented by the jagged vertex-based
-  // boundary) across every tested map size/player count.
-  const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
-  const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
-  const zoneBiome = assignZoneBiomes(graph.zones)
-
-  // Islands: shrink chosen neutral zones' own tile pool to a compact
-  // landmass BEFORE anchors/population are computed, so a dwelling/mine/
-  // guard placed "in this zone" naturally clusters within the landmass
-  // rather than potentially landing in what's about to become open water.
-  // `waterChance` doubles as "how island-y": more/bigger islands, less
-  // land kept per island, at higher settings.
-  let islandFloodNodes = new Set<number>()
-  const islandLandmassByZone = new Map<number, number[]>()
-  if (waterContent === 'islands') {
-    const neutralZoneCount = graph.zones.filter((z) => z.kind === 'neutral').length
-    const maxIslands = Math.max(1, Math.round(neutralZoneCount * waterChance))
-    const landmassFraction = 0.6 - waterChance * 0.4 // 0.6 at chance→0 down to 0.2 at chance=1
-    const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, landmassFraction)
-    for (const [zoneId, landmass] of islandResult.landmassByZone) {
-      tilesByZone.set(zoneId, landmass)
-      islandLandmassByZone.set(zoneId, landmass)
-    }
-    islandFloodNodes = islandResult.floodNodes
-  }
-
-  // Every zone's own real anchor tile — a player zone's spawn point, and
-  // every zone's own road/river endpoint (zone-connections.ts below).
-  const zoneAnchorNode = new Map<number, number>()
-  for (const zone of graph.zones) {
-    const tiles = tilesByZone.get(zone.id) ?? []
-    const center = centers[zone.id]
-    zoneAnchorNode.set(zone.id, tiles.length > 0 ? nearestTile(tiles, sizeX, center) : center.z * sizeX + center.x)
-  }
-
-  const players: BlankMapPlayer[] = graph.zones
-    .filter((zone) => zone.kind === 'player')
-    .map((zone) => ({ sid: playerSpawnerSid, node: zoneAnchorNode.get(zone.id) as number }))
-
-  let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
-
-  // Overwrite the uniform fill from buildBlankMap with each zone's own
-  // biome — one bulk pass, same paintTerrainTiles bulk writer the Terrain
-  // brush/bucket-fill use.
-  const terrainChanges: { node: number; biomeId: number }[] = new Array(tileCount)
-  for (let node = 0; node < tileCount; node++) {
-    terrainChanges[node] = { node, biomeId: zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0] }
-  }
-  let block2 = paintTerrainTiles(container.chunks[1], terrainChanges)
-
-  // Seed the collision state with the player spawners just placed, so every
-  // later placement pass (mines/dwellings/guards, then obstacles) never
-  // overlaps one.
-  const seedBlocked = new Set<number>()
-  const seedAnchors = new Set<number>()
+  // `objectGroups`' own spawner entry — same shape as before this
+  // extraction, just sourced from the players `generateTerrain` already
+  // committed via `buildBlankMap`.
   const spawnerGroup: ObjectPlacementGroup = { ids: [], nodes: [], rotations: [], levels: [] }
-  const spawnerTemplate = catalogById.get(playerSpawnerSid)
   players.forEach((p, i) => {
     spawnerGroup.ids.push(i)
     spawnerGroup.nodes.push(p.node)
     spawnerGroup.rotations.push(0)
     spawnerGroup.levels.push(0)
-    seedAnchors.add(p.node)
-    for (const cell of computeFootprintTiles(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX))) {
-      if (cell.value === 1) seedBlocked.add(cell.z * sizeX + cell.x)
-    }
   })
-  const state = createPlacementState(seedBlocked, seedAnchors)
 
   const { placements, concreteSquads } = populateZones({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety,

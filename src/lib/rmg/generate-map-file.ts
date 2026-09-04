@@ -11,14 +11,45 @@
 // (mines/dwellings) and needs their real footprints to avoid overlap.
 
 import { isTauri, readBinaryFile } from '@/lib/native-fs'
-import { readMapContainer, buildMapContainer, gzipBytes, gunzipBytes } from '@/lib/map-write'
+import { readMapContainer, buildMapContainer, gzipBytes, gunzipBytes, type MapContainer } from '@/lib/map-write'
 import { loadParsedMapFile, type OpenMapResult } from '@/lib/map-file'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { generateRandomMap, type GenerateRandomMapOptions } from './generate-random-map'
+import { generateTerrain, type GenerateTerrainOptions, type TerrainResult } from './generate-terrain'
 
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
+}
+
+/** Reads the same bundled `template.map`/loaded-catalog pair
+ *  `generateRandomMapFile` itself reads, for callers (the live-preview
+ *  dialog) that need it without going through a full generation — kept
+ *  here rather than in `generate-terrain.ts` so that file stays
+ *  environment-agnostic (no Tauri fs, no store access), matching this
+ *  file's own existing role as the Tauri/store orchestration layer. */
+async function readTemplateAndCatalog(): Promise<{ template: MapContainer; catalogById: Map<string, import('@/lib/catalog/types').CatalogMapObject> } | null> {
+  if (!isTauri()) return null
+  const catalog = useCatalogStore.getState().catalog
+  if (!catalog) throw new Error('Load Game Data first (More → Game Data) so map objects can be resolved.')
+
+  const { resourceDir, join } = await import('@tauri-apps/api/path')
+  const templatePath = await join(await resourceDir(), 'resources', 'template.map')
+  const templateBuffer = await readBinaryFile(templatePath)
+  if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
+  const template = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
+  const catalogById = new Map(catalog.mapObjects.map((o) => [o.id, o]))
+  return { template, catalogById }
+}
+
+/**
+ * Live-preview entry point (issue #210) — terrain only, no full generation.
+ * Returns `null` outside Tauri, same convention as `generateRandomMapFile`.
+ */
+export async function previewTerrain(options: GenerateTerrainOptions): Promise<TerrainResult | null> {
+  const loaded = await readTemplateAndCatalog()
+  if (!loaded) return null
+  return generateTerrain(loaded.template, loaded.catalogById, options)
 }
 
 /**
@@ -28,17 +59,12 @@ export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
  */
 export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<OpenMapResult | null> {
   if (!isTauri()) return null
-
   const catalog = useCatalogStore.getState().catalog
   if (!catalog) throw new Error('Load Game Data first (More → Game Data) so map objects can be resolved.')
 
-  const { resourceDir, join } = await import('@tauri-apps/api/path')
-  const templatePath = await join(await resourceDir(), 'resources', 'template.map')
-  const templateBuffer = await readBinaryFile(templatePath)
-  if (!templateBuffer) throw new Error(`Could not read the blank-map template at "${templatePath}"`)
-  const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
-
-  const container = generateRandomMap(templateContainer, catalog, options)
+  const loaded = await readTemplateAndCatalog()
+  if (!loaded) return null
+  const container = generateRandomMap(loaded.template, catalog, options)
   const gzipped = await gzipBytes(buildMapContainer(container))
   const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 

@@ -1,0 +1,244 @@
+// ─── RMG terrain generation — extracted for reuse (issue #210) ──────────────
+// A real user request: a "live terrain preview" the user can tweak sliders
+// against before committing to the rest of generation, plus a "terrain
+// only" final mode for a map maker who wants the random fractal terrain but
+// places everything else by hand. Both need the exact same zone-graph/
+// layout/Penrose-tiling/biome logic `generate-random-map.ts` already had
+// inlined as its own first phase — extracted here so there is ONE real
+// implementation, not two, and a preview's terrain is byte-identical to
+// what a real generation with the same seed/options produces.
+//
+// Confirmed via direct inspection: none of zone-graph.ts/zone-layout.ts/
+// zone-shape-penrose.ts/zone-water.ts/zone-islands.ts import anything from
+// `@/lib/catalog/*` — this whole phase needs only `catalogById` for the
+// player-spawner sid's own footprint (to seed collision state), nothing
+// else about a loaded GameCatalog. It's also fully deterministic given the
+// injected `rng` (no other randomness anywhere in this phase), so the same
+// seed reproduces byte-identical zone shapes/biomes every time.
+//
+// `computeWater` is a real, deliberate design choice, not an oversight:
+// `zone-water.ts`'s `scatterZoneWater` treats `blocked`/`usedAnchors` as an
+// ELIGIBILITY FILTER (a lake can't grow over an already-blocked tile) — in
+// the real full pipeline, water is computed AFTER object population
+// specifically so lakes avoid overlapping a real mine/dwelling/guard
+// (confirmed by reading `zone-water.ts` directly). Computing water here
+// instead — before any object exists — would flip that avoidance direction
+// (objects would end up avoiding water instead of water avoiding objects),
+// which risks crowding out real content in heavily-watered zones despite
+// not being technically broken (whichever runs second still avoids the
+// first via the shared `state.blocked`). To avoid that quality risk for
+// real generations, `generate-random-map.ts`'s own call into this function
+// passes `computeWater: false` and keeps computing water itself at its
+// existing point in the sequence, completely unchanged. `computeWater: true`
+// is only used by the terrain-only final mode and the live-preview's
+// terrain phase — both have zero objects to avoid at this point anyway, so
+// there's no discrepancy to worry about there. This is also why water
+// (unlike zone shape/biome) is NOT guaranteed pixel-identical between a
+// live preview and an eventual full generation — the full pipeline's real
+// water avoids real objects the preview never had.
+
+import {
+  buildBlankMap,
+  paintLevelTiles,
+  paintTerrainTiles,
+  paintWaterTiles,
+  BLANK_MAP_BIOME_NAMES,
+  type BlankMapPlayer,
+  type MapContainer,
+} from '@/lib/map-write'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import type { CatalogMapObject } from '@/lib/catalog/types'
+import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
+import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
+import { assignTilesToZonesPenrose } from './zone-shape-penrose'
+import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
+import { computeIslandZones } from './zone-islands'
+import { scatterZoneWater } from './zone-water'
+
+export { BLANK_MAP_BIOME_NAMES }
+
+/** `zoneJaggedness`'s 0-1 UI range onto zone-shape-penrose.ts's real `scale`
+ *  parameter — see `generate-random-map.ts`'s own copy of this before the
+ *  extraction for the full doc comment; kept identical here since both
+ *  files need it and it's a one-line pure function, not worth a shared
+ *  third module for. */
+export function jaggednessToPenroseScale(jaggedness: number): number {
+  return 7 - jaggedness * 6
+}
+
+export interface GenerateTerrainOptions {
+  sizeX: number
+  sizeZ: number
+  playerCount: number
+  waterContent?: 'none' | 'normal' | 'islands'
+  waterChance?: number
+  zoneJaggedness?: number
+  zoneSpread?: number
+  rng?: () => number
+  /** false for the "terrain only" final mode (no spawners at all — the map
+   *  maker places everything themselves) and for the real generator's own
+   *  initial phase when its own `terrainOnly` option is set; true for the
+   *  live-preview flow (spawners are needed for the roads-preview phase
+   *  and for a subsequent full generation to continue from) and for the
+   *  real generator's own normal (non-terrain-only) initial phase. */
+  includeSpawners: boolean
+  /** Required when `includeSpawners` is true. */
+  playerSpawnerSid?: 'city-spawner' | 'hero-spawner'
+  /** See this file's own header comment on why this defaults to false and
+   *  why the real full-pipeline generator deliberately passes false. */
+  computeWater?: boolean
+}
+
+export interface TerrainResult {
+  sizeX: number
+  sizeZ: number
+  /** Terrain-painted (and, if `computeWater`, water/level-painted) —
+   *  spawners already committed by `buildBlankMap` if `includeSpawners`. */
+  container: MapContainer
+  graph: ZoneGraph
+  zoneDistances: number[][]
+  centers: ZoneCenter[]
+  zoneIdByNode: number[]
+  /** Shrunk to each island's own landmass for `waterContent: 'islands'`. */
+  tilesByZone: Map<number, number[]>
+  zoneBiome: Map<number, BiomeId>
+  zoneAnchorNode: Map<number, number>
+  /** Only populated for `waterContent: 'islands'` — each island zone's own
+   *  shrunk landmass tile list, needed by the real generator's own
+   *  portal-placement pass (not run here — see header comment). */
+  islandLandmassByZone: Map<number, number[]>
+  /** Every tile outside an island zone's own landmass, not yet painted as
+   *  water unless `computeWater` — the real generator floods these itself
+   *  at its own existing point in the sequence when `computeWater` is
+   *  false. */
+  islandFloodNodes: Set<number>
+  players: BlankMapPlayer[]
+  /** Seeded from spawner footprints (if `includeSpawners`) and, if
+   *  `computeWater`, water tiles too. */
+  state: PlacementState
+  waterNodesAll: Set<number>
+  waterMapFinal: number[]
+  levelsMapFinal: number[]
+}
+
+/**
+ * Zone graph → Fruchterman-Reingold layout → Penrose-tiling zone shaping →
+ * biome assignment → (optional) water — the fully catalog-independent,
+ * deterministic, cheap phase of random map generation. See this file's own
+ * header comment for why water is gated behind `computeWater` rather than
+ * always computed here.
+ */
+export function generateTerrain(
+  template: MapContainer,
+  catalogById: Map<string, CatalogMapObject>,
+  options: GenerateTerrainOptions,
+): TerrainResult {
+  const {
+    sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
+    zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
+    includeSpawners, playerSpawnerSid, computeWater = false,
+  } = options
+  const tileCount = sizeX * sizeZ
+
+  const graph = buildZoneGraph(playerCount)
+  const zoneDistances = zoneDistanceMatrix(graph)
+  if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
+    throw new Error('RMG zone graph is disconnected — buildZoneGraph should never produce this')
+  }
+
+  const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
+  const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
+  const zoneBiome = assignZoneBiomes(graph.zones)
+
+  let islandFloodNodes = new Set<number>()
+  const islandLandmassByZone = new Map<number, number[]>()
+  if (waterContent === 'islands') {
+    const neutralZoneCount = graph.zones.filter((z) => z.kind === 'neutral').length
+    const maxIslands = Math.max(1, Math.round(neutralZoneCount * waterChance))
+    const landmassFraction = 0.6 - waterChance * 0.4
+    const islandResult = computeIslandZones(sizeX, sizeZ, graph.zones, tilesByZone, centers, rng, maxIslands, landmassFraction)
+    for (const [zoneId, landmass] of islandResult.landmassByZone) {
+      tilesByZone.set(zoneId, landmass)
+      islandLandmassByZone.set(zoneId, landmass)
+    }
+    islandFloodNodes = islandResult.floodNodes
+  }
+
+  const zoneAnchorNode = new Map<number, number>()
+  for (const zone of graph.zones) {
+    const tiles = tilesByZone.get(zone.id) ?? []
+    const center = centers[zone.id]
+    zoneAnchorNode.set(zone.id, tiles.length > 0 ? nearestTile(tiles, sizeX, center) : center.z * sizeX + center.x)
+  }
+
+  const players: BlankMapPlayer[] = includeSpawners
+    ? graph.zones.filter((zone) => zone.kind === 'player').map((zone) => ({ sid: playerSpawnerSid as 'city-spawner' | 'hero-spawner', node: zoneAnchorNode.get(zone.id) as number }))
+    : []
+
+  let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
+
+  const terrainChanges: { node: number; biomeId: number }[] = new Array(tileCount)
+  for (let node = 0; node < tileCount; node++) {
+    terrainChanges[node] = { node, biomeId: zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0] }
+  }
+  let block2 = paintTerrainTiles(container.chunks[1], terrainChanges)
+
+  const seedBlocked = new Set<number>()
+  const seedAnchors = new Set<number>()
+  if (includeSpawners && playerSpawnerSid) {
+    const spawnerTemplate = catalogById.get(playerSpawnerSid)
+    for (const p of players) {
+      seedAnchors.add(p.node)
+      for (const cell of computeFootprintTiles(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX))) {
+        if (cell.value === 1) seedBlocked.add(cell.z * sizeX + cell.x)
+      }
+    }
+  }
+  const state = createPlacementState(seedBlocked, seedAnchors)
+
+  let waterNodesAll = new Set<number>()
+  let waterChangesAll: { node: number; waterId: number }[] = []
+  let levelChangesAll: { node: number; level: number }[] = []
+  if (computeWater) {
+    if (waterContent === 'normal') {
+      const waterResult = scatterZoneWater({
+        sizeX, sizeZ, zones: graph.zones, tilesByZone,
+        excludedNodes: new Set(zoneAnchorNode.values()),
+        blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
+      })
+      waterNodesAll = waterResult.waterNodes
+      waterChangesAll = waterResult.waterChanges
+      levelChangesAll = waterResult.levelChanges
+    } else if (waterContent === 'islands') {
+      for (const node of islandFloodNodes) {
+        waterNodesAll.add(node)
+        waterChangesAll.push({ node, waterId: 1 })
+        levelChangesAll.push({ node, level: -1 })
+      }
+    }
+  }
+
+  if (waterChangesAll.length > 0) {
+    block2 = paintWaterTiles(block2, waterChangesAll)
+    block2 = paintLevelTiles(block2, levelChangesAll)
+    for (const node of waterNodesAll) {
+      state.blocked.add(node)
+      state.usedAnchors.add(node)
+    }
+  }
+  const levelsMapFinal = new Array(tileCount).fill(0)
+  const waterMapFinal = new Array(tileCount).fill(0)
+  for (const { node, waterId } of waterChangesAll) waterMapFinal[node] = waterId
+  for (const { node, level } of levelChangesAll) levelsMapFinal[node] = level
+
+  const finalChunks = container.chunks.slice()
+  finalChunks[1] = block2
+  container = { ...container, chunks: finalChunks }
+
+  return {
+    sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
+    zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
+    waterNodesAll, waterMapFinal, levelsMapFinal,
+  }
+}

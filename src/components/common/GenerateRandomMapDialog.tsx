@@ -10,8 +10,20 @@
 // builds, even though generation itself is Tauri-only) — deliberately
 // scoped down from VCMI's own per-zone template authoring (no zone-graph
 // topology editor exists yet; see issue #210's Milestone 4/5 notes).
+//
+// Two real user-requested additions (issue #210): "Terrain only" (Generate
+// produces just the tile arrays — no spawners, no roads, no objects — for a
+// map maker who wants the random fractal terrain shape but places
+// everything else themselves), and a two-phase live preview: first a live
+// terrain (biome/water/elevation) canvas the user tunes and confirms, then
+// a live roads/rivers canvas built on top of that now-fixed terrain, also
+// tuned and confirmed, before the normal full generation runs. See
+// generate-terrain.ts's own header comment for why the roads preview is
+// NOT pixel-guaranteed identical to the eventual real roads (it's a
+// cosmetic tuning aid, not a forecast) while the terrain phase IS
+// guaranteed identical for the same seed (one shared implementation).
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
@@ -22,7 +34,10 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
-import { generateRandomMapFile } from '@/lib/rmg/generate-map-file'
+import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
+import { previewRoads } from '@/lib/rmg/preview-roads'
+import type { TerrainResult } from '@/lib/rmg/generate-terrain'
+import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { openFile, saveFile } from '@/lib/native-fs'
@@ -36,6 +51,9 @@ interface Props {
 
 const DEFAULT_SIZE_KEY = presetKey({ sizeX: 64, sizeZ: 64 })
 const PLAYER_COUNT_OPTIONS = [2, 3, 4, 5, 6, 7, 8]
+const PREVIEW_DEBOUNCE_MS = 250
+
+type PreviewPhase = 'off' | 'terrain' | 'roads'
 
 function pctLabel(value: number): string {
   return `${Math.round(value * 100)}%`
@@ -72,7 +90,88 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
 
+  const [terrainOnly, setTerrainOnly] = useState(false)
+  const [previewPhase, setPreviewPhase] = useState<PreviewPhase>('off')
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewBusy, setPreviewBusy] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const lockedTerrainRef = useRef<TerrainResult | null>(null)
+
   const selectedSize = MAP_SIZE_PRESETS.find((p) => presetKey(p) === sizeKey) ?? MAP_SIZE_PRESETS[6]
+  const previewActive = previewPhase !== 'off'
+  const terrainLocked = previewPhase === 'roads'
+  // Every slider below is inert once "Terrain only" is on — no roads,
+  // objects, guards, or decoration ever get generated in that mode.
+  const nonTerrainDisabled = terrainOnly
+
+  const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], roadNodes?: Set<number>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    canvas.width = selectedSize.sizeX
+    canvas.height = selectedSize.sizeZ
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    paintTerrainCanvas(ctx, selectedSize.sizeX, selectedSize.sizeZ, tilesMap, waterMap, undefined, roadNodes)
+  }
+
+  // Terrain-phase live preview — debounced on every terrain-relevant field.
+  useEffect(() => {
+    if (previewPhase !== 'terrain') return
+    const seed = seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined
+    if (seed === undefined) return // handleTogglePreview always fills a seed in before entering 'terrain'
+    const timer = setTimeout(() => {
+      setPreviewBusy(true)
+      setPreviewError(null)
+      previewTerrain({
+        sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
+        waterContent, waterChance, zoneJaggedness, zoneSpread,
+        rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true,
+      })
+        .then((result) => {
+          if (!result) return // not Tauri
+          lockedTerrainRef.current = result
+          const b2 = JSON.parse(new TextDecoder().decode(result.container.chunks[1])) as { tilesMap: number[]; waterMap: number[] }
+          drawTerrainCanvas(b2.tilesMap, b2.waterMap)
+        })
+        .catch((e) => setPreviewError(e instanceof Error ? e.message : String(e)))
+        .finally(() => setPreviewBusy(false))
+    }, PREVIEW_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, zoneJaggedness, zoneSpread, seedText])
+
+  // Roads-phase live preview — debounced on winding sliders only, built on
+  // top of whatever terrain the 'terrain' phase last locked in.
+  useEffect(() => {
+    if (previewPhase !== 'roads') return
+    const terrain = lockedTerrainRef.current
+    if (!terrain) return
+    const timer = setTimeout(() => {
+      const { roadNodes, riverNodes } = previewRoads(terrain, {
+        roadWindingAmplitude, roadWindingWavelength,
+        rng: seedText.trim() && Number.isFinite(Number(seedText)) ? createSeededRng(Number(seedText)) : Math.random,
+      })
+      const b2 = JSON.parse(new TextDecoder().decode(terrain.container.chunks[1])) as { tilesMap: number[]; waterMap: number[] }
+      drawTerrainCanvas(b2.tilesMap, b2.waterMap, new Set([...roadNodes, ...riverNodes]))
+    }, PREVIEW_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewPhase, roadWindingAmplitude, roadWindingWavelength])
+
+  const handleTogglePreview = (checked: boolean) => {
+    if (checked) {
+      // A live preview only reproduces exactly what it showed if the final
+      // Generate call reuses the SAME seed — auto-fill one now (visibly,
+      // still editable) rather than leaving it blank.
+      if (!seedText.trim()) setSeedText(String(Math.floor(Math.random() * 1_000_000_000)))
+      setAdvancedOpen(true)
+      setPreviewError(null)
+      setPreviewPhase('terrain')
+    } else {
+      setPreviewPhase('off')
+      lockedTerrainRef.current = null
+    }
+  }
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -96,6 +195,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         squadDensity,
         roadWindingAmplitude,
         roadWindingWavelength,
+        terrainOnly,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -107,6 +207,14 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     } finally {
       setGenerating(false)
     }
+  }
+
+  const handleConfirmTerrain = () => {
+    if (terrainOnly) {
+      void handleGenerate()
+      return
+    }
+    setPreviewPhase('roads')
   }
 
   const handleSaveTemplate = async () => {
@@ -167,7 +275,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={advancedOpen ? 620 : 400} minWidth={360} minHeight={320} storageKey="generate-random-map">
+      <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={previewActive ? 720 : advancedOpen ? 620 : 400} minWidth={360} minHeight={320} storageKey="generate-random-map">
         <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
           <DialogTitle className="text-sm font-semibold">Generate Random Map</DialogTitle>
         </DraggableDialogDragHandle>
@@ -180,7 +288,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           <div className="space-y-1.5">
             <Label className="text-xs">Size</Label>
-            <Select value={sizeKey} onValueChange={setSizeKey}>
+            <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
               <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {MAP_SIZE_PRESETS.map((p) => (
@@ -192,7 +300,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           <div className="space-y-1.5">
             <Label className="text-xs">Players</Label>
-            <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))}>
+            <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked}>
               <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {PLAYER_COUNT_OPTIONS.map((n) => (
@@ -201,6 +309,35 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="rmg-terrain-only" className="text-xs" title="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves.">
+              Terrain only
+            </Label>
+            <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="rmg-live-preview" className="text-xs" title="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each phase.">
+              Live preview
+            </Label>
+            <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
+          </div>
+
+          {previewActive && (
+            <div className="space-y-1.5">
+              <div className="rounded border border-border overflow-hidden bg-muted/30" style={{ aspectRatio: `${selectedSize.sizeX} / ${selectedSize.sizeZ}` }}>
+                <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
+              </div>
+              {previewBusy && <p className="text-xs text-muted-foreground">Rendering preview…</p>}
+              {previewError && <p className="text-xs text-destructive">{previewError}</p>}
+              <p className="text-xs text-muted-foreground">
+                {previewPhase === 'terrain'
+                  ? 'Tune terrain sliders below, then confirm to move on.'
+                  : 'Tune road/river winding below — final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'}
+              </p>
+            </div>
+          )}
 
           <button
             type="button"
@@ -217,7 +354,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
                   Water content
                 </Label>
-                <Select value={waterContent} onValueChange={(v) => setWaterContent(v as 'none' | 'normal' | 'islands')}>
+                <Select value={waterContent} onValueChange={(v) => setWaterContent(v as 'none' | 'normal' | 'islands')} disabled={terrainLocked}>
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
@@ -242,48 +379,48 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     </Label>
                     <span className="text-xs text-muted-foreground">{pctLabel(waterChance)}</span>
                   </div>
-                  <Slider min={0} max={1} step={0.05} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} />
+                  <Slider min={0} max={1} step={0.05} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} disabled={terrainLocked} />
                 </div>
               )}
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Obstacle density</Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(obstacleDensity)}</span>
                 </div>
-                <Slider min={0} max={0.5} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} />
+                <Slider min={0} max={0.5} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} disabled={nonTerrainDisabled} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Treasure density</Label>
                   <span className="text-xs text-muted-foreground">{treasureDensity.toFixed(1)}×</span>
                 </div>
-                <Slider min={0} max={3} step={0.1} value={[treasureDensity]} onValueChange={([v]) => setTreasureDensity(v)} />
+                <Slider min={0} max={3} step={0.1} value={[treasureDensity]} onValueChange={([v]) => setTreasureDensity(v)} disabled={nonTerrainDisabled} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs" title="Chance a given treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random placeholder.">
                     Object variety
                   </Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.05} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} />
+                <Slider min={0} max={1} step={0.05} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} disabled={nonTerrainDisabled} />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className={`flex items-center justify-between ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <Label htmlFor="rmg-use-portals" className="text-xs" title="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement.">
                   Use portals
                 </Label>
-                <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} />
+                <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} disabled={nonTerrainDisabled} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <Label className="text-xs" title="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints, each at least Impossible difficulty. 'Strong'/'Very strong' scale that value up further.">
                   Boundary guards
                 </Label>
-                <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong' | 'very strong')}>
+                <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong' | 'very strong')} disabled={nonTerrainDisabled}>
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
@@ -294,57 +431,57 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs" title="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty.">
                     Squad density
                   </Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.05} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
+                <Slider min={0} max={1} step={0.05} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} disabled={nonTerrainDisabled} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${terrainLocked ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs" title="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones.">
                     Zone jaggedness
                   </Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.05} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} />
+                <Slider min={0} max={1} step={0.05} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} disabled={terrainLocked} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${terrainLocked ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs" title="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads.">
                     Zone spread
                   </Label>
                   <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
                 </div>
-                <Slider min={0.5} max={1.8} step={0.05} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} />
+                <Slider min={0.5} max={1.8} step={0.05} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs" title="How far roads/rivers swing away from a straight line, in tiles.">
                     Road/river winding amplitude
                   </Label>
                   <span className="text-xs text-muted-foreground">{roadWindingAmplitude.toFixed(1)}</span>
                 </div>
-                <Slider min={0} max={6} step={0.5} value={[roadWindingAmplitude]} onValueChange={([v]) => setRoadWindingAmplitude(v)} />
+                <Slider min={0} max={6} step={0.5} value={[roadWindingAmplitude]} onValueChange={([v]) => setRoadWindingAmplitude(v)} disabled={nonTerrainDisabled} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${nonTerrainDisabled ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs" title="How often roads/rivers curve, in tiles per curve. Lower = more frequent curves (can look jagged if pushed too low); higher = fewer, broader sweeps.">
                     Road/river winding wavelength
                   </Label>
                   <span className="text-xs text-muted-foreground">{roadWindingWavelength}</span>
                 </div>
-                <Slider min={20} max={100} step={5} value={[roadWindingWavelength]} onValueChange={([v]) => setRoadWindingWavelength(v)} />
+                <Slider min={20} max={100} step={5} value={[roadWindingWavelength]} onValueChange={([v]) => setRoadWindingWavelength(v)} disabled={nonTerrainDisabled} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className={`space-y-1.5 ${terrainLocked ? 'opacity-40' : ''}`}>
                 <Label htmlFor="rmg-seed" className="text-xs">Seed (optional — same seed, same map)</Label>
                 <Input
                   id="rmg-seed"
@@ -352,6 +489,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="Random"
                   className="h-8 text-sm"
+                  disabled={terrainLocked}
                 />
               </div>
 
@@ -382,9 +520,19 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleGenerate} disabled={generating || !mapName.trim()}>
-            {generating ? 'Generating…' : 'Generate'}
-          </Button>
+          {previewPhase === 'terrain' ? (
+            <Button size="sm" onClick={handleConfirmTerrain} disabled={generating || previewBusy || !mapName.trim()}>
+              {generating ? 'Generating…' : terrainOnly ? 'Generate' : 'Confirm terrain'}
+            </Button>
+          ) : previewPhase === 'roads' ? (
+            <Button size="sm" onClick={handleGenerate} disabled={generating || !mapName.trim()}>
+              {generating ? 'Generating…' : 'Confirm roads & Generate'}
+            </Button>
+          ) : (
+            <Button size="sm" onClick={handleGenerate} disabled={generating || !mapName.trim()}>
+              {generating ? 'Generating…' : 'Generate'}
+            </Button>
+          )}
         </div>
       </DraggableDialogContent>
     </Dialog>

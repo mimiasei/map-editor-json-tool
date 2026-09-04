@@ -42,7 +42,8 @@ import {
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
-import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
@@ -1834,7 +1835,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     canvas.height = sizeZ
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.clearRect(0, 0, sizeX, sizeZ)
     // Base pass: every tile gets its light terrain/water fill, occupied or
     // not — this is what makes the grid readable even with all filters off.
     // An in-progress (not yet committed) Paint Terrain drag stroke wins over
@@ -1843,19 +1843,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // renders pixel-identical to what committing will produce (issue #195
     // Phase 1 pattern). Water has no in-progress buffer — it applies
     // immediately on click, so waterMap already reflects it by the next render.
-    const tileCount = sizeX * sizeZ
-    if (tilesMap.length === tileCount) {
-      for (let node = 0; node < tileCount; node++) {
-        const x = node % sizeX
-        const z = Math.floor(node / sizeX)
-        ctx.fillStyle = terrainFillColor(
-          paintStaged.get(node) ?? tilesMap[node],
-          waterMap[node],
-          settings.terrainOpacity,
-        )
-        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
-      }
-    }
+    // Shared with GenerateRandomMapDialog.tsx's own live-preview canvas
+    // (`paintTerrainCanvas`) so both stay in sync by construction.
+    const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
+    paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
       const x = node % sizeX
