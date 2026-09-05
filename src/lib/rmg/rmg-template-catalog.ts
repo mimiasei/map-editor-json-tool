@@ -62,7 +62,7 @@ export async function listBundledGameTemplates(catalog: GameCatalog): Promise<Bu
       infos.push({
         fileName: entry.name,
         name: typeof data.name === 'string' && data.name ? data.name : entry.name.replace(/\.rmg\.json$/, ''),
-        description: catalog.rmgTemplateStrings[descriptionSid] ?? '',
+        description: (catalog.rmgTemplateStrings[descriptionSid] ?? '').replace(/<\/?[a-z]+>/gi, ''),
         sizeX: data.sizeX ?? 0,
         sizeZ: data.sizeZ ?? 0,
         gameMode: typeof data.gameMode === 'string' ? data.gameMode : '',
