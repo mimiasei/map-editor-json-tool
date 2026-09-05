@@ -430,7 +430,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // guardMultiplier (0.5-0.84) softens guards in the player's own start
       // zone specifically — guard-value-bands.ts's own doc comment has the
       // full rationale.
-      placeGuard(tiles, randomInRange(range.min, range.max, rng) * PLAYER_ZONE_GUARD_MULTIPLIER, sampleFraction(biome, 0.8, rng))
+      placeGuard(tiles, Math.round(randomInRange(range.min, range.max, rng) * PLAYER_ZONE_GUARD_MULTIPLIER), sampleFraction(biome, 0.8, rng))
     } else {
       const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
       place(mineSid, tiles)
