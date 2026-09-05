@@ -79,15 +79,27 @@ const NEUTRAL_ZONE_BIOMES: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
  *  previous behavior) meant total biome variety on the whole map was
  *  capped at `playerCount` (and always the same biomes in the same order
  *  run after run), and Sand never appeared at all since it was excluded
- *  from that shared list entirely. */
-export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number): Map<number, BiomeId> {
+ *  from that shared list entirely.
+ *
+ *  `enabledBiomes` (a real user request — "how many terrain types the RMG
+ *  will use") filters BOTH lists down to their intersection with it before
+ *  cycling/picking; omitted or empty (nothing usefully enabled) falls back
+ *  to the full unfiltered list, same as this function's own pre-existing
+ *  behavior — callers are responsible for not letting a UI empty this
+ *  down to zero in the first place. */
+export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number, enabledBiomes?: BiomeId[]): Map<number, BiomeId> {
+  const enabledSet = enabledBiomes && enabledBiomes.length > 0 ? new Set(enabledBiomes) : null
+  const playerBiomes = enabledSet ? ZONE_BIOMES.filter((b) => enabledSet.has(b)) : ZONE_BIOMES
+  const neutralBiomes = enabledSet ? NEUTRAL_ZONE_BIOMES.filter((b) => enabledSet.has(b)) : NEUTRAL_ZONE_BIOMES
+  const playerPool = playerBiomes.length > 0 ? playerBiomes : ZONE_BIOMES
+  const neutralPool = neutralBiomes.length > 0 ? neutralBiomes : NEUTRAL_ZONE_BIOMES
   const biomeByZone = new Map<number, BiomeId>()
   let playerIndex = 0
   for (const zone of zones) {
     if (zone.kind === 'player') {
-      biomeByZone.set(zone.id, ZONE_BIOMES[playerIndex++ % ZONE_BIOMES.length])
+      biomeByZone.set(zone.id, playerPool[playerIndex++ % playerPool.length])
     } else {
-      biomeByZone.set(zone.id, NEUTRAL_ZONE_BIOMES[Math.floor(rng() * NEUTRAL_ZONE_BIOMES.length)])
+      biomeByZone.set(zone.id, neutralPool[Math.floor(rng() * neutralPool.length)])
     }
   }
   return biomeByZone
@@ -102,6 +114,11 @@ export interface ZonePlacement {
    *  `randomItemOverrides` param — real maps vary `propRandomItems.rarity`
    *  (0-3), unlike this generator's old flat 0. */
   randomItemOverrides?: { rarity: number }
+  /** `random-city` (neutral, non-player-owned) placements only — a real
+   *  faction is required at placement time (CLAUDE.md's documented
+   *  "unconfigured random-city never verified in-game" trap), never left
+   *  for later configuration the way a manually-added one is. */
+  randomCityOverrides?: { factionSid: string; spawnHero: boolean }
 }
 
 /** A concrete, pre-composed army (`squads[]`, entityType 2 — structurally
@@ -234,6 +251,16 @@ export interface PopulateZonesOptions {
    *  items/artifacts, treasures and squads placed"). No effect if `catalog`
    *  is omitted. Defaults to 0.4. */
   objectVariety?: number
+  /** Total `random-city` (neutral, non-player-owned) placements scattered
+   *  across neutral zones — a real, reported gap (this generator never
+   *  placed one before). Defaults to 1. */
+  randomCityCount?: number
+  /** Map-wide per-sid placement caps (template.ts's own doc comment has
+   *  the real-game-template survey backing this shape). Applied to the
+   *  concrete artifact/storage/resource picks `placeTreasure` below can
+   *  make — the only named, capped-in-the-real-format sids this
+   *  generator currently has a placement path for at all. */
+  contentCountLimits?: { sid: string; maxCount: number }[]
 }
 
 /** Scatter each zone's own objects (see this file's header comment for what
@@ -250,15 +277,24 @@ export interface PopulateZonesResult {
 }
 
 export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
-  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4 } = options
+  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [] } = options
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
   const artifactSids = catalog ? collectArtifactSids(catalog) : []
+  const contentCountLimitBySid = new Map(contentCountLimits.map((l) => [l.sid, l.maxCount]))
+  const contentCountSoFar = new Map<string, number>()
+  const isAtContentCap = (sid: string): boolean => {
+    const max = contentCountLimitBySid.get(sid)
+    return max !== undefined && (contentCountSoFar.get(sid) ?? 0) >= max
+  }
+  const recordContentPlacement = (sid: string): void => {
+    if (contentCountLimitBySid.has(sid)) contentCountSoFar.set(sid, (contentCountSoFar.get(sid) ?? 0) + 1)
+  }
 
-  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides']): void => {
+  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides']): void => {
     const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, rng)
     if (node === null) return
-    placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides })
+    placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides, randomCityOverrides })
   }
 
   /** `random-item.rarity` "cost" table for the value-budget treasure loop
@@ -308,16 +344,21 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  templates only cap notable objects, not plain resources. */
   const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>): number => {
     if (catalog && rng() < objectVariety) {
-      const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid))
+      const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid) && !isAtContentCap(sid))
       if (availableArtifacts.length > 0 && rng() < 0.5) {
         const sid = availableArtifacts[Math.floor(rng() * availableArtifacts.length)]
         usedArtifactSids.add(sid)
+        recordContentPlacement(sid)
         place(sid, tiles)
         return RARITY_AVERAGE_COST
       }
-      const concretePool = rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS
-      place(concretePool[Math.floor(rng() * concretePool.length)], tiles)
-      return RARITY_AVERAGE_COST
+      const concretePool = (rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS).filter((sid) => !isAtContentCap(sid))
+      if (concretePool.length > 0) {
+        const sid = concretePool[Math.floor(rng() * concretePool.length)]
+        recordContentPlacement(sid)
+        place(sid, tiles)
+        return RARITY_AVERAGE_COST
+      }
     }
     const { rarity, cost } = pickRarity()
     place('random-item', tiles, undefined, { rarity })
@@ -450,6 +491,35 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       const fallbackRange = pickSquadRange(['Random'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
       const requestedValue = mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
       placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng))
+    }
+  }
+
+  // Neutral random-city placement (a real, reported gap — this generator
+  // never placed one before). Real-game-template survey (`maps/templates/
+  // *.rmg.json`'s own `mainObjects: [{type:"City", faction:{type:"FromList",
+  // args:["differentFrom: 0 Spawn-A", ...]}}]`) confirms a neutral city's
+  // faction should differ from every player's own — never just re-derived
+  // from the zone's own biome, and never left blank (CLAUDE.md's own
+  // documented "unconfigured random-city never verified in-game" trap,
+  // confirmed again this session: a real GME-added sample in `maps/
+  // Stormlight_saved_by_gme.map` is exactly `isDefined:false,factionSid:""`).
+  if (randomCityCount > 0) {
+    const neutralZones = zones.filter((z) => z.kind === 'neutral')
+    const playerFactions = new Set(
+      zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),
+    )
+    const allFactions = ZONE_BIOMES.map((b) => BIOME_FACTION[b]).filter((f): f is string => !!f)
+    const availableFactions = allFactions.filter((f) => !playerFactions.has(f))
+    const factionPool = availableFactions.length > 0 ? availableFactions : allFactions
+    const remainingZones = [...neutralZones]
+    for (let i = 0; i < randomCityCount && remainingZones.length > 0; i++) {
+      const zoneIndex = Math.floor(rng() * remainingZones.length)
+      const [zone] = remainingZones.splice(zoneIndex, 1)
+      const tiles = tilesByZone.get(zone.id) ?? []
+      if (tiles.length === 0) continue
+      const factionSid = factionPool[Math.floor(rng() * factionPool.length)]
+      const spawnHero = rng() < 0.5
+      place('random-city', tiles, undefined, undefined, { factionSid, spawnHero })
     }
   }
 

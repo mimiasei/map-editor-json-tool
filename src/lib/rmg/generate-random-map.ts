@@ -42,6 +42,7 @@ import {
 } from '@/lib/map-write'
 import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
 import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
@@ -162,6 +163,22 @@ export interface GenerateRandomMapOptions {
    *  Returns immediately after `generate-terrain.ts`'s own terrain phase.
    *  Defaults to `false` (normal full generation). */
   terrainOnly?: boolean
+  /** Which of the 7 real biomes generation may use at all (template.ts's
+   *  own doc comment has the full rationale). Defaults to all 7. */
+  enabledBiomes?: BiomeId[]
+  /** Total `random-city` (neutral) placements scattered across neutral
+   *  zones. Defaults to 1. */
+  randomCityCount?: number
+  /** Map-wide per-sid placement caps (template.ts's own doc comment).
+   *  Defaults to capping `university` at 1. */
+  contentCountLimits?: { sid: string; maxCount: number }[]
+  /** Chance a road segment is painted Stone instead of Dirt. Defaults to 0.35. */
+  stoneRoadChance?: number
+  /** Chance a neutral-zone road endpoint targets a real mine/interactable/
+   *  random-city node instead of the zone's own anchor. Defaults to 0.8. */
+  roadPointOfInterestChance?: number
+  /** Independent per-edge chance a road is painted at all. Defaults to 0.8. */
+  roadFullConnectivityChance?: number
 }
 
 /**
@@ -173,7 +190,7 @@ export interface GenerateRandomMapOptions {
  * their actual solid cells to avoid overlap).
  */
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8 } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -189,7 +206,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // since it returns immediately after this) to have generateTerrain
   // compute water itself.
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, rng,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, rng, enabledBiomes,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly,
   })
@@ -218,7 +235,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   })
 
   const { placements, concreteSquads } = populateZones({
-    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety,
+    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
@@ -368,8 +385,39 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // generated roads running close together and interleaving (more likely
   // at higher player counts, with more edges sharing the same map).
   const roadNodes = new Set<number>()
+  const roadIdByNode = new Map<number, number>()
   const roadPathsByEdge = new Map<string, number[]>()
   const reclaimedWaterNodes = new Set<number>()
+  // "Points of interest" a road should prefer over a zone's own abstract
+  // anchor — real user request. Mines (`MINE_SIDS`, this file's own local
+  // copy — zone-guard-scatter.ts/zone-population.ts each keep their own
+  // too, this codebase's established convention for a short constant used
+  // in one place) + weekly-resource interactables (`windmill` confirmed
+  // real via Core/DB/map/objects/4_interactables.json; a short starter
+  // list, not claimed exhaustive) + `random-city` (Phase 2, this session).
+  const MINE_SIDS_LOCAL = new Set(['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury'])
+  const WEEKLY_RESOURCE_SIDS = new Set(['windmill'])
+  const isNotableSid = (sid: string): boolean => MINE_SIDS_LOCAL.has(sid) || WEEKLY_RESOURCE_SIDS.has(sid) || sid === 'random-city'
+  const notableNodesByZone = new Map<number, number[]>()
+  for (const p of [...placements, ...concreteSquads]) {
+    if (!isNotableSid(p.sid)) continue
+    const zoneId = zoneIdByNode[p.node]
+    const list = notableNodesByZone.get(zoneId)
+    if (list) list.push(p.node)
+    else notableNodesByZone.set(zoneId, [p.node])
+  }
+  const zoneKindById = new Map(graph.zones.map((z) => [z.id, z.kind]))
+  const roadEndpointForZone = (zoneId: number): number => {
+    // Player zones always target the player's own city (the anchor IS the
+    // spawner's own node — generate-terrain.ts places it there) — the
+    // user's own "roads should certainly start from the player's own
+    // starting city" — never substituted for one of that zone's own mines.
+    const notable = zoneKindById.get(zoneId) === 'neutral' ? notableNodesByZone.get(zoneId) : undefined
+    if (notable && notable.length > 0 && rng() < roadPointOfInterestChance) {
+      return notable[Math.floor(rng() * notable.length)]
+    }
+    return zoneAnchorNode.get(zoneId) as number
+  }
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_AVOIDANCE_STRENGTH = 1.5
   // `smoothPath`'s own window was a flat 12 tiles — real ASCII-rendered
@@ -412,6 +460,12 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     selectIslandConnections(graph.zones, graph.edges, islandZoneIds, desiredPortalCount).map(([a, b]) => `${a}:${b}`),
   )
   const islandGotPortal = new Set<number>()
+  const islandPortalNodesByZone = new Map<number, number[]>()
+  const addIslandPortalNode = (zoneId: number, node: number): void => {
+    const list = islandPortalNodesByZone.get(zoneId)
+    if (list) list.push(node)
+    else islandPortalNodesByZone.set(zoneId, [node])
+  }
   let islandPortalColorIndex = 0
   const placeIslandPortal = (a: number, b: number): boolean => {
     const portalSid = PORTAL_SIDS[islandPortalColorIndex % PORTAL_SIDS.length]
@@ -425,8 +479,8 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     portalPlacements.push({ tempId: tempIdB, sid: portalSid, node: nodeB })
     portalAdjacency.set(tempIdA, tempIdB)
     portalAdjacency.set(tempIdB, tempIdA)
-    if (islandZoneIds.has(a)) islandGotPortal.add(a)
-    if (islandZoneIds.has(b)) islandGotPortal.add(b)
+    if (islandZoneIds.has(a)) { islandGotPortal.add(a); addIslandPortalNode(a, nodeA) }
+    if (islandZoneIds.has(b)) { islandGotPortal.add(b); addIslandPortalNode(b, nodeB) }
     return true
   }
   for (const [a, b] of graph.edges) {
@@ -439,8 +493,19 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       if (selectedPortalEdges.has(`${a}:${b}`)) placeIslandPortal(a, b)
       continue
     }
-    const from = zoneAnchorNode.get(a) as number
-    const to = zoneAnchorNode.get(b) as number
+    // Progressively-uncertain long-haul connectivity — a real user
+    // request: full player-to-player paved routes should get less certain
+    // over distance, not guaranteed. Every edge here already connects a
+    // player zone to its OWN immediate neutral neighbor (buildZoneGraph's
+    // ring never has a player-player or neutral-neutral edge), so a miss
+    // just leaves one local stretch unpaved — a route spanning several
+    // edges to a distant player compounds this naturally, no separate
+    // distance-aware logic needed. Roads are cosmetic (never gate
+    // walkability), so skipping some is a style choice, not a
+    // connectivity risk.
+    if (rng() >= roadFullConnectivityChance) continue
+    const from = roadEndpointForZone(a)
+    const to = roadEndpointForZone(b)
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
     const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
     const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
@@ -480,7 +545,8 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     if (path) {
       const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
       roadPathsByEdge.set(`${a}:${b}`, smoothed)
-      for (const node of smoothed) roadNodes.add(node)
+      const roadId = rng() < stoneRoadChance ? 2 : 1
+      for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
     } else {
       unroutableEdges += 1
     }
@@ -514,6 +580,40 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
 
+  // Intra-island roads — cosmetic-only paths confined entirely to one
+  // island's own landmass (surrounded by water, so `shortestPath` can't
+  // escape it), independent of the inter-zone portal network above. Two
+  // real user-requested gates: a hard minimum size (very small islands
+  // never get one, regardless of the size-scaled chance below), and only
+  // if the island actually has something worth reaching — a player
+  // spawner (when `islandsIncludePlayerZones` allowed it) or a `random-
+  // city` (Phase 2, this session). Chance scales with the island's own
+  // size relative to this run's own average (`avgIslandSize`, already
+  // computed above for portal-count calibration) — self-calibrating,
+  // same precedent as that logic.
+  const MIN_ISLAND_ROAD_TILES = 40
+  for (const islandZoneId of islandZoneIds) {
+    const islandTiles = islandLandmassByZone.get(islandZoneId) ?? []
+    if (islandTiles.length < MIN_ISLAND_ROAD_TILES) continue
+    const hasSpawner = players.some((p) => zoneIdByNode[p.node] === islandZoneId)
+    const hasRandomCity = placements.some((p) => p.sid === 'random-city' && zoneIdByNode[p.node] === islandZoneId)
+    if (!hasSpawner && !hasRandomCity) continue
+    const chance = avgIslandSize > 0 ? Math.max(0, Math.min(1, islandTiles.length / (avgIslandSize * 2))) : 0
+    if (rng() >= chance) continue
+    const portalNodes = islandPortalNodesByZone.get(islandZoneId) ?? []
+    let from: number | undefined
+    let to: number | undefined
+    if (portalNodes.length >= 2) { [from, to] = portalNodes }
+    else if (portalNodes.length === 1) { from = portalNodes[0]; to = zoneAnchorNode.get(islandZoneId) }
+    if (from === undefined || to === undefined || from === to) continue
+    const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+    const path = shortestPath(sizeX, sizeZ, from, to, state.blocked, windingCost)
+    if (!path) continue
+    const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
+    const roadId = rng() < stoneRoadChance ? 2 : 1
+    for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
+  }
+
   if (reclaimedWaterNodes.size > 0) {
     block2 = paintWaterTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, waterId: 0 })))
     block2 = paintLevelTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, level: 0 })))
@@ -523,7 +623,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
   if (roadNodes.size > 0) {
-    block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: 1 })))
+    block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
   }
 
   // One river across the map's most graph-distant zone pair — same
@@ -557,6 +657,45 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       })
       block2 = paintRiverTiles(block2, changes)
     }
+  }
+
+  // Intra-island rivers — same size-scaled chance as intra-island roads
+  // above, but no "needs a city" gate (a purely decorative water feature
+  // crossing the island, not a connection to anything) and its own
+  // endpoints: a cheap approximate-diameter pair within the island's own
+  // tile list (pick a random tile, find the island tile farthest from it,
+  // then the tile farthest from THAT one — two linear passes, good enough
+  // for a decorative path, not a real shortest-path/farthest-pair search).
+  const MIN_ISLAND_RIVER_TILES = 40
+  const farthestIslandTile = (from: number, tiles: number[]): number => {
+    const fx = from % sizeX, fz = Math.floor(from / sizeX)
+    let best = tiles[0]
+    let bestDist = -1
+    for (const n of tiles) {
+      const nx = n % sizeX, nz = Math.floor(n / sizeX)
+      const d = (nx - fx) ** 2 + (nz - fz) ** 2
+      if (d > bestDist) { bestDist = d; best = n }
+    }
+    return best
+  }
+  for (const islandZoneId of islandZoneIds) {
+    const islandTiles = islandLandmassByZone.get(islandZoneId) ?? []
+    if (islandTiles.length < MIN_ISLAND_RIVER_TILES) continue
+    const chance = avgIslandSize > 0 ? Math.max(0, Math.min(1, islandTiles.length / (avgIslandSize * 2))) : 0
+    if (rng() >= chance) continue
+    const seed = islandTiles[Math.floor(rng() * islandTiles.length)]
+    const riverFrom = farthestIslandTile(seed, islandTiles)
+    const riverTo = farthestIslandTile(riverFrom, islandTiles)
+    if (riverFrom === riverTo) continue
+    const rawPath = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng, roadWindingAmplitude, 0.5, roadWindingWavelength))
+    const path = rawPath && rawPath.length > 1 ? smoothPath(rawPath, sizeX, state.blocked, roadSmoothWindow) : rawPath
+    if (!path || path.length <= 1) continue
+    for (const node of path) riverNodes.add(node)
+    const changes = path.map((node) => {
+      const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
+      return { node, s: deriveRealShapeCode(dirs) }
+    })
+    block2 = paintRiverTiles(block2, changes)
   }
 
   // Road/river tiles join `state.blocked` here (water already did, right
@@ -671,7 +810,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
 
-  const additions: { sid: string; node: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number } }[] = []
+  const additions: { sid: string; node: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean } }[] = []
   const additionTempIds: number[] = [] // parallel to additions — needed to remap portal temp ids to real ids below
   for (const [sid, group] of objectGroups) {
     if (sid === playerSpawnerSid) continue // already committed to the container by buildBlankMap
@@ -679,7 +818,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       const tempId = group.ids[i]
       const placement = tempIdToPlacement.get(tempId)
       if (!placement) continue
-      additions.push({ sid, node: group.nodes[i], randomSquadOverrides: placement.randomSquadOverrides, randomItemOverrides: placement.randomItemOverrides })
+      additions.push({ sid, node: group.nodes[i], randomSquadOverrides: placement.randomSquadOverrides, randomItemOverrides: placement.randomItemOverrides, randomCityOverrides: placement.randomCityOverrides })
       additionTempIds.push(tempId)
     }
   }

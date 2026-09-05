@@ -120,6 +120,9 @@ export interface GenerateTerrainOptions {
   /** See this file's own header comment on why this defaults to false and
    *  why the real full-pipeline generator deliberately passes false. */
   computeWater?: boolean
+  /** Which of the 7 real biomes generation may use at all (template.ts's
+   *  own doc comment has the full rationale). Defaults to all 7. */
+  enabledBiomes?: BiomeId[]
 }
 
 export interface TerrainResult {
@@ -170,6 +173,7 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
+    enabledBiomes,
   } = options
   const tileCount = sizeX * sizeZ
 
@@ -181,7 +185,7 @@ export function generateTerrain(
 
   const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
   const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
-  const zoneBiome = assignZoneBiomes(graph.zones, rng)
+  const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes)
 
   let islandFloodNodes = new Set<number>()
   const islandLandmassByZone = new Map<number, number[]>()

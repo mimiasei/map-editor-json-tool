@@ -46,7 +46,9 @@ import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-fi
 import { previewRoads } from '@/lib/rmg/preview-roads'
 import type { TerrainResult } from '@/lib/rmg/generate-terrain'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
-import { DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
+import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
+import { Checkbox } from '@/components/ui/checkbox'
+import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
@@ -116,6 +118,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [squadDensity, setSquadDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
   const [roadWindingAmplitude, setRoadWindingAmplitude] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
   const [roadWindingWavelength, setRoadWindingWavelength] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
+  // Which of the 7 real biomes generation may use at all — a real user
+  // request ("how many terrain types the RMG will use"). All on by
+  // default; at least one must always stay checked (see the checkbox's
+  // own onCheckedChange below).
+  const [enabledBiomes, setEnabledBiomes] = useState<Record<BiomeId, boolean>>(
+    () => Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, true])) as Record<BiomeId, boolean>,
+  )
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -133,6 +142,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const lockedTerrainRef = useRef<TerrainResult | null>(null)
 
+  const enabledBiomesList = ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b])
   const selectedSize = MAP_SIZE_PRESETS.find((p) => presetKey(p) === sizeKey) ?? MAP_SIZE_PRESETS[6]
   const previewActive = previewPhase !== 'off'
   // Terrain-defining controls (Size/Players/water/zone/seed) are only ever
@@ -183,6 +193,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             const result = await previewTerrain({
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
               waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread,
+              enabledBiomes: enabledBiomesList,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true,
             })
             if (!result) return // not Tauri
@@ -206,7 +217,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -247,6 +258,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         roadWindingAmplitude,
         roadWindingWavelength,
         terrainOnly,
+        enabledBiomes: enabledBiomesList,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -293,6 +305,14 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       squadDensity,
       roadWindingAmplitude,
       roadWindingWavelength,
+      enabledBiomes: enabledBiomesList,
+      // No dedicated UI control yet for these (Phase 1's own "start small"
+      // scope) — saved/loaded at their template defaults.
+      randomCityCount: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+      contentCountLimits: DEFAULT_TEMPLATE_OVERRIDES.contentCountLimits,
+      stoneRoadChance: DEFAULT_TEMPLATE_OVERRIDES.stoneRoadChance,
+      roadPointOfInterestChance: DEFAULT_TEMPLATE_OVERRIDES.roadPointOfInterestChance,
+      roadFullConnectivityChance: DEFAULT_TEMPLATE_OVERRIDES.roadFullConnectivityChance,
       seed: seedText.trim() && Number.isFinite(Number(seedText)) ? Number(seedText) : undefined,
     }
     await saveFile(stringifyRandomMapTemplate(template), 'rmg-template.json')
@@ -324,6 +344,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setSquadDensity(template.squadDensity)
       setRoadWindingAmplitude(template.roadWindingAmplitude)
       setRoadWindingWavelength(template.roadWindingWavelength)
+      setEnabledBiomes(Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, template.enabledBiomes.includes(b)])) as Record<BiomeId, boolean>)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
       logInfo(`Loaded RMG template: ${file.name}`)
@@ -409,6 +430,32 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             </div>
           )}
 
+          {showTerrainSliders && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Terrain types</Label>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                {ALL_TEMPLATE_BIOMES.map((biomeId) => (
+                  <div key={biomeId} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`rmg-biome-${biomeId}`}
+                      checked={enabledBiomes[biomeId]}
+                      disabled={terrainLocked}
+                      onCheckedChange={(checked) => {
+                        setEnabledBiomes((prev) => {
+                          // At least one biome must always stay enabled —
+                          // generation needs at least one usable biome.
+                          if (!checked && Object.values(prev).filter(Boolean).length <= 1) return prev
+                          return { ...prev, [biomeId]: !!checked }
+                        })
+                      }}
+                    />
+                    <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{BIOME_NAMES[biomeId]}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {previewPhase === 'off' && (
             <button
               type="button"
@@ -451,7 +498,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     </Label>
                     <span className="text-xs text-muted-foreground">{pctLabel(waterChance)}</span>
                   </div>
-                  <Slider min={0} max={1} step={0.05} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} disabled={terrainLocked} />
+                  <Slider min={0} max={1} step={0.01} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} disabled={terrainLocked} />
                 </div>
               )}
 
@@ -472,7 +519,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     </Label>
                     <span className="text-xs text-muted-foreground">{Math.round(islandLandRatio * 100)}% land</span>
                   </div>
-                  <Slider min={0} max={1} step={0.05} value={[islandLandRatio]} onValueChange={([v]) => setIslandLandRatio(v)} disabled={terrainLocked} />
+                  <Slider min={0} max={1} step={0.01} value={[islandLandRatio]} onValueChange={([v]) => setIslandLandRatio(v)} disabled={terrainLocked} />
                 </div>
               )}
 
@@ -483,7 +530,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.05} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} disabled={terrainLocked} />
+                <Slider min={0} max={1} step={0.01} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} disabled={terrainLocked} />
               </div>
 
               <div className="space-y-1.5">
@@ -493,7 +540,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </Label>
                   <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
                 </div>
-                <Slider min={0.5} max={1.8} step={0.05} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
+                <Slider min={0.5} max={1.8} step={0.01} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
               </div>
 
               <div className="space-y-1.5">
@@ -574,7 +621,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.05} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} />
+                <Slider min={0} max={1} step={0.01} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} />
               </div>
 
               <div className="flex items-center justify-between">
@@ -606,7 +653,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.05} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
+                <Slider min={0} max={1} step={0.01} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
               </div>
 
               <div className="flex items-center gap-2">

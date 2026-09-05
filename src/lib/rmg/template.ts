@@ -12,8 +12,13 @@
 import { createSeededRng } from './seeded-rng'
 import type { GenerateRandomMapOptions } from './generate-random-map'
 import type { BoundaryGuardStrength } from './zone-boundary'
+import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 
 export const RMG_TEMPLATE_VERSION = 1
+
+/** All 7 real biomes, in `BiomeId` order — the default `enabledBiomes`
+ *  (every biome on). */
+export const ALL_TEMPLATE_BIOMES: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 
 export interface RandomMapTemplate {
   version: typeof RMG_TEMPLATE_VERSION
@@ -89,12 +94,56 @@ export interface RandomMapTemplate {
   roadWindingWavelength: number
   /** Fixed RNG seed for reproducible generation (mulberry32 — seeded-rng.ts). Omitted = a fresh random seed every time. */
   seed?: number
+  /** Which of the 7 real biomes the generator is allowed to use at all —
+   *  a real user request ("how many terrain types the RMG will use").
+   *  Filters BOTH the player-zone deterministic biome cycle and the
+   *  neutral-zone random pick (zone-population.ts's `ZONE_BIOMES`/
+   *  `NEUTRAL_ZONE_BIOMES`). Defaults to all 7 (`ALL_TEMPLATE_BIOMES`) —
+   *  must never be empty (at least one biome is required to generate
+   *  anything; callers are responsible for not letting the UI empty it). */
+  enabledBiomes: BiomeId[]
+  /** Total `random-city` (neutral, non-player-owned) placements scattered
+   *  across neutral zones map-wide — a real gap this generator never had
+   *  (confirmed: zero references anywhere in src/lib/rmg/ before this).
+   *  Defaults to 1. */
+  randomCityCount: number
+  /** Map-wide caps on specific object sids, mirroring the real game's own
+   *  RMG template format (`maps/templates/*.rmg.json`'s own generic
+   *  `contentCountLimits: [{sid, maxCount}]` shape — e.g. `Shamrock.rmg.json`
+   *  caps `university` at 2) rather than one hardcoded field per notable
+   *  sid. Applied as a single whole-map total (the real format applies it
+   *  per named zone role — `spawn`/`treasure`/etc. — which this generator's
+   *  simpler player/neutral-only zone model has no equivalent of yet).
+   *  Defaults to a small starter list capping `university` at 1. */
+  contentCountLimits: { sid: string; maxCount: number }[]
+  /** Of every road segment (a zone-graph edge, or an intra-island road),
+   *  the chance it's painted Stone (`roadId: 2`) instead of Dirt
+   *  (`roadId: 1`, this generator's only material before this option) —
+   *  confirmed real: `Fun_and_Graves.map` uses both ids. Defaults to 0.35. */
+  stoneRoadChance: number
+  /** When a road edge's neutral-zone side has a real mine/interactable/
+   *  random-city node in it, the chance the road targets that node
+   *  instead of the zone's own abstract anchor tile — a real user
+   *  request, confirmed as the real game's own template design too
+   *  (`mainObjects`/`roads` reference real objects, not arbitrary points).
+   *  Defaults to 0.8 (high — "a higher chance" per the user's own
+   *  wording, not a guarantee, since sometimes reading as the zone's own
+   *  center still looks right). */
+  roadPointOfInterestChance: number
+  /** Independent per-edge chance a road is painted at all — a real user
+   *  request that full player-to-player paved connectivity become
+   *  progressively less certain over distance (each edge on a longer
+   *  ring path independently rolls, so the odds compound) while each
+   *  player's own immediate edge(s) stay reliably painted. Roads are
+   *  purely cosmetic (never gate walkability), so skipping some is a
+   *  style choice, not a connectivity risk. Defaults to 0.8. */
+  roadFullConnectivityChance: number
 }
 
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   islandsIncludePlayerZones: false,
@@ -109,10 +158,16 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   squadDensity: 0.45,
   roadWindingAmplitude: 3,
   roadWindingWavelength: 50,
+  enabledBiomes: ALL_TEMPLATE_BIOMES,
+  randomCityCount: 1,
+  contentCountLimits: [{ sid: 'university', maxCount: 1 }],
+  stoneRoadChance: 0.35,
+  roadPointOfInterestChance: 0.8,
+  roadFullConnectivityChance: 0.8,
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, enabledBiomes, randomCityCount, contentCountLimits, stoneRoadChance, roadPointOfInterestChance, roadFullConnectivityChance, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -132,6 +187,12 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     squadDensity,
     roadWindingAmplitude,
     roadWindingWavelength,
+    enabledBiomes,
+    randomCityCount,
+    contentCountLimits,
+    stoneRoadChance,
+    roadPointOfInterestChance,
+    roadFullConnectivityChance,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -178,6 +239,12 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     squadDensity: typeof data.squadDensity === 'number' ? data.squadDensity : DEFAULT_TEMPLATE_OVERRIDES.squadDensity,
     roadWindingAmplitude: typeof data.roadWindingAmplitude === 'number' ? data.roadWindingAmplitude : DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude,
     roadWindingWavelength: typeof data.roadWindingWavelength === 'number' ? data.roadWindingWavelength : DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength,
+    enabledBiomes: Array.isArray(data.enabledBiomes) && data.enabledBiomes.length > 0 ? data.enabledBiomes : DEFAULT_TEMPLATE_OVERRIDES.enabledBiomes,
+    randomCityCount: typeof data.randomCityCount === 'number' ? data.randomCityCount : DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+    contentCountLimits: Array.isArray(data.contentCountLimits) ? data.contentCountLimits : DEFAULT_TEMPLATE_OVERRIDES.contentCountLimits,
+    stoneRoadChance: typeof data.stoneRoadChance === 'number' ? data.stoneRoadChance : DEFAULT_TEMPLATE_OVERRIDES.stoneRoadChance,
+    roadPointOfInterestChance: typeof data.roadPointOfInterestChance === 'number' ? data.roadPointOfInterestChance : DEFAULT_TEMPLATE_OVERRIDES.roadPointOfInterestChance,
+    roadFullConnectivityChance: typeof data.roadFullConnectivityChance === 'number' ? data.roadFullConnectivityChance : DEFAULT_TEMPLATE_OVERRIDES.roadFullConnectivityChance,
     seed: typeof data.seed === 'number' ? data.seed : undefined,
   }
 }

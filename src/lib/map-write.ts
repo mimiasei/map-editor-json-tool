@@ -1162,6 +1162,54 @@ const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: n
   },
 }
 
+/** `random-city` (neutral, non-player-owned city) needs 3 tables, unlike
+ *  every other `RANDOM_SPAWNER_TABLE_DEFAULTS` entry's single one — handled
+ *  as its own small dispatch rather than folded into that Record, mirroring
+ *  `PLAYER_START_SPAWNER_DEFAULTS`'s own multi-table `extraTables` shape.
+ *  Defaults confirmed against a real-map survey of every existing
+ *  `random-city` instance across 7 real, released maps (`Gorges_of_
+ *  Discord.map`, `Prisoners.map`, `The_Mysterious_Island.map`, `Thirst_for_
+ *  Power.map`, `infinite_frost.map`, `song_of_murmurwood.map`) — always
+ *  `isDefined:true` with a real `factionSid`, `owner:-1` in 5/7 samples
+ *  (genuinely neutral), `isConstantGrowth:true, countGrowth:1` in every
+ *  sample. A GME-added, never-configured sample in `maps/Stormlight_
+ *  saved_by_gme.map` is exactly `isDefined:false, factionSid:""` —
+ *  CLAUDE.md's own documented "looks fine in editors, never verified
+ *  in-game" trap — never reproduced here; `factionSid`/`spawnHero` are
+ *  always required, real, caller-supplied values (`randomCityOverrides`),
+ *  never left blank. */
+const RANDOM_CITY_DEFAULT_TABLES: { table: string; row: (id: number, overrides: { factionSid: string; spawnHero: boolean }) => Record<string, unknown> }[] = [
+  {
+    table: 'propCities',
+    row: (id, { factionSid, spawnHero }) => ({
+      type: 0, id, isDefined: true, factionSid, spawnHero,
+      buildingsConstructionSid: 'default_buildings_construction',
+      buildingsBanSid: 'default_buildings_ban',
+      buildingsSettingsSid: 'default_buildings_settings', customCityName: '',
+    }),
+  },
+  {
+    table: 'propOwners',
+    row: (id) => ({ type: 0, id, owner: -1 }),
+  },
+  {
+    table: 'propGrowthUnits',
+    row: (id) => ({ type: 0, id, isConstantGrowth: true, countGrowth: 1 }),
+  },
+  {
+    // Starting-garrison config, real-data-confirmed present on every
+    // sampled random-city instance too (same table/default row
+    // `PLAYER_START_SPAWNER_DEFAULTS['city-spawner']` already uses).
+    table: 'propRandomSquads',
+    row: (id) => ({
+      type: 0, id, sids: [], requestedValue: 0, fraction: '', tier: 0, isMainGuard: false,
+      reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
+      isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
+      isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
+    }),
+  },
+]
+
 /** Real resource-pickup sids (`resource_gold`/`resource_wood`/`resource_ore`/
  *  `resource_mercury`/`resource_crystals`/`resource_gemstones`/`resource_dust`
  *  — Core/DB/map/objects/3_resources.json) need a `propResParams` row to
@@ -1748,6 +1796,10 @@ export function addObjectInstances(
      *  0/1/2/3 all occur, ~63/21/14/2% respectively, not the flat `rarity: 0`
      *  every prior placement used. Omit to keep the previous flat-0 default. */
     randomItemOverrides?: { rarity: number }
+    /** `random-city` only — a real faction/hero identity is required at
+     *  placement time (never left blank, see `RANDOM_CITY_DEFAULT_TABLES`'
+     *  own doc comment). */
+    randomCityOverrides?: { factionSid: string; spawnHero: boolean }
   }[],
 ): { block2Chunk: Uint8Array; newIds: number[] } {
   if (additions.length === 0) return { block2Chunk, newIds: [] }
@@ -1768,7 +1820,7 @@ export function addObjectInstances(
     else propRowsByTable.set(table, [row])
   }
 
-  for (const { sid, node, rotation, level, randomSquadOverrides, randomItemOverrides } of additions) {
+  for (const { sid, node, rotation, level, randomSquadOverrides, randomItemOverrides, randomCityOverrides } of additions) {
     const id = nextId++
     newIds.push(id)
     let group = groupsBySid.get(sid)
@@ -1793,6 +1845,9 @@ export function addObjectInstances(
       }
       if (sid === 'random-item' && randomItemOverrides) row.rarity = randomItemOverrides.rarity
       appendRow(randomSpawnerDefault.table, row)
+    }
+    if (sid === 'random-city' && randomCityOverrides) {
+      for (const { table, row } of RANDOM_CITY_DEFAULT_TABLES) appendRow(table, row(id, randomCityOverrides))
     }
     if (RESOURCE_PICKUP_SIDS.has(sid)) {
       appendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(id))
