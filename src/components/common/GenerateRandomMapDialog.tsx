@@ -49,6 +49,7 @@ import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
@@ -125,6 +126,16 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [enabledBiomes, setEnabledBiomes] = useState<Record<BiomeId, boolean>>(
     () => Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, true])) as Record<BiomeId, boolean>,
   )
+  // Real game RMG template (issue #210, Stage 1) — when set, its own zone/
+  // connection topology (and playerCount, derived from its own Spawn zones)
+  // replaces this dialog's own Size-independent player-count selector and
+  // this generator's fixed ring entirely. Deliberately session-only, not
+  // part of RandomMapTemplate/Save-Load (same reasoning as `roadSeed`
+  // above — a separate, orthogonal choice from this generator's own
+  // slider-driven template format).
+  const [gameTemplate, setGameTemplate] = useState<{ fileName: string; name: string; json: string } | null>(null)
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
+  const [terrainTypesOpen, setTerrainTypesOpen] = useState(false)
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -193,7 +204,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             const result = await previewTerrain({
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
               waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread,
-              enabledBiomes: enabledBiomesList,
+              enabledBiomes: enabledBiomesList, gameTemplateJson: gameTemplate?.json,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true,
             })
             if (!result) return // not Tauri
@@ -217,7 +228,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -259,6 +270,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         roadWindingWavelength,
         terrainOnly,
         enabledBiomes: enabledBiomesList,
+        gameTemplateJson: gameTemplate?.json,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
@@ -396,7 +408,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           <div className="space-y-1.5">
             <Label className="text-xs">Players</Label>
-            <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked}>
+            <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
               <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {PLAYER_COUNT_OPTIONS.map((n) => (
@@ -404,6 +416,23 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 ))}
               </SelectContent>
             </Select>
+            {gameTemplate && <p className="text-xs text-muted-foreground">Ignored — the game template below sets its own player count.</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Game template</Label>
+            {gameTemplate ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm flex-1 truncate" title={gameTemplate.name}>{gameTemplate.name}</span>
+                <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setGameTemplate(null)} disabled={terrainLocked}>
+                  Clear
+                </Button>
+              </div>
+            ) : (
+              <Button type="button" variant="outline" size="sm" className="h-8 w-full justify-start text-sm font-normal" onClick={() => setTemplatePickerOpen(true)} disabled={terrainLocked}>
+                Use a game template…
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
@@ -439,27 +468,37 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           {showTerrainSliders && (
             <div className="space-y-1.5">
-              <Label className="text-xs">Terrain types</Label>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                {ALL_TEMPLATE_BIOMES.map((biomeId) => (
-                  <div key={biomeId} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`rmg-biome-${biomeId}`}
-                      checked={enabledBiomes[biomeId]}
-                      disabled={terrainLocked}
-                      onCheckedChange={(checked) => {
-                        setEnabledBiomes((prev) => {
-                          // At least one biome must always stay enabled —
-                          // generation needs at least one usable biome.
-                          if (!checked && Object.values(prev).filter(Boolean).length <= 1) return prev
-                          return { ...prev, [biomeId]: !!checked }
-                        })
-                      }}
-                    />
-                    <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{BIOME_NAMES[biomeId]}</Label>
-                  </div>
-                ))}
-              </div>
+              <button
+                type="button"
+                onClick={() => setTerrainTypesOpen((v) => !v)}
+                className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                {terrainTypesOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                Terrain types
+                <span className="font-normal">({ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b]).length}/{ALL_TEMPLATE_BIOMES.length} enabled)</span>
+              </button>
+              {terrainTypesOpen && (
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pl-1">
+                  {ALL_TEMPLATE_BIOMES.map((biomeId) => (
+                    <div key={biomeId} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`rmg-biome-${biomeId}`}
+                        checked={enabledBiomes[biomeId]}
+                        disabled={terrainLocked}
+                        onCheckedChange={(checked) => {
+                          setEnabledBiomes((prev) => {
+                            // At least one biome must always stay enabled —
+                            // generation needs at least one usable biome.
+                            if (!checked && Object.values(prev).filter(Boolean).length <= 1) return prev
+                            return { ...prev, [biomeId]: !!checked }
+                          })
+                        }}
+                      />
+                      <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{BIOME_NAMES[biomeId]}</Label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -695,6 +734,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           </Button>
         </div>
       </DraggableDialogContent>
+
+      <SelectGameTemplateDialog
+        open={templatePickerOpen}
+        onOpenChange={setTemplatePickerOpen}
+        onSelect={setGameTemplate}
+      />
     </Dialog>
   )
 }

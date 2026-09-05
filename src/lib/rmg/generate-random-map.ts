@@ -59,7 +59,7 @@ import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-bounda
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
 import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport } from './balance-analyzer'
-import { extractGameRulesPatch, parseGameTemplateJson } from './rmg-template-import'
+import { extractGameRulesPatch, parseGameTemplateJson, deriveWaterOverrides, deriveObstacleOverrides } from './rmg-template-import'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
@@ -229,7 +229,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
 
   const objectLogicsById = buildObjectLogicsIndex(catalog)
-  const { graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state, portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges } = terrain
+  const { graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state, portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, zoneLayoutByZoneId } = terrain
   let container = terrain.container
   let block2 = container.chunks[1]
   // A hard rule (zone-islands.ts's own header comment has the full
@@ -289,10 +289,12 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const portalAdjacency = new Map<number, number>()
 
   if (waterContent === 'normal') {
+    const { chanceByZone, minSizeByZone } = deriveWaterOverrides(zoneLayoutByZoneId)
     const waterResult = scatterZoneWater({
       sizeX, sizeZ, zones: graph.zones, tilesByZone,
       excludedNodes: new Set(zoneAnchorNode.values()),
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
+      chanceByZone, minSizeByZone,
     })
     waterNodesAll = waterResult.waterNodes
     waterChangesAll = waterResult.waterChanges
@@ -778,10 +780,11 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,
   // the river, or the water.
+  const { densityByZone, ambientPickupByZone } = deriveObstacleOverrides(zoneLayoutByZoneId)
   const obstaclePlacements = scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
-    density: obstacleDensity,
+    density: obstacleDensity, densityByZone, ambientPickupByZone,
   })
 
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain

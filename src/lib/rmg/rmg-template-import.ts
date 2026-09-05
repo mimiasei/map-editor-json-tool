@@ -50,6 +50,7 @@ interface RawMainObject {
 interface RawZone {
   name?: string
   size?: number
+  layout?: string
   mainObjects?: RawMainObject[]
   [key: string]: unknown
 }
@@ -68,6 +69,36 @@ interface RawVariant {
   [key: string]: unknown
 }
 
+interface RawAmbientPickupDistribution {
+  repulsion?: number
+  noise?: number
+  roadAttraction?: number
+  obstacleAttraction?: number
+  groupSizeWeights?: number[]
+}
+
+interface RawZoneLayout {
+  name?: string
+  obstaclesFill?: number
+  lakesFill?: number
+  minLakeArea?: number
+  ambientPickupDistribution?: RawAmbientPickupDistribution
+  [key: string]: unknown
+}
+
+/** Per-zone terrain-shape overrides a real template's own `zoneLayouts[]`
+ *  provides (issue #210, Stage 3a/3c) — resolved by zone id from each
+ *  zone's own `layout` name reference. Every field independently optional:
+ *  a zone whose layout omits a field (or has no `layout` at all) falls
+ *  back to this generator's own existing flat default, same as every
+ *  other per-zone override in this codebase. */
+export interface ZoneLayoutOverrides {
+  obstaclesFill?: number
+  lakesFill?: number
+  minLakeArea?: number
+  ambientPickupDistribution?: RawAmbientPickupDistribution
+}
+
 interface RawGameRules {
   heroCountMin?: number
   heroCountMax?: number
@@ -84,6 +115,7 @@ interface RawTemplate {
   variants?: RawVariant[]
   gameRules?: RawGameRules
   globalBans?: { items?: string[]; magics?: string[]; heroes?: string[] }
+  zoneLayouts?: RawZoneLayout[]
   [key: string]: unknown
 }
 
@@ -98,6 +130,10 @@ export interface GameTemplateTopology {
    *  `connectionType: "Portal"`) — see this file's own header comment for
    *  why these still need to be real graph edges. */
   unpaintedEdges: Set<string>
+  /** zone id -> its own resolved `zoneLayouts[]` entry (issue #210, Stage
+   *  3a/3c) — empty for a zone with no `layout` reference or an
+   *  unresolvable one. */
+  zoneLayoutByZoneId: Map<number, ZoneLayoutOverrides>
 }
 
 function edgeKey(a: number, b: number): string {
@@ -144,7 +180,7 @@ export function pickGameTemplateVariant(template: RawTemplate, rng: () => number
  * `sqrt(size)`-weighted placement/tiling; nothing downstream needs to
  * change to respect a real template's own size ratios).
  */
-export function buildTopologyFromVariant(variant: RawVariant): GameTemplateTopology {
+export function buildTopologyFromVariant(template: RawTemplate, variant: RawVariant): GameTemplateTopology {
   const rawZones = variant.zones ?? []
   const zoneIdByName = new Map<string, number>()
   rawZones.forEach((z, i) => { if (z.name) zoneIdByName.set(z.name, i) })
@@ -174,7 +210,24 @@ export function buildTopologyFromVariant(variant: RawVariant): GameTemplateTopol
     else if (!(conn.connectionType === 'Direct' && conn.road)) unpaintedEdges.add(key)
   }
 
-  return { graph: { zones, edges }, portalEdges, unpaintedEdges }
+  // Stage 3a/3c: resolve each zone's own `layout` name reference against
+  // the template's own `zoneLayouts[]` array.
+  const zoneLayoutsByName = new Map<string, RawZoneLayout>()
+  for (const zl of template.zoneLayouts ?? []) { if (zl.name) zoneLayoutsByName.set(zl.name, zl) }
+  const zoneLayoutByZoneId = new Map<number, ZoneLayoutOverrides>()
+  rawZones.forEach((z, id) => {
+    if (!z.layout) return
+    const layout = zoneLayoutsByName.get(z.layout)
+    if (!layout) return
+    zoneLayoutByZoneId.set(id, {
+      obstaclesFill: layout.obstaclesFill,
+      lakesFill: layout.lakesFill,
+      minLakeArea: layout.minLakeArea,
+      ambientPickupDistribution: layout.ambientPickupDistribution,
+    })
+  })
+
+  return { graph: { zones, edges }, portalEdges, unpaintedEdges, zoneLayoutByZoneId }
 }
 
 /** Extracts the Stage 4 `gameRules`/`globalBans` fields this generator
@@ -209,9 +262,42 @@ export function extractGameRulesPatch(template: RawTemplate): {
   }
 }
 
+/** Derives `scatterZoneWater`'s own `chanceByZone`/`minSizeByZone` params
+ *  (Stage 3a) from an imported topology's per-zone layout overrides. A zone
+ *  with no `lakesFill`/`minLakeArea` value is simply absent from the
+ *  returned maps, so `scatterZoneWater`'s own flat defaults still apply
+ *  there. */
+export function deriveWaterOverrides(zoneLayoutByZoneId: Map<number, ZoneLayoutOverrides>): { chanceByZone: Map<number, number>; minSizeByZone: Map<number, number> } {
+  const chanceByZone = new Map<number, number>()
+  const minSizeByZone = new Map<number, number>()
+  for (const [zoneId, overrides] of zoneLayoutByZoneId) {
+    if (overrides.lakesFill !== undefined) chanceByZone.set(zoneId, overrides.lakesFill)
+    if (overrides.minLakeArea !== undefined) minSizeByZone.set(zoneId, overrides.minLakeArea)
+  }
+  return { chanceByZone, minSizeByZone }
+}
+
+/** Derives `scatterZoneObstacles`'s own `densityByZone`/`ambientPickupByZone`
+ *  params (Stage 3a/3c) the same way. */
+export function deriveObstacleOverrides(zoneLayoutByZoneId: Map<number, ZoneLayoutOverrides>): {
+  densityByZone: Map<number, number>
+  ambientPickupByZone: Map<number, { groupSizeWeights?: number[]; obstacleAttraction?: number; repulsion?: number }>
+} {
+  const densityByZone = new Map<number, number>()
+  const ambientPickupByZone = new Map<number, { groupSizeWeights?: number[]; obstacleAttraction?: number; repulsion?: number }>()
+  for (const [zoneId, overrides] of zoneLayoutByZoneId) {
+    if (overrides.obstaclesFill !== undefined) densityByZone.set(zoneId, overrides.obstaclesFill)
+    if (overrides.ambientPickupDistribution) {
+      const { groupSizeWeights, obstacleAttraction, repulsion } = overrides.ambientPickupDistribution
+      ambientPickupByZone.set(zoneId, { groupSizeWeights, obstacleAttraction, repulsion })
+    }
+  }
+  return { densityByZone, ambientPickupByZone }
+}
+
 /** One-call convenience: parse + pick a variant + build the topology. */
 export function importGameTemplateTopology(json: string, rng: () => number): GameTemplateTopology {
   const template = parseGameTemplateJson(json)
   const variant = pickGameTemplateVariant(template, rng)
-  return buildTopologyFromVariant(variant)
+  return buildTopologyFromVariant(template, variant)
 }

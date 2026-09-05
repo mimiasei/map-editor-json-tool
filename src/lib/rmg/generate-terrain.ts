@@ -50,7 +50,7 @@ import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
-import { importGameTemplateTopology } from './rmg-template-import'
+import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides } from './rmg-template-import'
 import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
@@ -174,6 +174,10 @@ export interface TerrainResult {
    *  never be painted as a road or portal (rmg-template-import.ts's own
    *  header comment). Empty when no template was imported. */
   unpaintedEdges: Set<string>
+  /** Per-zone terrain-shape overrides from a Stage 1 game-template import
+   *  (Stage 3a/3c — rmg-template-import.ts's own `ZoneLayoutOverrides` doc
+   *  comment). Empty when no template was imported. */
+  zoneLayoutByZoneId: Map<number, ZoneLayoutOverrides>
 }
 
 /**
@@ -200,6 +204,7 @@ export function generateTerrain(
   const graph = importedTopology ? importedTopology.graph : buildZoneGraph(playerCount)
   const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
   const unpaintedEdges = importedTopology?.unpaintedEdges ?? new Set<string>()
+  const zoneLayoutByZoneId = importedTopology?.zoneLayoutByZoneId ?? new Map<number, ZoneLayoutOverrides>()
   const zoneDistances = zoneDistanceMatrix(graph)
   if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
     throw new Error(importedTopology
@@ -276,10 +281,12 @@ export function generateTerrain(
   let levelChangesAll: { node: number; level: number }[] = []
   if (computeWater) {
     if (waterContent === 'normal') {
+      const { chanceByZone, minSizeByZone } = deriveWaterOverrides(zoneLayoutByZoneId)
       const waterResult = scatterZoneWater({
         sizeX, sizeZ, zones: graph.zones, tilesByZone,
         excludedNodes: new Set(zoneAnchorNode.values()),
         blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
+        chanceByZone, minSizeByZone,
       })
       waterNodesAll = waterResult.waterNodes
       waterChangesAll = waterResult.waterChanges
@@ -313,6 +320,6 @@ export function generateTerrain(
   return {
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
-    waterNodesAll, waterMapFinal, levelsMapFinal, portalEdges, unpaintedEdges,
+    waterNodesAll, waterMapFinal, levelsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
   }
 }

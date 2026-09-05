@@ -124,4 +124,5 @@ export const STATIC_CATALOG: GameCatalog = {
   dialogAvatarIcons: [],
   speakerTitles: [],
   zoneTemplates: [],
+  rmgTemplateStrings: {},
 }

@@ -51,7 +51,8 @@
       "sidecar/extract_thumbnails"
     ],
     "resources": [
-      "resources/template.map"
+      "resources/template.map",
+      "resources/templates/*"
     ],
     "macOS": {
       "signingIdentity": "-"

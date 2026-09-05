@@ -92,6 +92,14 @@ export interface ScatterZoneWaterOptions {
   /** Absolute ceiling on lake size, in tiles, regardless of zone size or
    *  `chance` — keeps a single lake from dominating a very large zone. */
   maxSize?: number
+  /** Per-zone override of `chance` (issue #210, Stage 3a — a real game
+   *  template's own `zoneLayouts[].lakesFill`, imported per-zone via
+   *  rmg-template-import.ts). A zone with no entry here still uses the
+   *  flat `chance` above — only templates carry per-zone values. */
+  chanceByZone?: Map<number, number>
+  /** Per-zone override of `minSize` (Stage 3a — a template's own
+   *  `zoneLayouts[].minLakeArea`). */
+  minSizeByZone?: Map<number, number>
 }
 
 export interface ZoneWaterResult {
@@ -110,17 +118,19 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
   const {
     sizeX, sizeZ, zones, tilesByZone, excludedNodes, blocked, usedAnchors, rng,
     chance = 0.4, minSize = 8, minSizeFraction = 0.08, maxSizeFraction = 0.6, maxSize = 400,
+    chanceByZone, minSizeByZone,
   } = options
   const waterNodes = new Set<number>()
   const waterChanges: { node: number; waterId: number }[] = []
   const levelChanges: { node: number; level: number }[] = []
 
-  // Saturates well before chance=1 so a high setting reliably waters every
-  // eligible zone, not just "somewhat more often than the default."
-  const presenceChance = Math.min(1, chance * 2)
-
   for (const zone of zones) {
     if (zone.kind !== 'neutral') continue
+    const zoneChance = chanceByZone?.get(zone.id) ?? chance
+    const zoneMinSize = minSizeByZone?.get(zone.id) ?? minSize
+    // Saturates well before chance=1 so a high setting reliably waters every
+    // eligible zone, not just "somewhat more often than the default."
+    const presenceChance = Math.min(1, zoneChance * 2)
     if (rng() >= presenceChance) continue
 
     const eligible = new Set(
@@ -128,10 +138,10 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
         (n) => !excludedNodes.has(n) && !blocked.has(n) && !usedAnchors.has(n) && !waterNodes.has(n),
       ),
     )
-    if (eligible.size < minSize) continue // too little free room to bother
+    if (eligible.size < zoneMinSize) continue // too little free room to bother
 
-    const sizeFraction = minSizeFraction + (maxSizeFraction - minSizeFraction) * chance
-    const targetSize = Math.max(minSize, Math.min(eligible.size, maxSize, Math.round(eligible.size * sizeFraction)))
+    const sizeFraction = minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
+    const targetSize = Math.max(zoneMinSize, Math.min(eligible.size, maxSize, Math.round(eligible.size * sizeFraction)))
     const seed = [...eligible][Math.floor(rng() * eligible.size)]
     const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng)
     const waterId = WATER_IDS[Math.floor(rng() * WATER_IDS.length)]
