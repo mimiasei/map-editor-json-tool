@@ -263,6 +263,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       })
       if (!result) return // not Tauri — no filesystem access to read the template
       logInfo(`Generated random map: ${result.name}`)
+      // Balance score (issue #210, Stage 0) — advisory only, logged rather
+      // than a new dialog control for now (see balance-analyzer.ts's own
+      // header comment on what this measures/doesn't).
+      const { score, findings } = result.balanceReport
+      if (score !== null) {
+        logInfo(`Balance score: ${score}/100 — ${findings.map((f) => f.message).join(' ')}`)
+      }
       onGenerated({ name: result.name, warnings: result.warnings })
       onOpenChange(false)
     } catch (e) {

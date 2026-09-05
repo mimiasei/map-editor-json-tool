@@ -1992,6 +1992,74 @@ export function paintClimbTiles(chunk: Uint8Array, changes: { node: number; clim
   return paintFlatArrayTiles(chunk, 'climbsMap', changes.map(({ node, climb }) => ({ node, value: climb })))
 }
 
+// ─── Game rules / bans (issue #210, Stage 4 — real game RMG template
+// `gameRules`/`globalBans` → Block1/Block2 mapping). Mechanical field
+// mapping only, no new algorithms — confirmed direct name matches against
+// real `.map` files (`Stormlight.map`'s own Block2 `settings.heroCountMin:
+// 5, heroCountMax: 10, factionLawsExpModifier/astrologyExpModifier` are
+// exactly the same field names the real `.rmg.json` schema's own
+// `gameRules` uses). Deliberately does NOT touch `settings.
+// mapWinConditions` — that field's own `typeWinCondition` int-to-condition
+// enum isn't confirmed (real sample maps show inconsistent entry counts/
+// types with no reliable cross-reference available — this project's own
+// standing rule is to never guess a game-format fact), so a template's own
+// `gameRules.winConditions` is silently not applied rather than risk
+// writing a wrong/broken win-condition into a generated map.
+export interface GameRulesPatch {
+  heroCountMin?: number
+  heroCountMax?: number
+  heroCountIncrement?: number
+  /** Maps onto `settings.enableHeroHireBan` — real schema field is named
+   *  `heroHireBan`. */
+  heroHireBan?: boolean
+  factionLawsExpModifier?: number
+  astrologyExpModifier?: number
+  bonuses?: unknown[]
+  globalBans?: { items?: string[]; magics?: string[]; heroes?: string[] }
+}
+
+/** Patches Block2's `settings` object (heroCount fields, factionLawsExpModifier,
+ *  astrologyExpModifier, bonuses) and, if `globalBans` is set, both blocks'
+ *  own `banInfoData` objects — same span-patch-and-splice discipline as
+ *  every other write in this file (parse only the object's own span,
+ *  mutate, re-stringify, splice back). Every field is independently
+ *  optional — omitting one leaves whatever was already there untouched. */
+export function patchGameRules(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  patch: GameRulesPatch,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  let text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
+
+  const { objOpen, objClose, span } = findJsonObjectSpan(text2, 'settings')
+  const settings = JSON.parse(span) as Record<string, unknown>
+  if (patch.heroCountMin !== undefined) settings.heroCountMin = patch.heroCountMin
+  if (patch.heroCountMax !== undefined) settings.heroCountMax = patch.heroCountMax
+  if (patch.heroCountIncrement !== undefined) settings.heroCountIncrement = patch.heroCountIncrement
+  if (patch.heroHireBan !== undefined) settings.enableHeroHireBan = patch.heroHireBan
+  if (patch.factionLawsExpModifier !== undefined) settings.factionLawsExpModifier = patch.factionLawsExpModifier
+  if (patch.astrologyExpModifier !== undefined) settings.astrologyExpModifier = patch.astrologyExpModifier
+  if (patch.bonuses !== undefined) settings.bonuses = patch.bonuses
+  text2 = text2.slice(0, objOpen) + JSON.stringify(settings) + text2.slice(objClose + 1)
+
+  if (patch.globalBans) {
+    const globalBans = patch.globalBans
+    const applyBans = (text: string): string => {
+      const { objOpen: banOpen, objClose: banClose, span: banSpan } = findJsonObjectSpan(text, 'banInfoData')
+      const ban = JSON.parse(banSpan) as Record<string, unknown>
+      if (globalBans.items !== undefined) ban.bannedItems = globalBans.items
+      if (globalBans.magics !== undefined) ban.bannedMagics = globalBans.magics
+      if (globalBans.heroes !== undefined) ban.bannedHeroes = globalBans.heroes
+      return text.slice(0, banOpen) + JSON.stringify(ban) + text.slice(banClose + 1)
+    }
+    text1 = applyBans(text1)
+    text2 = applyBans(text2)
+  }
+
+  return { block1Chunk: new TextEncoder().encode(text1), block2Chunk: new TextEncoder().encode(text2) }
+}
+
 /** Upsert `{n, s, isWaterfall}` entries into `rivers[0].nodes` (add/update
  *  every `{node, s}` in `changes`, drop every node in `deletions`). Unlike
  *  paintFlatArrayTiles's dense per-tile arrays, `rivers[0].nodes` is SPARSE

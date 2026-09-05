@@ -37,6 +37,7 @@ import {
   setAreas,
   setCityFaction,
   upsertPropPortals,
+  patchGameRules,
   BLANK_MAP_BIOME_NAMES,
   type MapContainer,
 } from '@/lib/map-write'
@@ -57,6 +58,8 @@ import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
+import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport } from './balance-analyzer'
+import { extractGameRulesPatch, parseGameTemplateJson } from './rmg-template-import'
 
 export interface GenerateRandomMapOptions {
   sizeX: number
@@ -179,6 +182,10 @@ export interface GenerateRandomMapOptions {
   roadPointOfInterestChance?: number
   /** Independent per-edge chance a road is painted at all. Defaults to 0.8. */
   roadFullConnectivityChance?: number
+  /** Raw JSON text of a real game RMG template (issue #210, Stage 1) — see
+   *  `GenerateTerrainOptions.gameTemplateJson`'s own doc comment (this
+   *  option is threaded straight through to `generateTerrain`). */
+  gameTemplateJson?: string
 }
 
 /**
@@ -189,8 +196,15 @@ export interface GenerateRandomMapOptions {
  * 3×3 real map objects, not 1-tile placeholders, so placement must know
  * their actual solid cells to avoid overlap).
  */
-export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): MapContainer {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8 } = options
+export interface GenerateRandomMapResult {
+  container: MapContainer
+  /** Advisory-only 0-100 symmetry score (issue #210, Stage 0) — see
+   *  balance-analyzer.ts's own header comment. */
+  balanceReport: BalanceReport
+}
+
+export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): GenerateRandomMapResult {
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -206,14 +220,16 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // since it returns immediately after this) to have generateTerrain
   // compute water itself.
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, rng, enabledBiomes,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly,
   })
-  if (terrainOnly) return terrain.container
+  if (terrainOnly) {
+    return { container: terrain.container, balanceReport: { score: null, findings: [], summary: { zones: 0, players: 0, totalWealth: 0, wealthPerPlayer: 0, wealthSpread: 0 } } }
+  }
 
   const objectLogicsById = buildObjectLogicsIndex(catalog)
-  const { graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state } = terrain
+  const { graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state, portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges } = terrain
   let container = terrain.container
   let block2 = container.chunks[1]
   // A hard rule (zone-islands.ts's own header comment has the full
@@ -483,7 +499,34 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     if (islandZoneIds.has(b)) { islandGotPortal.add(b); addIslandPortalNode(b, nodeB) }
     return true
   }
+  // Deduplicated by zone pair before this loop — a Stage 1 game-template
+  // import can (and, confirmed on a real template, does) list more than one
+  // raw connection between the same two zones (e.g. a real Portal
+  // connection plus a separate "Pseudo" Proximity spring between the exact
+  // same pair, presumably so the layout physics pulls them close AND a real
+  // passage exists) — `graph.edges` legitimately contains both as parallel
+  // tuples (harmless for `zoneDistanceMatrix`'s own BFS), but processing
+  // the pair twice here would double-place whatever the first pass already
+  // placed (confirmed: an early version of this loop placed 2 redundant
+  // portal pairs for Crossroads.rmg.json's own single Portal connection).
+  const seenEdgeKeys = new Set<string>()
   for (const [a, b] of graph.edges) {
+    const dedupeKey = `${Math.min(a, b)}:${Math.max(a, b)}`
+    if (seenEdgeKeys.has(dedupeKey)) continue
+    seenEdgeKeys.add(dedupeKey)
+    // Stage 1 game-template import: a connection the template itself
+    // declared `connectionType: "Portal"` gets a portal unconditionally —
+    // authored, not inferred from island/water status the way this
+    // generator's own procedural islands mode works below. Empty
+    // `templatePortalEdges` (no template imported) makes this a no-op.
+    if (templatePortalEdges.has(`${Math.min(a, b)}:${Math.max(a, b)}`)) {
+      placeIslandPortal(a, b)
+      continue
+    }
+    // A template-declared connectivity-only edge (Proximity/GladiatorArena/
+    // anything not road-flagged Direct) — real graph edge (zoneDistances
+    // already reflects it), but nothing painted for it.
+    if (templateUnpaintedEdges.has(`${Math.min(a, b)}:${Math.max(a, b)}`)) continue
     if (islandZoneIds.has(a) || islandZoneIds.has(b)) {
       // Only place a portal for edges `selectIslandConnections` actually
       // kept — every OTHER island-touching edge is real, deliberate
@@ -502,8 +545,12 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     // edges to a distant player compounds this naturally, no separate
     // distance-aware logic needed. Roads are cosmetic (never gate
     // walkability), so skipping some is a style choice, not a
-    // connectivity risk.
-    if (rng() >= roadFullConnectivityChance) continue
+    // connectivity risk. Skipped entirely for a Stage 1 template-driven
+    // generation — the template already curated exactly which connections
+    // exist as real edges at all (a Proximity/GladiatorArena connection
+    // was never added as one), so every edge that survives here is one the
+    // template author actually wanted painted.
+    if (!gameTemplateJson && rng() >= roadFullConnectivityChance) continue
     const from = roadEndpointForZone(a)
     const to = roadEndpointForZone(b)
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
@@ -918,8 +965,36 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const areas = computeZoneAreas(sizeX, sizeZ, zoneIdByNode, tilesByZoneFull, zoneAnchorNode, zoneBiomeName, playerZoneIndex)
   finalBlock2 = setAreas(finalBlock2, areas)
 
+  // Stage 4 (issue #210) — a game-template import's own gameRules/
+  // globalBans, mapped onto Block2's `settings`/both blocks' `banInfoData`
+  // (map-write.ts's own `patchGameRules` doc comment has the full field
+  // mapping and why `winConditions` is deliberately never touched).
+  if (gameTemplateJson) {
+    const rawTemplate = parseGameTemplateJson(gameTemplateJson)
+    const gameRulesPatch = extractGameRulesPatch(rawTemplate)
+    const patched = patchGameRules(finalBlock1, finalBlock2, gameRulesPatch)
+    finalBlock1 = patched.block1Chunk
+    finalBlock2 = patched.block2Chunk
+  }
+
   const finalChunks = container.chunks.slice()
   finalChunks[0] = finalBlock1
   finalChunks[1] = finalBlock2
-  return { ...container, chunks: finalChunks }
+
+  // Balance scoring (issue #210, Stage 0) — advisory only, ported from a
+  // real third-party template editor's own heuristic
+  // (github.com/GendizerGaming/olden-era-rmg-editor's balanceAnalyzer.ts —
+  // see balance-analyzer.ts's own header comment for the full rationale and
+  // disclosed limitations). Wealth is summed from every real guard/treasure
+  // placement this generation actually made; exit-guard values come from
+  // the zone-boundary chokepoint guards (empty if `boundaryGuardStrength`
+  // was 'none').
+  const zoneWealth = computeZoneWealth(
+    [...placements, ...proximityGuards.guardPlacements, ...boundaryResult.guardPlacements],
+    zoneIdByNode,
+  )
+  const exitGuardsByZone = computeExitGuardsByZone(boundaryResult.guardPlacements, zoneIdByNode)
+  const balanceReport = analyzeBalance(graph, zoneWealth, exitGuardsByZone)
+
+  return { container: { ...container, chunks: finalChunks }, balanceReport }
 }

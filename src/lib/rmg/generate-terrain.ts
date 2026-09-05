@@ -50,6 +50,7 @@ import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
+import { importGameTemplateTopology } from './rmg-template-import'
 import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
@@ -123,6 +124,14 @@ export interface GenerateTerrainOptions {
   /** Which of the 7 real biomes generation may use at all (template.ts's
    *  own doc comment has the full rationale). Defaults to all 7. */
   enabledBiomes?: BiomeId[]
+  /** Raw JSON text of a real game RMG template (`maps/templates/*.rmg.json`
+   *  shape — issue #210, Stage 1) — when set, its own zone/connection
+   *  topology REPLACES `buildZoneGraph`'s fixed ring entirely (`playerCount`
+   *  is then derived from the template's own Spawn zones, not this option).
+   *  See rmg-template-import.ts's own header comment for exactly what's
+   *  imported (topology only — biome/water/decoration/population all still
+   *  run as this generator's own logic on top of the imported shape). */
+  gameTemplateJson?: string
 }
 
 export interface TerrainResult {
@@ -155,6 +164,16 @@ export interface TerrainResult {
   waterNodesAll: Set<number>
   waterMapFinal: number[]
   levelsMapFinal: number[]
+  /** Zone-graph edge keys (`"${min}:${max}"`) a Stage 1 game-template import
+   *  declared as `connectionType: "Portal"` — the road loop
+   *  (generate-random-map.ts) treats these as portals unconditionally,
+   *  independent of island detection. Empty when no template was
+   *  imported. */
+  portalEdges: Set<string>
+  /** Zone-graph edge keys that exist for connectivity only and should
+   *  never be painted as a road or portal (rmg-template-import.ts's own
+   *  header comment). Empty when no template was imported. */
+  unpaintedEdges: Set<string>
 }
 
 /**
@@ -173,14 +192,19 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
-    enabledBiomes,
+    enabledBiomes, gameTemplateJson,
   } = options
   const tileCount = sizeX * sizeZ
 
-  const graph = buildZoneGraph(playerCount)
+  const importedTopology = gameTemplateJson ? importGameTemplateTopology(gameTemplateJson, rng) : null
+  const graph = importedTopology ? importedTopology.graph : buildZoneGraph(playerCount)
+  const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
+  const unpaintedEdges = importedTopology?.unpaintedEdges ?? new Set<string>()
   const zoneDistances = zoneDistanceMatrix(graph)
   if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
-    throw new Error('RMG zone graph is disconnected — buildZoneGraph should never produce this')
+    throw new Error(importedTopology
+      ? 'RMG game template graph is disconnected — its own zones/connections do not form a single connected graph'
+      : 'RMG zone graph is disconnected — buildZoneGraph should never produce this')
   }
 
   const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
@@ -214,8 +238,16 @@ export function generateTerrain(
     zoneAnchorNode.set(zone.id, tiles.length > 0 ? nearestTile(tiles, sizeX, center) : center.z * sizeX + center.x)
   }
 
+  // Sorted by `playerIndex` rather than relied on array order — `buildZoneGraph`'s
+  // own ring happens to already list player zones in ascending order, but a
+  // real imported game-template's own zones[] array has no such guarantee
+  // (Stage 1, rmg-template-import.ts), and `buildBlankMap`'s own player
+  // slots are assigned strictly by THIS array's order (owner 1, 2, 3...).
   const players: BlankMapPlayer[] = includeSpawners
-    ? graph.zones.filter((zone) => zone.kind === 'player').map((zone) => ({ sid: playerSpawnerSid as 'city-spawner' | 'hero-spawner', node: zoneAnchorNode.get(zone.id) as number }))
+    ? graph.zones
+        .filter((zone) => zone.kind === 'player')
+        .sort((a, b) => (a.playerIndex ?? 0) - (b.playerIndex ?? 0))
+        .map((zone) => ({ sid: playerSpawnerSid as 'city-spawner' | 'hero-spawner', node: zoneAnchorNode.get(zone.id) as number }))
     : []
 
   let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
@@ -281,6 +313,6 @@ export function generateTerrain(
   return {
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
-    waterNodesAll, waterMapFinal, levelsMapFinal,
+    waterNodesAll, waterMapFinal, levelsMapFinal, portalEdges, unpaintedEdges,
   }
 }

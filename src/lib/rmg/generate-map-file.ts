@@ -16,6 +16,7 @@ import { loadParsedMapFile, type OpenMapResult } from '@/lib/map-file'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { generateRandomMap, type GenerateRandomMapOptions } from './generate-random-map'
+import type { BalanceReport } from './balance-analyzer'
 import { generateTerrain, type GenerateTerrainOptions, type TerrainResult } from './generate-terrain'
 
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
@@ -57,14 +58,14 @@ export async function previewTerrain(options: GenerateTerrainOptions): Promise<T
  * app exactly like Import Map/New Map would — with no file path yet.
  * Returns null only when not running in Tauri.
  */
-export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<OpenMapResult | null> {
+export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<(OpenMapResult & { balanceReport: BalanceReport }) | null> {
   if (!isTauri()) return null
   const catalog = useCatalogStore.getState().catalog
   if (!catalog) throw new Error('Load Game Data first (More → Game Data) so map objects can be resolved.')
 
   const loaded = await readTemplateAndCatalog()
   if (!loaded) return null
-  const container = generateRandomMap(loaded.template, catalog, options)
+  const { container, balanceReport } = generateRandomMap(loaded.template, catalog, options)
   const gzipped = await gzipBytes(buildMapContainer(container))
   const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 
@@ -73,5 +74,5 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // Same reasoning as createNewMap(): a generated map has nowhere on disk
   // yet, so the dirty-dot/exit-guard must reflect that immediately.
   useMapDocumentStore.setState({ mapIsDirty: true })
-  return result
+  return { ...result, balanceReport }
 }
