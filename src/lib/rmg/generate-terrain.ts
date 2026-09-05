@@ -181,7 +181,7 @@ export function generateTerrain(
 
   const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
   const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
-  const zoneBiome = assignZoneBiomes(graph.zones)
+  const zoneBiome = assignZoneBiomes(graph.zones, rng)
 
   let islandFloodNodes = new Set<number>()
   const islandLandmassByZone = new Map<number, number[]>()

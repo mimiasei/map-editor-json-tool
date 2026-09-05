@@ -51,29 +51,44 @@ function dwellingFactionToken(biome: BiomeId): string {
  *  — cycled through neutral zones for variety. */
 const MINE_SIDS = ['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury']
 
-/** Zones only ever cycle through these 6 real faction biomes — never Sand
- *  (biome 2), which CLAUDE.md confirms no faction natively occupies, so
+/** Player zones only ever cycle through these 6 real faction biomes — never
+ *  Sand (biome 2), which CLAUDE.md confirms no faction natively occupies, so
  *  `dwellingFactionToken` always resolves a zone's own real faction rather
  *  than the neutral-dwelling fallback. */
 export const ZONE_BIOMES: BiomeId[] = [1, 3, 4, 5, 6, 7]
 
-/** Cycles player zones and neutral zones through `ZONE_BIOMES` with two
- *  INDEPENDENT counters, not a single `zone.id % 6` — `buildZoneGraph`'s
- *  ring gives every player zone an even id and every neutral zone an odd
- *  one, and since 6 is itself even, `id % 6` on a strictly-even or
- *  strictly-odd sequence only ever lands on 3 of the 6 residues (confirmed
- *  the hard way: an earlier version of this function used `zone.id % 6`
- *  directly and every generated map's player zones only ever got
- *  human/unfrozen/demon dwellings — 3 of 6 factions, never
- *  necropolis/nature/dungeon, no matter the player count). Independent
- *  counters make each kind cycle through all 6 factions on its own. */
-export function assignZoneBiomes(zones: ZoneSpec[]): Map<number, BiomeId> {
+/** Neutral zones have no faction to protect, so unlike `ZONE_BIOMES` they
+ *  draw from all 7 real biomes including Sand — real, released maps use it
+ *  freely for neutral terrain (confirmed: `Stormlight.map`'s own tile
+ *  histogram has 385 Sand tiles alongside its other biomes). */
+const NEUTRAL_ZONE_BIOMES: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
+
+/** Player zones still cycle deterministically through `ZONE_BIOMES` with
+ *  their own counter, not a single `zone.id % 6` — `buildZoneGraph`'s ring
+ *  gives every player zone an even id and every neutral zone an odd one,
+ *  and since 6 is itself even, `id % 6` on a strictly-even sequence only
+ *  ever lands on 3 of the 6 residues (confirmed the hard way: an earlier
+ *  version of this function used `zone.id % 6` directly and every
+ *  generated map's player zones only ever got human/unfrozen/demon
+ *  dwellings — 3 of 6 factions, never necropolis/nature/dungeon, no matter
+ *  the player count).
+ *
+ *  Neutral zones instead get an independent random pick per zone from
+ *  `NEUTRAL_ZONE_BIOMES` — a real, reported gap: cycling neutral zones
+ *  through the same small deterministic list as player zones (the
+ *  previous behavior) meant total biome variety on the whole map was
+ *  capped at `playerCount` (and always the same biomes in the same order
+ *  run after run), and Sand never appeared at all since it was excluded
+ *  from that shared list entirely. */
+export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number): Map<number, BiomeId> {
   const biomeByZone = new Map<number, BiomeId>()
   let playerIndex = 0
-  let neutralIndex = 0
   for (const zone of zones) {
-    const index = zone.kind === 'player' ? playerIndex++ : neutralIndex++
-    biomeByZone.set(zone.id, ZONE_BIOMES[index % ZONE_BIOMES.length])
+    if (zone.kind === 'player') {
+      biomeByZone.set(zone.id, ZONE_BIOMES[playerIndex++ % ZONE_BIOMES.length])
+    } else {
+      biomeByZone.set(zone.id, NEUTRAL_ZONE_BIOMES[Math.floor(rng() * NEUTRAL_ZONE_BIOMES.length)])
+    }
   }
   return biomeByZone
 }
