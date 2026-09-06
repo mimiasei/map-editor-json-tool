@@ -36,6 +36,7 @@ import {
   paintWaterTiles,
   setAreas,
   setCityFaction,
+  setCitySpawnHero,
   upsertPropPortals,
   patchGameRules,
   BLANK_MAP_BIOME_NAMES,
@@ -932,6 +933,19 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       const result = setCityFaction(finalBlock1, finalBlock2, 0, playerId, faction)
       finalBlock1 = result.block1Chunk
       finalBlock2 = result.block2Chunk
+      // setCityFaction only sets factionSid/isDefined — PLAYER_START_SPAWNER_DEFAULTS'
+      // own propCities row leaves spawnHero:true (a real, confirmed default for a
+      // still-unconfigured city), which this activation step never revisits. RMG has
+      // no player-hero-assignment feature (every spawns.spawns[].isHeroDefined stays
+      // false), so an activated city left at spawnHero:true has zero backing propHeroes
+      // data — confirmed via real player.log testing to freeze the game at 100% load
+      // (an uncaught exception in AI area-processing code, preceded by tens of
+      // thousands of "Hero by id N not found" messages). setCitySpawnHero(..., false)
+      // is what correctly keeps propHeroes in sync (removing any stale row), matching
+      // its own doc comment's confirmed real-data invariant.
+      const heroResult = setCitySpawnHero(finalBlock1, finalBlock2, 0, playerId, false)
+      finalBlock1 = heroResult.block1Chunk
+      finalBlock2 = heroResult.block2Chunk
     }
   }
 

@@ -518,7 +518,16 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       const tiles = tilesByZone.get(zone.id) ?? []
       if (tiles.length === 0) continue
       const factionSid = factionPool[Math.floor(rng() * factionPool.length)]
-      const spawnHero = rng() < 0.5
+      // Always false, not a coin flip: RANDOM_CITY_DEFAULT_TABLES writes
+      // spawnHero straight onto propCities with no mechanism to add the
+      // matching propHeroes row spawnHero:true requires (unlike
+      // setCitySpawnHero(), which keeps that pairing in sync) — confirmed via
+      // real player.log testing that a spawnHero:true city with no propHeroes
+      // entry freezes the game at 100% load. Giving some neutral cities a
+      // real garrison hero is a legitimate future feature, but needs its own
+      // setCitySpawnHero()-based wiring (using the ids addObjectInstances
+      // returns) to stay invariant-safe — not a bare boolean here.
+      const spawnHero = false
       place('random-city', tiles, undefined, undefined, { factionSid, spawnHero })
     }
   }
