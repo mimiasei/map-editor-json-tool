@@ -44,7 +44,7 @@
 // dropped): map events, global timed events, and the structural validator
 // (Phase 5).
 
-import type { MapContainer } from '@/lib/map-write'
+import { generateMapHash, type MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
@@ -735,8 +735,19 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const templateB2 = JSON.parse(decoder.decode(template.chunks[1])) as Record<string, unknown>
   const templateB3Text = template.chunks[2] ? decoder.decode(template.chunks[2]) : '{"dialogs":{"lines":[]},"quests":{"quests":[]}}'
 
+  // See map-write.ts's buildBlankMap() comment: the hash/hashSum are never
+  // cloned from the template like everything else here — every real sample
+  // checked has its own distinct value, changing even on a same-content
+  // resave, so it's an opaque per-map identity the game keys recognition
+  // on, not a content checksum. Cloning the template's fixed value made
+  // every H3-imported map collide on the same identity, confirmed via real
+  // player.log testing to be why the game silently refused to recognize
+  // any map imported this way.
+  const mapHash = generateMapHash()
+
   const b1 = {
     ...templateB1,
+    hashSum: mapHash,
     sizeX: atlas.atlasWidth,
     sizeZ: atlas.atlasHeight,
     spawns: { playersCount: ownership.finalOwners.length, spawns: block1Spawns, takenHeroes: [] as string[] },
@@ -815,7 +826,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   }
 
   const container: MapContainer = {
-    hash: template.hash,
+    hash: new TextEncoder().encode(mapHash),
     version: template.version,
     separator: template.separator,
     chunks: [

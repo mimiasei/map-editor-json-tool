@@ -2103,8 +2103,26 @@ export function paintRiverTiles(
 // Block 4 doesn't exist in the 3-chunk template (a real, tolerated shape —
 // `parseMapFile` already substitutes `{}` for a missing block), so a
 // minimal empty one is added here for future quest/counter data.
+//
+// The hash and Block 1's hashSum (always equal to it, confirmed across
+// every real sample checked) are NOT cloned from the template, unlike
+// everything else here: resaving one unchanged real map through GME
+// produced a brand-new hash despite identical content, proving it isn't a
+// content checksum at all but an opaque per-map identity value the game
+// keys map recognition on. Cloning the template's fixed value made every
+// map ever created this way collide on the same identity — confirmed via
+// real player.log testing to be why the game silently refuses to
+// recognize/select any map produced this way. generateMapHash() below
+// mints a fresh one per map instead.
 
 const BLANK_BLOCK4 = '{"comment":"","aiRolesId":"","counters":[],"interruptions":[],"quests":[]}'
+
+/** A fresh 32-lowercase-hex-char per-map identity, matching the shape of
+ *  every real sample's header hash / Block 1 hashSum (e.g.
+ *  "8e68060f1d3150ee214214785a9b6bb5") — see the comment above. */
+export function generateMapHash(): string {
+  return crypto.randomUUID().replace(/-/g, '')
+}
 
 export interface BlankMapPlayer {
   /** A player-start spawner sid — the only two sids real Block 1
@@ -2150,8 +2168,11 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     ? new TextDecoder('utf-8').decode(template.chunks[2])
     : '{"dialogs":{"lines":[]},"quests":{"quests":[]}}'
 
+  const mapHash = generateMapHash()
+
   const b1 = {
     ...templateB1,
+    hashSum: mapHash,
     sizeX,
     sizeZ,
     spawns: { playersCount: players.length, spawns: [] as unknown[], takenHeroes: [] as string[] },
@@ -2223,7 +2244,7 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
   ]
 
   let container: MapContainer = {
-    hash: template.hash,
+    hash: new TextEncoder().encode(mapHash),
     version: template.version,
     separator: template.separator,
     chunks,

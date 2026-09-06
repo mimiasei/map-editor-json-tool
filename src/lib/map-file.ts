@@ -230,6 +230,16 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
  * useScenarioStore's mapFilePath/sidecarPath so later saves go straight to
  * disk without prompting again.
  *
+ * Pass `forceNewPath: true` for a genuine Save As — unlike plain Save,
+ * which should only prompt the very first time a path is unknown, Save As
+ * must always show the location prompt even when a path is already known
+ * (a regression introduced when this function started backing both: it
+ * only ever checked `mapIsDirty` before, so a map beyond its first save
+ * silently overwrote the existing path with no dialog at all — see the
+ * map-identity-hash fix's plan file for the full report). Gates on the
+ * loaded container rather than `mapIsDirty` in that mode, since a
+ * just-opened-but-unedited map still has something worth saving a copy of.
+ *
  * Returns `false` only when a save-location prompt this call needed was
  * cancelled — callers (AppShell.handleSave / Toolbar.handleExport) must
  * check this and abort their own Save/Save As entirely rather than falling
@@ -237,12 +247,13 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
  * SECOND, unrelated save dialog for the JSON sidecar right after the user
  * just said "not now" to the first one.
  */
-export async function commitMapWithPathPrompt(): Promise<boolean> {
-  const { mapIsDirty, commitToDisk } = useMapDocumentStore.getState()
-  if (!mapIsDirty) return true
+export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean }): Promise<boolean> {
+  const forceNewPath = options?.forceNewPath ?? false
+  const { mapIsDirty, container, commitToDisk } = useMapDocumentStore.getState()
+  if (forceNewPath ? !container : !mapIsDirty) return true
   const scenarioState = useScenarioStore.getState()
   let mapPath = scenarioState.mapFilePath
-  if (!mapPath) {
+  if (!mapPath || forceNewPath) {
     const suggested = scenarioState.mapName || 'New Map'
     const fileName = suggested.endsWith('.map') ? suggested : `${suggested}.map`
     mapPath = await pickSavePath(fileName, { name: 'Map file', extensions: ['map'] }, 'Save map')

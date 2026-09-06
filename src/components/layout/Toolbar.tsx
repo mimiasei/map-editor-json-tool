@@ -383,13 +383,13 @@ export default function Toolbar({
   }
 
   // ── Save As ───────────────────────────────────────────────────────────────────
-  // Always shows a file-save dialog, even when a .map/sidecar path is known.
-  // Also commits any pending Map Grid edits, same as Save — via
-  // commitMapWithPathPrompt (map-file.ts), which itself prompts for a .map
-  // save location whenever none is known yet (a never-saved map), same
-  // behavior plain Save now has for that same first-save case.
+  // Always shows a file-save dialog, even when a .map/sidecar path is known —
+  // commitMapWithPathPrompt({ forceNewPath: true }) (map-file.ts) is what
+  // makes the .map half always prompt; plain Save calls the same function
+  // with no options, which only prompts the very first time (a never-saved
+  // map, e.g. one just created via New Map).
   const handleExport = async () => {
-    if (!(await commitMapWithPathPrompt())) return // user cancelled the .map save-location prompt — abort the whole Save As
+    if (!(await commitMapWithPathPrompt({ forceNewPath: true }))) return // user cancelled the .map save-location prompt — abort the whole Save As
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
