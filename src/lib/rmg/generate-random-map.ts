@@ -37,6 +37,7 @@ import {
   setAreas,
   setCityFaction,
   setCitySpawnHero,
+  upsertPropHero,
   upsertPropPortals,
   patchGameRules,
   BLANK_MAP_BIOME_NAMES,
@@ -911,11 +912,12 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
 
   // Town/faction matching — a player zone's own biome determines its
-  // city-spawner's real faction, rather than leaving it unconfigured.
-  // hero-spawner has no equivalent (picking a specific real hero identity
-  // needs a hero-catalog lookup this milestone doesn't attempt — CLAUDE.md
-  // already documents "random" as GME's own real default for an
-  // unconfigured hero-spawner, unlike city-spawner's unconfigured state).
+  // city-spawner's real faction, rather than leaving it unconfigured. Each
+  // player also gets a real starting hero matching that faction (see below) —
+  // playerSpawnerSid === 'hero-spawner' (a separate, rarer player-start kind)
+  // has no equivalent here; CLAUDE.md documents "random" as GME's own real
+  // default for an unconfigured hero-spawner, unlike city-spawner's own
+  // unconfigured state.
   const playerZoneIndex = new Map<number, number>()
   {
     let index = 0
@@ -926,6 +928,19 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
   if (playerSpawnerSid === 'city-spawner') {
+    // Every real player city on every known-working sample map (Broken_Alliance,
+    // Stormlight) ships with a real, named starting hero (propHeroes isDefined:true)
+    // — RMG previously gave none at all (propHeroes stayed completely empty), which
+    // is what actually froze the game at 100% load: real player.log testing showed
+    // the AI's per-frame hero-resolution pass fails identically for all 177 catalog
+    // heroes when propHeroes has zero entries (Stormlight, with 5 real entries,
+    // fails for none), crashing with an uncaught exception in AI area-processing
+    // code. A prior fix attempt only synced the propCities.spawnHero flag to match
+    // the (still-empty) propHeroes table — that kept the flag/table consistent but
+    // never put real data in the table, so it didn't change the crash at all.
+    // Assigning every player a real hero is also a deliberate design choice, not
+    // just a crash workaround — a template-driven generation may override this.
+    const usedHeroSids = new Set<string>()
     for (const [zoneId, playerId] of playerZoneIndex) {
       const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
       const faction = BIOME_FACTION[biome]
@@ -933,17 +948,24 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       const result = setCityFaction(finalBlock1, finalBlock2, 0, playerId, faction)
       finalBlock1 = result.block1Chunk
       finalBlock2 = result.block2Chunk
-      // setCityFaction only sets factionSid/isDefined — PLAYER_START_SPAWNER_DEFAULTS'
-      // own propCities row leaves spawnHero:true (a real, confirmed default for a
-      // still-unconfigured city), which this activation step never revisits. RMG has
-      // no player-hero-assignment feature (every spawns.spawns[].isHeroDefined stays
-      // false), so an activated city left at spawnHero:true has zero backing propHeroes
-      // data — confirmed via real player.log testing to freeze the game at 100% load
-      // (an uncaught exception in AI area-processing code, preceded by tens of
-      // thousands of "Hero by id N not found" messages). setCitySpawnHero(..., false)
-      // is what correctly keeps propHeroes in sync (removing any stale row), matching
-      // its own doc comment's confirmed real-data invariant.
-      const heroResult = setCitySpawnHero(finalBlock1, finalBlock2, 0, playerId, false)
+
+      // A plain /^[a-z]+_hero_\d+$/ shape isn't enough — Core/DB/heroes/campaign_tutorial
+      // ships e.g. "tutorial_hero_2" and Core/DB/heroes/campaign ships e.g.
+      // "campaign_hero_4", both matching that shape too. Only these 6 real per-faction
+      // roster prefixes (Core/DB/heroes/humans|necros|demons|dungeon|unfrozen|nature)
+      // are meant for a generic skirmish/random-map start; confirmed via every real
+      // sample's own sids (e.g. Stormlight's human_hero_9/nature_hero_10/demon_hero_9/necro_hero_9).
+      const factionHeroes = catalog.heroes.filter((h) => h.fraction === faction && /^(human|necro|demon|dungeon|unfrozen|nature)_hero_\d+$/.test(h.id))
+      const unusedFactionHeroes = factionHeroes.filter((h) => !usedHeroSids.has(h.id))
+      const heroPool = unusedFactionHeroes.length > 0 ? unusedFactionHeroes : factionHeroes
+      if (heroPool.length === 0) continue // no catalog heroes for this faction — leave unconfigured rather than guess
+      const hero = heroPool[Math.floor(rng() * heroPool.length)]
+      usedHeroSids.add(hero.id)
+
+      const spawnResult = setCitySpawnHero(finalBlock1, finalBlock2, 0, playerId, true)
+      finalBlock1 = spawnResult.block1Chunk
+      finalBlock2 = spawnResult.block2Chunk
+      const heroResult = upsertPropHero(finalBlock1, finalBlock2, 0, playerId, hero.id)
       finalBlock1 = heroResult.block1Chunk
       finalBlock2 = heroResult.block2Chunk
     }
