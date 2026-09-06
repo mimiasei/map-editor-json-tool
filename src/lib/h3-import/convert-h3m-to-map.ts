@@ -44,7 +44,7 @@
 // dropped): map events, global timed events, and the structural validator
 // (Phase 5).
 
-import { generateMapHash, type MapContainer } from '@/lib/map-write'
+import { generateMapHash, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
@@ -755,6 +755,10 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       ...((templateB1.startSettings as Record<string, unknown>) ?? {}),
       DefeatAllEnemiesEnabled: mainQuest !== null,
     },
+    economicDifficulties: FULL_DIFFICULTIES,
+    aiDifficulties: FULL_DIFFICULTIES,
+    neutralDifficulties: FULL_DIFFICULTIES,
+    quickStartDifficulties: FULL_DIFFICULTIES,
   }
 
   const templateViews = (templateB2.views as Array<Record<string, unknown>>) ?? []
@@ -804,6 +808,10 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // real enemy hero's army (a real OE-format fact, not H3-specific —
       // see CLAUDE.md's random-squad notes).
       disableAutoBattleAgainstEnemyHeroes: true,
+      economicDifficulties: FULL_DIFFICULTIES,
+      aiDifficulties: FULL_DIFFICULTIES,
+      neutralDifficulties: FULL_DIFFICULTIES,
+      quickStartDifficulties: FULL_DIFFICULTIES,
     },
     // Start from the template's own ~29-table objectsProperties shape (every
     // other table stays a template-provided empty array — a real, freshly

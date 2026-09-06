@@ -2124,6 +2124,16 @@ export function generateMapHash(): string {
   return crypto.randomUUID().replace(/-/g, '')
 }
 
+/** economicDifficulties/aiDifficulties/neutralDifficulties/quickStartDifficulties
+ *  (Block 1 top-level AND Block 2's nested `settings`) are 6-element boolean
+ *  arrays, one flag per difficulty level — every real sample map has them
+ *  populated; the bundled template has them empty (`[]`), and neither editor
+ *  exposes a per-difficulty toggle to fix that after the fact, so a
+ *  from-scratch map inherited that emptiness verbatim. All-`true` ("every
+ *  difficulty enabled") is the permissive default matching what a map with no
+ *  explicit restrictions should mean. */
+export const FULL_DIFFICULTIES = [true, true, true, true, true, true]
+
 export interface BlankMapPlayer {
   /** A player-start spawner sid — the only two sids real Block 1
    *  spawns.spawns[] entries are ever backed by (see backfillPlayerStartSpawner). */
@@ -2176,6 +2186,10 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     sizeX,
     sizeZ,
     spawns: { playersCount: players.length, spawns: [] as unknown[], takenHeroes: [] as string[] },
+    economicDifficulties: FULL_DIFFICULTIES,
+    aiDifficulties: FULL_DIFFICULTIES,
+    neutralDifficulties: FULL_DIFFICULTIES,
+    quickStartDifficulties: FULL_DIFFICULTIES,
   }
 
   // `views` gates GME's own pannable/editable viewport — every real sample
@@ -2226,6 +2240,13 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     levelsMap: new Array(tileCount).fill(0),
     climbsMap: new Array(tileCount).fill(0),
     roadsMap: new Array(tileCount).fill(0),
+    settings: {
+      ...((templateB2.settings as Record<string, unknown>) ?? {}),
+      economicDifficulties: FULL_DIFFICULTIES,
+      aiDifficulties: FULL_DIFFICULTIES,
+      neutralDifficulties: FULL_DIFFICULTIES,
+      quickStartDifficulties: FULL_DIFFICULTIES,
+    },
     objects: [] as unknown[],
     squads: [] as unknown[],
     markers: [] as unknown[],
