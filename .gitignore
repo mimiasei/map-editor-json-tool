@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+build/
 
 # Environment
 .env
@@ -29,6 +30,8 @@ plans/translator.md
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+tauri-dev.log*
+
 
 # TypeScript
 *.tsbuildinfo
@@ -59,3 +62,6 @@ Core/
 # Reference-only external repos copied in for local lookup (issue #207) —
 # read-only reference material, never part of this project's own source.
 /reference/
+
+extract_thumbnails-x86_64-unknown-linux-gnu.spec
+src-tauri/sidecar/extract_thumbnails-x86_64-unknown-linux-gnu

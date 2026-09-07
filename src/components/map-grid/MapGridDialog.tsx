@@ -75,7 +75,8 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2, Users } from 'lucide-react'
+import ImageColorMappingDialog, { type ImageColorMappingResult, type ImportedImage } from '@/components/map-grid/ImageColorMappingDialog'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2, ImageIcon, Users } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -327,6 +328,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const handleRemoveBackgroundImage = () => {
     if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current)
     setBackgroundImageUrl(null)
+  }
+
+  const [imageMappingOpen, setImageMappingOpen] = useState(false)
+  const [imageMappingSource, setImageMappingSource] = useState<ImportedImage | null>(null)
+  const handleLoadImageMapping = async () => {
+    const picked = await openImageFile()
+    if (!picked) return
+    setImageMappingSource(picked)
+    setImageMappingOpen(true)
   }
 
   // ── Tile index + per-tile primary pick (only for OCCUPIED tiles — a few
@@ -2663,6 +2673,50 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return false
   }, [blockedTileSet, paintObjectStaged, sizeX, catalog])
 
+  const applyImageColorMapping = useCallback(async (
+    result: ImageColorMappingResult,
+    onProgress: (completed: number, total: number) => void,
+  ) => {
+    const terrainChanges = new Map<number, number>()
+    const waterChanges = new Map<number, number>()
+    const waterLevelChanges = new Map<number, -1>()
+    const additions: { node: number; sid: string }[] = []
+    const total = sizeX * sizeZ
+    const yieldToUi = () => new Promise<void>((resolve) => window.setTimeout(resolve, 0))
+    for (let screenRow = 0; screenRow < sizeZ; screenRow++) {
+      const imageY = Math.min(result.height - 1, Math.floor(screenRow * result.height / sizeZ))
+      for (let x = 0; x < sizeX; x++) {
+        const imageX = Math.min(result.width - 1, Math.floor(x * result.width / sizeX))
+        const target = result.mapping[result.pixels[imageY * result.width + imageX]]
+        if (!target) continue
+        const node = (sizeZ - 1 - screenRow) * sizeX + x
+        if (target.kind === 'terrain') terrainChanges.set(node, target.biomeId)
+        else if (target.kind === 'water') {
+          waterChanges.set(node, target.waterId)
+          waterLevelChanges.set(node, -1)
+        }
+        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
+          additions.push({ node, sid: target.sid })
+        }
+      }
+      const completed = Math.min(total, (screenRow + 1) * sizeX)
+      onProgress(completed, total)
+      if (screenRow % 8 === 0) await yieldToUi()
+    }
+    if (terrainChanges.size > 0) {
+      applyEdit({ kind: 'paintTerrain', changes: [...terrainChanges].map(([node, biomeId]) => ({ node, biomeId })) }, 'paint terrain from image')
+    }
+    onProgress(total > 0 ? total : 1, total > 0 ? total : 1)
+    if (waterChanges.size > 0) {
+      applyEdit({ kind: 'paintLevel', changes: [...waterLevelChanges].map(([node, level]) => ({ node, level })) }, 'set water levels from image')
+      applyEdit({ kind: 'paintWater', changes: [...waterChanges].map(([node, waterId]) => ({ node, waterId })) }, 'paint water from image')
+    }
+    if (additions.length > 0) {
+      applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'paint assets from image')
+    }
+    setImageMappingOpen(false)
+  }, [sizeX, sizeZ, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, applyEdit])
+
   const stageObjectPaint = useCallback((node: number, sid: string) => {
     if (!isNodeInBoundsForPlacement(sid, node) || isNodeBlockedForObjectPaint(node)) return
     if (paintObjectStaged.get(node) === sid) return
@@ -3534,6 +3588,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   }}
                 />
               )}
+              <ToolButton
+                icon={<ImageIcon className="h-3.5 w-3.5" />}
+                label="Image map"
+                title="Load an image and map its colors to terrain, water, forest, or mountain assets"
+                onClick={() => {
+                  stopPlacing(); setObjectBrowserOpen(false); stopPainting(); setPaintBiome(null); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser()
+                  void handleLoadImageMapping()
+                }}
+              />
               {/* Freehand/Rectangle interaction mode (issue #193 Phase 4) —
                   a shared toggle for Terrain/Level, not a separate top-level
                   tool. Only shown once a relevant brush is active, since it
@@ -4331,6 +4394,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         </Panel>
         </Group>
     </div>
+
+    <ImageColorMappingDialog
+      open={imageMappingOpen}
+      onOpenChange={setImageMappingOpen}
+      image={imageMappingSource}
+      sizeX={sizeX}
+      sizeZ={sizeZ}
+      catalog={catalog}
+      onApply={applyImageColorMapping}
+    />
 
     <RenameEntitySidDialog
       open={renameTarget !== null}
