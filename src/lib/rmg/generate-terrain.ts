@@ -50,7 +50,7 @@ import { computeFootprintTiles, clampAnchorToFootprintBounds } from '@/lib/map-g
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
-import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides } from './rmg-template-import'
+import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides } from './rmg-template-import'
 import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
@@ -178,6 +178,14 @@ export interface TerrainResult {
    *  (Stage 3a/3c — rmg-template-import.ts's own `ZoneLayoutOverrides` doc
    *  comment). Empty when no template was imported. */
   zoneLayoutByZoneId: Map<number, ZoneLayoutOverrides>
+  /** Per-zone balance overrides from a game-template import (issue #210
+   *  runner-up milestone) — see rmg-template-import.ts's own
+   *  `GameTemplateTopology` doc comments. All empty when no template was
+   *  imported. */
+  guardCutoffValueByZoneId: Map<number, number>
+  zoneContentValueByZoneId: Map<number, ZoneContentValueOverrides>
+  contentCountLimitsByZoneId: Map<number, { sid: string; maxCount: number }[]>
+  neutralCityExclusionsByZoneId: Map<number, Set<number>>
 }
 
 /**
@@ -205,6 +213,10 @@ export function generateTerrain(
   const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
   const unpaintedEdges = importedTopology?.unpaintedEdges ?? new Set<string>()
   const zoneLayoutByZoneId = importedTopology?.zoneLayoutByZoneId ?? new Map<number, ZoneLayoutOverrides>()
+  const guardCutoffValueByZoneId = importedTopology?.guardCutoffValueByZoneId ?? new Map<number, number>()
+  const zoneContentValueByZoneId = importedTopology?.zoneContentValueByZoneId ?? new Map<number, ZoneContentValueOverrides>()
+  const contentCountLimitsByZoneId = importedTopology?.contentCountLimitsByZoneId ?? new Map<number, { sid: string; maxCount: number }[]>()
+  const neutralCityExclusionsByZoneId = importedTopology?.neutralCityExclusionsByZoneId ?? new Map<number, Set<number>>()
   const zoneDistances = zoneDistanceMatrix(graph)
   if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
     throw new Error(importedTopology
@@ -336,5 +348,6 @@ export function generateTerrain(
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     waterNodesAll, waterMapFinal, levelsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
   }
 }

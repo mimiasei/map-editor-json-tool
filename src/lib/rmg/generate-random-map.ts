@@ -231,7 +231,11 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
 
   const objectLogicsById = buildObjectLogicsIndex(catalog)
-  const { graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state, portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, zoneLayoutByZoneId } = terrain
+  const {
+    graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
+    portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, zoneLayoutByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+  } = terrain
   let container = terrain.container
   let block2 = container.chunks[1]
   // A hard rule (zone-islands.ts's own header comment has the full
@@ -254,6 +258,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
 
   const { placements, concreteSquads } = populateZones({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 

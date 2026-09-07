@@ -1,13 +1,21 @@
 // ─── Real game RMG template import (issue #210, Stage 1) ────────────────────
-// Imports a real `.rmg.json` game template's own TOPOLOGY ONLY — zones
-// (name, size, which one is which player's spawn) and connections (road/
-// portal/skip) — as an alternative to `zone-graph.ts`'s `buildZoneGraph`
-// fixed ring. Everything else in this generator's own pipeline (biome
-// assignment, water, decoration clustering, object population, roads/
-// rivers painting) is untouched and keeps running exactly as built this
-// session — this is deliberately topology-only, not full template
-// consumption (content pools/zoneLayouts terrain-shape fields are a real,
-// larger undertaking, tracked separately, not attempted here).
+// Imports a real `.rmg.json` game template's own topology — zones (name,
+// size, which one is which player's spawn) and connections (road/portal/
+// skip) — as an alternative to `zone-graph.ts`'s `buildZoneGraph` fixed
+// ring, PLUS a handful of per-zone value/balance fields layered on top of
+// this generator's own existing population logic (issue #210 runner-up
+// milestone, added later than the rest of this file): `guardCutoffValue`,
+// `guardedContentValue`/`resourcesValue` (+ `...PerArea`), named
+// `contentCountLimits[]` references, and neutral-city faction
+// `differentFrom` constraints — see each field's own doc comment below and
+// `zone-population.ts`'s own consuming code for exactly how each is used.
+// Still deliberately NOT full template consumption: content POOLS (which
+// specific objects a zone's own `guardedContentPool`/`unguardedContentPool`/
+// `resourcesContentPool` names resolve to) and the full multi-main-object-
+// per-zone placement model are a real, much larger undertaking, tracked
+// separately, not attempted here — this generator still places its own
+// single mine/treasure-loop/guard per zone, just tuned by the real values
+// above when a template provides them.
 //
 // Schema confirmed two ways: this repo's own `maps/templates/*.rmg.json`
 // (~90 real game templates) and a third-party template editor's full
@@ -41,9 +49,15 @@
 
 import type { ZoneGraph, ZoneSpec } from './zone-graph'
 
+interface RawFactionConstraint {
+  type?: string
+  args?: string[]
+}
+
 interface RawMainObject {
   type?: string
   spawn?: string
+  faction?: RawFactionConstraint
   [key: string]: unknown
 }
 
@@ -52,6 +66,36 @@ interface RawZone {
   size?: number
   layout?: string
   mainObjects?: RawMainObject[]
+  /** Below this rolled value, no guard is placed at all (1500-2500 seen
+   *  across real templates) — see guard-value-bands.ts's own
+   *  GUARD_VALUE_CUTOFF doc comment for why this generator's own default
+   *  deliberately does NOT match the real absolute number; a per-zone value
+   *  read directly from the picked template is a different, more targeted
+   *  case than that earlier rejected global port. */
+  guardCutoffValue?: number
+  /** Value-budget fields (issue #210 runner-up milestone) — real templates
+   *  always ship a flat `xValue` alongside a `xValuePerArea` scaled by the
+   *  zone's own `size`; combined in `combineValueAndArea` below. */
+  guardedContentValue?: number
+  guardedContentValuePerArea?: number
+  resourcesValue?: number
+  resourcesValuePerArea?: number
+  /** Names of this zone's own entries in the template's top-level
+   *  `contentCountLimits[]` (an array of NAMED limit sets, e.g.
+   *  `content_limits_spawn`) — resolved against `limitSetsByName` below. */
+  contentCountLimits?: string[]
+  [key: string]: unknown
+}
+
+interface RawContentCountLimit {
+  sid?: string
+  maxCount?: number
+  [key: string]: unknown
+}
+
+interface RawContentCountLimitSet {
+  name?: string
+  limits?: RawContentCountLimit[]
   [key: string]: unknown
 }
 
@@ -116,6 +160,7 @@ interface RawTemplate {
   gameRules?: RawGameRules
   globalBans?: { items?: string[]; magics?: string[]; heroes?: string[] }
   zoneLayouts?: RawZoneLayout[]
+  contentCountLimits?: RawContentCountLimitSet[]
   [key: string]: unknown
 }
 
@@ -134,10 +179,55 @@ export interface GameTemplateTopology {
    *  3a/3c) — empty for a zone with no `layout` reference or an
    *  unresolvable one. */
   zoneLayoutByZoneId: Map<number, ZoneLayoutOverrides>
+  /** zone id -> that zone's own real `guardCutoffValue`, when present
+   *  (issue #210 runner-up milestone). Empty for a zone with no such field
+   *  (or when no template was imported at all) — callers fall back to
+   *  their own default cutoff in that case. */
+  guardCutoffValueByZoneId: Map<number, number>
+  /** zone id -> that zone's own real value-budget fields, combined with
+   *  their `...PerArea` counterpart (see `combineValueAndArea` below).
+   *  Empty for a zone with neither field set. */
+  zoneContentValueByZoneId: Map<number, ZoneContentValueOverrides>
+  /** zone id -> real per-sid placement caps resolved from this zone's own
+   *  named `contentCountLimits[]` references (merged across every name the
+   *  zone lists, strictest maxCount wins per sid). Empty for a zone with no
+   *  such references. */
+  contentCountLimitsByZoneId: Map<number, { sid: string; maxCount: number }[]>
+  /** neutral zone id -> the set of PLAYER zone ids a candidate neutral
+   *  city placed here must have a DIFFERENT faction from, parsed from that
+   *  zone's own City main object(s) `faction: {type:"FromList",
+   *  args:["differentFrom: <idx> <zoneName>"]}` (real shape confirmed in
+   *  `Pyramid.rmg.json`). Merges every constraint found across all of a
+   *  zone's City main objects, since this generator places at most one
+   *  candidate city per zone (unlike the real format's own multiple-
+   *  alternative-object model). Empty for a zone with no such constraint —
+   *  callers fall back to "differ from every player" in that case. */
+  neutralCityExclusionsByZoneId: Map<number, Set<number>>
+}
+
+/** Per-zone value-budget overrides (issue #210 runner-up milestone) — see
+ *  `RawZone`'s own `guardedContentValue`/`resourcesValue` doc comments. */
+export interface ZoneContentValueOverrides {
+  guardedContentValue?: number
+  resourcesValue?: number
 }
 
 function edgeKey(a: number, b: number): string {
   return `${Math.min(a, b)}:${Math.max(a, b)}`
+}
+
+/** Combines a real template's flat `xValue` with its `xValuePerArea`
+ *  counterpart into one effective total (`value + perArea * zoneSize`) —
+ *  every real zone sampled in `maps/templates/*.rmg.json` that carries
+ *  either field carries both. Not independently confirmed against the
+ *  actual game engine's own formula (no engine source to check against) —
+ *  flagged as the closest reasonable reading, same spirit as this
+ *  generator's other real-but-unverified-formula cases. Returns undefined
+ *  (not 0) when neither field is present, so callers can tell "no real
+ *  data" apart from "a real, deliberate zero". */
+function combineValueAndArea(value: number | undefined, perArea: number | undefined, size: number): number | undefined {
+  if (value === undefined && perArea === undefined) return undefined
+  return (value ?? 0) + (perArea ?? 0) * size
 }
 
 /** `"Player1"` -> `1`. Real templates confirmed to use this exact
@@ -227,7 +317,68 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
     })
   })
 
-  return { graph: { zones, edges }, portalEdges, unpaintedEdges, zoneLayoutByZoneId }
+  // Runner-up milestone: resolve the template's own named
+  // `contentCountLimits[]` sets (top-level) so each zone's own
+  // `contentCountLimits: string[]` (a list of set NAMES, not inline
+  // limits) can be resolved to real {sid,maxCount} rows.
+  const limitSetsByName = new Map<string, { sid: string; maxCount: number }[]>()
+  for (const set of template.contentCountLimits ?? []) {
+    if (!set.name) continue
+    const rows = (set.limits ?? []).filter(
+      (l): l is { sid: string; maxCount: number } => typeof l.sid === 'string' && typeof l.maxCount === 'number',
+    )
+    limitSetsByName.set(set.name, rows)
+  }
+
+  const guardCutoffValueByZoneId = new Map<number, number>()
+  const zoneContentValueByZoneId = new Map<number, ZoneContentValueOverrides>()
+  const contentCountLimitsByZoneId = new Map<number, { sid: string; maxCount: number }[]>()
+  const neutralCityExclusionsByZoneId = new Map<number, Set<number>>()
+
+  rawZones.forEach((z, id) => {
+    if (typeof z.guardCutoffValue === 'number') guardCutoffValueByZoneId.set(id, z.guardCutoffValue)
+
+    const size = typeof z.size === 'number' && z.size > 0 ? z.size : 1
+    const guardedContentValue = combineValueAndArea(z.guardedContentValue, z.guardedContentValuePerArea, size)
+    const resourcesValue = combineValueAndArea(z.resourcesValue, z.resourcesValuePerArea, size)
+    if (guardedContentValue !== undefined || resourcesValue !== undefined) {
+      zoneContentValueByZoneId.set(id, { guardedContentValue, resourcesValue })
+    }
+
+    if (Array.isArray(z.contentCountLimits) && z.contentCountLimits.length > 0) {
+      // Merge every named set the zone references, taking the strictest
+      // (lowest) maxCount when the same sid appears in more than one —
+      // every real sample checked only ever references a single set per
+      // zone, but nothing in the schema forbids more.
+      const merged = new Map<string, number>()
+      for (const setName of z.contentCountLimits) {
+        for (const row of limitSetsByName.get(setName) ?? []) {
+          const existing = merged.get(row.sid)
+          merged.set(row.sid, existing === undefined ? row.maxCount : Math.min(existing, row.maxCount))
+        }
+      }
+      if (merged.size > 0) contentCountLimitsByZoneId.set(id, [...merged].map(([sid, maxCount]) => ({ sid, maxCount })))
+    }
+
+    // Neutral city faction exclusions — see neutralCityExclusionsByZoneId's
+    // own doc comment above for the real shape this parses.
+    for (const mo of z.mainObjects ?? []) {
+      if (mo.type !== 'City' || mo.faction?.type !== 'FromList') continue
+      for (const arg of mo.faction.args ?? []) {
+        const match = /^differentFrom:\s*\d+\s+(.+)$/.exec(arg)
+        if (!match) continue
+        const otherZoneId = zoneIdByName.get(match[1])
+        if (otherZoneId === undefined) continue
+        if (!neutralCityExclusionsByZoneId.has(id)) neutralCityExclusionsByZoneId.set(id, new Set())
+        neutralCityExclusionsByZoneId.get(id)!.add(otherZoneId)
+      }
+    }
+  })
+
+  return {
+    graph: { zones, edges }, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+  }
 }
 
 /** Extracts the Stage 4 `gameRules`/`globalBans` fields this generator

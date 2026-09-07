@@ -261,6 +261,26 @@ export interface PopulateZonesOptions {
    *  make — the only named, capped-in-the-real-format sids this
    *  generator currently has a placement path for at all. */
   contentCountLimits?: { sid: string; maxCount: number }[]
+  /** Issue #210 runner-up milestone — per-zone overrides parsed from a real
+   *  imported game template (rmg-template-import.ts). Every map is empty
+   *  when no template was picked (or a given zone has no matching real
+   *  data), in which case behavior is byte-for-byte identical to before
+   *  these were added. */
+  /** zone id -> that zone's own real `guardCutoffValue`, replacing
+   *  `GUARD_VALUE_CUTOFF` for guards placed in that specific zone. */
+  guardCutoffValueByZoneId?: Map<number, number>
+  /** zone id -> that zone's own real value-budget fields — see
+   *  `ZoneContentValueOverrides`'s own doc comment (rmg-template-import.ts)
+   *  for what each represents and how `...PerArea` is folded in. */
+  zoneContentValueByZoneId?: Map<number, { guardedContentValue?: number; resourcesValue?: number }>
+  /** zone id -> real per-sid placement caps scoped to just that zone,
+   *  layered ON TOP OF (not replacing) the map-wide `contentCountLimits`
+   *  above — an item can be blocked by either cap independently. */
+  contentCountLimitsByZoneId?: Map<number, { sid: string; maxCount: number }[]>
+  /** neutral zone id -> the player zone ids a candidate `random-city`
+   *  placed here must have a different faction from. Replaces the default
+   *  "differ from every player" rule for zones with real data. */
+  neutralCityExclusionsByZoneId?: Map<number, Set<number>>
 }
 
 /** Scatter each zone's own objects (see this file's header comment for what
@@ -277,18 +297,37 @@ export interface PopulateZonesResult {
 }
 
 export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
-  const { sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [] } = options
+  const {
+    sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+  } = options
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
   const artifactSids = catalog ? collectArtifactSids(catalog) : []
+  // True overall span of RMG_GUARD_DIFFICULTY_RANGES' real bands (Easy
+  // through Lethal) — NOT `pickSquadRange(['Random'], ...)`'s own return
+  // value, which resolves 'Random' to one weighted-random SPECIFIC band
+  // (e.g. 'Impossible': 20000-50000), not the literal overall span. Used
+  // only to clamp a real template's own `guardedContentValue` into this
+  // generator's guard-value units below.
+  const guardValueBandMin = Math.min(...RMG_GUARD_DIFFICULTY_RANGES.filter((r) => r.label !== 'Random').map((r) => r.min))
+  const guardValueBandMax = Math.max(...RMG_GUARD_DIFFICULTY_RANGES.filter((r) => r.label !== 'Random').map((r) => r.max))
   const contentCountLimitBySid = new Map(contentCountLimits.map((l) => [l.sid, l.maxCount]))
   const contentCountSoFar = new Map<string, number>()
+  // Per-zone overlay (runner-up milestone) — reset per neutral zone below,
+  // layered ON TOP OF the map-wide cap above rather than replacing it.
+  let currentZoneContentLimitBySid = new Map<string, number>()
+  let currentZoneContentSoFar = new Map<string, number>()
   const isAtContentCap = (sid: string): boolean => {
     const max = contentCountLimitBySid.get(sid)
-    return max !== undefined && (contentCountSoFar.get(sid) ?? 0) >= max
+    if (max !== undefined && (contentCountSoFar.get(sid) ?? 0) >= max) return true
+    const zoneMax = currentZoneContentLimitBySid.get(sid)
+    if (zoneMax !== undefined && (currentZoneContentSoFar.get(sid) ?? 0) >= zoneMax) return true
+    return false
   }
   const recordContentPlacement = (sid: string): void => {
     if (contentCountLimitBySid.has(sid)) contentCountSoFar.set(sid, (contentCountSoFar.get(sid) ?? 0) + 1)
+    if (currentZoneContentLimitBySid.has(sid)) currentZoneContentSoFar.set(sid, (currentZoneContentSoFar.get(sid) ?? 0) + 1)
   }
 
   const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides']): void => {
@@ -372,11 +411,13 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  `pickSquadTemplate` to roughly match `requestedValue`/`fraction` the
    *  same way a `random-squad` roll would have. Falls back to `random-squad`
    *  if no matching template exists or the zone has no free tile left for
-   *  it. Below `GUARD_VALUE_CUTOFF` (Olden Era's own real RMG templates'
-   *  `guardCutoffValue` concept), no guard is placed at all — the resource
+   *  it. Below `cutoff` (defaults to `GUARD_VALUE_CUTOFF` — Olden Era's own
+   *  real RMG templates' `guardCutoffValue` concept, overridden per-zone
+   *  with that zone's own real value when a template provides one — issue
+   *  #210 runner-up milestone), no guard is placed at all — the resource
    *  stays free rather than getting a near-worthless guard. */
-  const placeGuard = (tiles: number[], requestedValue: number, fraction: string): void => {
-    if (requestedValue < GUARD_VALUE_CUTOFF) return
+  const placeGuard = (tiles: number[], requestedValue: number, fraction: string, cutoff: number = GUARD_VALUE_CUTOFF): void => {
+    if (requestedValue < cutoff) return
     if (catalog && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
       if (template) {
@@ -389,6 +430,24 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     }
     place('random-squad', tiles, { requestedValue, fraction })
   }
+
+  // Per-zone treasure-budget scaling from a real template's own
+  // resourcesValue (+ resourcesValuePerArea) — issue #210 runner-up
+  // milestone. Applied RELATIVE to the median across every neutral zone in
+  // this variant, not the raw absolute number: real values are on a totally
+  // different scale than this generator's own synthetic RARITY_TABLE cost
+  // budget (there's no real per-item value data in this generator's own
+  // catalog to spend the literal number against), so a zone richer/poorer
+  // than its siblings gets proportionally more/less treasure instead.
+  // `medianResourceValue` stays undefined (every zone's scale stays exactly
+  // 1, unchanged from before this milestone) whenever no template provided
+  // this data at all.
+  const neutralResourceValues = zones
+    .filter((z) => z.kind === 'neutral')
+    .map((z) => zoneContentValueByZoneId?.get(z.id)?.resourcesValue)
+    .filter((v): v is number => v !== undefined && v > 0)
+    .sort((a, b) => a - b)
+  const medianResourceValue = neutralResourceValues.length > 0 ? neutralResourceValues[Math.floor(neutralResourceValues.length / 2)] : undefined
 
   let mineIndex = 0
   for (const zone of zones) {
@@ -430,8 +489,19 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // guardMultiplier (0.5-0.84) softens guards in the player's own start
       // zone specifically — guard-value-bands.ts's own doc comment has the
       // full rationale.
-      placeGuard(tiles, Math.round(randomInRange(range.min, range.max, rng) * PLAYER_ZONE_GUARD_MULTIPLIER), sampleFraction(biome, 0.8, rng))
+      placeGuard(
+        tiles,
+        Math.round(randomInRange(range.min, range.max, rng) * PLAYER_ZONE_GUARD_MULTIPLIER),
+        sampleFraction(biome, 0.8, rng),
+        guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF,
+      )
     } else {
+      // Runner-up milestone: this zone's own real per-sid caps (if any),
+      // layered on top of the map-wide `contentCountLimitBySid` above —
+      // reset fresh per zone since a cap here is scoped to just this zone.
+      currentZoneContentLimitBySid = new Map((contentCountLimitsByZoneId?.get(zone.id) ?? []).map((l) => [l.sid, l.maxCount]))
+      currentZoneContentSoFar = new Map()
+
       const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
       place(mineSid, tiles)
       mineIndex += 1
@@ -472,7 +542,17 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // RARITY_AVERAGE_COST` reproduces `baseTreasureCount * treasureDensity`
       // on average, while richer zones now more often roll a few pricier
       // (rarer) items instead of only ever adding more identical ones.
-      const treasureBudget = Math.max(0, baseTreasureCount * treasureDensity) * RARITY_AVERAGE_COST
+      // `treasureScale`: this zone's own real `resourcesValue` relative to
+      // its neutral-zone siblings (see `medianResourceValue` above) — a
+      // "Poor" template zone gets proportionally less, a "Rich" one
+      // proportionally more, clamped to a sane range so one extreme outlier
+      // zone can't blow the loop's iteration budget. Stays exactly 1 (no
+      // change) whenever no template provided this data.
+      const zoneResourceValue = zoneContentValueByZoneId?.get(zone.id)?.resourcesValue
+      const treasureScale = medianResourceValue !== undefined && zoneResourceValue !== undefined
+        ? Math.min(2.5, Math.max(0.4, zoneResourceValue / medianResourceValue))
+        : 1
+      const treasureBudget = Math.max(0, baseTreasureCount * treasureDensity * treasureScale) * RARITY_AVERAGE_COST
       const usedArtifactSids = new Set<string>()
       let spent = 0
       let iterations = 0
@@ -488,9 +568,25 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // harder than a wood mine, matching the real game's own economic
       // weighting, falling back to the same flat roll only if this Core.zip
       // has no matching objects_logic entry for some reason.
+      //
+      // Runner-up milestone: when a real imported template gives THIS zone
+      // its own `guardedContentValue`, that takes priority over both —
+      // it's the template author's own explicit difficulty design for this
+      // specific zone, more authoritative than this generator's generic
+      // per-resource heuristic. Clamped into RMG_GUARD_DIFFICULTY_RANGES'
+      // own overall span (400-150000, the same real-map-calibrated band
+      // guard-value-bands.ts already uses everywhere else) since a real
+      // template's own value scale is confirmed to match this generator's
+      // guard `requestedValue` units (both top out in the low hundreds of
+      // thousands) — unlike `resourcesValue` above, which has no comparably
+      // scaled destination in this generator's own data model and so is
+      // only ever used as a relative multiplier, never directly.
       const fallbackRange = pickSquadRange(['Random'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
-      const requestedValue = mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
-      placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng))
+      const templateGuardedValue = zoneContentValueByZoneId?.get(zone.id)?.guardedContentValue
+      const requestedValue = templateGuardedValue !== undefined
+        ? Math.min(guardValueBandMax, Math.max(guardValueBandMin, Math.round(templateGuardedValue)))
+        : mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
+      placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng), guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF)
     }
   }
 
@@ -503,20 +599,30 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   // documented "unconfigured random-city never verified in-game" trap,
   // confirmed again this session: a real GME-added sample in `maps/
   // Stormlight_saved_by_gme.map` is exactly `isDefined:false,factionSid:""`).
+  // Runner-up milestone: a zone with real `differentFrom` data
+  // (`neutralCityExclusionsByZoneId`) uses THAT specific, narrower
+  // constraint instead of "differ from every player" — confirmed narrower
+  // in every real sample checked (`Pyramid.rmg.json`: a Treasure zone
+  // between two spawns only excludes those two factions, not every player
+  // in the game).
   if (randomCityCount > 0) {
     const neutralZones = zones.filter((z) => z.kind === 'neutral')
     const playerFactions = new Set(
       zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),
     )
     const allFactions = ZONE_BIOMES.map((b) => BIOME_FACTION[b]).filter((f): f is string => !!f)
-    const availableFactions = allFactions.filter((f) => !playerFactions.has(f))
-    const factionPool = availableFactions.length > 0 ? availableFactions : allFactions
     const remainingZones = [...neutralZones]
     for (let i = 0; i < randomCityCount && remainingZones.length > 0; i++) {
       const zoneIndex = Math.floor(rng() * remainingZones.length)
       const [zone] = remainingZones.splice(zoneIndex, 1)
       const tiles = tilesByZone.get(zone.id) ?? []
       if (tiles.length === 0) continue
+      const exclusions = neutralCityExclusionsByZoneId?.get(zone.id)
+      const excludedFactions = exclusions && exclusions.size > 0
+        ? new Set([...exclusions].map((pid) => BIOME_FACTION[zoneBiome.get(pid) ?? 1]).filter((f): f is string => !!f))
+        : playerFactions
+      const availableFactions = allFactions.filter((f) => !excludedFactions.has(f))
+      const factionPool = availableFactions.length > 0 ? availableFactions : allFactions
       const factionSid = factionPool[Math.floor(rng() * factionPool.length)]
       // Always false, not a coin flip: RANDOM_CITY_DEFAULT_TABLES writes
       // spawnHero straight onto propCities with no mechanism to add the
