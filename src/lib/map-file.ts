@@ -230,30 +230,45 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
  * useScenarioStore's mapFilePath/sidecarPath so later saves go straight to
  * disk without prompting again.
  *
- * Returns `false` only when a save-location prompt this call needed was
- * cancelled — callers (AppShell.handleSave / Toolbar.handleExport) must
- * check this and abort their own Save/Save As entirely rather than falling
- * through to their scenario-JSON-saving logic, which would otherwise pop a
- * SECOND, unrelated save dialog for the JSON sidecar right after the user
- * just said "not now" to the first one.
+ * Pass `forceNewPath: true` for a genuine Save As — unlike plain Save,
+ * which should only prompt the very first time a path is unknown, Save As
+ * must always show the location prompt even when a path is already known
+ * (a regression introduced when this function started backing both: it
+ * only ever checked `mapIsDirty` before, so a map beyond its first save
+ * silently overwrote the existing path with no dialog at all — see the
+ * map-identity-hash fix's plan file for the full report). Gates on the
+ * loaded container rather than `mapIsDirty` in that mode, since a
+ * just-opened-but-unedited map still has something worth saving a copy of.
+ *
+ * Returns `'cancelled'` when a save-location prompt this call needed was
+ * dismissed, or `'blocked'` when the .map document has an out-of-bounds
+ * placement (`useMapDocumentStore`'s `boundsViolations` is already set for
+ * the app-shell-level dialog to show by the time this resolves) — callers
+ * (AppShell.handleSave / Toolbar.handleExport) must check for either and
+ * abort their own Save/Save As entirely rather than falling through to
+ * their scenario-JSON-saving logic, which would otherwise pop a SECOND,
+ * unrelated save dialog for the JSON sidecar right after the user just said
+ * "not now" to the first one (or after a blocked .map write).
  */
-export async function commitMapWithPathPrompt(): Promise<boolean> {
-  const { mapIsDirty, commitToDisk } = useMapDocumentStore.getState()
-  if (!mapIsDirty) return true
+export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean }): Promise<'saved' | 'cancelled' | 'blocked'> {
+  const forceNewPath = options?.forceNewPath ?? false
+  const { mapIsDirty, container, commitToDisk } = useMapDocumentStore.getState()
+  if (forceNewPath ? !container : !mapIsDirty) return 'saved'
   const scenarioState = useScenarioStore.getState()
   let mapPath = scenarioState.mapFilePath
-  if (!mapPath) {
+  if (!mapPath || forceNewPath) {
     const suggested = scenarioState.mapName || 'New Map'
     const fileName = suggested.endsWith('.map') ? suggested : `${suggested}.map`
     mapPath = await pickSavePath(fileName, { name: 'Map file', extensions: ['map'] }, 'Save map')
-    if (!mapPath) return false // user cancelled — leave the in-memory edits dirty
+    if (!mapPath) return 'cancelled' // user cancelled — leave the in-memory edits dirty
   }
-  await commitToDisk(mapPath)
+  const result = await commitToDisk(mapPath)
+  if (result.status === 'blocked') return 'blocked'
   if (mapPath !== scenarioState.mapFilePath) {
     const name = mapPath.replace(/\\/g, '/').split('/').pop() ?? mapPath
     scenarioState.setMapFile(mapPath, sidecarPathFor(mapPath, name))
   }
-  return true
+  return 'saved'
 }
 
 /** Exposed for tests / consumers that need the sidecar path without opening a dialog. */

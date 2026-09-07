@@ -244,6 +244,11 @@ export interface GameCatalog {
   /** Known `dialogue_title_*` speaker SIDs with resolved English names. */
   speakerTitles: CatalogSpeakerTitle[]
   zoneTemplates: CatalogZoneTemplate[]
+  /** Every loaded localization entry whose sid starts with `templates_`
+   *  (lowercased sid -> resolved English text) — resolves a bundled game
+   *  RMG template's own `description` field, which is a sid, not literal
+   *  text (see `CATALOG_SCHEMA_VERSION`'s v11 doc comment). */
+  rmgTemplateStrings: Record<string, string>
 }
 
 // v3: mapObjects now covers all 9 DB/map/objects/*.json category files
@@ -266,4 +271,11 @@ export interface GameCatalog {
 // — same hygiene-only reasoning.
 // v10: added zoneTemplates, parsed from Core/DB/map/trigger_zones/zones.json
 // (issue #193 Phase 3's Zones tool) — same hygiene-only reasoning.
-export const CATALOG_SCHEMA_VERSION = 10
+// v11: added rmgTemplateStrings — every already-loaded localization entry
+// whose sid starts with `templates_` (the real game's own RMG template
+// name/description sids, e.g. `templates_description_pve_all_around`),
+// needed to show a human-readable description for the bundled
+// `resources/templates/*.rmg.json` game templates (issue #210, Stage 1's
+// template picker) since a template's own `description` field is a sid,
+// not literal text — confirmed via Core/Lang/english/texts/ui.json.
+export const CATALOG_SCHEMA_VERSION = 11

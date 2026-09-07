@@ -649,6 +649,11 @@ export async function buildCatalog(
 
   inferInteractableBiomes(mapObjects, factions)
 
+  const rmgTemplateStrings: Record<string, string> = {}
+  for (const [sid, text] of locMap) {
+    if (sid.startsWith('templates_')) rmgTemplateStrings[sid] = text
+  }
+
   return {
     version: CATALOG_SCHEMA_VERSION,
     generatedAt: new Date().toISOString(),
@@ -668,5 +673,6 @@ export async function buildCatalog(
     dialogAvatarIcons: dialogData.avatarIcons,
     speakerTitles: dialogData.speakerTitles,
     zoneTemplates,
+    rmgTemplateStrings,
   }
 }

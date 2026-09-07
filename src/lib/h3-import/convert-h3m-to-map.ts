@@ -44,7 +44,7 @@
 // dropped): map events, global timed events, and the structural validator
 // (Phase 5).
 
-import type { MapContainer } from '@/lib/map-write'
+import { generateMapHash, FULL_DIFFICULTIES, type MapContainer } from '@/lib/map-write'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { parseH3mFile } from './parse-h3m'
 import { buildSideBySideLayerAtlas } from './atlas'
@@ -663,9 +663,26 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
         isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
       })
+      // spawnHero:true above needs a REAL, catalog-backed hero the moment
+      // the city is actually isDefined:true — a real player.log test on a
+      // hand-built map confirmed BOTH that an undefined city (isDefined:
+      // false) with spawnHero:true and NO propHeroes row at all loads fine
+      // (GME's own real reference), and that an isDefined:true city with
+      // spawnHero:true backed only by the {isDefined:false, heroSid:
+      // 'random'} placeholder still crashes identically to having no row at
+      // all (ArgumentOutOfRangeException in dbi.vve, "squad config not
+      // found ... tier: -1") — the placeholder only works pre-activation.
+      // Mirrors generate-random-map.ts's own player-city fix exactly.
+      let heroId: string | undefined
+      if (isDefined) {
+        const factionHeroes = catalog.heroes.filter((h) => h.fraction === town.factionSid && /^(human|necro|demon|dungeon|unfrozen|nature)_hero_\d+$/.test(h.id))
+        if (factionHeroes.length > 0) heroId = factionHeroes[Math.floor(rng() * factionHeroes.length)].id
+      }
+      if (heroId) propHeroes.push({ type: 0, id: objectId, isDefined: true, heroSid: heroId })
       block1Spawns.push({
         owner: finalOwner, spawnType, spawnPointType: 0, playerId: '',
-        isCityDefined: isDefined, factionSid: town.factionSid, isHeroDefined: false, heroSid: '',
+        isCityDefined: isDefined, factionSid: town.factionSid,
+        isHeroDefined: !!heroId, heroSid: heroId ?? '',
         colorId: -1, isAlive: true, isLocked: false,
       })
     } else {
@@ -735,8 +752,19 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   const templateB2 = JSON.parse(decoder.decode(template.chunks[1])) as Record<string, unknown>
   const templateB3Text = template.chunks[2] ? decoder.decode(template.chunks[2]) : '{"dialogs":{"lines":[]},"quests":{"quests":[]}}'
 
+  // See map-write.ts's buildBlankMap() comment: the hash/hashSum are never
+  // cloned from the template like everything else here — every real sample
+  // checked has its own distinct value, changing even on a same-content
+  // resave, so it's an opaque per-map identity the game keys recognition
+  // on, not a content checksum. Cloning the template's fixed value made
+  // every H3-imported map collide on the same identity, confirmed via real
+  // player.log testing to be why the game silently refused to recognize
+  // any map imported this way.
+  const mapHash = generateMapHash()
+
   const b1 = {
     ...templateB1,
+    hashSum: mapHash,
     sizeX: atlas.atlasWidth,
     sizeZ: atlas.atlasHeight,
     spawns: { playersCount: ownership.finalOwners.length, spawns: block1Spawns, takenHeroes: [] as string[] },
@@ -744,6 +772,10 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       ...((templateB1.startSettings as Record<string, unknown>) ?? {}),
       DefeatAllEnemiesEnabled: mainQuest !== null,
     },
+    economicDifficulties: FULL_DIFFICULTIES,
+    aiDifficulties: FULL_DIFFICULTIES,
+    neutralDifficulties: FULL_DIFFICULTIES,
+    quickStartDifficulties: FULL_DIFFICULTIES,
   }
 
   const templateViews = (templateB2.views as Array<Record<string, unknown>>) ?? []
@@ -793,6 +825,10 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       // real enemy hero's army (a real OE-format fact, not H3-specific —
       // see CLAUDE.md's random-squad notes).
       disableAutoBattleAgainstEnemyHeroes: true,
+      economicDifficulties: FULL_DIFFICULTIES,
+      aiDifficulties: FULL_DIFFICULTIES,
+      neutralDifficulties: FULL_DIFFICULTIES,
+      quickStartDifficulties: FULL_DIFFICULTIES,
     },
     // Start from the template's own ~29-table objectsProperties shape (every
     // other table stays a template-provided empty array — a real, freshly
@@ -813,16 +849,22 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     interruptions: [] as unknown[],
     quests: [...(mainQuest ? [mainQuest] : []), ...globalEventQuests],
   }
+  // Real editors never emit a 4th chunk when it would be entirely default —
+  // see buildBlankMap's own doc comment (map-write.ts) for the real-map
+  // evidence. Only include it here when the import actually produced real
+  // content (a main quest or global event quests) to put in it.
+  const b4IsDefault = b4.comment === '' && b4.aiRolesId === '' && b4.counters.length === 0
+    && b4.interruptions.length === 0 && b4.quests.length === 0
 
   const container: MapContainer = {
-    hash: template.hash,
+    hash: new TextEncoder().encode(mapHash),
     version: template.version,
     separator: template.separator,
     chunks: [
       new TextEncoder().encode(JSON.stringify(b1)),
       new TextEncoder().encode(JSON.stringify(b2)),
       new TextEncoder().encode(templateB3Text),
-      new TextEncoder().encode(JSON.stringify(b4)),
+      ...(b4IsDefault ? [] : [new TextEncoder().encode(JSON.stringify(b4))]),
     ],
   }
 

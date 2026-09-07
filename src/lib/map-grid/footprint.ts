@@ -10,13 +10,42 @@
 // only ever use `0`/`1`; interactables/artifacts/resources/spawns mix in `2`
 // for their entrance cell(s).
 //
-// Anchor math (pivotX/pivotZ) is not new here — it's the exact formula
-// already implemented and tested in CustomObjectEditorDialog.tsx's
-// CORNER_1X1_PATTERNS/addInteractionRing (built for issue #146's from-scratch
-// object footprint padding): given a placed instance's anchor tile and the
-// template's sizeX/sizeZ/nodes/pivotX/pivotZ (default 0,0 when absent), local
-// grid index `i` (`lx = i % sizeX`, `lz = Math.floor(i / sizeX)`) maps to
-// world tile `(anchorX + lx - pivotX, anchorZ + lz - pivotZ)`.
+// Anchor math (pivotX/pivotZ): X and Z are NOT symmetric, confirmed against
+// real ground truth (2026-09-07, the "Bug A" load-crash investigation) — X
+// extends forward from the anchor (`anchorX + lx - pivotX`), but Z extends
+// BACKWARD (`anchorZ - lz + pivotZ`). This was found by decoding a real GME-
+// saved map with one city-spawner in each of two opposite corners
+// (`maps/gme_onecityeachcorner.map`, anchors at node (x=0,z=15) and
+// (x=13,z=2) on a 16x16 map) and pixel-analyzing a real screenshot of it in
+// GME's own viewport: both cities' rendered 3x3 highlight occupied the tiles
+// BEHIND their anchor in Z (e.g. anchor z=15 occupied z={13,14,15}, not
+// z={15,16,17}), while occupying tiles AHEAD of their anchor in X. This is
+// also provable independent of any screen-rendering convention: anchor z=15
+// on a 16-tall map (valid z range 0-15) forward-extended by 2 would require
+// z=16/17, which aren't valid tile indices at all — yet GME placed and
+// rendered the object there without issue, so the local z index must
+// subtract, not add. Confirmed NOT explained by "centered pivot + auto-
+// clamp near an edge" either: the second corner's anchor (z=2) had room for
+// a centered ±1 footprint on both sides (z=1..3, no clamping would ever
+// trigger) and still occupied z={0,1,2} — pure backward extension, even away
+// from any edge.
+//
+// This was previously coded as `anchorZ + lz - pivotZ` (same direction as
+// X), based on the pattern in CustomObjectEditorDialog.tsx's
+// CORNER_1X1_PATTERNS/addInteractionRing (issue #146). That formula was only
+// ever checked against real templates' own `nodes[]` shape (issue #167) —
+// never against an external, independently-rendered ground truth — so the
+// wrong Z sign went unnoticed. It only matters for BOUNDS purposes on an
+// off-center-pivot template (`pivotZ` not equal to `(sizeZ-1)/2` — true for
+// `city-spawner`/`hero-spawner`/`random-city`, all `pivotZ:0` on a 3-tall
+// footprint, per `Core/DB/map/objects/7_spawns.json`): a CENTERED-pivot
+// template (e.g. `random-hero`/`random-squad`/`random-item`/`random-res`,
+// all `pivotZ:1` for the same 3-tall size) occupies the identical set of
+// world tiles either direction, just in reverse local order — confirmed no
+// regression there. This exact bug is what let a city-spawner get placed 1
+// tile from a map edge in TSE (its old, wrong forward-Z footprint read as
+// fully in-bounds) that then crashed the actual game on load — the real
+// footprint's back row fell one tile off the map.
 //
 // Rotation is a known, deliberately out-of-scope gap: the mapmaking guide
 // confirms rotation 0/1/2/3 = 0/90/180/270°, and a 90°/270° rotation should
@@ -78,7 +107,7 @@ export function computeFootprintTiles(
     const lz = Math.floor(i / sizeX)
     cells.push({
       x: anchorX + lx - pivotX,
-      z: anchorZ + lz - pivotZ,
+      z: anchorZ - lz + pivotZ,
       value: template.nodes[i],
     })
   }
@@ -122,4 +151,40 @@ export function footprintIconBounds(cells: FootprintCell[]): FootprintBounds | n
  *  any part of a multi-tile object off the edge of the map. */
 export function isFootprintInBounds(cells: FootprintCell[], sizeX: number, sizeZ: number): boolean {
   return cells.every((cell) => cell.x >= 0 && cell.x < sizeX && cell.z >= 0 && cell.z < sizeZ)
+}
+
+/**
+ * Clamps an anchor tile so its footprint (per `computeFootprintTiles`'s
+ * X-forward/Z-backward convention above) fits fully within `sizeX`x`sizeZ` —
+ * for a placement that MUST happen somewhere (RMG's own player city-spawner/
+ * hero-spawner, confirmed 2026-09-07 to have no bounds awareness at all: its
+ * anchor is picked purely as the nearest zone-owned tile to a relaxed zone
+ * center, with no footprint check, so a small map's ~1-tile zone-center
+ * inset can leave a 3-wide footprint no room — see generate-terrain.ts's own
+ * comment at the zoneAnchorNode/players[] site). Every other RMG placement
+ * (zone-population.ts's tryPlaceAt/tryPlace) instead just rejects a
+ * candidate tile and tries another, which isn't an option for "this
+ * player's one and only start position." Falls back to a plain single-tile
+ * clamp when the template can't be resolved or has no real footprint,
+ * matching computeFootprintTiles' own single-anchor-cell fallback.
+ */
+export function clampAnchorToFootprintBounds(
+  template: FootprintTemplate | undefined,
+  anchorX: number,
+  anchorZ: number,
+  sizeX: number,
+  sizeZ: number,
+): { x: number; z: number } {
+  const tplSizeX = template?.nodes?.length ? (template.sizeX ?? 1) : 1
+  const tplSizeZ = template?.nodes?.length ? (template.sizeZ ?? 1) : 1
+  const pivotX = template?.pivotX ?? 0
+  const pivotZ = template?.pivotZ ?? 0
+  const minX = pivotX
+  const maxX = Math.max(minX, sizeX - tplSizeX + pivotX)
+  const minZ = tplSizeZ - 1 - pivotZ
+  const maxZ = Math.max(minZ, sizeZ - 1 - pivotZ)
+  return {
+    x: Math.min(Math.max(anchorX, minX), maxX),
+    z: Math.min(Math.max(anchorZ, minZ), maxZ),
+  }
 }

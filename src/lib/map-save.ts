@@ -63,8 +63,8 @@ export type MapSaveEdit =
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
   | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
-  | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean }
-  | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string }
+  | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
+  | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
@@ -187,10 +187,34 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const patched = setCitySpawnHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
     newChunks[0] = patched.block1Chunk
     newChunks[1] = patched.block2Chunk
+    // `heroSid` (real, catalog-backed) upgrades the placeholder
+    // {isDefined:false, heroSid:'random'} row setCitySpawnHero(true) just
+    // created — see setCityFaction's own case below for why this matters.
+    if (edit.spawnHero && edit.heroSid) {
+      const heroPatched = upsertPropHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
+      newChunks[0] = heroPatched.block1Chunk
+      newChunks[1] = heroPatched.block2Chunk
+    }
   } else if (edit?.kind === 'setCityFaction') {
     const patched = setCityFaction(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.factionSid)
     newChunks[0] = patched.block1Chunk
     newChunks[1] = patched.block2Chunk
+    // A city that becomes isDefined:true (real faction assigned) with
+    // spawnHero:true needs a REAL hero, not just a propHeroes row — real
+    // player.log testing confirmed the {isDefined:false, heroSid:'random'}
+    // placeholder still crashes on load once the city is active (only safe
+    // pre-activation, matching a real GME reference map). The caller
+    // resolves which real catalog hero to use (map-write.ts stays
+    // catalog-agnostic) and passes it here only when spawnHero is already
+    // true for this city.
+    if (edit.heroSid) {
+      const spawnResult = setCitySpawnHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, true)
+      newChunks[0] = spawnResult.block1Chunk
+      newChunks[1] = spawnResult.block2Chunk
+      const heroResult = upsertPropHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
+      newChunks[0] = heroResult.block1Chunk
+      newChunks[1] = heroResult.block2Chunk
+    }
   } else if (edit?.kind === 'setGuardSquad') {
     newChunks[1] = upsertPropSquads(newChunks[1], edit.entityType, edit.entityId, edit.unitProps)
   } else if (edit?.kind === 'setCityGarrison') {
@@ -371,16 +395,21 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: {
         propCities?: Array<{ type?: number | string; id?: number; spawnHero?: boolean }>
-        propHeroes?: Array<{ type?: number | string; id?: number }>
+        propHeroes?: Array<{ type?: number | string; id?: number; isDefined?: boolean; heroSid?: string }>
         propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }>
       }
     }
     const cityMatch = (block2.objectsProperties?.propCities ?? [])
       .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
-    const heroRowPresent = (block2.objectsProperties?.propHeroes ?? [])
-      .some((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
-    if (!cityMatch || cityMatch.spawnHero !== edit.spawnHero || heroRowPresent !== edit.spawnHero) {
+    const heroMatch = (block2.objectsProperties?.propHeroes ?? [])
+      .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!cityMatch || cityMatch.spawnHero !== edit.spawnHero || !heroMatch !== !edit.spawnHero) {
       throw new Error('Verification failed: spawnHero not reflected consistently in propCities/propHeroes')
+    }
+    // `heroSid` (real, catalog-backed) upgrades the placeholder — see
+    // setCityFaction's own case below for why a real hero matters here.
+    if (edit.spawnHero && edit.heroSid && (!heroMatch || heroMatch.isDefined !== true || heroMatch.heroSid !== edit.heroSid)) {
+      throw new Error('Verification failed: real heroSid not reflected in the rebuilt propHeroes table')
     }
     const owner = (block2.objectsProperties?.propSpawns ?? [])
       .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)?.owner
@@ -388,13 +417,15 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       spawns?: { spawns?: Array<{ owner?: number; isHeroDefined?: boolean; heroSid?: string }> }
     }
     const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === owner)
-    if (!entry1 || entry1.isHeroDefined !== false || entry1.heroSid !== '') {
+    const expectDefined1 = edit.spawnHero && !!edit.heroSid
+    if (!entry1 || entry1.isHeroDefined !== expectDefined1 || entry1.heroSid !== (expectDefined1 ? edit.heroSid : '')) {
       throw new Error('Verification failed: spawnHero not reflected in the rebuilt Block 1 spawns table')
     }
   } else if (edit?.kind === 'setCityFaction') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: {
         propCities?: Array<{ type?: number | string; id?: number; factionSid?: string; isDefined?: boolean }>
+        propHeroes?: Array<{ type?: number | string; id?: number; isDefined?: boolean; heroSid?: string }>
         propSpawns?: Array<{ type?: number | string; id?: number; owner?: number }>
       }
     }
@@ -404,14 +435,24 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     if (!match || match.factionSid !== edit.factionSid || match.isDefined !== expectedDefined) {
       throw new Error('Verification failed: faction not reflected in the rebuilt propCities table')
     }
+    if (edit.heroSid) {
+      const heroMatch = (block2.objectsProperties?.propHeroes ?? [])
+        .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+      if (!heroMatch || heroMatch.isDefined !== true || heroMatch.heroSid !== edit.heroSid) {
+        throw new Error('Verification failed: real heroSid not reflected in the rebuilt propHeroes table')
+      }
+    }
     const owner = (block2.objectsProperties?.propSpawns ?? [])
       .find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)?.owner
     const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as {
-      spawns?: { spawns?: Array<{ owner?: number; isCityDefined?: boolean; factionSid?: string }> }
+      spawns?: { spawns?: Array<{ owner?: number; isCityDefined?: boolean; factionSid?: string; isHeroDefined?: boolean; heroSid?: string }> }
     }
     const entry1 = (block1.spawns?.spawns ?? []).find((e) => e.owner === owner)
     if (!entry1 || entry1.isCityDefined !== expectedDefined || entry1.factionSid !== edit.factionSid) {
       throw new Error('Verification failed: faction not reflected in the rebuilt Block 1 spawns table')
+    }
+    if (edit.heroSid && (entry1.isHeroDefined !== true || entry1.heroSid !== edit.heroSid)) {
+      throw new Error('Verification failed: real heroSid not reflected in the rebuilt Block 1 spawns table')
     }
   } else if (edit?.kind === 'setGuardSquad') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

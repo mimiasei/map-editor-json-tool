@@ -34,7 +34,7 @@ interface Props {
 
 /** Every size this project's own map-format research confirms the real game
  *  ships (not just squares — several real maps are rectangular). */
-const MAP_SIZE_PRESETS: { sizeX: number; sizeZ: number }[] = [
+export const MAP_SIZE_PRESETS: { sizeX: number; sizeZ: number }[] = [
   { sizeX: 16, sizeZ: 16 },
   { sizeX: 32, sizeZ: 32 },
   { sizeX: 48, sizeZ: 32 },
@@ -50,7 +50,7 @@ const MAP_SIZE_PRESETS: { sizeX: number; sizeZ: number }[] = [
   { sizeX: 256, sizeZ: 128 },
   { sizeX: 256, sizeZ: 256 },
 ]
-function presetKey(p: { sizeX: number; sizeZ: number }): string {
+export function presetKey(p: { sizeX: number; sizeZ: number }): string {
   return `${p.sizeX}x${p.sizeZ}`
 }
 const DEFAULT_SIZE_KEY = presetKey({ sizeX: 64, sizeZ: 64 })

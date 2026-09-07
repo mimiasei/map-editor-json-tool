@@ -71,11 +71,13 @@ import {
   Wand2,
   UploadCloud,
   FileInput,
+  Dices,
 } from 'lucide-react'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ImportH3mDialog from '@/components/common/ImportH3mDialog'
+import GenerateRandomMapDialog from '@/components/common/GenerateRandomMapDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
@@ -163,6 +165,7 @@ export default function Toolbar({
   const [aboutOpen,           setAboutOpen]           = useState(false)
   const [newMapOpen,          setNewMapOpen]          = useState(false)
   const [importH3mOpen,       setImportH3mOpen]       = useState(false)
+  const [generateMapOpen,     setGenerateMapOpen]     = useState(false)
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -316,6 +319,21 @@ export default function Toolbar({
     setImportH3mOpen(true)
   }
 
+  // ── Generate Random Map — same unsaved-changes guard as New Map/Import H3
+  // Map above, since a successful generation discards the currently loaded
+  // map immediately (loads the generated result via loadParsedMapFile,
+  // unconditionally — see generate-map-file.ts).
+  const handleGenerateMapClick = async () => {
+    if (isDirty || mapIsDirty) {
+      const ok = await confirmDialog(
+        'You have unsaved changes. Generate a random map anyway?',
+        'Generate Random Map',
+      )
+      if (!ok) return
+    }
+    setGenerateMapOpen(true)
+  }
+
   // ── Open .map file ────────────────────────────────────────────────────────────
   const handleOpenMap = async () => {
     console.log('[Toolbar] handleOpenMap called')
@@ -344,7 +362,7 @@ export default function Toolbar({
   //   unified — one action for both halves, matching how the .map side no
   //   longer has its own separate save trigger).
   const handleSave = async () => {
-    await commitMapIfDirty(mapFilePath)
+    if ((await commitMapIfDirty(mapFilePath)).status === 'blocked') return // out-of-bounds object — abort the whole Save, dialog already shown
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
@@ -365,13 +383,13 @@ export default function Toolbar({
   }
 
   // ── Save As ───────────────────────────────────────────────────────────────────
-  // Always shows a file-save dialog, even when a .map/sidecar path is known.
-  // Also commits any pending Map Grid edits, same as Save — via
-  // commitMapWithPathPrompt (map-file.ts), which itself prompts for a .map
-  // save location whenever none is known yet (a never-saved map), same
-  // behavior plain Save now has for that same first-save case.
+  // Always shows a file-save dialog, even when a .map/sidecar path is known —
+  // commitMapWithPathPrompt({ forceNewPath: true }) (map-file.ts) is what
+  // makes the .map half always prompt; plain Save calls the same function
+  // with no options, which only prompts the very first time (a never-saved
+  // map, e.g. one just created via New Map).
   const handleExport = async () => {
-    if (!(await commitMapWithPathPrompt())) return // user cancelled the .map save-location prompt — abort the whole Save As
+    if ((await commitMapWithPathPrompt({ forceNewPath: true })) !== 'saved') return // user cancelled the prompt, or the .map write was blocked (out-of-bounds object) — abort the whole Save As
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
@@ -821,6 +839,10 @@ export default function Toolbar({
                     <FileInput className="h-4 w-4 mr-2" />
                     Import H3 Map…
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTimeout(handleGenerateMapClick, 0)}>
+                    <Dices className="h-4 w-4 mr-2" />
+                    Generate Random Map…
+                  </DropdownMenuItem>
                 </>
               )}
 
@@ -1128,6 +1150,19 @@ export default function Toolbar({
           open={newMapOpen}
           onOpenChange={setNewMapOpen}
           onCreated={({ warnings }) => {
+            if (warnings.length > 0) {
+              setImportWarnings(warnings)
+              setImportFeedbackOpen(true)
+            }
+          }}
+        />
+      )}
+
+      {isTauri() && (
+        <GenerateRandomMapDialog
+          open={generateMapOpen}
+          onOpenChange={setGenerateMapOpen}
+          onGenerated={({ warnings }) => {
             if (warnings.length > 0) {
               setImportWarnings(warnings)
               setImportFeedbackOpen(true)

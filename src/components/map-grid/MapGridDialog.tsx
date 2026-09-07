@@ -42,7 +42,8 @@ import {
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
-import { terrainFillColor, terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
@@ -57,6 +58,7 @@ import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-d
 import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
+import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -73,7 +75,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2, Users } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -1604,6 +1606,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         // anything else silently did nothing until Escape (which didn't
         // cancel Move either — see the Escape handler fix below).
         selectNode(drag.item.node)
+        setSpawnerSelectorOpen(false)
         e.currentTarget.setPointerCapture(e.pointerId)
       }
       const node = screenToNode(e.clientX, e.clientY, rect)
@@ -1815,6 +1818,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
+  // Pans to a tile's center, keeping the current zoom level as-is (unlike
+  // zoomTo100/fitToViewport, which both change scale) — used by the spawner
+  // selector's "jump to this spawner" rows. z is converted to a screen row
+  // via the same `sizeZ - 1 - z` flip the highlight-marker overlay and every
+  // other screen<->world conversion in this file already use (issue #130).
+  const centerOnTile = useCallback((x: number, z: number) => {
+    setTransform((prev) => {
+      const worldX = (x + 0.5) * BASE_CELL_PX
+      const worldY = (sizeZ - 1 - z + 0.5) * BASE_CELL_PX
+      return { ...prev, x: containerSize.width / 2 - worldX * prev.scale, y: containerSize.height / 2 - worldY * prev.scale }
+    })
+  }, [sizeZ, containerSize])
+
   const zoomTo100 = useCallback(() => {
     setTransform((prev) => {
       const worldX = (containerSize.width / 2 - prev.x) / prev.scale
@@ -1834,7 +1850,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     canvas.height = sizeZ
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.clearRect(0, 0, sizeX, sizeZ)
     // Base pass: every tile gets its light terrain/water fill, occupied or
     // not — this is what makes the grid readable even with all filters off.
     // An in-progress (not yet committed) Paint Terrain drag stroke wins over
@@ -1843,19 +1858,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // renders pixel-identical to what committing will produce (issue #195
     // Phase 1 pattern). Water has no in-progress buffer — it applies
     // immediately on click, so waterMap already reflects it by the next render.
-    const tileCount = sizeX * sizeZ
-    if (tilesMap.length === tileCount) {
-      for (let node = 0; node < tileCount; node++) {
-        const x = node % sizeX
-        const z = Math.floor(node / sizeX)
-        ctx.fillStyle = terrainFillColor(
-          paintStaged.get(node) ?? tilesMap[node],
-          waterMap[node],
-          settings.terrainOpacity,
-        )
-        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
-      }
-    }
+    // Shared with GenerateRandomMapDialog.tsx's own live-preview canvas
+    // (`paintTerrainCanvas`) so both stay in sync by construction.
+    const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
+    paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
       const x = node % sizeX
@@ -2319,7 +2325,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // object" state below) so columnOpen can reference it without a
   // temporal-dead-zone issue.
   const [objectBrowserOpen, setObjectBrowserOpen] = useState(false)
-  const columnOpen = (selectedNode !== null && !columnClosed) || objectBrowserOpen
+  // Same "force the column open" convention as objectBrowserOpen above, for
+  // the player-spawner selector's own info-column panel.
+  const [spawnerSelectorOpen, setSpawnerSelectorOpen] = useState(false)
+  const columnOpen = (selectedNode !== null && !columnClosed) || objectBrowserOpen || spawnerSelectorOpen
 
   // Imperatively resized rather than conditionally mounted (same convention
   // as AppShell's sidebar/editor/preview panels) so the Group/Panel tree
@@ -2370,14 +2379,37 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setSpawnerPlayerType', entityType: item.type, entityId: item.id, spawnType }, 'set spawner Player type')
   const handleSetSpawnerOwner = (item: PlacedObject, newOwner: number) =>
     applyEdit({ kind: 'swapSpawnerOwner', entityType: item.type, entityId: item.id, newOwner }, 'reassign spawner owner')
-  const handleSetCityFaction = (item: PlacedObject, factionSid: string) =>
-    applyEdit({ kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid }, 'set faction')
-  const handleSetCitySpawnHero = (item: PlacedObject, spawnHero: boolean) =>
-    applyEdit({ kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero }, 'toggle companion hero')
+  // A city that's isDefined:true (real faction assigned) with spawnHero:true
+  // needs a REAL, catalog-backed hero, not just a propHeroes row — real
+  // player.log testing confirmed the {isDefined:false, heroSid:'random'}
+  // placeholder (setCitySpawnHero's own default when toggled on) still
+  // crashes on load once the city is active; it's only safe pre-activation.
+  // Same catalog filter generate-random-map.ts's own player-city fix uses.
+  const pickRandomHeroForFaction = (faction: string): string | undefined => {
+    if (!catalog) return undefined
+    const factionHeroes = catalog.heroes.filter((h) => h.fraction === faction && /^(human|necro|demon|dungeon|unfrozen|nature)_hero_\d+$/.test(h.id))
+    if (factionHeroes.length === 0) return undefined
+    return factionHeroes[Math.floor(Math.random() * factionHeroes.length)].id
+  }
+  const handleSetCityFaction = (item: PlacedObject, factionSid: string) => {
+    const spawnHero = item.spawnerInfo?.spawnHero ?? false
+    const heroSid = factionSid && spawnHero ? pickRandomHeroForFaction(factionSid) : undefined
+    applyEdit({ kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid, heroSid }, 'set faction')
+  }
+  const handleSetCitySpawnHero = (item: PlacedObject, spawnHero: boolean) => {
+    const factionSid = item.spawnerInfo?.factionSid ?? ''
+    const heroSid = spawnHero && factionSid ? pickRandomHeroForFaction(factionSid) : undefined
+    applyEdit({ kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero, heroSid }, 'toggle companion hero')
+  }
   const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
+  const allSpawners = useMemo(() => placedObjects.filter((p) => p.spawnerInfo), [placedObjects])
+  const selectSpawner = useCallback((item: PlacedObject) => {
+    selectNode(item.node)
+    centerOnTile(item.x, item.z)
+  }, [selectNode, centerOnTile])
   const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
     applyEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch }, 'set portal target')
   const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
@@ -2429,6 +2461,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (!prev || !isNodeInBoundsForMove(prev, node) || prev.node === node) return prev
       applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: node }, 'move object')
       selectNode(node)
+      setSpawnerSelectorOpen(false)
       return { ...prev, node }
     })
   }, [isNodeInBoundsForMove, applyEdit, selectNode])
@@ -2896,6 +2929,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setPlacingCreatureId(null)
                     setPlacingZoneSid(null)
                     setObjectBrowserOpen(false)
+                    setSpawnerSelectorOpen(false)
                     setGridMode('browse')
                   }}
                 >
@@ -2932,6 +2966,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 </Button>
               )}
             </div>
+            <Button
+              variant={spawnerSelectorOpen ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              title="Player spawners"
+              data-nodrag
+              onClick={() => { setObjectBrowserOpen(false); setSpawnerSelectorOpen((prev) => !prev) }}
+            >
+              <Users className="h-3.5 w-3.5" />
+            </Button>
             <div className="flex items-center gap-1 shrink-0" data-nodrag>
               <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
                 {Math.round(transform.scale * 100)}%
@@ -3004,7 +3048,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
@@ -3014,7 +3058,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Plus className="h-3.5 w-3.5" />}
                   label="Objects"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -3854,7 +3898,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) { selectNode(entry.clickNode); setSpawnerSelectorOpen(false) } }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className={`shrink-0 ${visual.colorClassName ?? ''}`} />}
                       {visual.kind === 'text' && (
@@ -4217,6 +4261,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 placingCreatureId={placingCreatureId}
                 onPickCreature={(id) => { stopPainting(); stopPlacing(); setPlacingCreatureId(id) }}
                 onClose={() => setObjectBrowserOpen(false)}
+              />
+            ) : spawnerSelectorOpen && !undocked ? (
+              <SpawnerSelectorPanel
+                spawners={allSpawners}
+                catalog={catalog}
+                selectedNode={selectedNode}
+                onSelect={selectSpawner}
+                onClose={() => setSpawnerSelectorOpen(false)}
               />
             ) : (
             <>
