@@ -76,8 +76,7 @@ import MapGridSettingsDialog, {
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
 import ImageColorMappingDialog, { type ImageColorMappingResult, type ImportedImage } from '@/components/map-grid/ImageColorMappingDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2, ImageIcon } from 'lucide-react'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2, Users } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2, ImageIcon, Users } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
