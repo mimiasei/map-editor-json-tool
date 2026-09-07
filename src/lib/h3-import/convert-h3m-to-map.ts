@@ -663,6 +663,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
         isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
       })
+      // spawnHero:true above always needs a matching propHeroes row — a real
+      // player.log test on a hand-built map with the two out of sync (this
+      // exact combination) crashed on load (ArgumentOutOfRangeException in
+      // dbi.vve, "squad config not found ... tier: -1"). Same placeholder
+      // shape as PLAYER_START_SPAWNER_DEFAULTS['city-spawner'] in map-write.ts.
+      propHeroes.push({ type: 0, id: objectId, isDefined: false, heroSid: 'random' })
       block1Spawns.push({
         owner: finalOwner, spawnType, spawnPointType: 0, playerId: '',
         isCityDefined: isDefined, factionSid: town.factionSid, isHeroDefined: false, heroSid: '',

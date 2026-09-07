@@ -1369,6 +1369,17 @@ const PLAYER_START_SPAWNER_DEFAULTS: Record<string, PlayerStartSpawnerDefault> =
         table: 'propGrowthUnits',
         row: (id) => ({ type: 0, id, isConstantGrowth: true, countGrowth: 1 }),
       },
+      {
+        // A fresh city-spawner's own default above is `spawnHero: true` with
+        // no propHeroes row at all — confirmed via real-game testing
+        // (player.log) to violate setCitySpawnHero's own documented
+        // invariant and crash on load (ArgumentOutOfRangeException in
+        // dbi.vve, "squad config not found ... tier: -1") the moment a
+        // faction is assigned, since setCityFaction never creates this row.
+        // Same placeholder shape hero-spawner already uses below.
+        table: 'propHeroes',
+        row: (id) => ({ type: 0, id, isDefined: false, heroSid: 'random' }),
+      },
     ],
   },
   'hero-spawner': {
