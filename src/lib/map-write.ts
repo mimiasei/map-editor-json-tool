@@ -2115,7 +2115,16 @@ export function paintRiverTiles(
 // recognize/select any map produced this way. generateMapHash() below
 // mints a fresh one per map instead.
 
-const BLANK_BLOCK4 = '{"comment":"","aiRolesId":"","counters":[],"interruptions":[],"quests":[]}'
+// Real editors never emit a 4th chunk (comment/aiRolesId/counters/
+// interruptions/quests) when there's nothing to put in it — confirmed via
+// a fresh GME-saved map (3 chunks total, Block 3's own {dialogs,quests}
+// index also empty) vs. every from-scratch TSE map (4 chunks, this exact
+// all-default Block 4) — a real, player.log-confirmed structural
+// difference from the one state no real editor produces. map-parser.ts's
+// own reader already treats a missing trailing block as `{}` (its own
+// comment: "Some maps ... ship with fewer than 4 blocks"), and nothing in
+// this app's own UI ever reads or writes Block 4's fields — so omitting
+// it here has no other effect than matching real editors' own behavior.
 
 /** A fresh 32-lowercase-hex-char per-map identity, matching the shape of
  *  every real sample's header hash / Block 1 hashSum (e.g.
@@ -2261,7 +2270,6 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     new TextEncoder().encode(JSON.stringify(b1)),
     new TextEncoder().encode(JSON.stringify(b2)),
     new TextEncoder().encode(templateB3Text),
-    new TextEncoder().encode(BLANK_BLOCK4),
   ]
 
   let container: MapContainer = {

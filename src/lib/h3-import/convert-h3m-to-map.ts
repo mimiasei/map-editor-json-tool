@@ -849,6 +849,12 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
     interruptions: [] as unknown[],
     quests: [...(mainQuest ? [mainQuest] : []), ...globalEventQuests],
   }
+  // Real editors never emit a 4th chunk when it would be entirely default —
+  // see buildBlankMap's own doc comment (map-write.ts) for the real-map
+  // evidence. Only include it here when the import actually produced real
+  // content (a main quest or global event quests) to put in it.
+  const b4IsDefault = b4.comment === '' && b4.aiRolesId === '' && b4.counters.length === 0
+    && b4.interruptions.length === 0 && b4.quests.length === 0
 
   const container: MapContainer = {
     hash: new TextEncoder().encode(mapHash),
@@ -858,7 +864,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
       new TextEncoder().encode(JSON.stringify(b1)),
       new TextEncoder().encode(JSON.stringify(b2)),
       new TextEncoder().encode(templateB3Text),
-      new TextEncoder().encode(JSON.stringify(b4)),
+      ...(b4IsDefault ? [] : [new TextEncoder().encode(JSON.stringify(b4))]),
     ],
   }
 
