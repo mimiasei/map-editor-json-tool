@@ -1,0 +1,227 @@
+// ─── RMG post-generation validation & repair (issue #210, user-reported) ────
+// A real user report: "the validation pass must really look for 'impossible'
+// cases, like objects (resource, item or squad) on water or zones that have
+// no opening at all. General rule: quality over speed — better to spend more
+// time on passes and validation than to get a random map generated super
+// quickly." This module is that pass: it runs LAST, after every other
+// placement decision has been made, and checks the map's own FINAL state
+// against real physical-possibility rules this codebase already enforces
+// everywhere else — not by re-deriving a new passability model, but by
+// reusing the exact same `buildBlockedTileSet` (`passability.ts`) every
+// other reachability computation in this codebase already trusts.
+//
+// Two checks, both fix-then-verify (never just a warning where a real repair
+// is possible):
+// 1. Sealed zones — a zone with literally no tile reachable from any player
+//    spawner (a real risk this generator's own wall-the-boundary feature
+//    introduced: a zone whose only real road/river crossing failed to be
+//    detected, or one that never got a crossing at all, would otherwise be
+//    walled in on every side with zero gates). Repaired by removing wall
+//    obstacles bordering the sealed zone until it opens up, then
+//    re-verifying — not by guessing which wall tile is "the" blocker.
+// 2. Objects on water — any object or squad whose own tile is marked water
+//    in the final `waterMap`. Repaired by reclaiming that specific water
+//    tile back to land (the same "land bridge" technique the road
+//    generator's own water-partition repair already uses), never by moving
+//    the object (which could just relocate the problem into a new
+//    collision).
+
+import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import { buildBlockedTileSet } from '@/lib/map-grid/passability'
+import type { PlacedObject } from '@/types/map-context'
+import type { ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
+import type { ConcreteSquadPlacement } from './zone-population'
+
+const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+
+function floodFillReachable(seeds: number[], blocked: Set<number>, sizeX: number, sizeZ: number): Set<number> {
+  const visited = new Set<number>(seeds)
+  const queue = [...seeds]
+  while (queue.length > 0) {
+    const node = queue.pop() as number
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (visited.has(n) || blocked.has(n)) continue
+      visited.add(n)
+      queue.push(n)
+    }
+  }
+  return visited
+}
+
+/** `buildBlockedTileSet` (`passability.ts`) reads a `PlacedObject`'s own
+ *  `x`/`z` fields, NOT `node` — a real bug this file's own first version
+ *  had (`x: -1, z: -1` placeholders, on the wrong assumption only `node`
+ *  mattered): every object's footprint cells landed at nonsensical negative
+ *  coordinates and got silently dropped by `buildBlockedTileSet`'s own
+ *  bounds check, so NO object — including this module's own wall
+ *  obstacles — ever counted as blocking, and `repairSealedZones` below
+ *  could never detect a real sealed zone at all. Confirmed via a real
+ *  16×16/2-player/`boundaryGuardStrength:'strong'` generation that came out
+ *  with 3 of its 4 zones fully walled in with zero openings, silently,
+ *  because this exact bug made the check believe everything was fine. */
+function buildFlatPlaced(objectGroups: Map<string, ObjectPlacementGroup>, sizeX: number): PlacedObject[] {
+  const flat: PlacedObject[] = []
+  for (const [sid, group] of objectGroups) {
+    for (let i = 0; i < group.ids.length; i++) {
+      const id = group.ids[i]
+      const node = group.nodes[i]
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      flat.push({ key: `0:${id}`, type: 0, id, sid, x, z, node } as PlacedObject)
+    }
+  }
+  return flat
+}
+
+/** Removes every entry (across `objectGroups`' own parallel arrays) whose
+ *  `tempId` is in `tempIds` — the repair primitive both checks below use to
+ *  actually undo a placement decision rather than just reporting it. */
+function removeFromObjectGroups(objectGroups: Map<string, ObjectPlacementGroup>, tempIds: Set<number>): void {
+  if (tempIds.size === 0) return
+  for (const group of objectGroups.values()) {
+    for (let i = group.ids.length - 1; i >= 0; i--) {
+      if (!tempIds.has(group.ids[i])) continue
+      group.ids.splice(i, 1)
+      group.nodes.splice(i, 1)
+      group.rotations.splice(i, 1)
+      group.levels.splice(i, 1)
+    }
+  }
+}
+
+export interface SealedZoneRepairOptions {
+  sizeX: number
+  sizeZ: number
+  zoneIds: number[]
+  zoneIdByNode: number[]
+  objectGroups: Map<string, ObjectPlacementGroup>
+  /** Every DECORATIVE placement (zone-boundary wall obstacles AND regular
+   *  zone-interior scatter obstacles alike — anything already marked
+   *  removable-if-blocking, same set `applyAccessibilityPass`'s own
+   *  `decorativeIds` uses) — the repair's own candidate pool. Deliberately
+   *  not scoped to wall obstacles alone: on a small enough map, regular
+   *  obstacle scattering can seal a tiny zone in on its own, with no
+   *  boundary-wall feature involved at all (confirmed on a real 16×16/
+   *  2-player generation), so the repair needs to consider anything
+   *  removable, not just this specific feature's own placements. */
+  decorativePlacements: { tempId: number; node: number }[]
+  spawnerSid: string
+  catalog: GameCatalog
+  catalogById: Map<string, CatalogMapObject>
+  levelsMap: number[]
+  waterMap: number[]
+}
+
+export interface SealedZoneRepairResult {
+  /** Zone ids that were sealed before repair (empty on a clean map — the
+   *  overwhelmingly common case). */
+  sealedZoneIds: number[]
+  /** Zone ids still sealed AFTER repair — a real, disclosed failure (e.g. a
+   *  zone with no decorative object bordering it at all to remove, so
+   *  whatever's actually sealing it is a REAL, non-decorative placement —
+   *  a mine/dwelling this pass deliberately never deletes), not silently
+   *  swallowed. */
+  stillSealedZoneIds: number[]
+}
+
+/**
+ * Real flood-fill reachability from every player spawner over the CURRENT
+ * `objectGroups` state (post accessibility-pass, pre-serialization) — if
+ * any zone comes back with zero reachable tiles, removes decorative objects
+ * bordering it (from `decorativePlacements`, mutating `objectGroups` in
+ * place) until it opens up or there's nothing left to remove, then
+ * re-verifies. Up to 3 rounds of removal per zone (each round removes every
+ * decorative tile still bordering that zone, which should open it on the
+ * very first round in every real case — more rounds only matter if an
+ * opened gap still routes through another fully-sealed pocket, a
+ * degenerate case this guards without assuming can't happen).
+ */
+export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneRepairResult {
+  const { sizeX, sizeZ, zoneIds, zoneIdByNode, objectGroups, decorativePlacements, spawnerSid, catalog, catalogById, levelsMap, waterMap } = options
+
+  const computeReachable = (): Set<number> => {
+    const placed = buildFlatPlaced(objectGroups, sizeX)
+    const blocked = buildBlockedTileSet({ sizeX, sizeZ, placedObjects: placed, levelsMap, climbsMap: [], waterMap }, catalog)
+    const spawnerGroup = objectGroups.get(spawnerSid)
+    const spawnerTemplate = catalogById.get(spawnerSid)
+    const seeds: number[] = []
+    if (spawnerGroup) {
+      for (const node of spawnerGroup.nodes) {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        const cells = computeFootprintTiles(spawnerTemplate, x, z)
+        const accessCells = cells.filter((c) => c.value === 2)
+        for (const cell of accessCells.length > 0 ? accessCells : [{ x, z }]) {
+          if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
+          seeds.push(cell.z * sizeX + cell.x)
+        }
+      }
+    }
+    return floodFillReachable(seeds, blocked, sizeX, sizeZ)
+  }
+
+  const sealedNow = (): Set<number> => {
+    const reachable = computeReachable()
+    const reachableZones = new Set<number>()
+    for (const node of reachable) reachableZones.add(zoneIdByNode[node])
+    return new Set(zoneIds.filter((id) => !reachableZones.has(id)))
+  }
+
+  const sealedBefore = sealedNow()
+  if (sealedBefore.size === 0) return { sealedZoneIds: [], stillSealedZoneIds: [] }
+
+  for (let round = 0; round < 3; round++) {
+    const stillSealed = sealedNow()
+    if (stillSealed.size === 0) break
+    const toRemove = new Set<number>()
+    for (const placement of decorativePlacements) {
+      if (stillSealed.has(zoneIdByNode[placement.node])) toRemove.add(placement.tempId)
+    }
+    if (toRemove.size === 0) break // nothing decorative left to remove — a real, disclosed dead end
+    removeFromObjectGroups(objectGroups, toRemove)
+  }
+
+  return { sealedZoneIds: [...sealedBefore], stillSealedZoneIds: [...sealedNow()] }
+}
+
+export interface ReclaimWaterCollisionsOptions {
+  objectGroups: Map<string, ObjectPlacementGroup>
+  concreteSquads: ConcreteSquadPlacement[]
+  waterNodes: Set<number>
+}
+
+export interface ReclaimWaterCollisionsResult {
+  /** Nodes reclaimed back to land because a real object/squad was standing
+   *  on them — feed to `paintWaterTiles`/`paintLevelTiles` (waterId 0,
+   *  level 0) to patch the final container, same as the road generator's
+   *  own water-partition repair does. */
+  reclaimedNodes: Set<number>
+}
+
+/**
+ * Any placed object OR squad whose own node is in `waterNodes` gets that
+ * tile reclaimed to land — never the object moved (which could just
+ * relocate the same problem into a new collision this pass hasn't checked
+ * for). `waterNodes` is mutated in place so a caller checking it afterward
+ * (or painting from it) sees the corrected state.
+ */
+export function reclaimWaterCollisions(options: ReclaimWaterCollisionsOptions): ReclaimWaterCollisionsResult {
+  const { objectGroups, concreteSquads, waterNodes } = options
+  const reclaimedNodes = new Set<number>()
+  for (const group of objectGroups.values()) {
+    for (const node of group.nodes) {
+      if (waterNodes.has(node)) { waterNodes.delete(node); reclaimedNodes.add(node) }
+    }
+  }
+  for (const squad of concreteSquads) {
+    if (waterNodes.has(squad.node)) { waterNodes.delete(squad.node); reclaimedNodes.add(squad.node) }
+  }
+  return { reclaimedNodes }
+}

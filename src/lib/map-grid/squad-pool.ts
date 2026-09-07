@@ -103,7 +103,7 @@ export function pickSquadRange(
  *  codebase's biome logic): human->Grass, undead->Deathland, dungeon->Dirt,
  *  nature->Autumn, demon->Lava, unfrozen->Snow. Sand/Desert (biome 2) is
  *  intentionally absent — no faction natively occupies it. */
-const BIOME_FACTION: Partial<Record<BiomeId, string>> = {
+export const BIOME_FACTION: Partial<Record<BiomeId, string>> = {
   1: 'human',
   3: 'undead',
   4: 'unfrozen',

@@ -147,6 +147,16 @@ export function applyAccessibilityPass(
    *  way a declared target is, so a stretch of open H3 floor with no
    *  interactable in it isn't invisible to this pass. */
   mustBeReachable: Set<number>,
+  /** Nodes the nudge phase should never relocate a target onto — purely
+   *  cosmetic, not a passability concern (roads/rivers aren't blocking
+   *  terrain, so `nudgeBlocked` itself doesn't know about them), added for
+   *  the RMG's own road/river tiles: without this, a nudge can (and,
+   *  confirmed on real generated maps, does) relocate an object's solid
+   *  footprint cell right on top of an already-painted road tile, which
+   *  renders as an icon sitting on the road. Defaults to empty — the H3
+   *  import call site doesn't pass this, so its own nudge behavior is
+   *  unchanged. */
+  avoidNodes: Set<number> = new Set(),
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
@@ -345,7 +355,21 @@ export function applyAccessibilityPass(
   // post-deletion blocked set and is kept in sync as each successful nudge
   // vacates its old cells and occupies its new ones, so two targets in the
   // same pocket never land on top of each other.
+  //
+  // `nudgeBlocked` alone only ever records SOLID (value===1) footprint
+  // cells (the same rule `buildBlockedTileSet` itself follows) — it has no
+  // idea a tile is already some other object's anchor if that object has
+  // no solid cell there (every `NON_BLOCKING_SPAWNER_SIDS` placement —
+  // random-res/-squad/-item — and plenty of ordinary resource piles whose
+  // whole footprint is a walk-onto-anywhere interaction cell). A real RMG
+  // regeneration surfaced this concretely: a nudge nonetheless picked such
+  // a tile as "free" and relocated a target's anchor exactly onto an
+  // already-placed `resource_mercury`, producing two live game objects on
+  // one node. `occupiedAnchors` is every object's own anchor node — checked
+  // in ADDITION to `nudgeBlocked`, independent of solid/non-solid, and kept
+  // in sync the same way as each nudge succeeds.
   const nudgeBlocked = new Set(blocked)
+  const occupiedAnchors = new Set(idToNode.values())
   for (const target of unreachable) {
     const sid = target.sid
     const template = catalogById.get(sid)
@@ -354,8 +378,17 @@ export function applyAccessibilityPass(
     const anchorX = anchorNode % atlasWidth
     const anchorZ = Math.floor(anchorNode / atlasWidth)
     const ownCells = computeFootprintTiles(template, anchorX, anchorZ)
+    // Only the OLD position's SOLID (value===1) cells ever contributed to
+    // `blocked`/`nudgeBlocked` in the first place (buildBlockedTileSet's
+    // own rule) — excluding the target's non-solid cells too was a real
+    // bug (confirmed via a real generated map): if a target's old
+    // walkable/interaction cell happened to land on the SAME node as an
+    // unrelated object's real solid footprint, that node got waved through
+    // as "just my own old space" for the new candidate's check, letting
+    // the nudge land right on top of the other object.
     const ownNodes = new Set<number>()
     for (const cell of ownCells) {
+      if (cell.value !== 1) continue
       const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
       if (n !== null) ownNodes.add(n)
     }
@@ -364,12 +397,15 @@ export function applyAccessibilityPass(
     for (let radius = 1; radius <= MAX_NUDGE_RADIUS && !placed; radius++) {
       for (const [cx, cz] of ringOffsets(anchorX, anchorZ, radius)) {
         if (cx < 0 || cx >= atlasWidth || cz < 0 || cz >= atlasHeight) continue
+        const candidateAnchorNode = cz * atlasWidth + cx
+        if (occupiedAnchors.has(candidateAnchorNode) && candidateAnchorNode !== anchorNode) continue
         const candidateCells = computeFootprintTiles(template, cx, cz)
         let valid = true
         for (const cell of candidateCells) {
           const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
           if (n === null) { valid = false; break }
           if (cell.value === 1 && nudgeBlocked.has(n) && !ownNodes.has(n)) { valid = false; break }
+          if (cell.value === 1 && avoidNodes.has(n)) { valid = false; break }
         }
         if (!valid) continue
         const candidateAccess = NON_BLOCKING_SPAWNER_SIDS.has(sid)
@@ -383,6 +419,8 @@ export function applyAccessibilityPass(
           const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
           if (n !== null) nudgeBlocked.add(n)
         }
+        occupiedAnchors.delete(anchorNode)
+        occupiedAnchors.add(candidateAnchorNode)
         const group = objectGroups.get(sid)
         if (group) {
           const index = group.ids.indexOf(target.id)

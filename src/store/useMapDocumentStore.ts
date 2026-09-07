@@ -16,6 +16,8 @@ import type { MapContainer } from '@/lib/map-write'
 import type { RawMapBlocks } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
+import { findOutOfBoundsPlacements, type OutOfBoundsPlacement } from '@/lib/map-grid/bounds-validation'
 
 /** Cheap in-memory equivalent of parseMapFile's gzip-then-JSON-parse pass —
  *  reused here so applyEdit can re-sync useMapContextStore on every single
@@ -43,9 +45,21 @@ function containerToRawBlocks(container: MapContainer): RawMapBlocks {
   }
 }
 
+/** Result of `commitToDisk` — 'blocked' means nothing was written at all
+ *  (the in-memory document stays dirty) because at least one placed object's
+ *  real footprint extends past the map's edge (see bounds-validation.ts).
+ *  Callers must check `.status` and abort their own Save/Save As flow on
+ *  'blocked', the same way they already do for a cancelled save-location
+ *  prompt — showing the violation list is `boundsViolations` below's job. */
+export type CommitResult = ({ status: 'saved' } & MapSaveResult) | { status: 'blocked'; violations: OutOfBoundsPlacement[] }
+
 interface MapDocumentStore {
   container: MapContainer | null
   mapIsDirty: boolean
+  /** Set by a blocked `commitToDisk` so a single, app-shell-level dialog can
+   *  show the offending objects; cleared by `clearBoundsViolations`. */
+  boundsViolations: OutOfBoundsPlacement[] | null
+  clearBoundsViolations: () => void
   /** Load a freshly-opened .map's container — resets dirty state and undo history. */
   loadContainer: (container: MapContainer) => void
   /** Apply one edit to the in-memory document. Throws (leaving the store
@@ -57,9 +71,10 @@ interface MapDocumentStore {
    *  document itself now *is* the current state. Returns the id an
    *  'addObject'/'addMarker' edit allocated, if any. */
   applyEdit: (edit: MapSaveEdit) => number | undefined
-  /** Persist the current in-memory document to `mapFilePath` and clear
-   *  mapIsDirty on success. */
-  commitToDisk: (mapFilePath: string) => Promise<MapSaveResult>
+  /** Persist the current in-memory document to `mapFilePath` — clears
+   *  mapIsDirty on success ('saved'), leaves it untouched and sets
+   *  `boundsViolations` on 'blocked' (see CommitResult). */
+  commitToDisk: (mapFilePath: string) => Promise<CommitResult>
   /** Discard the loaded document without writing anything — used on New/
    *  closing a map, mirroring useMapContextStore's own clearContext(). */
   clear: () => void
@@ -77,6 +92,8 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
     (set, get) => ({
       container: null,
       mapIsDirty: false,
+      boundsViolations: null,
+      clearBoundsViolations: () => set({ boundsViolations: null }),
 
       loadContainer: (container) => {
         set({ container, mapIsDirty: false })
@@ -95,9 +112,15 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       commitToDisk: async (mapFilePath) => {
         const current = get().container
         if (!current) throw new Error('No .map document is currently loaded')
+        const context = extractMapContext(containerToRawBlocks(current))
+        const violations = findOutOfBoundsPlacements(context, useCatalogStore.getState().catalog)
+        if (violations.length > 0) {
+          set({ boundsViolations: violations })
+          return { status: 'blocked', violations }
+        }
         const result = await writeMapChunks(mapFilePath, current)
-        set({ mapIsDirty: false })
-        return result
+        set({ mapIsDirty: false, boundsViolations: null })
+        return { status: 'saved', ...result }
       },
 
       clear: () => {
@@ -131,10 +154,17 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
  *  pending). Shared by every top-level Save/Save As entry point (issue
  *  #195 follow-up: Save is unified — one action covers both the .map and
  *  the scenario JSON, instead of the .map side having its own separate
- *  save trigger inside the Map Grid). */
-export async function commitMapIfDirty(mapFilePath: string | null): Promise<void> {
+ *  save trigger inside the Map Grid). Callers must check the returned
+ *  status and abort their own Save flow (skip the scenario-JSON save too)
+ *  when it's 'blocked' — same as they already do for a cancelled save-
+ *  location prompt — since `useMapDocumentStore`'s `boundsViolations` is
+ *  already set for the app-shell-level dialog to show by the time this
+ *  resolves. */
+export async function commitMapIfDirty(mapFilePath: string | null): Promise<{ status: 'saved' | 'skipped' | 'blocked' }> {
   const { mapIsDirty, commitToDisk } = useMapDocumentStore.getState()
   if (mapIsDirty && mapFilePath) {
-    await commitToDisk(mapFilePath)
+    const result = await commitToDisk(mapFilePath)
+    return { status: result.status }
   }
+  return { status: 'skipped' }
 }

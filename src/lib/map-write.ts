@@ -1162,6 +1162,70 @@ const RANDOM_SPAWNER_TABLE_DEFAULTS: Record<string, { table: string; row: (id: n
   },
 }
 
+/** `random-city` (neutral, non-player-owned city) needs 3 tables, unlike
+ *  every other `RANDOM_SPAWNER_TABLE_DEFAULTS` entry's single one — handled
+ *  as its own small dispatch rather than folded into that Record, mirroring
+ *  `PLAYER_START_SPAWNER_DEFAULTS`'s own multi-table `extraTables` shape.
+ *  Defaults confirmed against a real-map survey of every existing
+ *  `random-city` instance across 7 real, released maps (`Gorges_of_
+ *  Discord.map`, `Prisoners.map`, `The_Mysterious_Island.map`, `Thirst_for_
+ *  Power.map`, `infinite_frost.map`, `song_of_murmurwood.map`) — always
+ *  `isDefined:true` with a real `factionSid`, `owner:-1` in 5/7 samples
+ *  (genuinely neutral), `isConstantGrowth:true, countGrowth:1` in every
+ *  sample. A GME-added, never-configured sample in `maps/Stormlight_
+ *  saved_by_gme.map` is exactly `isDefined:false, factionSid:""` —
+ *  CLAUDE.md's own documented "looks fine in editors, never verified
+ *  in-game" trap — never reproduced here; `factionSid`/`spawnHero` are
+ *  always required, real, caller-supplied values (`randomCityOverrides`),
+ *  never left blank. */
+const RANDOM_CITY_DEFAULT_TABLES: { table: string; row: (id: number, overrides: { factionSid: string; spawnHero: boolean }) => Record<string, unknown> }[] = [
+  {
+    table: 'propCities',
+    row: (id, { factionSid, spawnHero }) => ({
+      type: 0, id, isDefined: true, factionSid, spawnHero,
+      buildingsConstructionSid: 'default_buildings_construction',
+      buildingsBanSid: 'default_buildings_ban',
+      buildingsSettingsSid: 'default_buildings_settings', customCityName: '',
+    }),
+  },
+  {
+    table: 'propOwners',
+    row: (id) => ({ type: 0, id, owner: -1 }),
+  },
+  {
+    table: 'propGrowthUnits',
+    row: (id) => ({ type: 0, id, isConstantGrowth: true, countGrowth: 1 }),
+  },
+  {
+    // Starting-garrison config, real-data-confirmed present on every
+    // sampled random-city instance too (same table/default row
+    // `PLAYER_START_SPAWNER_DEFAULTS['city-spawner']` already uses).
+    table: 'propRandomSquads',
+    row: (id) => ({
+      type: 0, id, sids: [], requestedValue: 0, fraction: '', tier: 0, isMainGuard: false,
+      reactionType: 2, customTopUnit: '', weeklyIncrementBonus: 0, diplomacyUnitsCountBonus: 0,
+      isEscape: true, isAutobatle: true, isFreeDiplomacy: false, isCampaignFreeDiplomacy: false,
+      isCampaignDiplomacy: false, isIgnoreMultiply: false, obstruction: '', customStacks: 0,
+    }),
+  },
+]
+
+/** Real resource-pickup sids (`resource_gold`/`resource_wood`/`resource_ore`/
+ *  `resource_mercury`/`resource_crystals`/`resource_gemstones`/`resource_dust`
+ *  — Core/DB/map/objects/3_resources.json) need a `propResParams` row to
+ *  function, unlike the visually-similar `storage_*` piles (no config at
+ *  all — see STORAGE_SIDS's own doc comment in object-variety.ts).
+ *  `value: 0` is the dominant real pattern surveyed across every instance in
+ *  maps/Broken_Alliance.map, maps/Prisoners.map, and
+ *  maps/The_Mysterious_Island.map (the large majority of rows, with only a
+ *  minority carrying an explicit nonzero override) — read as "use the
+ *  object's own built-in default amount", the same 0-as-default-sentinel
+ *  convention this file already follows elsewhere (e.g. random-squad's own
+ *  historical requestedValue:0 pitfall, `randomSquadDefaultValue`'s own doc
+ *  comment). */
+const RESOURCE_PICKUP_SIDS = new Set(['resource_gold', 'resource_wood', 'resource_ore', 'resource_mercury', 'resource_crystals', 'resource_gemstones', 'resource_dust'])
+const RESOURCE_PICKUP_TABLE_DEFAULT = { table: 'propResParams', row: (id: number) => ({ type: 0, id, value: 0 }) }
+
 /** Which sids get a `propVariants` and/or `propRewardParams` row on a fresh
  *  placement — confirmed by surveying every `city-spawner`/interactable/
  *  decoration instance across every real map in `maps/*.map` (677 distinct
@@ -1246,6 +1310,9 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
   const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
   if (randomSpawnerDefault) {
     tryAppendRow(randomSpawnerDefault.table, randomSpawnerDefault.row(newId, randomSquadDefaultValue()))
+  }
+  if (RESOURCE_PICKUP_SIDS.has(sid)) {
+    tryAppendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(newId))
   }
   return text
 }
@@ -1699,6 +1766,129 @@ export function clearAllObjects(block1Chunk: Uint8Array, block2Chunk: Uint8Array
   }
 }
 
+/** Bulk-add many type-0 `objects[]` placements in a single JSON.parse/
+ *  stringify pass over `objects[]` plus every `objectsProperties.*` table
+ *  any of them touch (`propVariants`/`propRewardParams`/the random-spawner
+ *  tables) — the RMG-scale sibling of `addObjectInstance`/`paintObjects`,
+ *  both of which are single-object-granularity looped and re-decode/
+ *  re-encode all of Block 2 per call (an already-flagged perf risk at
+ *  "thousands of placements" — see `clearAllObjects`'s own doc comment
+ *  above, which solved the equivalent problem for delete-all but not
+ *  bulk-add). A random map generator placing hundreds/thousands of objects
+ *  in one generation pass needs this instead of looping `addObjectInstance`.
+ *
+ *  Player-start spawner sids (`city-spawner`/`hero-spawner`) are
+ *  deliberately unsupported here (throws) — they need
+ *  `backfillPlayerStartSpawner`'s serial player-slot bookkeeping in Block 1,
+ *  and there are only ever a handful of them per map, so the existing
+ *  per-item `addObjectInstance` path's cost is negligible for those. */
+export function addObjectInstances(
+  block2Chunk: Uint8Array,
+  additions: {
+    sid: string
+    node: number
+    rotation?: number
+    level?: number
+    randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }
+    /** Real Olden Era RMG templates show `propRandomItems.rarity` (0-3) is
+     *  real, shipped, and varied — a real-map survey this session
+     *  (`maps/*.map`'s own `propRandomItems.rarity`, 140 rows) confirmed
+     *  0/1/2/3 all occur, ~63/21/14/2% respectively, not the flat `rarity: 0`
+     *  every prior placement used. Omit to keep the previous flat-0 default. */
+    randomItemOverrides?: { rarity: number }
+    /** `random-city` only — a real faction/hero identity is required at
+     *  placement time (never left blank, see `RANDOM_CITY_DEFAULT_TABLES`'
+     *  own doc comment). */
+    randomCityOverrides?: { factionSid: string; spawnHero: boolean }
+  }[],
+): { block2Chunk: Uint8Array; newIds: number[] } {
+  if (additions.length === 0) return { block2Chunk, newIds: [] }
+  const playerStartSid = additions.find(({ sid }) => PLAYER_START_SPAWNER_DEFAULTS[sid])
+  if (playerStartSid) {
+    throw new Error(`addObjectInstances does not support player-start spawner sid "${playerStartSid.sid}" — use addObjectInstance instead`)
+  }
+
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
+  let nextId = findTopLevelScalarSpan(text2, 'objectsFreeId').value
+  const newIds: number[] = []
+
+  const groupsBySid = new Map<string, ObjectGroupEntry>()
+  const propRowsByTable = new Map<string, Record<string, unknown>[]>()
+  const appendRow = (table: string, row: Record<string, unknown>): void => {
+    const rows = propRowsByTable.get(table)
+    if (rows) rows.push(row)
+    else propRowsByTable.set(table, [row])
+  }
+
+  for (const { sid, node, rotation, level, randomSquadOverrides, randomItemOverrides, randomCityOverrides } of additions) {
+    const id = nextId++
+    newIds.push(id)
+    let group = groupsBySid.get(sid)
+    if (!group) { group = { sid, ids: [], nodes: [], rotations: [], levels: [] }; groupsBySid.set(sid, group) }
+    group.ids!.push(id)
+    group.nodes!.push(node)
+    group.rotations!.push(rotation ?? 0)
+    group.levels!.push(level ?? 0)
+
+    if (SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_VARIANTS_ONLY.has(sid)) {
+      appendRow('propVariants', { type: 0, id, selectedVar: -1, typeVariant: 0, fraction: 0, unitVersion: 0 })
+    }
+    if (SIDS_WITH_VARIANTS_AND_REWARD_PARAMS.has(sid) || SIDS_WITH_REWARD_PARAMS_ONLY.has(sid)) {
+      appendRow('propRewardParams', { type: 0, id, parameters: [] })
+    }
+    const randomSpawnerDefault = RANDOM_SPAWNER_TABLE_DEFAULTS[sid]
+    if (randomSpawnerDefault) {
+      const row = randomSpawnerDefault.row(id, randomSquadOverrides?.requestedValue ?? randomSquadDefaultValue())
+      if (sid === 'random-squad' && randomSquadOverrides) {
+        row.fraction = randomSquadOverrides.fraction
+        if (randomSquadOverrides.weeklyIncrementBonus !== undefined) row.weeklyIncrementBonus = randomSquadOverrides.weeklyIncrementBonus
+      }
+      if (sid === 'random-item' && randomItemOverrides) row.rarity = randomItemOverrides.rarity
+      appendRow(randomSpawnerDefault.table, row)
+    }
+    if (sid === 'random-city' && randomCityOverrides) {
+      for (const { table, row } of RANDOM_CITY_DEFAULT_TABLES) appendRow(table, row(id, randomCityOverrides))
+    }
+    if (RESOURCE_PICKUP_SIDS.has(sid)) {
+      appendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(id))
+    }
+  }
+
+  // objects[] — one pass, merging into any pre-existing same-sid group
+  // exactly like addObjectInstance does per-call.
+  {
+    const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, 'objects')
+    const existingGroups = JSON.parse(span) as ObjectGroupEntry[]
+    for (const group of groupsBySid.values()) {
+      const existing = existingGroups.find((g) => g.sid === group.sid)
+      if (existing) {
+        existing.ids = [...(existing.ids ?? []), ...group.ids!]
+        existing.nodes = [...(existing.nodes ?? []), ...group.nodes!]
+        if (existing.rotations) existing.rotations = [...existing.rotations, ...group.rotations!]
+        if (existing.levels) existing.levels = [...existing.levels, ...group.levels!]
+      } else {
+        existingGroups.push(group)
+      }
+    }
+    text2 = text2.slice(0, arrayOpen) + JSON.stringify(existingGroups) + text2.slice(arrayClose + 1)
+  }
+
+  // Each touched objectsProperties.* table — one parse/append/stringify pass
+  // per table touched, not per new object (same "skip a table silently if
+  // it isn't present" convention as backfillNewObjectPropertiesDefaults).
+  for (const [table, rows] of propRowsByTable) {
+    try {
+      const { arrayOpen, arrayClose, span } = findJsonArraySpan(text2, table)
+      const entries = JSON.parse(span) as unknown[]
+      entries.push(...rows)
+      text2 = text2.slice(0, arrayOpen) + JSON.stringify(entries) + text2.slice(arrayClose + 1)
+    } catch { /* table absent in this file */ }
+  }
+
+  const finalBlock2Chunk = patchTopLevelScalar(new TextEncoder().encode(text2), 'objectsFreeId', nextId)
+  return { block2Chunk: finalBlock2Chunk, newIds }
+}
+
 // ─── Paint terrain / level / water (issue #167 Phase D, generalized #193
 // Phase 2) — `tilesMap`/`levelsMap`/`waterMap` are all flat number[] arrays,
 // one entry per tile, same row-major indexing (see CLAUDE.md's "Object
@@ -1802,6 +1992,74 @@ export function paintClimbTiles(chunk: Uint8Array, changes: { node: number; clim
   return paintFlatArrayTiles(chunk, 'climbsMap', changes.map(({ node, climb }) => ({ node, value: climb })))
 }
 
+// ─── Game rules / bans (issue #210, Stage 4 — real game RMG template
+// `gameRules`/`globalBans` → Block1/Block2 mapping). Mechanical field
+// mapping only, no new algorithms — confirmed direct name matches against
+// real `.map` files (`Stormlight.map`'s own Block2 `settings.heroCountMin:
+// 5, heroCountMax: 10, factionLawsExpModifier/astrologyExpModifier` are
+// exactly the same field names the real `.rmg.json` schema's own
+// `gameRules` uses). Deliberately does NOT touch `settings.
+// mapWinConditions` — that field's own `typeWinCondition` int-to-condition
+// enum isn't confirmed (real sample maps show inconsistent entry counts/
+// types with no reliable cross-reference available — this project's own
+// standing rule is to never guess a game-format fact), so a template's own
+// `gameRules.winConditions` is silently not applied rather than risk
+// writing a wrong/broken win-condition into a generated map.
+export interface GameRulesPatch {
+  heroCountMin?: number
+  heroCountMax?: number
+  heroCountIncrement?: number
+  /** Maps onto `settings.enableHeroHireBan` — real schema field is named
+   *  `heroHireBan`. */
+  heroHireBan?: boolean
+  factionLawsExpModifier?: number
+  astrologyExpModifier?: number
+  bonuses?: unknown[]
+  globalBans?: { items?: string[]; magics?: string[]; heroes?: string[] }
+}
+
+/** Patches Block2's `settings` object (heroCount fields, factionLawsExpModifier,
+ *  astrologyExpModifier, bonuses) and, if `globalBans` is set, both blocks'
+ *  own `banInfoData` objects — same span-patch-and-splice discipline as
+ *  every other write in this file (parse only the object's own span,
+ *  mutate, re-stringify, splice back). Every field is independently
+ *  optional — omitting one leaves whatever was already there untouched. */
+export function patchGameRules(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  patch: GameRulesPatch,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  let text1 = new TextDecoder('utf-8').decode(block1Chunk)
+  let text2 = new TextDecoder('utf-8').decode(block2Chunk)
+
+  const { objOpen, objClose, span } = findJsonObjectSpan(text2, 'settings')
+  const settings = JSON.parse(span) as Record<string, unknown>
+  if (patch.heroCountMin !== undefined) settings.heroCountMin = patch.heroCountMin
+  if (patch.heroCountMax !== undefined) settings.heroCountMax = patch.heroCountMax
+  if (patch.heroCountIncrement !== undefined) settings.heroCountIncrement = patch.heroCountIncrement
+  if (patch.heroHireBan !== undefined) settings.enableHeroHireBan = patch.heroHireBan
+  if (patch.factionLawsExpModifier !== undefined) settings.factionLawsExpModifier = patch.factionLawsExpModifier
+  if (patch.astrologyExpModifier !== undefined) settings.astrologyExpModifier = patch.astrologyExpModifier
+  if (patch.bonuses !== undefined) settings.bonuses = patch.bonuses
+  text2 = text2.slice(0, objOpen) + JSON.stringify(settings) + text2.slice(objClose + 1)
+
+  if (patch.globalBans) {
+    const globalBans = patch.globalBans
+    const applyBans = (text: string): string => {
+      const { objOpen: banOpen, objClose: banClose, span: banSpan } = findJsonObjectSpan(text, 'banInfoData')
+      const ban = JSON.parse(banSpan) as Record<string, unknown>
+      if (globalBans.items !== undefined) ban.bannedItems = globalBans.items
+      if (globalBans.magics !== undefined) ban.bannedMagics = globalBans.magics
+      if (globalBans.heroes !== undefined) ban.bannedHeroes = globalBans.heroes
+      return text.slice(0, banOpen) + JSON.stringify(ban) + text.slice(banClose + 1)
+    }
+    text1 = applyBans(text1)
+    text2 = applyBans(text2)
+  }
+
+  return { block1Chunk: new TextEncoder().encode(text1), block2Chunk: new TextEncoder().encode(text2) }
+}
+
 /** Upsert `{n, s, isWaterfall}` entries into `rivers[0].nodes` (add/update
  *  every `{node, s}` in `changes`, drop every node in `deletions`). Unlike
  *  paintFlatArrayTiles's dense per-tile arrays, `rivers[0].nodes` is SPARSE
@@ -1845,8 +2103,45 @@ export function paintRiverTiles(
 // Block 4 doesn't exist in the 3-chunk template (a real, tolerated shape —
 // `parseMapFile` already substitutes `{}` for a missing block), so a
 // minimal empty one is added here for future quest/counter data.
+//
+// The hash and Block 1's hashSum (always equal to it, confirmed across
+// every real sample checked) are NOT cloned from the template, unlike
+// everything else here: resaving one unchanged real map through GME
+// produced a brand-new hash despite identical content, proving it isn't a
+// content checksum at all but an opaque per-map identity value the game
+// keys map recognition on. Cloning the template's fixed value made every
+// map ever created this way collide on the same identity — confirmed via
+// real player.log testing to be why the game silently refuses to
+// recognize/select any map produced this way. generateMapHash() below
+// mints a fresh one per map instead.
 
-const BLANK_BLOCK4 = '{"comment":"","aiRolesId":"","counters":[],"interruptions":[],"quests":[]}'
+// Real editors never emit a 4th chunk (comment/aiRolesId/counters/
+// interruptions/quests) when there's nothing to put in it — confirmed via
+// a fresh GME-saved map (3 chunks total, Block 3's own {dialogs,quests}
+// index also empty) vs. every from-scratch TSE map (4 chunks, this exact
+// all-default Block 4) — a real, player.log-confirmed structural
+// difference from the one state no real editor produces. map-parser.ts's
+// own reader already treats a missing trailing block as `{}` (its own
+// comment: "Some maps ... ship with fewer than 4 blocks"), and nothing in
+// this app's own UI ever reads or writes Block 4's fields — so omitting
+// it here has no other effect than matching real editors' own behavior.
+
+/** A fresh 32-lowercase-hex-char per-map identity, matching the shape of
+ *  every real sample's header hash / Block 1 hashSum (e.g.
+ *  "8e68060f1d3150ee214214785a9b6bb5") — see the comment above. */
+export function generateMapHash(): string {
+  return crypto.randomUUID().replace(/-/g, '')
+}
+
+/** economicDifficulties/aiDifficulties/neutralDifficulties/quickStartDifficulties
+ *  (Block 1 top-level AND Block 2's nested `settings`) are 6-element boolean
+ *  arrays, one flag per difficulty level — every real sample map has them
+ *  populated; the bundled template has them empty (`[]`), and neither editor
+ *  exposes a per-difficulty toggle to fix that after the fact, so a
+ *  from-scratch map inherited that emptiness verbatim. All-`true` ("every
+ *  difficulty enabled") is the permissive default matching what a map with no
+ *  explicit restrictions should mean. */
+export const FULL_DIFFICULTIES = [true, true, true, true, true, true]
 
 export interface BlankMapPlayer {
   /** A player-start spawner sid — the only two sids real Block 1
@@ -1878,7 +2173,7 @@ export interface BlankMapOptions {
 // string, which uses "Sand" not the catalog's own "Desert"; kept as a
 // local, self-contained copy here rather than importing the UI-layer
 // terrain-colors.ts module from this low-level writer).
-const BLANK_MAP_BIOME_NAMES: Record<number, string> = {
+export const BLANK_MAP_BIOME_NAMES: Record<number, string> = {
   1: 'Grass', 2: 'Sand', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt',
 }
 
@@ -1892,11 +2187,18 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     ? new TextDecoder('utf-8').decode(template.chunks[2])
     : '{"dialogs":{"lines":[]},"quests":{"quests":[]}}'
 
+  const mapHash = generateMapHash()
+
   const b1 = {
     ...templateB1,
+    hashSum: mapHash,
     sizeX,
     sizeZ,
     spawns: { playersCount: players.length, spawns: [] as unknown[], takenHeroes: [] as string[] },
+    economicDifficulties: FULL_DIFFICULTIES,
+    aiDifficulties: FULL_DIFFICULTIES,
+    neutralDifficulties: FULL_DIFFICULTIES,
+    quickStartDifficulties: FULL_DIFFICULTIES,
   }
 
   // `views` gates GME's own pannable/editable viewport — every real sample
@@ -1947,6 +2249,13 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     levelsMap: new Array(tileCount).fill(0),
     climbsMap: new Array(tileCount).fill(0),
     roadsMap: new Array(tileCount).fill(0),
+    settings: {
+      ...((templateB2.settings as Record<string, unknown>) ?? {}),
+      economicDifficulties: FULL_DIFFICULTIES,
+      aiDifficulties: FULL_DIFFICULTIES,
+      neutralDifficulties: FULL_DIFFICULTIES,
+      quickStartDifficulties: FULL_DIFFICULTIES,
+    },
     objects: [] as unknown[],
     squads: [] as unknown[],
     markers: [] as unknown[],
@@ -1961,11 +2270,10 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
     new TextEncoder().encode(JSON.stringify(b1)),
     new TextEncoder().encode(JSON.stringify(b2)),
     new TextEncoder().encode(templateB3Text),
-    new TextEncoder().encode(BLANK_BLOCK4),
   ]
 
   let container: MapContainer = {
-    hash: template.hash,
+    hash: new TextEncoder().encode(mapHash),
     version: template.version,
     separator: template.separator,
     chunks,
@@ -1985,6 +2293,23 @@ export function buildBlankMap(template: MapContainer, options: BlankMapOptions):
   }
 
   return container
+}
+
+/** Overwrite Block 2's whole `areas[]` region index in one pass — the RMG's
+ *  own real-region recomputation (issue #210, Milestone 3; see
+ *  `src/lib/rmg/zone-areas.ts`), replacing `buildBlankMap`'s single
+ *  whole-map placeholder region with each zone's own real tile partition.
+ *  Every entry must carry `id`/`keyObjectId`/`rootNode`/`nodes`/
+ *  `neighbors`/`biome` — the exact shape confirmed against real sample
+ *  maps' own `areas[]` entries (see zone-areas.ts's own doc comment). */
+export function setAreas(
+  chunk: Uint8Array,
+  areas: { id: number; keyObjectId: number; rootNode: number; nodes: number[]; neighbors: number[]; biome: string }[],
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose } = findJsonArraySpan(text, 'areas')
+  const patchedText = text.slice(0, arrayOpen) + JSON.stringify(areas) + text.slice(arrayClose + 1)
+  return new TextEncoder().encode(patchedText)
 }
 
 // ─── Byte equality (verification) ───────────────────────────────────────────
