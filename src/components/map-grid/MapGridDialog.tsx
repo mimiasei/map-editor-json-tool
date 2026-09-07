@@ -2361,10 +2361,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setSpawnerPlayerType', entityType: item.type, entityId: item.id, spawnType }, 'set spawner Player type')
   const handleSetSpawnerOwner = (item: PlacedObject, newOwner: number) =>
     applyEdit({ kind: 'swapSpawnerOwner', entityType: item.type, entityId: item.id, newOwner }, 'reassign spawner owner')
-  const handleSetCityFaction = (item: PlacedObject, factionSid: string) =>
-    applyEdit({ kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid }, 'set faction')
-  const handleSetCitySpawnHero = (item: PlacedObject, spawnHero: boolean) =>
-    applyEdit({ kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero }, 'toggle companion hero')
+  // A city that's isDefined:true (real faction assigned) with spawnHero:true
+  // needs a REAL, catalog-backed hero, not just a propHeroes row — real
+  // player.log testing confirmed the {isDefined:false, heroSid:'random'}
+  // placeholder (setCitySpawnHero's own default when toggled on) still
+  // crashes on load once the city is active; it's only safe pre-activation.
+  // Same catalog filter generate-random-map.ts's own player-city fix uses.
+  const pickRandomHeroForFaction = (faction: string): string | undefined => {
+    if (!catalog) return undefined
+    const factionHeroes = catalog.heroes.filter((h) => h.fraction === faction && /^(human|necro|demon|dungeon|unfrozen|nature)_hero_\d+$/.test(h.id))
+    if (factionHeroes.length === 0) return undefined
+    return factionHeroes[Math.floor(Math.random() * factionHeroes.length)].id
+  }
+  const handleSetCityFaction = (item: PlacedObject, factionSid: string) => {
+    const spawnHero = item.spawnerInfo?.spawnHero ?? false
+    const heroSid = factionSid && spawnHero ? pickRandomHeroForFaction(factionSid) : undefined
+    applyEdit({ kind: 'setCityFaction', entityType: item.type, entityId: item.id, factionSid, heroSid }, 'set faction')
+  }
+  const handleSetCitySpawnHero = (item: PlacedObject, spawnHero: boolean) => {
+    const factionSid = item.spawnerInfo?.factionSid ?? ''
+    const heroSid = spawnHero && factionSid ? pickRandomHeroForFaction(factionSid) : undefined
+    applyEdit({ kind: 'setCitySpawnHero', entityType: item.type, entityId: item.id, spawnHero, heroSid }, 'toggle companion hero')
+  }
   const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
