@@ -58,6 +58,7 @@ import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-d
 import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
+import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -74,7 +75,7 @@ import MapGridSettingsDialog, {
   loadMapGridSettings,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
-import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Percent, X, SquareArrowOutUpRight, Search, ChevronDown, Ban, Plus, Minus, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Paintbrush, Layers, Droplets, SquareDashed, Mountain, Eraser, Milestone, Waves, Trees, TrendingUpDown, Landmark, Swords, Trash2, Users } from 'lucide-react'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -1816,6 +1817,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
   }
 
+  // Pans to a tile's center, keeping the current zoom level as-is (unlike
+  // zoomTo100/fitToViewport, which both change scale) — used by the spawner
+  // selector's "jump to this spawner" rows. z is converted to a screen row
+  // via the same `sizeZ - 1 - z` flip the highlight-marker overlay and every
+  // other screen<->world conversion in this file already use (issue #130).
+  const centerOnTile = useCallback((x: number, z: number) => {
+    setTransform((prev) => {
+      const worldX = (x + 0.5) * BASE_CELL_PX
+      const worldY = (sizeZ - 1 - z + 0.5) * BASE_CELL_PX
+      return { ...prev, x: containerSize.width / 2 - worldX * prev.scale, y: containerSize.height / 2 - worldY * prev.scale }
+    })
+  }, [sizeZ, containerSize])
+
   const zoomTo100 = useCallback(() => {
     setTransform((prev) => {
       const worldX = (containerSize.width / 2 - prev.x) / prev.scale
@@ -2310,7 +2324,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // object" state below) so columnOpen can reference it without a
   // temporal-dead-zone issue.
   const [objectBrowserOpen, setObjectBrowserOpen] = useState(false)
-  const columnOpen = (selectedNode !== null && !columnClosed) || objectBrowserOpen
+  // Same "force the column open" convention as objectBrowserOpen above, for
+  // the player-spawner selector's own info-column panel.
+  const [spawnerSelectorOpen, setSpawnerSelectorOpen] = useState(false)
+  const columnOpen = (selectedNode !== null && !columnClosed) || objectBrowserOpen || spawnerSelectorOpen
 
   // Imperatively resized rather than conditionally mounted (same convention
   // as AppShell's sidebar/editor/preview panels) so the Group/Panel tree
@@ -2387,6 +2404,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
+  const allSpawners = useMemo(() => placedObjects.filter((p) => p.spawnerInfo), [placedObjects])
+  const selectSpawner = useCallback((item: PlacedObject) => {
+    selectNode(item.node)
+    centerOnTile(item.x, item.z)
+  }, [selectNode, centerOnTile])
   const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
     applyEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch }, 'set portal target')
   const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
@@ -2905,6 +2927,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     setPlacingCreatureId(null)
                     setPlacingZoneSid(null)
                     setObjectBrowserOpen(false)
+                    setSpawnerSelectorOpen(false)
                     setGridMode('browse')
                   }}
                 >
@@ -2941,6 +2964,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 </Button>
               )}
             </div>
+            <Button
+              variant={spawnerSelectorOpen ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              title="Player spawners"
+              data-nodrag
+              onClick={() => { setObjectBrowserOpen(false); setSpawnerSelectorOpen((prev) => !prev) }}
+            >
+              <Users className="h-3.5 w-3.5" />
+            </Button>
             <div className="flex items-center gap-1 shrink-0" data-nodrag>
               <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
                 {Math.round(transform.scale * 100)}%
@@ -3013,7 +3046,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="sm"
                   className="h-6 text-xs gap-1"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Objects
@@ -3023,7 +3056,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Plus className="h-3.5 w-3.5" />}
                   label="Objects"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -4226,6 +4259,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 placingCreatureId={placingCreatureId}
                 onPickCreature={(id) => { stopPainting(); stopPlacing(); setPlacingCreatureId(id) }}
                 onClose={() => setObjectBrowserOpen(false)}
+              />
+            ) : spawnerSelectorOpen && !undocked ? (
+              <SpawnerSelectorPanel
+                spawners={allSpawners}
+                catalog={catalog}
+                selectedNode={selectedNode}
+                onSelect={selectSpawner}
+                onClose={() => setSpawnerSelectorOpen(false)}
               />
             ) : (
             <>
