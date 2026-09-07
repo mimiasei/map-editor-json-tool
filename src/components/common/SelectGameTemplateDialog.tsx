@@ -6,6 +6,7 @@
 // GenerateRandomMapDialog.tsx's own "Use game template" entry point.
 
 import { useEffect, useState } from 'react'
+import { Info } from 'lucide-react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { listBundledGameTemplates, readBundledGameTemplateJson, type BundledGameTemplateInfo } from '@/lib/rmg/rmg-template-catalog'
 import { logError } from '@/lib/logger'
+import TemplateDetailsDialog from '@/components/common/TemplateDetailsDialog'
 
 interface Props {
   open: boolean
@@ -26,6 +28,7 @@ export default function SelectGameTemplateDialog({ open, onOpenChange, onSelect 
   const [search, setSearch] = useState('')
   const [loadingFileName, setLoadingFileName] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [detailsTarget, setDetailsTarget] = useState<BundledGameTemplateInfo | null>(null)
 
   useEffect(() => {
     if (!open || !catalog) return
@@ -85,24 +88,36 @@ export default function SelectGameTemplateDialog({ open, onOpenChange, onSelect 
             <p className="text-xs text-muted-foreground px-2 py-4 text-center">No templates match "{search}".</p>
           )}
           {filtered.map((t) => (
-            <button
+            <div
               key={t.fileName}
-              type="button"
-              onClick={() => void handlePick(t)}
-              disabled={loadingFileName !== null}
-              className="w-full text-left rounded border border-border hover:bg-accent/50 hover:border-foreground/30 transition-colors px-3 py-2 disabled:opacity-60"
+              className="w-full flex items-stretch rounded border border-border hover:border-foreground/30 transition-colors"
             >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-medium">{t.name}</span>
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {t.playerCount} player{t.playerCount === 1 ? '' : 's'}
-                </span>
-              </div>
-              {t.description && (
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>
-              )}
-              {loadingFileName === t.fileName && <p className="text-xs text-muted-foreground mt-1">Loading…</p>}
-            </button>
+              <button
+                type="button"
+                onClick={() => void handlePick(t)}
+                disabled={loadingFileName !== null}
+                className="flex-1 min-w-0 text-left hover:bg-accent/50 transition-colors px-3 py-2 rounded-l disabled:opacity-60"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium">{t.name}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {t.playerCount} player{t.playerCount === 1 ? '' : 's'}
+                  </span>
+                </div>
+                {t.description && (
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>
+                )}
+                {loadingFileName === t.fileName && <p className="text-xs text-muted-foreground mt-1">Loading…</p>}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailsTarget(t)}
+                title="View template details"
+                className="shrink-0 px-2.5 flex items-center justify-center text-muted-foreground border-l border-border hover:text-foreground hover:bg-accent/50 transition-colors rounded-r"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
 
@@ -113,6 +128,13 @@ export default function SelectGameTemplateDialog({ open, onOpenChange, onSelect 
           </Button>
         </div>
       </DraggableDialogContent>
+
+      <TemplateDetailsDialog
+        open={detailsTarget !== null}
+        onOpenChange={(o) => { if (!o) setDetailsTarget(null) }}
+        fileName={detailsTarget?.fileName ?? null}
+        displayName={detailsTarget?.name ?? ''}
+      />
     </Dialog>
   )
 }

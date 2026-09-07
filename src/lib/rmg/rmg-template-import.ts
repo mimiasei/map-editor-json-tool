@@ -81,9 +81,13 @@ interface RawZone {
   resourcesValue?: number
   resourcesValuePerArea?: number
   /** Names of this zone's own entries in the template's top-level
-   *  `contentCountLimits[]` (an array of NAMED limit sets, e.g.
-   *  `content_limits_spawn`) — resolved against `limitSetsByName` below. */
-  contentCountLimits?: string[]
+   *  `contentCountLimits[]` (named limit sets, e.g. `content_limits_spawn`)
+   *  — resolved against `limitSetsByName` below. Real schema quirk
+   *  confirmed directly (`Crossroads.rmg.json`'s `"SuperTreasure"` zone): a
+   *  zone with exactly one reference ships it as a bare STRING, not a
+   *  single-element array, unlike every other zone sampled — normalized to
+   *  an array in `buildTopologyFromVariant` below rather than assumed. */
+  contentCountLimits?: string | string[]
   [key: string]: unknown
 }
 
@@ -345,13 +349,14 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
       zoneContentValueByZoneId.set(id, { guardedContentValue, resourcesValue })
     }
 
-    if (Array.isArray(z.contentCountLimits) && z.contentCountLimits.length > 0) {
+    const zoneLimitNames = typeof z.contentCountLimits === 'string' ? [z.contentCountLimits] : z.contentCountLimits
+    if (zoneLimitNames && zoneLimitNames.length > 0) {
       // Merge every named set the zone references, taking the strictest
       // (lowest) maxCount when the same sid appears in more than one —
       // every real sample checked only ever references a single set per
       // zone, but nothing in the schema forbids more.
       const merged = new Map<string, number>()
-      for (const setName of z.contentCountLimits) {
+      for (const setName of zoneLimitNames) {
         for (const row of limitSetsByName.get(setName) ?? []) {
           const existing = merged.get(row.sid)
           merged.set(row.sid, existing === undefined ? row.maxCount : Math.min(existing, row.maxCount))
