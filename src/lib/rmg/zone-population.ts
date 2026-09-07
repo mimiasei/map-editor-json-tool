@@ -87,7 +87,18 @@ const NEUTRAL_ZONE_BIOMES: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
  *  to the full unfiltered list, same as this function's own pre-existing
  *  behavior — callers are responsible for not letting a UI empty this
  *  down to zero in the first place. */
-export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number, enabledBiomes?: BiomeId[]): Map<number, BiomeId> {
+/**
+ * @param templateBiomeByZoneId Real per-zone biome constraints from a
+ *   picked game template (`rmg-template-import.ts`'s `biomeIdByZoneId` —
+ *   issue #210 second follow-up milestone), applied as a direct override
+ *   before falling back to this function's own pool-cycling logic. Only
+ *   ever populated for neutral zones in every real sample checked (Spawn
+ *   zones use a self-referential `MatchMainObject` constraint instead,
+ *   already effectively what this function's own per-player cycling
+ *   achieves) — so a player zone's own `playerIndex` cycling is never
+ *   skipped/disturbed by this override.
+ */
+export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number, enabledBiomes?: BiomeId[], templateBiomeByZoneId?: Map<number, BiomeId>): Map<number, BiomeId> {
   const enabledSet = enabledBiomes && enabledBiomes.length > 0 ? new Set(enabledBiomes) : null
   const playerBiomes = enabledSet ? ZONE_BIOMES.filter((b) => enabledSet.has(b)) : ZONE_BIOMES
   const neutralBiomes = enabledSet ? NEUTRAL_ZONE_BIOMES.filter((b) => enabledSet.has(b)) : NEUTRAL_ZONE_BIOMES
@@ -96,10 +107,17 @@ export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number, enabledBi
   const biomeByZone = new Map<number, BiomeId>()
   let playerIndex = 0
   for (const zone of zones) {
+    const templateBiome = templateBiomeByZoneId?.get(zone.id)
     if (zone.kind === 'player') {
-      biomeByZone.set(zone.id, playerPool[playerIndex++ % playerPool.length])
+      // `playerIndex` must advance every player zone regardless of whether
+      // this specific one has a template override, so a later un-
+      // overridden player zone still lands on the pool's own next color —
+      // deliberately NOT `templateBiome ?? playerPool[playerIndex++ ...]`,
+      // which would skip the increment whenever a template DID provide one.
+      const cycled = playerPool[playerIndex++ % playerPool.length]
+      biomeByZone.set(zone.id, templateBiome ?? cycled)
     } else {
-      biomeByZone.set(zone.id, neutralPool[Math.floor(rng() * neutralPool.length)])
+      biomeByZone.set(zone.id, templateBiome ?? neutralPool[Math.floor(rng() * neutralPool.length)])
     }
   }
   return biomeByZone
@@ -281,6 +299,13 @@ export interface PopulateZonesOptions {
    *  placed here must have a different faction from. Replaces the default
    *  "differ from every player" rule for zones with real data. */
   neutralCityExclusionsByZoneId?: Map<number, Set<number>>
+  /** zone id -> real, inline placeable sids from that zone's own
+   *  `mandatoryContent[]` (second follow-up milestone) — biases which
+   *  concrete artifact/storage/resource sid a treasure roll picks toward
+   *  ones the template author actually specified for this zone, without
+   *  forcing extra placements or overriding the existing count/budget/cap
+   *  logic (see `placeTreasure`'s own doc comment). */
+  mandatoryContentSidsByZoneId?: Map<number, string[]>
 }
 
 /** Scatter each zone's own objects (see this file's header comment for what
@@ -299,7 +324,7 @@ export interface PopulateZonesResult {
 export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
   } = options
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
@@ -381,11 +406,19 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  a specific artifact can't repeat within one zone purely by chance;
    *  ordinary storage/resource piles are NOT capped, matching how real
    *  templates only cap notable objects, not plain resources. */
-  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>): number => {
+  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, preferredSids?: Set<string>): number => {
     if (catalog && rng() < objectVariety) {
       const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid) && !isAtContentCap(sid))
       if (availableArtifacts.length > 0 && rng() < 0.5) {
-        const sid = availableArtifacts[Math.floor(rng() * availableArtifacts.length)]
+        // Bias toward a real per-zone `mandatoryContent` sid when this
+        // zone has one available (issue #210 second follow-up milestone) —
+        // real, template-authored "this zone should have this" data,
+        // without forcing an extra placement or disturbing the existing
+        // count/budget logic. 0.7 (not 1.0) so a mismatched/emptied
+        // preference list never fully starves the normal random variety.
+        const preferredArtifacts = preferredSids ? availableArtifacts.filter((sid) => preferredSids.has(sid)) : []
+        const artifactPool = preferredArtifacts.length > 0 && rng() < 0.7 ? preferredArtifacts : availableArtifacts
+        const sid = artifactPool[Math.floor(rng() * artifactPool.length)]
         usedArtifactSids.add(sid)
         recordContentPlacement(sid)
         place(sid, tiles)
@@ -393,7 +426,9 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       }
       const concretePool = (rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS).filter((sid) => !isAtContentCap(sid))
       if (concretePool.length > 0) {
-        const sid = concretePool[Math.floor(rng() * concretePool.length)]
+        const preferredConcrete = preferredSids ? concretePool.filter((sid) => preferredSids.has(sid)) : []
+        const pool = preferredConcrete.length > 0 && rng() < 0.7 ? preferredConcrete : concretePool
+        const sid = pool[Math.floor(rng() * pool.length)]
         recordContentPlacement(sid)
         place(sid, tiles)
         return RARITY_AVERAGE_COST
@@ -501,6 +536,8 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // reset fresh per zone since a cap here is scoped to just this zone.
       currentZoneContentLimitBySid = new Map((contentCountLimitsByZoneId?.get(zone.id) ?? []).map((l) => [l.sid, l.maxCount]))
       currentZoneContentSoFar = new Map()
+      const mandatorySids = mandatoryContentSidsByZoneId?.get(zone.id)
+      const preferredTreasureSids = mandatorySids && mandatorySids.length > 0 ? new Set(mandatorySids) : undefined
 
       const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
       place(mineSid, tiles)
@@ -557,7 +594,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       let spent = 0
       let iterations = 0
       while (spent < treasureBudget && iterations < 400) {
-        spent += placeTreasure(tiles, usedArtifactSids)
+        spent += placeTreasure(tiles, usedArtifactSids, preferredTreasureSids)
         iterations++
       }
 

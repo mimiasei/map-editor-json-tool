@@ -186,6 +186,13 @@ export interface TerrainResult {
   zoneContentValueByZoneId: Map<number, ZoneContentValueOverrides>
   contentCountLimitsByZoneId: Map<number, { sid: string; maxCount: number }[]>
   neutralCityExclusionsByZoneId: Map<number, Set<number>>
+  /** Per-zone real biome constraints (issue #210 second follow-up
+   *  milestone) — already folded into `zoneBiome` above by the time this is
+   *  returned; kept here too so callers needing the RAW template signal
+   *  (as opposed to the final resolved biome) can still get at it. */
+  biomeIdByZoneId: Map<number, BiomeId>
+  mandatoryContentSidsByZoneId: Map<number, string[]>
+  roadMaterialByEdgeKey: Map<string, 'Stone' | 'Dirt'>
 }
 
 /**
@@ -217,6 +224,9 @@ export function generateTerrain(
   const zoneContentValueByZoneId = importedTopology?.zoneContentValueByZoneId ?? new Map<number, ZoneContentValueOverrides>()
   const contentCountLimitsByZoneId = importedTopology?.contentCountLimitsByZoneId ?? new Map<number, { sid: string; maxCount: number }[]>()
   const neutralCityExclusionsByZoneId = importedTopology?.neutralCityExclusionsByZoneId ?? new Map<number, Set<number>>()
+  const biomeIdByZoneId = importedTopology?.biomeIdByZoneId ?? new Map<number, BiomeId>()
+  const mandatoryContentSidsByZoneId = importedTopology?.mandatoryContentSidsByZoneId ?? new Map<number, string[]>()
+  const roadMaterialByEdgeKey = importedTopology?.roadMaterialByEdgeKey ?? new Map<string, 'Stone' | 'Dirt'>()
   const zoneDistances = zoneDistanceMatrix(graph)
   if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
     throw new Error(importedTopology
@@ -226,7 +236,7 @@ export function generateTerrain(
 
   const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
   const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
-  const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes)
+  const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes, biomeIdByZoneId)
 
   let islandFloodNodes = new Set<number>()
   const islandLandmassByZone = new Map<number, number[]>()
@@ -349,5 +359,6 @@ export function generateTerrain(
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     waterNodesAll, waterMapFinal, levelsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
   }
 }

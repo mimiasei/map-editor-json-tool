@@ -235,6 +235,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
   } = terrain
   let container = terrain.container
   let block2 = container.chunks[1]
@@ -258,7 +259,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
 
   const { placements, concreteSquads } = populateZones({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
-    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
@@ -601,7 +602,13 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     if (path) {
       const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
       roadPathsByEdge.set(`${a}:${b}`, smoothed)
-      const roadId = rng() < stoneRoadChance ? 2 : 1
+      // A real template's own road material for this exact connection
+      // (issue #210 second follow-up milestone — see rmg-template-
+      // import.ts's own roadMaterialByEdgeKey doc comment) takes priority
+      // over the generic stoneRoadChance roll; empty map (no template, or
+      // this specific edge has no resolvable road entry) falls through.
+      const templateMaterial = roadMaterialByEdgeKey.get(`${Math.min(a, b)}:${Math.max(a, b)}`)
+      const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (rng() < stoneRoadChance ? 2 : 1)
       for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
     } else {
       unroutableEdges += 1

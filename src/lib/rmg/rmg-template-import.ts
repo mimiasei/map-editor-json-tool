@@ -48,6 +48,7 @@
 // either.
 
 import type { ZoneGraph, ZoneSpec } from './zone-graph'
+import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 
 interface RawFactionConstraint {
   type?: string
@@ -88,7 +89,45 @@ interface RawZone {
    *  single-element array, unlike every other zone sampled — normalized to
    *  an array in `buildTopologyFromVariant` below rather than assumed. */
   contentCountLimits?: string | string[]
+  /** Biome constraint (issue #210 second follow-up milestone) — real shapes
+   *  confirmed: `{type:"FromList", args:["Sand"]}` (a literal, closed list
+   *  of real biome names, matching `BIOME_NAMES`' own tile-naming
+   *  convention exactly) on neutral/treasure zones, and
+   *  `{type:"MatchMainObject", args:["0"]}` on every Spawn zone sampled
+   *  (self-referential — "matches whichever faction this zone's own city
+   *  ends up as," already effectively what this generator's own per-player
+   *  biome cycling achieves, so only `FromList` is actually consumed
+   *  below). */
+  zoneBiome?: RawFactionConstraint
+  /** Names of this zone's own entries in the template's top-level
+   *  `mandatoryContent[]` (named content sets with REAL inline sids, unlike
+   *  `guardedContentPool`/`unguardedContentPool`/`resourcesContentPool`,
+   *  which reference pool names with no inline definition anywhere in this
+   *  format — confirmed empty `contentPools`/`contentLists` in 100% of the
+   *  ~60 bundled templates, so those three are NOT resolvable from this
+   *  file at all). Always a real array in every zone sampled — no
+   *  string-vs-array quirk like `contentCountLimits` above. */
+  mandatoryContent?: string[]
+  /** Zone-internal road segments — confirmed the reliable, real link back
+   *  to a top-level connection: a `to: {type:"Connection", args:[name]}`
+   *  matches some connection's own `name` field in 1674/1680 real
+   *  instances sampled (~99.6%) across every bundled template. `type` is
+   *  this segment's real paved material (`"Stone"`/`"Dirt"`, sometimes
+   *  absent) — `roadMaterialByEdgeKey` below resolves this into a
+   *  per-zone-graph-edge material override. */
+  roads?: RawRoad[]
   [key: string]: unknown
+}
+
+interface RawRoadEndpoint {
+  type?: string
+  args?: string[]
+}
+
+interface RawRoad {
+  type?: string
+  from?: RawRoadEndpoint
+  to?: RawRoadEndpoint
 }
 
 interface RawContentCountLimit {
@@ -104,6 +143,7 @@ interface RawContentCountLimitSet {
 }
 
 interface RawConnection {
+  name?: string
   from?: string
   to?: string
   connectionType?: string
@@ -159,12 +199,24 @@ interface RawGameRules {
   [key: string]: unknown
 }
 
+interface RawMandatoryContentEntry {
+  sid?: string
+  [key: string]: unknown
+}
+
+interface RawMandatoryContentSet {
+  name?: string
+  content?: RawMandatoryContentEntry[]
+  [key: string]: unknown
+}
+
 interface RawTemplate {
   variants?: RawVariant[]
   gameRules?: RawGameRules
   globalBans?: { items?: string[]; magics?: string[]; heroes?: string[] }
   zoneLayouts?: RawZoneLayout[]
   contentCountLimits?: RawContentCountLimitSet[]
+  mandatoryContent?: RawMandatoryContentSet[]
   [key: string]: unknown
 }
 
@@ -207,6 +259,23 @@ export interface GameTemplateTopology {
    *  alternative-object model). Empty for a zone with no such constraint —
    *  callers fall back to "differ from every player" in that case. */
   neutralCityExclusionsByZoneId: Map<number, Set<number>>
+  /** zone id -> a real, closed biome choice from that zone's own
+   *  `zoneBiome: {type:"FromList", args:[...]}` (neutral zones only in
+   *  every sample checked — Spawn zones use `MatchMainObject` instead, see
+   *  `RawZone.zoneBiome`'s own doc comment). Empty for a zone with no
+   *  resolvable `FromList` constraint. */
+  biomeIdByZoneId: Map<number, BiomeId>
+  /** zone id -> real inline sids from that zone's own `mandatoryContent[]`
+   *  name references (see `RawZone.mandatoryContent`'s own doc comment for
+   *  why this is resolvable but `guardedContentPool`/etc. are not). Empty
+   *  for a zone with no such reference. */
+  mandatoryContentSidsByZoneId: Map<number, string[]>
+  /** zone-graph edge key -> that connection's real paved material, resolved
+   *  from a zone's own `roads[]` entry pointing at it (see `RawZone.roads`'s
+   *  own doc comment for the confirmed name-matching rate). Empty for an
+   *  edge with no resolvable road entry — callers fall back to their own
+   *  default material chance in that case. */
+  roadMaterialByEdgeKey: Map<string, 'Stone' | 'Dirt'>
 }
 
 /** Per-zone value-budget overrides (issue #210 runner-up milestone) — see
@@ -293,6 +362,11 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
   const edges: [number, number][] = []
   const portalEdges = new Set<string>()
   const unpaintedEdges = new Set<string>()
+  // Real connection `name` -> its own zone-graph edge key, so a zone's own
+  // `roads[]` entry (which references a connection by NAME, not by zone
+  // pair) can be resolved back to the edge it actually paints — see
+  // `RawZone.roads`'s own doc comment for the confirmed match rate.
+  const connNameToEdgeKey = new Map<string, string>()
   for (const conn of variant.connections ?? []) {
     if (!conn.from || !conn.to) continue
     const a = zoneIdByName.get(conn.from)
@@ -302,6 +376,7 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
     const key = edgeKey(a, b)
     if (conn.connectionType === 'Portal') portalEdges.add(key)
     else if (!(conn.connectionType === 'Direct' && conn.road)) unpaintedEdges.add(key)
+    if (conn.name) connNameToEdgeKey.set(conn.name, key)
   }
 
   // Stage 3a/3c: resolve each zone's own `layout` name reference against
@@ -334,10 +409,27 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
     limitSetsByName.set(set.name, rows)
   }
 
+  // Second follow-up milestone: resolve the template's own named
+  // `mandatoryContent[]` sets (top-level, REAL inline sids — see
+  // `RawZone.mandatoryContent`'s own doc comment for why this is
+  // resolvable but the guarded/unguarded/resources content POOLS are not).
+  const mandatoryContentSetsByName = new Map<string, string[]>()
+  for (const set of template.mandatoryContent ?? []) {
+    if (!set.name) continue
+    const sids = (set.content ?? []).map((c) => c.sid).filter((sid): sid is string => typeof sid === 'string')
+    mandatoryContentSetsByName.set(set.name, sids)
+  }
+  const biomeNameToId = new Map<string, BiomeId>(
+    Object.entries(BIOME_NAMES).map(([id, name]) => [name.toLowerCase(), Number(id) as BiomeId]),
+  )
+
   const guardCutoffValueByZoneId = new Map<number, number>()
   const zoneContentValueByZoneId = new Map<number, ZoneContentValueOverrides>()
   const contentCountLimitsByZoneId = new Map<number, { sid: string; maxCount: number }[]>()
   const neutralCityExclusionsByZoneId = new Map<number, Set<number>>()
+  const biomeIdByZoneId = new Map<number, BiomeId>()
+  const mandatoryContentSidsByZoneId = new Map<number, string[]>()
+  const roadMaterialByEdgeKey = new Map<string, 'Stone' | 'Dirt'>()
 
   rawZones.forEach((z, id) => {
     if (typeof z.guardCutoffValue === 'number') guardCutoffValueByZoneId.set(id, z.guardCutoffValue)
@@ -378,11 +470,41 @@ export function buildTopologyFromVariant(template: RawTemplate, variant: RawVari
         neutralCityExclusionsByZoneId.get(id)!.add(otherZoneId)
       }
     }
+
+    // Biome constraint — only `FromList` is consumed (see `zoneBiome`'s own
+    // doc comment above for why `MatchMainObject`, the Spawn-zone shape, is
+    // left alone). A multi-option list picks its first real, resolvable
+    // entry — every real sample checked ships exactly one anyway.
+    if (z.zoneBiome?.type === 'FromList') {
+      for (const arg of z.zoneBiome.args ?? []) {
+        const biomeId = biomeNameToId.get(arg.toLowerCase())
+        if (biomeId !== undefined) { biomeIdByZoneId.set(id, biomeId); break }
+      }
+    }
+
+    // Mandatory content — real, placeable sids straight from the
+    // template's own top-level named sets.
+    if (z.mandatoryContent && z.mandatoryContent.length > 0) {
+      const sids = z.mandatoryContent.flatMap((setName) => mandatoryContentSetsByName.get(setName) ?? [])
+      if (sids.length > 0) mandatoryContentSidsByZoneId.set(id, sids)
+    }
+
+    // Road material — resolve this zone's own internal road segments that
+    // point AT a real top-level connection (`to.type === "Connection"`)
+    // back to that connection's own zone-graph edge.
+    for (const road of z.roads ?? []) {
+      if (road.to?.type !== 'Connection' || (road.type !== 'Stone' && road.type !== 'Dirt')) continue
+      for (const connName of road.to.args ?? []) {
+        const edgeKeyForConn = connNameToEdgeKey.get(connName)
+        if (edgeKeyForConn) roadMaterialByEdgeKey.set(edgeKeyForConn, road.type)
+      }
+    }
   })
 
   return {
     graph: { zones, edges }, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
+    biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
   }
 }
 
