@@ -1606,6 +1606,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         // anything else silently did nothing until Escape (which didn't
         // cancel Move either — see the Escape handler fix below).
         selectNode(drag.item.node)
+        setSpawnerSelectorOpen(false)
         e.currentTarget.setPointerCapture(e.pointerId)
       }
       const node = screenToNode(e.clientX, e.clientY, rect)
@@ -2460,6 +2461,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (!prev || !isNodeInBoundsForMove(prev, node) || prev.node === node) return prev
       applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: node }, 'move object')
       selectNode(node)
+      setSpawnerSelectorOpen(false)
       return { ...prev, node }
     })
   }, [isNodeInBoundsForMove, applyEdit, selectNode])
@@ -3896,7 +3898,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) selectNode(entry.clickNode) }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) { selectNode(entry.clickNode); setSpawnerSelectorOpen(false) } }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className={`shrink-0 ${visual.colorClassName ?? ''}`} />}
                       {visual.kind === 'text' && (
