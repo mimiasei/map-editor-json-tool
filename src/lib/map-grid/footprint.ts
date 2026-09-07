@@ -152,3 +152,39 @@ export function footprintIconBounds(cells: FootprintCell[]): FootprintBounds | n
 export function isFootprintInBounds(cells: FootprintCell[], sizeX: number, sizeZ: number): boolean {
   return cells.every((cell) => cell.x >= 0 && cell.x < sizeX && cell.z >= 0 && cell.z < sizeZ)
 }
+
+/**
+ * Clamps an anchor tile so its footprint (per `computeFootprintTiles`'s
+ * X-forward/Z-backward convention above) fits fully within `sizeX`x`sizeZ` —
+ * for a placement that MUST happen somewhere (RMG's own player city-spawner/
+ * hero-spawner, confirmed 2026-09-07 to have no bounds awareness at all: its
+ * anchor is picked purely as the nearest zone-owned tile to a relaxed zone
+ * center, with no footprint check, so a small map's ~1-tile zone-center
+ * inset can leave a 3-wide footprint no room — see generate-terrain.ts's own
+ * comment at the zoneAnchorNode/players[] site). Every other RMG placement
+ * (zone-population.ts's tryPlaceAt/tryPlace) instead just rejects a
+ * candidate tile and tries another, which isn't an option for "this
+ * player's one and only start position." Falls back to a plain single-tile
+ * clamp when the template can't be resolved or has no real footprint,
+ * matching computeFootprintTiles' own single-anchor-cell fallback.
+ */
+export function clampAnchorToFootprintBounds(
+  template: FootprintTemplate | undefined,
+  anchorX: number,
+  anchorZ: number,
+  sizeX: number,
+  sizeZ: number,
+): { x: number; z: number } {
+  const tplSizeX = template?.nodes?.length ? (template.sizeX ?? 1) : 1
+  const tplSizeZ = template?.nodes?.length ? (template.sizeZ ?? 1) : 1
+  const pivotX = template?.pivotX ?? 0
+  const pivotZ = template?.pivotZ ?? 0
+  const minX = pivotX
+  const maxX = Math.max(minX, sizeX - tplSizeX + pivotX)
+  const minZ = tplSizeZ - 1 - pivotZ
+  const maxZ = Math.max(minZ, sizeZ - 1 - pivotZ)
+  return {
+    x: Math.min(Math.max(anchorX, minX), maxX),
+    z: Math.min(Math.max(anchorZ, minZ), maxZ),
+  }
+}

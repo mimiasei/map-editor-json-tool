@@ -46,7 +46,7 @@ import {
   type BlankMapPlayer,
   type MapContainer,
 } from '@/lib/map-write'
-import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import { computeFootprintTiles, clampAnchorToFootprintBounds } from '@/lib/map-grid/footprint'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
@@ -236,11 +236,26 @@ export function generateTerrain(
     islandFloodNodes = islandResult.floodNodes
   }
 
+  // A player zone's anchor becomes its city-spawner/hero-spawner's actual
+  // placement (players[] below) AND is the single value every other RMG
+  // stage (roads, key objects — see this function's own zoneAnchorNode
+  // return) treats as "where this player's start is," so the footprint
+  // clamp below must land here, in the shared map, not in a local copy —
+  // otherwise a road/keyObjectId could still point at the old, unclamped
+  // tile while the real spawner sits up to 2 tiles away. See players[]'s
+  // own comment for why a clamp (not a reject-and-retry) is used here.
+  const spawnerTemplate = includeSpawners && playerSpawnerSid ? catalogById.get(playerSpawnerSid) : undefined
   const zoneAnchorNode = new Map<number, number>()
   for (const zone of graph.zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
     const center = centers[zone.id]
-    zoneAnchorNode.set(zone.id, tiles.length > 0 ? nearestTile(tiles, sizeX, center) : center.z * sizeX + center.x)
+    const rawNode = tiles.length > 0 ? nearestTile(tiles, sizeX, center) : center.z * sizeX + center.x
+    if (zone.kind === 'player' && includeSpawners) {
+      const { x, z } = clampAnchorToFootprintBounds(spawnerTemplate, rawNode % sizeX, Math.floor(rawNode / sizeX), sizeX, sizeZ)
+      zoneAnchorNode.set(zone.id, z * sizeX + x)
+    } else {
+      zoneAnchorNode.set(zone.id, rawNode)
+    }
   }
 
   // Sorted by `playerIndex` rather than relied on array order — `buildZoneGraph`'s
