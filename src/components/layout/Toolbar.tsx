@@ -362,7 +362,7 @@ export default function Toolbar({
   //   unified — one action for both halves, matching how the .map side no
   //   longer has its own separate save trigger).
   const handleSave = async () => {
-    await commitMapIfDirty(mapFilePath)
+    if ((await commitMapIfDirty(mapFilePath)).status === 'blocked') return // out-of-bounds object — abort the whole Save, dialog already shown
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
@@ -389,7 +389,7 @@ export default function Toolbar({
   // with no options, which only prompts the very first time (a never-saved
   // map, e.g. one just created via New Map).
   const handleExport = async () => {
-    if (!(await commitMapWithPathPrompt({ forceNewPath: true }))) return // user cancelled the .map save-location prompt — abort the whole Save As
+    if ((await commitMapWithPathPrompt({ forceNewPath: true })) !== 'saved') return // user cancelled the prompt, or the .map write was blocked (out-of-bounds object) — abort the whole Save As
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return

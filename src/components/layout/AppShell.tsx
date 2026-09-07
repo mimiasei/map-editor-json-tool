@@ -23,6 +23,7 @@ import type { RestoreResult } from '@/lib/session-handoff'
 import { UpdateBanner, RestoreBanner, ThumbnailsBanner } from '@/components/common/UpdateBanner'
 import UpdateDialog from '@/components/common/UpdateDialog'
 import UnsavedChangesDialog from '@/components/common/UnsavedChangesDialog'
+import MapBoundsErrorDialog from '@/components/common/MapBoundsErrorDialog'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -305,7 +306,7 @@ export default function AppShell() {
   // silently dropping the in-memory .map edits on the floor when no path
   // was known.
   const handleSave = useCallback(async () => {
-    if (!(await commitMapWithPathPrompt())) return // user cancelled the .map save-location prompt — abort the whole Save
+    if ((await commitMapWithPathPrompt()) !== 'saved') return // user cancelled the prompt, or the .map write was blocked (out-of-bounds object) — abort the whole Save
     if (isScenarioEmpty(
       scenarioRef.current, dialogsRef.current, localizationRef.current, translationsRef.current,
       customHeroesRef.current, customMapObjectsRef.current, customArtifactsRef.current, customBuffsRef.current,
@@ -676,6 +677,7 @@ export default function AppShell() {
         onDiscard={() => resolveExitChoice('discard')}
         onCancel={() => resolveExitChoice('cancel')}
       />
+      <MapBoundsErrorDialog />
 
       <ThumbnailExtractDialog
         open={thumbnailDialogOpen}
