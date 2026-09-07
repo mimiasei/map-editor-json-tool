@@ -95,7 +95,7 @@ export default function SelectGameTemplateDialog({ open, onOpenChange, onSelect 
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-medium">{t.name}</span>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {t.sizeX}×{t.sizeZ} · {t.playerCount} player{t.playerCount === 1 ? '' : 's'}
+                  {t.playerCount} player{t.playerCount === 1 ? '' : 's'}
                 </span>
               </div>
               {t.description && (
