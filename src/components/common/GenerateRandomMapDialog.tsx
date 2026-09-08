@@ -384,6 +384,24 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         : 'Generate'
   const footerAction = previewPhase === 'terrain' ? handleConfirmTerrain : previewPhase === 'roads' ? handleConfirmRoads : handleGenerate
 
+  const handleResetAll= () => {
+      setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
+      setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
+      setIslandsIncludePlayerZones(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
+      setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
+      setObstacleDensity(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
+      setMountainDensity(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
+      setTreasureDensity(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
+      setObjectVariety(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
+      setUsePortals(DEFAULT_TEMPLATE_OVERRIDES.usePortals)
+      setZoneJaggedness(DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
+      setZoneSpread(DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
+      setBoundaryGuardStrength(DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength)
+      setSquadDensity(DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
+      setRoadWindingAmplitude(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
+      setRoadWindingWavelength(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={advancedOpen ? 620 : 400} minWidth={360} minHeight={320} storageKey="generate-random-map">
@@ -682,7 +700,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                             <TooltipTrigger asChild>
                                 <Info className="h-3 w-3 text-muted-foreground" />
                             </TooltipTrigger>
-                            <TooltipContent>Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a placeholder.</TooltipContent>
+                            <TooltipContent>Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random type.</TooltipContent>
                         </Tooltip>
                     </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
@@ -744,13 +762,18 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         </div>
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
+            <div>
+                <Button variant="ghost" size="sm" onClick={() => handleResetAll()} disabled={generating}>
+                    Reset all to defaults
+                </Button>
+            </div>
           <div className="flex-1" />
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
-            {footerLabel}
-          </Button>
+              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
+                {footerLabel}
+              </Button>
         </div>
       </DraggableDialogContent>
 
