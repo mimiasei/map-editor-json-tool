@@ -705,6 +705,7 @@ export default function AppShell() {
         onOpenChange={setStatsOpen}
         onUndock={() => { setStatsOpen(false); handleUndock('stats') }}
         undocked={isUndocked('stats')}
+        mapGridOpen={mapGridOpen}
       />
       <DialogEditor />
       <LocalizationDialog />

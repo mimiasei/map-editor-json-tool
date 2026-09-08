@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useMapContextStore } from '@/store/useMapContextStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
@@ -10,6 +12,9 @@ import {
 import { Button } from '@/components/ui/button'
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import UndockButton from '@/components/panels/UndockButton'
+import { computeMapStats, type MapStats } from '@/lib/map-grid/map-stats'
+import type { MapContext } from '@/types/map-context'
+import type { GameCatalog } from '@/lib/catalog/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -409,6 +414,133 @@ export function StatsContent({ scenario, onNavigate, alwaysOpen, onCloseRequeste
   )
 }
 
+// ─── Map statistics content (shown instead of scenario stats while the Map
+//     Grid is open) ─────────────────────────────────────────────────────────
+
+function PctBar({ label, pct }: { label: string; pct: number }) {
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <div className="w-32 shrink-0 truncate text-xs text-right text-muted-foreground">{label}</div>
+      <div className="flex-1 flex items-center gap-2 min-w-0">
+        <div className="h-4 rounded-sm bg-primary/70" style={{ width: `${Math.max(1, pct)}%` }} />
+        <span className="text-xs tabular-nums text-muted-foreground">{pct.toFixed(1)}%</span>
+      </div>
+    </div>
+  )
+}
+
+function CountList({ rows, emptyLabel }: { rows: [string, number][]; emptyLabel: string }) {
+  if (rows.length === 0) return <p className="text-xs text-muted-foreground py-1">{emptyLabel}</p>
+  const max = Math.max(1, ...rows.map(([, n]) => n))
+  return (
+    <div className="space-y-1">
+      {rows.map(([label, count]) => (
+        <FreqBar key={label} label={label} count={count} max={max} />
+      ))}
+    </div>
+  )
+}
+
+export function MapStatsContent({ context, catalog }: { context: MapContext; catalog: GameCatalog | null }) {
+  const stats: MapStats = useMemo(() => computeMapStats(context, catalog), [context, catalog])
+
+  return (
+    <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-6">
+      <div className="grid grid-cols-4 gap-3">
+        <StatCard label="Map Size" value={stats.totalTiles} />
+        <StatCard label="Player Cities" value={stats.playerCities.length} />
+        <StatCard label="Random Cities" value={stats.randomCityCount} />
+        <StatCard label="Hero Spawners" value={stats.playerHeroSpawnerCount} />
+        <StatCard label="Squads" value={stats.squadCount} />
+        <StatCard label="River Tiles" value={stats.riverLength} />
+        <StatCard label="Chests" value={stats.chestCount} />
+        <StatCard label="Blocking Tiles %" value={Math.round(stats.blockingPct)} />
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Player Cities</h3>
+        {stats.playerCities.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No player city-spawners placed.</p>
+        ) : (
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="pb-1 text-left font-medium">Player</th>
+                <th className="pb-1 text-left font-medium">Faction</th>
+                <th className="pb-1 text-right font-medium">Hero</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.playerCities.map((c) => (
+                <tr key={c.owner} className="border-b border-border/50">
+                  <td className="py-1">Player {c.owner}</td>
+                  <td className="py-1">{c.faction}</td>
+                  <td className="py-1 text-right">{c.hasHero ? 'Yes' : 'No'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Terrain — Biomes</h3>
+        <div className="space-y-1">
+          {stats.biomePct.map((b) => <PctBar key={b.id} label={b.label} pct={b.pct} />)}
+          <PctBar label="Water" pct={stats.waterPct} />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Elevation Levels</h3>
+        <div className="space-y-1">
+          {stats.levelPct.map((l) => (
+            <PctBar key={l.level} label={l.level === -1 ? 'Lowered' : l.level === 0 ? 'Ground' : 'Heightened'} pct={l.pct} />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Roads</h3>
+        <CountList rows={stats.roadTileCounts.map((r) => [r.label, r.tiles] as [string, number])} emptyLabel="No roads painted." />
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Resources & Storage</h3>
+        <CountList rows={stats.resourceCounts} emptyLabel="No resource/storage pickups placed." />
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Mines</h3>
+        <CountList rows={stats.minesByType} emptyLabel="No mines placed." />
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Interactables by Category</h3>
+        <CountList rows={stats.interactableByCategory} emptyLabel="No interactables placed." />
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Decorations by Category</h3>
+        <CountList rows={stats.decorationByCategory} emptyLabel="No decorations placed." />
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Squads — Units</h3>
+        <CountList rows={stats.unitFrequency} emptyLabel="No squads placed." />
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Portals</h3>
+        <CountList
+          rows={stats.portalLinkCounts.map((p) => [p.kind === 'two-way' ? '2-way' : p.kind === 'one-way' ? '1-way' : 'Unlinked', p.count] as [string, number])}
+          emptyLabel="No portals placed."
+        />
+      </div>
+    </div>
+  )
+}
+
 // ─── Dialog (docked) ──────────────────────────────────────────────────────────
 
 interface Props {
@@ -418,11 +550,20 @@ interface Props {
   onUndock?: () => void
   /** True while the panel is already open in a separate window. */
   undocked?: boolean
+  /** True while the Map Grid is open (AppShell's own `mapGridOpen`) —
+   *  swaps this dialog's content to real .map document statistics instead
+   *  of the scenario-JSON quest/trigger stats, since the Map Grid replaces
+   *  the whole editor view and the scenario side isn't what's being
+   *  worked on at that point. */
+  mapGridOpen?: boolean
 }
 
-export default function StatsDialog({ open, onOpenChange, onUndock, undocked }: Props) {
+export default function StatsDialog({ open, onOpenChange, onUndock, undocked, mapGridOpen }: Props) {
   const scenario    = useScenarioStore((s) => s.scenario)
   const setSelection = useScenarioStore((s) => s.setSelection)
+  const mapContext  = useMapContextStore((s) => s.context)
+  const catalog     = useCatalogStore((s) => s.catalog)
+  const showMapStats = !!mapGridOpen && !!mapContext
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -438,7 +579,7 @@ export default function StatsDialog({ open, onOpenChange, onUndock, undocked }: 
         {/* StatsContent has no header of its own, so the title bar is here and
             doubles as the drag handle. pr-10 clears the close button. */}
         <DraggableDialogDragHandle className="flex items-center px-6 py-3 pr-10 border-b border-border shrink-0">
-          <DialogTitle className="text-sm font-semibold">Scenario Statistics</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">{showMapStats ? 'Map Statistics' : 'Scenario Statistics'}</DialogTitle>
 
           {/* UndockButton — stop propagation so clicking it doesn't start a drag */}
           {onUndock && (
@@ -451,11 +592,15 @@ export default function StatsDialog({ open, onOpenChange, onUndock, undocked }: 
           )}
         </DraggableDialogDragHandle>
 
-        <StatsContent
-          scenario={scenario}
-          onNavigate={(type, path) => setSelection(type, path)}
-          onCloseRequested={() => onOpenChange(false)}
-        />
+        {showMapStats && mapContext ? (
+          <MapStatsContent context={mapContext} catalog={catalog} />
+        ) : (
+          <StatsContent
+            scenario={scenario}
+            onNavigate={(type, path) => setSelection(type, path)}
+            onCloseRequested={() => onOpenChange(false)}
+          />
+        )}
       </DraggableDialogContent>
     </Dialog>
   )
