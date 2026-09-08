@@ -729,7 +729,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const changes = computeShapeChanges(affected, survivingSet, sizeX, sizeZ)
       applyEdit({ kind: 'paintRiver', changes, deletions: erasedRiverNodes }, 'erase river')
     }
-  }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, applyEdit])
+      // Also clears any road tile under the brush — same reuse-the-tool
+      // convention as rivers above.
+      const erasedRoadNodes = nodes.filter((n) => (roadsMap[n] ?? 0) !== 0)
+      if (erasedRoadNodes.length > 0) {
+          applyEdit({ kind: 'paintRoad', changes: erasedRoadNodes.map((n) => ({ node: n, roadId: 0 })) }, 'erase road')
+      }
+  }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, roadsMap, applyEdit])
 
   // ── Clear All — Eraser's whole-map sibling: wipes absolutely everything
   // (every object/squad/marker/river node, including player-start city-
