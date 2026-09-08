@@ -228,24 +228,20 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     const freeTiles = tiles.filter((node) => !excludedNodes.has(node))
     if (freeTiles.length === 0) continue
     let candidateTiles = freeTiles.filter(() => rng() < zoneDensity)
-    // Guaranteed floor — a real user report: islands mode at a high player
-    // count can leave a zone's own free-tile pool small enough (a thin
-    // Penrose slice further shrunk by an island's own interior-only growth,
-    // zone-islands.ts's own computeIslandZones) that the purely
-    // probabilistic roll above has a real, non-negligible chance of
-    // rejecting every single tile — leaving that zone with literally zero
-    // decoration, not a deliberate "sparse zone" outcome. Falls back to up
-    // to 3 tiles picked directly from freeTiles (never more than exist)
-    // whenever the roll above produced nothing, so a zone with any free
-    // tiles at all always gets at least one real placement attempt.
-    if (candidateTiles.length === 0) {
-      const pool = [...freeTiles]
-      const floorCount = Math.min(3, pool.length)
-      candidateTiles = []
-      for (let i = 0; i < floorCount; i++) {
-        candidateTiles.push(pool.splice(Math.floor(rng() * pool.length), 1)[0])
-      }
-    }
+    // Guaranteed floor — a real user report: islands mode (especially with
+    // player-start islands enabled) can leave a zone's own free-tile pool
+    // small enough — a thin Penrose slice further shrunk by an island's
+    // own interior-only growth (zone-islands.ts's computeIslandZones), on
+    // top of a player zone's own city/mine/guard footprints already eating
+    // much of what's left — that the purely probabilistic roll above has a
+    // real chance of rejecting every tile, leaving that zone with literally
+    // zero decoration. Falls back to the FULL free-tile pool (not just a
+    // small fixed count) so downstream's existing tryPlaceAt collision
+    // check gets a real chance to find whatever room is actually left,
+    // rather than risking a small fixed sample landing entirely on
+    // already-blocked tiles (a city-spawner/mine footprint) and still
+    // placing nothing.
+    if (candidateTiles.length === 0) candidateTiles = [...freeTiles]
 
     // A small slice of this zone's own already-density-rolled candidates
     // seeds clusters (this file's own header comment has the real-map
