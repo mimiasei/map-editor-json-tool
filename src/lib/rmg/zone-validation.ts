@@ -35,11 +35,27 @@ import type { ConcreteSquadPlacement } from './zone-population'
 
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
-function floodFillReachable(seeds: number[], blocked: Set<number>, sizeX: number, sizeZ: number): Set<number> {
+/** `portalNodeAdjacency` (node -> its linked portal's node) treats a
+ *  linked portal pair as a direct edge — required because an island is
+ *  reached ONLY by portal, never a walkable path (this codebase's own
+ *  standing rule), so a pure orthogonal-neighbor flood-fill would flag
+ *  EVERY island zone as sealed regardless of whether its portal actually
+ *  works, real bug confirmed 2026-09-08: every island generation logged
+ *  4-6 of 12 zones as sealed, at a rate matching "every real island zone",
+ *  and the repair that followed then stripped those zones' own decorative
+ *  placements for nothing (removing an obstacle can't open a portal-only
+ *  route) — a real, non-decorative-object false positive, not the
+ *  degenerate case its own doc comment describes. */
+function floodFillReachable(seeds: number[], blocked: Set<number>, sizeX: number, sizeZ: number, portalNodeAdjacency: Map<number, number>): Set<number> {
   const visited = new Set<number>(seeds)
   const queue = [...seeds]
   while (queue.length > 0) {
     const node = queue.pop() as number
+    const portalPartner = portalNodeAdjacency.get(node)
+    if (portalPartner !== undefined && !visited.has(portalPartner) && !blocked.has(portalPartner)) {
+      visited.add(portalPartner)
+      queue.push(portalPartner)
+    }
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
     for (const [dx, dz] of NEIGHBOR_OFFSETS) {
@@ -117,6 +133,14 @@ export interface SealedZoneRepairOptions {
   catalogById: Map<string, CatalogMapObject>
   levelsMap: number[]
   waterMap: number[]
+  /** tempId -> linked portal's tempId (generate-random-map.ts's own
+   *  `portalAdjacency`, the exact same map `applyAccessibilityPass`
+   *  already consumes) — an island is reached ONLY by portal, so this
+   *  reachability check needs the same portal-hop awareness or it flags
+   *  every island zone as sealed. Optional/defaults to empty so a caller
+   *  with no portals (or one that hasn't been updated) sees no behavior
+   *  change. */
+  portalAdjacency?: Map<number, number>
 }
 
 export interface SealedZoneRepairResult {
@@ -144,7 +168,24 @@ export interface SealedZoneRepairResult {
  * degenerate case this guards without assuming can't happen).
  */
 export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneRepairResult {
-  const { sizeX, sizeZ, zoneIds, zoneIdByNode, objectGroups, decorativePlacements, spawnerSid, catalog, catalogById, levelsMap, waterMap } = options
+  const { sizeX, sizeZ, zoneIds, zoneIdByNode, objectGroups, decorativePlacements, spawnerSid, catalog, catalogById, levelsMap, waterMap, portalAdjacency } = options
+
+  // Resolve tempId-based portalAdjacency to node-based once up front —
+  // portals themselves are never in `decorativePlacements` (so
+  // `removeFromObjectGroups` never removes them across rounds below),
+  // making this stable for the whole repair.
+  const portalNodeAdjacency = new Map<number, number>()
+  if (portalAdjacency && portalAdjacency.size > 0) {
+    const idToNode = new Map<number, number>()
+    for (const group of objectGroups.values()) {
+      for (let i = 0; i < group.ids.length; i++) idToNode.set(group.ids[i], group.nodes[i])
+    }
+    for (const [fromId, toId] of portalAdjacency) {
+      const fromNode = idToNode.get(fromId)
+      const toNode = idToNode.get(toId)
+      if (fromNode !== undefined && toNode !== undefined) portalNodeAdjacency.set(fromNode, toNode)
+    }
+  }
 
   const computeReachable = (): Set<number> => {
     const placed = buildFlatPlaced(objectGroups, sizeX)
@@ -164,7 +205,7 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
         }
       }
     }
-    return floodFillReachable(seeds, blocked, sizeX, sizeZ)
+    return floodFillReachable(seeds, blocked, sizeX, sizeZ, portalNodeAdjacency)
   }
 
   const sealedNow = (): Set<number> => {

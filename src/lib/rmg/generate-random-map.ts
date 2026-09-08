@@ -857,6 +857,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     decorativePlacements: [...obstaclePlacements, ...boundaryResult.wallPlacements],
     spawnerSid: playerSpawnerSid,
     catalog, catalogById, levelsMap: levelsMapFinal, waterMap: waterMapFinal,
+    portalAdjacency,
   })
   if (sealedResult.sealedZoneIds.length > 0) {
     logWarn(`Random map generation: ${sealedResult.sealedZoneIds.length} zone(s) had no reachable opening at all — repaired by removing bordering decorative obstacles`)
