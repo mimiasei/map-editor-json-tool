@@ -31,7 +31,8 @@ export interface MapStats {
   playerCities: PlayerCityStat[]
   randomCityCount: number
   playerHeroSpawnerCount: number
-  squadCount: number
+  randomSquadCount: number
+  unitSquadCount: number
   unitFrequency: [string, number][]
   minesByType: [string, number][]
   interactableByCategory: [string, number][]
@@ -51,6 +52,24 @@ export interface MapStats {
  *  breakdown — the same three real, data-backed buckets the object browser
  *  already filters by (environments/animals/fxs), not an invented split. */
 const DECORATION_CATEGORIES = ['environments', 'animals', 'fxs'] as const
+const BIOMES = ['death', 'snow', 'desert', 'autumn', 'dirt']
+
+function classifyDecoration(sid: string): string {
+    if (sid.startsWith('mountain_')) return 'Mountains'
+    const trees = ['tree_', 'pinetree', 'palm', 'cactus']
+    if (trees.some((t) => sid.startsWith(t))) return 'Trees'
+    const rocks = ['rock_', 'stone_', '_stones_']
+    if (rocks.some((r) => sid.includes(r))) return 'Rocks'
+    if (sid.startsWith('pool_')) return 'Pools'
+    if (sid.startsWith('campaign_')) return 'Campaign related'
+    const walkables = ['flowers_', 'mushrooms_', 'grass_1', 'grass_2',
+        ...BIOMES.map((b) => 'grass_' + b + '_1'),
+        ...BIOMES.map((b) => 'grass_' + b + '_2'),
+    ]
+    if (walkables.some((w) => sid.startsWith(w))) return 'Walkable'
+    if (sid.includes('_hill_')) return 'Hills'
+    return 'Other decorations'
+}
 
 function pct(count: number, total: number): number {
   return total > 0 ? (count / total) * 100 : 0
@@ -76,9 +95,11 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
   const playerHeroSpawnerCount = placedObjects.filter((o) => o.spawnerInfo?.spawnPointType === 1).length
 
   // ── Squads / units ───────────────────────────────────────────────────────
-  const squads = placedObjects.filter((o) => o.type === 2)
+  // const squads = placedObjects.filter((o) => o.type === 2)
+  const concreteSquads = placedObjects.filter((o) => o.type === 2)
+  const randomSquads = placedObjects.filter((o) => o.type === 0 && o.sid === 'random-squad')
   const unitFreq = new Map<string, number>()
-  for (const s of squads) {
+  for (const s of concreteSquads) {
     if (!s.firstUnitSid) continue
     unitFreq.set(s.firstUnitSid, (unitFreq.get(s.firstUnitSid) ?? 0) + 1)
   }
@@ -97,9 +118,10 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
       const label = INTERACTABLE_SUBCATEGORY_LABELS[sub]
       interactableByCategory.set(label, (interactableByCategory.get(label) ?? 0) + 1)
     }
-    if ((DECORATION_CATEGORIES as readonly string[]).includes(catalogObj.category)) {
-      decorationByCategory.set(catalogObj.category, (decorationByCategory.get(catalogObj.category) ?? 0) + 1)
-    }
+      if ((DECORATION_CATEGORIES as readonly string[]).includes(catalogObj.category)) {
+          const sub = classifyDecoration(o.sid)
+          decorationByCategory.set(sub, (decorationByCategory.get(sub) ?? 0) + 1)
+      }
   }
 
   // ── Terrain: biomes / water / levels ─────────────────────────────────────
@@ -135,7 +157,6 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     if ((RESOURCE_SIDS as readonly string[]).includes(o.sid) || (STORAGE_SIDS as readonly string[]).includes(o.sid)) {
       resourceCounts.set(o.sid, (resourceCounts.get(o.sid) ?? 0) + 1)
     }
-    if (o.sid === 'storage_chest' || o.sid.includes('chest')) chestCount++
   }
 
   // ── Portals ───────────────────────────────────────────────────────────────
@@ -154,22 +175,27 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     playerCities,
     randomCityCount,
     playerHeroSpawnerCount,
-    squadCount: squads.length,
-    unitFrequency: [...unitFreq.entries()].sort((a, b) => b[1] - a[1]),
-    minesByType: [...minesByType.entries()].sort((a, b) => b[1] - a[1]),
+    randomSquadCount: randomSquads.length,
+    unitSquadCount: concreteSquads.length,
+    unitFrequency: [...unitFreq.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([sid, n]) => [catalog?.creatures.find((c) => c.id === sid)?.name ?? sid, n] as [string, number]),
+    minesByType: [...minesByType.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),
     interactableByCategory: INTERACTABLE_SUBCATEGORY_ORDER
       .map((s) => INTERACTABLE_SUBCATEGORY_LABELS[s])
       .filter((label) => (interactableByCategory.get(label) ?? 0) > 0)
       .map((label) => [label, interactableByCategory.get(label) ?? 0] as [string, number]),
-    decorationByCategory: DECORATION_CATEGORIES
-      .filter((c) => (decorationByCategory.get(c) ?? 0) > 0)
-      .map((c) => [c, decorationByCategory.get(c) ?? 0] as [string, number]),
+    decorationByCategory: [...decorationByCategory.entries()].sort((a, b) => b[1] - a[1]),
     biomePct,
     waterPct: pct(waterTiles, totalTiles),
     levelPct,
     roadTileCounts,
     riverLength: riverNodes.size,
-    resourceCounts: [...resourceCounts.entries()].sort((a, b) => b[1] - a[1]),
+    resourceCounts: [...resourceCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([sid, n]) => [catalogById.get(sid)?.name ?? sid, n] as [string, number]),
     chestCount,
     portalLinkCounts: [...portalKindCounts.entries()].map(([kind, count]) => ({ kind, count })),
     blockingPct,

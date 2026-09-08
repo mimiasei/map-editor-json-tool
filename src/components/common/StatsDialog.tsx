@@ -447,13 +447,13 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-6">
       <div className="grid grid-cols-4 gap-3">
-        <StatCard label="Map Size" value={stats.totalTiles} />
+        <StatCard label="Map Size Tiles" value={stats.totalTiles} />
         <StatCard label="Player Cities" value={stats.playerCities.length} />
         <StatCard label="Random Cities" value={stats.randomCityCount} />
         <StatCard label="Hero Spawners" value={stats.playerHeroSpawnerCount} />
-        <StatCard label="Squads" value={stats.squadCount} />
+        <StatCard label="Random Squads" value={stats.randomSquadCount} />
+        <StatCard label="Unit Squads" value={stats.unitSquadCount} />
         <StatCard label="River Tiles" value={stats.riverLength} />
-        <StatCard label="Chests" value={stats.chestCount} />
         <StatCard label="Blocking Tiles %" value={Math.round(stats.blockingPct)} />
       </div>
 
@@ -523,11 +523,6 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
       <div>
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Decorations by Category</h3>
         <CountList rows={stats.decorationByCategory} emptyLabel="No decorations placed." />
-      </div>
-
-      <div>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Squads — Units</h3>
-        <CountList rows={stats.unitFrequency} emptyLabel="No squads placed." />
       </div>
 
       <div>

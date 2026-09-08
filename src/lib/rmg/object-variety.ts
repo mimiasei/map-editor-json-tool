@@ -27,7 +27,7 @@ export const STORAGE_SIDS = ['storage_gold', 'storage_wood', 'storage_ore', 'sto
  *  overwhelmingly `0` (the majority pattern across all three analyzed maps,
  *  meaning "use the object's own built-in default amount"), so that's the
  *  safe default `addObjectInstances` backfills. */
-export const RESOURCE_SIDS = ['resource_gold', 'resource_wood', 'resource_ore', 'resource_mercury', 'resource_crystals', 'resource_gemstones', 'resource_dust']
+export const RESOURCE_SIDS = ['resource_gold', 'resource_wood', 'resource_ore', 'resource_mercury', 'resource_crystals', 'resource_gemstones', 'resource_dust', 'chest']
 
 /** Every real artifact pickup sid in the loaded catalog, excluding the
  *  handful of "Shadow of Death"-prefixed items confirmed (via a real
