@@ -791,6 +791,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
     zoneDistances, catalogById, mapObjects: catalog.mapObjects,
     catalog, objectVariety, mountainDensity, strength: boundaryGuardStrength, state, rng,
+    islandZoneIds,
   })
 
   // Obstacle scattering — fills whatever each zone has left over, sharing

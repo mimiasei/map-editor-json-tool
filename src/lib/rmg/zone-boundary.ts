@@ -186,6 +186,26 @@ export interface FortifyZoneBoundariesOptions {
   strength: BoundaryGuardStrength
   state: PlacementState
   rng: () => number
+  /** Zone ids that became real islands (`islandLandmassByZone`'s own keys
+   *  in generate-random-map.ts) — these zones' own boundary tiles are
+   *  skipped entirely by the wall-placement loop below. Real bug confirmed
+   *  2026-09-08: `zoneIdByNode` still reports an island zone's ORIGINAL,
+   *  pre-shrink Voronoi boundary against its neighbors (only `tilesByZone`/
+   *  `islandLandmassByZone` reflect the shrunk landmass — see generate-
+   *  terrain.ts's own comment on this), so this pass was walling a
+   *  boundary that's now mostly flooded moat, with no concept of "this
+   *  zone is reached by portal, not a walkable gate." A wall placed near
+   *  the portal's own tile (or simply enclosing the whole shrunk landmass
+   *  with no gate, since gates are only ever cut for road/river crossings)
+   *  could fully seal an island in — and the accessibility pass that runs
+   *  afterward doesn't reopen it, it NUDGES the trapped portal object out
+   *  to the nearest reachable tile instead, relocating it into a
+   *  completely different, unrelated zone and leaving the island with no
+   *  portal at all. An island's real security already comes from being
+   *  surrounded by water — walling its notional leftover boundary serves
+   *  no purpose and actively breaks its only access. Defaults to empty so
+   *  a non-islands caller sees no behavior change. */
+  islandZoneIds?: Set<number>
 }
 
 export interface FortifyZoneBoundariesResult {
@@ -214,6 +234,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   const {
     sizeX, sizeZ, zones, zoneIdByNode, zoneBiome, roadPaths, zoneDistances,
     catalogById, mapObjects, catalog, objectVariety, mountainDensity, strength, state, rng,
+    islandZoneIds,
   } = options
 
   const playerZoneIds = zones.filter((z) => z.kind === 'player').map((z) => z.id)
@@ -305,6 +326,14 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
     if (gateBufferAll.has(node)) continue
     if (state.blocked.has(node) || state.usedAnchors.has(node)) continue
     const nodeZoneId = zoneIdByNode[node]
+    // An island zone's real security already comes from being surrounded
+    // by water, and it's reached ONLY by portal — walling its own
+    // (mostly-flooded, post-shrink) notional Voronoi boundary risks
+    // sealing that portal in with no gate (gates are only ever cut for
+    // road/river crossings), which the later accessibility pass then
+    // "fixes" by relocating the trapped portal into an unrelated zone
+    // entirely — see this option's own doc comment for the full story.
+    if (islandZoneIds?.has(nodeZoneId)) continue
     if ((zoneTileCounts.get(nodeZoneId) ?? 0) < MIN_ZONE_SIZE_TO_WALL) continue
     const biome = zoneBiome.get(nodeZoneId) ?? ZONE_BIOMES[0]
     const pool = pools[biome]

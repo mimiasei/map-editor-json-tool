@@ -179,10 +179,34 @@ export function applyAccessibilityPass(
     return flat
   }
 
+  // Portal templates (portal_1..portal_5, Core/DB/map/objects/
+  // 4_interactables.json) all place their SOLID footprint cell (value===1,
+  // permanently blocked/unwalkable) right at the anchor, with the real
+  // walkable "step here to use it" cell (value===2) OFFSET from it —
+  // confirmed real bug 2026-09-08: using the raw anchor node (`idToNode`)
+  // for the hop meant a portal's own node could never become `visited`
+  // via normal walking (it's solid), so the hop condition below (which
+  // only fires for an already-visited node) silently never triggered for
+  // ANY portal — every island's reachability via its own portal was
+  // effectively dead code. The nudge phase then "fixed" the resulting
+  // unreachable portal targets by relocating them to the nearest already-
+  // reachable tile, moving them clean off their intended island into an
+  // unrelated zone. Resolves to the template's own real access cell
+  // instead, matching zone-validation.ts's own spawner-seeding convention.
+  const accessNodeForId = (id: number): number | undefined => {
+    const node = idToNode.get(id)
+    if (node === undefined) return undefined
+    const template = catalogById.get(idToSid.get(id) ?? '')
+    const cells = computeFootprintTiles(template, node % atlasWidth, Math.floor(node / atlasWidth))
+    const access = cells.find((c) => c.value === 2)
+    if (!access) return node
+    return nodeAt(access.x, access.z, atlasWidth, atlasHeight) ?? node
+  }
+
   const portalNodeAdjacency = new Map<number, number[]>()
   for (const [fromId, toId] of portalAdjacencyByObjectId) {
-    const fromNode = idToNode.get(fromId)
-    const toNode = idToNode.get(toId)
+    const fromNode = accessNodeForId(fromId)
+    const toNode = accessNodeForId(toId)
     if (fromNode === undefined || toNode === undefined) continue
     const list = portalNodeAdjacency.get(fromNode)
     if (list) list.push(toNode)

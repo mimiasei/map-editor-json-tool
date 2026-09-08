@@ -173,16 +173,34 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
   // Resolve tempId-based portalAdjacency to node-based once up front —
   // portals themselves are never in `decorativePlacements` (so
   // `removeFromObjectGroups` never removes them across rounds below),
-  // making this stable for the whole repair.
+  // making this stable for the whole repair. Resolves to each portal's own
+  // WALKABLE ACCESS cell (value===2), not its raw anchor node — every real
+  // portal_1..portal_5 template's anchor is itself a SOLID, permanently-
+  // blocked cell (confirmed real bug 2026-09-08, same root cause fixed in
+  // accessibility-pass.ts's own portalNodeAdjacency — see that file's doc
+  // comment for the full story), so using the anchor here made this same
+  // "portal-aware" fix a no-op in practice: the anchor node can never
+  // become `visited`, so the hop condition in `floodFillReachable` never
+  // fires for it.
   const portalNodeAdjacency = new Map<number, number>()
   if (portalAdjacency && portalAdjacency.size > 0) {
     const idToNode = new Map<number, number>()
-    for (const group of objectGroups.values()) {
-      for (let i = 0; i < group.ids.length; i++) idToNode.set(group.ids[i], group.nodes[i])
+    const idToSid = new Map<number, string>()
+    for (const [sid, group] of objectGroups) {
+      for (let i = 0; i < group.ids.length; i++) { idToNode.set(group.ids[i], group.nodes[i]); idToSid.set(group.ids[i], sid) }
+    }
+    const accessNodeFor = (id: number): number | undefined => {
+      const node = idToNode.get(id)
+      if (node === undefined) return undefined
+      const template = catalogById.get(idToSid.get(id) ?? '')
+      const cells = computeFootprintTiles(template, node % sizeX, Math.floor(node / sizeX))
+      const access = cells.find((c) => c.value === 2)
+      if (!access || access.x < 0 || access.x >= sizeX || access.z < 0 || access.z >= sizeZ) return node
+      return access.z * sizeX + access.x
     }
     for (const [fromId, toId] of portalAdjacency) {
-      const fromNode = idToNode.get(fromId)
-      const toNode = idToNode.get(toId)
+      const fromNode = accessNodeFor(fromId)
+      const toNode = accessNodeFor(toId)
       if (fromNode !== undefined && toNode !== undefined) portalNodeAdjacency.set(fromNode, toNode)
     }
   }
