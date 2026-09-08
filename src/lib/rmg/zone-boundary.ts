@@ -58,6 +58,7 @@ import {
   type ZonePlacement,
 } from './zone-population'
 import type { ZoneSpec } from './zone-graph'
+//import {CLUSTER_MOUNTAIN_HEAVY_CHANCE} from "@/lib/rmg/zone-decoration.ts";
 
 /** Every tile whose immediate (4-neighbor) cell belongs to a DIFFERENT zone
  *  — both sides of every zone-to-zone border on the whole map, regardless
@@ -181,6 +182,7 @@ export interface FortifyZoneBoundariesOptions {
    *  `zone-population.ts`'s own `placeGuard`. No effect if `catalog` is
    *  omitted. */
   objectVariety?: number
+  mountainDensity: number
   strength: BoundaryGuardStrength
   state: PlacementState
   rng: () => number
@@ -211,7 +213,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
 
   const {
     sizeX, sizeZ, zones, zoneIdByNode, zoneBiome, roadPaths, zoneDistances,
-    catalogById, mapObjects, catalog, objectVariety, strength, state, rng,
+    catalogById, mapObjects, catalog, objectVariety, mountainDensity, strength, state, rng,
   } = options
 
   const playerZoneIds = zones.filter((z) => z.kind === 'player').map((z) => z.id)
@@ -306,7 +308,10 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
     if ((zoneTileCounts.get(nodeZoneId) ?? 0) < MIN_ZONE_SIZE_TO_WALL) continue
     const biome = zoneBiome.get(nodeZoneId) ?? ZONE_BIOMES[0]
     const pool = pools[biome]
-    const candidates = pool.obstacles.length > 0 ? pool.obstacles : pool.mountains
+    //const candidates = pool.obstacles.length > 0 ? pool.obstacles : pool.mountains
+    const mountainHeavy = pool.mountains.length > 0 && rng() < mountainDensity
+    const candidates = mountainHeavy ? pool.mountains : pool.obstacles.length > 0 ? pool.obstacles : pool.mountains;
+
     if (candidates.length === 0) continue
     const sid = candidates[Math.floor(rng() * candidates.length)]
     if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {

@@ -93,6 +93,8 @@ export interface GenerateRandomMapOptions {
   islandLandRatio?: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
   obstacleDensity?: number
+  /** 0-1 fraction of the chance to have mountains in the zone boundary walls. */
+  mountainDensity?: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts). Defaults to 1. */
   treasureDensity?: number
   /** 0-1 chance a given treasure/guard slot places a real, concrete object
@@ -206,7 +208,7 @@ export interface GenerateRandomMapResult {
 }
 
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): GenerateRandomMapResult {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -788,7 +790,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     sizeX, sizeZ, zones: graph.zones, zoneIdByNode, zoneBiome,
     roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
     zoneDistances, catalogById, mapObjects: catalog.mapObjects,
-    catalog, objectVariety, strength: boundaryGuardStrength, state, rng,
+    catalog, objectVariety, mountainDensity, strength: boundaryGuardStrength, state, rng,
   })
 
   // Obstacle scattering — fills whatever each zone has left over, sharing
