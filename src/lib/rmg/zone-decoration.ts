@@ -49,11 +49,11 @@ const CLUSTER_RADIUS = 3
  *  stand at its base, or vice versa). Zero real mountain entries for a
  *  biome (mirrors `sampleFuzzyObstacles`' own `mountainChance` doc comment)
  *  makes every cluster obstacle-heavy regardless of this weight. */
-const CLUSTER_MOUNTAIN_HEAVY_CHANCE = 0.4
+export const CLUSTER_MOUNTAIN_HEAVY_CHANCE = 0.4
 /** Within one cluster, the split between its own dominant pool, an accent
  *  drawn from the OTHER family (the real "mountain_green_big + pinetree" /
  *  "grass_desert + palms" cross-family pattern), and plain clutter. */
-const CLUSTER_PRIMARY_CHANCE = 0.7
+export const CLUSTER_PRIMARY_CHANCE = 0.7
 const CLUSTER_ACCENT_CHANCE = 0.2
 
 function shuffledClusterOffsets(radius: number, rng: () => number): [number, number][] {
@@ -225,8 +225,27 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     // density equivalent, softer than a full skip since some scenery still
     // reads as a lived-in start.
     const zoneDensity = densityByZone?.get(zone.id) ?? (zone.kind === 'player' ? density * 0.6 : density)
-    const candidateTiles = tiles.filter((node) => !excludedNodes.has(node) && rng() < zoneDensity)
-    if (candidateTiles.length === 0) continue
+    const freeTiles = tiles.filter((node) => !excludedNodes.has(node))
+    if (freeTiles.length === 0) continue
+    let candidateTiles = freeTiles.filter(() => rng() < zoneDensity)
+    // Guaranteed floor — a real user report: islands mode at a high player
+    // count can leave a zone's own free-tile pool small enough (a thin
+    // Penrose slice further shrunk by an island's own interior-only growth,
+    // zone-islands.ts's own computeIslandZones) that the purely
+    // probabilistic roll above has a real, non-negligible chance of
+    // rejecting every single tile — leaving that zone with literally zero
+    // decoration, not a deliberate "sparse zone" outcome. Falls back to up
+    // to 3 tiles picked directly from freeTiles (never more than exist)
+    // whenever the roll above produced nothing, so a zone with any free
+    // tiles at all always gets at least one real placement attempt.
+    if (candidateTiles.length === 0) {
+      const pool = [...freeTiles]
+      const floorCount = Math.min(3, pool.length)
+      candidateTiles = []
+      for (let i = 0; i < floorCount; i++) {
+        candidateTiles.push(pool.splice(Math.floor(rng() * pool.length), 1)[0])
+      }
+    }
 
     // A small slice of this zone's own already-density-rolled candidates
     // seeds clusters (this file's own header comment has the real-map
