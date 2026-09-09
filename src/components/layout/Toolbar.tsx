@@ -94,6 +94,7 @@ interface ToolbarProps {
   onDialogBrowserOpen?: () => void
   onGameDatabaseOpen?: () => void
   onMapGridOpen?: () => void
+  mapGridOpen?: boolean
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -115,6 +116,7 @@ export default function Toolbar({
   onDialogBrowserOpen,
   onGameDatabaseOpen,
   onMapGridOpen,
+  mapGridOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -737,7 +739,7 @@ export default function Toolbar({
                 <BarChart2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Scenario Statistics</TooltipContent>
+            <TooltipContent>{mapGridOpen ? 'Map' : 'Scenario'} Statistics</TooltipContent>
           </Tooltip>
 
           {/* Needs a loaded .map for anything to show (issue #122) */}

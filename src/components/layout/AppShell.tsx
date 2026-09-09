@@ -642,6 +642,7 @@ export default function AppShell() {
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
         onOpen={() => window.dispatchEvent(new Event('oe:open'))}
+        mapGridOpen={mapGridOpen}
       />
 
       {/* Non-blocking notices under the toolbar */}
