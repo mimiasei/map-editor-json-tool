@@ -29,7 +29,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
-import { collectArtifactSids, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
+import { collectArtifactSids, pickInteractableSid, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
 
@@ -409,7 +409,17 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, preferredSids?: Set<string>): number => {
     if (catalog && rng() < objectVariety) {
       const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid) && !isAtContentCap(sid))
-      if (availableArtifacts.length > 0 && rng() < 0.5) {
+      // Three-way split for what a "concrete" treasure slot becomes: artifact
+      // / storage-or-resource / interactable building. The interactable
+      // branch is new (issue #210 follow-up — user-reported "RMG never
+      // places anything but dwellings/mines/storage piles"; before this,
+      // nothing in this function ever sampled `object-variety.ts`'s
+      // `pickInteractableSid` pool at all). Weights (0.3/0.45/0.25)
+      // approximate real RMG templates' own content-pool mixing ratios
+      // (`pickInteractableSid`'s own doc comment has the real-data source),
+      // well above the previous 0% for interactables.
+      const branchRoll = rng()
+      if (availableArtifacts.length > 0 && branchRoll < 0.3) {
         // Bias toward a real per-zone `mandatoryContent` sid when this
         // zone has one available (issue #210 second follow-up milestone) —
         // real, template-authored "this zone should have this" data,
@@ -424,14 +434,23 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
         place(sid, tiles)
         return RARITY_AVERAGE_COST
       }
-      const concretePool = (rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS).filter((sid) => !isAtContentCap(sid))
-      if (concretePool.length > 0) {
-        const preferredConcrete = preferredSids ? concretePool.filter((sid) => preferredSids.has(sid)) : []
-        const pool = preferredConcrete.length > 0 && rng() < 0.7 ? preferredConcrete : concretePool
-        const sid = pool[Math.floor(rng() * pool.length)]
-        recordContentPlacement(sid)
-        place(sid, tiles)
-        return RARITY_AVERAGE_COST
+      if (branchRoll < 0.75) {
+        const concretePool = (rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS).filter((sid) => !isAtContentCap(sid))
+        if (concretePool.length > 0) {
+          const preferredConcrete = preferredSids ? concretePool.filter((sid) => preferredSids.has(sid)) : []
+          const pool = preferredConcrete.length > 0 && rng() < 0.7 ? preferredConcrete : concretePool
+          const sid = pool[Math.floor(rng() * pool.length)]
+          recordContentPlacement(sid)
+          place(sid, tiles)
+          return RARITY_AVERAGE_COST
+        }
+      } else {
+        const sid = pickInteractableSid(rng, isAtContentCap)
+        if (sid) {
+          recordContentPlacement(sid)
+          place(sid, tiles)
+          return RARITY_AVERAGE_COST
+        }
       }
     }
     const { rarity, cost } = pickRarity()

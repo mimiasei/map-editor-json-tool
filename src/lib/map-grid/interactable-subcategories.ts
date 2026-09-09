@@ -54,7 +54,7 @@ export const INTERACTABLE_SUBCATEGORY_LABELS: Record<InteractableSubcategory, st
   other: 'Other',
 }
 
-const ADVENTURE_SITE_SIDS = new Set([
+export const ADVENTURE_SITE_SIDS = new Set([
     'abandoned_mansion', 'abnormal_structure', 'alvars_eye', 'overgrown_grave', 'black_tower',
     'boreal_call', 'the_gorge', 'circle_of_life', 'jousting_range', 'cursed_old_house',
     'dragon_utopia', 'orb_observatory', 'infernal_cirque', 'iridescent_abbey', 'knowledge_garden',
@@ -66,7 +66,7 @@ const ADVENTURE_SITE_SIDS = new Set([
     'university', 'wise_owl',
 ])
 
-const TREASURE_AWARDS_SIDS = new Set([
+export const TREASURE_AWARDS_SIDS = new Set([
     'peasant_cart', 'mystical_tower', 'beer_fountain', 'camp_fire', 'crow_nest',
     'crystal_trail', 'huntsmans_camp', 'abandoned_corpse', 'fountain',
     'gingerbread_house', 'goblin_cache', 'gardener',
@@ -75,11 +75,11 @@ const TREASURE_AWARDS_SIDS = new Set([
     'wind_rose', 'windmill', 'flattering_mirror',
 ])
 
-const MARKETS_TRADE_SIDS = new Set([
+export const MARKETS_TRADE_SIDS = new Set([
     'alchemy_lab', 'forge', 'market',
 ])
 
-const SPECIAL_SIDS = new Set([
+export const SPECIAL_SIDS = new Set([
     'gladiator_arena', 'gladiator_spire', 'arena', 'remote_foothold', 'abandoned_outpost',
     'tree_of_abundance', 'celestial_sphere', 'chimerologist', 'eternal_dragon', 'prison',
     'insaras_eye', 'mirage', 'tavern', 'heros_crypt',

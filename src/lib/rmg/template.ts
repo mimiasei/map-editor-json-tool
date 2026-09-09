@@ -13,6 +13,7 @@ import { createSeededRng } from './seeded-rng'
 import type { GenerateRandomMapOptions } from './generate-random-map'
 import type { BoundaryGuardStrength } from './zone-boundary'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import { INTERACTABLE_COMMON_SIDS, INTERACTABLE_UNCOMMON_SIDS, INTERACTABLE_RARE_SIDS } from './object-variety'
 
 export const RMG_TEMPLATE_VERSION = 1
 
@@ -117,7 +118,9 @@ export interface RandomMapTemplate {
    *  sid. Applied as a single whole-map total (the real format applies it
    *  per named zone role — `spawn`/`treasure`/etc. — which this generator's
    *  simpler player/neutral-only zone model has no equivalent of yet).
-   *  Defaults to a small starter list capping `university` at 1. */
+   *  Defaults to a tier-based cap per interactable sid (see
+   *  `DEFAULT_TEMPLATE_OVERRIDES`'s own doc comment on `contentCountLimits`
+   *  below) — common sids allowed more copies map-wide than rare ones. */
   contentCountLimits: { sid: string; maxCount: number }[]
   /** Of every road segment (a zone-graph edge, or an intra-island road),
    *  the chance it's painted Stone (`roadId: 2`) instead of Dirt
@@ -143,6 +146,21 @@ export interface RandomMapTemplate {
   roadFullConnectivityChance: number
 }
 
+/** Default map-wide interactable caps (issue #210 follow-up — interactables
+ *  are now placeable by `zone-population.ts`'s `placeTreasure` via
+ *  `pickInteractableSid`, which previously never happened at all): common
+ *  sids get more headroom than rare ones, matching real RMG templates'
+ *  own bias toward simple sites over unique/epic ones. These numbers are
+ *  well above what a typical map's own treasure budget would ever spend on
+ *  any one sid, so in practice they only stop one rare/unique sid from
+ *  repeating excessively on a very large map — they're a ceiling, not a
+ *  tuning target. */
+const DEFAULT_INTERACTABLE_CONTENT_LIMITS = [
+  ...INTERACTABLE_COMMON_SIDS.map((sid) => ({ sid, maxCount: 4 })),
+  ...INTERACTABLE_UNCOMMON_SIDS.map((sid) => ({ sid, maxCount: 2 })),
+  ...INTERACTABLE_RARE_SIDS.map((sid) => ({ sid, maxCount: 1 })),
+]
+
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
@@ -164,7 +182,7 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   roadWindingWavelength: 50,
   enabledBiomes: ALL_TEMPLATE_BIOMES,
   randomCityCount: 1,
-  contentCountLimits: [{ sid: 'university', maxCount: 1 }],
+  contentCountLimits: DEFAULT_INTERACTABLE_CONTENT_LIMITS,
   stoneRoadChance: 0.35,
   roadPointOfInterestChance: 0.8,
   roadFullConnectivityChance: 0.8,
