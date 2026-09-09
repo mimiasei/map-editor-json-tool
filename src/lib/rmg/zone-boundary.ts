@@ -206,6 +206,19 @@ export interface FortifyZoneBoundariesOptions {
    *  no purpose and actively breaks its only access. Defaults to empty so
    *  a non-islands caller sees no behavior change. */
   islandZoneIds?: Set<number>
+  /** Real bug confirmed 2026-09-09 (found while tracing why `zone-fauna.ts`'s
+   *  fish placements kept failing — the actual root cause there turned out
+   *  to be unrelated, see that investigation's own notes, but this was a
+   *  real defect found along the way): the wall loop below had zero water
+   *  awareness — it happily claimed `usedAnchors`/`blocked` on a zone-
+   *  boundary tile that was already water (a lake can validly touch its own
+   *  zone's boundary, since `scatterZoneWater` only scopes eligibility to
+   *  ONE zone's tiles, not away from that zone's edges), wastefully placing
+   *  a mountain/rock obstacle that `reclaimWaterCollisions` then has to
+   *  notice and convert back to land. Skips a water tile entirely instead —
+   *  never placed here, never wastefully claimed/reclaimed. Optional so a
+   *  caller with no water pass (or `waterContent: 'none'`) sees no change. */
+  waterNodes?: Set<number>
 }
 
 export interface FortifyZoneBoundariesResult {
@@ -234,7 +247,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   const {
     sizeX, sizeZ, zones, zoneIdByNode, zoneBiome, roadPaths, zoneDistances,
     catalogById, mapObjects, catalog, objectVariety, mountainDensity, strength, state, rng,
-    islandZoneIds,
+    islandZoneIds, waterNodes,
   } = options
 
   const playerZoneIds = zones.filter((z) => z.kind === 'player').map((z) => z.id)
@@ -325,6 +338,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   for (const node of computeAllBoundaryTiles(zoneIdByNode, sizeX, sizeZ)) {
     if (gateBufferAll.has(node)) continue
     if (state.blocked.has(node) || state.usedAnchors.has(node)) continue
+    if (waterNodes?.has(node)) continue
     const nodeZoneId = zoneIdByNode[node]
     // An island zone's real security already comes from being surrounded
     // by water, and it's reached ONLY by portal — walling its own

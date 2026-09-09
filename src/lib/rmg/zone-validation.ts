@@ -254,6 +254,13 @@ export interface ReclaimWaterCollisionsOptions {
   objectGroups: Map<string, ObjectPlacementGroup>
   concreteSquads: ConcreteSquadPlacement[]
   waterNodes: Set<number>
+  /** Sids allowed to legitimately sit on water — `zone-fauna.ts`'s `fish`
+   *  and approved ambient `fxs` sids, which are deliberately placed ON
+   *  water and must never be "fixed" by draining the tile out from under
+   *  them (this function's own reclaim logic has no way to tell "ended up
+   *  on water by mistake" apart from "supposed to be on water" otherwise).
+   *  Defaults to empty — every other caller's behavior is unchanged. */
+  waterCompatibleSids?: Set<string>
 }
 
 export interface ReclaimWaterCollisionsResult {
@@ -272,9 +279,10 @@ export interface ReclaimWaterCollisionsResult {
  * (or painting from it) sees the corrected state.
  */
 export function reclaimWaterCollisions(options: ReclaimWaterCollisionsOptions): ReclaimWaterCollisionsResult {
-  const { objectGroups, concreteSquads, waterNodes } = options
+  const { objectGroups, concreteSquads, waterNodes, waterCompatibleSids } = options
   const reclaimedNodes = new Set<number>()
-  for (const group of objectGroups.values()) {
+  for (const [sid, group] of objectGroups) {
+    if (waterCompatibleSids?.has(sid)) continue
     for (const node of group.nodes) {
       if (waterNodes.has(node)) { waterNodes.delete(node); reclaimedNodes.add(node) }
     }

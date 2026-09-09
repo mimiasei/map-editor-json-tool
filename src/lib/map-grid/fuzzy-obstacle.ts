@@ -162,6 +162,41 @@ export function buildTreePools(mapObjects: CatalogMapObject[]): Record<BiomeId, 
   return pools
 }
 
+export interface AnimalPools {
+  byBiome: Record<BiomeId, string[]>
+  /** `fish` specifically — real maps place it 100% on water tiles despite
+   *  its own catalog `biome: Grass` tag (confirmed via a direct survey of
+   *  22 real maps/*.map this session), so it's kept out of `byBiome`
+   *  entirely and handled by a caller's own water-tile check instead. */
+  fish: string[]
+  /** Animals with no catalog `biome` at all (the `birds*` family) — real,
+   *  not a data gap (confirmed: every OTHER animals.json entry has one). */
+  universal: string[]
+}
+
+/** Buckets every real `animals` catalog entry (Core/DB/map/objects/
+ *  2_animals.json, 33 entries) by its own real per-entry `biome` field —
+ *  unlike `environments`, animals genuinely carry this data already (no
+ *  denylist/prefix heuristic needed, no man-made/campaign entries to
+ *  exclude either). `fish` and the biome-less `birds*` family are split
+ *  out separately (see `AnimalPools`'s own field docs). */
+export function buildAnimalPools(mapObjects: CatalogMapObject[]): AnimalPools {
+  const byBiome = Object.fromEntries(ALL_BIOME_IDS.map((id) => [id, [] as string[]])) as Record<BiomeId, string[]>
+  const fish: string[] = []
+  const universal: string[] = []
+  const biomeIdByCatalogName = new Map<string, BiomeId>(
+    ALL_BIOME_IDS.map((id) => [BIOME_ID_TO_CATALOG_BIOME[id], id]),
+  )
+  for (const obj of mapObjects) {
+    if (obj.category !== 'animals') continue
+    if (obj.id === 'fish') { fish.push(obj.id); continue }
+    if (!obj.biome) { universal.push(obj.id); continue }
+    const biomeId = biomeIdByCatalogName.get(obj.biome)
+    if (biomeId) byBiome[biomeId].push(obj.id)
+  }
+  return { byBiome, fish, universal }
+}
+
 /**
  * Normalized (0 = stroke center, ~1 = stroke edge) distance for every node
  * in `nodes`, based on the set's own enclosing bounding box — applies
