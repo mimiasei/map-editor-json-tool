@@ -111,6 +111,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [islandsIncludePlayerZones, setIslandsIncludePlayerZones] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
   const [islandLandRatio, setIslandLandRatio] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
+  const [interactableDensity, setInteractableDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
   const [mountainDensity, setMountainDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
   const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
@@ -317,6 +318,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       islandsIncludePlayerZones,
       islandLandRatio,
       obstacleDensity,
+      interactableDensity,
       mountainDensity,
       treasureDensity,
       objectVariety,
@@ -390,6 +392,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setIslandsIncludePlayerZones(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
       setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
       setObstacleDensity(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
+      setInteractableDensity(DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
       setMountainDensity(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
       setTreasureDensity(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
       setObjectVariety(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
@@ -673,6 +676,14 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 </div>
                 <Slider min={0} max={0.5} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} />
               </div>
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs">Interactable density</Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(interactableDensity)}</span>
+                    </div>
+                    <Slider min={0} max={0.5} step={0.02} value={[interactableDensity]} onValueChange={([v]) => setInteractableDensity(v)} />
+                </div>
 
                 <div className="space-y-1.5">
                     <div className="flex items-center justify-between">

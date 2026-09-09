@@ -51,7 +51,7 @@ const INTERACTABLE_SIDS = new Set([...INTERACTABLE_COMMON_SIDS, ...INTERACTABLE_
  *  (`barracks_*`), resource pile/pickup, interactable building, or
  *  artifact. `random-item`/`random-squad` placeholders are deliberately
  *  excluded (nothing real to stand guard over yet at generation time). */
-function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
+export function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
   return MINE_SIDS.has(sid) || sid.startsWith('barracks_') || STORAGE_SIDS.includes(sid) ||
     (RESOURCE_SIDS as readonly string[]).includes(sid) || INTERACTABLE_SIDS.has(sid) || artifactSids.has(sid)
 }
@@ -62,7 +62,7 @@ function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
  *  distance typically 3-6 tiles, and a tighter radius silently suppressed
  *  placements (no free tile found) even on a successful `squadDensity`
  *  roll. */
-const NEARBY_GUARD_RADIUS = 4
+export const NEARBY_GUARD_RADIUS = 4
 
 function nearbyFreeTile(node: number, sizeX: number, sizeZ: number, state: PlacementState, rng: () => number): number | null {
   const cx = node % sizeX

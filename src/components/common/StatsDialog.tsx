@@ -446,7 +446,7 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-6">
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-5 gap-3">
         <StatCard label="Map Size Tiles" value={stats.totalTiles} />
         <StatCard label="Player Cities" value={stats.playerCities.length} />
         <StatCard label="Random Cities" value={stats.randomCityCount} />
@@ -455,6 +455,7 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
         <StatCard label="Unit Squads" value={stats.unitSquadCount} />
         <StatCard label="River Tiles" value={stats.riverLength} />
         <StatCard label="Blocking Tiles %" value={Math.round(stats.blockingPct)} />
+        <StatCard label="Guarded Objects %" value={Math.round(stats.guardedPct)} />
       </div>
 
       <div>

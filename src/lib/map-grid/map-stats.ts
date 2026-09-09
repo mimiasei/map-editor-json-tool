@@ -10,13 +10,14 @@ import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { factionDisplayName } from '@/lib/factions'
 import { buildBlockedTileSet } from '@/lib/map-grid/passability'
-import { RESOURCE_SIDS, STORAGE_SIDS } from '@/lib/rmg/object-variety'
+import {collectArtifactSids, RESOURCE_SIDS, STORAGE_SIDS} from '@/lib/rmg/object-variety'
 import {
   resolveInteractableSubcategory,
   INTERACTABLE_SUBCATEGORY_ORDER,
   INTERACTABLE_SUBCATEGORY_LABELS,
 } from '@/lib/map-grid/interactable-subcategories'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import {isGuardCandidate} from "@/lib/rmg/zone-guard-scatter.ts";
 
 export interface PlayerCityStat {
   owner: number
@@ -46,6 +47,7 @@ export interface MapStats {
   chestCount: number
   portalLinkCounts: { kind: string; count: number }[]
   blockingPct: number
+  guardedPct: number
 }
 
 /** Every catalog category treated as "scenery" for the decorations
@@ -170,6 +172,23 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
   const blocked = buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap: context.climbsMap, waterMap }, catalog)
   const blockingPct = pct(blocked.size, totalTiles)
 
+  // ── Guarded map objects ────────────────────────────────────────
+  const squadNodes = placedObjects
+    .filter((o) => o.type === 2 || (o.type === 0 && o.sid === 'random-squad'))
+    .map((o) => o.node)
+  const artifactSids = new Set(catalog ? collectArtifactSids(catalog) : [])
+  let guardableCount = 0, guardedCount = 0
+  for (const o of placedObjects) {
+    if (o.type !== 0 || !isGuardCandidate(o.sid, artifactSids)) continue
+    guardableCount++
+    const x = o.node % sizeX, z = Math.floor(o.node / sizeX)
+    const guarded = squadNodes.some((sn) => {
+        const sx = sn % sizeX, sz = Math.floor(sn / sizeX)
+        return Math.abs(sx - x) <= 4 && Math.abs(sz - z) <= 4
+    })
+    if (guarded) guardedCount++
+  }
+
   return {
     sizeX, sizeZ, totalTiles,
     playerCities,
@@ -199,5 +218,6 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
     chestCount,
     portalLinkCounts: [...portalKindCounts.entries()].map(([kind, count]) => ({ kind, count })),
     blockingPct,
+    guardedPct: pct(guardedCount, guardableCount)
   }
 }

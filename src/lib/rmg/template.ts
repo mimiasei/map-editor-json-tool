@@ -57,6 +57,9 @@ export interface RandomMapTemplate {
    *  21% actual coverage — the middle of that range — rather than porting the
    *  percentage directly. */
   obstacleDensity: number
+    /** 0-1 fraction of each zone's own tiles considered for interactable object scattering
+     *  0.25 default */
+  interactableDensity: number
     /** 0-1 fraction of the chance of using mountains in the clusters of obstacles
      * composing the boundary walls between zones */
   mountainDensity: number
@@ -164,12 +167,13 @@ const DEFAULT_INTERACTABLE_CONTENT_LIMITS = [
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'mountainDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'interactableDensity' | 'mountainDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   islandsIncludePlayerZones: false,
   islandLandRatio: 0.4,
   obstacleDensity: 0.35,
+  interactableDensity: 0.25,
   mountainDensity: 0.35,
   treasureDensity: 1,
   objectVariety: 0.4,
@@ -252,6 +256,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     islandsIncludePlayerZones: typeof data.islandsIncludePlayerZones === 'boolean' ? data.islandsIncludePlayerZones : DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones,
     islandLandRatio: typeof data.islandLandRatio === 'number' ? data.islandLandRatio : DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio,
     obstacleDensity: typeof data.obstacleDensity === 'number' ? data.obstacleDensity : DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity,
+    interactableDensity: typeof data.interactableDensity === 'number' ? data.interactableDensity : DEFAULT_TEMPLATE_OVERRIDES.interactableDensity,
     mountainDensity: typeof data.mountainDensity === 'number' ? data.mountainDensity : DEFAULT_TEMPLATE_OVERRIDES.mountainDensity,
     treasureDensity: typeof data.treasureDensity === 'number' ? data.treasureDensity : DEFAULT_TEMPLATE_OVERRIDES.treasureDensity,
     objectVariety: typeof data.objectVariety === 'number' ? data.objectVariety : DEFAULT_TEMPLATE_OVERRIDES.objectVariety,
