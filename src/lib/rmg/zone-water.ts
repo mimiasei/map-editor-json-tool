@@ -22,13 +22,64 @@ const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
  *  reads as one consistent texture in every real sample checked. */
 const WATER_IDS = [1, 2, 3, 4, 5, 6, 7]
 
+/** Whether flooding `n` would leave a `protectedTiles` neighbor (an
+ *  already-placed object's own tile) with zero remaining non-water land
+ *  neighbors — i.e. fully water-locked on a 1-tile island. `protectedTiles`
+ *  itself is never eligible for `blob` membership (callers already exclude
+ *  it from `eligible`), so this only ever needs to check `n`'s neighbors,
+ *  not `n` itself. `existingWater` is water already committed by a
+ *  PREVIOUSLY processed zone in this same `scatterZoneWater` call — real
+ *  bug confirmed: checking only the current zone's own in-progress `blob`
+ *  missed the case where two ADJACENT zones' separate lakes each flood a
+ *  different side of the same protected border tile, jointly isolating it
+ *  even though neither zone's own blob ever completed the encirclement on
+ *  its own. */
+function wouldIsolateProtectedNeighbor(
+  n: number, sizeX: number, sizeZ: number, blob: Set<number>, protectedTiles: Set<number>, existingWater: Set<number>,
+): boolean {
+  const x = n % sizeX
+  const z = Math.floor(n / sizeX)
+  for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+    const px = x + dx
+    const pz = z + dz
+    if (px < 0 || px >= sizeX || pz < 0 || pz >= sizeZ) continue
+    const p = pz * sizeX + px
+    if (!protectedTiles.has(p)) continue
+    let hasOtherLandNeighbor = false
+    for (const [pdx, pdz] of NEIGHBOR_OFFSETS) {
+      const qx = px + pdx
+      const qz = pz + pdz
+      if (qx < 0 || qx >= sizeX || qz < 0 || qz >= sizeZ) continue
+      const q = qz * sizeX + qx
+      if (q === n) continue
+      if (!blob.has(q) && !existingWater.has(q)) { hasOtherLandNeighbor = true; break }
+    }
+    if (!hasOtherLandNeighbor) return true
+  }
+  return false
+}
+
 /** Organic blob growth from `seed`, adding a random eligible neighbor of a
  *  random frontier tile each step (not a plain flood fill, which would
  *  produce a uniform diamond) until `targetSize` is reached or no eligible
  *  neighbor remains anywhere on the frontier. Exported for zone-islands.ts's
  *  own landmass-blob computation — same organic-growth need, different
- *  purpose (a landmass to KEEP, not a lake to flood). */
-export function growBlob(seed: number, sizeX: number, sizeZ: number, targetSize: number, eligible: Set<number>, rng: () => number): Set<number> {
+ *  purpose (a landmass to KEEP, not a lake to flood).
+ *
+ *  `protectedTiles` (optional — zone-islands.ts's landmass growth doesn't
+ *  pass it, since it's not flooding anything) skips any candidate that
+ *  would fully surround one of those tiles with blob on every side —
+ *  confirmed real bug: `scatterZoneWater`'s lake growth had no such check,
+ *  so a `random-squad`/mine/etc. already placed on ordinary land (object
+ *  placement runs BEFORE water carving in `generate-random-map.ts`) could
+ *  end up alone on a 1-tile island, completely unreachable — the game's own
+ *  accessibility repair pass can't bridge across water or nudge across a
+ *  lake wider than its own search radius, so the object shipped exactly
+ *  where it landed. */
+export function growBlob(
+  seed: number, sizeX: number, sizeZ: number, targetSize: number, eligible: Set<number>, rng: () => number,
+  protectedTiles?: Set<number>, existingWater: Set<number> = new Set(),
+): Set<number> {
   const blob = new Set<number>([seed])
   const frontier = [seed]
   while (blob.size < targetSize && frontier.length > 0) {
@@ -44,6 +95,7 @@ export function growBlob(seed: number, sizeX: number, sizeZ: number, targetSize:
       if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
       const n = nz * sizeX + nx
       if (blob.has(n) || !eligible.has(n)) continue
+      if (protectedTiles && wouldIsolateProtectedNeighbor(n, sizeX, sizeZ, blob, protectedTiles, existingWater)) continue
       blob.add(n)
       frontier.push(n)
       grew = true
@@ -123,6 +175,12 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
   const waterNodes = new Set<number>()
   const waterChanges: { node: number; waterId: number }[] = []
   const levelChanges: { node: number; level: number }[] = []
+  // Every tile that must stay reachable — object placement (populateZones,
+  // scatterProximityGuards) runs BEFORE water carving, so this is the one
+  // place that can (and, confirmed via a real user report, did) strand an
+  // already-placed guard/mine/treasure alone on a 1-tile water-locked
+  // island. See `growBlob`'s own doc comment for the full mechanism.
+  const protectedTiles = new Set<number>([...excludedNodes, ...blocked, ...usedAnchors])
 
   for (const zone of zones) {
     if (zone.kind !== 'neutral') continue
@@ -143,7 +201,7 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
     const sizeFraction = minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
     const targetSize = Math.max(zoneMinSize, Math.min(eligible.size, maxSize, Math.round(eligible.size * sizeFraction)))
     const seed = [...eligible][Math.floor(rng() * eligible.size)]
-    const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng)
+    const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng, protectedTiles, waterNodes)
     const waterId = WATER_IDS[Math.floor(rng() * WATER_IDS.length)]
 
     for (const node of blob) {

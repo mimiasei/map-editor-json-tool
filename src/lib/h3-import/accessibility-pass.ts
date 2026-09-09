@@ -428,6 +428,19 @@ export function applyAccessibilityPass(
         for (const cell of candidateCells) {
           const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
           if (n === null) { valid = false; break }
+          // Real bug confirmed via a user-reported screenshot (two RMG
+          // squads alone on a 1-tile island): for a multi-cell NON_BLOCKING
+          // footprint (random-squad is 3x3), `candidateAccess` below only
+          // needs ONE of its 9 cells to be reachable — nothing here ever
+          // checked water, so a candidate whose ANCHOR itself sat on a lake
+          // tile could still pass as long as some corner 1-2 tiles away
+          // happened to be dry land. The nudge then relocated the target
+          // there; `reclaimWaterCollisions` (zone-validation.ts) later
+          // un-painted just that one anchor tile back to land, since it never
+          // checks the tile's neighbors — producing exactly the isolated
+          // island. Rejecting any candidate that touches water AT ALL (not
+          // just its solid cells) closes this off entirely, for every sid.
+          if ((out.waterMap[n] ?? 0) !== 0) { valid = false; break }
           if (cell.value === 1 && nudgeBlocked.has(n) && !ownNodes.has(n)) { valid = false; break }
           if (cell.value === 1 && avoidNodes.has(n)) { valid = false; break }
         }
