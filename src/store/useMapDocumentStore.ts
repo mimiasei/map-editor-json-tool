@@ -18,6 +18,7 @@ import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { findOutOfBoundsPlacements, type OutOfBoundsPlacement } from '@/lib/map-grid/bounds-validation'
+import { computeBoundsAutoFix } from '@/lib/map-grid/bounds-autofix'
 
 /** Cheap in-memory equivalent of parseMapFile's gzip-then-JSON-parse pass —
  *  reused here so applyEdit can re-sync useMapContextStore on every single
@@ -60,6 +61,13 @@ interface MapDocumentStore {
    *  show the offending objects; cleared by `clearBoundsViolations`. */
   boundsViolations: OutOfBoundsPlacement[] | null
   clearBoundsViolations: () => void
+  /** Relocates every current out-of-bounds violation to an in-bounds, non-
+   *  colliding, reachable tile (`bounds-autofix.ts`) via the same
+   *  `moveObject` edit the Map Grid's own Move tool uses — no new write
+   *  path. Re-derives `boundsViolations` from the result afterward (empty
+   *  if everything was fixed) so the dialog reacts the same way it already
+   *  does after any other edit. Returns a summary for the dialog to show. */
+  autoFixBoundsViolations: () => { fixedCount: number; unresolvedCount: number }
   /** Load a freshly-opened .map's container — resets dirty state and undo history. */
   loadContainer: (container: MapContainer) => void
   /** Apply one edit to the in-memory document. Throws (leaving the store
@@ -94,6 +102,21 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       mapIsDirty: false,
       boundsViolations: null,
       clearBoundsViolations: () => set({ boundsViolations: null }),
+
+      autoFixBoundsViolations: () => {
+        const current = get().container
+        if (!current) throw new Error('No .map document is currently loaded')
+        const catalog = useCatalogStore.getState().catalog
+        const context = extractMapContext(containerToRawBlocks(current))
+        const { fixes, unresolved } = computeBoundsAutoFix(context, catalog)
+        for (const fix of fixes) {
+          get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: fix.id, newNode: fix.toNode })
+        }
+        const after = get().container
+        const remaining = after ? findOutOfBoundsPlacements(extractMapContext(containerToRawBlocks(after)), catalog) : unresolved
+        set({ boundsViolations: remaining.length > 0 ? remaining : null })
+        return { fixedCount: fixes.length, unresolvedCount: remaining.length }
+      },
 
       loadContainer: (container) => {
         set({ container, mapIsDirty: false })
