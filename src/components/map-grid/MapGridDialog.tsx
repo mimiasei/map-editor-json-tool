@@ -65,6 +65,7 @@ import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type F
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
 import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
+import MapGameSettingsDialog from '@/components/map-grid/MapGameSettingsDialog'
 import ToolBrushSettingsPopover from '@/components/map-grid/ToolBrushSettingsPopover'
 import ToolButton from '@/components/map-grid/ToolButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
@@ -3075,6 +3076,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 </Button>
               )}
             </div>
+            <MapGameSettingsDialog />
             <Button
               variant={spawnerSelectorOpen ? 'secondary' : 'ghost'}
               size="icon"
