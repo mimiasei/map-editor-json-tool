@@ -41,6 +41,12 @@ import {
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
+import {
+  DECORATION_SUBCATEGORY_ORDER,
+  DECORATION_SUBCATEGORY_LABELS,
+  resolveDecorationSubcategory,
+  type DecorationSubcategory,
+} from '@/lib/map-grid/decoration-subcategories'
 import type { PlacedObject, MapEntity } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
@@ -173,6 +179,27 @@ function saveInteractableSubFilter(f: InteractableSubFilterState): void {
   try { localStorage.setItem(INTERACTABLE_SUBFILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
 }
 
+// Same "no natural single toggle" reasoning as Interactables above, mirrored
+// for the Decorations group (environments/animals/fxs).
+type DecorationSubFilterState = Record<DecorationSubcategory, boolean>
+
+const DECORATION_SUBFILTER_STORAGE_KEY = 'oe-map-grid-decoration-subfilter'
+
+function loadDecorationSubFilter(): DecorationSubFilterState {
+  const fallback = Object.fromEntries(
+    DECORATION_SUBCATEGORY_ORDER.map((c) => [c, true]),
+  ) as DecorationSubFilterState
+  try {
+    const raw = localStorage.getItem(DECORATION_SUBFILTER_STORAGE_KEY)
+    if (raw) return { ...fallback, ...JSON.parse(raw) }
+  } catch { /* ignore */ }
+  return fallback
+}
+
+function saveDecorationSubFilter(f: DecorationSubFilterState): void {
+  try { localStorage.setItem(DECORATION_SUBFILTER_STORAGE_KEY, JSON.stringify(f)) } catch { /* ignore */ }
+}
+
 // ─── Transform ────────────────────────────────────────────────────────────────
 
 interface Transform { x: number; y: number; scale: number }
@@ -269,6 +296,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     ) as InteractableSubFilterState
     setInteractableSubFilter(next)
     saveInteractableSubFilter(next)
+  }
+
+  const [decorationSubFilter, setDecorationSubFilter] = useState<DecorationSubFilterState>(
+    loadDecorationSubFilter,
+  )
+  const toggleDecorationSubcategory = (c: DecorationSubcategory) => {
+    setDecorationSubFilter((prev) => {
+      const next = { ...prev, [c]: !prev[c] }
+      saveDecorationSubFilter(next)
+      return next
+    })
+  }
+  const setAllDecorationSubcategories = (value: boolean) => {
+    const next = Object.fromEntries(
+      DECORATION_SUBCATEGORY_ORDER.map((c) => [c, value]),
+    ) as DecorationSubFilterState
+    setDecorationSubFilter(next)
+    saveDecorationSubFilter(next)
   }
 
   // ── Search (issue #130) — matches sid/entitySid/displayName, highlights
@@ -375,10 +420,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (!pick || !filter[pick.group]) continue
       // issue #130: interactables additionally need their sub-category selected.
       if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) continue
+      if (pick.group === 'decorations') {
+        const category = catalog?.mapObjects.find((o) => o.id === pick.primary.sid)?.category
+        if (!decorationSubFilter[resolveDecorationSubcategory(pick.primary.sid, category)]) continue
+      }
       map.set(node, pick)
     }
     return map
-  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter])
+  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation
   // walls + water (src/lib/map-grid/passability.ts). Independent of
@@ -3700,7 +3749,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <button
                   onClick={() => toggleGroup(g)}
                   className={`h-6 px-2 text-xs rounded shrink-0 border transition-colors ${
-                    g === 'interactables' ? 'rounded-r-none border-r-0' : ''
+                    g === 'interactables' || g === 'decorations' ? 'rounded-r-none border-r-0' : ''
                   } ${
                     filter[g]
                       ? 'bg-background text-foreground border-border'
@@ -3761,6 +3810,59 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         size="sm"
                         className="h-6 text-xs w-full"
                         onClick={() => setAllInteractableSubcategories(true)}
+                      >
+                        Reset
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                )}
+                {g === 'decorations' && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={`h-6 w-5 flex items-center justify-center rounded-r border transition-colors ${
+                          filter[g]
+                            ? 'bg-background text-foreground border-border'
+                            : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
+                        }`}
+                        title="Decorations sub-categories"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 space-y-2" data-nodrag>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Sub-categories
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="decoration-subcat-all"
+                          checked={DECORATION_SUBCATEGORY_ORDER.every((c) => decorationSubFilter[c])}
+                          onCheckedChange={(v) => setAllDecorationSubcategories(Boolean(v))}
+                        />
+                        <Label htmlFor="decoration-subcat-all" className="text-xs cursor-pointer font-medium">
+                          All
+                        </Label>
+                      </div>
+                      <div className="border-t border-border pt-2 space-y-2">
+                        {DECORATION_SUBCATEGORY_ORDER.map((c) => (
+                          <div key={c} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`decoration-subcat-${c}`}
+                              checked={decorationSubFilter[c]}
+                              onCheckedChange={() => toggleDecorationSubcategory(c)}
+                            />
+                            <Label htmlFor={`decoration-subcat-${c}`} className="text-xs cursor-pointer">
+                              {DECORATION_SUBCATEGORY_LABELS[c]}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs w-full"
+                        onClick={() => setAllDecorationSubcategories(true)}
                       >
                         Reset
                       </Button>

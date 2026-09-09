@@ -16,6 +16,7 @@ import {
   INTERACTABLE_SUBCATEGORY_ORDER,
   INTERACTABLE_SUBCATEGORY_LABELS,
 } from '@/lib/map-grid/interactable-subcategories'
+import { resolveDecorationSubcategory, DECORATION_SUBCATEGORY_LABELS } from '@/lib/map-grid/decoration-subcategories'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {isGuardCandidate} from "@/lib/rmg/zone-guard-scatter.ts";
 
@@ -54,24 +55,6 @@ export interface MapStats {
  *  breakdown — the same three real, data-backed buckets the object browser
  *  already filters by (environments/animals/fxs), not an invented split. */
 const DECORATION_CATEGORIES = ['environments', 'animals', 'fxs'] as const
-const BIOMES = ['death', 'snow', 'desert', 'autumn', 'dirt']
-
-function classifyDecoration(sid: string): string {
-    if (sid.startsWith('mountain_')) return 'Mountains'
-    const trees = ['tree_', 'pinetree', 'palm', 'cactus']
-    if (trees.some((t) => sid.startsWith(t))) return 'Trees'
-    const rocks = ['rock_', 'stone_', '_stones_']
-    if (rocks.some((r) => sid.includes(r))) return 'Rocks'
-    if (sid.startsWith('pool_')) return 'Pools'
-    if (sid.startsWith('campaign_')) return 'Campaign related'
-    const walkables = ['flowers_', 'mushrooms_', 'grass_1', 'grass_2',
-        ...BIOMES.map((b) => 'grass_' + b + '_1'),
-        ...BIOMES.map((b) => 'grass_' + b + '_2'),
-    ]
-    if (walkables.some((w) => sid.startsWith(w))) return 'Walkable'
-    if (sid.includes('_hill_')) return 'Hills'
-    return 'Other decorations'
-}
 
 function pct(count: number, total: number): number {
   return total > 0 ? (count / total) * 100 : 0
@@ -120,10 +103,10 @@ export function computeMapStats(context: MapContext, catalog: GameCatalog | null
       const label = INTERACTABLE_SUBCATEGORY_LABELS[sub]
       interactableByCategory.set(label, (interactableByCategory.get(label) ?? 0) + 1)
     }
-      if ((DECORATION_CATEGORIES as readonly string[]).includes(catalogObj.category)) {
-          const sub = classifyDecoration(o.sid)
-          decorationByCategory.set(sub, (decorationByCategory.get(sub) ?? 0) + 1)
-      }
+    if ((DECORATION_CATEGORIES as readonly string[]).includes(catalogObj.category)) {
+      const sub = DECORATION_SUBCATEGORY_LABELS[resolveDecorationSubcategory(o.sid, catalogObj.category)]
+      decorationByCategory.set(sub, (decorationByCategory.get(sub) ?? 0) + 1)
+    }
   }
 
   // ── Terrain: biomes / water / levels ─────────────────────────────────────
