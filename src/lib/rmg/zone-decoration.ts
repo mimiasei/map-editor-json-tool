@@ -55,6 +55,8 @@ export const CLUSTER_MOUNTAIN_HEAVY_CHANCE = 0.4
  *  "grass_desert + palms" cross-family pattern), and plain clutter. */
 export const CLUSTER_PRIMARY_CHANCE = 0.7
 const CLUSTER_ACCENT_CHANCE = 0.2
+/** Chance of placing a pool as obstacle **/
+const CLUSTER_POOL_CHANCE = 0.15
 
 function shuffledClusterOffsets(radius: number, rng: () => number): [number, number][] {
   const offsets: [number, number][] = []
@@ -113,6 +115,9 @@ function scatterCluster(
   if (primaryPool.length === 0) return []
 
   const pickSid = (): string | null => {
+    if (pool.pools.length > 0 && rng() < CLUSTER_POOL_CHANCE) {
+      return pool.pools[Math.floor(rng() * pool.pools.length)]
+    }
     const roll = rng()
     if (roll < CLUSTER_PRIMARY_CHANCE || accentPool.length === 0) {
       return primaryPool[Math.floor(rng() * primaryPool.length)]
