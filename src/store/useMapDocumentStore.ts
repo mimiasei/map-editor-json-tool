@@ -28,7 +28,7 @@ import { computeEntranceAutoFix } from '@/lib/map-grid/entrance-autofix'
  *  that's the one place "what really landed on disk" matters. Missing
  *  chunks become `{}`, matching parseMapFile's own fallback for a map that
  *  ships with fewer than 4 blocks. */
-function containerToRawBlocks(container: MapContainer): RawMapBlocks {
+export function containerToRawBlocks(container: MapContainer): RawMapBlocks {
   const decoder = new TextDecoder('utf-8')
   const parse = (i: number): unknown => {
     const chunk = container.chunks[i]

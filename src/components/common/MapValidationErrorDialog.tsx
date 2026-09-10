@@ -18,14 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
-import type { MapValidationIssue } from '@/lib/map-grid/map-validation'
-
-function describeIssue(issue: MapValidationIssue): string {
-  const where = `${issue.sid} (id ${issue.id}) at (${issue.x}, ${issue.z})`
-  return issue.kind === 'outOfBounds'
-    ? `${where} — extends past the map's edge`
-    : `${where} — entrance is fully blocked (can't be reached)`
-}
+import {describeMapValidationIssue} from '@/lib/map-grid/map-validation'
 
 export default function MapValidationErrorDialog() {
   const issues = useMapDocumentStore((s) => s.mapValidationIssues)
@@ -45,7 +38,7 @@ export default function MapValidationErrorDialog() {
     ? [
         "The following object(s) can't be saved:",
         '',
-        ...issues.map((v) => `• ${describeIssue(v)}`),
+        ...issues.map((v) => `• ${describeMapValidationIssue(v)}`),
         ...(lastFixed !== null
           ? ['', `Auto-fix resolved ${lastFixed} issue(s) — ${issues.length} still couldn't be fixed automatically. Fix them manually.`]
           : []),

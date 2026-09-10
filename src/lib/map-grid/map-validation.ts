@@ -20,3 +20,10 @@ export function findMapValidationIssues(context: MapValidationContext, catalog: 
     ...findBlockedEntrancePlacements(context, catalog).map((v) => ({ kind: 'blockedEntrance' as const, ...v })),
   ]
 }
+
+export function describeMapValidationIssue(issue: MapValidationIssue): string {
+    const where = `${issue.sid} (id ${issue.id}) at (${issue.x}, ${issue.z})`
+    return issue.kind === 'outOfBounds'
+        ? `${where} — extends past the map's edge`
+        : `${where} — entrance is fully blocked (can't be reached)`
+}

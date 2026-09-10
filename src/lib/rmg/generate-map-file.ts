@@ -13,11 +13,16 @@
 import { isTauri, readBinaryFile } from '@/lib/native-fs'
 import { readMapContainer, buildMapContainer, gzipBytes, gunzipBytes, type MapContainer } from '@/lib/map-write'
 import { loadParsedMapFile, type OpenMapResult } from '@/lib/map-file'
-import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import {containerToRawBlocks, useMapDocumentStore} from '@/store/useMapDocumentStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { generateRandomMap, type GenerateRandomMapOptions } from './generate-random-map'
 import type { BalanceReport } from './balance-analyzer'
 import { generateTerrain, type GenerateTerrainOptions, type TerrainResult } from './generate-terrain'
+import {extractMapContext} from "@/lib/map-extract.ts";
+import {computeBoundsAutoFix} from "@/lib/map-grid/bounds-autofix.ts";
+import {applyMapEdit} from "@/lib/map-save.ts";
+import {computeEntranceAutoFix} from "@/lib/map-grid/entrance-autofix.ts";
+import {describeMapValidationIssue, findMapValidationIssues} from "@/lib/map-grid/map-validation.ts";
 
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
@@ -66,7 +71,27 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   const loaded = await readTemplateAndCatalog()
   if (!loaded) return null
   const { container, balanceReport } = generateRandomMap(loaded.template, catalog, options)
-  const gzipped = await gzipBytes(buildMapContainer(container))
+
+  let fixed = container
+  const boundsCtx = extractMapContext(containerToRawBlocks(fixed))
+  const bounds = computeBoundsAutoFix(boundsCtx, catalog)
+  for (const fix of bounds.fixes) {
+    fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: 0, entityId: fix.id, newNode: fix.toNode }).container
+  }
+  const entranceCtx = extractMapContext(containerToRawBlocks(fixed))
+  const entrance = computeEntranceAutoFix(entranceCtx, catalog)
+  for (const del of entrance.deletions) {
+    fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: del.id }).container
+  }
+  const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
+  const autoFixWarnings: string[] = []
+  const fixedCount = bounds.fixes.length + entrance.deletions.length
+  if (fixedCount > 0) autoFixWarnings.push(`Auto-fixed ${fixedCount} placement issue(s) during generation.`)
+  for (const issue of remaining) {
+    autoFixWarnings.push(`Unresolved: ${describeMapValidationIssue(issue)}`)
+  }
+
+  const gzipped = await gzipBytes(buildMapContainer(fixed))
   const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 
   const name = options.mapName.endsWith('.map') ? options.mapName : `${options.mapName}.map`
@@ -74,5 +99,5 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // Same reasoning as createNewMap(): a generated map has nowhere on disk
   // yet, so the dirty-dot/exit-guard must reflect that immediately.
   useMapDocumentStore.setState({ mapIsDirty: true })
-  return { ...result, balanceReport }
+  return { ...result, warnings: [...autoFixWarnings, ...result.warnings], balanceReport }
 }
