@@ -169,7 +169,19 @@ export function createPlacementState(seedBlocked: Set<number>, seedAnchors: Set<
  *  picked a specific candidate node (zone-decoration.ts's obstacle
  *  scattering, driven by fuzzy-obstacle.ts's own distance/biome rolls) use
  *  this directly; `tryPlace` below (an unconstrained "anywhere in this
- *  zone" placement) is built on top of it. */
+ *  zone" placement) is built on top of it.
+ *
+ *  `state.blocked` also gets a placement's entrance/interaction (value===2)
+ *  cells, not just its solid (value===1) ones — confirmed the real root
+ *  cause of a long-standing RMG load-freeze bug (see entrance-validation.ts):
+ *  without this, nothing stopped a later decoration pass from placing a
+ *  solid object (e.g. a pinetree) directly on an already-placed city's own
+ *  entrance tile, sealing it off in-game. A future *solid* placement whose
+ *  own footprint would land on that node is rejected by the `cell.value ===
+ *  1 &&` check above, same as any other blocked cell; a walkable decoration
+ *  (no value===1 cells at all, e.g. grass/flowers) is still allowed there,
+ *  matching the real game's own tolerance for walkable clutter on an
+ *  entrance tile. */
 export function tryPlaceAt(
   sid: string,
   node: number,
@@ -191,7 +203,7 @@ export function tryPlaceAt(
   state.usedAnchors.add(node)
   if (!nonBlocking) {
     for (const cell of cells) {
-      if (cell.value === 1) state.blocked.add(cell.z * sizeX + cell.x)
+      if (cell.value === 1 || cell.value === 2) state.blocked.add(cell.z * sizeX + cell.x)
     }
   }
   return true

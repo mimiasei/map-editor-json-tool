@@ -307,7 +307,7 @@ export function generateTerrain(
     for (const p of players) {
       seedAnchors.add(p.node)
       for (const cell of computeFootprintTiles(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX))) {
-        if (cell.value === 1) seedBlocked.add(cell.z * sizeX + cell.x)
+        if (cell.value === 1 || cell.value === 2) seedBlocked.add(cell.z * sizeX + cell.x)
       }
     }
   }
