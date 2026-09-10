@@ -241,9 +241,9 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
  * just-opened-but-unedited map still has something worth saving a copy of.
  *
  * Returns `'cancelled'` when a save-location prompt this call needed was
- * dismissed, or `'blocked'` when the .map document has an out-of-bounds
- * placement (`useMapDocumentStore`'s `boundsViolations` is already set for
- * the app-shell-level dialog to show by the time this resolves) — callers
+ * dismissed, or `'blocked'` when the .map document fails a save-time
+ * validation check (`useMapDocumentStore`'s `mapValidationIssues` is already
+ * set for the app-shell-level dialog to show by the time this resolves) — callers
  * (AppShell.handleSave / Toolbar.handleExport) must check for either and
  * abort their own Save/Save As entirely rather than falling through to
  * their scenario-JSON-saving logic, which would otherwise pop a SECOND,

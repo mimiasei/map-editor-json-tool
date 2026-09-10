@@ -23,7 +23,7 @@ import type { RestoreResult } from '@/lib/session-handoff'
 import { UpdateBanner, RestoreBanner, ThumbnailsBanner } from '@/components/common/UpdateBanner'
 import UpdateDialog from '@/components/common/UpdateDialog'
 import UnsavedChangesDialog from '@/components/common/UnsavedChangesDialog'
-import MapBoundsErrorDialog from '@/components/common/MapBoundsErrorDialog'
+import MapValidationErrorDialog from '@/components/common/MapValidationErrorDialog'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -678,7 +678,7 @@ export default function AppShell() {
         onDiscard={() => resolveExitChoice('discard')}
         onCancel={() => resolveExitChoice('cancel')}
       />
-      <MapBoundsErrorDialog />
+      <MapValidationErrorDialog />
 
       <ThumbnailExtractDialog
         open={thumbnailDialogOpen}
