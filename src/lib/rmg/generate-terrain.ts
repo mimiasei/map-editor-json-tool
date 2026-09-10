@@ -46,7 +46,7 @@ import {
   type BlankMapPlayer,
   type MapContainer,
 } from '@/lib/map-write'
-import { computeFootprintTiles, clampAnchorToFootprintBounds } from '@/lib/map-grid/footprint'
+import {computeFootprintTiles, clampAnchorToFootprintBounds, protectedNeighborNodes} from '@/lib/map-grid/footprint'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
@@ -306,8 +306,14 @@ export function generateTerrain(
     const spawnerTemplate = catalogById.get(playerSpawnerSid)
     for (const p of players) {
       seedAnchors.add(p.node)
-      for (const cell of computeFootprintTiles(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX))) {
+      const cells = computeFootprintTiles(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX))
+      for (const cell of cells) {
         if (cell.value === 1 || cell.value === 2) seedBlocked.add(cell.z * sizeX + cell.x)
+      }
+
+      const protectedNodes = protectedNeighborNodes(cells, sizeX, sizeZ)
+      for (const pNode of protectedNodes) {
+          seedBlocked.add(pNode)
       }
     }
   }

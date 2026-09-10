@@ -20,7 +20,7 @@
 
 import type { CatalogMapObject, CatalogObjectLogic, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import {computeFootprintTiles, protectedNeighborNodes} from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import {
   BIOME_FACTION,
@@ -204,6 +204,11 @@ export function tryPlaceAt(
   if (!nonBlocking) {
     for (const cell of cells) {
       if (cell.value === 1 || cell.value === 2) state.blocked.add(cell.z * sizeX + cell.x)
+    }
+
+    const protectedNodes = protectedNeighborNodes(cells, sizeX, sizeZ)
+    for (const pNode of protectedNodes) {
+      state.blocked.add(pNode)
     }
   }
   return true

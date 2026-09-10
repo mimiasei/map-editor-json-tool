@@ -15,7 +15,7 @@
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
-import { computeFootprintTiles } from './footprint'
+import {computeFootprintTiles, protectedNeighborNodes} from './footprint'
 import { buildBlockedTileSet } from './passability'
 
 export interface BlockedEntrancePlacement {
@@ -33,8 +33,9 @@ type EntranceValidationContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObj
  *  water, or an unramped elevation wall (the same three-source rule
  *  `buildBlockedTileSet` already uses for the grid's own blocked-tile
  *  overlay). An object with more than one entrance cell is only flagged if
- *  EVERY one of them is blocked — one open side is enough to actually reach
- *  it. Objects with no `value===2` cell at all (plain decorations, mines,
+ *  any protected node (entrance + adjacent footprint cells' external neighbors)
+ *  is blocked — one open side is enough to actually reach it.
+ *  Objects with no `value===2` cell at all (plain decorations, mines,
  *  most environments) have no entrance concept and are never checked. */
 export function findBlockedEntrancePlacements(
   context: EntranceValidationContext,
@@ -48,11 +49,11 @@ export function findBlockedEntrancePlacements(
   for (const placed of context.placedObjects as PlacedObject[]) {
     if (placed.type !== 0) continue
     const template = catalogById.get(placed.sid)
-    const entranceCells = computeFootprintTiles(template, placed.x, placed.z)
-      .filter((c) => c.value === 2 && c.x >= 0 && c.x < sizeX && c.z >= 0 && c.z < sizeZ)
-    if (entranceCells.length === 0) continue
-    const allBlocked = entranceCells.every((c) => blocked.has(c.z * sizeX + c.x))
-    if (allBlocked) {
+    const allCells = computeFootprintTiles(template, placed.x, placed.z)
+    if (!allCells.some((c) => c.value === 2)) continue
+    const protectedNodes = protectedNeighborNodes(allCells, sizeX, sizeZ)
+    const isBlocked = [...protectedNodes].some((n) => blocked.has(n))
+    if (isBlocked) {
       violations.push({ sid: placed.sid, id: placed.id, x: placed.x, z: placed.z, node: placed.node })
     }
   }

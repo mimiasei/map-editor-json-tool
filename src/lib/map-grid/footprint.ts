@@ -153,6 +153,33 @@ export function isFootprintInBounds(cells: FootprintCell[], sizeX: number, sizeZ
   return cells.every((cell) => cell.x >= 0 && cell.x < sizeX && cell.z >= 0 && cell.z < sizeZ)
 }
 
+/** S = {entrance cell(s)} ∪ {footprint cells that are 4-directionally (edge-)adjacent
+ * to an entrance cell}. For city-spawner's real template (nodes:[1,1,1,1,1,1,2,1,1],
+ * entrance at local index 6 = lx0,lz2), the footprint-neighbors sharing an edge with
+ * the entrance are local index 3 (lx0,lz1 — directly behind it) and
+ * local index 7 (lx1,lz2 — beside it in the same row) — these are your "1" and "3".
+ * The far corners/edge (index 0,2,5,8 in real local terms) aren't adjacent to the entrance,
+ * so they're excluded — matches your "2,5,6,8 don't matter." */
+export function protectedNeighborNodes(cells: FootprintCell[], sizeX: number, sizeZ: number): Set<number> {
+    const ownNodes = new Set(cells.map((c) => c.z * sizeX + c.x))
+    const entranceCells = cells.filter((c) => c.value === 2)
+    const coreCells = entranceCells.concat(
+        cells.filter((c) => c.value === 1 && entranceCells.some((e) =>
+            (Math.abs(e.x - c.x) === 1 && e.z === c.z) || (Math.abs(e.z - c.z) === 1 && e.x === c.x)
+        ))
+    )
+    const result = new Set<number>()
+    for (const cell of coreCells) {
+        for (const [dx, dz] of [[1,0],[-1,0],[0,1],[0,-1]]) { // or 8-way if you want diagonals too
+            const x = cell.x + dx, z = cell.z + dz
+            if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
+            const node = z * sizeX + x
+            if (!ownNodes.has(node)) result.add(node)
+        }
+    }
+    return result
+}
+
 /**
  * Clamps an anchor tile so its footprint (per `computeFootprintTiles`'s
  * X-forward/Z-backward convention above) fits fully within `sizeX`x`sizeZ` —

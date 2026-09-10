@@ -13,7 +13,7 @@
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
-import { computeFootprintTiles } from './footprint'
+import {computeFootprintTiles, protectedNeighborNodes} from './footprint'
 import { groupOf } from './tile-index'
 import { findBlockedEntrancePlacements, type BlockedEntrancePlacement } from './entrance-validation'
 
@@ -55,6 +55,7 @@ export function computeEntranceAutoFix(
   for (const obj of placedObjects) {
     if (obj.type !== 0) continue
     const template = catalogById.get(obj.sid)
+
     for (const cell of computeFootprintTiles(template, obj.x, obj.z)) {
       if (cell.value !== 1) continue
       const node = cell.z * sizeX + cell.x
@@ -70,13 +71,13 @@ export function computeEntranceAutoFix(
 
   for (const violation of violations) {
     const template = catalogById.get(violation.sid)
-    const entranceCells = computeFootprintTiles(template, violation.x, violation.z).filter((c) => c.value === 2)
+    const allCells = computeFootprintTiles(template, violation.x, violation.z)
+    const protectedNodes = protectedNeighborNodes(allCells, sizeX, context.sizeZ)
     const blockers = new Map<number, PlacedObject>()
     let resolvable = true
-    for (const cell of entranceCells) {
-      const node = cell.z * sizeX + cell.x
+    for (const node of protectedNodes) {
       const owners = solidOwnersByNode.get(node)
-      if (!owners || owners.length === 0) { resolvable = false; break } // water/elevation wall, no object to delete
+      if (!owners) continue // this protected tile is not blocked so move on to the next
       for (const owner of owners) {
         if (groupOf(owner, catalog) !== 'decorations') { resolvable = false; break }
         blockers.set(owner.id, owner)
