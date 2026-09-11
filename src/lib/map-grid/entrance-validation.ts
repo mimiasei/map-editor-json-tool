@@ -12,6 +12,18 @@
 // interactable/artifact/resource/spawner template that "mixes in" a
 // value===2 cell (footprint.ts's own doc comment) has the exact same
 // failure mode.
+//
+// A SECOND, narrower failure mode along the same lines (found 2026-09-11 via
+// a real H3 import — Ville'de'Porte.h3m's city-spawner id 1901, owner 2):
+// `entranceGroups()` computes each group's own `entranceNode` (the `2` cell
+// itself) separately from `protectedNodes` (the *approach* ring around it) —
+// this function used to only ever check `protectedNodes`, so another
+// object's solid footprint landing directly ON the entrance cell itself
+// (not the approach ring, but the literal "stand here to interact" tile)
+// went undetected even though the approach ring was completely open. Real
+// case: `tree_dead_3` placed exactly on city-spawner 1901's entrance cell —
+// every `protectedNodes` check passed clean, so the object was never flagged
+// and the auto-fix pass never touched that tree.
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -53,7 +65,7 @@ export function findBlockedEntrancePlacements(
     const allCells = computeFootprintTiles(template, placed.x, placed.z)
     const groups = entranceGroups(allCells, sizeX, sizeZ)
     if (groups.length === 0) continue
-    const allBlocked = groups.every((g) => [...g.protectedNodes].some((n) => blocked.has(n)))
+    const allBlocked = groups.every((g) => blocked.has(g.entranceNode) || [...g.protectedNodes].some((n) => blocked.has(n)))
     if (allBlocked) {
       violations.push({ sid: placed.sid, id: placed.id, x: placed.x, z: placed.z, node: placed.node })
     }

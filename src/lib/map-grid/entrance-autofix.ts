@@ -16,6 +16,13 @@
 // can't safely resolve unattended; blocking caused by water/an elevation
 // wall has no "object" to clear at all — both land in `unresolved` rather
 // than guessing at a fix.
+//
+// The blockable-node set for a group is its entrance cell (`entranceNode`)
+// PLUS its approach ring (`protectedNodes`) — not just the ring. A blocker
+// can sit directly on the entrance cell itself (Ville'de'Porte.h3m's
+// tree_dead_3, found 2026-09-11 sitting exactly on city-spawner 1901's own
+// entrance tile with the whole approach ring completely open) — matching
+// entrance-validation.ts's own fix for the same gap.
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -131,7 +138,12 @@ export function computeEntranceAutoFix(
     for (const group of groups) {
       const blockers = new Map<number, PlacedObject>()
       let clearable = true
-      for (const node of group.protectedNodes) {
+      // The entrance cell itself (group.entranceNode) needs the same check as
+      // the approach ring (protectedNodes) — another object's solid footprint
+      // can land directly on it (Ville'de'Porte.h3m's tree_dead_3 on city-
+      // spawner 1901's own entrance cell), which the approach-ring check alone
+      // never catches since that tile isn't part of protectedNodes at all.
+      for (const node of [group.entranceNode, ...group.protectedNodes]) {
         if (!blocked.has(node)) continue
         const owners = solidOwnersByNode.get(node)
         if (!owners || owners.length === 0) { clearable = false; break } // water/wall — no object to delete
@@ -247,7 +259,7 @@ function findRelocationTarget(
     for (const cell of cells) {
       if (cell.value === 1 && blocked.has(cell.z * sizeX + cell.x)) return false
     }
-    return entranceGroups(cells, sizeX, sizeZ).some((g) => ![...g.protectedNodes].some((n) => blocked.has(n)))
+    return entranceGroups(cells, sizeX, sizeZ).some((g) => !blocked.has(g.entranceNode) && ![...g.protectedNodes].some((n) => blocked.has(n)))
   }
 
   if (isValidCandidate(violation.x, violation.z)) return violation.z * sizeX + violation.x
