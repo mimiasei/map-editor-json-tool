@@ -19,6 +19,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { gunzipH3mIfNeeded } from './parse-h3m'
 import { convertH3mToMap, type H3ImportReport } from './convert-h3m-to-map'
 import { validateMapStructure } from '@/lib/map-grid/validate-map'
+import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 
 export interface ImportH3mResult {
   /** Display name for the freshly-imported map, e.g. "Crimson and Clover.map" */
@@ -28,6 +29,7 @@ export interface ImportH3mResult {
    *  surfaced so a real gap in this round's simplified conversion is always
    *  visible, never silently produced as a "looks fine" map. */
   validationErrors: string[]
+  autoFixWarnings: string[]
 }
 
 /**
@@ -58,13 +60,14 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
   const templateContainer = readMapContainer(await gunzipBytes(new Uint8Array(templateBuffer)))
 
   const { container, report, localizationTokens, dialogFlows } = convertH3mToMap(data, catalog, templateContainer)
+  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog)
 
   const decoder = new TextDecoder('utf-8')
-  const b1 = JSON.parse(decoder.decode(container.chunks[0])) as Record<string, unknown>
-  const b2 = JSON.parse(decoder.decode(container.chunks[1])) as Record<string, unknown>
+  const b1 = JSON.parse(decoder.decode(fixed.chunks[0])) as Record<string, unknown>
+  const b2 = JSON.parse(decoder.decode(fixed.chunks[1])) as Record<string, unknown>
   const { errors: validationErrors } = validateMapStructure(b1, b2)
 
-  const gzipped = await gzipBytes(buildMapContainer(container))
+  const gzipped = await gzipBytes(buildMapContainer(fixed))
   const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 
   const stem = file.name.replace(/\.h3m$/i, '')
@@ -88,5 +91,5 @@ export async function importH3mFile(): Promise<ImportH3mResult | null> {
     useScenarioStore.getState().setDialogFlow(flow.id, flow)
   }
 
-  return { name, report, validationErrors }
+  return { name, report, validationErrors, autoFixWarnings }
 }

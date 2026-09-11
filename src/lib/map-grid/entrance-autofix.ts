@@ -1,15 +1,21 @@
 // ─── Map Grid — blocked-entrance auto-fix (Bug B root cause, 2026-09-10) ────
 // Companion to entrance-validation.ts. Fix strategy mirrors accessibility-
-// pass.ts's own established, real-game-tested repair rule: delete the
-// decorative object standing in the way — never the real target (a city's
-// entrance is never itself relocated; its position is load-bearing for zone
-// layout/roads, unlike a stray tree). Only ever deletes a PURELY decorative
-// blocker (`groupOf(...) === 'decorations'` — environments/animals/fxs/test/
-// blocks, tile-index.ts's own real categorization, not a new one); a real
-// object placed too close (another city, a mine, ...) is a genuine design
-// conflict this can't safely resolve unattended, and blocking caused by
-// water/an elevation wall has no "object" to delete at all — both land in
-// `unresolved` rather than guessing at a relocation.
+// pass.ts's own established, real-game-tested repair rule: clear the object
+// standing in the way — never the real target (a city's entrance is never
+// itself relocated; its position is load-bearing for zone layout/roads,
+// unlike a stray tree or a loose artifact). A blocker is handled by kind
+// (tile-index.ts's own real `groupOf` categorization, not a new one): a pure
+// decoration (`decorations`) is deleted outright; a pickable ground item
+// (`artifacts`/`resources` — real loot, but never load-bearing the way a
+// city/mine/dwelling is) is moved to a nearby free tile first and only
+// deleted if no such tile exists. Confirmed needed against a real H3 import:
+// Ville'de'Porte.h3m's city-spawner (id 1901) has a dead tree AND a loose
+// artifact overlapping its entrance tile — deleting only decorations left
+// the artifact still blocking it. Anything else (another real object placed
+// too close — another city, a mine, ...) is a genuine design conflict this
+// can't safely resolve unattended; blocking caused by water/an elevation
+// wall has no "object" to clear at all — both land in `unresolved` rather
+// than guessing at a fix.
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -19,8 +25,11 @@ import { buildBlockedTileSet } from './passability'
 import { findBlockedEntrancePlacements, type BlockedEntrancePlacement } from './entrance-validation'
 
 export interface EntranceAutoFixDeletion {
-  /** The decorative object being removed — always type 0 (a footprint
-   *  template is what creates the collision in the first place). */
+  /** The object being removed — always type 0 (a footprint template is what
+   *  creates the collision in the first place). Usually a pure decoration;
+   *  can also be a pickable artifact/resource that had nowhere valid to be
+   *  moved to (see EntranceAutoFixRelocation — a move is always tried
+   *  first for those two groups). */
   id: number
   sid: string
   /** The real entrance this deletion unblocks — for the dialog's own
@@ -29,6 +38,9 @@ export interface EntranceAutoFixDeletion {
 }
 
 export interface EntranceAutoFixRelocation {
+  /** Either the violating object itself (moved because deleting/moving its
+   *  blockers alone couldn't open any entrance group), or a pickable
+   *  artifact/resource blocker moved out of someone else's entrance. */
   id: number
   sid: string
   fromNode: number
@@ -108,10 +120,13 @@ export function computeEntranceAutoFix(
     const allCells = computeFootprintTiles(template, violation.x, violation.z)
     const groups = entranceGroups(allCells, sizeX, sizeZ)
 
-    // Pick whichever entrance group can be opened with the FEWEST decorative
-    // deletions — a violation is only flagged when EVERY group is blocked,
-    // so opening just one group (not every blocker on every group) is
-    // enough to make the object valid again.
+    // Pick whichever entrance group can be opened with the FEWEST blockers —
+    // a violation is only flagged when EVERY group is blocked, so opening
+    // just one group (not every blocker on every group) is enough to make
+    // the object valid again. A group only counts as clearable when every
+    // blocking owner is a decoration or a pickable item (artifacts/
+    // resources) — anything else (another real placed object, or a
+    // water/wall cell with no owner at all) can't be safely cleared here.
     let bestGroupBlockers: PlacedObject[] | null = null
     for (const group of groups) {
       const blockers = new Map<number, PlacedObject>()
@@ -121,7 +136,8 @@ export function computeEntranceAutoFix(
         const owners = solidOwnersByNode.get(node)
         if (!owners || owners.length === 0) { clearable = false; break } // water/wall — no object to delete
         for (const owner of owners) {
-          if (groupOf(owner, catalog) !== 'decorations') { clearable = false; break }
+          const ownerGroup = groupOf(owner, catalog)
+          if (ownerGroup !== 'decorations' && ownerGroup !== 'artifacts' && ownerGroup !== 'resources') { clearable = false; break }
           blockers.set(owner.id, owner)
         }
         if (!clearable) break
@@ -135,12 +151,21 @@ export function computeEntranceAutoFix(
       for (const blocker of bestGroupBlockers) {
         if (alreadyMarked.has(blocker.id)) continue
         alreadyMarked.add(blocker.id)
+        const blockerGroup = groupOf(blocker, catalog)
+        if (blockerGroup === 'artifacts' || blockerGroup === 'resources') {
+          const blockerTemplate = catalogById.get(blocker.sid)
+          const target = findNearbyFreeTile(blocker, blockerTemplate, context, catalog)
+          if (target !== null) {
+            relocations.push({ id: blocker.id, sid: blocker.sid, fromNode: blocker.node, toNode: target })
+            continue
+          }
+        }
         deletions.push({ id: blocker.id, sid: blocker.sid, unblocks: { sid: violation.sid, id: violation.id } })
       }
       continue
     }
 
-    // No group could be opened by deleting decorations alone — a real
+    // No group could be opened by clearing blockers alone — a real
     // object is in the way on every side. A player-start spawner's position
     // is load-bearing (zone layout/roads) and is never relocated, matching
     // the existing rule; everything else gets moved to a nearby valid tile
@@ -156,6 +181,44 @@ export function computeEntranceAutoFix(
   }
 
   return { deletions, relocations, unresolved }
+}
+
+/** Nearest free tile (expanding ring search) for relocating a pickable
+ *  blocker (artifact/resource) out of another object's entrance. Unlike
+ *  findRelocationTarget below, this never checks the mover's OWN entrance
+ *  groups — a ground pickup is frequently a single fully-solid cell with no
+ *  "2" interaction ring at all, which would make that check always fail —
+ *  it only needs a spot where the mover's own footprint isn't itself
+ *  blocked. Always searches outward from radius 1 (never returns the
+ *  mover's current tile — that's the one place we already know is blocking
+ *  something). */
+function findNearbyFreeTile(
+  obj: PlacedObject,
+  template: ReturnType<Map<string, import('@/lib/catalog/types').CatalogMapObject>['get']>,
+  context: EntranceAutoFixContext,
+  catalog: GameCatalog | null,
+): number | null {
+  const { sizeX, sizeZ } = context
+  const blocked = buildBlockedTileSet(context, catalog)
+  for (const cell of computeFootprintTiles(template, obj.x, obj.z)) {
+    if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
+    blocked.delete(cell.z * sizeX + cell.x)
+  }
+
+  const isValidCandidate = (x: number, z: number): boolean => {
+    const cells = computeFootprintTiles(template, x, z)
+    if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+    return cells.every((cell) => cell.value !== 1 || !blocked.has(cell.z * sizeX + cell.x))
+  }
+
+  const maxRadius = Math.max(sizeX, sizeZ)
+  for (let radius = 1; radius <= maxRadius; radius++) {
+    for (const [x, z] of ringOffsets(obj.x, obj.z, radius)) {
+      if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
+      if (isValidCandidate(x, z)) return z * sizeX + x
+    }
+  }
+  return null
 }
 
 /** Nearest tile (expanding ring search, same shape as bounds-autofix.ts's
