@@ -121,6 +121,18 @@ export function computeEntranceAutoFix(
   const relocations: EntranceAutoFixRelocation[] = []
   const unresolved: BlockedEntrancePlacement[] = []
   const alreadyMarked = new Set<number>()
+  // Solid-cell nodes claimed by a relocation decided EARLIER in this same
+  // pass — each relocation target below is validated against a static
+  // snapshot (`blocked`, built once up front), so without this two different
+  // violations processed in the same call could independently pick the same
+  // destination tile. Confirmed via a real H3 import (Ville'de'Porte.h3m,
+  // 2026-09-11): portal_2 (id 316) and portal_3 (id 467) both got relocated
+  // onto the exact same node — each looked valid in isolation against the
+  // pre-pass snapshot, but the map's own independent post-fix revalidation
+  // caught the resulting overlap. Passed into findNearbyFreeTile/
+  // findRelocationTarget so every later candidate search also avoids tiles
+  // already spoken for.
+  const claimedDestinations = new Set<number>()
 
   for (const violation of violations) {
     const template = catalogById.get(violation.sid)
@@ -166,8 +178,9 @@ export function computeEntranceAutoFix(
         const blockerGroup = groupOf(blocker, catalog)
         if (blockerGroup === 'artifacts' || blockerGroup === 'resources') {
           const blockerTemplate = catalogById.get(blocker.sid)
-          const target = findNearbyFreeTile(blocker, blockerTemplate, context, catalog)
+          const target = findNearbyFreeTile(blocker, blockerTemplate, context, catalog, claimedDestinations)
           if (target !== null) {
+            claimNode(target, blockerTemplate, sizeX, claimedDestinations)
             relocations.push({ id: blocker.id, sid: blocker.sid, fromNode: blocker.node, toNode: target })
             continue
           }
@@ -184,8 +197,9 @@ export function computeEntranceAutoFix(
     // instead of being left permanently blocked.
     if (PLAYER_START_SIDS.has(violation.sid)) { unresolved.push(violation); continue }
 
-    const relocated = findRelocationTarget(violation, template, context, catalog)
+    const relocated = findRelocationTarget(violation, template, context, catalog, claimedDestinations)
     if (relocated) {
+      claimNode(relocated, template, sizeX, claimedDestinations)
       relocations.push({ id: violation.id, sid: violation.sid, fromNode: violation.node, toNode: relocated })
     } else {
       unresolved.push(violation)
@@ -193,6 +207,22 @@ export function computeEntranceAutoFix(
   }
 
   return { deletions, relocations, unresolved }
+}
+
+/** Marks a relocation destination's own SOLID cells as claimed, so a later
+ *  violation's search in the same pass won't pick the same tile — see
+ *  `claimedDestinations`'s doc comment above. */
+function claimNode(
+  node: number,
+  template: ReturnType<Map<string, import('@/lib/catalog/types').CatalogMapObject>['get']>,
+  sizeX: number,
+  claimedDestinations: Set<number>,
+): void {
+  const x = node % sizeX
+  const z = Math.floor(node / sizeX)
+  for (const cell of computeFootprintTiles(template, x, z)) {
+    if (cell.value === 1) claimedDestinations.add(cell.z * sizeX + cell.x)
+  }
 }
 
 /** Nearest free tile (expanding ring search) for relocating a pickable
@@ -203,24 +233,36 @@ export function computeEntranceAutoFix(
  *  it only needs a spot where the mover's own footprint isn't itself
  *  blocked. Always searches outward from radius 1 (never returns the
  *  mover's current tile — that's the one place we already know is blocking
- *  something). */
+ *  something).
+ *
+ *  The blocked set is built with the mover's OWN placement excluded from
+ *  `placedObjects` entirely (not by deleting its footprint's nodes from an
+ *  already-built set) — a real H3 import (Ville'de'Porte.h3m's 4 portals,
+ *  found 2026-09-11) showed why the naive delete is wrong: a template's
+ *  non-solid (`0`/`2`) footprint cells routinely spatially coincide with a
+ *  completely different, unrelated object's solid cell (e.g. a portal's own
+ *  empty padding cell landing on a tree's trunk tile) — blindly deleting
+ *  every node the mover's footprint touches erases that unrelated object's
+ *  real block too, so a candidate right next to a real obstacle could pass
+ *  as "valid" here yet still fail the map's own independent post-fix
+ *  revalidation. */
 function findNearbyFreeTile(
   obj: PlacedObject,
   template: ReturnType<Map<string, import('@/lib/catalog/types').CatalogMapObject>['get']>,
   context: EntranceAutoFixContext,
   catalog: GameCatalog | null,
+  claimedDestinations: Set<number>,
 ): number | null {
   const { sizeX, sizeZ } = context
-  const blocked = buildBlockedTileSet(context, catalog)
-  for (const cell of computeFootprintTiles(template, obj.x, obj.z)) {
-    if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
-    blocked.delete(cell.z * sizeX + cell.x)
-  }
+  const blocked = buildBlockedTileSet(
+    { ...context, placedObjects: (context.placedObjects as PlacedObject[]).filter((o) => !(o.type === 0 && o.id === obj.id)) },
+    catalog,
+  )
 
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z)
     if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
-    return cells.every((cell) => cell.value !== 1 || !blocked.has(cell.z * sizeX + cell.x))
+    return cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x)))
   }
 
   const maxRadius = Math.max(sizeX, sizeZ)
@@ -239,27 +281,39 @@ function findNearbyFreeTile(
  *  collision set first so it never blocks itself, same fix bounds-autofix.ts
  *  needed for the same reason. No reachability/flood-fill check here
  *  (unlike bounds-autofix.ts) — this only needs "not blocked," not "on the
- *  same connected landmass as a player start." */
+ *  same connected landmass as a player start."
+ *
+ *  Same exclude-by-filtering-placedObjects fix as `findNearbyFreeTile`
+ *  above, for the same reason — see its doc comment. Confirmed needed here
+ *  too: Ville'de'Porte.h3m's 4 blocked portals (all `portal_1`/`portal_2`/
+ *  `portal_3`, 2x2 templates with a non-solid padding cell alongside their
+ *  solid+entrance cells) each got "relocated" to a candidate whose
+ *  entrance/approach ring was only clear because the old delete-by-node
+ *  logic wiped out a real neighboring tree/city/portal's genuine block that
+ *  happened to spatially coincide with one of the mover's own non-solid
+ *  cells — passing this function's own check yet still showing up as
+ *  blocked in the map's independent post-fix revalidation. */
 function findRelocationTarget(
   violation: BlockedEntrancePlacement,
   template: ReturnType<Map<string, import('@/lib/catalog/types').CatalogMapObject>['get']>,
   context: EntranceAutoFixContext,
   catalog: GameCatalog | null,
+  claimedDestinations: Set<number>,
 ): number | null {
   const { sizeX, sizeZ } = context
-  const blocked = buildBlockedTileSet(context, catalog)
-  for (const cell of computeFootprintTiles(template, violation.x, violation.z)) {
-    if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
-    blocked.delete(cell.z * sizeX + cell.x)
-  }
+  const blocked = buildBlockedTileSet(
+    { ...context, placedObjects: (context.placedObjects as PlacedObject[]).filter((o) => !(o.type === 0 && o.id === violation.id)) },
+    catalog,
+  )
+  const isBlocked = (n: number) => blocked.has(n) || claimedDestinations.has(n)
 
   const isValidCandidate = (x: number, z: number): boolean => {
     const cells = computeFootprintTiles(template, x, z)
     if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
     for (const cell of cells) {
-      if (cell.value === 1 && blocked.has(cell.z * sizeX + cell.x)) return false
+      if (cell.value === 1 && isBlocked(cell.z * sizeX + cell.x)) return false
     }
-    return entranceGroups(cells, sizeX, sizeZ).some((g) => !blocked.has(g.entranceNode) && ![...g.protectedNodes].some((n) => blocked.has(n)))
+    return entranceGroups(cells, sizeX, sizeZ).some((g) => !isBlocked(g.entranceNode) && ![...g.protectedNodes].some((n) => isBlocked(n)))
   }
 
   if (isValidCandidate(violation.x, violation.z)) return violation.z * sizeX + violation.x
