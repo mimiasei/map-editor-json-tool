@@ -128,10 +128,13 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
         for (const deletion of entrance.deletions) {
           get().applyEdit({ kind: 'deleteObject', entityType: 0, entityId: deletion.id })
         }
+        for (const relocation of entrance.relocations) {
+          get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: relocation.id, newNode: relocation.toNode })
+        }
         const after = get().container
         const remaining = after ? findMapValidationIssues(extractMapContext(containerToRawBlocks(after)), catalog) : []
         set({ mapValidationIssues: remaining.length > 0 ? remaining : null })
-        const fixedCount = bounds.fixes.length + entrance.deletions.length
+        const fixedCount = bounds.fixes.length + entrance.deletions.length + entrance.relocations.length
         return { fixedCount, unresolvedCount: remaining.length }
       },
 

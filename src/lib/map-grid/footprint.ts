@@ -180,6 +180,45 @@ export function protectedNeighborNodes(cells: FootprintCell[], sizeX: number, si
     return result
 }
 
+export interface EntranceGroup {
+  entranceNode: number
+  protectedNodes: Set<number>
+}
+
+/** Same "entrance cell + its own directly-adjacent solid flanking cell(s)"
+ *  idea as `protectedNeighborNodes`, but scoped to ONE entrance cell at a
+ *  time instead of unioned across every entrance cell in the footprint.
+ *  Needed for multi-entrance templates like `resource_dust`
+ *  (pivotX/Z:1, 3x3, nodes:[2,2,2,2,1,2,2,2,2] — a solid center ringed by 8
+ *  entrance cells): `protectedNeighborNodes` treats the center as "adjacent
+ *  to every entrance cell," so it pulls the WHOLE 3x3's outer perimeter into
+ *  one combined set — any single blocked neighbor anywhere around the
+ *  object then reads as "blocked," when really only one open side should be
+ *  required. Callers should flag an object only when EVERY group here is
+ *  blocked (one open group is enough to reach it) — restores the original
+ *  "one open side is enough" rule while keeping the corner-flanking
+ *  widening `protectedNeighborNodes` itself introduced for city-spawner's
+ *  single corner entrance. */
+export function entranceGroups(cells: FootprintCell[], sizeX: number, sizeZ: number): EntranceGroup[] {
+  const ownNodes = new Set(cells.map((c) => c.z * sizeX + c.x))
+  const entranceCells = cells.filter((c) => c.value === 2)
+  return entranceCells.map((entrance) => {
+    const coreCells = [entrance, ...cells.filter((c) =>
+      c.value === 1 && ((Math.abs(c.x - entrance.x) === 1 && c.z === entrance.z) || (Math.abs(c.z - entrance.z) === 1 && c.x === entrance.x))
+    )]
+    const protectedNodes = new Set<number>()
+    for (const cell of coreCells) {
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+        const x = cell.x + dx, z = cell.z + dz
+        if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
+        const node = z * sizeX + x
+        if (!ownNodes.has(node)) protectedNodes.add(node)
+      }
+    }
+    return { entranceNode: entrance.z * sizeX + entrance.x, protectedNodes }
+  })
+}
+
 /**
  * Clamps an anchor tile so its footprint (per `computeFootprintTiles`'s
  * X-forward/Z-backward convention above) fits fully within `sizeX`x`sizeZ` —

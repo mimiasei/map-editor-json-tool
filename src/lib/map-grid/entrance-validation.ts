@@ -15,7 +15,7 @@
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
-import {computeFootprintTiles, protectedNeighborNodes} from './footprint'
+import {computeFootprintTiles, entranceGroups} from './footprint'
 import { buildBlockedTileSet } from './passability'
 
 export interface BlockedEntrancePlacement {
@@ -28,15 +28,16 @@ export interface BlockedEntrancePlacement {
 
 type EntranceValidationContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
 
-/** Every type-0 placement whose real entrance (every footprint cell with
- *  `value===2`) is entirely blocked — by another object's solid footprint,
- *  water, or an unramped elevation wall (the same three-source rule
- *  `buildBlockedTileSet` already uses for the grid's own blocked-tile
- *  overlay). An object with more than one entrance cell is only flagged if
- *  any protected node (entrance + adjacent footprint cells' external neighbors)
- *  is blocked — one open side is enough to actually reach it.
- *  Objects with no `value===2` cell at all (plain decorations, mines,
- *  most environments) have no entrance concept and are never checked. */
+/** Every type-0 placement whose real entrance is entirely blocked — by
+ *  another object's solid footprint, water, or an unramped elevation wall
+ *  (the same three-source rule `buildBlockedTileSet` already uses for the
+ *  grid's own blocked-tile overlay). Evaluated per entrance cell
+ *  (`footprint.ts`'s `entranceGroups`, one group per `value===2` cell) so an
+ *  object with multiple entrance cells (e.g. `resource_dust`'s 8-cell ring
+ *  around a solid center) is only flagged if EVERY group is blocked — one
+ *  open side is enough to actually reach it. Objects with no `value===2`
+ *  cell at all (plain decorations, mines, most environments) have no
+ *  entrance concept and are never checked. */
 export function findBlockedEntrancePlacements(
   context: EntranceValidationContext,
   catalog: GameCatalog | null,
@@ -50,10 +51,10 @@ export function findBlockedEntrancePlacements(
     if (placed.type !== 0) continue
     const template = catalogById.get(placed.sid)
     const allCells = computeFootprintTiles(template, placed.x, placed.z)
-    if (!allCells.some((c) => c.value === 2)) continue
-    const protectedNodes = protectedNeighborNodes(allCells, sizeX, sizeZ)
-    const isBlocked = [...protectedNodes].some((n) => blocked.has(n))
-    if (isBlocked) {
+    const groups = entranceGroups(allCells, sizeX, sizeZ)
+    if (groups.length === 0) continue
+    const allBlocked = groups.every((g) => [...g.protectedNodes].some((n) => blocked.has(n)))
+    if (allBlocked) {
       violations.push({ sid: placed.sid, id: placed.id, x: placed.x, z: placed.z, node: placed.node })
     }
   }

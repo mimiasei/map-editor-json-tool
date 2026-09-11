@@ -83,9 +83,12 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   for (const del of entrance.deletions) {
     fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: del.id }).container
   }
+  for (const rel of entrance.relocations) {
+    fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: 0, entityId: rel.id, newNode: rel.toNode }).container
+  }
   const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
   const autoFixWarnings: string[] = []
-  const fixedCount = bounds.fixes.length + entrance.deletions.length
+  const fixedCount = bounds.fixes.length + entrance.deletions.length + entrance.relocations.length
   if (fixedCount > 0) autoFixWarnings.push(`Auto-fixed ${fixedCount} placement issue(s) during generation.`)
   for (const issue of remaining) {
     autoFixWarnings.push(`Unresolved: ${describeMapValidationIssue(issue)}`)
