@@ -9,6 +9,11 @@ import { importScenario } from '@/lib/import'
 import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { exportMapZip } from '@/lib/zip-export'
 import { validateScenario } from '@/lib/validate'
+import { findMapValidationIssues, describeMapValidationIssue, type MapValidationIssue } from '@/lib/map-grid/map-validation'
+import {
+  findUnreachablePlacements, describeUnreachablePlacement, type UnreachablePlacement,
+  findIsolatedPlayerStarts, describeIsolatedPlayerStart, type IsolatedPlayerStart,
+} from '@/lib/map-grid/reachability-validation'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog } from '@/lib/native-fs'
@@ -156,6 +161,12 @@ export default function Toolbar({
   const mapIsDirty = useMapDocumentStore((s) => s.mapIsDirty)
 
   const [validateOpen,        setValidateOpen]        = useState(false)
+  // On-demand only (per issue: no continuous/auto-validation while editing)
+  // — (re)computed just before the Validate dialog opens, never on every
+  // render like the scenario `validation` below. null means either "not
+  // checked yet this session" or "no map currently loaded".
+  const [mapPlacementCheck, setMapPlacementCheck] = useState<{ issues: MapValidationIssue[]; unreachable: UnreachablePlacement[]; isolated: IsolatedPlayerStart[] } | null>(null)
+  const [placementAutoFixing, setPlacementAutoFixing] = useState(false)
   const [importErrors,        setImportErrors]        = useState<string[]>([])
   const [importWarnings,      setImportWarnings]      = useState<string[]>([])
   const [importFeedbackOpen,  setImportFeedbackOpen]  = useState(false)
@@ -504,6 +515,43 @@ export default function Toolbar({
   )
   const validation = validateScenario(scenario, { mapName, dialogs, localization, knownGameSids })
 
+  // Map placement/reachability check — deliberately NOT run on every render
+  // like `validation` above (a full reachability flood-fill/BFS isn't cheap
+  // on a large map, and continuously re-validating while the user is mid-edit
+  // would be noisy besides) — only recomputed right before the dialog opens.
+  const handleOpenValidate = () => {
+    const context = useMapContextStore.getState().context
+    setMapPlacementCheck(
+      context
+        ? {
+            issues: findMapValidationIssues(context, catalog),
+            unreachable: findUnreachablePlacements(context, catalog),
+            isolated: findIsolatedPlayerStarts(context, catalog),
+          }
+        : null,
+    )
+    setValidateOpen(true)
+  }
+
+  const handleAutoFixPlacement = () => {
+    setPlacementAutoFixing(true)
+    try {
+      const result = useMapDocumentStore.getState().autoFixMapPlacementIssues()
+      const context = useMapContextStore.getState().context
+      setMapPlacementCheck({
+        issues: result.remainingIssues,
+        unreachable: result.remainingUnreachable,
+        isolated: context ? findIsolatedPlayerStarts(context, catalog) : [],
+      })
+      const remaining = result.remainingIssues.length + result.remainingUnreachable.length
+      logInfo(`Auto-fixed ${result.fixedCount} map placement issue(s)${remaining > 0 ? ` — ${remaining} still unresolved` : ''}.`)
+    } catch (e) {
+      logError(`Map placement auto-fix failed: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setPlacementAutoFixing(false)
+    }
+  }
+
   return (
     <>
       <header className="flex h-10 items-center gap-2 border-b border-border bg-card px-2 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
@@ -605,7 +653,7 @@ export default function Toolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={() => setValidateOpen(true)} className="gap-1.5">
+              <Button variant="ghost" size="sm" onClick={handleOpenValidate} className="gap-1.5">
                 <ShieldCheck className="h-4 w-4" />
                 Validate
                 <Badge
@@ -972,6 +1020,7 @@ export default function Toolbar({
             <DialogTitle>Validation Results</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
+            <p className="text-xs font-medium text-muted-foreground">Scenario</p>
             {validation.errors.length === 0 && validation.warnings.length === 0 && (
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
@@ -998,6 +1047,50 @@ export default function Toolbar({
                 </AlertDescription>
               </Alert>
             ))}
+
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <p className="text-xs font-medium text-muted-foreground">Map placement &amp; reachability</p>
+              {mapPlacementCheck && (mapPlacementCheck.issues.length > 0 || mapPlacementCheck.unreachable.length > 0) && (
+                <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={handleAutoFixPlacement} disabled={placementAutoFixing}>
+                  {placementAutoFixing ? 'Fixing…' : 'Auto-fix'}
+                </Button>
+              )}
+            </div>
+            {!mapPlacementCheck && (
+              <p className="text-xs text-muted-foreground">Open a .map file to also check placement/reachability issues.</p>
+            )}
+            {mapPlacementCheck
+              && mapPlacementCheck.issues.length === 0
+              && mapPlacementCheck.unreachable.length === 0
+              && mapPlacementCheck.isolated.length === 0 && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                No map placement issues found.
+              </div>
+            )}
+            {mapPlacementCheck?.issues.map((issue, i) => (
+              <Alert key={`bounds-entrance-${i}`} variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="ml-2">{describeMapValidationIssue(issue)}</AlertDescription>
+              </Alert>
+            ))}
+            {mapPlacementCheck?.unreachable.map((issue, i) => (
+              <Alert key={`unreachable-${i}`} className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                <AlertDescription className="ml-2">{describeUnreachablePlacement(issue)}</AlertDescription>
+              </Alert>
+            ))}
+            {mapPlacementCheck && mapPlacementCheck.isolated.length > 0 && (
+              <>
+                <p className="text-xs text-muted-foreground">Not auto-fixable — reconnecting isolated players needs a manual road/bridge/portal, a real map-design decision.</p>
+                {mapPlacementCheck.isolated.map((issue, i) => (
+                  <Alert key={`isolated-${i}`} variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="ml-2">{describeIsolatedPlayerStart(issue)}</AlertDescription>
+                  </Alert>
+                ))}
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

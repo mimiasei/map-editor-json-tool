@@ -49,7 +49,7 @@ export const DECORATION_SUBCATEGORY_LABELS: Record<DecorationSubcategory, string
 
 const WALKABLE_BIOMES = ['death', 'snow', 'desert', 'autumn', 'dirt']
 const WALKABLE_PREFIXES = [
-  'flowers_', 'mushrooms_', 'grass_1', 'grass_2',
+  'flowers_', 'mushrooms_', 'grass_1', 'grass_2', 'walkable',
   ...WALKABLE_BIOMES.map((b) => 'grass_' + b + '_1'),
   ...WALKABLE_BIOMES.map((b) => 'grass_' + b + '_2'),
 ]
@@ -68,7 +68,7 @@ export function resolveDecorationSubcategory(sid: string, category: string | und
   if (ROCK_MARKERS.some((r) => sid.includes(r))) return 'rocks'
   if (sid.startsWith('pool_')) return 'pools'
   if (sid.startsWith('campaign_')) return 'campaignRelated'
-  if (WALKABLE_PREFIXES.some((w) => sid.startsWith(w))) return 'walkable'
+  if (WALKABLE_PREFIXES.some((w) => sid.includes(w))) return 'walkable'
   if (sid.includes('_hill_')) return 'hills'
   return 'other'
 }

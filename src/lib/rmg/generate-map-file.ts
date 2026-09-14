@@ -13,12 +13,14 @@
 import { isTauri, readBinaryFile } from '@/lib/native-fs'
 import { readMapContainer, buildMapContainer, gzipBytes, gunzipBytes, type MapContainer } from '@/lib/map-write'
 import { loadParsedMapFile, type OpenMapResult } from '@/lib/map-file'
-import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { useMapDocumentStore, containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { generateRandomMap, type GenerateRandomMapOptions } from './generate-random-map'
 import type { BalanceReport } from './balance-analyzer'
 import { generateTerrain, type GenerateTerrainOptions, type TerrainResult } from './generate-terrain'
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
+import { extractMapContext } from '@/lib/map-extract'
+import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
@@ -59,7 +61,7 @@ export async function previewTerrain(options: GenerateTerrainOptions): Promise<T
  * app exactly like Import Map/New Map would — with no file path yet.
  * Returns null only when not running in Tauri.
  */
-export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<(OpenMapResult & { balanceReport: BalanceReport }) | null> {
+export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<(OpenMapResult & { balanceReport: BalanceReport; unreachablePlacements: UnreachablePlacement[]; isolatedPlayerStarts: IsolatedPlayerStart[] }) | null> {
   if (!isTauri()) return null
   const catalog = useCatalogStore.getState().catalog
   if (!catalog) throw new Error('Load Game Data first (More → Game Data) so map objects can be resolved.')
@@ -70,6 +72,23 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
 
   const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog)
 
+  // Whole-map reachability validation (reachability-validation.ts) —
+  // runPlacementAutoFix above already ran its own reachability auto-fix
+  // round (portal-aware; deletes/relocates decorative or pickable blockers,
+  // relocates the target itself as a last resort), so this final read-only
+  // pass only ever reports what THAT couldn't safely resolve — a real,
+  // disclosed gap in the generated map, not a pre-fix snapshot.
+  const finalContext = extractMapContext(containerToRawBlocks(fixed))
+  const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)
+  // Merged-reachability's own blind spot (see reachability-validation.ts's
+  // header comment): two player starts can each have a fully populated,
+  // internally-reachable zone yet be mutually disconnected from each other,
+  // which findUnreachablePlacements alone would never flag. Not auto-
+  // fixable (would need a real terrain/road/portal decision), so this is
+  // reported alongside unreachablePlacements rather than folded into
+  // runPlacementAutoFix.
+  const isolatedPlayerStarts = findIsolatedPlayerStarts(finalContext, catalog)
+
   const gzipped = await gzipBytes(buildMapContainer(fixed))
   const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 
@@ -78,5 +97,5 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // Same reasoning as createNewMap(): a generated map has nowhere on disk
   // yet, so the dirty-dot/exit-guard must reflect that immediately.
   useMapDocumentStore.setState({ mapIsDirty: true })
-  return { ...result, warnings: [...autoFixWarnings, ...result.warnings], balanceReport }
+  return { ...result, warnings: [...autoFixWarnings, ...result.warnings], balanceReport, unreachablePlacements, isolatedPlayerStarts }
 }

@@ -9,9 +9,31 @@
 // value actually takes effect everywhere.
 
 import type { BiomeId } from './terrain-colors'
+import unitValuesData from '@/data/units_values.json'
+import type { GameCatalog } from '@/lib/catalog/types'
 
 export interface DifficultyRange { label: string; min: number; max: number }
 export interface DifficultyWeight { label: string; weight: number }
+
+const UNIT_VALUE_BY_SID: Record<string, number> = Object.fromEntries(
+    (unitValuesData as { sid: string; value: number | null }[])
+        .filter((u) => u.value != null)
+        .map((u) => [u.sid, u.value as number]),
+)
+
+function unitValue(sid: string, catalog: GameCatalog | null): number {
+    const fromCatalog = catalog?.creatures.find((c) => c.id === sid)?.squadValue
+    if (fromCatalog != null) return fromCatalog
+    return UNIT_VALUE_BY_SID[sid] ?? 0
+}
+
+export function squadValueFromUnits(
+    guardUnitProps: { sid: string; count: number }[] | undefined,
+    catalog: GameCatalog | null,
+): number {
+    if (!guardUnitProps) return 0
+    return guardUnitProps.reduce((sum, { sid, count }) => sum + unitValue(sid, catalog) * count, 0)
+}
 
 /** Labels match the game's own scenario-difficulty naming (Easy/Normal/
  *  Difficult/Impossible/Lethal — see plans/mapmaking_guide_en_noMapEditor.md's

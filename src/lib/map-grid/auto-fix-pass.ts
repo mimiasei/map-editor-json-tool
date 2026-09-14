@@ -11,6 +11,7 @@ import { extractMapContext } from '@/lib/map-extract'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { computeBoundsAutoFix } from './bounds-autofix'
 import { computeEntranceAutoFix } from './entrance-autofix'
+import { computeReachabilityAutoFix } from './reachability-validation'
 import { findMapValidationIssues, describeMapValidationIssue } from './map-validation'
 
 export interface PlacementAutoFixResult {
@@ -36,6 +37,13 @@ export interface PlacementAutoFixResult {
 // pathological oscillating case that hasn't been seen yet.
 const MAX_ENTRANCE_AUTOFIX_PASSES = 5
 
+// Same re-run-to-convergence rationale as the entrance loop above: one
+// reachability round's fixes (a deletion opening a path, a target relocated
+// onto what's now someone else's claimed tile) can change what the next
+// round sees, and the blocking-chain BFS itself is only ever computed
+// against one static snapshot per call.
+const MAX_REACHABILITY_AUTOFIX_PASSES = 5
+
 export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalog | null): PlacementAutoFixResult {
   let fixed = container
   const boundsCtx = extractMapContext(containerToRawBlocks(fixed))
@@ -58,9 +66,23 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
     entranceFixCount += entrance.deletions.length + entrance.relocations.length
   }
 
+  let reachabilityFixCount = 0
+  for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
+    const reachabilityCtx = extractMapContext(containerToRawBlocks(fixed))
+    const reachability = computeReachabilityAutoFix(reachabilityCtx, catalog)
+    if (reachability.deletions.length === 0 && reachability.relocations.length === 0) break
+    for (const del of reachability.deletions) {
+      fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: del.entityType, entityId: del.id }).container
+    }
+    for (const rel of reachability.relocations) {
+      fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode }).container
+    }
+    reachabilityFixCount += reachability.deletions.length + reachability.relocations.length
+  }
+
   const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
   const warnings: string[] = []
-  const fixedCount = bounds.fixes.length + entranceFixCount
+  const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount
   if (fixedCount > 0) warnings.push(`Auto-fixed ${fixedCount} placement issue(s).`)
   for (const issue of remaining) {
     warnings.push(`Unresolved: ${describeMapValidationIssue(issue)}`)

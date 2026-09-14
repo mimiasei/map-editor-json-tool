@@ -296,19 +296,31 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
   // for a fixed/named-creature guard with no host object of its own. A
   // creature sid (e.g. "griffin") is a roster-only `GameCatalog.creatures`
   // entry, never a placeable `mapObjects` template — it can only ever be
-  // referenced from `propSquads.unitProps[].sid`, never placed directly via
-  // `placeObject`. Every real sample map's own non-random `squads[]` entry
-  // uses a generic neutral template sid here (`squad_neutral_one_unit_t1_1`,
-  // confirmed in `plans/olden_era_map_format.md` §3.3 and independently in
-  // a real shipped map this session) — the template's own nominal
-  // composition is irrelevant since `propSquads.unitProps` supplies the
-  // real one, so every placement here reuses that same real, confirmed sid.
-  const SQUAD_TEMPLATE_SID = 'squad_neutral_one_unit_t1_1'
+  // referenced from `propSquads.unitProps[].sid`. The placement's own
+  // VISUAL appearance in-game, however, comes from the `squads[]` template
+  // sid itself (its `baseSquad`), NOT from `unitProps` — a real bug report
+  // confirmed this: always using the generic `squad_neutral_one_unit_t1_1`
+  // template (this file's old behavior) rendered every fixed-creature guard
+  // as that template's own pixie regardless of its real composition (e.g. a
+  // 28-wasp_upg guard visibly showing pixies). Fixed by picking the one
+  // real squad template whose own composition is that exact single creature
+  // (`unitSids.length === 1`) — every faction has a per-tier "one unit"
+  // template family for exactly this (`squad_<faction>_one_unit_t<N>_<v>`),
+  // built once here keyed by creature sid. Falls back to the old generic
+  // pixie template only if no matching single-creature template exists.
+  const FALLBACK_SQUAD_TEMPLATE_SID = 'squad_neutral_one_unit_t1_1'
+  const squadTemplateSidByCreature = new Map<string, string>()
+  for (const t of catalog.squadTemplates) {
+    if (t.unitSids.length === 1 && !squadTemplateSidByCreature.has(t.unitSids[0])) {
+      squadTemplateSidByCreature.set(t.unitSids[0], t.id)
+    }
+  }
   const squadGroups = new Map<string, { ids: number[]; nodes: number[] }>()
   let nextSquadId = 0
-  const placeSquad = (node: number): number => {
-    let group = squadGroups.get(SQUAD_TEMPLATE_SID)
-    if (!group) { group = { ids: [], nodes: [] }; squadGroups.set(SQUAD_TEMPLATE_SID, group) }
+  const placeSquad = (node: number, creatureSid: string): number => {
+    const templateSid = squadTemplateSidByCreature.get(creatureSid) ?? FALLBACK_SQUAD_TEMPLATE_SID
+    let group = squadGroups.get(templateSid)
+    if (!group) { group = { ids: [], nodes: [] }; squadGroups.set(templateSid, group) }
     const id = nextSquadId
     group.ids.push(id)
     group.nodes.push(node)
@@ -497,7 +509,7 @@ export function convertH3mToMap(data: Uint8Array, catalog: GameCatalog, template
         const nominalTier = CREATURE_TYPE_SQUAD_VALUE[record.templateSubtype]?.tier
         const nominalCount = nominalTier !== undefined ? NOMINAL_STACK_COUNT_BY_LEVEL[nominalTier] : undefined
         const unitCount = typeof record.count === 'number' && record.count > 0 ? record.count : (nominalCount ?? 1)
-        const squadId = placeSquad(node)
+        const squadId = placeSquad(node, equivSid)
         propSquads.push({
           type: 2, id: squadId, isMainGuard: true, isStartBattleImmediately: false,
           reactionType: 2, weeklyIncrementBonus: 0, unitProps: [{ sid: equivSid, count: unitCount }],

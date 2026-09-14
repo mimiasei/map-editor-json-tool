@@ -43,7 +43,7 @@ export const NON_BLOCKING_SPAWNER_SIDS = new Set(['random-res', 'random-squad', 
  * Whether `node` is an elevation "wall" tile: its own level is not 0, at
  * least one 4-neighbor is a *different* level, and no 4-neighbor is a ramp.
  */
-function isElevationWallTile(
+export function isElevationWallTile(
   node: number,
   sizeX: number,
   sizeZ: number,
@@ -70,16 +70,20 @@ function isElevationWallTile(
 type PassabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
 
 /** A single `objects[]` (type 0) instance's own solid (`value === 1`)
+ *  The optional parameter entranceCells can be used to return the entrance cells
+ *  of the object (`value === 2`) instead of the solid cells. This is used to check
+ *  if the entrance of an object is blocked or to display those entrance cells on the map.
  *  footprint cells in world space — the same per-object rule
  *  `buildBlockedTileSet` sweeps over every placed instance, factored out so
  *  the object-paint tool (map-grid painter, generalized from terrain to any
  *  object) can ask "would placing THIS sid HERE block anything" for a
  *  candidate that isn't placed yet. Spawn-placeholder sids never block, per
  *  the walked-onto-to-interact rule above. */
-export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null): { x: number; z: number }[] {
+export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null, entranceCells?: boolean | false): { x: number; z: number }[] {
   if (NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
+  const valueToFind = entranceCells ? 2 : 1
   const template = catalog?.mapObjects.find((o) => o.id === sid)
-  return computeFootprintTiles(template, x, z).filter((cell) => cell.value === 1)
+  return computeFootprintTiles(template, x, z).filter((cell) => cell.value === valueToFind)
 }
 
 /** Every blocked tile (node index) on the current map, per the three-source
@@ -117,4 +121,23 @@ export function buildBlockedTileSet(context: PassabilityContext, catalog: GameCa
   }
 
   return blocked
+}
+
+export function buildEntranceTileSet(context: PassabilityContext, catalog: GameCatalog | null): Set<number> {
+    const entrances = new Set<number>()
+    const { sizeX, sizeZ, placedObjects } = context
+
+    if (sizeX <= 0 || sizeZ <= 0) return entrances
+
+    // Source 1: object footprints. Only objects[] (type 0) — squads/markers
+    // aren't physical terrain and have no footprint template in the catalog.
+    for (const object of placedObjects) {
+        if (object.type !== 0) continue
+        for (const cell of objectBlockedCells(object.sid, object.x, object.z, catalog, true)) {
+            if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
+            entrances.add(cell.z * sizeX + cell.x)
+        }
+    }
+
+    return entrances
 }

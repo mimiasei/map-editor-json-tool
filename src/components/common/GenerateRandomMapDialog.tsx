@@ -54,6 +54,7 @@ import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDial
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
+import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 
 interface Props {
   open: boolean
@@ -284,6 +285,22 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       const { score, findings } = result.balanceReport
       if (score !== null) {
         logInfo(`Balance score: ${score}/100 — ${findings.map((f) => f.message).join(' ')}`)
+      }
+      // Reachability validation (reachability-validation.ts) — generateRandomMapFile
+      // already ran its own portal-aware reachability auto-fix round as part of
+      // runPlacementAutoFix, so anything reported here is what that couldn't
+      // safely resolve (logged, not blocking — same as the balance score).
+      if (result.unreachablePlacements.length > 0) {
+        logWarn(`Reachability check: ${result.unreachablePlacements.length} placement(s) still unreachable from any player start after auto-fix`)
+        for (const issue of result.unreachablePlacements) logWarn(`  ${describeUnreachablePlacement(issue)}`)
+      }
+      // Isolated-player-start check — a real, separate gap findUnreachablePlacements
+      // above can't catch (see reachability-validation.ts's header comment):
+      // two players' zones can each be internally fine yet mutually
+      // disconnected. Never auto-fixable, so always just reported.
+      if (result.isolatedPlayerStarts.length > 0) {
+        logWarn(`Reachability check: ${result.isolatedPlayerStarts.length} player start(s) isolated from every other player`)
+        for (const issue of result.isolatedPlayerStarts) logWarn(`  ${describeIsolatedPlayerStart(issue)}`)
       }
       onGenerated({ name: result.name, warnings: result.warnings })
       onOpenChange(false)

@@ -17,7 +17,7 @@ import { Settings } from 'lucide-react'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 
 interface Props {
-  tool: 'obstacles' | 'trees' | 'interactable' | 'squad'
+  tool: 'obstacles' | 'trees' | 'interactable' | 'squad' | 'resource'
   /** Obstacles only — chance an obstacle-role pick is specifically a
    *  mountain_* entry (0 = None, 1 = Always). */
   mountainChance: number
@@ -53,6 +53,10 @@ interface Props {
    *  north of the squad (auto-generates a resource with a guard). */
   squadPlaceResourceAbove: boolean
   onSquadPlaceResourceAboveChange: (value: boolean) => void
+  /** Resource only — also place a random-squad guard on the tile directly
+   *  south of the resource (auto-generates a resource with a guard). */
+  resourceGuardBelow: boolean
+  onResourceGuardBelowChange: (value: boolean) => void
 }
 
 function pctLabel(value: number, zeroLabel: string, oneLabel: string): string {
@@ -66,6 +70,7 @@ const TOOL_TITLES: Record<Props['tool'], string> = {
   trees: 'Tree brush settings',
   interactable: 'Interactable brush settings',
   squad: 'Encounter brush settings',
+  resource: 'Resource brush settings',
 }
 
 /** Every setting's description moved from an always-visible line of text to
@@ -105,6 +110,8 @@ export default function ToolBrushSettingsPopover({
   squadDifficultyRanges = DEFAULT_SQUAD_DIFFICULTY_RANGES,
   squadPlaceResourceAbove,
   onSquadPlaceResourceAboveChange,
+  resourceGuardBelow,
+  onResourceGuardBelowChange,
 }: Props) {
   return (
     <Popover>
@@ -172,25 +179,43 @@ export default function ToolBrushSettingsPopover({
           </div>
         )}
 
-        <div className="space-y-1.5">
+        {tool === 'resource' && (
           <div className="flex items-center justify-between">
             <LabelWithTooltip
-              tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : tool === 'squad' ? "a squad's faction" : 'picks'} vary from other biomes vs. only the biome painted on.`}
+              htmlFor="resource-guard-below"
+              tooltip="Also places a random-squad guard on the tile directly south of the resource — an easy way to auto-generate a guarded resource."
             >
-              Biome mix
+              Place a guard on the tile below
             </LabelWithTooltip>
-            <span className="text-xs text-muted-foreground">
-              {biomePurity >= 1 ? 'This biome only' : biomePurity <= 0 ? 'All biomes' : `${Math.round(biomePurity * 100)}% pure`}
-            </span>
+            <Switch
+              id="resource-guard-below"
+              checked={resourceGuardBelow}
+              onCheckedChange={onResourceGuardBelowChange}
+            />
           </div>
-          <Slider
-            min={0} max={1} step={0.01}
-            value={[biomePurity]}
-            onValueChange={([v]) => onBiomePurityChange(v)}
-          />
-        </div>
+        )}
 
-        {tool !== 'squad' && (
+        {tool !== 'resource' && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <LabelWithTooltip
+                  tooltip={`How much ${tool === 'obstacles' ? 'obstacle types' : tool === 'trees' ? 'tree types' : tool === 'squad' ? "a squad's faction" : 'picks'} vary from other biomes vs. only the biome painted on.`}
+                >
+                  Biome mix
+                </LabelWithTooltip>
+                <span className="text-xs text-muted-foreground">
+                  {biomePurity >= 1 ? 'This biome only' : biomePurity <= 0 ? 'All biomes' : `${Math.round(biomePurity * 100)}% pure`}
+                </span>
+              </div>
+              <Slider
+                min={0} max={1} step={0.01}
+                value={[biomePurity]}
+                onValueChange={([v]) => onBiomePurityChange(v)}
+              />
+            </div>
+        )}
+
+        {tool !== 'squad' && tool !== 'resource' && (
           <div className="flex items-center justify-between">
             <LabelWithTooltip
               htmlFor={`${tool}-high-contrast`}

@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "sizeX": 96,
+  "sizeZ": 96,
+  "playerCount": 5,
+  "playerSpawnerSid": "city-spawner",
+  "waterContent": "normal",
+  "waterChance": 0.2,
+  "islandsIncludePlayerZones": false,
+  "islandLandRatio": 0.4,
+  "obstacleDensity": 0.35,
+  "interactableDensity": 0.5,
+  "mountainDensity": 0.35,
+  "treasureDensity": 2.9,
+  "objectVariety": 0.97,
+  "usePortals": false,
+  "zoneJaggedness": 0.5,
+  "zoneSpread": 1,
+  "boundaryGuardStrength": "strong",
+  "squadDensity": 0.5,
+  "roadWindingAmplitude": 3,
+  "roadWindingWavelength": 50,
+  "enabledBiomes": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "randomCityCount": 1,
+  "contentCountLimits": [
+    {
+      "sid": "mystical_tower",
+      "maxCount": 4
+    },
+    {
+      "sid": "beer_fountain",
+      "maxCount": 4
+    },
+    {
+      "sid": "camp_fire",
+      "maxCount": 4
+    },
+    {
+      "sid": "crow_nest",
+      "maxCount": 4
+    },
+    {
+      "sid": "crystal_trail",
+      "maxCount": 4
+    },
+    {
+      "sid": "huntsmans_camp",
+      "maxCount": 4
+    },
+    {
+      "sid": "fountain",
+      "maxCount": 4
+    },
+    {
+      "sid": "gardener",
+      "maxCount": 4
+    },
+    {
+      "sid": "pile_of_books",
+      "maxCount": 4
+    },
+    {
+      "sid": "quixs_path",
+      "maxCount": 4
+    },
+    {
+      "sid": "watchtower",
+      "maxCount": 4
+    },
+    {
+      "sid": "stables",
+      "maxCount": 4
+    },
+    {
+      "sid": "tear_of_truth",
+      "maxCount": 4
+    },
+    {
+      "sid": "mana_well",
+      "maxCount": 4
+    },
+    {
+      "sid": "mysterious_stone",
+      "maxCount": 4
+    },
+    {
+      "sid": "wind_rose",
+      "maxCount": 4
+    },
+    {
+      "sid": "windmill",
+      "maxCount": 4
+    },
+    {
+      "sid": "flattering_mirror",
+      "maxCount": 4
+    },
+    {
+      "sid": "peasant_cart",
+      "maxCount": 4
+    },
+    {
+      "sid": "wise_owl",
+      "maxCount": 4
+    },
+    {
+      "sid": "jousting_range",
+      "maxCount": 4
+    },
+    {
+      "sid": "maze",
+      "maxCount": 4
+    },
+    {
+      "sid": "fort",
+      "maxCount": 4
+    },
+    {
+      "sid": "petrified_memorial",
+      "maxCount": 4
+    },
+    {
+      "sid": "abandoned_corpse",
+      "maxCount": 4
+    },
+    {
+      "sid": "gingerbread_house",
+      "maxCount": 4
+    },
+    {
+      "sid": "goblin_cache",
+      "maxCount": 4
+    },
+    {
+      "sid": "pandora_box",
+      "maxCount": 4
+    },
+    {
+      "sid": "monty_hall",
+      "maxCount": 4
+    },
+    {
+      "sid": "village",
+      "maxCount": 4
+    },
+    {
+      "sid": "market",
+      "maxCount": 2
+    },
+    {
+      "sid": "forge",
+      "maxCount": 2
+    },
+    {
+      "sid": "alchemy_lab",
+      "maxCount": 2
+    },
+    {
+      "sid": "university",
+      "maxCount": 2
+    },
+    {
+      "sid": "circus",
+      "maxCount": 2
+    },
+    {
+      "sid": "infernal_cirque",
+      "maxCount": 2
+    },
+    {
+      "sid": "arena",
+      "maxCount": 2
+    },
+    {
+      "sid": "gladiator_arena",
+      "maxCount": 2
+    },
+    {
+      "sid": "gladiator_spire",
+      "maxCount": 2
+    },
+    {
+      "sid": "tavern",
+      "maxCount": 2
+    },
+    {
+      "sid": "celestial_sphere",
+      "maxCount": 2
+    },
+    {
+      "sid": "chimerologist",
+      "maxCount": 2
+    },
+    {
+      "sid": "knowledge_garden",
+      "maxCount": 2
+    },
+    {
+      "sid": "learning_stone",
+      "maxCount": 2
+    },
+    {
+      "sid": "legions_memorial",
+      "maxCount": 2
+    },
+    {
+      "sid": "lost_library",
+      "maxCount": 2
+    },
+    {
+      "sid": "magic_wheel",
+      "maxCount": 2
+    },
+    {
+      "sid": "college_of_wonder",
+      "maxCount": 2
+    },
+    {
+      "sid": "research_laboratory",
+      "maxCount": 2
+    },
+    {
+      "sid": "orb_observatory",
+      "maxCount": 2
+    },
+    {
+      "sid": "unstable_ruins",
+      "maxCount": 2
+    },
+    {
+      "sid": "raiders_camp",
+      "maxCount": 2
+    },
+    {
+      "sid": "point_of_balance",
+      "maxCount": 2
+    },
+    {
+      "sid": "trial_scales",
+      "maxCount": 2
+    },
+    {
+      "sid": "stinging_sword",
+      "maxCount": 2
+    },
+    {
+      "sid": "armory_automaton",
+      "maxCount": 2
+    },
+    {
+      "sid": "circle_of_life",
+      "maxCount": 2
+    },
+    {
+      "sid": "boreal_call",
+      "maxCount": 2
+    },
+    {
+      "sid": "the_gorge",
+      "maxCount": 2
+    },
+    {
+      "sid": "unforgotten_grave",
+      "maxCount": 2
+    },
+    {
+      "sid": "cursed_old_house",
+      "maxCount": 2
+    },
+    {
+      "sid": "overgrown_grave",
+      "maxCount": 2
+    },
+    {
+      "sid": "mereas_shrine",
+      "maxCount": 2
+    },
+    {
+      "sid": "tree_of_abundance",
+      "maxCount": 1
+    },
+    {
+      "sid": "eternal_dragon",
+      "maxCount": 1
+    },
+    {
+      "sid": "prison",
+      "maxCount": 1
+    },
+    {
+      "sid": "insaras_eye",
+      "maxCount": 1
+    },
+    {
+      "sid": "mirage",
+      "maxCount": 1
+    },
+    {
+      "sid": "remote_foothold",
+      "maxCount": 1
+    },
+    {
+      "sid": "abandoned_outpost",
+      "maxCount": 1
+    },
+    {
+      "sid": "dragon_utopia",
+      "maxCount": 1
+    },
+    {
+      "sid": "black_tower",
+      "maxCount": 1
+    },
+    {
+      "sid": "prismatic_lair",
+      "maxCount": 1
+    },
+    {
+      "sid": "iridescent_abbey",
+      "maxCount": 1
+    },
+    {
+      "sid": "tree_of_knowledge",
+      "maxCount": 1
+    },
+    {
+      "sid": "troglodyte_throne",
+      "maxCount": 1
+    },
+    {
+      "sid": "shady_den",
+      "maxCount": 1
+    },
+    {
+      "sid": "twilight_bloom",
+      "maxCount": 1
+    },
+    {
+      "sid": "uncanny_rite",
+      "maxCount": 1
+    },
+    {
+      "sid": "underground_lair",
+      "maxCount": 1
+    },
+    {
+      "sid": "abandoned_mansion",
+      "maxCount": 1
+    },
+    {
+      "sid": "abnormal_structure",
+      "maxCount": 1
+    },
+    {
+      "sid": "alvars_eye",
+      "maxCount": 1
+    },
+    {
+      "sid": "ritual_pyre",
+      "maxCount": 1
+    },
+    {
+      "sid": "heros_crypt",
+      "maxCount": 1
+    }
+  ],
+  "stoneRoadChance": 0.35,
+  "roadPointOfInterestChance": 0.8,
+  "roadFullConnectivityChance": 0.8
+}

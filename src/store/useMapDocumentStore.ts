@@ -20,6 +20,16 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { findMapValidationIssues, type MapValidationIssue } from '@/lib/map-grid/map-validation'
 import { computeBoundsAutoFix } from '@/lib/map-grid/bounds-autofix'
 import { computeEntranceAutoFix } from '@/lib/map-grid/entrance-autofix'
+import { computeReachabilityAutoFix, findUnreachablePlacements, type UnreachablePlacement } from '@/lib/map-grid/reachability-validation'
+
+// Same re-run-to-convergence rationale as auto-fix-pass.ts's own identical
+// constants (used by the RMG/H3-import orchestration layer) — a single
+// entrance or reachability auto-fix pass only ever computes against one
+// static snapshot, so re-deriving and re-running until a pass makes no
+// further changes catches fixes that only became visible after an earlier
+// fix in the same run. Capped, not unbounded, for the same reason.
+const MAX_ENTRANCE_AUTOFIX_PASSES = 5
+const MAX_REACHABILITY_AUTOFIX_PASSES = 5
 
 /** Cheap in-memory equivalent of parseMapFile's gzip-then-JSON-parse pass —
  *  reused here so applyEdit can re-sync useMapContextStore on every single
@@ -74,6 +84,21 @@ interface MapDocumentStore {
    *  was fixed) so the dialog reacts the same way it already does after any
    *  other edit. Returns a summary for the dialog to show. */
   autoFixMapValidationIssues: () => { fixedCount: number; unresolvedCount: number }
+  /** On-demand full placement check + auto-fix (bounds, entrance-to-
+   *  convergence, and portal-aware reachability-to-convergence) for the
+   *  Toolbar's manual "Validate" button — manually-built maps get the exact
+   *  same repair pass "Generate Random Map"/"Import H3 Map" already run
+   *  automatically (auto-fix-pass.ts's runPlacementAutoFix), just triggered
+   *  on demand instead of always-on. Unlike autoFixMapValidationIssues above
+   *  (save-time-only, bounds+entrance single-pass), this never touches
+   *  `mapValidationIssues` — that field exclusively drives the separate
+   *  save-blocking dialog (MapValidationErrorDialog, gated on
+   *  `issues !== null`), and setting it here would pop that dialog
+   *  unexpectedly during a manual on-demand check. The caller keeps its own
+   *  local state for what to display. Each fix is applied via the real
+   *  applyEdit (not a throwaway MapContainer rebuild), so it's covered by
+   *  the same undo history/dirty flag as any other edit. */
+  autoFixMapPlacementIssues: () => { fixedCount: number; remainingIssues: MapValidationIssue[]; remainingUnreachable: UnreachablePlacement[] }
   /** Load a freshly-opened .map's container — resets dirty state and undo history. */
   loadContainer: (container: MapContainer) => void
   /** Apply one edit to the in-memory document. Throws (leaving the store
@@ -136,6 +161,44 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
         set({ mapValidationIssues: remaining.length > 0 ? remaining : null })
         const fixedCount = bounds.fixes.length + entrance.deletions.length + entrance.relocations.length
         return { fixedCount, unresolvedCount: remaining.length }
+      },
+
+      autoFixMapPlacementIssues: () => {
+        const current = get().container
+        if (!current) throw new Error('No .map document is currently loaded')
+        const catalog = useCatalogStore.getState().catalog
+
+        const boundsCtx = extractMapContext(containerToRawBlocks(current))
+        const bounds = computeBoundsAutoFix(boundsCtx, catalog)
+        for (const fix of bounds.fixes) {
+          get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: fix.id, newNode: fix.toNode })
+        }
+
+        let entranceFixCount = 0
+        for (let pass = 0; pass < MAX_ENTRANCE_AUTOFIX_PASSES; pass++) {
+          const entranceCtx = extractMapContext(containerToRawBlocks(get().container ?? current))
+          const entrance = computeEntranceAutoFix(entranceCtx, catalog)
+          if (entrance.deletions.length === 0 && entrance.relocations.length === 0) break
+          for (const del of entrance.deletions) get().applyEdit({ kind: 'deleteObject', entityType: 0, entityId: del.id })
+          for (const rel of entrance.relocations) get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: rel.id, newNode: rel.toNode })
+          entranceFixCount += entrance.deletions.length + entrance.relocations.length
+        }
+
+        let reachabilityFixCount = 0
+        for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
+          const reachabilityCtx = extractMapContext(containerToRawBlocks(get().container ?? current))
+          const reachability = computeReachabilityAutoFix(reachabilityCtx, catalog)
+          if (reachability.deletions.length === 0 && reachability.relocations.length === 0) break
+          for (const del of reachability.deletions) get().applyEdit({ kind: 'deleteObject', entityType: del.entityType, entityId: del.id })
+          for (const rel of reachability.relocations) get().applyEdit({ kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode })
+          reachabilityFixCount += reachability.deletions.length + reachability.relocations.length
+        }
+
+        const finalCtx = extractMapContext(containerToRawBlocks(get().container ?? current))
+        const remainingIssues = findMapValidationIssues(finalCtx, catalog)
+        const remainingUnreachable = findUnreachablePlacements(finalCtx, catalog)
+        const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount
+        return { fixedCount, remainingIssues, remainingUnreachable }
       },
 
       loadContainer: (container) => {
