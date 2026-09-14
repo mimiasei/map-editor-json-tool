@@ -40,6 +40,7 @@ import {
   paintWaterTiles,
   paintRoadTiles,
   paintClimbTiles,
+  paintZoneTiles,
   paintRiverTiles,
   addObjectInstance,
   addMarkerInstance,
@@ -82,6 +83,7 @@ export type MapSaveEdit =
   | { kind: 'paintWater'; changes: { node: number; waterId: number }[] }
   | { kind: 'paintRoad'; changes: { node: number; roadId: number }[] }
   | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
+  | { kind: 'paintZone'; changes: { node: number; zoneId: number }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
   | { kind: 'clearAll' }
@@ -253,6 +255,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = paintRoadTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintClimb') {
     newChunks[1] = paintClimbTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintZone') {
+    newChunks[1] = paintZoneTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintRiver') {
     newChunks[1] = paintRiverTiles(newChunks[1], edit.changes, edit.deletions ?? [])
   } else if (edit?.kind === 'paintObjects') {
@@ -633,6 +637,20 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       if (climbs[node] !== climb) {
         throw new Error('Verification failed: painted ramp not reflected in the rebuilt climbsMap')
       }
+    }
+  } else if (edit?.kind === 'paintZone') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      customAreasPainting?: number[]
+      haveCustomAreas?: boolean
+    }
+    const zones = block2.customAreasPainting ?? []
+    for (const { node, zoneId } of edit.changes) {
+      if (zones[node] !== zoneId) {
+        throw new Error('Verification failed: painted zone not reflected in the rebuilt customAreasPainting')
+      }
+    }
+    if (edit.changes.some((c) => c.zoneId !== 0) && block2.haveCustomAreas !== true) {
+      throw new Error('Verification failed: haveCustomAreas not set after painting a nonzero zone')
     }
   } else if (edit?.kind === 'paintRiver') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

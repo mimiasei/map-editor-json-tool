@@ -47,6 +47,10 @@ export interface MapGridSettings {
    *  elevation-shading.ts) — a flat elevation-relief tint, independent of the
    *  blocked-tile overlay's wall-vs-interior distinction. */
   showElevationShading: boolean
+  /** Translucent per-zone color fill over every painted "Player Areas" tile
+   *  (see zone-colors.ts) — an escape hatch to hide the overlay, same
+   *  rationale as showBlockedTiles above. */
+  showPlayerAreas: boolean
   /** A thin darker strip along the long edges of a road/river band (the
    *  edges parallel to its direction of travel, not the short end caps) —
    *  purely cosmetic, on the line-feature canvas in MapGridDialog.tsx. */
@@ -88,6 +92,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showGridHover: true,
   showBlockedTiles: false,
   showElevationShading: true,
+  showPlayerAreas: true,
   lineFeatureShading: true,
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
   squadRandomWeights: DEFAULT_SQUAD_RANDOM_WEIGHTS,
@@ -207,6 +212,15 @@ export default function MapGridSettingsDialog({
               id="grid-show-elevation"
               checked={settings.showElevationShading}
               onCheckedChange={(v) => update({ showElevationShading: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-player-areas" className="text-xs cursor-pointer">Player Areas fill</Label>
+          <Switch
+              id="grid-show-player-areas"
+              checked={settings.showPlayerAreas}
+              onCheckedChange={(v) => update({ showPlayerAreas: v })}
           />
         </div>
 

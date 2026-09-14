@@ -1033,6 +1033,18 @@ export function patchTopLevelScalar(chunk: Uint8Array, key: string, newValue: nu
   return new TextEncoder().encode(patchedText)
 }
 
+/** Boolean sibling of findTopLevelScalarSpan — for a bare top-level
+ *  `true`/`false` literal (e.g. `haveCustomAreas`). */
+function findTopLevelBooleanSpan(text: string, key: string): { valueStart: number; valueEnd: number; value: boolean } {
+  const marker = `"${key}":`
+  const markerIdx = text.indexOf(marker)
+  if (markerIdx === -1) throw new Error(`"${key}" not found in this block`)
+  const valueStart = markerIdx + marker.length
+  if (text.startsWith('true', valueStart)) return { valueStart, valueEnd: valueStart + 4, value: true }
+  if (text.startsWith('false', valueStart)) return { valueStart, valueEnd: valueStart + 5, value: false }
+  throw new Error(`"${key}" is not a bare boolean scalar`)
+}
+
 /** String sibling of findTopLevelScalarSpan — for a bare top-level string
  *  scalar (Block 1's own `title`/`desc`, both flat top-level fields, not
  *  nested under a key like `settings`/`banInfoData`). Spans the WHOLE quoted
@@ -1934,10 +1946,11 @@ export function addObjectInstances(
 /** Overwrite `arrayKey`'s value at every `{node, value}` in `changes`. Shared
  *  by paintTerrainTiles/paintLevelTiles/paintWaterTiles below — the only
  *  thing that varies between them is which flat array they target. */
-function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap' | 'roadsMap' | 'climbsMap', changes: { node: number; value: number }[]): Uint8Array {
+function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap' | 'roadsMap' | 'climbsMap' | 'customAreasPainting', changes: { node: number; value: number }[], resizeToLength?: number): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, arrayKey)
-  const values = JSON.parse(span) as number[]
+  let values = JSON.parse(span) as number[]
+  if (resizeToLength !== undefined && values.length !== resizeToLength) values = new Array(resizeToLength).fill(0)
   for (const { node, value } of changes) {
     if (node < 0 || node >= values.length) {
       throw new Error(`Node ${node} is out of bounds for ${arrayKey} (length ${values.length})`)
@@ -2020,6 +2033,28 @@ export function paintRoadTiles(chunk: Uint8Array, changes: { node: number; roadI
  *  real data surveyed this session). */
 export function paintClimbTiles(chunk: Uint8Array, changes: { node: number; climb: 0 | 1 }[]): Uint8Array {
   return paintFlatArrayTiles(chunk, 'climbsMap', changes.map(({ node, climb }) => ({ node, value: climb })))
+}
+
+/** Overwrite `customAreasPainting[node]` for every `{node, zoneId}` in
+ *  `changes` (0 = unpainted). `customAreasPainting` is present but `[]`
+ *  (not full tile-count length) on any never-painted map, even the blank
+ *  template — resized to `tilesMap`'s own confirmed-correct length on first
+ *  use rather than assuming it's already sized. Flips `haveCustomAreas` to
+ *  `true` the first time a nonzero zoneId is written; never flips it back
+ *  to `false` (clearing every zone to 0 resetting the flag isn't confirmed
+ *  against any real sample). */
+export function paintZoneTiles(chunk: Uint8Array, changes: { node: number; zoneId: number }[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { span: tilesSpan } = findJsonArraySpan(text, 'tilesMap')
+  const tileCount = (JSON.parse(tilesSpan) as number[]).length
+  const patched = paintFlatArrayTiles(chunk, 'customAreasPainting', changes.map(({ node, zoneId }) => ({ node, value: zoneId })), tileCount)
+  if (!changes.some((c) => c.zoneId !== 0)) return patched
+
+  const patchedText = new TextDecoder('utf-8').decode(patched)
+  const have = findTopLevelBooleanSpan(patchedText, 'haveCustomAreas')
+  if (have.value) return patched
+  const newText = patchedText.slice(0, have.valueStart) + 'true' + patchedText.slice(have.valueEnd)
+  return new TextEncoder().encode(newText)
 }
 
 // ─── Game rules / bans (issue #210, Stage 4 — real game RMG template

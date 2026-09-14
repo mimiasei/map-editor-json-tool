@@ -70,12 +70,27 @@
 // path, reconnecting two disconnected landmasses (a road, a bridge, a
 // terrain edit, a portal pair) is a real map-design decision, not something
 // safe to guess at automatically.
+//
+// Player Areas zone scoping (2026-09-14): the "merge every player start into
+// ONE flood fill" rule above is only the fallback now, not the whole story.
+// When a player's own start sits inside a painted "custom area" zone
+// (customAreasPainting, see zone-ownership.ts), that player is scoped to
+// ONLY their own zone's targets, checked ONLY against their own zone's
+// start(s) — a target in player A's zone is never considered reachable via
+// player B's seeds, even if B could physically walk there. A target whose
+// own zone has no player start at all (an "orphan" zone) plus every
+// zone-0 target still falls back to the original merged-seed rule. A
+// player whose own start sits on unpainted ground (zone 0) is entirely
+// unaffected — same whole-map check as before. A map with no zones at all
+// collapses to exactly the original single merged call. See
+// analyzeReachability's own doc comment for the exact algorithm.
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, isFootprintInBounds } from './footprint'
 import { buildBlockedTileSet, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from './passability'
 import { groupOf } from './tile-index'
+import { groupPlayerStartsByZone } from './zone-ownership'
 
 export interface UnreachablePlacement {
   sid: string
@@ -130,7 +145,7 @@ export interface ReachabilityAutoFixResult {
   unresolved: UnreachablePlacement[]
 }
 
-type ReachabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
+type ReachabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap' | 'customAreasPainting'>
 
 const PLAYER_START_SIDS = new Set(['city-spawner', 'hero-spawner'])
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
@@ -216,44 +231,18 @@ interface ReachabilityAnalysis {
   sizeX: number
   sizeZ: number
   catalogById: Map<string, CatalogMapObject>
-  reachable: Set<number>
   unreachable: { item: PlacedObject; accessNodes: number[]; blockedBy: { id: number; sid: string }[] }[]
 }
 
-/** Shared core: flood fill (grid + portal edges) from every player start,
- *  then a 0-1 BFS (Dial's algorithm) outward from the reachable region to
- *  identify, for every still-unreachable target, the minimal chain of other
- *  placed objects' solid footprint standing on the shortest bridge back.
- *  Consumed by both `findUnreachablePlacements` (report) and
- *  `computeReachabilityAutoFix` (report + fix). */
-function analyzeReachability(context: ReachabilityContext, catalog: GameCatalog | null): ReachabilityAnalysis {
-  const { sizeX, sizeZ, placedObjects } = context
-  const catalogById = new Map((catalog?.mapObjects ?? []).map((o) => [o.id, o]))
-  if (sizeX <= 0 || sizeZ <= 0) return { sizeX, sizeZ, catalogById, reachable: new Set(), unreachable: [] }
+type ReachTarget = { item: PlacedObject; accessNodes: number[] }
 
-  const seeds: number[] = []
-  const targets: { item: PlacedObject; accessNodes: number[] }[] = []
-  for (const item of placedObjects) {
-    if (item.type === 0 && PLAYER_START_SIDS.has(item.sid)) {
-      const nodes = accessNodesFor(item, catalogById, sizeX)
-      seeds.push(...(nodes.length > 0 ? nodes : [item.node]))
-      continue
-    }
-    const accessNodes = accessNodesFor(item, catalogById, sizeX)
-    if (accessNodes.length > 0) targets.push({ item, accessNodes })
-  }
-  const portalEdges = buildPortalEdges(placedObjects, catalogById, sizeX)
-  if (seeds.length === 0 || targets.length === 0) return { sizeX, sizeZ, catalogById, reachable: new Set(), unreachable: [] }
-
-  const blocked = buildBlockedTileSet(context, catalog)
-  const reachable = floodFill(seeds, blocked, sizeX, sizeZ, portalEdges)
-
-  const unreachable = targets.filter((t) => !t.accessNodes.some((n) => reachable.has(n)))
-  if (unreachable.length === 0) return { sizeX, sizeZ, catalogById, reachable, unreachable: [] }
-
-  // Solid (value===1) footprint cell ownership — same source buildBlockedTileSet
-  // itself sweeps for `type === 0` placements — so a blocking cell on the
-  // bridge path traces back to the specific object responsible.
+/** Solid (value===1) footprint cell ownership — same source buildBlockedTileSet
+ *  itself sweeps for `type === 0` placements — so a blocking cell on a
+ *  bridge path traces back to the specific object responsible. Computed
+ *  once per analyzeReachability call and reused across every scoped
+ *  resolveUnreachable run below (it doesn't depend on which seeds/targets
+ *  are in play). */
+function buildNodeOwners(placedObjects: PlacedObject[], catalogById: Map<string, CatalogMapObject>, sizeX: number): Map<number, { id: number; sid: string }[]> {
   const nodeOwners = new Map<number, { id: number; sid: string }[]>()
   for (const obj of placedObjects) {
     if (obj.type !== 0) continue
@@ -267,6 +256,30 @@ function analyzeReachability(context: ReachabilityContext, catalog: GameCatalog 
       else nodeOwners.set(node, [entry])
     }
   }
+  return nodeOwners
+}
+
+/** Shared core: flood fill (grid + portal edges) from `seeds`, then a 0-1 BFS
+ *  (Dial's algorithm) outward from the reachable region to identify, for
+ *  every `target` this seed set can't reach, the minimal chain of other
+ *  placed objects' solid footprint standing on the shortest bridge back.
+ *  `blocked`/`nodeOwners`/`portalEdges` are shared, precomputed once per
+ *  analyzeReachability call (see §4 of the Player Areas plan) — only the
+ *  seeds/targets vary between a whole-map run and a per-zone-scoped one. */
+function resolveUnreachable(
+  seeds: number[],
+  targets: ReachTarget[],
+  blocked: Set<number>,
+  nodeOwners: Map<number, { id: number; sid: string }[]>,
+  portalEdges: Map<number, number[]>,
+  sizeX: number,
+  sizeZ: number,
+): { item: PlacedObject; accessNodes: number[]; blockedBy: { id: number; sid: string }[] }[] {
+  if (seeds.length === 0 || targets.length === 0) return []
+  const reachable = floodFill(seeds, blocked, sizeX, sizeZ, portalEdges)
+
+  const unreachable = targets.filter((t) => !t.accessNodes.some((n) => reachable.has(n)))
+  if (unreachable.length === 0) return []
 
   // 0-1 BFS (Dial's algorithm, bucket-queued) outward from the reachable
   // region: a free neighbor (or a portal warp) costs 0, a neighbor blocked
@@ -311,7 +324,7 @@ function analyzeReachability(context: ReachabilityContext, catalog: GameCatalog 
     }
   }
 
-  const results: ReachabilityAnalysis['unreachable'] = []
+  const results: { item: PlacedObject; accessNodes: number[]; blockedBy: { id: number; sid: string }[] }[] = []
   for (const { item, accessNodes } of unreachable) {
     let best: number | null = null
     for (const n of accessNodes) {
@@ -330,7 +343,77 @@ function analyzeReachability(context: ReachabilityContext, catalog: GameCatalog 
     }
     results.push({ item, accessNodes, blockedBy: [...blockedBy.values()] })
   }
-  return { sizeX, sizeZ, catalogById, reachable, unreachable: results }
+  return results
+}
+
+/** Groups every player start and every reachability-significant placement by
+ *  the "custom area" zone id its own anchor node sits in (0 = unpainted),
+ *  then runs `resolveUnreachable` per the Player Areas per-player scoping
+ *  policy (2026-09-14):
+ *   - A player start on a nonzero zone is scoped to ONLY that zone's own
+ *     targets, checked only against that zone's own player start(s).
+ *   - Any target whose own zone has NO player start in it ("orphan" zone),
+ *     plus every zone-0 target, is checked against every player's combined
+ *     seeds — the direct generalization of the pre-zoning "reachable by ANY
+ *     player" rule for content nobody has explicitly claimed via a zone.
+ *  When there are zero zoned players at all (including any unzoned map),
+ *  this collapses to exactly one call with every seed against every target —
+ *  structurally identical to the pre-zoning single merged pass, not just
+ *  behaviorally equivalent. */
+function analyzeReachability(context: ReachabilityContext, catalog: GameCatalog | null): ReachabilityAnalysis {
+  const { sizeX, sizeZ, placedObjects } = context
+  const catalogById = new Map((catalog?.mapObjects ?? []).map((o) => [o.id, o]))
+  if (sizeX <= 0 || sizeZ <= 0) return { sizeX, sizeZ, catalogById, unreachable: [] }
+
+  const starts: ReachTarget[] = []
+  const targets: ReachTarget[] = []
+  for (const item of placedObjects) {
+    if (item.type === 0 && PLAYER_START_SIDS.has(item.sid)) {
+      const nodes = accessNodesFor(item, catalogById, sizeX)
+      starts.push({ item, accessNodes: nodes.length > 0 ? nodes : [item.node] })
+      continue
+    }
+    const accessNodes = accessNodesFor(item, catalogById, sizeX)
+    if (accessNodes.length > 0) targets.push({ item, accessNodes })
+  }
+  const portalEdges = buildPortalEdges(placedObjects, catalogById, sizeX)
+  const allSeeds = starts.flatMap((s) => s.accessNodes)
+  if (allSeeds.length === 0 || targets.length === 0) return { sizeX, sizeZ, catalogById, unreachable: [] }
+
+  const blocked = buildBlockedTileSet(context, catalog)
+  const nodeOwners = buildNodeOwners(placedObjects, catalogById, sizeX)
+
+  const zones = context.customAreasPainting
+  const zoneOf = (node: number): number => zones[node] ?? 0
+  const startsByZone = groupPlayerStartsByZone(context)
+  const zonedIds = new Set([...startsByZone.keys()].filter((z) => z !== 0))
+
+  const unreachable: ReachabilityAnalysis['unreachable'] = []
+  if (zonedIds.size === 0) {
+    unreachable.push(...resolveUnreachable(allSeeds, targets, blocked, nodeOwners, portalEdges, sizeX, sizeZ))
+  } else {
+    const startAccessByItemKey = new Map(starts.map((s) => [s.item.key, s.accessNodes]))
+    const targetsByZone = new Map<number, ReachTarget[]>()
+    const unclaimedTargets: ReachTarget[] = []
+    for (const t of targets) {
+      const z = zoneOf(t.item.node)
+      if (z === 0 || !zonedIds.has(z)) { unclaimedTargets.push(t); continue }
+      const list = targetsByZone.get(z)
+      if (list) list.push(t)
+      else targetsByZone.set(z, [t])
+    }
+    for (const z of zonedIds) {
+      const zoneTargets = targetsByZone.get(z)
+      if (!zoneTargets || zoneTargets.length === 0) continue
+      const zoneSeeds = (startsByZone.get(z) ?? []).flatMap((p) => startAccessByItemKey.get(p.key) ?? [p.node])
+      unreachable.push(...resolveUnreachable(zoneSeeds, zoneTargets, blocked, nodeOwners, portalEdges, sizeX, sizeZ))
+    }
+    if (unclaimedTargets.length > 0) {
+      unreachable.push(...resolveUnreachable(allSeeds, unclaimedTargets, blocked, nodeOwners, portalEdges, sizeX, sizeZ))
+    }
+  }
+
+  return { sizeX, sizeZ, catalogById, unreachable }
 }
 
 /** Whether any of a target's access nodes (or their immediate 4-neighbors,

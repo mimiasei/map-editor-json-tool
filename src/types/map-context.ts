@@ -262,6 +262,12 @@ export interface MapContext {
   /** Road type ID per tile (0 = none) — see RawMapBlock2.roadsMap. Empty
    *  when the map has no known size. */
   roadsMap: number[]
+  /** Per-tile "custom area"/player-region paint id (0 = unpainted) — see
+   *  RawMapBlock2.customAreasPainting. Empty when unpainted or the map has
+   *  no known size — never a stale wrong-length array. */
+  customAreasPainting: number[]
+  /** True once any customAreasPainting value is nonzero. */
+  haveCustomAreas: boolean
   /** Every river tile on the map, keyed by node — pre-flattened out of
    *  RawMapBlock2.rivers[0].nodes (the real format's single wrapper entry)
    *  since every consumer only ever needs "is this node a river tile, and
