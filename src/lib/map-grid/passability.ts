@@ -68,18 +68,21 @@ export function isElevationWallTile(
 }
 
 type PassabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
+type EntranceContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects'>
 
 /** A single `objects[]` (type 0) instance's own solid (`value === 1`)
- *  The optional parameter entranceCells can be used to return the entrance cells
- *  of the object (`value === 2`) instead of the solid cells. This is used to check
- *  if the entrance of an object is blocked or to display those entrance cells on the map.
  *  footprint cells in world space — the same per-object rule
  *  `buildBlockedTileSet` sweeps over every placed instance, factored out so
  *  the object-paint tool (map-grid painter, generalized from terrain to any
  *  object) can ask "would placing THIS sid HERE block anything" for a
  *  candidate that isn't placed yet. Spawn-placeholder sids never block, per
- *  the walked-onto-to-interact rule above. */
-export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null, entranceCells?: boolean | false): { x: number; z: number }[] {
+ *  the walked-onto-to-interact rule above.
+ *
+ *  `entranceCells` (default false) returns the object's entrance cells
+ *  (`value === 2`) instead of its solid cells — used to check whether an
+ *  object's own entrance is blocked, or to display entrance cells on the
+ *  map (see `buildEntranceTileSet` below). */
+export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null, entranceCells?: boolean): { x: number; z: number }[] {
   if (NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
   const valueToFind = entranceCells ? 2 : 1
   const template = catalog?.mapObjects.find((o) => o.id === sid)
@@ -123,7 +126,7 @@ export function buildBlockedTileSet(context: PassabilityContext, catalog: GameCa
   return blocked
 }
 
-export function buildEntranceTileSet(context: PassabilityContext, catalog: GameCatalog | null): Set<number> {
+export function buildEntranceTileSet(context: EntranceContext, catalog: GameCatalog | null): Set<number> {
     const entrances = new Set<number>()
     const { sizeX, sizeZ, placedObjects } = context
 
