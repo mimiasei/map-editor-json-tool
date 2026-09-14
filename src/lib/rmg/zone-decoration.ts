@@ -49,12 +49,14 @@ const CLUSTER_RADIUS = 3
  *  stand at its base, or vice versa). Zero real mountain entries for a
  *  biome (mirrors `sampleFuzzyObstacles`' own `mountainChance` doc comment)
  *  makes every cluster obstacle-heavy regardless of this weight. */
-const CLUSTER_MOUNTAIN_HEAVY_CHANCE = 0.4
+export const CLUSTER_MOUNTAIN_HEAVY_CHANCE = 0.4
 /** Within one cluster, the split between its own dominant pool, an accent
  *  drawn from the OTHER family (the real "mountain_green_big + pinetree" /
  *  "grass_desert + palms" cross-family pattern), and plain clutter. */
-const CLUSTER_PRIMARY_CHANCE = 0.7
+export const CLUSTER_PRIMARY_CHANCE = 0.7
 const CLUSTER_ACCENT_CHANCE = 0.2
+/** Chance of placing a pool as obstacle **/
+const CLUSTER_POOL_CHANCE = 0.15
 
 function shuffledClusterOffsets(radius: number, rng: () => number): [number, number][] {
   const offsets: [number, number][] = []
@@ -113,6 +115,9 @@ function scatterCluster(
   if (primaryPool.length === 0) return []
 
   const pickSid = (): string | null => {
+    if (pool.pools.length > 0 && rng() < CLUSTER_POOL_CHANCE) {
+      return pool.pools[Math.floor(rng() * pool.pools.length)]
+    }
     const roll = rng()
     if (roll < CLUSTER_PRIMARY_CHANCE || accentPool.length === 0) {
       return primaryPool[Math.floor(rng() * primaryPool.length)]
@@ -225,8 +230,23 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     // density equivalent, softer than a full skip since some scenery still
     // reads as a lived-in start.
     const zoneDensity = densityByZone?.get(zone.id) ?? (zone.kind === 'player' ? density * 0.6 : density)
-    const candidateTiles = tiles.filter((node) => !excludedNodes.has(node) && rng() < zoneDensity)
-    if (candidateTiles.length === 0) continue
+    const freeTiles = tiles.filter((node) => !excludedNodes.has(node))
+    if (freeTiles.length === 0) continue
+    let candidateTiles = freeTiles.filter(() => rng() < zoneDensity)
+    // Guaranteed floor — a real user report: islands mode (especially with
+    // player-start islands enabled) can leave a zone's own free-tile pool
+    // small enough — a thin Penrose slice further shrunk by an island's
+    // own interior-only growth (zone-islands.ts's computeIslandZones), on
+    // top of a player zone's own city/mine/guard footprints already eating
+    // much of what's left — that the purely probabilistic roll above has a
+    // real chance of rejecting every tile, leaving that zone with literally
+    // zero decoration. Falls back to the FULL free-tile pool (not just a
+    // small fixed count) so downstream's existing tryPlaceAt collision
+    // check gets a real chance to find whatever room is actually left,
+    // rather than risking a small fixed sample landing entirely on
+    // already-blocked tiles (a city-spawner/mine footprint) and still
+    // placing nothing.
+    if (candidateTiles.length === 0) candidateTiles = [...freeTiles]
 
     // A small slice of this zone's own already-density-rolled candidates
     // seeds clusters (this file's own header comment has the real-map

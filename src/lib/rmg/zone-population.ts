@@ -20,7 +20,7 @@
 
 import type { CatalogMapObject, CatalogObjectLogic, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import {computeFootprintTiles, protectedNeighborNodes} from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import {
   BIOME_FACTION,
@@ -29,7 +29,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
-import { collectArtifactSids, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
+import { collectArtifactSids, pickInteractableSid, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
 
@@ -169,7 +169,19 @@ export function createPlacementState(seedBlocked: Set<number>, seedAnchors: Set<
  *  picked a specific candidate node (zone-decoration.ts's obstacle
  *  scattering, driven by fuzzy-obstacle.ts's own distance/biome rolls) use
  *  this directly; `tryPlace` below (an unconstrained "anywhere in this
- *  zone" placement) is built on top of it. */
+ *  zone" placement) is built on top of it.
+ *
+ *  `state.blocked` also gets a placement's entrance/interaction (value===2)
+ *  cells, not just its solid (value===1) ones — confirmed the real root
+ *  cause of a long-standing RMG load-freeze bug (see entrance-validation.ts):
+ *  without this, nothing stopped a later decoration pass from placing a
+ *  solid object (e.g. a pinetree) directly on an already-placed city's own
+ *  entrance tile, sealing it off in-game. A future *solid* placement whose
+ *  own footprint would land on that node is rejected by the `cell.value ===
+ *  1 &&` check above, same as any other blocked cell; a walkable decoration
+ *  (no value===1 cells at all, e.g. grass/flowers) is still allowed there,
+ *  matching the real game's own tolerance for walkable clutter on an
+ *  entrance tile. */
 export function tryPlaceAt(
   sid: string,
   node: number,
@@ -191,7 +203,12 @@ export function tryPlaceAt(
   state.usedAnchors.add(node)
   if (!nonBlocking) {
     for (const cell of cells) {
-      if (cell.value === 1) state.blocked.add(cell.z * sizeX + cell.x)
+      if (cell.value === 1 || cell.value === 2) state.blocked.add(cell.z * sizeX + cell.x)
+    }
+
+    const protectedNodes = protectedNeighborNodes(cells, sizeX, sizeZ)
+    for (const pNode of protectedNodes) {
+      state.blocked.add(pNode)
     }
   }
   return true
@@ -409,7 +426,17 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, preferredSids?: Set<string>): number => {
     if (catalog && rng() < objectVariety) {
       const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid) && !isAtContentCap(sid))
-      if (availableArtifacts.length > 0 && rng() < 0.5) {
+      // Three-way split for what a "concrete" treasure slot becomes: artifact
+      // / storage-or-resource / interactable building. The interactable
+      // branch is new (issue #210 follow-up — user-reported "RMG never
+      // places anything but dwellings/mines/storage piles"; before this,
+      // nothing in this function ever sampled `object-variety.ts`'s
+      // `pickInteractableSid` pool at all). Weights (0.3/0.45/0.25)
+      // approximate real RMG templates' own content-pool mixing ratios
+      // (`pickInteractableSid`'s own doc comment has the real-data source),
+      // well above the previous 0% for interactables.
+      const branchRoll = rng()
+      if (availableArtifacts.length > 0 && branchRoll < 0.3) {
         // Bias toward a real per-zone `mandatoryContent` sid when this
         // zone has one available (issue #210 second follow-up milestone) —
         // real, template-authored "this zone should have this" data,
@@ -424,14 +451,23 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
         place(sid, tiles)
         return RARITY_AVERAGE_COST
       }
-      const concretePool = (rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS).filter((sid) => !isAtContentCap(sid))
-      if (concretePool.length > 0) {
-        const preferredConcrete = preferredSids ? concretePool.filter((sid) => preferredSids.has(sid)) : []
-        const pool = preferredConcrete.length > 0 && rng() < 0.7 ? preferredConcrete : concretePool
-        const sid = pool[Math.floor(rng() * pool.length)]
-        recordContentPlacement(sid)
-        place(sid, tiles)
-        return RARITY_AVERAGE_COST
+      if (branchRoll < 0.75) {
+        const concretePool = (rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS).filter((sid) => !isAtContentCap(sid))
+        if (concretePool.length > 0) {
+          const preferredConcrete = preferredSids ? concretePool.filter((sid) => preferredSids.has(sid)) : []
+          const pool = preferredConcrete.length > 0 && rng() < 0.7 ? preferredConcrete : concretePool
+          const sid = pool[Math.floor(rng() * pool.length)]
+          recordContentPlacement(sid)
+          place(sid, tiles)
+          return RARITY_AVERAGE_COST
+        }
+      } else {
+        const sid = pickInteractableSid(rng, isAtContentCap)
+        if (sid) {
+          recordContentPlacement(sid)
+          place(sid, tiles)
+          return RARITY_AVERAGE_COST
+        }
       }
     }
     const { rarity, cost } = pickRarity()

@@ -26,6 +26,7 @@ import { importH3mFile, type ImportH3mResult } from '@/lib/h3-import/import-h3m-
 import { describeH3ObjectId } from '@/lib/h3-import/h3-object-mapping'
 import { logError, logInfo } from '@/lib/logger'
 import { saveFile } from '@/lib/native-fs'
+import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 
 interface Props {
   open: boolean
@@ -92,6 +93,16 @@ function buildReportText(result: ImportH3mResult): string {
   if (report.accessibilityStillUnreachable > 0) {
     lines.push('')
     lines.push(`WARNING: ${report.accessibilityStillUnreachable} item/resource/interactable${report.accessibilityStillUnreachable !== 1 ? 's' : ''} could not be made reachable automatically — often because the source map guarded them with water, rock, or a gate/quest mechanic this importer doesn't yet emit. Worth checking manually with the Map Grid's blocked-tile overlay.`)
+  }
+  if (result.unreachablePlacements.length > 0) {
+    lines.push('')
+    lines.push(`WARNING: final reachability check found ${result.unreachablePlacements.length} placement(s) (including squads) still unreachable from any player start after auto-fix:`)
+    for (const issue of result.unreachablePlacements) lines.push(`  ${describeUnreachablePlacement(issue)}`)
+  }
+  if (result.isolatedPlayerStarts.length > 0) {
+    lines.push('')
+    lines.push(`WARNING: ${result.isolatedPlayerStarts.length} player start(s) are isolated from every other player — not auto-fixable, needs a manual road/bridge/portal:`)
+    for (const issue of result.isolatedPlayerStarts) lines.push(`  ${describeIsolatedPlayerStart(issue)}`)
   }
   if (report.unboundOrphanOwners.length > 0) {
     lines.push('')
@@ -337,6 +348,37 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
               </Alert>
             )}
 
+            {result.unreachablePlacements.length > 0 && (
+              <Alert className="py-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="ml-2 text-xs">
+                  <p>
+                    Final reachability check found {result.unreachablePlacements.length} placement{result.unreachablePlacements.length !== 1 ? 's' : ''}
+                    {' '}(including squads) still unreachable from any player start after auto-fix:
+                  </p>
+                  <ul className="list-disc pl-4 mt-1">
+                    {result.unreachablePlacements.slice(0, 10).map((issue, i) => <li key={i}>{describeUnreachablePlacement(issue)}</li>)}
+                  </ul>
+                  {result.unreachablePlacements.length > 10 && <p>…and {result.unreachablePlacements.length - 10} more.</p>}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {result.isolatedPlayerStarts.length > 0 && (
+              <Alert className="py-2" variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="ml-2 text-xs">
+                  <p>
+                    {result.isolatedPlayerStarts.length} player start{result.isolatedPlayerStarts.length !== 1 ? 's are' : ' is'} isolated from every
+                    other player — not auto-fixable, needs a manual road/bridge/portal:
+                  </p>
+                  <ul className="list-disc pl-4 mt-1">
+                    {result.isolatedPlayerStarts.map((issue, i) => <li key={i}>{describeIsolatedPlayerStart(issue)}</li>)}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {report.groundTruthStillBlocked > 0 && (
               <Alert className="py-2">
                 <AlertTriangle className="h-4 w-4" />
@@ -364,6 +406,17 @@ export default function ImportH3mDialog({ open, onOpenChange }: Props) {
                 <AlertDescription className="ml-2 text-xs">
                   {report.outOfEnvelopeCount} object{report.outOfEnvelopeCount !== 1 ? 's' : ''} sat outside the source map's own bounds and were skipped.
                 </AlertDescription>
+              </Alert>
+            )}
+
+            {result.autoFixWarnings.length > 0 && (
+              <Alert className="py-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="ml-2 text-xs space-y-1">
+                      <ul className="list-disc pl-4 space-y-0.5">
+                          {result.autoFixWarnings.map((w, i) => <li key={i}>{w}</li>)}
+                      </ul>
+                  </AlertDescription>
               </Alert>
             )}
 

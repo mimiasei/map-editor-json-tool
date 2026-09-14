@@ -1,0 +1,747 @@
+[
+  {
+    "sid": "angel",
+    "name": "Angel",
+    "value": 3660
+  },
+  {
+    "sid": "angel_upg_alt",
+    "name": "Apotheosis",
+    "value": 6362
+  },
+  {
+    "sid": "angel_upg",
+    "name": "Archangel",
+    "value": 6362
+  },
+  {
+    "sid": "crossbowman_upg",
+    "name": "Austringer",
+    "value": 113
+  },
+  {
+    "sid": "sunlight_cavalry",
+    "name": "Cavalry",
+    "value": 908
+  },
+  {
+    "sid": "crossbowman",
+    "name": "Crossbowman",
+    "value": 83
+  },
+  {
+    "sid": "inquisitor_upg_alt",
+    "name": "Excommunicator",
+    "value": 1806
+  },
+  {
+    "sid": "griffin",
+    "name": "Griffin",
+    "value": 247
+  },
+  {
+    "sid": "esquire_upg",
+    "name": "Guard Captain",
+    "value": 87
+  },
+  {
+    "sid": "griffin_upg_alt",
+    "name": "Guardian Griffin",
+    "value": 340
+  },
+  {
+    "sid": "lightweaver_upg",
+    "name": "Hierophant",
+    "value": 459
+  },
+  {
+    "sid": "inquisitor",
+    "name": "Inquisitor",
+    "value": 1122
+  },
+  {
+    "sid": "lightweaver",
+    "name": "Lightweaver",
+    "value": 312
+  },
+  {
+    "sid": "crossbowman_upg_alt",
+    "name": "Marksman",
+    "value": 113
+  },
+  {
+    "sid": "inquisitor_upg",
+    "name": "Mother Superior",
+    "value": 1806
+  },
+  {
+    "sid": "sunlight_cavalry_upg",
+    "name": "Noble Cavalry",
+    "value": 1366
+  },
+  {
+    "sid": "lightweaver_upg_alt",
+    "name": "Sun Herald",
+    "value": 455
+  },
+  {
+    "sid": "esquire_upg_alt",
+    "name": "Sun’s Aegis",
+    "value": 87
+  },
+  {
+    "sid": "sunlight_cavalry_upg_alt",
+    "name": "Sunspear Cavalry",
+    "value": 1366
+  },
+  {
+    "sid": "esquire",
+    "name": "Swordsman",
+    "value": 67
+  },
+  {
+    "sid": "griffin_upg",
+    "name": "Temple Griffin",
+    "value": 340
+  },
+  {
+    "sid": "pet_upg_alt",
+    "name": "Armored Hound",
+    "value": 152
+  },
+  {
+    "sid": "avatar_of_war_upg",
+    "name": "Avatar of War",
+    "value": 1349
+  },
+  {
+    "sid": "pet_upg",
+    "name": "Barghest",
+    "value": 152
+  },
+  {
+    "sid": "avatar_of_war",
+    "name": "Dread Knight",
+    "value": 852
+  },
+  {
+    "sid": "graverobber",
+    "name": "Graverobber",
+    "value": 244
+  },
+  {
+    "sid": "avatar_of_war_upg_alt",
+    "name": "Hollow Reaper",
+    "value": 1349
+  },
+  {
+    "sid": "graverobber_upg_alt",
+    "name": "Kennelmaster",
+    "value": 353
+  },
+  {
+    "sid": "lich",
+    "name": "Lich",
+    "value": 345
+  },
+  {
+    "sid": "graverobber_upg",
+    "name": "Merchant of Death",
+    "value": 353
+  },
+  {
+    "sid": "lich_upg",
+    "name": "Pestilent Lich",
+    "value": 517
+  },
+  {
+    "sid": "flicker_upg_alt",
+    "name": "Phantasm",
+    "value": 114
+  },
+  {
+    "sid": "lich_upg_alt",
+    "name": "Sanguine Lich",
+    "value": 517
+  },
+  {
+    "sid": "skeleton",
+    "name": "Skeleton",
+    "value": 29
+  },
+  {
+    "sid": "skeleton_upg_alt",
+    "name": "Skeleton Archer",
+    "value": 38
+  },
+  {
+    "sid": "skeleton_upg",
+    "name": "Skeleton Warrior",
+    "value": 38
+  },
+  {
+    "sid": "pet",
+    "name": "Undead Pet",
+    "value": 110
+  },
+  {
+    "sid": "vampire",
+    "name": "Vampire",
+    "value": 1875
+  },
+  {
+    "sid": "vampire_upg",
+    "name": "Vampire Lord",
+    "value": 3276
+  },
+  {
+    "sid": "vampire_upg_alt",
+    "name": "Vampire Scholar",
+    "value": 3276
+  },
+  {
+    "sid": "flicker",
+    "name": "Wight",
+    "value": 85
+  },
+  {
+    "sid": "flicker_upg",
+    "name": "Wraith",
+    "value": 114
+  },
+  {
+    "sid": "black_dragon_upg_alt",
+    "name": "Ashen Dragon",
+    "value": 8009
+  },
+  {
+    "sid": "blade_dancer_upg_alt",
+    "name": "Aureate Dancer",
+    "value": 211
+  },
+  {
+    "sid": "black_dragon_upg",
+    "name": "Black Dragon",
+    "value": 8064
+  },
+  {
+    "sid": "assassin_upg_alt",
+    "name": "Bleak Infiltrator",
+    "value": 145
+  },
+  {
+    "sid": "black_dragon",
+    "name": "Cave Dragon",
+    "value": 4584
+  },
+  {
+    "sid": "hydra_upg",
+    "name": "Chthonic Hydra",
+    "value": 2151
+  },
+  {
+    "sid": "assassin_upg",
+    "name": "Guile Infiltrator",
+    "value": 145
+  },
+  {
+    "sid": "hydra",
+    "name": "Hydra",
+    "value": 1345
+  },
+  {
+    "sid": "hydra_upg_alt",
+    "name": "Infernal Hydra",
+    "value": 2151
+  },
+  {
+    "sid": "trogl_upg",
+    "name": "Infernal Troglodyte",
+    "value": 52
+  },
+  {
+    "sid": "assassin",
+    "name": "Infiltrator",
+    "value": 106
+  },
+  {
+    "sid": "blade_dancer_upg",
+    "name": "Jasper Dancer",
+    "value": 211
+  },
+  {
+    "sid": "medusa",
+    "name": "Medusa",
+    "value": 524
+  },
+  {
+    "sid": "medusa_upg_alt",
+    "name": "Medusa Queen",
+    "value": 793
+  },
+  {
+    "sid": "medusa_upg",
+    "name": "Medusa Sculptor",
+    "value": 787
+  },
+  {
+    "sid": "minos",
+    "name": "Minotaur",
+    "value": 384
+  },
+  {
+    "sid": "minos_upg",
+    "name": "Minotaur Lord",
+    "value": 552
+  },
+  {
+    "sid": "minos_upg_alt",
+    "name": "Minotaur Vanguard",
+    "value": 552
+  },
+  {
+    "sid": "blade_dancer",
+    "name": "Onyx Dancer",
+    "value": 151
+  },
+  {
+    "sid": "trogl_upg_alt",
+    "name": "Toxic Troglodyte",
+    "value": 52
+  },
+  {
+    "sid": "trogl",
+    "name": "Troglodyte",
+    "value": 40
+  },
+  {
+    "sid": "unspeakable",
+    "name": "Abyssal Envoy",
+    "value": 3810
+  },
+  {
+    "sid": "unspeakable_upg_alt",
+    "name": "Abyssal Executor",
+    "value": 6689
+  },
+  {
+    "sid": "unspeakable_upg",
+    "name": "Abyssal Overseer",
+    "value": 6689
+  },
+  {
+    "sid": "frostworm_rider_upg_alt",
+    "name": "Aga’Shoth Mat’ha",
+    "value": 256
+  },
+  {
+    "sid": "frostworm_rider",
+    "name": "Aga’Shoth Rider",
+    "value": 181
+  },
+  {
+    "sid": "frostworm_rider_upg",
+    "name": "Aga’Shoth Tamer",
+    "value": 256
+  },
+  {
+    "sid": "arbitrator",
+    "name": "Arbitrator",
+    "value": 1411
+  },
+  {
+    "sid": "succubus_upg_alt",
+    "name": "Bewitcher",
+    "value": 950
+  },
+  {
+    "sid": "unfrozen_cultist_upg",
+    "name": "Binder",
+    "value": 193
+  },
+  {
+    "sid": "arbitrator_upg_alt",
+    "name": "Bloated Arbitrator",
+    "value": 2273
+  },
+  {
+    "sid": "succubus",
+    "name": "Concubus",
+    "value": 623
+  },
+  {
+    "sid": "unfrozen_cultist",
+    "name": "Cultist",
+    "value": 144
+  },
+  {
+    "sid": "lesser_eldritch_upg_alt",
+    "name": "Ferocious Ra’Shoth",
+    "value": 81
+  },
+  {
+    "sid": "eldritch_flyer",
+    "name": "Grand Shoth",
+    "value": 453
+  },
+  {
+    "sid": "succubus_upg",
+    "name": "Mistress of Chains",
+    "value": 950
+  },
+  {
+    "sid": "lesser_eldritch",
+    "name": "Ra’Shoth",
+    "value": 63
+  },
+  {
+    "sid": "arbitrator_upg",
+    "name": "Rift Arbitrator",
+    "value": 2273
+  },
+  {
+    "sid": "lesser_eldritch_upg",
+    "name": "Stinging Ra’Shoth",
+    "value": 81
+  },
+  {
+    "sid": "eldritch_flyer_upg",
+    "name": "Unspeakable Shoth",
+    "value": 657
+  },
+  {
+    "sid": "eldritch_flyer_upg_alt",
+    "name": "Unthinkable Shoth",
+    "value": 657
+  },
+  {
+    "sid": "unfrozen_cultist_upg_alt",
+    "name": "Votary",
+    "value": 193
+  },
+  {
+    "sid": "wasp_upg",
+    "name": "Chanter",
+    "value": 327
+  },
+  {
+    "sid": "olgoi_upg",
+    "name": "Devourer",
+    "value": 2277
+  },
+  {
+    "sid": "lava_larva",
+    "name": "Fire Larva",
+    "value": 100
+  },
+  {
+    "sid": "locust_upg_alt",
+    "name": "Harvester Locust",
+    "value": 155
+  },
+  {
+    "sid": "hive_queen_upg_alt",
+    "name": "Hive Huntress",
+    "value": 5410
+  },
+  {
+    "sid": "hive_queen_upg",
+    "name": "Hive Mother",
+    "value": 5410
+  },
+  {
+    "sid": "hive_queen",
+    "name": "Hive Queen",
+    "value": 3135
+  },
+  {
+    "sid": "wasp",
+    "name": "Hornet",
+    "value": 233
+  },
+  {
+    "sid": "locust",
+    "name": "Locust",
+    "value": 115
+  },
+  {
+    "sid": "godslayer_upg_alt",
+    "name": "Maniacal Reaver",
+    "value": 1216
+  },
+  {
+    "sid": "godslayer_upg",
+    "name": "Menacing Reaver",
+    "value": 1216
+  },
+  {
+    "sid": "locust_upg",
+    "name": "Overgrown Locust",
+    "value": 155
+  },
+  {
+    "sid": "trick_demon",
+    "name": "Parasite",
+    "value": 63
+  },
+  {
+    "sid": "olgoi_upg_alt",
+    "name": "Pyroboros",
+    "value": 2277
+  },
+  {
+    "sid": "trick_demon_upg_alt",
+    "name": "Ravager Parasite",
+    "value": 83
+  },
+  {
+    "sid": "godslayer",
+    "name": "Reaver",
+    "value": 799
+  },
+  {
+    "sid": "jaw",
+    "name": "Scorpion",
+    "value": 303
+  },
+  {
+    "sid": "jaw_upg_alt",
+    "name": "Spelaean Scorpion",
+    "value": 439
+  },
+  {
+    "sid": "wasp_upg_alt",
+    "name": "Stinger",
+    "value": 327
+  },
+  {
+    "sid": "jaw_upg",
+    "name": "Volcanic Scorpion",
+    "value": 439
+  },
+  {
+    "sid": "trick_demon_upg",
+    "name": "Warden Parasite",
+    "value": 83
+  },
+  {
+    "sid": "olgoi",
+    "name": "Waurms",
+    "value": 1428
+  },
+  {
+    "sid": "aqualotl_upg_alt",
+    "name": "Brumal Naiad",
+    "value": 528
+  },
+  {
+    "sid": "ent_upg_alt",
+    "name": "Crystal Iriyad",
+    "value": 280
+  },
+  {
+    "sid": "twinkle_upg",
+    "name": "Dawn Hoplet",
+    "value": 216
+  },
+  {
+    "sid": "twinkle_upg_alt",
+    "name": "Dusk Hoplet",
+    "value": 216
+  },
+  {
+    "sid": "phoenix_upg_alt",
+    "name": "Energy Phoenix",
+    "value": 7699
+  },
+  {
+    "sid": "elf_tracker",
+    "name": "Faun",
+    "value": 93
+  },
+  {
+    "sid": "elf_tracker_upg",
+    "name": "Faun Archer",
+    "value": 121
+  },
+  {
+    "sid": "elf_tracker_upg_alt",
+    "name": "Faun Warrior",
+    "value": 121
+  },
+  {
+    "sid": "phoenix_upg",
+    "name": "Flaming Phoenix",
+    "value": 7699
+  },
+  {
+    "sid": "ent_upg",
+    "name": "Fungal Iriyad",
+    "value": 280
+  },
+  {
+    "sid": "druid",
+    "name": "Herbomancer",
+    "value": 680
+  },
+  {
+    "sid": "twinkle",
+    "name": "Hoplet",
+    "value": 160
+  },
+  {
+    "sid": "qilin_upg_alt",
+    "name": "Mist Qilin",
+    "value": 2238
+  },
+  {
+    "sid": "druid_upg_alt",
+    "name": "Murmurmancer",
+    "value": 1027
+  },
+  {
+    "sid": "aqualotl",
+    "name": "Naiad",
+    "value": 363
+  },
+  {
+    "sid": "phoenix",
+    "name": "Phoenix",
+    "value": 4414
+  },
+  {
+    "sid": "qilin",
+    "name": "Qilin",
+    "value": 1405
+  },
+  {
+    "sid": "druid_upg",
+    "name": "Sporemancer",
+    "value": 1027
+  },
+  {
+    "sid": "qilin_upg",
+    "name": "Thunder Qilin",
+    "value": 2238
+  },
+  {
+    "sid": "aqualotl_upg",
+    "name": "Vernal Naiad",
+    "value": 528
+  },
+  {
+    "sid": "ent",
+    "name": "Vine Iriyad",
+    "value": 201
+  },
+  {
+    "sid": "animated_armor",
+    "name": "Animated Armor",
+    "value": 275
+  },
+  {
+    "sid": "avatar",
+    "name": "Avatar",
+    "value": 275
+  },
+  {
+    "sid": "avatar_nature",
+    "name": "avatar_nature",
+    "value": 275
+  },
+  {
+    "sid": "avatar_unfrozen",
+    "name": "avatar_unfrozen",
+    "value": 275
+  },
+  {
+    "sid": "coatl",
+    "name": "Couatl",
+    "value": 1700
+  },
+  {
+    "sid": "dragon_hunter",
+    "name": "Dragonslayer",
+    "value": 1700
+  },
+  {
+    "sid": "fairy_dragon",
+    "name": "Faerie Dragon",
+    "value": 950
+  },
+  {
+    "sid": "undead_peasant",
+    "name": "Ghoul",
+    "value": 1
+  },
+  {
+    "sid": "giant_frog",
+    "name": "Giant Toad",
+    "value": 950
+  },
+  {
+    "sid": "gnat",
+    "name": "Gnat",
+    "value": 66
+  },
+  {
+    "sid": "gorilla",
+    "name": "Groll",
+    "value": 275
+  },
+  {
+    "sid": "halfling",
+    "name": "Halfling",
+    "value": 125
+  },
+  {
+    "sid": "kitten_horn",
+    "name": "Kittenhorn",
+    "value": 550
+  },
+  {
+    "sid": "lich_dragon",
+    "name": "Lich Dragon",
+    "value": 30000
+  },
+  {
+    "sid": "peasant",
+    "name": "Peasant",
+    "value": 125
+  },
+  {
+    "sid": "peasant_normal",
+    "name": "peasant_normal",
+    "value": 10
+  },
+  {
+    "sid": "pixie",
+    "name": "Pixie",
+    "value": 75
+  },
+  {
+    "sid": "primal_remnant",
+    "name": "Primal Remnant",
+    "value": 550
+  },
+  {
+    "sid": "sentinel",
+    "name": "Sentinel of Glory",
+    "value": 7000
+  },
+  {
+    "sid": "star_child",
+    "name": "Starchild",
+    "value": 550
+  },
+  {
+    "sid": "unicorn",
+    "name": "Unicorn",
+    "value": 550
+  },
+  {
+    "sid": "mech_guard",
+    "name": "Worldwatcher",
+    "value": 1700
+  }
+]

@@ -39,8 +39,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ChevronDown, ChevronRight, Dices } from 'lucide-react'
+import { ChevronDown, ChevronRight, Dices, Info } from 'lucide-react'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
 import { previewRoads } from '@/lib/rmg/preview-roads'
@@ -53,6 +54,7 @@ import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDial
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
+import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 
 interface Props {
   open: boolean
@@ -110,6 +112,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [islandsIncludePlayerZones, setIslandsIncludePlayerZones] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
   const [islandLandRatio, setIslandLandRatio] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
+  const [interactableDensity, setInteractableDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
+  const [mountainDensity, setMountainDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
   const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
   const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
   const [usePortals, setUsePortals] = useState(DEFAULT_TEMPLATE_OVERRIDES.usePortals)
@@ -282,6 +286,22 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       if (score !== null) {
         logInfo(`Balance score: ${score}/100 — ${findings.map((f) => f.message).join(' ')}`)
       }
+      // Reachability validation (reachability-validation.ts) — generateRandomMapFile
+      // already ran its own portal-aware reachability auto-fix round as part of
+      // runPlacementAutoFix, so anything reported here is what that couldn't
+      // safely resolve (logged, not blocking — same as the balance score).
+      if (result.unreachablePlacements.length > 0) {
+        logWarn(`Reachability check: ${result.unreachablePlacements.length} placement(s) still unreachable from any player start after auto-fix`)
+        for (const issue of result.unreachablePlacements) logWarn(`  ${describeUnreachablePlacement(issue)}`)
+      }
+      // Isolated-player-start check — a real, separate gap findUnreachablePlacements
+      // above can't catch (see reachability-validation.ts's header comment):
+      // two players' zones can each be internally fine yet mutually
+      // disconnected. Never auto-fixable, so always just reported.
+      if (result.isolatedPlayerStarts.length > 0) {
+        logWarn(`Reachability check: ${result.isolatedPlayerStarts.length} player start(s) isolated from every other player`)
+        for (const issue of result.isolatedPlayerStarts) logWarn(`  ${describeIsolatedPlayerStart(issue)}`)
+      }
       onGenerated({ name: result.name, warnings: result.warnings })
       onOpenChange(false)
     } catch (e) {
@@ -315,6 +335,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       islandsIncludePlayerZones,
       islandLandRatio,
       obstacleDensity,
+      interactableDensity,
+      mountainDensity,
       treasureDensity,
       objectVariety,
       usePortals,
@@ -380,6 +402,25 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         ? 'Confirm roads'
         : 'Generate'
   const footerAction = previewPhase === 'terrain' ? handleConfirmTerrain : previewPhase === 'roads' ? handleConfirmRoads : handleGenerate
+
+  const handleResetAll= () => {
+      setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
+      setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
+      setIslandsIncludePlayerZones(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
+      setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
+      setObstacleDensity(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
+      setInteractableDensity(DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
+      setMountainDensity(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
+      setTreasureDensity(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
+      setObjectVariety(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
+      setUsePortals(DEFAULT_TEMPLATE_OVERRIDES.usePortals)
+      setZoneJaggedness(DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
+      setZoneSpread(DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
+      setBoundaryGuardStrength(DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength)
+      setSquadDensity(DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
+      setRoadWindingAmplitude(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
+      setRoadWindingWavelength(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -515,6 +556,21 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           {showTerrainSliders && (
             <div className="space-y-4 pl-1">
+                <div className="space-y-1.5">
+                    <Label htmlFor="rmg-seed" className="text-xs">Seed (optional — same seed, same map)</Label>
+                    <div className="flex items-center gap-2">
+                        <Input
+                            id="rmg-seed"
+                            value={seedText}
+                            onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, ''))}
+                            placeholder="Random"
+                            className="h-8 text-sm"
+                            disabled={terrainLocked}
+                        />
+                        <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
+                    </div>
+                </div>
+
               <div className="space-y-1.5">
                 <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
                   Water content
@@ -589,20 +645,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 <Slider min={0.5} max={1.8} step={0.01} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="rmg-seed" className="text-xs">Seed (optional — same seed, same map)</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="rmg-seed"
-                    value={seedText}
-                    onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="Random"
-                    className="h-8 text-sm"
-                    disabled={terrainLocked}
-                  />
-                  <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
-                </div>
-              </div>
             </div>
           )}
 
@@ -652,6 +694,22 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 <Slider min={0} max={0.5} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} />
               </div>
 
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs">Interactable density</Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(interactableDensity)}</span>
+                    </div>
+                    <Slider min={0} max={0.5} step={0.02} value={[interactableDensity]} onValueChange={([v]) => setInteractableDensity(v)} />
+                </div>
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs">Mountain density in zone boundaries</Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(mountainDensity)}</span>
+                    </div>
+                    <Slider min={0} max={0.8} step={0.02} value={[mountainDensity]} onValueChange={([v]) => setMountainDensity(v)} />
+                </div>
+
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Treasure density</Label>
@@ -662,13 +720,31 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="Chance a given treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random placeholder.">
-                    Object variety
-                  </Label>
+                    <div className="flex gap-1.5">
+                      <Label className="text-xs">
+                        Object variety
+                      </Label>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Info className="h-3 w-3 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random type.</TooltipContent>
+                        </Tooltip>
+                    </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.01} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} />
               </div>
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs" title="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty.">
+                            Squad density
+                        </Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
+                    </div>
+                    <Slider min={0} max={1} step={0.01} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
+                </div>
 
               <div className="flex items-center justify-between">
                 <Label htmlFor="rmg-use-portals" className="text-xs" title="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement.">
@@ -692,16 +768,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty.">
-                    Squad density
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.01} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
-              </div>
-
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={handleSaveTemplate} className="flex-1">
                   Save Template…
@@ -719,19 +785,23 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             river, and biome-appropriate scenery. Player zones get a
             faction-matched starting dwelling, mine, and guard; neutral
             zones get a mine (guarded to its own real economic value) and
-            scaled treasure. No zone-shape variety yet — see issue #210 for
-            the full roadmap.
+            scaled treasure. No zone-shape variety yet.
           </p>
         </div>
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
+            <div>
+                <Button variant="ghost" size="sm" onClick={() => handleResetAll()} disabled={generating}>
+                    Reset all to defaults
+                </Button>
+            </div>
           <div className="flex-1" />
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
-            {footerLabel}
-          </Button>
+              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={generating}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
+                {footerLabel}
+              </Button>
         </div>
       </DraggableDialogContent>
 

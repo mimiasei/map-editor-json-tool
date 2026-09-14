@@ -1,8 +1,8 @@
 // ─── RMG proximity guards (issue #210, user-reported) ───────────────────────
 // A real user request: a random chance of a guard squad next to a real
-// resource/artifact/mine/dwelling — on top of each zone's own single
-// mine/treasure guard (zone-population.ts) and each zone-boundary gate's own
-// guard (zone-boundary.ts). Runs as its own pass AFTER `populateZones` (the
+// resource/artifact/mine/dwelling/interactable — on top of each zone's own
+// single mine/treasure guard (zone-population.ts) and each zone-boundary
+// gate's own guard (zone-boundary.ts). Runs as its own pass AFTER `populateZones` (the
 // user's own explicit ordering: "add squads as a pass after resources and
 // artifacts have been placed"), scanning its real placements for candidates
 // rather than re-deriving what got placed where.
@@ -21,7 +21,15 @@ import {
 } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
-import { STORAGE_SIDS, collectArtifactSids, pickSquadTemplate } from './object-variety'
+import {
+  STORAGE_SIDS,
+  RESOURCE_SIDS,
+  INTERACTABLE_COMMON_SIDS,
+  INTERACTABLE_UNCOMMON_SIDS,
+  INTERACTABLE_RARE_SIDS,
+  collectArtifactSids,
+  pickSquadTemplate,
+} from './object-variety'
 import {
   tryPlaceAt,
   ZONE_BIOMES,
@@ -32,12 +40,20 @@ import {
 
 const MINE_SIDS = new Set(['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury'])
 
+/** Every interactable sid `object-variety.ts`'s `pickInteractableSid` can
+ *  place (issue #210 follow-up) — these were never guard candidates at all
+ *  before, so most of them ended up unguarded regardless of `squadDensity`,
+ *  same gap `RESOURCE_SIDS` had (real resource pickups, as opposed to
+ *  `STORAGE_SIDS`'s storage piles, which were already covered). */
+const INTERACTABLE_SIDS = new Set([...INTERACTABLE_COMMON_SIDS, ...INTERACTABLE_UNCOMMON_SIDS, ...INTERACTABLE_RARE_SIDS])
+
 /** Whether `sid` is a real "worth guarding" candidate — mine, dwelling
- *  (`barracks_*`), resource pile, or artifact. `random-item`/`random-squad`
- *  placeholders are deliberately excluded (nothing real to stand guard
- *  over yet at generation time). */
-function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
-  return MINE_SIDS.has(sid) || sid.startsWith('barracks_') || STORAGE_SIDS.includes(sid) || artifactSids.has(sid)
+ *  (`barracks_*`), resource pile/pickup, interactable building, or
+ *  artifact. `random-item`/`random-squad` placeholders are deliberately
+ *  excluded (nothing real to stand guard over yet at generation time). */
+export function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
+  return MINE_SIDS.has(sid) || sid.startsWith('barracks_') || STORAGE_SIDS.includes(sid) ||
+    (RESOURCE_SIDS as readonly string[]).includes(sid) || INTERACTABLE_SIDS.has(sid) || artifactSids.has(sid)
 }
 
 /** A free tile within a small radius of `node` — the candidate's own
@@ -46,7 +62,7 @@ function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
  *  distance typically 3-6 tiles, and a tighter radius silently suppressed
  *  placements (no free tile found) even on a successful `squadDensity`
  *  roll. */
-const NEARBY_GUARD_RADIUS = 4
+export const NEARBY_GUARD_RADIUS = 4
 
 function nearbyFreeTile(node: number, sizeX: number, sizeZ: number, state: PlacementState, rng: () => number): number | null {
   const cx = node % sizeX

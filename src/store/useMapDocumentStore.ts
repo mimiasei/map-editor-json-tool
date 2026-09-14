@@ -17,7 +17,19 @@ import type { RawMapBlocks } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
-import { findOutOfBoundsPlacements, type OutOfBoundsPlacement } from '@/lib/map-grid/bounds-validation'
+import { findMapValidationIssues, type MapValidationIssue } from '@/lib/map-grid/map-validation'
+import { computeBoundsAutoFix } from '@/lib/map-grid/bounds-autofix'
+import { computeEntranceAutoFix } from '@/lib/map-grid/entrance-autofix'
+import { computeReachabilityAutoFix, findUnreachablePlacements, type UnreachablePlacement } from '@/lib/map-grid/reachability-validation'
+
+// Same re-run-to-convergence rationale as auto-fix-pass.ts's own identical
+// constants (used by the RMG/H3-import orchestration layer) — a single
+// entrance or reachability auto-fix pass only ever computes against one
+// static snapshot, so re-deriving and re-running until a pass makes no
+// further changes catches fixes that only became visible after an earlier
+// fix in the same run. Capped, not unbounded, for the same reason.
+const MAX_ENTRANCE_AUTOFIX_PASSES = 5
+const MAX_REACHABILITY_AUTOFIX_PASSES = 5
 
 /** Cheap in-memory equivalent of parseMapFile's gzip-then-JSON-parse pass —
  *  reused here so applyEdit can re-sync useMapContextStore on every single
@@ -26,7 +38,7 @@ import { findOutOfBoundsPlacements, type OutOfBoundsPlacement } from '@/lib/map-
  *  that's the one place "what really landed on disk" matters. Missing
  *  chunks become `{}`, matching parseMapFile's own fallback for a map that
  *  ships with fewer than 4 blocks. */
-function containerToRawBlocks(container: MapContainer): RawMapBlocks {
+export function containerToRawBlocks(container: MapContainer): RawMapBlocks {
   const decoder = new TextDecoder('utf-8')
   const parse = (i: number): unknown => {
     const chunk = container.chunks[i]
@@ -46,20 +58,47 @@ function containerToRawBlocks(container: MapContainer): RawMapBlocks {
 }
 
 /** Result of `commitToDisk` — 'blocked' means nothing was written at all
- *  (the in-memory document stays dirty) because at least one placed object's
- *  real footprint extends past the map's edge (see bounds-validation.ts).
- *  Callers must check `.status` and abort their own Save/Save As flow on
- *  'blocked', the same way they already do for a cancelled save-location
- *  prompt — showing the violation list is `boundsViolations` below's job. */
-export type CommitResult = ({ status: 'saved' } & MapSaveResult) | { status: 'blocked'; violations: OutOfBoundsPlacement[] }
+ *  (the in-memory document stays dirty) because at least one placed object
+ *  fails a save-time check (see map-validation.ts — currently: a footprint
+ *  extending past the map's edge, or an entrance/interaction cell fully
+ *  blocked by another object/water/an unramped elevation wall). Callers must
+ *  check `.status` and abort their own Save/Save As flow on 'blocked', the
+ *  same way they already do for a cancelled save-location prompt — showing
+ *  the issue list is `mapValidationIssues` below's job. */
+export type CommitResult = ({ status: 'saved' } & MapSaveResult) | { status: 'blocked'; issues: MapValidationIssue[] }
 
 interface MapDocumentStore {
   container: MapContainer | null
   mapIsDirty: boolean
   /** Set by a blocked `commitToDisk` so a single, app-shell-level dialog can
-   *  show the offending objects; cleared by `clearBoundsViolations`. */
-  boundsViolations: OutOfBoundsPlacement[] | null
-  clearBoundsViolations: () => void
+   *  show the offending objects; cleared by `clearMapValidationIssues`. */
+  mapValidationIssues: MapValidationIssue[] | null
+  clearMapValidationIssues: () => void
+  /** Fixes every current validation issue it safely can: an out-of-bounds
+   *  violator is relocated to an in-bounds, non-colliding, reachable tile
+   *  (`bounds-autofix.ts`) via the same `moveObject` edit the Map Grid's own
+   *  Move tool uses; a blocked entrance has its purely-decorative blocker
+   *  deleted (`entrance-autofix.ts`) — never a real object, and never the
+   *  entrance's own target. No new write paths either way. Re-derives
+   *  `mapValidationIssues` from the result afterward (empty if everything
+   *  was fixed) so the dialog reacts the same way it already does after any
+   *  other edit. Returns a summary for the dialog to show. */
+  autoFixMapValidationIssues: () => { fixedCount: number; unresolvedCount: number }
+  /** On-demand full placement check + auto-fix (bounds, entrance-to-
+   *  convergence, and portal-aware reachability-to-convergence) for the
+   *  Toolbar's manual "Validate" button — manually-built maps get the exact
+   *  same repair pass "Generate Random Map"/"Import H3 Map" already run
+   *  automatically (auto-fix-pass.ts's runPlacementAutoFix), just triggered
+   *  on demand instead of always-on. Unlike autoFixMapValidationIssues above
+   *  (save-time-only, bounds+entrance single-pass), this never touches
+   *  `mapValidationIssues` — that field exclusively drives the separate
+   *  save-blocking dialog (MapValidationErrorDialog, gated on
+   *  `issues !== null`), and setting it here would pop that dialog
+   *  unexpectedly during a manual on-demand check. The caller keeps its own
+   *  local state for what to display. Each fix is applied via the real
+   *  applyEdit (not a throwaway MapContainer rebuild), so it's covered by
+   *  the same undo history/dirty flag as any other edit. */
+  autoFixMapPlacementIssues: () => { fixedCount: number; remainingIssues: MapValidationIssue[]; remainingUnreachable: UnreachablePlacement[] }
   /** Load a freshly-opened .map's container — resets dirty state and undo history. */
   loadContainer: (container: MapContainer) => void
   /** Apply one edit to the in-memory document. Throws (leaving the store
@@ -73,7 +112,7 @@ interface MapDocumentStore {
   applyEdit: (edit: MapSaveEdit) => number | undefined
   /** Persist the current in-memory document to `mapFilePath` — clears
    *  mapIsDirty on success ('saved'), leaves it untouched and sets
-   *  `boundsViolations` on 'blocked' (see CommitResult). */
+   *  `mapValidationIssues` on 'blocked' (see CommitResult). */
   commitToDisk: (mapFilePath: string) => Promise<CommitResult>
   /** Discard the loaded document without writing anything — used on New/
    *  closing a map, mirroring useMapContextStore's own clearContext(). */
@@ -92,8 +131,75 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
     (set, get) => ({
       container: null,
       mapIsDirty: false,
-      boundsViolations: null,
-      clearBoundsViolations: () => set({ boundsViolations: null }),
+      mapValidationIssues: null,
+      clearMapValidationIssues: () => set({ mapValidationIssues: null }),
+
+      autoFixMapValidationIssues: () => {
+        const current = get().container
+        if (!current) throw new Error('No .map document is currently loaded')
+        const catalog = useCatalogStore.getState().catalog
+        const context = extractMapContext(containerToRawBlocks(current))
+        const bounds = computeBoundsAutoFix(context, catalog)
+        for (const fix of bounds.fixes) {
+          get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: fix.id, newNode: fix.toNode })
+        }
+        // Re-derive from the post-move document before computing entrance
+        // fixes — a moved object's old footprint no longer blocks anything,
+        // and its new one might (rare, but cheap to get right by re-reading
+        // rather than assuming).
+        const afterBounds = get().container
+        const entranceContext = afterBounds ? extractMapContext(containerToRawBlocks(afterBounds)) : context
+        const entrance = computeEntranceAutoFix(entranceContext, catalog)
+        for (const deletion of entrance.deletions) {
+          get().applyEdit({ kind: 'deleteObject', entityType: 0, entityId: deletion.id })
+        }
+        for (const relocation of entrance.relocations) {
+          get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: relocation.id, newNode: relocation.toNode })
+        }
+        const after = get().container
+        const remaining = after ? findMapValidationIssues(extractMapContext(containerToRawBlocks(after)), catalog) : []
+        set({ mapValidationIssues: remaining.length > 0 ? remaining : null })
+        const fixedCount = bounds.fixes.length + entrance.deletions.length + entrance.relocations.length
+        return { fixedCount, unresolvedCount: remaining.length }
+      },
+
+      autoFixMapPlacementIssues: () => {
+        const current = get().container
+        if (!current) throw new Error('No .map document is currently loaded')
+        const catalog = useCatalogStore.getState().catalog
+
+        const boundsCtx = extractMapContext(containerToRawBlocks(current))
+        const bounds = computeBoundsAutoFix(boundsCtx, catalog)
+        for (const fix of bounds.fixes) {
+          get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: fix.id, newNode: fix.toNode })
+        }
+
+        let entranceFixCount = 0
+        for (let pass = 0; pass < MAX_ENTRANCE_AUTOFIX_PASSES; pass++) {
+          const entranceCtx = extractMapContext(containerToRawBlocks(get().container ?? current))
+          const entrance = computeEntranceAutoFix(entranceCtx, catalog)
+          if (entrance.deletions.length === 0 && entrance.relocations.length === 0) break
+          for (const del of entrance.deletions) get().applyEdit({ kind: 'deleteObject', entityType: 0, entityId: del.id })
+          for (const rel of entrance.relocations) get().applyEdit({ kind: 'moveObject', entityType: 0, entityId: rel.id, newNode: rel.toNode })
+          entranceFixCount += entrance.deletions.length + entrance.relocations.length
+        }
+
+        let reachabilityFixCount = 0
+        for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
+          const reachabilityCtx = extractMapContext(containerToRawBlocks(get().container ?? current))
+          const reachability = computeReachabilityAutoFix(reachabilityCtx, catalog)
+          if (reachability.deletions.length === 0 && reachability.relocations.length === 0) break
+          for (const del of reachability.deletions) get().applyEdit({ kind: 'deleteObject', entityType: del.entityType, entityId: del.id })
+          for (const rel of reachability.relocations) get().applyEdit({ kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode })
+          reachabilityFixCount += reachability.deletions.length + reachability.relocations.length
+        }
+
+        const finalCtx = extractMapContext(containerToRawBlocks(get().container ?? current))
+        const remainingIssues = findMapValidationIssues(finalCtx, catalog)
+        const remainingUnreachable = findUnreachablePlacements(finalCtx, catalog)
+        const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount
+        return { fixedCount, remainingIssues, remainingUnreachable }
+      },
 
       loadContainer: (container) => {
         set({ container, mapIsDirty: false })
@@ -113,13 +219,13 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
         const current = get().container
         if (!current) throw new Error('No .map document is currently loaded')
         const context = extractMapContext(containerToRawBlocks(current))
-        const violations = findOutOfBoundsPlacements(context, useCatalogStore.getState().catalog)
-        if (violations.length > 0) {
-          set({ boundsViolations: violations })
-          return { status: 'blocked', violations }
+        const issues = findMapValidationIssues(context, useCatalogStore.getState().catalog)
+        if (issues.length > 0) {
+          set({ mapValidationIssues: issues })
+          return { status: 'blocked', issues }
         }
         const result = await writeMapChunks(mapFilePath, current)
-        set({ mapIsDirty: false, boundsViolations: null })
+        set({ mapIsDirty: false, mapValidationIssues: null })
         return { status: 'saved', ...result }
       },
 
@@ -157,7 +263,7 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
  *  save trigger inside the Map Grid). Callers must check the returned
  *  status and abort their own Save flow (skip the scenario-JSON save too)
  *  when it's 'blocked' — same as they already do for a cancelled save-
- *  location prompt — since `useMapDocumentStore`'s `boundsViolations` is
+ *  location prompt — since `useMapDocumentStore`'s `mapValidationIssues` is
  *  already set for the app-shell-level dialog to show by the time this
  *  resolves. */
 export async function commitMapIfDirty(mapFilePath: string | null): Promise<{ status: 'saved' | 'skipped' | 'blocked' }> {

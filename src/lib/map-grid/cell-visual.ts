@@ -12,12 +12,18 @@
 // check needed), but portals' real-icon status is unconfirmed, and squads
 // should show a real creature icon whenever one resolves.
 
-import { Castle, Shield, DoorOpen, SquareDashed, Building2, UserRound, Swords, Gem, Package, Users, type LucideIcon } from 'lucide-react'
+import {
+    Castle, Shield, DoorOpen, SquareDashed, Building2, UserRound, Swords, Gem, Package, Users,
+    Trees, Mountain, MountainSnow, Flower2, Squirrel,
+    CloudFog, Trophy, Waves, Flag, Box, Leaf, Tent, Pickaxe,
+    type LucideIcon } from 'lucide-react'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
-import { randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
+import { randomSquadDifficultyLabel, squadValueFromUnits, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import type { PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
+import type { CatalogMapObject } from '@/lib/catalog/types'
+import { resolveDecorationSubcategory, type DecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
 
 export type GridCellVisual =
   | { kind: 'icon'; Icon: LucideIcon; colorClassName?: string }
@@ -49,6 +55,24 @@ const SID_ICON_OVERRIDES: Record<string, LucideIcon> = {
   'random-res': Gem,
   'random-item': Package,
   'random-hire': Users,
+  'squad': Swords,
+}
+
+const SUBCATEGORY_ICON_FALLBACK: Partial<Record<DecorationSubcategory, LucideIcon>> = {
+    animals: Squirrel,
+    fx: CloudFog,
+    mountains: Mountain,
+    trees: Trees,
+    rocks: Box,
+    pools: Waves,
+    hills: MountainSnow,
+    walkable: Flower2,
+    campaignRelated: Flag,
+    other: Leaf,
+}
+
+const CATEGORY_ICON_FALLBACK: Partial<Record<CatalogMapObject['category'], LucideIcon>> = {
+    artifacts: Trophy,
 }
 
 /** issue #205: tints the random-squad Swords icon by rolled difficulty so it
@@ -62,6 +86,27 @@ const SQUAD_DIFFICULTY_COLOR: Record<string, string> = {
   Difficult: 'text-yellow-300',
   Impossible: 'text-orange-400',
   Lethal: 'text-red-500',
+}
+
+const RESOURCE_COLOR: Record<string, string> = {
+    resource_gold: 'fill-amber-300',
+    resource_wood: 'fill-amber-700',
+    resource_ore: 'fill-gray-500',
+    resource_gemstones: 'fill-purple-400',
+    resource_crystals: 'fill-rose-500',
+    resource_mercury: 'fill-blue-200',
+    resource_dust: 'fill-pink-300',
+    chest: 'fill-blue-500',
+    camp_fire: 'fill-orange-400',
+}
+
+const MINE_COLOR: Record<string, string> = {
+    mine_gold: RESOURCE_COLOR.resource_gold,
+    mine_wood: RESOURCE_COLOR.resource_wood,
+    mine_ore: RESOURCE_COLOR.resource_ore,
+    mine_gemstones: RESOURCE_COLOR.resource_gemstones,
+    mine_crystals: RESOURCE_COLOR.resource_crystals,
+    mine_mercury: RESOURCE_COLOR.resource_mercury,
 }
 
 export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog | null, squadDifficultyRanges?: DifficultyRange[]): GridCellVisual {
@@ -89,10 +134,20 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
     }
   }
 
-  const spawnerOverride = SID_ICON_OVERRIDES[item.sid]
+  const spawnerKey = Object.keys(SID_ICON_OVERRIDES).find((k) => item.sid === k || item.sid.startsWith(k))
+  const spawnerOverride = spawnerKey ? SID_ICON_OVERRIDES[spawnerKey] : undefined
   if (spawnerOverride) {
     if (item.sid === 'random-squad' && item.randomSquadValue !== undefined) {
       const label = randomSquadDifficultyLabel(item.randomSquadValue, squadDifficultyRanges)
+      return { kind: 'icon', Icon: spawnerOverride, colorClassName: SQUAD_DIFFICULTY_COLOR[label] }
+    }
+    // Fixed (non-random) squad, no real creature icon to fall back to (see
+    // the item.type === 2 checks above) — tint the Swords fallback by value
+    // derived from its actual unit composition, same difficulty vocabulary
+    // as random-squad above.
+    if (item.sid === 'squad' && item.guardUnitProps) {
+      const value = squadValueFromUnits(item.guardUnitProps, catalog)
+      const label = randomSquadDifficultyLabel(value, squadDifficultyRanges)
       return { kind: 'icon', Icon: spawnerOverride, colorClassName: SQUAD_DIFFICULTY_COLOR[label] }
     }
     return { kind: 'icon', Icon: spawnerOverride }
@@ -108,7 +163,19 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
     return { kind: 'icon', Icon: DoorOpen }
   }
 
-  if (groupOf(item, catalog) === 'resources') return { kind: 'text', text: 'Res' }
+  if (item.sid.startsWith('barracks_')) {
+    const catalogIcon = catalog?.mapObjects.find((o) => o.id === item.sid)?.icon
+    if (catalogIcon && thumbnailPath(catalogIcon)) return { kind: 'catalog' }
+    return { kind: 'icon', Icon: Tent }
+  }
+
+  if (item.sid.startsWith('mine_')) {
+    const catalogIcon = catalog?.mapObjects.find((o) => o.id === item.sid)?.icon
+    if (catalogIcon && thumbnailPath(catalogIcon)) return { kind: 'catalog' }
+    return { kind: 'icon', Icon: Pickaxe, colorClassName: MINE_COLOR[item.sid] }
+  }
+
+  if (groupOf(item, catalog) === 'resources') return { kind: 'icon', Icon: Gem, colorClassName: RESOURCE_COLOR[item.sid] }
 
   // A "custom_" object (e.g. custom_windmill) is a scripting-only variant of
   // its base object (windmill) — same prefab/texture, just wrapped so it can
@@ -122,8 +189,19 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
   // it differs from the item's own sid fixes this in general, not just for
   // custom_* specifically.
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === item.sid)
-  if (catalogEntry?.icon && catalogEntry.icon !== item.sid) {
+  if (catalogEntry?.icon && catalogEntry.icon !== item.sid && thumbnailPath(catalogEntry.icon)) {
     return { kind: 'catalogOverride', iconId: catalogEntry.icon, name: catalogEntry.name }
   }
+
+  if (catalogEntry?.icon && thumbnailPath(catalogEntry.icon)) return { kind: 'catalog' }
+
+  if (catalogEntry?.category === 'environments' || catalogEntry?.category === 'animals' || catalogEntry?.category === 'fxs') {
+    const subIcon = SUBCATEGORY_ICON_FALLBACK[resolveDecorationSubcategory(item.sid, catalogEntry.category)]
+    if (subIcon) return { kind: 'icon', Icon: subIcon }
+  }
+
+  const categoryIcon = catalogEntry?.category ? CATEGORY_ICON_FALLBACK[catalogEntry.category] : undefined
+  if (categoryIcon) return { kind: 'icon', Icon: categoryIcon }
+
   return { kind: 'catalog' }
 }

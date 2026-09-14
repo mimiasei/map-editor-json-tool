@@ -81,6 +81,16 @@ export interface RawMapBlock2 {
    *  flat indexing as tilesMap. Already round-trips today (the blank-map
    *  template zero-fills it) but was unparsed/unused until this field. */
   roadsMap?: number[]
+  /** Per-tile "custom area"/player-region paint id, 0 = unpainted, distinct
+   *  small ints = distinct zones — confirmed real via GME-authored sample
+   *  map validationtest_gme.map (color-coded regions painted around each
+   *  player's starting city, bounded by terrain/obstacles). Same flat
+   *  indexing as tilesMap. Present as `[]` (empty, not full-length) on an
+   *  unpainted map, even the blank New Map template — never actually
+   *  missing. */
+  customAreasPainting?: number[]
+  /** True once any customAreasPainting value is nonzero. */
+  haveCustomAreas?: boolean
   /** River path data. Confirmed across every parseable real sample map to
    *  always contain exactly ONE entry (sid "test", matching the single
    *  template DB/map/rivers/rivers.json ships) — even on maps with zero

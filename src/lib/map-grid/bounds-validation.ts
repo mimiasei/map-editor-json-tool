@@ -20,6 +20,9 @@ export interface OutOfBoundsPlacement {
   id: number
   x: number
   z: number
+  /** `z * sizeX + x` — precomputed so a caller (e.g. `bounds-autofix.ts`)
+   *  never needs to re-derive it or thread `sizeX` around separately. */
+  node: number
 }
 
 /** Every type-0 (objects[]) placement whose real footprint (per its catalog
@@ -39,7 +42,7 @@ export function findOutOfBoundsPlacements(
     const template = catalog?.mapObjects.find((o) => o.id === placed.sid)
     const cells = computeFootprintTiles(template, placed.x, placed.z)
     if (!isFootprintInBounds(cells, context.sizeX, context.sizeZ)) {
-      violations.push({ sid: placed.sid, id: placed.id, x: placed.x, z: placed.z })
+      violations.push({ sid: placed.sid, id: placed.id, x: placed.x, z: placed.z, node: placed.z * context.sizeX + placed.x })
     }
   }
   return violations

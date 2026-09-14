@@ -13,6 +13,7 @@ import { createSeededRng } from './seeded-rng'
 import type { GenerateRandomMapOptions } from './generate-random-map'
 import type { BoundaryGuardStrength } from './zone-boundary'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import { INTERACTABLE_COMMON_SIDS, INTERACTABLE_UNCOMMON_SIDS, INTERACTABLE_RARE_SIDS } from './object-variety'
 
 export const RMG_TEMPLATE_VERSION = 1
 
@@ -56,6 +57,12 @@ export interface RandomMapTemplate {
    *  21% actual coverage — the middle of that range — rather than porting the
    *  percentage directly. */
   obstacleDensity: number
+    /** 0-1 fraction of each zone's own tiles considered for interactable object scattering
+     *  0.25 default */
+  interactableDensity: number
+    /** 0-1 fraction of the chance of using mountains in the clusters of obstacles
+     * composing the boundary walls between zones */
+  mountainDensity: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts) — 1 = the generator's own default zone-size scaling, 2 = double, 0 = none. */
   treasureDensity: number
   /** 0-1 chance a given treasure/guard slot places a real, concrete object
@@ -114,7 +121,9 @@ export interface RandomMapTemplate {
    *  sid. Applied as a single whole-map total (the real format applies it
    *  per named zone role — `spawn`/`treasure`/etc. — which this generator's
    *  simpler player/neutral-only zone model has no equivalent of yet).
-   *  Defaults to a small starter list capping `university` at 1. */
+   *  Defaults to a tier-based cap per interactable sid (see
+   *  `DEFAULT_TEMPLATE_OVERRIDES`'s own doc comment on `contentCountLimits`
+   *  below) — common sids allowed more copies map-wide than rare ones. */
   contentCountLimits: { sid: string; maxCount: number }[]
   /** Of every road segment (a zone-graph edge, or an intra-island road),
    *  the chance it's painted Stone (`roadId: 2`) instead of Dirt
@@ -140,15 +149,32 @@ export interface RandomMapTemplate {
   roadFullConnectivityChance: number
 }
 
+/** Default map-wide interactable caps (issue #210 follow-up — interactables
+ *  are now placeable by `zone-population.ts`'s `placeTreasure` via
+ *  `pickInteractableSid`, which previously never happened at all): common
+ *  sids get more headroom than rare ones, matching real RMG templates'
+ *  own bias toward simple sites over unique/epic ones. These numbers are
+ *  well above what a typical map's own treasure budget would ever spend on
+ *  any one sid, so in practice they only stop one rare/unique sid from
+ *  repeating excessively on a very large map — they're a ceiling, not a
+ *  tuning target. */
+const DEFAULT_INTERACTABLE_CONTENT_LIMITS = [
+  ...INTERACTABLE_COMMON_SIDS.map((sid) => ({ sid, maxCount: 4 })),
+  ...INTERACTABLE_UNCOMMON_SIDS.map((sid) => ({ sid, maxCount: 2 })),
+  ...INTERACTABLE_RARE_SIDS.map((sid) => ({ sid, maxCount: 1 })),
+]
+
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'interactableDensity' | 'mountainDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   islandsIncludePlayerZones: false,
   islandLandRatio: 0.4,
   obstacleDensity: 0.35,
+  interactableDensity: 0.25,
+  mountainDensity: 0.35,
   treasureDensity: 1,
   objectVariety: 0.4,
   usePortals: false,
@@ -160,7 +186,7 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   roadWindingWavelength: 50,
   enabledBiomes: ALL_TEMPLATE_BIOMES,
   randomCityCount: 1,
-  contentCountLimits: [{ sid: 'university', maxCount: 1 }],
+  contentCountLimits: DEFAULT_INTERACTABLE_CONTENT_LIMITS,
   stoneRoadChance: 0.35,
   roadPointOfInterestChance: 0.8,
   roadFullConnectivityChance: 0.8,
@@ -230,6 +256,8 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     islandsIncludePlayerZones: typeof data.islandsIncludePlayerZones === 'boolean' ? data.islandsIncludePlayerZones : DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones,
     islandLandRatio: typeof data.islandLandRatio === 'number' ? data.islandLandRatio : DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio,
     obstacleDensity: typeof data.obstacleDensity === 'number' ? data.obstacleDensity : DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity,
+    interactableDensity: typeof data.interactableDensity === 'number' ? data.interactableDensity : DEFAULT_TEMPLATE_OVERRIDES.interactableDensity,
+    mountainDensity: typeof data.mountainDensity === 'number' ? data.mountainDensity : DEFAULT_TEMPLATE_OVERRIDES.mountainDensity,
     treasureDensity: typeof data.treasureDensity === 'number' ? data.treasureDensity : DEFAULT_TEMPLATE_OVERRIDES.treasureDensity,
     objectVariety: typeof data.objectVariety === 'number' ? data.objectVariety : DEFAULT_TEMPLATE_OVERRIDES.objectVariety,
     usePortals: typeof data.usePortals === 'boolean' ? data.usePortals : DEFAULT_TEMPLATE_OVERRIDES.usePortals,

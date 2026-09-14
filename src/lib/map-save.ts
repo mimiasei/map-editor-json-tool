@@ -40,14 +40,17 @@ import {
   paintWaterTiles,
   paintRoadTiles,
   paintClimbTiles,
+  paintZoneTiles,
   paintRiverTiles,
   addObjectInstance,
   addMarkerInstance,
   deleteObjectInstance,
   paintObjects,
   clearAllObjects,
+  patchMapSettings,
   bytesEqual,
   type MapContainer,
+  type MapSettingsPatch,
 } from '@/lib/map-write'
 import { parseMapFile } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
@@ -65,6 +68,7 @@ export type MapSaveEdit =
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
   | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
+  | { kind: 'setMapSettings'; patch: MapSettingsPatch }
   | { kind: 'setGuardSquad'; entityType: number; entityId: number; unitProps: { sid: string; count: number }[] }
   | { kind: 'setCityGarrison'; entityType: number; entityId: number; sids: string[] }
   | { kind: 'setRandomSquadValue'; entityType: number; entityId: number; requestedValue: number }
@@ -79,6 +83,7 @@ export type MapSaveEdit =
   | { kind: 'paintWater'; changes: { node: number; waterId: number }[] }
   | { kind: 'paintRoad'; changes: { node: number; roadId: number }[] }
   | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
+  | { kind: 'paintZone'; changes: { node: number; zoneId: number }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
   | { kind: 'clearAll' }
@@ -101,7 +106,7 @@ export type MapSaveEdit =
  *  map-write.ts). */
 function editedChunkIndices(edit?: MapSaveEdit): Set<number> {
   if (!edit) return new Set()
-  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'swapSpawnerOwner' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects' || edit.kind === 'setHeroSid' || edit.kind === 'setCitySpawnHero' || edit.kind === 'setCityFaction' || edit.kind === 'clearAll'
+  return edit.kind === 'setSpawnerPlayerType' || edit.kind === 'swapSpawnerOwner' || edit.kind === 'deleteObject' || edit.kind === 'addObject' || edit.kind === 'paintObjects' || edit.kind === 'setHeroSid' || edit.kind === 'setCitySpawnHero' || edit.kind === 'setCityFaction' || edit.kind === 'clearAll' || edit.kind === 'setMapSettings'
     ? new Set([0, 1])
     : new Set([1])
 }
@@ -250,6 +255,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = paintRoadTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintClimb') {
     newChunks[1] = paintClimbTiles(newChunks[1], edit.changes)
+  } else if (edit?.kind === 'paintZone') {
+    newChunks[1] = paintZoneTiles(newChunks[1], edit.changes)
   } else if (edit?.kind === 'paintRiver') {
     newChunks[1] = paintRiverTiles(newChunks[1], edit.changes, edit.deletions ?? [])
   } else if (edit?.kind === 'paintObjects') {
@@ -258,6 +265,10 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = result.block2Chunk
   } else if (edit?.kind === 'clearAll') {
     const result = clearAllObjects(newChunks[0], newChunks[1])
+    newChunks[0] = result.block1Chunk
+    newChunks[1] = result.block2Chunk
+  } else if (edit?.kind === 'setMapSettings') {
+    const result = patchMapSettings(newChunks[0], newChunks[1], edit.patch)
     newChunks[0] = result.block1Chunk
     newChunks[1] = result.block2Chunk
   }
@@ -627,6 +638,20 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
         throw new Error('Verification failed: painted ramp not reflected in the rebuilt climbsMap')
       }
     }
+  } else if (edit?.kind === 'paintZone') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      customAreasPainting?: number[]
+      haveCustomAreas?: boolean
+    }
+    const zones = block2.customAreasPainting ?? []
+    for (const { node, zoneId } of edit.changes) {
+      if (zones[node] !== zoneId) {
+        throw new Error('Verification failed: painted zone not reflected in the rebuilt customAreasPainting')
+      }
+    }
+    if (edit.changes.some((c) => c.zoneId !== 0) && block2.haveCustomAreas !== true) {
+      throw new Error('Verification failed: haveCustomAreas not set after painting a nonzero zone')
+    }
   } else if (edit?.kind === 'paintRiver') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       rivers?: Array<{ nodes?: Array<{ n: number; s: number }> }>
@@ -691,6 +716,22 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     }
     if ((block1.spawns?.spawns?.length ?? 0) > 0 || (block1.spawns?.playersCount ?? 0) !== 0) {
       throw new Error('Verification failed: clear-all left Block 1 player-start spawns behind')
+    }
+  } else if (edit?.kind === 'setMapSettings') {
+    const block1 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[0])) as { title?: string; desc?: string }
+    if (edit.patch.title !== undefined && block1.title !== edit.patch.title) {
+      throw new Error('Verification failed: title not reflected in the rebuilt Block 1')
+    }
+    if (edit.patch.desc !== undefined && block1.desc !== edit.patch.desc) {
+      throw new Error('Verification failed: description not reflected in the rebuilt Block 1')
+    }
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { settings?: Record<string, unknown> }
+    const settings = block2.settings ?? {}
+    for (const [field, expected] of Object.entries(edit.patch)) {
+      if (field === 'title' || field === 'desc' || expected === undefined) continue
+      if (settings[field] !== expected) {
+        throw new Error(`Verification failed: ${field} not reflected in the rebuilt Block 2 settings`)
+      }
     }
   }
 

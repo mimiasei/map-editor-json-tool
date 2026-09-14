@@ -52,6 +52,7 @@ import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
+import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
@@ -93,6 +94,8 @@ export interface GenerateRandomMapOptions {
   islandLandRatio?: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
   obstacleDensity?: number
+  /** 0-1 fraction of the chance to have mountains in the zone boundary walls. */
+  mountainDensity?: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts). Defaults to 1. */
   treasureDensity?: number
   /** 0-1 chance a given treasure/guard slot places a real, concrete object
@@ -206,7 +209,7 @@ export interface GenerateRandomMapResult {
 }
 
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): GenerateRandomMapResult {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -788,7 +791,8 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     sizeX, sizeZ, zones: graph.zones, zoneIdByNode, zoneBiome,
     roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
     zoneDistances, catalogById, mapObjects: catalog.mapObjects,
-    catalog, objectVariety, strength: boundaryGuardStrength, state, rng,
+    catalog, objectVariety, mountainDensity, strength: boundaryGuardStrength, state, rng,
+    islandZoneIds, waterNodes: waterNodesAll,
   })
 
   // Obstacle scattering — fills whatever each zone has left over, sharing
@@ -801,6 +805,16 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     density: obstacleDensity, densityByZone, ambientPickupByZone,
   })
 
+  // Ambient animal/fx decoration (issue #210 follow-up) — real-map-
+  // calibrated density, see zone-fauna.ts's own header comment. Runs after
+  // obstacles so it only fills tiles obstacles left free; every placement
+  // is non-blocking, so this can never introduce a new reachability or
+  // water-isolation problem for anything else.
+  const faunaPlacements = scatterZoneFauna({
+    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, waterNodes: waterNodesAll, catalogById,
+    mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state, rng,
+  })
+
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain
   // carving" milestone item) — reuses the H3-import accessibility pass
   // verbatim rather than inventing a second flood-fill repair algorithm.
@@ -811,7 +825,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
   const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads, ...proximityGuards.concreteSquads]
-  for (const placement of [...placements, ...obstaclePlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
+  for (const placement of [...placements, ...obstaclePlacements, ...faunaPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
@@ -821,6 +835,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     group.levels.push(0)
   }
   for (const placement of obstaclePlacements) decorativeIds.add(placement.tempId)
+  for (const placement of faunaPlacements) decorativeIds.add(placement.tempId)
   // Wall obstacles are decorative too (deletable if one seals off a real
   // target) — gate GUARDS are deliberately NOT, matching every other real
   // guard this generator places (a dwelling/mine/treasure guard is never
@@ -855,6 +870,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     decorativePlacements: [...obstaclePlacements, ...boundaryResult.wallPlacements],
     spawnerSid: playerSpawnerSid,
     catalog, catalogById, levelsMap: levelsMapFinal, waterMap: waterMapFinal,
+    portalAdjacency,
   })
   if (sealedResult.sealedZoneIds.length > 0) {
     logWarn(`Random map generation: ${sealedResult.sealedZoneIds.length} zone(s) had no reachable opening at all — repaired by removing bordering decorative obstacles`)
@@ -865,6 +881,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
 
   const waterCollisionResult = reclaimWaterCollisions({
     objectGroups, concreteSquads: allConcreteSquads, waterNodes: waterNodesAll,
+    waterCompatibleSids: WATER_COMPATIBLE_FAUNA_SIDS,
   })
   if (waterCollisionResult.reclaimedNodes.size > 0) {
     logWarn(`Random map generation: ${waterCollisionResult.reclaimedNodes.size} placed object/squad(s) ended up on a water tile — reclaimed that tile back to land`)

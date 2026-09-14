@@ -179,10 +179,34 @@ export function applyAccessibilityPass(
     return flat
   }
 
+  // Portal templates (portal_1..portal_5, Core/DB/map/objects/
+  // 4_interactables.json) all place their SOLID footprint cell (value===1,
+  // permanently blocked/unwalkable) right at the anchor, with the real
+  // walkable "step here to use it" cell (value===2) OFFSET from it —
+  // confirmed real bug 2026-09-08: using the raw anchor node (`idToNode`)
+  // for the hop meant a portal's own node could never become `visited`
+  // via normal walking (it's solid), so the hop condition below (which
+  // only fires for an already-visited node) silently never triggered for
+  // ANY portal — every island's reachability via its own portal was
+  // effectively dead code. The nudge phase then "fixed" the resulting
+  // unreachable portal targets by relocating them to the nearest already-
+  // reachable tile, moving them clean off their intended island into an
+  // unrelated zone. Resolves to the template's own real access cell
+  // instead, matching zone-validation.ts's own spawner-seeding convention.
+  const accessNodeForId = (id: number): number | undefined => {
+    const node = idToNode.get(id)
+    if (node === undefined) return undefined
+    const template = catalogById.get(idToSid.get(id) ?? '')
+    const cells = computeFootprintTiles(template, node % atlasWidth, Math.floor(node / atlasWidth))
+    const access = cells.find((c) => c.value === 2)
+    if (!access) return node
+    return nodeAt(access.x, access.z, atlasWidth, atlasHeight) ?? node
+  }
+
   const portalNodeAdjacency = new Map<number, number[]>()
   for (const [fromId, toId] of portalAdjacencyByObjectId) {
-    const fromNode = idToNode.get(fromId)
-    const toNode = idToNode.get(toId)
+    const fromNode = accessNodeForId(fromId)
+    const toNode = accessNodeForId(toId)
     if (fromNode === undefined || toNode === undefined) continue
     const list = portalNodeAdjacency.get(fromNode)
     if (list) list.push(toNode)
@@ -404,6 +428,19 @@ export function applyAccessibilityPass(
         for (const cell of candidateCells) {
           const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
           if (n === null) { valid = false; break }
+          // Real bug confirmed via a user-reported screenshot (two RMG
+          // squads alone on a 1-tile island): for a multi-cell NON_BLOCKING
+          // footprint (random-squad is 3x3), `candidateAccess` below only
+          // needs ONE of its 9 cells to be reachable — nothing here ever
+          // checked water, so a candidate whose ANCHOR itself sat on a lake
+          // tile could still pass as long as some corner 1-2 tiles away
+          // happened to be dry land. The nudge then relocated the target
+          // there; `reclaimWaterCollisions` (zone-validation.ts) later
+          // un-painted just that one anchor tile back to land, since it never
+          // checks the tile's neighbors — producing exactly the isolated
+          // island. Rejecting any candidate that touches water AT ALL (not
+          // just its solid cells) closes this off entirely, for every sid.
+          if ((out.waterMap[n] ?? 0) !== 0) { valid = false; break }
           if (cell.value === 1 && nudgeBlocked.has(n) && !ownNodes.has(n)) { valid = false; break }
           if (cell.value === 1 && avoidNodes.has(n)) { valid = false; break }
         }

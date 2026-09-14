@@ -23,7 +23,7 @@ import type { RestoreResult } from '@/lib/session-handoff'
 import { UpdateBanner, RestoreBanner, ThumbnailsBanner } from '@/components/common/UpdateBanner'
 import UpdateDialog from '@/components/common/UpdateDialog'
 import UnsavedChangesDialog from '@/components/common/UnsavedChangesDialog'
-import MapBoundsErrorDialog from '@/components/common/MapBoundsErrorDialog'
+import MapValidationErrorDialog from '@/components/common/MapValidationErrorDialog'
 import Toolbar from './Toolbar'
 import ScenarioTree from '@/components/tree/ScenarioTree'
 import EditorPanel from '@/components/editors/EditorPanel'
@@ -642,6 +642,7 @@ export default function AppShell() {
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
         onOpen={() => window.dispatchEvent(new Event('oe:open'))}
+        mapGridOpen={mapGridOpen}
       />
 
       {/* Non-blocking notices under the toolbar */}
@@ -677,7 +678,7 @@ export default function AppShell() {
         onDiscard={() => resolveExitChoice('discard')}
         onCancel={() => resolveExitChoice('cancel')}
       />
-      <MapBoundsErrorDialog />
+      <MapValidationErrorDialog />
 
       <ThumbnailExtractDialog
         open={thumbnailDialogOpen}
@@ -705,6 +706,7 @@ export default function AppShell() {
         onOpenChange={setStatsOpen}
         onUndock={() => { setStatsOpen(false); handleUndock('stats') }}
         undocked={isUndocked('stats')}
+        mapGridOpen={mapGridOpen}
       />
       <DialogEditor />
       <LocalizationDialog />

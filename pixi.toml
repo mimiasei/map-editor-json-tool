@@ -1,0 +1,10 @@
+[workspace]
+authors = ["Mikkel Syse Grosland <mikkel.grosland@ecoonline.com>"]
+channels = ["conda-forge"]
+name = "map-editor-json-tool"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]

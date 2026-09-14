@@ -1033,6 +1033,48 @@ export function patchTopLevelScalar(chunk: Uint8Array, key: string, newValue: nu
   return new TextEncoder().encode(patchedText)
 }
 
+/** Boolean sibling of findTopLevelScalarSpan — for a bare top-level
+ *  `true`/`false` literal (e.g. `haveCustomAreas`). */
+function findTopLevelBooleanSpan(text: string, key: string): { valueStart: number; valueEnd: number; value: boolean } {
+  const marker = `"${key}":`
+  const markerIdx = text.indexOf(marker)
+  if (markerIdx === -1) throw new Error(`"${key}" not found in this block`)
+  const valueStart = markerIdx + marker.length
+  if (text.startsWith('true', valueStart)) return { valueStart, valueEnd: valueStart + 4, value: true }
+  if (text.startsWith('false', valueStart)) return { valueStart, valueEnd: valueStart + 5, value: false }
+  throw new Error(`"${key}" is not a bare boolean scalar`)
+}
+
+/** String sibling of findTopLevelScalarSpan — for a bare top-level string
+ *  scalar (Block 1's own `title`/`desc`, both flat top-level fields, not
+ *  nested under a key like `settings`/`banInfoData`). Spans the WHOLE quoted
+ *  literal (opening through closing quote, escapes respected) so the patch
+ *  function below can replace it wholesale with a fresh `JSON.stringify`
+ *  rather than fiddling with escaping itself. */
+function findTopLevelStringSpan(text: string, key: string): { valueStart: number; valueEnd: number; value: string } {
+  const marker = `"${key}":`
+  const markerIdx = text.indexOf(marker)
+  if (markerIdx === -1) throw new Error(`"${key}" not found in this block`)
+  const valueStart = markerIdx + marker.length
+  if (text[valueStart] !== '"') throw new Error(`"${key}" is not a bare string scalar`)
+  let pos = valueStart + 1
+  while (pos < text.length) {
+    if (text[pos] === '\\') { pos += 2; continue }
+    if (text[pos] === '"') { pos++; break }
+    pos++
+  }
+  const valueEnd = pos
+  return { valueStart, valueEnd, value: JSON.parse(text.slice(valueStart, valueEnd)) as string }
+}
+
+/** Patch a bare top-level string scalar — string sibling of patchTopLevelScalar. */
+export function patchTopLevelStringScalar(chunk: Uint8Array, key: string, newValue: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { valueStart, valueEnd } = findTopLevelStringSpan(text, key)
+  const patchedText = text.slice(0, valueStart) + JSON.stringify(newValue) + text.slice(valueEnd)
+  return new TextEncoder().encode(patchedText)
+}
+
 /**
  * Add a new `objects[]` (type 0) or `squads[]` (type 2) instance at `node`.
  * Finds the sid's existing group and pushes onto its parallel arrays, or
@@ -1904,10 +1946,11 @@ export function addObjectInstances(
 /** Overwrite `arrayKey`'s value at every `{node, value}` in `changes`. Shared
  *  by paintTerrainTiles/paintLevelTiles/paintWaterTiles below — the only
  *  thing that varies between them is which flat array they target. */
-function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap' | 'roadsMap' | 'climbsMap', changes: { node: number; value: number }[]): Uint8Array {
+function paintFlatArrayTiles(chunk: Uint8Array, arrayKey: 'tilesMap' | 'levelsMap' | 'waterMap' | 'roadsMap' | 'climbsMap' | 'customAreasPainting', changes: { node: number; value: number }[], resizeToLength?: number): Uint8Array {
   const text = new TextDecoder('utf-8').decode(chunk)
   const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, arrayKey)
-  const values = JSON.parse(span) as number[]
+  let values = JSON.parse(span) as number[]
+  if (resizeToLength !== undefined && values.length !== resizeToLength) values = new Array(resizeToLength).fill(0)
   for (const { node, value } of changes) {
     if (node < 0 || node >= values.length) {
       throw new Error(`Node ${node} is out of bounds for ${arrayKey} (length ${values.length})`)
@@ -1992,6 +2035,28 @@ export function paintClimbTiles(chunk: Uint8Array, changes: { node: number; clim
   return paintFlatArrayTiles(chunk, 'climbsMap', changes.map(({ node, climb }) => ({ node, value: climb })))
 }
 
+/** Overwrite `customAreasPainting[node]` for every `{node, zoneId}` in
+ *  `changes` (0 = unpainted). `customAreasPainting` is present but `[]`
+ *  (not full tile-count length) on any never-painted map, even the blank
+ *  template — resized to `tilesMap`'s own confirmed-correct length on first
+ *  use rather than assuming it's already sized. Flips `haveCustomAreas` to
+ *  `true` the first time a nonzero zoneId is written; never flips it back
+ *  to `false` (clearing every zone to 0 resetting the flag isn't confirmed
+ *  against any real sample). */
+export function paintZoneTiles(chunk: Uint8Array, changes: { node: number; zoneId: number }[]): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { span: tilesSpan } = findJsonArraySpan(text, 'tilesMap')
+  const tileCount = (JSON.parse(tilesSpan) as number[]).length
+  const patched = paintFlatArrayTiles(chunk, 'customAreasPainting', changes.map(({ node, zoneId }) => ({ node, value: zoneId })), tileCount)
+  if (!changes.some((c) => c.zoneId !== 0)) return patched
+
+  const patchedText = new TextDecoder('utf-8').decode(patched)
+  const have = findTopLevelBooleanSpan(patchedText, 'haveCustomAreas')
+  if (have.value) return patched
+  const newText = patchedText.slice(0, have.valueStart) + 'true' + patchedText.slice(have.valueEnd)
+  return new TextEncoder().encode(newText)
+}
+
 // ─── Game rules / bans (issue #210, Stage 4 — real game RMG template
 // `gameRules`/`globalBans` → Block1/Block2 mapping). Mechanical field
 // mapping only, no new algorithms — confirmed direct name matches against
@@ -2058,6 +2123,93 @@ export function patchGameRules(
   }
 
   return { block1Chunk: new TextEncoder().encode(text1), block2Chunk: new TextEncoder().encode(text2) }
+}
+
+// ─── Map Settings dialog (issue #210 follow-up — Map Grid header) ──────────
+// Block 1's `title`/`desc` are the map's real in-game name/description (NOT
+// the same as `mapName`, a Block 2 field this app's own sidebar already
+// exposes purely for SID-prefix/export naming — see MapContext's own doc
+// comments). The 10 booleans are every boolean Block 2 `settings` field
+// confirmed real (varies across at least one real sample map surveyed this
+// session) and understood well enough to expose directly, deliberately
+// excluding `mapWinConditions` (real `typeWinCondition` enum unconfirmed —
+// this project's own standing rule is to never guess a game-format fact,
+// same reasoning `patchGameRules` above already documents) and every
+// `startSettings.*` lobby/turn-timer field (near-constant across all 18 real
+// samples checked — a lobby-time concern, not a per-map authoring one).
+export interface MapSettingsPatch {
+  title?: string
+  desc?: string
+  isTournamentRules?: boolean
+  enableHeroHireBan?: boolean
+  enableCustomHeroMaxLevel?: boolean
+  disableWeekEffect?: boolean
+  disableFactionLaws?: boolean
+  disableMagicGuild?: boolean
+  disableMagicCustomLearning?: boolean
+  disableAutoBattleAgainstEnemyHeroes?: boolean
+  cantRewriteTurnMode?: boolean
+  enableCustomAI?: boolean
+}
+
+/** Every `MapSettingsPatch` boolean field name — shared between the patch
+ *  and read functions below so the two can never silently drift apart. */
+const MAP_SETTINGS_BOOLEAN_FIELDS = [
+  'isTournamentRules', 'enableHeroHireBan', 'enableCustomHeroMaxLevel', 'disableWeekEffect',
+  'disableFactionLaws', 'disableMagicGuild', 'disableMagicCustomLearning',
+  'disableAutoBattleAgainstEnemyHeroes', 'cantRewriteTurnMode', 'enableCustomAI',
+] as const satisfies readonly (keyof MapSettingsPatch)[]
+
+/** Patches Block 1's `title`/`desc` (bare top-level string scalars) and
+ *  Block 2's `settings` object (the 10 booleans above) — same span-patch-
+ *  and-splice discipline as every other write in this file. Every field is
+ *  independently optional — omitting one leaves whatever was already there
+ *  untouched. */
+export function patchMapSettings(
+  block1Chunk: Uint8Array,
+  block2Chunk: Uint8Array,
+  patch: MapSettingsPatch,
+): { block1Chunk: Uint8Array; block2Chunk: Uint8Array } {
+  let block1 = block1Chunk
+  if (patch.title !== undefined) block1 = patchTopLevelStringScalar(block1, 'title', patch.title)
+  if (patch.desc !== undefined) block1 = patchTopLevelStringScalar(block1, 'desc', patch.desc)
+
+  let block2 = block2Chunk
+  if (MAP_SETTINGS_BOOLEAN_FIELDS.some((f) => patch[f] !== undefined)) {
+    const text2 = new TextDecoder('utf-8').decode(block2)
+    const { objOpen, objClose, span } = findJsonObjectSpan(text2, 'settings')
+    const settings = JSON.parse(span) as Record<string, unknown>
+    for (const field of MAP_SETTINGS_BOOLEAN_FIELDS) {
+      if (patch[field] !== undefined) settings[field] = patch[field]
+    }
+    const patchedText2 = text2.slice(0, objOpen) + JSON.stringify(settings) + text2.slice(objClose + 1)
+    block2 = new TextEncoder().encode(patchedText2)
+  }
+
+  return { block1Chunk: block1, block2Chunk: block2 }
+}
+
+export type MapSettingsValues = Required<MapSettingsPatch>
+
+/** Reads the current values `patchMapSettings` above can write — a plain
+ *  full JSON.parse of each block (unlike the write side, there's no byte-
+ *  span-preservation concern for a read), used to prefill the Map Settings
+ *  dialog. Missing fields (an older map that predates one of these) default
+ *  to `false`/empty string rather than throwing — this dialog should still
+ *  open on any real map. */
+export function readMapSettings(block1Chunk: Uint8Array, block2Chunk: Uint8Array): MapSettingsValues {
+  const decoder = new TextDecoder('utf-8')
+  const block1 = JSON.parse(decoder.decode(block1Chunk)) as Record<string, unknown>
+  const block2 = JSON.parse(decoder.decode(block2Chunk)) as { settings?: Record<string, unknown> }
+  const settings = block2.settings ?? {}
+  const values = {
+    title: typeof block1.title === 'string' ? block1.title : '',
+    desc: typeof block1.desc === 'string' ? block1.desc : '',
+  } as MapSettingsValues
+  for (const field of MAP_SETTINGS_BOOLEAN_FIELDS) {
+    values[field] = settings[field] === true
+  }
+  return values
 }
 
 /** Upsert `{n, s, isWaterfall}` entries into `rivers[0].nodes` (add/update
