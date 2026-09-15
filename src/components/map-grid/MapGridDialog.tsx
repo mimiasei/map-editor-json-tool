@@ -1435,6 +1435,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // movement) then never triggers capture at all, so it reaches whatever's
   // actually under the cursor — the cell — with no redirection to fight.
   const CLICK_DRAG_THRESHOLD_PX = 4
+  // One real mouse-wheel detent sends ~100 deltaY; a trackpad sends many
+  // small events per gesture instead. Accumulating to this threshold makes
+  // Alt+wheel-rotate feel like one 90deg step per physical notch either way.
+  const ROTATE_WHEEL_STEP = 100
+  const rotateWheelAccumRef = useRef(0)
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     // Panning is the middle mouse button only, so it never fights the
     // object-move/paint gestures below (which need left-button drag) and so
@@ -2021,8 +2026,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     if (moveDragRef.current) {
-      if (moveDragRef.current.moved && e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId)
+      const drag = moveDragRef.current
+      if (drag.moved) {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+        // onPointerMove already writes the live cursor tile straight into
+        // moveState.node on every drag tick (so the ghost preview tracks the
+        // cursor) without ever calling applyEdit — so by the time we get
+        // here, moveState.node already equals the drop tile. Comparing
+        // against drag.item.node (the pre-drag origin) instead of going
+        // through applyMoveTo's own prev.node===node guard is what actually
+        // commits the drop; applyMoveTo would see "no change" and no-op.
+        setMoveState((prev) => {
+          if (prev && prev.node !== drag.item.node) {
+            applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: prev.node }, 'move object')
+            selectNode(prev.node)
+            setSpawnerSelectorOpen(false)
+          }
+          return prev
+        })
       }
       moveDragRef.current = null
       return
@@ -2097,6 +2118,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const onWheel = (e: ReactWheelEvent<HTMLDivElement>) => {
     e.preventDefault()
+    // Alt+wheel (not Ctrl/Cmd+wheel) rotates the selected object — Ctrl is
+    // avoided because browsers/trackpads synthesize ctrlKey:true on native
+    // pinch-to-zoom wheel events, which would silently hijack pinch-zoom on
+    // the macOS desktop build.
+    const rotateTarget = e.altKey && selectedNode !== null ? primaryByNode.get(selectedNode)?.primary : undefined
+    if (rotateTarget && rotateTarget.type === 0 && rotateTarget.rotation !== undefined) {
+      rotateWheelAccumRef.current += e.deltaY
+      while (rotateWheelAccumRef.current >= ROTATE_WHEEL_STEP) {
+        stepRotate(rotateTarget, 1)
+        rotateWheelAccumRef.current -= ROTATE_WHEEL_STEP
+      }
+      while (rotateWheelAccumRef.current <= -ROTATE_WHEEL_STEP) {
+        stepRotate(rotateTarget, -1)
+        rotateWheelAccumRef.current += ROTATE_WHEEL_STEP
+      }
+      return
+    }
+    rotateWheelAccumRef.current = 0
     const rect = e.currentTarget.getBoundingClientRect()
     const factor = Math.exp(-e.deltaY * 0.001)
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
@@ -4392,13 +4431,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
                   // relocate (Move, now shown for real at its destination via
-                  // stagedMoveIcon below) fades out; a pending Rotate gets a
-                  // highlighted ring instead of an actually-rotated icon,
-                  // since no committed object visually rotates its icon
-                  // either — there's no "final appearance" to preview here,
-                  // only a way to mark that a change is pending.
+                  // stagedMoveIcon below) fades out.
                   const isMoveSource = moveState?.key === entry.pick.primary.key
                   const isDeleting = deleteConfirmTarget?.key === entry.pick.primary.key || stagedPaintObjectDeletionKeys.has(entry.pick.primary.key)
+                  // Only objects[] (type 0) ever carries rotation. Same
+                  // encoding as formatRotation()/stepRotation() elsewhere:
+                  // quadrant 0-3 * 90deg, +10 offset means mirrored.
+                  const rotation = entry.pick.primary.type === 0 ? entry.pick.primary.rotation : undefined
+                  const rotateTransform = rotation !== undefined
+                    ? `rotate(${(rotation % 10) * 90}deg)${rotation >= 10 ? ' scaleX(-1)' : ''}`
+                    : undefined
                   return (
                     <div
                       key={entry.key}
@@ -4414,6 +4456,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         opacity: isDeleting || isMoveSource ? 0.35 : 1,
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
+                        transform: rotateTransform,
                       }}
                       onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) { selectNode(entry.clickNode); setSpawnerSelectorOpen(false) } }}
                     >
