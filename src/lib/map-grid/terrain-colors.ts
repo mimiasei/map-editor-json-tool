@@ -135,5 +135,5 @@ export function terrainLabel(
   const suffix = waterId ? ' (Water)' : ''
   const levelSuffix = levelsMap ? `, Level ${levelsMap[node] ?? 0}` : ''
   const rampSuffix = rampDirection ? `, Ramp (${rampDirection})` : ''
-  return `${biome}${suffix} - Tile (${node % sizeX}, ${Math.floor(node / sizeX)})${levelSuffix}${rampSuffix}`
+  return `${biome}${suffix} - Tile (${node % sizeX}, ${Math.floor(node / sizeX)}) (${node}) ${levelSuffix}${rampSuffix}`
 }

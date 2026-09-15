@@ -55,6 +55,7 @@ import {
 import { parseMapFile } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { logError } from '@/lib/logger'
 
 export type MapSaveEdit =
   | { kind: 'renameSid'; oldSid: string; newSid: string }
@@ -757,8 +758,18 @@ export async function writeMapChunks(mapFilePath: string, container: MapContaine
 
   await writeBinaryFile(mapFilePath, gzipped)
 
-  const reparsedBlocks = await parseMapFile(toArrayBuffer(gzipped))
-  useMapContextStore.getState().setContext(extractMapContext(reparsedBlocks))
+  // Best-effort only: the bytes are already safely on disk by this point, so
+  // a re-parse failure (e.g. a stricter check in parseMapFile choking on
+  // data a save-time validation warning already flagged as broken) must
+  // never look like the save itself failed — that used to abort this whole
+  // function (and everything awaiting it, including the caller's own
+  // scenario-JSON save) even though the .map write had already succeeded.
+  try {
+    const reparsedBlocks = await parseMapFile(toArrayBuffer(gzipped))
+    useMapContextStore.getState().setContext(extractMapContext(reparsedBlocks))
+  } catch (e) {
+    logError(`Saved .map but failed to refresh in-memory context from it: ${e instanceof Error ? e.message : String(e)}`)
+  }
 
   return { backupPath, backupCreated, bytesWritten: gzipped.length }
 }

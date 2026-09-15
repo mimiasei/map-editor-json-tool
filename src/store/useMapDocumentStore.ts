@@ -57,21 +57,22 @@ export function containerToRawBlocks(container: MapContainer): RawMapBlocks {
   }
 }
 
-/** Result of `commitToDisk` — 'blocked' means nothing was written at all
- *  (the in-memory document stays dirty) because at least one placed object
- *  fails a save-time check (see map-validation.ts — currently: a footprint
+/** Result of `commitToDisk` — the write always happens; `mapValidationIssues`
+ *  (see below) is set alongside it whenever at least one placed object fails
+ *  a save-time check (see map-validation.ts — currently: a footprint
  *  extending past the map's edge, or an entrance/interaction cell fully
- *  blocked by another object/water/an unramped elevation wall). Callers must
- *  check `.status` and abort their own Save/Save As flow on 'blocked', the
- *  same way they already do for a cancelled save-location prompt — showing
- *  the issue list is `mapValidationIssues` below's job. */
-export type CommitResult = ({ status: 'saved' } & MapSaveResult) | { status: 'blocked'; issues: MapValidationIssue[] }
+ *  blocked by another object/water/an unramped elevation wall), purely so a
+ *  post-save warning dialog can show the offending objects. Save itself is
+ *  never blocked by this. */
+export type CommitResult = { status: 'saved' } & MapSaveResult
 
 interface MapDocumentStore {
   container: MapContainer | null
   mapIsDirty: boolean
-  /** Set by a blocked `commitToDisk` so a single, app-shell-level dialog can
-   *  show the offending objects; cleared by `clearMapValidationIssues`. */
+  /** Set by `commitToDisk` after a successful write whenever a save-time
+   *  check finds a problem, so a single, app-shell-level dialog can show the
+   *  offending objects as a post-save warning; cleared by
+   *  `clearMapValidationIssues`. */
   mapValidationIssues: MapValidationIssue[] | null
   clearMapValidationIssues: () => void
   /** Fixes every current validation issue it safely can: an out-of-bounds
@@ -110,9 +111,10 @@ interface MapDocumentStore {
    *  document itself now *is* the current state. Returns the id an
    *  'addObject'/'addMarker' edit allocated, if any. */
   applyEdit: (edit: MapSaveEdit) => number | undefined
-  /** Persist the current in-memory document to `mapFilePath` — clears
-   *  mapIsDirty on success ('saved'), leaves it untouched and sets
-   *  `mapValidationIssues` on 'blocked' (see CommitResult). */
+  /** Persist the current in-memory document to `mapFilePath` — always
+   *  writes and clears mapIsDirty; also sets `mapValidationIssues` (see
+   *  CommitResult) when a save-time check finds a problem, purely for the
+   *  post-save warning dialog to show. */
   commitToDisk: (mapFilePath: string) => Promise<CommitResult>
   /** Discard the loaded document without writing anything — used on New/
    *  closing a map, mirroring useMapContextStore's own clearContext(). */
@@ -220,12 +222,8 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
         if (!current) throw new Error('No .map document is currently loaded')
         const context = extractMapContext(containerToRawBlocks(current))
         const issues = findMapValidationIssues(context, useCatalogStore.getState().catalog)
-        if (issues.length > 0) {
-          set({ mapValidationIssues: issues })
-          return { status: 'blocked', issues }
-        }
         const result = await writeMapChunks(mapFilePath, current)
-        set({ mapIsDirty: false, mapValidationIssues: null })
+        set({ mapIsDirty: false, mapValidationIssues: issues.length > 0 ? issues : null })
         return { status: 'saved', ...result }
       },
 
@@ -260,13 +258,11 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
  *  pending). Shared by every top-level Save/Save As entry point (issue
  *  #195 follow-up: Save is unified — one action covers both the .map and
  *  the scenario JSON, instead of the .map side having its own separate
- *  save trigger inside the Map Grid). Callers must check the returned
- *  status and abort their own Save flow (skip the scenario-JSON save too)
- *  when it's 'blocked' — same as they already do for a cancelled save-
- *  location prompt — since `useMapDocumentStore`'s `mapValidationIssues` is
- *  already set for the app-shell-level dialog to show by the time this
- *  resolves. */
-export async function commitMapIfDirty(mapFilePath: string | null): Promise<{ status: 'saved' | 'skipped' | 'blocked' }> {
+ *  save trigger inside the Map Grid). The write always succeeds — a
+ *  save-time validation problem only pops a post-save warning dialog
+ *  (`useMapDocumentStore`'s `mapValidationIssues`), it never aborts the
+ *  save. */
+export async function commitMapIfDirty(mapFilePath: string | null): Promise<{ status: 'saved' | 'skipped' }> {
   const { mapIsDirty, commitToDisk } = useMapDocumentStore.getState()
   if (mapIsDirty && mapFilePath) {
     const result = await commitToDisk(mapFilePath)

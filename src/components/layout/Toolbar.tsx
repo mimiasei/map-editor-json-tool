@@ -375,7 +375,7 @@ export default function Toolbar({
   //   unified — one action for both halves, matching how the .map side no
   //   longer has its own separate save trigger).
   const handleSave = async () => {
-    if ((await commitMapIfDirty(mapFilePath)).status === 'blocked') return // out-of-bounds object — abort the whole Save, dialog already shown
+    await commitMapIfDirty(mapFilePath)
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
@@ -402,12 +402,26 @@ export default function Toolbar({
   // with no options, which only prompts the very first time (a never-saved
   // map, e.g. one just created via New Map).
   const handleExport = async () => {
-    if ((await commitMapWithPathPrompt({ forceNewPath: true })) !== 'saved') return // user cancelled the prompt, or the .map write was blocked (out-of-bounds object) — abort the whole Save As
+    if ((await commitMapWithPathPrompt({ forceNewPath: true })) !== 'saved') return // user cancelled the prompt — abort the whole Save As
     if (isScenarioEmpty(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)) {
       markClean()
       return
     }
-    const json     = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)
+    const json = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)
+    // commitMapWithPathPrompt (map-file.ts) already derived and stored the
+    // sidecar path alongside whatever .map path the user just picked in the
+    // ONE dialog above — write straight there instead of prompting a SECOND
+    // save dialog (which used to default to the .map's own file name,
+    // producing a confusing "<map name>.map.json" once saved). Read fresh
+    // from the store rather than the render-time `sidecarPath` closure,
+    // since that prompt just updated it a moment ago.
+    const freshSidecarPath = useScenarioStore.getState().sidecarPath
+    if (isTauri() && freshSidecarPath) {
+      await saveToPath(freshSidecarPath, json)
+      setCurrentFile(freshSidecarPath, freshSidecarPath.replace(/\\/g, '/').split('/').pop() ?? freshSidecarPath)
+      markClean()
+      return
+    }
     const saveName = currentFileName ?? 'scenario.json'
     const savedPath = await saveFile(json, saveName)
     // In browser saveFile always downloads and returns null — still mark clean
