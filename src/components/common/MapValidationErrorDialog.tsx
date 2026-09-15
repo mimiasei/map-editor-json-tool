@@ -1,4 +1,4 @@
-// ─── Save-time validation block (Bug A/B follow-ups) ────────────────────────
+// ─── Post-save validation warning (Bug A/B follow-ups) ──────────────────────
 // Shown whenever useMapDocumentStore's commitToDisk finds a save-time
 // validation issue (map-validation.ts) — currently two real, confirmed-via-
 // actual-game-crash defects: a placed object's footprint extending past the
@@ -7,8 +7,10 @@
 // object/water/an unramped elevation wall (entrance-validation.ts — the real
 // root cause behind the long-standing RMG load-freeze "Bug B" investigation,
 // confirmed by the user: a single pinetree placed on a city's own entrance
-// tile). Mounted once at the app-shell level since both Save
-// (AppShell.handleSave / Toolbar.handleSave) and Save As (Toolbar.
+// tile). The .map write always happens regardless — this is purely an
+// informational warning shown after the fact, never a save gate (the user
+// should always be able to save). Mounted once at the app-shell level since
+// both Save (AppShell.handleSave / Toolbar.handleSave) and Save As (Toolbar.
 // handleExport) funnel into the same commitToDisk and need to surface the
 // same dialog, matching UnsavedChangesDialog's own single-mount pattern.
 
@@ -36,7 +38,7 @@ export default function MapValidationErrorDialog() {
 
   const message = issues
     ? [
-        "The following object(s) can't be saved:",
+        'The map was saved, but the following object(s) have problems:',
         '',
         ...issues.map((v) => `• ${describeMapValidationIssue(v)}`),
         ...(lastFixed !== null
@@ -52,7 +54,7 @@ export default function MapValidationErrorDialog() {
     >
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Cannot Save — Map Validation Failed</DialogTitle>
+          <DialogTitle>Map Saved With Issues</DialogTitle>
         </DialogHeader>
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />

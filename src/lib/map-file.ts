@@ -241,16 +241,17 @@ export async function loadParsedMapFile(name: string, mapPath: string | null, bu
  * just-opened-but-unedited map still has something worth saving a copy of.
  *
  * Returns `'cancelled'` when a save-location prompt this call needed was
- * dismissed, or `'blocked'` when the .map document fails a save-time
- * validation check (`useMapDocumentStore`'s `mapValidationIssues` is already
- * set for the app-shell-level dialog to show by the time this resolves) — callers
- * (AppShell.handleSave / Toolbar.handleExport) must check for either and
- * abort their own Save/Save As entirely rather than falling through to
- * their scenario-JSON-saving logic, which would otherwise pop a SECOND,
- * unrelated save dialog for the JSON sidecar right after the user just said
- * "not now" to the first one (or after a blocked .map write).
+ * dismissed — callers (AppShell.handleSave / Toolbar.handleExport) must
+ * check for this and abort their own Save/Save As entirely rather than
+ * falling through to their scenario-JSON-saving logic, which would
+ * otherwise pop a SECOND, unrelated save dialog for the JSON sidecar right
+ * after the user just said "not now" to the first one. The .map write
+ * itself always succeeds — a save-time validation problem only pops a
+ * post-save warning dialog (`useMapDocumentStore`'s `mapValidationIssues`
+ * is already set for the app-shell-level dialog to show by the time this
+ * resolves), it never blocks the save.
  */
-export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean }): Promise<'saved' | 'cancelled' | 'blocked'> {
+export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean }): Promise<'saved' | 'cancelled'> {
   const forceNewPath = options?.forceNewPath ?? false
   const { mapIsDirty, container, commitToDisk } = useMapDocumentStore.getState()
   if (forceNewPath ? !container : !mapIsDirty) return 'saved'
@@ -262,8 +263,7 @@ export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean
     mapPath = await pickSavePath(fileName, { name: 'Map file', extensions: ['map'] }, 'Save map')
     if (!mapPath) return 'cancelled' // user cancelled — leave the in-memory edits dirty
   }
-  const result = await commitToDisk(mapPath)
-  if (result.status === 'blocked') return 'blocked'
+  await commitToDisk(mapPath)
   if (mapPath !== scenarioState.mapFilePath) {
     const name = mapPath.replace(/\\/g, '/').split('/').pop() ?? mapPath
     scenarioState.setMapFile(mapPath, sidecarPathFor(mapPath, name))

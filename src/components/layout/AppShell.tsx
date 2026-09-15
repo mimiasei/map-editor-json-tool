@@ -306,7 +306,7 @@ export default function AppShell() {
   // silently dropping the in-memory .map edits on the floor when no path
   // was known.
   const handleSave = useCallback(async () => {
-    if ((await commitMapWithPathPrompt()) !== 'saved') return // user cancelled the prompt, or the .map write was blocked (out-of-bounds object) — abort the whole Save
+    if ((await commitMapWithPathPrompt()) !== 'saved') return // user cancelled the prompt — abort the whole Save
     if (isScenarioEmpty(
       scenarioRef.current, dialogsRef.current, localizationRef.current, translationsRef.current,
       customHeroesRef.current, customMapObjectsRef.current, customArtifactsRef.current, customBuffsRef.current,
