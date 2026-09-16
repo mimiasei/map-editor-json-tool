@@ -367,7 +367,14 @@ export default function MapGridCellContent({
             )
           })()}
 
-          {selected.type === 0 && selected.rotation !== undefined && (
+          {/* A template only supports rotation in-game when its own catalog
+              entry carries the randomRotation field at all (true or false)
+              — interactables/artifacts/spawns/resources/fxs essentially
+              never do, even though every type-0 instance still carries a
+              rotations[] value regardless (see MapGridDialog's
+              catalogSupportsRotation for the full survey/reasoning). */}
+          {selected.type === 0 && selected.rotation !== undefined &&
+            catalog?.mapObjects.find((o) => o.id === selected.sid)?.randomRotation !== undefined && (
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Rotation</p>
               <div className="flex items-center gap-1.5">

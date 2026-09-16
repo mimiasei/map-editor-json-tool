@@ -77,6 +77,7 @@ import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
+import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import { logError } from '@/lib/logger'
 import UndockButton from '@/components/panels/UndockButton'
 import MapGridSettingsDialog, {
@@ -2992,14 +2993,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [moveState, sizeX, catalog])
 
   // ── Rotate via drag handle ───────────────────────────────────────────────
+  // A template only supports rotation in-game at all when its own catalog
+  // entry (Core/DB/map/objects/*.json) carries the randomRotation field —
+  // present (true or false) for environments/animals and 3 interactable
+  // exceptions, absent for every resource/fx/artifact/spawn (confirmed via
+  // a full survey). This is the real gate, not whether the placed instance
+  // happens to carry a rotations[] entry — every type-0 instance does,
+  // rotatable or not, since it's a plain parallel array in the data format.
+  const catalogSupportsRotation = useCallback((sid: string): boolean =>
+    catalog?.mapObjects.find((o) => o.id === sid)?.randomRotation !== undefined, [catalog])
+  // Only `randomRotation: true` sids (decorative scatter — trees/rocks/etc.,
+  // where facing doesn't matter) get a random initial facing; `false` sids
+  // (bridges, campaign set-pieces) still support manual rotation but start
+  // at 0, same as everything else. Matches h3-import's own
+  // randomDecorRotation (quadrant 0-3 only, never a mirrored +10 variant).
+  const randomInitialRotation = useCallback((sid: string): number | undefined =>
+    catalog?.mapObjects.find((o) => o.id === sid)?.randomRotation ? randomDecorRotation(Math.random) : undefined, [catalog])
+
   // Only the currently-selected objects[] (type 0) instance ever qualifies —
   // markers[]/squads[] never carry rotation, same gate the chevron buttons
   // (stepRotate callers in MapGridCellContent) already use.
   const selectedRotatable = useMemo(() => {
     if (selectedNode === null) return null
     const item = primaryByNode.get(selectedNode)?.primary
-    return item && item.type === 0 && item.rotation !== undefined ? item : null
-  }, [selectedNode, primaryByNode])
+    return item && item.type === 0 && catalogSupportsRotation(item.sid) ? item : null
+  }, [selectedNode, primaryByNode, catalogSupportsRotation])
 
   const selectedFootprintBounds = useMemo(() => {
     if (!selectedRotatable) return null
@@ -3112,7 +3130,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // the drag-paint tool already has.
   const placeAt = (node: number) => {
     if (!placingSid || isNodeBlockedForObjectPaint(node)) return
-    applyEdit({ kind: 'addObject', entityType: 0, sid: placingSid, node }, 'place object')
+    applyEdit({ kind: 'addObject', entityType: 0, sid: placingSid, node, rotation: randomInitialRotation(placingSid) }, 'place object')
   }
 
   // Squads have no footprint template (always single-tile), so no
@@ -3149,7 +3167,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const terrainChanges = new Map<number, number>()
     const waterChanges = new Map<number, number>()
     const waterLevelChanges = new Map<number, -1>()
-    const additions: { node: number; sid: string }[] = []
+    const additions: { node: number; sid: string; rotation?: number }[] = []
     const total = sizeX * sizeZ
     const yieldToUi = () => new Promise<void>((resolve) => window.setTimeout(resolve, 0))
     for (let screenRow = 0; screenRow < sizeZ; screenRow++) {
@@ -3165,7 +3183,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           waterLevelChanges.set(node, -1)
         }
         else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
-          additions.push({ node, sid: target.sid })
+          additions.push({ node, sid: target.sid, rotation: randomInitialRotation(target.sid) })
         }
       }
       const completed = Math.min(total, (screenRow + 1) * sizeX)
@@ -3184,7 +3202,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'paint assets from image')
     }
     setImageMappingOpen(false)
-  }, [sizeX, sizeZ, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, applyEdit])
+  }, [sizeX, sizeZ, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, randomInitialRotation, applyEdit])
 
   const stageObjectPaint = useCallback((node: number, sid: string) => {
     if (!isNodeInBoundsForPlacement(sid, node) || isNodeBlockedForObjectPaint(node)) return
@@ -3194,13 +3212,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const commitObjectPaintStroke = useCallback(() => {
     if (paintObjectStaged.size === 0) return
-    const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid }))
+    const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid, rotation: randomInitialRotation(sid) }))
     const deletions = placedObjects
       .filter((o) => o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
       .map((o) => o.id)
     setPaintObjectStaged(new Map())
     applyEdit({ kind: 'paintObjects', additions, deletions }, 'paint objects')
-  }, [paintObjectStaged, placedObjects, catalog, applyEdit])
+  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit])
 
   // ── In-progress-stroke full-fidelity preview (issue #195 Phase 1) —
   // deliberately placed here rather than up near sortedIconEntries, since a
@@ -4557,10 +4575,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // stagedMoveIcon below) fades out.
                   const isMoveSource = moveState?.key === entry.pick.primary.key
                   const isDeleting = deleteConfirmTarget?.key === entry.pick.primary.key || stagedPaintObjectDeletionKeys.has(entry.pick.primary.key)
-                  // Only objects[] (type 0) ever carries rotation. Same
-                  // encoding as formatRotation()/stepRotation() elsewhere:
-                  // quadrant 0-3 * 90deg, +10 offset means mirrored.
-                  const rotation = entry.pick.primary.type === 0 ? entry.pick.primary.rotation : undefined
+                  // Only objects[] (type 0) ever carries rotation, and only
+                  // when its catalog template actually supports it in-game
+                  // (catalogSupportsRotation) — every type-0 instance has a
+                  // rotations[] entry regardless, but visually rotating an
+                  // interactable/artifact/spawn icon would show a facing
+                  // change that has no real in-game effect. Same encoding as
+                  // formatRotation()/stepRotation() elsewhere: quadrant 0-3 *
+                  // 90deg, +10 offset means mirrored.
+                  const rotation = entry.pick.primary.type === 0 && catalogSupportsRotation(entry.pick.primary.sid)
+                    ? entry.pick.primary.rotation
+                    : undefined
                   const rotateTransform = rotation !== undefined
                     ? `rotate(${(rotation % 10) * 90}deg)${rotation >= 10 ? ' scaleX(-1)' : ''}`
                     : undefined

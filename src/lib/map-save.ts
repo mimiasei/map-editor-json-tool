@@ -86,7 +86,7 @@ export type MapSaveEdit =
   | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
   | { kind: 'paintZone'; changes: { node: number; zoneId: number }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
-  | { kind: 'paintObjects'; additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
+  | { kind: 'paintObjects'; additions: { node: number; sid: string; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
   | { kind: 'clearAll' }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
@@ -671,7 +671,7 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     }
   } else if (edit?.kind === 'paintObjects') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
-      objects?: Array<{ sid?: string; ids?: number[]; nodes?: number[] }>
+      objects?: Array<{ sid?: string; ids?: number[]; nodes?: number[]; rotations?: number[] }>
       objectsProperties?: { propRandomSquads?: Array<{ type?: number | string; id?: number; requestedValue?: number; fraction?: string }> }
     }
     const groups = block2.objects ?? []
@@ -680,11 +680,14 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
         throw new Error('Verification failed: painted-over instance still present in the rebuilt placement table')
       }
     }
-    for (const { node, sid, randomSquadOverrides } of edit.additions) {
+    for (const { node, sid, rotation, randomSquadOverrides } of edit.additions) {
       const group = groups.find((g) => g.sid === sid)
       const nodeIdx = (group?.nodes ?? []).indexOf(node)
       if (nodeIdx === -1) {
         throw new Error('Verification failed: painted instance not reflected in the rebuilt placement table')
+      }
+      if ((group?.rotations?.[nodeIdx] ?? 0) !== (rotation ?? 0)) {
+        throw new Error('Verification failed: painted instance rotation not reflected in the rebuilt placement table')
       }
       if (randomSquadOverrides) {
         const newId = group?.ids?.[nodeIdx]
