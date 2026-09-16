@@ -125,6 +125,19 @@ import { sampleResource } from '@/lib/map-grid/resource-pool'
 const BASE_CELL_PX = 32
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
+
+// Custom cursor for the rotate-drag handle ring — lucide-react's RotateCw
+// glyph (see node_modules/lucide-react/dist/esm/icons/rotate-cw.js for the
+// source path data) on a translucent white badge so it reads on both light
+// and dark canvas backgrounds. Built as a raw data-URI (not the React
+// component) since a CSS cursor needs a URL, not a rendered element.
+const ROTATE_CURSOR_CSS = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">' +
+    '<circle cx="12" cy="12" r="11" fill="white" fill-opacity="0.85"/>' +
+    '<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M21 3v5h-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>'
+)}") 11 11, auto`
 /** Below this on-screen cell size, icons/letters aren't legible — canvas swatches only. */
 const ICON_LOD_THRESHOLD_PX = 16
 const OVERDRAW_CELLS = 3
@@ -546,6 +559,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // pointerup's native click reach the icon's own onClick (plain select),
   // completely unchanged from before this feature existed.
   const moveDragRef = useRef<{ item: PlacedObject; startX: number; startY: number; moved: boolean } | null>(null)
+
+  // Drag-to-rotate — pointerdown just outside the selected object's
+  // footprint (the ROTATE_HANDLE_MARGIN_PX ring, where the cursor already
+  // switched to ROTATE_CURSOR_CSS) arms this instead of a move-drag or pan.
+  // centerX/centerY are the footprint's screen-space center at drag start;
+  // accumAngle tracks how far around that center the pointer has swept
+  // since the last committed 90deg step (stepRotate is called immediately
+  // per step, same "apply immediately" convention as click/arrow-key move).
+  const rotateDragRef = useRef<{ item: PlacedObject; centerX: number; centerY: number; lastAngle: number; accumAngle: number; rotation: number } | null>(null)
+  const [isRotateHover, setIsRotateHover] = useState(false)
 
   // Drag-to-paint-objects — mirrors moveDragRef's shape, kept separate so a
   // middle-mouse pan mid-placingSid can't be misread as a paint stroke (see
@@ -1435,11 +1458,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // movement) then never triggers capture at all, so it reaches whatever's
   // actually under the cursor — the cell — with no redirection to fight.
   const CLICK_DRAG_THRESHOLD_PX = 4
-  // One real mouse-wheel detent sends ~100 deltaY; a trackpad sends many
-  // small events per gesture instead. Accumulating to this threshold makes
-  // Alt+wheel-rotate feel like one 90deg step per physical notch either way.
-  const ROTATE_WHEEL_STEP = 100
-  const rotateWheelAccumRef = useRef(0)
+  // How far outside the selected object's footprint (in screen px, not
+  // scaled by zoom) the rotate-drag "ring" extends — hovering here (not
+  // directly over the object, which is the move-drag zone) shows the rotate
+  // cursor and arms a drag-rotate gesture on pointerdown.
+  const ROTATE_HANDLE_MARGIN_PX = 14
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     // Panning is the middle mouse button only, so it never fights the
     // object-move/paint gestures below (which need left-button drag) and so
@@ -1715,6 +1738,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       paintObjectDragRef.current = { startX: e.clientX, startY: e.clientY, moved: false }
       return
     }
+    // A pointerdown in the rotate-handle ring around the selected object
+    // (see isInRotateRing/ROTATE_HANDLE_MARGIN_PX) arms a drag-rotate — takes
+    // priority over move-drag/pan since it's the more specific gesture, and
+    // works independently of moveState (rotate isn't gated behind Move mode,
+    // same as the pre-existing chevron rotate buttons).
+    if (canEditEntities && selectedRotatable) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      if (isInRotateRing(e.clientX, e.clientY, rect)) {
+        const r = selectedFootprintClientRect(rect)!
+        const centerX = (r.left + r.right) / 2
+        const centerY = (r.top + r.bottom) / 2
+        rotateDragRef.current = {
+          item: selectedRotatable,
+          centerX,
+          centerY,
+          lastAngle: Math.atan2(e.clientY - centerY, e.clientX - centerX),
+          accumAngle: 0,
+          rotation: selectedRotatable.rotation ?? 0,
+        }
+        e.currentTarget.setPointerCapture(e.pointerId)
+        return
+      }
+    }
     // A pointerdown directly on an occupied tile (no move/placing/paint
     // already active) is a drag-to-move candidate — real commitment (calling
     // startMove) waits for the same movement threshold as panning below, so
@@ -1862,6 +1908,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setHoveredNode(node)
       return
     }
+    if (rotateDragRef.current) {
+      const drag = rotateDragRef.current
+      const angle = Math.atan2(e.clientY - drag.centerY, e.clientX - drag.centerX)
+      // Normalized signed delta since the last sample, in (-PI, PI] — avoids
+      // a step-jump when atan2 wraps across +-PI while dragging around.
+      let delta = angle - drag.lastAngle
+      if (delta > Math.PI) delta -= 2 * Math.PI
+      if (delta < -Math.PI) delta += 2 * Math.PI
+      drag.lastAngle = angle
+      drag.accumAngle += delta
+      const STEP = Math.PI / 2
+      // atan2 on screen (Y-down) coordinates increases clockwise on screen,
+      // matching CSS rotate()'s positive-is-clockwise convention and this
+      // codebase's stepRotation(+1) — no sign flip needed.
+      //
+      // Tracks drag.rotation locally (rather than calling stepRotate, which
+      // re-reads item.rotation from the pre-drag snapshot) because multiple
+      // steps can fire within one synchronous drag before a re-render ever
+      // refreshes that snapshot — using the stale value for a second step
+      // would recompute the same result as the first instead of advancing.
+      while (drag.accumAngle >= STEP) {
+        drag.rotation = stepRotation(drag.rotation, 1)
+        applyEdit({ kind: 'rotateObject', entityId: drag.item.id, newRotation: drag.rotation }, 'rotate object')
+        drag.accumAngle -= STEP
+      }
+      while (drag.accumAngle <= -STEP) {
+        drag.rotation = stepRotation(drag.rotation, -1)
+        applyEdit({ kind: 'rotateObject', entityId: drag.item.id, newRotation: drag.rotation }, 'rotate object')
+        drag.accumAngle += STEP
+      }
+      return
+    }
     if (moveDragRef.current) {
       const drag = moveDragRef.current
       const dx = e.clientX - drag.startX
@@ -1940,8 +2018,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+    setIsRotateHover(!!selectedRotatable && isInRotateRing(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (rotateDragRef.current) {
+      // Each 90deg step already committed live during the drag (see
+      // onPointerMove) — nothing left to persist here, just release.
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      rotateDragRef.current = null
+      return
+    }
     if (rectangleDragRef.current) {
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -2036,13 +2122,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         // against drag.item.node (the pre-drag origin) instead of going
         // through applyMoveTo's own prev.node===node guard is what actually
         // commits the drop; applyMoveTo would see "no change" and no-op.
+        //
+        // Unlike click/arrow-key move (which stays armed so you can keep
+        // trying spots), a mouse-drag is a single self-contained gesture —
+        // releasing exits move mode automatically (same as clicking "Done"),
+        // so that button is never actually needed for this interaction path.
         setMoveState((prev) => {
           if (prev && prev.node !== drag.item.node) {
             applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: prev.node }, 'move object')
             selectNode(prev.node)
             setSpawnerSelectorOpen(false)
           }
-          return prev
+          return null
         })
       }
       moveDragRef.current = null
@@ -2105,7 +2196,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       stopPlacingCreature()
     }
   }
-  const onPointerLeaveViewport = () => setHoveredNode(null)
+  const onPointerLeaveViewport = () => {
+    setHoveredNode(null)
+    setIsRotateHover(false)
+  }
 
   const zoomAt = useCallback((cursorX: number, cursorY: number, factor: number) => {
     setTransform((prev) => {
@@ -2118,24 +2212,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const onWheel = (e: ReactWheelEvent<HTMLDivElement>) => {
     e.preventDefault()
-    // Alt+wheel (not Ctrl/Cmd+wheel) rotates the selected object — Ctrl is
-    // avoided because browsers/trackpads synthesize ctrlKey:true on native
-    // pinch-to-zoom wheel events, which would silently hijack pinch-zoom on
-    // the macOS desktop build.
-    const rotateTarget = e.altKey && selectedNode !== null ? primaryByNode.get(selectedNode)?.primary : undefined
-    if (rotateTarget && rotateTarget.type === 0 && rotateTarget.rotation !== undefined) {
-      rotateWheelAccumRef.current += e.deltaY
-      while (rotateWheelAccumRef.current >= ROTATE_WHEEL_STEP) {
-        stepRotate(rotateTarget, 1)
-        rotateWheelAccumRef.current -= ROTATE_WHEEL_STEP
-      }
-      while (rotateWheelAccumRef.current <= -ROTATE_WHEEL_STEP) {
-        stepRotate(rotateTarget, -1)
-        rotateWheelAccumRef.current += ROTATE_WHEEL_STEP
-      }
-      return
-    }
-    rotateWheelAccumRef.current = 0
     const rect = e.currentTarget.getBoundingClientRect()
     const factor = Math.exp(-e.deltaY * 0.001)
     zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor)
@@ -2914,6 +2990,52 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const template = catalog?.mapObjects.find((o) => o.id === moveState.sid)
     return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [moveState, sizeX, catalog])
+
+  // ── Rotate via drag handle ───────────────────────────────────────────────
+  // Only the currently-selected objects[] (type 0) instance ever qualifies —
+  // markers[]/squads[] never carry rotation, same gate the chevron buttons
+  // (stepRotate callers in MapGridCellContent) already use.
+  const selectedRotatable = useMemo(() => {
+    if (selectedNode === null) return null
+    const item = primaryByNode.get(selectedNode)?.primary
+    return item && item.type === 0 && item.rotation !== undefined ? item : null
+  }, [selectedNode, primaryByNode])
+
+  const selectedFootprintBounds = useMemo(() => {
+    if (!selectedRotatable) return null
+    const x = selectedRotatable.node % sizeX
+    const z = Math.floor(selectedRotatable.node / sizeX)
+    const template = catalog?.mapObjects.find((o) => o.id === selectedRotatable.sid)
+    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+  }, [selectedRotatable, sizeX, catalog])
+
+  // Converts the selected footprint's tile bounds into a CLIENT-space rect —
+  // the inverse of screenToNode/screenToTileRaw's client→world math (same
+  // transform.x/y/scale + BASE_CELL_PX/effectiveCellPx + the sizeZ-1-z row
+  // flip), so it can be compared directly against a pointer event's
+  // clientX/clientY without needing to walk the rendered overlay's own DOM
+  // transform chain.
+  const selectedFootprintClientRect = useCallback((rect: DOMRect) => {
+    if (!selectedFootprintBounds) return null
+    const b = selectedFootprintBounds
+    return {
+      left: b.minX * effectiveCellPx + transform.x + rect.left,
+      right: (b.maxX + 1) * effectiveCellPx + transform.x + rect.left,
+      top: (sizeZ - 1 - b.maxZ) * effectiveCellPx + transform.y + rect.top,
+      bottom: (sizeZ - b.minZ) * effectiveCellPx + transform.y + rect.top,
+    }
+  }, [selectedFootprintBounds, effectiveCellPx, transform, sizeZ])
+
+  // True when (clientX, clientY) is in the ring just outside the selected
+  // object's footprint — not directly over it (that's the move-drag zone).
+  const isInRotateRing = useCallback((clientX: number, clientY: number, rect: DOMRect): boolean => {
+    const r = selectedFootprintClientRect(rect)
+    if (!r) return false
+    const insideOuter = clientX >= r.left - ROTATE_HANDLE_MARGIN_PX && clientX <= r.right + ROTATE_HANDLE_MARGIN_PX &&
+      clientY >= r.top - ROTATE_HANDLE_MARGIN_PX && clientY <= r.bottom + ROTATE_HANDLE_MARGIN_PX
+    const insideFootprint = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom
+    return insideOuter && !insideFootprint
+  }, [selectedFootprintClientRect])
 
   // ── Place object (issue #167 Phase B) ───────────────────────────────────
   // Pick a map-object sid, then every subsequent grid click adds a new
@@ -4285,6 +4407,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
+              style={isRotateHover ? { cursor: ROTATE_CURSOR_CSS } : undefined}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
