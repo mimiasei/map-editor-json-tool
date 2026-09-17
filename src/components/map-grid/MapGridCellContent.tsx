@@ -162,6 +162,10 @@ export interface MapGridCellContentProps {
   onConfirmDelete?: () => void
   /** Dismiss the confirmation without deleting anything. Docked-only. */
   onCancelDelete?: () => void
+  /** Reports whichever row is currently resolved as `selected` below, so a
+   *  parent-level keyboard shortcut (Delete/Backspace) can target the right
+   *  item on a multi-item tile — selectedKey itself stays local/undocked-safe. */
+  onSelectionChange?: (item: PlacedObject | null) => void
 }
 
 const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
@@ -220,6 +224,7 @@ export default function MapGridCellContent({
   onStartDelete,
   onConfirmDelete,
   onCancelDelete,
+  onSelectionChange,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
@@ -247,6 +252,11 @@ export default function MapGridCellContent({
 
   const selected = items.find((i) => i.key === selectedKey) ?? items[0] ?? null
   const renameEntity = selected ? toEntity(selected) : null
+
+  useEffect(() => {
+    onSelectionChange?.(selected)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected])
 
   useEffect(() => { setNewSidInput('') }, [selected?.key])
   useEffect(() => { setHeroFactionFilter('') }, [selected?.key])

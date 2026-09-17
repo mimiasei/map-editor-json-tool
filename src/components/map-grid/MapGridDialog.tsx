@@ -2914,6 +2914,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // this is now purely an "are you sure?" UI flag, not a staged edit;
   // confirming applies the delete immediately.
   const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{ key: string; type: 0 | 1 | 2; id: number } | null>(null)
+  // Mirrors whichever row MapGridCellContent currently resolves as `selected`
+  // (its own local selectedKey, reported upward) — lets the Delete/Backspace
+  // keyboard shortcut below target the right item on a multi-item tile.
+  const [inspectedItem, setInspectedItem] = useState<PlacedObject | null>(null)
   const startDelete = (item: PlacedObject) => {
     setDeleteConfirmTarget({ key: item.key, type: item.type, id: item.id })
   }
@@ -3377,6 +3381,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return () => window.removeEventListener('keydown', handler)
   }, [open])
 
+  // Delete/Backspace deletes whichever placed object/marker/squad is
+  // currently selected — reuses the same startDelete confirm-arm flow as the
+  // trash button in MapGridCellContent (issue #167 Phase C), so it still
+  // gets the same deliberate confirmation UI rather than deleting instantly.
+  useEffect(() => {
+    if (!open || !canEditEntities) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (moveState) return // an in-progress Move already owns arrow keys/Escape
+      const target = selectedItems.find((i) => i.key === inspectedItem?.key) ?? selectedItems[0] ?? null
+      if (!target) return
+      e.preventDefault()
+      // Make sure the confirm row is actually visible if the column was collapsed.
+      if (columnClosed && selectedNode !== null) selectNode(selectedNode)
+      startDelete(target)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, canEditEntities, selectedItems, inspectedItem, moveState, columnClosed, selectedNode, selectNode])
+
   const placingFootprintBounds = useMemo(() => {
     if (!activePlacingSid || hoveredNode === null) return null
     const x = hoveredNode % sizeX
@@ -3403,6 +3429,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
+
+  const focusRequest = useMapGridStore((s) => s.focusRequest)
+  const clearFocusRequest = useMapGridStore((s) => s.clearFocusRequest)
+
+  useEffect(() => {
+    if (!focusRequest) return
+    // containerSize isn't measured yet on first mount (e.g. Map Grid was
+    // closed when the row was clicked) — wait for the ResizeObserver instead
+    // of centering against a 0x0 viewport.
+    if (containerSize.width === 0 && containerSize.height === 0) return
+    centerOnTile(focusRequest.x, focusRequest.z)
+    zoomTo100()
+    clearFocusRequest()
+  }, [focusRequest, containerSize, centerOnTile, zoomTo100, clearFocusRequest])
 
   if (!open) return null
 
@@ -5030,6 +5070,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onStartDelete={canEditEntities ? startDelete : undefined}
                   onConfirmDelete={canEditEntities ? confirmDelete : undefined}
                   onCancelDelete={canEditEntities ? cancelDelete : undefined}
+                  onSelectionChange={setInspectedItem}
                 />
               ) : null}
             </div>
