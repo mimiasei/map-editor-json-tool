@@ -133,6 +133,19 @@ export interface CatalogMapObject {
    *  where shown" split as CatalogHero.raw. Only present when built from a
    *  real Core.zip — absent from the static fallback catalog. */
   raw?: Record<string, unknown>
+  /** Whether this template supports rotation at all, and if so whether a
+   *  freshly-placed instance should get a random initial facing rather than
+   *  always defaulting to 0. Confirmed via a full survey of every
+   *  Core/DB/map/objects/*.json entry: only `environments` (274/296, mostly
+   *  natural scatter like trees/rocks — the 19 `false` exceptions are fixed-
+   *  orientation set-pieces like bridges/campaign props) and `animals`
+   *  (27/27) carry this field with any regularity; `interactables` has it on
+   *  just 3 sids (beer_fountain/block/block_2, all `false`); every other
+   *  category (resources, fxs, artifacts, spawns) never carries it at all.
+   *  `undefined` here means the object structurally can't be rotated in-game
+   *  — the Map Grid's rotate UI (chevrons + drag handle) is gated on this
+   *  field being present, not on `true` specifically. */
+  randomRotation?: boolean
 }
 
 export interface CatalogFaction {
@@ -278,4 +291,9 @@ export interface GameCatalog {
 // `resources/templates/*.rmg.json` game templates (issue #210, Stage 1's
 // template picker) since a template's own `description` field is a sid,
 // not literal text — confirmed via Core/Lang/english/texts/ui.json.
-export const CATALOG_SCHEMA_VERSION = 11
+// v12: added CatalogMapObject.randomRotation — promoted out of raw so the
+// Map Grid can gate rotation UI on it directly (only templates that carry
+// this field at all support rotation in-game; interactables/artifacts/
+// spawns/resources/fxs essentially never do — confirmed via a full survey
+// of Core/DB/map/objects/*.json, see the field's own doc comment above).
+export const CATALOG_SCHEMA_VERSION = 12

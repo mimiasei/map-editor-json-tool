@@ -88,6 +88,8 @@ import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
 import { ImageIcon } from 'lucide-react'
 
+import { useMapGridStore } from '@/store/useMapGridStore'
+
 interface ToolbarProps {
   onSearchOpen?: () => void
   onTimelineOpen?: () => void
@@ -161,6 +163,8 @@ export default function Toolbar({
   const mapIsDirty = useMapDocumentStore((s) => s.mapIsDirty)
 
   const [validateOpen,        setValidateOpen]        = useState(false)
+  const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
+  const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   // On-demand only (per issue: no continuous/auto-validation while editing)
   // — (re)computed just before the Validate dialog opens, never on every
   // render like the scenario `validation` below. null means either "not
@@ -179,6 +183,15 @@ export default function Toolbar({
   const [newMapOpen,          setNewMapOpen]          = useState(false)
   const [importH3mOpen,       setImportH3mOpen]       = useState(false)
   const [generateMapOpen,     setGenerateMapOpen]     = useState(false)
+
+  const selectNode = useMapGridStore((s) => s.selectNode)
+  const requestMapGridFocus = useMapGridStore((s) => s.requestFocus)
+
+  const focusOnTile = (x: number, z: number, node: number) => {
+    onMapGridOpen?.()       // prop Toolbar already receives from AppShell
+    selectNode(node)
+    requestMapGridFocus(x, z)
+  }
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -1034,42 +1047,61 @@ export default function Toolbar({
             <DialogTitle>Validation Results</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            <p className="text-xs font-medium text-muted-foreground">Scenario</p>
-            {validation.errors.length === 0 && validation.warnings.length === 0 && (
-              <div className="flex items-center gap-2 text-sm text-green-600">
-                <CheckCircle className="h-4 w-4" />
-                No issues found.
-              </div>
+            <button
+              type="button"
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground w-full"
+              onClick={() => setScenarioSectionOpen((v) => !v)}
+            >
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${scenarioSectionOpen ? '' : '-rotate-90'}`} />
+              Scenario
+            </button>
+            {scenarioSectionOpen && (
+                <>
+                {validation.errors.length === 0 && validation.warnings.length === 0 && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4" />
+                    No issues found.
+                  </div>
+                )}
+                {validation.errors.map((e, i) => (
+                  <Alert key={i} variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="ml-2">
+                      <span className="font-medium text-xs opacity-70">{e.path}</span>
+                      <br />
+                      {e.message}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+                {validation.warnings.map((w, i) => (
+                  <Alert key={i} className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+                    <AlertDescription className="ml-2">
+                      <span className="font-medium text-xs opacity-70">{w.path}</span>
+                      <br />
+                      {w.message}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </>
             )}
-            {validation.errors.map((e, i) => (
-              <Alert key={i} variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="ml-2">
-                  <span className="font-medium text-xs opacity-70">{e.path}</span>
-                  <br />
-                  {e.message}
-                </AlertDescription>
-              </Alert>
-            ))}
-            {validation.warnings.map((w, i) => (
-              <Alert key={i} className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30">
-                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
-                <AlertDescription className="ml-2">
-                  <span className="font-medium text-xs opacity-70">{w.path}</span>
-                  <br />
-                  {w.message}
-                </AlertDescription>
-              </Alert>
-            ))}
-
             <div className="flex items-center justify-between pt-2 border-t border-border">
-              <p className="text-xs font-medium text-muted-foreground">Map placement &amp; reachability</p>
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs font-medium text-muted-foreground w-full"
+                onClick={() => setPlacementSectionOpen((v) => !v)}
+              >
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${placementSectionOpen ? '' : '-rotate-90'}`} />
+                Map placement &amp; reachability
+              </button>
               {mapPlacementCheck && (mapPlacementCheck.issues.length > 0 || mapPlacementCheck.unreachable.length > 0) && (
                 <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={handleAutoFixPlacement} disabled={placementAutoFixing}>
                   {placementAutoFixing ? 'Fixing…' : 'Auto-fix'}
                 </Button>
               )}
             </div>
+            {placementSectionOpen && (
+              <>
             {!mapPlacementCheck && (
               <p className="text-xs text-muted-foreground">Open a .map file to also check placement/reachability issues.</p>
             )}
@@ -1089,21 +1121,31 @@ export default function Toolbar({
               </Alert>
             ))}
             {mapPlacementCheck?.unreachable.map((issue, i) => (
-              <Alert key={`unreachable-${i}`} className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30">
+              <Alert key={`unreachable-${i}`}
+                     className="border-yellow-600/50 bg-yellow-50 dark:bg-yellow-950/30 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                     onClick={() => focusOnTile(issue.x, issue.z, issue.node)}
+              >
                 <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
                 <AlertDescription className="ml-2">{describeUnreachablePlacement(issue)}</AlertDescription>
               </Alert>
             ))}
-            {mapPlacementCheck && mapPlacementCheck.isolated.length > 0 && (
-              <>
-                <p className="text-xs text-muted-foreground">Not auto-fixable — reconnecting isolated players needs a manual road/bridge/portal, a real map-design decision.</p>
-                {mapPlacementCheck.isolated.map((issue, i) => (
-                  <Alert key={`isolated-${i}`} variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="ml-2">{describeIsolatedPlayerStart(issue)}</AlertDescription>
-                  </Alert>
-                ))}
-              </>
+              {mapPlacementCheck && mapPlacementCheck.isolated.length > 0 && (
+                  <>
+                      <p className="text-xs text-muted-foreground">Not auto-fixable — reconnecting isolated players needs a manual road/bridge/portal, a real map-design decision.</p>
+                      {mapPlacementCheck.isolated.map((issue, i) => (
+                          <Alert
+                              key={`isolated-${i}`}
+                              variant="destructive"
+                              className="cursor-pointer hover:opacity-80"
+                              onClick={() => focusOnTile(issue.x, issue.z, issue.node)}
+                          >
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertDescription className="ml-2">{describeIsolatedPlayerStart(issue)}</AlertDescription>
+                          </Alert>
+                      ))}
+                  </>
+              )}
+            </>
             )}
           </div>
         </DialogContent>

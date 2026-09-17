@@ -13,13 +13,23 @@ interface MapGridStore {
   /** True once the user closes the column via its own X — the column stays
    *  hidden until a new cell is clicked (selectNode always reopens it). */
   columnClosed: boolean
+  focusRequest: FocusRequest | null
   selectNode: (node: number) => void
   closeColumn: () => void
+  requestFocus: (x: number, z: number) => void
+  clearFocusRequest: () => void
 }
 
+interface FocusRequest { x: number; z: number; requestId: number }
+
+let nextFocusRequestId = 0
+
 export const useMapGridStore = create<MapGridStore>((set) => ({
-  selectedNode: null,
-  columnClosed: false,
-  selectNode: (node) => set({ selectedNode: node, columnClosed: false }),
-  closeColumn: () => set({ columnClosed: true }),
+    selectedNode: null,
+    columnClosed: false,
+    focusRequest: null,
+    selectNode: (node) => set({ selectedNode: node, columnClosed: false }),
+    closeColumn: () => set({ columnClosed: true }),
+    requestFocus: (x, z) => set({ focusRequest: { x, z, requestId: ++nextFocusRequestId } }),
+    clearFocusRequest: () => set({ focusRequest: null }),
 }))

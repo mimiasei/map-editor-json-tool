@@ -478,6 +478,7 @@ async function collectMapObjects(zip: JSZip, locMap: Map<string, string>): Promi
         pivotZ: typeof entry.pivotZ === 'number' ? entry.pivotZ : undefined,
         biome: str(entry.biome || '') || undefined,
         description,
+        randomRotation: typeof entry.randomRotation === 'boolean' ? entry.randomRotation : undefined,
         raw: entry,
       })
     }

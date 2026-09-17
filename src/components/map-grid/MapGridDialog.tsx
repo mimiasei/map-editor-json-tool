@@ -77,6 +77,7 @@ import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
 import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
+import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import { logError } from '@/lib/logger'
 import UndockButton from '@/components/panels/UndockButton'
 import MapGridSettingsDialog, {
@@ -125,6 +126,19 @@ import { sampleResource } from '@/lib/map-grid/resource-pool'
 const BASE_CELL_PX = 32
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
+
+// Custom cursor for the rotate-drag handle ring — lucide-react's RotateCw
+// glyph (see node_modules/lucide-react/dist/esm/icons/rotate-cw.js for the
+// source path data) on a translucent white badge so it reads on both light
+// and dark canvas backgrounds. Built as a raw data-URI (not the React
+// component) since a CSS cursor needs a URL, not a rendered element.
+const ROTATE_CURSOR_CSS = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">' +
+    '<circle cx="12" cy="12" r="11" fill="white" fill-opacity="0.85"/>' +
+    '<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M21 3v5h-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>'
+)}") 11 11, auto`
 /** Below this on-screen cell size, icons/letters aren't legible — canvas swatches only. */
 const ICON_LOD_THRESHOLD_PX = 16
 const OVERDRAW_CELLS = 3
@@ -546,6 +560,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // pointerup's native click reach the icon's own onClick (plain select),
   // completely unchanged from before this feature existed.
   const moveDragRef = useRef<{ item: PlacedObject; startX: number; startY: number; moved: boolean } | null>(null)
+
+  // Drag-to-rotate — pointerdown just outside the selected object's
+  // footprint (the ROTATE_HANDLE_MARGIN_PX ring, where the cursor already
+  // switched to ROTATE_CURSOR_CSS) arms this instead of a move-drag or pan.
+  // centerX/centerY are the footprint's screen-space center at drag start;
+  // accumAngle tracks how far around that center the pointer has swept
+  // since the last committed 90deg step (stepRotate is called immediately
+  // per step, same "apply immediately" convention as click/arrow-key move).
+  const rotateDragRef = useRef<{ item: PlacedObject; centerX: number; centerY: number; lastAngle: number; accumAngle: number; rotation: number } | null>(null)
+  const [isRotateHover, setIsRotateHover] = useState(false)
 
   // Drag-to-paint-objects — mirrors moveDragRef's shape, kept separate so a
   // middle-mouse pan mid-placingSid can't be misread as a paint stroke (see
@@ -1435,6 +1459,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // movement) then never triggers capture at all, so it reaches whatever's
   // actually under the cursor — the cell — with no redirection to fight.
   const CLICK_DRAG_THRESHOLD_PX = 4
+  // How far outside the selected object's footprint (in screen px, not
+  // scaled by zoom) the rotate-drag "ring" extends — hovering here (not
+  // directly over the object, which is the move-drag zone) shows the rotate
+  // cursor and arms a drag-rotate gesture on pointerdown.
+  const ROTATE_HANDLE_MARGIN_PX = 14
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     // Panning is the middle mouse button only, so it never fights the
     // object-move/paint gestures below (which need left-button drag) and so
@@ -1710,6 +1739,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       paintObjectDragRef.current = { startX: e.clientX, startY: e.clientY, moved: false }
       return
     }
+    // A pointerdown in the rotate-handle ring around the selected object
+    // (see isInRotateRing/ROTATE_HANDLE_MARGIN_PX) arms a drag-rotate — takes
+    // priority over move-drag/pan since it's the more specific gesture, and
+    // works independently of moveState (rotate isn't gated behind Move mode,
+    // same as the pre-existing chevron rotate buttons).
+    if (canEditEntities && selectedRotatable) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      if (isInRotateRing(e.clientX, e.clientY, rect)) {
+        const r = selectedFootprintClientRect(rect)!
+        const centerX = (r.left + r.right) / 2
+        const centerY = (r.top + r.bottom) / 2
+        rotateDragRef.current = {
+          item: selectedRotatable,
+          centerX,
+          centerY,
+          lastAngle: Math.atan2(e.clientY - centerY, e.clientX - centerX),
+          accumAngle: 0,
+          rotation: selectedRotatable.rotation ?? 0,
+        }
+        e.currentTarget.setPointerCapture(e.pointerId)
+        return
+      }
+    }
     // A pointerdown directly on an occupied tile (no move/placing/paint
     // already active) is a drag-to-move candidate — real commitment (calling
     // startMove) waits for the same movement threshold as panning below, so
@@ -1857,6 +1909,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       setHoveredNode(node)
       return
     }
+    if (rotateDragRef.current) {
+      const drag = rotateDragRef.current
+      const angle = Math.atan2(e.clientY - drag.centerY, e.clientX - drag.centerX)
+      // Normalized signed delta since the last sample, in (-PI, PI] — avoids
+      // a step-jump when atan2 wraps across +-PI while dragging around.
+      let delta = angle - drag.lastAngle
+      if (delta > Math.PI) delta -= 2 * Math.PI
+      if (delta < -Math.PI) delta += 2 * Math.PI
+      drag.lastAngle = angle
+      drag.accumAngle += delta
+      const STEP = Math.PI / 2
+      // atan2 on screen (Y-down) coordinates increases clockwise on screen,
+      // matching CSS rotate()'s positive-is-clockwise convention and this
+      // codebase's stepRotation(+1) — no sign flip needed.
+      //
+      // Tracks drag.rotation locally (rather than calling stepRotate, which
+      // re-reads item.rotation from the pre-drag snapshot) because multiple
+      // steps can fire within one synchronous drag before a re-render ever
+      // refreshes that snapshot — using the stale value for a second step
+      // would recompute the same result as the first instead of advancing.
+      while (drag.accumAngle >= STEP) {
+        drag.rotation = stepRotation(drag.rotation, 1)
+        applyEdit({ kind: 'rotateObject', entityId: drag.item.id, newRotation: drag.rotation }, 'rotate object')
+        drag.accumAngle -= STEP
+      }
+      while (drag.accumAngle <= -STEP) {
+        drag.rotation = stepRotation(drag.rotation, -1)
+        applyEdit({ kind: 'rotateObject', entityId: drag.item.id, newRotation: drag.rotation }, 'rotate object')
+        drag.accumAngle += STEP
+      }
+      return
+    }
     if (moveDragRef.current) {
       const drag = moveDragRef.current
       const dx = e.clientX - drag.startX
@@ -1935,8 +2019,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     setHoveredNode(screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
+    setIsRotateHover(!!selectedRotatable && isInRotateRing(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect()))
   }
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (rotateDragRef.current) {
+      // Each 90deg step already committed live during the drag (see
+      // onPointerMove) — nothing left to persist here, just release.
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+      rotateDragRef.current = null
+      return
+    }
     if (rectangleDragRef.current) {
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -2021,8 +2113,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     if (moveDragRef.current) {
-      if (moveDragRef.current.moved && e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId)
+      const drag = moveDragRef.current
+      if (drag.moved) {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
+        // onPointerMove already writes the live cursor tile straight into
+        // moveState.node on every drag tick (so the ghost preview tracks the
+        // cursor) without ever calling applyEdit — so by the time we get
+        // here, moveState.node already equals the drop tile. Comparing
+        // against drag.item.node (the pre-drag origin) instead of going
+        // through applyMoveTo's own prev.node===node guard is what actually
+        // commits the drop; applyMoveTo would see "no change" and no-op.
+        //
+        // Unlike click/arrow-key move (which stays armed so you can keep
+        // trying spots), a mouse-drag is a single self-contained gesture —
+        // releasing exits move mode automatically (same as clicking "Done"),
+        // so that button is never actually needed for this interaction path.
+        setMoveState((prev) => {
+          if (prev && prev.node !== drag.item.node) {
+            applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: prev.node }, 'move object')
+            selectNode(prev.node)
+            setSpawnerSelectorOpen(false)
+          }
+          return null
+        })
       }
       moveDragRef.current = null
       return
@@ -2084,7 +2197,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       stopPlacingCreature()
     }
   }
-  const onPointerLeaveViewport = () => setHoveredNode(null)
+  const onPointerLeaveViewport = () => {
+    setHoveredNode(null)
+    setIsRotateHover(false)
+  }
 
   const zoomAt = useCallback((cursorX: number, cursorY: number, factor: number) => {
     setTransform((prev) => {
@@ -2798,6 +2914,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // this is now purely an "are you sure?" UI flag, not a staged edit;
   // confirming applies the delete immediately.
   const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{ key: string; type: 0 | 1 | 2; id: number } | null>(null)
+  // Mirrors whichever row MapGridCellContent currently resolves as `selected`
+  // (its own local selectedKey, reported upward) — lets the Delete/Backspace
+  // keyboard shortcut below target the right item on a multi-item tile.
+  const [inspectedItem, setInspectedItem] = useState<PlacedObject | null>(null)
   const startDelete = (item: PlacedObject) => {
     setDeleteConfirmTarget({ key: item.key, type: item.type, id: item.id })
   }
@@ -2876,6 +2996,69 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
   }, [moveState, sizeX, catalog])
 
+  // ── Rotate via drag handle ───────────────────────────────────────────────
+  // A template only supports rotation in-game at all when its own catalog
+  // entry (Core/DB/map/objects/*.json) carries the randomRotation field —
+  // present (true or false) for environments/animals and 3 interactable
+  // exceptions, absent for every resource/fx/artifact/spawn (confirmed via
+  // a full survey). This is the real gate, not whether the placed instance
+  // happens to carry a rotations[] entry — every type-0 instance does,
+  // rotatable or not, since it's a plain parallel array in the data format.
+  const catalogSupportsRotation = useCallback((sid: string): boolean =>
+    catalog?.mapObjects.find((o) => o.id === sid)?.randomRotation !== undefined, [catalog])
+  // Only `randomRotation: true` sids (decorative scatter — trees/rocks/etc.,
+  // where facing doesn't matter) get a random initial facing; `false` sids
+  // (bridges, campaign set-pieces) still support manual rotation but start
+  // at 0, same as everything else. Matches h3-import's own
+  // randomDecorRotation (quadrant 0-3 only, never a mirrored +10 variant).
+  const randomInitialRotation = useCallback((sid: string): number | undefined =>
+    catalog?.mapObjects.find((o) => o.id === sid)?.randomRotation ? randomDecorRotation(Math.random) : undefined, [catalog])
+
+  // Only the currently-selected objects[] (type 0) instance ever qualifies —
+  // markers[]/squads[] never carry rotation, same gate the chevron buttons
+  // (stepRotate callers in MapGridCellContent) already use.
+  const selectedRotatable = useMemo(() => {
+    if (selectedNode === null) return null
+    const item = primaryByNode.get(selectedNode)?.primary
+    return item && item.type === 0 && catalogSupportsRotation(item.sid) ? item : null
+  }, [selectedNode, primaryByNode, catalogSupportsRotation])
+
+  const selectedFootprintBounds = useMemo(() => {
+    if (!selectedRotatable) return null
+    const x = selectedRotatable.node % sizeX
+    const z = Math.floor(selectedRotatable.node / sizeX)
+    const template = catalog?.mapObjects.find((o) => o.id === selectedRotatable.sid)
+    return footprintIconBounds(computeFootprintTiles(template, x, z)) ?? { minX: x, maxX: x, minZ: z, maxZ: z }
+  }, [selectedRotatable, sizeX, catalog])
+
+  // Converts the selected footprint's tile bounds into a CLIENT-space rect —
+  // the inverse of screenToNode/screenToTileRaw's client→world math (same
+  // transform.x/y/scale + BASE_CELL_PX/effectiveCellPx + the sizeZ-1-z row
+  // flip), so it can be compared directly against a pointer event's
+  // clientX/clientY without needing to walk the rendered overlay's own DOM
+  // transform chain.
+  const selectedFootprintClientRect = useCallback((rect: DOMRect) => {
+    if (!selectedFootprintBounds) return null
+    const b = selectedFootprintBounds
+    return {
+      left: b.minX * effectiveCellPx + transform.x + rect.left,
+      right: (b.maxX + 1) * effectiveCellPx + transform.x + rect.left,
+      top: (sizeZ - 1 - b.maxZ) * effectiveCellPx + transform.y + rect.top,
+      bottom: (sizeZ - b.minZ) * effectiveCellPx + transform.y + rect.top,
+    }
+  }, [selectedFootprintBounds, effectiveCellPx, transform, sizeZ])
+
+  // True when (clientX, clientY) is in the ring just outside the selected
+  // object's footprint — not directly over it (that's the move-drag zone).
+  const isInRotateRing = useCallback((clientX: number, clientY: number, rect: DOMRect): boolean => {
+    const r = selectedFootprintClientRect(rect)
+    if (!r) return false
+    const insideOuter = clientX >= r.left - ROTATE_HANDLE_MARGIN_PX && clientX <= r.right + ROTATE_HANDLE_MARGIN_PX &&
+      clientY >= r.top - ROTATE_HANDLE_MARGIN_PX && clientY <= r.bottom + ROTATE_HANDLE_MARGIN_PX
+    const insideFootprint = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom
+    return insideOuter && !insideFootprint
+  }, [selectedFootprintClientRect])
+
   // ── Place object (issue #167 Phase B) ───────────────────────────────────
   // Pick a map-object sid, then every subsequent grid click adds a new
   // instance immediately — unlike Move, this doesn't stage-then-save: each
@@ -2951,7 +3134,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // the drag-paint tool already has.
   const placeAt = (node: number) => {
     if (!placingSid || isNodeBlockedForObjectPaint(node)) return
-    applyEdit({ kind: 'addObject', entityType: 0, sid: placingSid, node }, 'place object')
+    applyEdit({ kind: 'addObject', entityType: 0, sid: placingSid, node, rotation: randomInitialRotation(placingSid) }, 'place object')
   }
 
   // Squads have no footprint template (always single-tile), so no
@@ -2988,7 +3171,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const terrainChanges = new Map<number, number>()
     const waterChanges = new Map<number, number>()
     const waterLevelChanges = new Map<number, -1>()
-    const additions: { node: number; sid: string }[] = []
+    const additions: { node: number; sid: string; rotation?: number }[] = []
     const total = sizeX * sizeZ
     const yieldToUi = () => new Promise<void>((resolve) => window.setTimeout(resolve, 0))
     for (let screenRow = 0; screenRow < sizeZ; screenRow++) {
@@ -3004,7 +3187,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           waterLevelChanges.set(node, -1)
         }
         else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
-          additions.push({ node, sid: target.sid })
+          additions.push({ node, sid: target.sid, rotation: randomInitialRotation(target.sid) })
         }
       }
       const completed = Math.min(total, (screenRow + 1) * sizeX)
@@ -3023,7 +3206,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       applyEdit({ kind: 'paintObjects', additions, deletions: [] }, 'paint assets from image')
     }
     setImageMappingOpen(false)
-  }, [sizeX, sizeZ, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, applyEdit])
+  }, [sizeX, sizeZ, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, randomInitialRotation, applyEdit])
 
   const stageObjectPaint = useCallback((node: number, sid: string) => {
     if (!isNodeInBoundsForPlacement(sid, node) || isNodeBlockedForObjectPaint(node)) return
@@ -3033,13 +3216,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const commitObjectPaintStroke = useCallback(() => {
     if (paintObjectStaged.size === 0) return
-    const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid }))
+    const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid, rotation: randomInitialRotation(sid) }))
     const deletions = placedObjects
       .filter((o) => o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
       .map((o) => o.id)
     setPaintObjectStaged(new Map())
     applyEdit({ kind: 'paintObjects', additions, deletions }, 'paint objects')
-  }, [paintObjectStaged, placedObjects, catalog, applyEdit])
+  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit])
 
   // ── In-progress-stroke full-fidelity preview (issue #195 Phase 1) —
   // deliberately placed here rather than up near sortedIconEntries, since a
@@ -3198,6 +3381,28 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return () => window.removeEventListener('keydown', handler)
   }, [open])
 
+  // Delete/Backspace deletes whichever placed object/marker/squad is
+  // currently selected — reuses the same startDelete confirm-arm flow as the
+  // trash button in MapGridCellContent (issue #167 Phase C), so it still
+  // gets the same deliberate confirmation UI rather than deleting instantly.
+  useEffect(() => {
+    if (!open || !canEditEntities) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (moveState) return // an in-progress Move already owns arrow keys/Escape
+      const target = selectedItems.find((i) => i.key === inspectedItem?.key) ?? selectedItems[0] ?? null
+      if (!target) return
+      e.preventDefault()
+      // Make sure the confirm row is actually visible if the column was collapsed.
+      if (columnClosed && selectedNode !== null) selectNode(selectedNode)
+      startDelete(target)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, canEditEntities, selectedItems, inspectedItem, moveState, columnClosed, selectedNode, selectNode])
+
   const placingFootprintBounds = useMemo(() => {
     if (!activePlacingSid || hoveredNode === null) return null
     const x = hoveredNode % sizeX
@@ -3224,6 +3429,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
+
+  const focusRequest = useMapGridStore((s) => s.focusRequest)
+  const clearFocusRequest = useMapGridStore((s) => s.clearFocusRequest)
+
+  useEffect(() => {
+    if (!focusRequest) return
+    // containerSize isn't measured yet on first mount (e.g. Map Grid was
+    // closed when the row was clicked) — wait for the ResizeObserver instead
+    // of centering against a 0x0 viewport.
+    if (containerSize.width === 0 && containerSize.height === 0) return
+    centerOnTile(focusRequest.x, focusRequest.z)
+    zoomTo100()
+    clearFocusRequest()
+  }, [focusRequest, containerSize, centerOnTile, zoomTo100, clearFocusRequest])
 
   if (!open) return null
 
@@ -4246,6 +4465,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     ? 'cursor-crosshair'
                     : 'cursor-default'
               }`}
+              style={isRotateHover ? { cursor: ROTATE_CURSOR_CSS } : undefined}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -4392,13 +4612,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
                   // relocate (Move, now shown for real at its destination via
-                  // stagedMoveIcon below) fades out; a pending Rotate gets a
-                  // highlighted ring instead of an actually-rotated icon,
-                  // since no committed object visually rotates its icon
-                  // either — there's no "final appearance" to preview here,
-                  // only a way to mark that a change is pending.
+                  // stagedMoveIcon below) fades out.
                   const isMoveSource = moveState?.key === entry.pick.primary.key
                   const isDeleting = deleteConfirmTarget?.key === entry.pick.primary.key || stagedPaintObjectDeletionKeys.has(entry.pick.primary.key)
+                  // Only objects[] (type 0) ever carries rotation, and only
+                  // when its catalog template actually supports it in-game
+                  // (catalogSupportsRotation) — every type-0 instance has a
+                  // rotations[] entry regardless, but visually rotating an
+                  // interactable/artifact/spawn icon would show a facing
+                  // change that has no real in-game effect. Same encoding as
+                  // formatRotation()/stepRotation() elsewhere: quadrant 0-3 *
+                  // 90deg, +10 offset means mirrored.
+                  const rotation = entry.pick.primary.type === 0 && catalogSupportsRotation(entry.pick.primary.sid)
+                    ? entry.pick.primary.rotation
+                    : undefined
+                  const rotateTransform = rotation !== undefined
+                    ? `rotate(${(rotation % 10) * 90}deg)${rotation >= 10 ? ' scaleX(-1)' : ''}`
+                    : undefined
                   return (
                     <div
                       key={entry.key}
@@ -4414,6 +4644,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         opacity: isDeleting || isMoveSource ? 0.35 : 1,
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
+                        transform: rotateTransform,
                       }}
                       onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) { selectNode(entry.clickNode); setSpawnerSelectorOpen(false) } }}
                     >
@@ -4839,6 +5070,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onStartDelete={canEditEntities ? startDelete : undefined}
                   onConfirmDelete={canEditEntities ? confirmDelete : undefined}
                   onCancelDelete={canEditEntities ? cancelDelete : undefined}
+                  onSelectionChange={setInspectedItem}
                 />
               ) : null}
             </div>

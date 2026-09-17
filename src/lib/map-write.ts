@@ -1695,7 +1695,7 @@ function patchRandomSquadRow(
 export function paintObjects(
   block1Chunk: Uint8Array,
   block2Chunk: Uint8Array,
-  additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[],
+  additions: { node: number; sid: string; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[],
   deletions: number[],
 ): { block1Chunk: Uint8Array; block2Chunk: Uint8Array; newIds: number[] } {
   let b1 = block1Chunk
@@ -1706,8 +1706,8 @@ export function paintObjects(
     b2 = result.block2Chunk
   }
   const newIds: number[] = []
-  for (const { node, sid, randomSquadOverrides } of additions) {
-    const result = addObjectInstance(b1, b2, 0, sid, node)
+  for (const { node, sid, rotation, randomSquadOverrides } of additions) {
+    const result = addObjectInstance(b1, b2, 0, sid, node, rotation)
     b1 = result.block1Chunk
     b2 = result.block2Chunk
     if (sid === 'random-squad' && randomSquadOverrides) {
