@@ -830,13 +830,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
 
   // ── Eraser (issue #195 follow-up) — deletes non-terrain content (objects/
-  // units/zones) under the brush, same freehand (brush-radius, via
-  // eraserDragRef mirroring obstacleDragRef above) or Rectangle-mode
-  // selection every other paint tool already offers. Never touches
-  // terrain/level/water — only ever calls deleteObject. Applies
-  // immediately on stroke release, same as every other brush tool here (no
-  // extra confirmation step, unlike the single-object Delete tool in the
-  // info panel — Ctrl+Z covers an eraser mistake same as any other edit).
+  // units/zones/rivers/roads/ramps) under the brush, same freehand
+  // (brush-radius, via eraserDragRef mirroring obstacleDragRef above) or
+  // Rectangle-mode selection every other paint tool already offers. Never
+  // touches tilesMap/levelsMap/waterMap. Applies immediately on stroke
+  // release, same as every other brush tool here (no extra confirmation
+  // step, unlike the single-object Delete tool in the info panel — Ctrl+Z
+  // covers an eraser mistake same as any other edit).
   const [eraserActive, setEraserActive] = useState(false)
   const eraserDragRef = useRef<Set<number> | null>(null)
   const stopEraser = () => setEraserActive(false)
@@ -887,7 +887,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (erasedRoadNodes.length > 0) {
           applyEdit({ kind: 'paintRoad', changes: erasedRoadNodes.map((n) => ({ node: n, roadId: 0 })) }, 'erase road')
       }
-  }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, roadsMap, applyEdit])
+      // Also clears any ramp (climbsMap) tile under the brush — same
+      // reuse-the-tool convention as rivers/roads above, since Ramp itself
+      // has no eraser of its own (single-tile-only, no Bucket/Rectangle).
+      const erasedRampNodes = nodes.filter((n) => (climbsMap[n] ?? 0) !== 0)
+      if (erasedRampNodes.length > 0) {
+          applyEdit({ kind: 'paintClimb', changes: erasedRampNodes.map((n) => ({ node: n, climb: 0 as const })) }, 'erase ramp')
+      }
+  }, [placedObjects, catalog, sizeX, sizeZ, riverNodes, roadsMap, climbsMap, applyEdit])
 
   // ── Clear All — Eraser's whole-map sibling: wipes absolutely everything
   // (every object/squad/marker/river node, including player-start city-
