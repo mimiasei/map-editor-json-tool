@@ -2029,8 +2029,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // terrain to any object): stamps a candidate at every newly-crossed
       // tile into paintObjectStaged, same "stage locally, then explicit
       // Save" convention as terrain paint — nothing here writes to disk. A
-      // plain (non-dragged) click still falls through to onPointerUp's
-      // one-shot immediate placeAt below, unchanged.
+      // plain (non-dragged) click still falls through to onPointerUp's own
+      // brush-radius-aware commit below (not a bespoke single-tile path —
+      // see that branch's own comment for why).
       const node = screenToNode(e.clientX, e.clientY, rect)
       if (node !== null && placingSid) stageObjectPaint(node, placingSid)
       setHoveredNode(node)
@@ -2198,10 +2199,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // A plain click (not a paint stroke) while placing a new object commits
       // it immediately and stays in placing mode (issue #167 Phase B) — same
       // "fires on pointerup, not the icon's own onClick" reasoning as Move.
+      // Runs through the same brush-radius/Disperse-aware commit a drag
+      // stroke uses (not a bespoke single-tile placeAt) — Size/Disperse
+      // apply to Objects the same as every other brush tool now, where a
+      // plain click already stamps the whole brush area (e.g. Terrain
+      // stages its brush on pointerDown, before any drag distance exists),
+      // so a click here needs to do the same rather than always placing
+      // exactly one tile regardless of brush size.
       if (wasClick && placingSid) {
         const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null && isNodeInBoundsForPlacement(placingSid, node)) {
-          void placeAt(node)
+        if (node !== null) {
+          const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+          commitObjectPaintStroke(tiles)
         }
       } else if (wasClick && placingCreatureId) {
         // Single-click only — a drag here never staged anything (see
@@ -3173,18 +3182,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const template = catalog?.mapObjects.find((o) => o.id === sid)
     return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
-
-  // issue #195 follow-up: applies immediately (a single click was always
-  // one addObject edit before any staging concept existed) — isNodeBlockedForObjectPaint
-  // is declared below (safe to reference here since placeAt's BODY only
-  // runs when actually called from an event handler, well after that
-  // `const` exists; unlike a hook's dependency array, this isn't evaluated
-  // at placeAt's own definition time), reusing the same blocked-tile check
-  // the drag-paint tool already has.
-  const placeAt = (node: number) => {
-    if (!placingSid || isNodeBlockedForObjectPaint(node)) return
-    applyEdit({ kind: 'addObject', entityType: 0, sid: placingSid, node, rotation: randomInitialRotation(placingSid) }, 'place object')
-  }
 
   // Squads have no footprint template (always single-tile), so no
   // blocked-tile check — matches this handler's pre-existing behavior.
