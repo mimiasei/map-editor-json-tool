@@ -49,6 +49,13 @@ export interface RandomMapTemplate {
    *  water, each island small (this mode's original, still-default look);
    *  1 = mostly land, each island large. Defaults to 0.4. */
   islandLandRatio: number
+  /** Overall hill (level 1) amount, 0-1 — see zone-elevation.ts's own header
+   *  comment. Eligible on both player and neutral zones (a player's own
+   *  spawn tile itself stays protected). Defaults to 0. */
+  hillChance: number
+  /** Overall dry-valley (level -1, decoupled from water) amount, 0-1 — same
+   *  shape as `hillChance`. Defaults to 0. */
+  valleyChance: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering
    *  (zone-decoration.ts). 0.35 default — real hand-crafted maps run 17-40%
    *  actual decoration tile coverage; this isn't a 1:1 proxy for that (candidates
@@ -167,11 +174,13 @@ const DEFAULT_INTERACTABLE_CONTENT_LIMITS = [
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'obstacleDensity' | 'interactableDensity' | 'mountainDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'hillChance' | 'valleyChance' | 'obstacleDensity' | 'interactableDensity' | 'mountainDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   islandsIncludePlayerZones: false,
   islandLandRatio: 0.4,
+  hillChance: 0,
+  valleyChance: 0,
   obstacleDensity: 0.35,
   interactableDensity: 0.25,
   mountainDensity: 0.35,
@@ -193,7 +202,7 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, enabledBiomes, randomCityCount, contentCountLimits, stoneRoadChance, roadPointOfInterestChance, roadFullConnectivityChance, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, enabledBiomes, randomCityCount, contentCountLimits, stoneRoadChance, roadPointOfInterestChance, roadFullConnectivityChance, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -203,6 +212,8 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     waterChance,
     islandsIncludePlayerZones,
     islandLandRatio,
+    hillChance,
+    valleyChance,
     obstacleDensity,
     treasureDensity,
     objectVariety,
@@ -255,6 +266,8 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     waterChance: typeof data.waterChance === 'number' ? data.waterChance : DEFAULT_TEMPLATE_OVERRIDES.waterChance,
     islandsIncludePlayerZones: typeof data.islandsIncludePlayerZones === 'boolean' ? data.islandsIncludePlayerZones : DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones,
     islandLandRatio: typeof data.islandLandRatio === 'number' ? data.islandLandRatio : DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio,
+    hillChance: typeof data.hillChance === 'number' ? data.hillChance : DEFAULT_TEMPLATE_OVERRIDES.hillChance,
+    valleyChance: typeof data.valleyChance === 'number' ? data.valleyChance : DEFAULT_TEMPLATE_OVERRIDES.valleyChance,
     obstacleDensity: typeof data.obstacleDensity === 'number' ? data.obstacleDensity : DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity,
     interactableDensity: typeof data.interactableDensity === 'number' ? data.interactableDensity : DEFAULT_TEMPLATE_OVERRIDES.interactableDensity,
     mountainDensity: typeof data.mountainDensity === 'number' ? data.mountainDensity : DEFAULT_TEMPLATE_OVERRIDES.mountainDensity,

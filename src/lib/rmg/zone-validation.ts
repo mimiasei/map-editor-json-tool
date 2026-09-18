@@ -28,10 +28,11 @@
 
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
-import { buildBlockedTileSet } from '@/lib/map-grid/passability'
+import { buildBlockedTileSet, isElevationWallTile } from '@/lib/map-grid/passability'
 import type { PlacedObject } from '@/types/map-context'
 import type { ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import type { ConcreteSquadPlacement } from './zone-population'
+import { findAdjacentLevelZeroNode } from './zone-elevation'
 
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
@@ -112,6 +113,48 @@ function removeFromObjectGroups(objectGroups: Map<string, ObjectPlacementGroup>,
   }
 }
 
+/** tempId -> linked portal's ACCESS node (value===2 footprint cell, not its
+ *  raw anchor — every real portal_1..portal_5 template's anchor is itself a
+ *  SOLID, permanently-blocked cell, confirmed real bug 2026-09-08, same
+ *  root cause fixed in accessibility-pass.ts's own portalNodeAdjacency —
+ *  using the anchor here would make this "portal-aware" resolution a no-op
+ *  in practice, since the anchor node can never become `visited`). Shared
+ *  by `repairSealedZones` and `repairIsolatedPlayerStarts` below — both
+ *  need the exact same node-based adjacency for their own
+ *  `floodFillReachable` calls. Returns an empty map when `portalAdjacency`
+ *  is undefined/empty, so a caller with no portals sees no behavior
+ *  change. */
+function resolvePortalNodeAdjacency(
+  portalAdjacency: Map<number, number> | undefined,
+  objectGroups: Map<string, ObjectPlacementGroup>,
+  catalogById: Map<string, CatalogMapObject>,
+  sizeX: number,
+  sizeZ: number,
+): Map<number, number> {
+  const portalNodeAdjacency = new Map<number, number>()
+  if (!portalAdjacency || portalAdjacency.size === 0) return portalNodeAdjacency
+  const idToNode = new Map<number, number>()
+  const idToSid = new Map<number, string>()
+  for (const [sid, group] of objectGroups) {
+    for (let i = 0; i < group.ids.length; i++) { idToNode.set(group.ids[i], group.nodes[i]); idToSid.set(group.ids[i], sid) }
+  }
+  const accessNodeFor = (id: number): number | undefined => {
+    const node = idToNode.get(id)
+    if (node === undefined) return undefined
+    const template = catalogById.get(idToSid.get(id) ?? '')
+    const cells = computeFootprintTiles(template, node % sizeX, Math.floor(node / sizeX))
+    const access = cells.find((c) => c.value === 2)
+    if (!access || access.x < 0 || access.x >= sizeX || access.z < 0 || access.z >= sizeZ) return node
+    return access.z * sizeX + access.x
+  }
+  for (const [fromId, toId] of portalAdjacency) {
+    const fromNode = accessNodeFor(fromId)
+    const toNode = accessNodeFor(toId)
+    if (fromNode !== undefined && toNode !== undefined) portalNodeAdjacency.set(fromNode, toNode)
+  }
+  return portalNodeAdjacency
+}
+
 export interface SealedZoneRepairOptions {
   sizeX: number
   sizeZ: number
@@ -132,6 +175,10 @@ export interface SealedZoneRepairOptions {
   catalog: GameCatalog
   catalogById: Map<string, CatalogMapObject>
   levelsMap: number[]
+  /** Mutated in place when the ramp-punching repair tactic fires (see this
+   *  function's own doc comment) — a caller should treat its own array as
+   *  possibly changed after this call, same as `objectGroups`. */
+  climbsMap: number[]
   waterMap: number[]
   /** tempId -> linked portal's tempId (generate-random-map.ts's own
    *  `portalAdjacency`, the exact same map `applyAccessibilityPass`
@@ -153,6 +200,12 @@ export interface SealedZoneRepairResult {
    *  a mine/dwelling this pass deliberately never deletes), not silently
    *  swallowed. */
   stillSealedZoneIds: number[]
+  /** Ramp tiles this repair added (second tactic, tried only for a zone
+   *  still sealed after decorative-object removal) — feed to
+   *  `paintClimbTiles` to patch the real container, same as
+   *  `reclaimWaterCollisions`'s own reclaimed-node list. Empty on a clean
+   *  map or one decorative removal alone already fixed. */
+  addedClimbChanges: { node: number; climb: 1 }[]
 }
 
 /**
@@ -168,46 +221,28 @@ export interface SealedZoneRepairResult {
  * degenerate case this guards without assuming can't happen).
  */
 export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneRepairResult {
-  const { sizeX, sizeZ, zoneIds, zoneIdByNode, objectGroups, decorativePlacements, spawnerSid, catalog, catalogById, levelsMap, waterMap, portalAdjacency } = options
+  const { sizeX, sizeZ, zoneIds, zoneIdByNode, objectGroups, decorativePlacements, spawnerSid, catalog, catalogById, levelsMap, climbsMap, waterMap, portalAdjacency } = options
 
-  // Resolve tempId-based portalAdjacency to node-based once up front —
+  // Resolves tempId-based portalAdjacency to node-based once up front —
   // portals themselves are never in `decorativePlacements` (so
   // `removeFromObjectGroups` never removes them across rounds below),
-  // making this stable for the whole repair. Resolves to each portal's own
-  // WALKABLE ACCESS cell (value===2), not its raw anchor node — every real
-  // portal_1..portal_5 template's anchor is itself a SOLID, permanently-
-  // blocked cell (confirmed real bug 2026-09-08, same root cause fixed in
-  // accessibility-pass.ts's own portalNodeAdjacency — see that file's doc
-  // comment for the full story), so using the anchor here made this same
-  // "portal-aware" fix a no-op in practice: the anchor node can never
-  // become `visited`, so the hop condition in `floodFillReachable` never
-  // fires for it.
-  const portalNodeAdjacency = new Map<number, number>()
-  if (portalAdjacency && portalAdjacency.size > 0) {
-    const idToNode = new Map<number, number>()
-    const idToSid = new Map<number, string>()
-    for (const [sid, group] of objectGroups) {
-      for (let i = 0; i < group.ids.length; i++) { idToNode.set(group.ids[i], group.nodes[i]); idToSid.set(group.ids[i], sid) }
-    }
-    const accessNodeFor = (id: number): number | undefined => {
-      const node = idToNode.get(id)
-      if (node === undefined) return undefined
-      const template = catalogById.get(idToSid.get(id) ?? '')
-      const cells = computeFootprintTiles(template, node % sizeX, Math.floor(node / sizeX))
-      const access = cells.find((c) => c.value === 2)
-      if (!access || access.x < 0 || access.x >= sizeX || access.z < 0 || access.z >= sizeZ) return node
-      return access.z * sizeX + access.x
-    }
-    for (const [fromId, toId] of portalAdjacency) {
-      const fromNode = accessNodeFor(fromId)
-      const toNode = accessNodeFor(toId)
-      if (fromNode !== undefined && toNode !== undefined) portalNodeAdjacency.set(fromNode, toNode)
-    }
+  // making this stable for the whole repair. See resolvePortalNodeAdjacency's
+  // own doc comment for why this resolves to each portal's own ACCESS cell,
+  // not its raw anchor.
+  const portalNodeAdjacency = resolvePortalNodeAdjacency(portalAdjacency, objectGroups, catalogById, sizeX, sizeZ)
+
+  // Factored out so the ramp-punching repair below can also know which
+  // tiles are already occupied — a candidate ramp spot must never land on
+  // one (real bug confirmed on `maps/map_elevation.map`: a stray ramp
+  // landed directly on player 4's own city-spawner anchor tile, and the
+  // map failed to load in the actual game because of it).
+  const computeBlocked = (): Set<number> => {
+    const placed = buildFlatPlaced(objectGroups, sizeX)
+    return buildBlockedTileSet({ sizeX, sizeZ, placedObjects: placed, levelsMap, climbsMap, waterMap }, catalog)
   }
 
   const computeReachable = (): Set<number> => {
-    const placed = buildFlatPlaced(objectGroups, sizeX)
-    const blocked = buildBlockedTileSet({ sizeX, sizeZ, placedObjects: placed, levelsMap, climbsMap: [], waterMap }, catalog)
+    const blocked = computeBlocked()
     const spawnerGroup = objectGroups.get(spawnerSid)
     const spawnerTemplate = catalogById.get(spawnerSid)
     const seeds: number[] = []
@@ -234,7 +269,7 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
   }
 
   const sealedBefore = sealedNow()
-  if (sealedBefore.size === 0) return { sealedZoneIds: [], stillSealedZoneIds: [] }
+  if (sealedBefore.size === 0) return { sealedZoneIds: [], stillSealedZoneIds: [], addedClimbChanges: [] }
 
   for (let round = 0; round < 3; round++) {
     const stillSealed = sealedNow()
@@ -247,7 +282,163 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
     removeFromObjectGroups(objectGroups, toRemove)
   }
 
-  return { sealedZoneIds: [...sealedBefore], stillSealedZoneIds: [...sealedNow()] }
+  // Second repair tactic (only reached for a zone STILL sealed after
+  // decorative-object removal above): a real elevation wall — not a
+  // removable object — sealing a zone can only be fixed by adding a ramp.
+  // Punches one through every elevation-wall tile bordering a still-sealed
+  // zone, same "keep trying while something changed" shape as the removal
+  // loop above, tried strictly after (and only if) removal alone wasn't
+  // enough — a ramp is a real terrain change, decorative removal isn't, so
+  // the cheaper fix stays first-choice.
+  const addedClimbChanges: { node: number; climb: 1 }[] = []
+  if (sealedNow().size > 0) {
+    const tileCount = sizeX * sizeZ
+    for (let round = 0; round < 3; round++) {
+      const stillSealed = sealedNow()
+      if (stillSealed.size === 0) break
+      let addedAny = false
+      const blocked = computeBlocked()
+      for (let node = 0; node < tileCount; node++) {
+        if (!stillSealed.has(zoneIdByNode[node])) continue
+        if (!isElevationWallTile(node, sizeX, sizeZ, levelsMap, climbsMap)) continue
+        if (levelsMap[node] < 0 && blocked.has(node)) continue // the valley tile itself is occupied — not a usable ramp spot either
+        const rampNode = levelsMap[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMap, blocked)
+        if (rampNode === null || climbsMap[rampNode] === 1) continue
+        climbsMap[rampNode] = 1
+        addedClimbChanges.push({ node: rampNode, climb: 1 })
+        addedAny = true
+      }
+      if (!addedAny) break // nothing left to open a ramp through — a real, disclosed dead end
+    }
+  }
+
+  return { sealedZoneIds: [...sealedBefore], stillSealedZoneIds: [...sealedNow()], addedClimbChanges }
+}
+
+export interface IsolatedStartRepairOptions {
+  sizeX: number
+  sizeZ: number
+  /** Every player's own spawner instance ({sid, node} — `generate-terrain.ts`'s
+   *  own `players[]` shape). Needs at least 2 to mean anything — isolation
+   *  is only meaningful relative to another player, same as
+   *  `findIsolatedPlayerStarts` (reachability-validation.ts). */
+  players: { sid: string; node: number }[]
+  objectGroups: Map<string, ObjectPlacementGroup>
+  catalog: GameCatalog
+  catalogById: Map<string, CatalogMapObject>
+  levelsMap: number[]
+  /** Mutated in place when a ramp gets added, same as `repairSealedZones`'s own. */
+  climbsMap: number[]
+  waterMap: number[]
+  portalAdjacency?: Map<number, number>
+}
+
+export interface IsolatedStartRepairResult {
+  /** Indices into `players` that were isolated before repair. */
+  isolatedOwners: number[]
+  /** Indices into `players` still isolated after repair — a real,
+   *  disclosed failure (no wall tile bordering that player's own local
+   *  pocket had a legal, unoccupied ramp spot), not silently swallowed. */
+  stillIsolatedOwners: number[]
+  /** Ramp tiles this repair added — feed to `paintClimbTiles`. */
+  addedClimbChanges: { node: number; climb: 1 }[]
+}
+
+/**
+ * `repairSealedZones`'s own blind spot, confirmed on a real generated map
+ * (map_elevation.map, user-reported): its "is any tile of this ZONE
+ * reachable" check can pass even when a SPECIFIC player's own spawner sits
+ * in a small local pocket fully walled off from the rest of that same
+ * zone — the zone's OTHER tiles stayed reachable via a completely
+ * different route, so the zone-level check never fired, and the actual
+ * player-start point shipped genuinely unreachable (the map failed to
+ * load in the real game because of it). This is the exact same
+ * reachability test `findIsolatedPlayerStarts` (reachability-
+ * validation.ts) already runs POST-generation — this version runs during
+ * generation and can actually fix what it finds, rather than only
+ * reporting it. Punches a ramp through whichever wall tile bordering the
+ * isolated player's own local pocket sits closest to its own start (the
+ * ramp always lands on the LOWER-level side of that specific boundary —
+ * isValidRampNode's real rule — and is skipped if that exact tile is
+ * already occupied, same "never stamp a ramp on something standing on the
+ * tile" rule this whole file's other repair already enforces), then
+ * re-verifies, up to 3 rounds.
+ */
+export function repairIsolatedPlayerStarts(options: IsolatedStartRepairOptions): IsolatedStartRepairResult {
+  const { sizeX, sizeZ, players, objectGroups, catalog, catalogById, levelsMap, climbsMap, waterMap, portalAdjacency } = options
+  if (players.length < 2) return { isolatedOwners: [], stillIsolatedOwners: [], addedClimbChanges: [] }
+
+  const portalNodeAdjacency = resolvePortalNodeAdjacency(portalAdjacency, objectGroups, catalogById, sizeX, sizeZ)
+
+  const accessNodeForPlayer = (p: { sid: string; node: number }): number => {
+    const template = catalogById.get(p.sid)
+    const x = p.node % sizeX
+    const z = Math.floor(p.node / sizeX)
+    const cells = computeFootprintTiles(template, x, z)
+    const access = cells.find((c) => c.value === 2)
+    if (!access || access.x < 0 || access.x >= sizeX || access.z < 0 || access.z >= sizeZ) return p.node
+    return access.z * sizeX + access.x
+  }
+  const accessNodes = players.map(accessNodeForPlayer)
+
+  const computeBlocked = (): Set<number> => {
+    const placed = buildFlatPlaced(objectGroups, sizeX)
+    return buildBlockedTileSet({ sizeX, sizeZ, placedObjects: placed, levelsMap, climbsMap, waterMap }, catalog)
+  }
+
+  const isolatedNow = (blocked: Set<number>): Set<number> => {
+    const isolated = new Set<number>()
+    for (let i = 0; i < accessNodes.length; i++) {
+      const reach = floodFillReachable([accessNodes[i]], blocked, sizeX, sizeZ, portalNodeAdjacency)
+      const reachesOther = accessNodes.some((n, j) => j !== i && reach.has(n))
+      if (!reachesOther) isolated.add(i)
+    }
+    return isolated
+  }
+
+  const isolatedBefore = isolatedNow(computeBlocked())
+  if (isolatedBefore.size === 0) return { isolatedOwners: [], stillIsolatedOwners: [], addedClimbChanges: [] }
+
+  const addedClimbChanges: { node: number; climb: 1 }[] = []
+  for (let round = 0; round < 3; round++) {
+    const blocked = computeBlocked()
+    const stillIsolated = isolatedNow(blocked)
+    if (stillIsolated.size === 0) break
+    let addedAny = false
+    for (const i of stillIsolated) {
+      const seed = accessNodes[i]
+      const pocket = floodFillReachable([seed], blocked, sizeX, sizeZ, portalNodeAdjacency)
+      const seedX = seed % sizeX
+      const seedZ = Math.floor(seed / sizeX)
+      let bestRampNode: number | null = null
+      let bestDist = Infinity
+      for (const node of pocket) {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+          const nx = x + dx
+          const nz = z + dz
+          if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+          const n = nz * sizeX + nx
+          if (pocket.has(n)) continue
+          if (!isElevationWallTile(n, sizeX, sizeZ, levelsMap, climbsMap)) continue
+          const rampNode = (levelsMap[node] ?? 0) < (levelsMap[n] ?? 0) ? node : n
+          if (blocked.has(rampNode) || climbsMap[rampNode] === 1) continue
+          const rx = rampNode % sizeX
+          const rz = Math.floor(rampNode / sizeX)
+          const dist = (rx - seedX) ** 2 + (rz - seedZ) ** 2
+          if (dist < bestDist) { bestDist = dist; bestRampNode = rampNode }
+        }
+      }
+      if (bestRampNode === null) continue
+      climbsMap[bestRampNode] = 1
+      addedClimbChanges.push({ node: bestRampNode, climb: 1 })
+      addedAny = true
+    }
+    if (!addedAny) break // nothing left to open a ramp through — a real, disclosed dead end
+  }
+
+  return { isolatedOwners: [...isolatedBefore], stillIsolatedOwners: [...isolatedNow(computeBlocked())], addedClimbChanges }
 }
 
 export interface ReclaimWaterCollisionsOptions {
