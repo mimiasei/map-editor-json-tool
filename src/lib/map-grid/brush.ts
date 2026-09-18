@@ -30,6 +30,9 @@ function hashUnit(x: number, z: number): number {
  * leave only a sparse scatter of tiles spread across the brush's area. The
  * exact center tile always survives, so a click/drag never becomes a
  * complete no-op purely because of where it happens to land on the map.
+ * The incoming disperse value is multiplied by 0.95 so it never reaches a
+ * higher value than that, thereby making sure even 100% disperse paints more
+ * than one singular tile.
  */
 export function tilesInRadius(
   centerX: number,
@@ -46,6 +49,7 @@ export function tilesInRadius(
   const maxX = Math.min(sizeX - 1, centerX + (r - 1))
   const minZ = Math.max(0, centerZ - (r - 1))
   const maxZ = Math.min(sizeZ - 1, centerZ + (r - 1))
+  disperse *= 0.95
   for (let z = minZ; z <= maxZ; z++) {
     for (let x = minX; x <= maxX; x++) {
       const dx = x - centerX
