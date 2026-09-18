@@ -662,7 +662,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
@@ -1064,11 +1064,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // than accumulating into an in-progress buffer first.
   // A ramp tile is only ever valid on the LOWER side of a levelsMap
   // boundary, directly bordering a strictly higher neighbor (see the Ramp
-  // tool's own doc comment below for the real-data confirmation). Declared
-  // here (rather than alongside the rest of the Ramp tool) so
-  // applyRectangleFill's 'ramp' branch can reference it without a
-  // temporal-dead-zone error, same reasoning as roadBrush's own early
-  // declaration above.
+  // tool's own doc comment below for the real-data confirmation).
   const isValidRampNode = useCallback((node: number): boolean => {
     const level = levelsMap[node] ?? 0
     const x = node % sizeX
@@ -1081,16 +1077,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     return false
   }, [levelsMap, sizeX, sizeZ])
-  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone', bounds: RectangleBounds) => {
+  const applyRectangleFill = useCallback((tool: 'terrain' | 'level' | 'road' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone', bounds: RectangleBounds) => {
     const nodes = nodesInRectangle(bounds, sizeX)
     if (nodes.length === 0) return
-    if (tool === 'ramp') {
-      const valid = nodes.filter(isValidRampNode)
-      if (valid.length > 0) {
-        applyEdit({ kind: 'paintClimb', changes: valid.map((n) => ({ node: n, climb: 1 as const })) }, 'paint ramp')
-      }
-      return
-    }
     if (tool === 'obstacles') {
       commitObstacleStroke(nodes)
       return
@@ -1166,7 +1155,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     } else if (tool === 'road' && roadBrush !== null) {
       applyEdit({ kind: 'paintRoad', changes: nodes.map((n) => ({ node: n, roadId: roadBrush })) }, 'paint road')
     }
-  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, paintZone, isValidRampNode, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
+  }, [sizeX, sizeZ, paintBiome, levelBrush, roadBrush, paintZone, applyEdit, commitObstacleStroke, commitTreeStroke, commitEraserStroke, interactablePools, interactableBiomePurity, interactableAllowHighContrast, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, squadPlaceResourceAbove, resourceGuardBelow, tilesMap])
 
   const stopLevelPainting = () => {
     setLevelBrush(null)
@@ -1258,17 +1247,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setRampActive(false)
     setPaintRampStaged(new Set())
   }
-  // isValidRampNode declared earlier (near applyRectangleFill) so that
-  // callback's Rectangle-mode 'ramp' branch can reference it.
+  // isValidRampNode declared earlier (near applyRectangleFill).
+  // Deliberately NOT scaled by brushRadius/brushDisperse (user-requested —
+  // unlike every area brush, a ramp tile is a single structural marker).
   const stageRampNode = useCallback((node: number) => {
-    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse).filter(isValidRampNode)
-    if (tiles.length === 0 || tiles.every((n) => paintRampStaged.has(n))) return
-    setPaintRampStaged((prev) => {
-      const next = new Set(prev)
-      for (const n of tiles) next.add(n)
-      return next
-    })
-  }, [paintRampStaged, brushRadius, brushDisperse, sizeX, sizeZ, isValidRampNode])
+    if (!isValidRampNode(node) || paintRampStaged.has(node)) return
+    setPaintRampStaged((prev) => new Set(prev).add(node))
+  }, [paintRampStaged, isValidRampNode])
   const commitRampStroke = useCallback(() => {
     if (paintRampStaged.size === 0) return
     const changes = [...paintRampStaged].map((node) => ({ node, climb: 1 as const }))
@@ -1607,17 +1592,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (node !== null) stageRoadNode(node, roadBrush)
       return
     }
-    // Same freehand-stroke idea for the Ramp brush.
+    // Ramp — always exactly one tile per position, no Bucket/Rectangle
+    // (user-requested — a ramp tile is a structural marker derived from the
+    // level boundary, not an area brush), ignoring interactionMode entirely
+    // so a stale 'rectangle' mode left over from another tool has no effect.
     if (rampActive) {
-      if (interactionMode === 'rectangle') {
-        const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null) {
-          e.currentTarget.setPointerCapture(e.pointerId)
-          rectangleDragRef.current = { tool: 'ramp', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
-          setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
-        }
-        return
-      }
       rampPaintingRef.current = true
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
@@ -3507,7 +3486,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // following set, not a per-map-tile render — doesn't reintroduce the
   // one-DOM-node-per-map-tile pattern this codebase avoids. Ramp/Road stay
   // deliberately excluded — always single-tile, no brush shape to preview.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive)
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
     return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
@@ -4308,12 +4287,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {/* Freehand/Rectangle interaction mode (issue #193 Phase 4) —
                   a shared toggle for Terrain/Level, not a separate top-level
                   tool. Only shown once a relevant brush is active, since it
-                  has nothing to modify otherwise. Water deliberately excluded
-                  (issue #205) — it's always click-to-flood-fill; a stale
-                  'rectangle' mode left over from switching from another tool
-                  made Water look broken (a rectangle over ordinary ground
-                  matches no level-(-1) tile, so nothing visibly happens). */}
-              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || placingSid !== null) && (
+                  has nothing to modify otherwise. Water and Ramp deliberately
+                  excluded (issue #205, and user-requested for Ramp — it's
+                  always a single structural tile, never an area/rectangle
+                  fill); a stale 'rectangle' mode left over from switching
+                  from another tool made Water look broken (a rectangle over
+                  ordinary ground matches no level-(-1) tile, so nothing
+                  visibly happens) — Ramp's own onPointerDown branch ignores
+                  interactionMode entirely for the same reason. */}
+              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || placingSid !== null) && (
                 <>
                   <div className="flex-1" />
                   {(obstacleBrushActive || treesActive || interactableActive || squadActive || resourceActive) && (
@@ -4363,7 +4345,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   already select their own explicit region, so radius has
                   nothing to modify for either. Ramp/Road are deliberately
                   excluded too — always single-tile, no brush to size. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive) && (
+              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
                   <Button
