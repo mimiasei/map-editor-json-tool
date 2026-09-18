@@ -15,8 +15,11 @@
 // sub-category dropdown, reusing decoration-subcategories.ts /
 // interactable-subcategories.ts verbatim) since only those two have a real
 // sub-category breakdown. Animals/F/X/Spawners/Resources have no such
-// breakdown, so they stay plain single-click pills. Biome and (Units-mode)
-// Tier are pure multi-value dropdowns with no separate master toggle.
+// breakdown, so they stay plain pills on their own row — but single-select
+// (only one of the four active at a time), unlike Decorations/Interactables
+// which each toggle independently. Biome and (Units-mode) Tier are pure
+// multi-value dropdowns (default: everything selected) with no separate
+// master toggle.
 
 import { useMemo, useState } from 'react'
 import { Search, Settings, X, ChevronDown } from 'lucide-react'
@@ -107,20 +110,22 @@ const FILTER_STORAGE_KEY = 'oe-object-browser-filter'
 
 interface StoredFilter {
   types: TypeFilterKey[]
-  biomes: BiomeId[]
+  plainType: TypeFilterKey | null
+  biomes: Record<BiomeId, boolean>
   mode: BrowseMode
   fractions: string[]
-  tiers: number[]
+  tiers: Record<number, boolean>
   decorationSub: Record<PanelDecorationSubcategory, boolean>
   interactableSub: Record<InteractableSubcategory, boolean>
   showCampaign: boolean
   showCustom: boolean
 }
 
-// Sub-category filters default every key to `true` ("All" selected) — any
-// key missing from a stored (older) save also defaults `true`, so a
-// newly-added sub-category doesn't silently start hidden for existing users.
-function buildSubFilterDefaults<T extends string>(
+// Sub-category (and Biome/Tier) filters default every key to `true` ("All"
+// selected) — any key missing from a stored (older) save also defaults
+// `true`, so a newly-added sub-category doesn't silently start hidden for
+// existing users.
+function buildSubFilterDefaults<T extends string | number>(
   order: T[],
   stored: Partial<Record<T, boolean>> | undefined,
 ): Record<T, boolean> {
@@ -135,10 +140,11 @@ function loadStoredFilter(): StoredFilter {
   } catch { /* ignore */ }
   return {
     types: Array.isArray(parsed.types) ? parsed.types : [],
-    biomes: Array.isArray(parsed.biomes) ? parsed.biomes : [],
+    plainType: PLAIN_TYPE_FILTER_ORDER.includes(parsed.plainType as TypeFilterKey) ? (parsed.plainType as TypeFilterKey) : null,
+    biomes: buildSubFilterDefaults(BIOME_ORDER, parsed.biomes as Partial<Record<BiomeId, boolean>> | undefined),
     mode: parsed.mode === 'creatures' ? 'creatures' : 'objects',
     fractions: Array.isArray(parsed.fractions) ? parsed.fractions : [],
-    tiers: Array.isArray(parsed.tiers) ? parsed.tiers : [],
+    tiers: buildSubFilterDefaults(TIER_ORDER, parsed.tiers as Partial<Record<number, boolean>> | undefined),
     decorationSub: buildSubFilterDefaults(PANEL_DECORATION_SUBCATEGORY_ORDER, parsed.decorationSub),
     interactableSub: buildSubFilterDefaults(INTERACTABLE_SUBCATEGORY_ORDER, parsed.interactableSub),
     showCampaign: parsed.showCampaign === true,
@@ -231,10 +237,11 @@ function unitTypeLabel(aiType: string | undefined): string | null {
 export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placingCreatureId, onPickCreature, onClose }: Props) {
   const initialFilter = useMemo(loadStoredFilter, [])
   const [typeFilter, setTypeFilter] = useState<Set<TypeFilterKey>>(() => new Set(initialFilter.types))
-  const [biomeFilter, setBiomeFilter] = useState<Set<BiomeId>>(() => new Set(initialFilter.biomes))
+  const [plainTypeFilter, setPlainTypeFilter] = useState<TypeFilterKey | null>(initialFilter.plainType)
+  const [biomeFilter, setBiomeFilter] = useState<Record<BiomeId, boolean>>(initialFilter.biomes)
   const [mode, setMode] = useState<BrowseMode>(initialFilter.mode)
   const [fractionFilter, setFractionFilter] = useState<Set<string>>(() => new Set(initialFilter.fractions))
-  const [tierFilter, setTierFilter] = useState<Set<number>>(() => new Set(initialFilter.tiers))
+  const [tierFilter, setTierFilter] = useState<Record<number, boolean>>(initialFilter.tiers)
   const [decorationSubFilter, setDecorationSubFilter] = useState<Record<PanelDecorationSubcategory, boolean>>(
     initialFilter.decorationSub,
   )
@@ -248,8 +255,8 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
 
   const persist = (next: Partial<StoredFilter>) => {
     saveStoredFilter({
-      types: [...typeFilter], biomes: [...biomeFilter], mode, fractions: [...fractionFilter],
-      tiers: [...tierFilter], decorationSub: decorationSubFilter, interactableSub: interactableSubFilter,
+      types: [...typeFilter], plainType: plainTypeFilter, biomes: biomeFilter, mode, fractions: [...fractionFilter],
+      tiers: tierFilter, decorationSub: decorationSubFilter, interactableSub: interactableSubFilter,
       showCampaign, showCustom,
       ...next,
     })
@@ -263,32 +270,45 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       return next
     })
   }
-  // Biome/Tier are plain multi-value dropdowns with an "All" row standing in
-  // for "nothing excluded" — toggling one while every item is implicitly
-  // selected (an empty set) must start from the full list minus that item,
-  // not from an empty list plus it, or unchecking the first box would
-  // narrow the view to just that one item instead of excluding it. Collapses
-  // back to the canonical empty set once everything is included again, so a
-  // biome/tier added later isn't silently excluded by a stale saved filter.
-  const toggleBiome = (b: BiomeId) => {
-    setBiomeFilter((prev) => {
-      const effective = prev.size === 0 ? new Set(BIOME_ORDER) : new Set(prev)
-      if (effective.has(b)) effective.delete(b)
-      else effective.add(b)
-      const next = effective.size === BIOME_ORDER.length ? new Set<BiomeId>() : effective
-      persist({ biomes: [...next] })
+  // Animals/F/X/Spawners/Resources are single-select (only one active at a
+  // time, unlike Decorations/Interactables which toggle independently) —
+  // clicking the currently-active one deselects it back to "show all four".
+  const togglePlainType = (t: TypeFilterKey) => {
+    setPlainTypeFilter((prev) => {
+      const next = prev === t ? null : t
+      persist({ plainType: next })
       return next
     })
   }
-  const toggleTier = (t: number) => {
-    setTierFilter((prev) => {
-      const effective = prev.size === 0 ? new Set(TIER_ORDER) : new Set(prev)
-      if (effective.has(t)) effective.delete(t)
-      else effective.add(t)
-      const next = effective.size === TIER_ORDER.length ? new Set<number>() : effective
-      persist({ tiers: [...next] })
+  // Biome/Tier use the same Record-of-booleans "All" convention as the
+  // Decorations/Interactables sub-category dropdowns above (default every
+  // key true) rather than a Set — a Set can't distinguish "everything
+  // selected" from "nothing selected" when both display as "All" collapsed
+  // to empty, which is exactly what made the "All" checkbox unable to
+  // actually deselect everything.
+  const toggleBiome = (b: BiomeId) => {
+    setBiomeFilter((prev) => {
+      const next = { ...prev, [b]: !prev[b] }
+      persist({ biomes: next })
       return next
     })
+  }
+  const setAllBiomes = (value: boolean) => {
+    const next = Object.fromEntries(BIOME_ORDER.map((b) => [b, value])) as Record<BiomeId, boolean>
+    setBiomeFilter(next)
+    persist({ biomes: next })
+  }
+  const toggleTier = (t: number) => {
+    setTierFilter((prev) => {
+      const next = { ...prev, [t]: !prev[t] }
+      persist({ tiers: next })
+      return next
+    })
+  }
+  const setAllTiers = (value: boolean) => {
+    const next = Object.fromEntries(TIER_ORDER.map((t) => [t, value])) as Record<number, boolean>
+    setTierFilter(next)
+    persist({ tiers: next })
   }
   const toggleFraction = (f: string) => {
     setFractionFilter((prev) => {
@@ -343,9 +363,18 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
   const entries = useMemo(() => {
     const all = catalog?.mapObjects ?? []
     const q = query.trim().toLowerCase()
-    const wantedBiomes = biomeFilter.size > 0 ? [...biomeFilter].map((b) => BIOME_ID_TO_CATALOG_BIOME[b]) : null
+    const selectedBiomes = BIOME_ORDER.filter((b) => biomeFilter[b])
+    const wantedBiomes = selectedBiomes.length < BIOME_ORDER.length
+      ? selectedBiomes.map((b) => BIOME_ID_TO_CATALOG_BIOME[b])
+      : null
+    // Decorations/Interactables (independently toggled) and the single-select
+    // Animals/F/X/Spawners/Resources group combine into one active-category
+    // set — any restriction from either narrows the list the same way the
+    // old single typeFilter Set used to.
+    const activeCategories = new Set<TypeFilterKey>(typeFilter)
+    if (plainTypeFilter) activeCategories.add(plainTypeFilter)
     return all.filter((o: CatalogMapObject) => {
-      if (typeFilter.size > 0 && !typeFilter.has(o.category as TypeFilterKey)) return false
+      if (activeCategories.size > 0 && !activeCategories.has(o.category as TypeFilterKey)) return false
       if (wantedBiomes && (!o.biome || !wantedBiomes.includes(o.biome))) return false
       // Safe cast: resolveDecorationSubcategory only ever returns 'animals'/
       // 'fx' when the real category is 'animals'/'fxs', which can't be true
@@ -358,14 +387,16 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       if (q && !o.name.toLowerCase().includes(q) && !o.id.toLowerCase().includes(q)) return false
       return true
     })
-  }, [catalog, typeFilter, biomeFilter, decorationSubFilter, interactableSubFilter, showCampaign, showCustom, query])
+  }, [catalog, typeFilter, plainTypeFilter, biomeFilter, decorationSubFilter, interactableSubFilter, showCampaign, showCustom, query])
 
   const creatureEntries = useMemo(() => {
     const all = catalog?.creatures ?? []
     const q = query.trim().toLowerCase()
+    const selectedTiers = TIER_ORDER.filter((t) => tierFilter[t])
+    const tierRestricted = selectedTiers.length < TIER_ORDER.length
     return all.filter((c) => {
       if (fractionFilter.size > 0 && !fractionFilter.has(c.fraction)) return false
-      if (tierFilter.size > 0 && !tierFilter.has(c.tier)) return false
+      if (tierRestricted && !selectedTiers.includes(c.tier)) return false
       if (!showCampaign && c.id.includes('campaign')) return false
       if (!showCustom && c.id.includes('custom')) return false
       if (q && !c.name.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q)) return false
@@ -433,7 +464,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
               <>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={pillClass(biomeFilter.size > 0, 'px-2 rounded flex items-center gap-0.5')}>
+                    <button className={pillClass(BIOME_ORDER.some((b) => !biomeFilter[b]), 'px-2 rounded flex items-center gap-0.5')}>
                       Biomes
                       <ChevronDown className="h-3 w-3" />
                     </button>
@@ -442,8 +473,8 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="obj-browser-biome-all"
-                        checked={biomeFilter.size === 0}
-                        onCheckedChange={() => { setBiomeFilter(new Set()); persist({ biomes: [] }) }}
+                        checked={BIOME_ORDER.every((b) => biomeFilter[b])}
+                        onCheckedChange={(v) => setAllBiomes(Boolean(v))}
                       />
                       <Label htmlFor="obj-browser-biome-all" className="text-xs cursor-pointer font-medium">All</Label>
                     </div>
@@ -452,7 +483,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                         <div key={b} className="flex items-center gap-2">
                           <Checkbox
                             id={`obj-browser-biome-${b}`}
-                            checked={biomeFilter.size === 0 || biomeFilter.has(b)}
+                            checked={biomeFilter[b]}
                             onCheckedChange={() => toggleBiome(b)}
                           />
                           <Label htmlFor={`obj-browser-biome-${b}`} className="text-xs cursor-pointer">{BIOME_NAMES[b]}</Label>
@@ -549,12 +580,6 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     </PopoverContent>
                   </Popover>
                 </div>
-
-                {PLAIN_TYPE_FILTER_ORDER.map((t) => (
-                  <FilterPill key={t} active={typeFilter.has(t)} onClick={() => toggleType(t)}>
-                    {TYPE_FILTER_LABELS[t]}
-                  </FilterPill>
-                ))}
               </>
             ) : (
               <>
@@ -569,7 +594,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 )}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={pillClass(tierFilter.size > 0, 'px-2 rounded flex items-center gap-0.5')}>
+                    <button className={pillClass(TIER_ORDER.some((t) => !tierFilter[t]), 'px-2 rounded flex items-center gap-0.5')}>
                       Tier
                       <ChevronDown className="h-3 w-3" />
                     </button>
@@ -578,8 +603,8 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="obj-browser-tier-all"
-                        checked={tierFilter.size === 0}
-                        onCheckedChange={() => { setTierFilter(new Set()); persist({ tiers: [] }) }}
+                        checked={TIER_ORDER.every((t) => tierFilter[t])}
+                        onCheckedChange={(v) => setAllTiers(Boolean(v))}
                       />
                       <Label htmlFor="obj-browser-tier-all" className="text-xs cursor-pointer font-medium">All</Label>
                     </div>
@@ -588,7 +613,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                         <div key={t} className="flex items-center gap-2">
                           <Checkbox
                             id={`obj-browser-tier-${t}`}
-                            checked={tierFilter.size === 0 || tierFilter.has(t)}
+                            checked={tierFilter[t]}
                             onCheckedChange={() => toggleTier(t)}
                           />
                           <Label htmlFor={`obj-browser-tier-${t}`} className="text-xs cursor-pointer">Tier {t}</Label>
@@ -622,6 +647,15 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
             </PopoverContent>
           </Popover>
         </div>
+        {mode === 'objects' && (
+          <div className="flex flex-wrap gap-1">
+            {PLAIN_TYPE_FILTER_ORDER.map((t) => (
+              <FilterPill key={t} active={plainTypeFilter === t} onClick={() => togglePlainType(t)}>
+                {TYPE_FILTER_LABELS[t]}
+              </FilterPill>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto py-1">
