@@ -1279,28 +1279,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // ── Interactable — interactableActive/interactableBiomePurity/
   // interactableAllowHighContrast/interactablePools declared earlier (near
   // isValidRampNode) so applyRectangleFill's own 'interactable' branch can
-  // reference them. Always exactly one tile per position, never scaled by
-  // brushRadius (same as Road — see its own doc comment). A node already
-  // staged this stroke keeps its first pick rather than re-rolling on every
-  // revisit, matching how re-dragging over an already-painted road tile
-  // doesn't change anything either.
+  // reference them. Scaled by brushRadius/brushDisperse same as Terrain/
+  // Level/Zone (user-requested — unlike Road/Ramp, which stay single-tile).
+  // A node already staged this stroke keeps its first pick rather than
+  // re-rolling on every revisit, matching how re-dragging over an
+  // already-painted road tile doesn't change anything either.
   const interactablePaintingRef = useRef(false)
   const [interactableStaged, setInteractableStaged] = useState<Map<number, string>>(new Map())
   const stageInteractableNode = useCallback((node: number) => {
-    if (!interactablePools || interactableStaged.has(node)) return
-    const biome = tilesMap[node]
-    if (biome === undefined || biome < 1 || biome > 7) return
-    const sid = sampleInteractable(biome as BiomeId, interactablePools, {
-      crossBiomeChance: 1 - interactableBiomePurity,
-      allowHighContrastBiomes: interactableAllowHighContrast,
-    })
-    if (!sid) return
+    if (!interactablePools) return
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+      .filter((n) => !interactableStaged.has(n))
+    if (tiles.length === 0) return
     setInteractableStaged((prev) => {
       const next = new Map(prev)
-      next.set(node, sid)
+      for (const n of tiles) {
+        const biome = tilesMap[n]
+        if (biome === undefined || biome < 1 || biome > 7) continue
+        const sid = sampleInteractable(biome as BiomeId, interactablePools, {
+          crossBiomeChance: 1 - interactableBiomePurity,
+          allowHighContrastBiomes: interactableAllowHighContrast,
+        })
+        if (sid) next.set(n, sid)
+      }
       return next
     })
-  }, [interactablePools, interactableStaged, tilesMap, interactableBiomePurity, interactableAllowHighContrast])
+  }, [interactablePools, interactableStaged, tilesMap, interactableBiomePurity, interactableAllowHighContrast, brushRadius, brushDisperse, sizeX, sizeZ])
   const commitInteractableStroke = useCallback(() => {
     if (interactableStaged.size === 0) return
     const additions = [...interactableStaged.entries()].map(([node, sid]) => ({ node, sid }))
@@ -1314,24 +1318,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // ── Encounter (issue #203) — squadActive/squadDifficulties/squadBiomePurity/
   // squadPlaceResourceAbove declared earlier (near interactablePools) so
-  // applyRectangleFill's own 'squad' branch can reference them. Always
-  // exactly one tile per position, same as Landmark/Road — a random-squad
-  // guard is a single spawner, not an area brush. A node already staged
-  // this stroke keeps its first roll rather than re-rolling on every
-  // revisit, matching Interactable's own "first pick sticks" rule.
+  // applyRectangleFill's own 'squad' branch can reference them. Scaled by
+  // brushRadius/brushDisperse same as Terrain/Level/Zone (user-requested —
+  // each tile in the brushed area gets its own independently-rolled guard,
+  // not a single spawner per drag position). A node already staged this
+  // stroke keeps its first roll rather than re-rolling on every revisit,
+  // matching Interactable's own "first pick sticks" rule.
   const squadPaintingRef = useRef(false)
   const [squadStaged, setSquadStaged] = useState<Map<number, { requestedValue: number; fraction: string }>>(new Map())
   const stageSquadNode = useCallback((node: number) => {
-    if (squadStaged.has(node)) return
-    const range = pickSquadRange(squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights)
-    const biome = tilesMap[node]
-    const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+      .filter((n) => !squadStaged.has(n))
+    if (tiles.length === 0) return
     setSquadStaged((prev) => {
       const next = new Map(prev)
-      next.set(node, { requestedValue: randomInRange(range.min, range.max), fraction })
+      for (const n of tiles) {
+        const range = pickSquadRange(squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights)
+        const biome = tilesMap[n]
+        const fraction = biome !== undefined && biome >= 1 && biome <= 7 ? sampleFraction(biome as BiomeId, squadBiomePurity) : ''
+        next.set(n, { requestedValue: randomInRange(range.min, range.max), fraction })
+      }
       return next
     })
-  }, [squadStaged, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, tilesMap])
+  }, [squadStaged, squadDifficulties, settings.squadDifficultyRanges, settings.squadRandomWeights, squadBiomePurity, tilesMap, brushRadius, brushDisperse, sizeX, sizeZ])
   const commitSquadStroke = useCallback(() => {
     if (squadStaged.size === 0) return
     const additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
@@ -1350,14 +1359,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setSquadStaged(new Map())
   }
 
-    // ── Resource —
-    // random resource
+    // ── Resource — scaled by brushRadius/brushDisperse same as
+    // Terrain/Level/Zone (user-requested), unlike Road/Ramp which stay
+    // single-tile. A node already staged this stroke keeps its first pick,
+    // matching Interactable/Encounter's own "first pick sticks" rule.
     const resourcePaintingRef = useRef(false)
     const [resourceStaged, setResourceStaged] = useState<Map<number, string>>(new Map())
     const stageResourceNode = useCallback((node: number) => {
-        if (resourceStaged.has(node)) return
-        setResourceStaged((prev) => new Map(prev).set(node, sampleResource([])))
-    }, [resourceStaged])
+        const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+          .filter((n) => !resourceStaged.has(n))
+        if (tiles.length === 0) return
+        setResourceStaged((prev) => {
+          const next = new Map(prev)
+          for (const n of tiles) next.set(n, sampleResource([]))
+          return next
+        })
+    }, [resourceStaged, brushRadius, brushDisperse, sizeX, sizeZ])
     const commitResourceStroke = useCallback(() => {
         if (resourceStaged.size === 0) return
         const additions: { node: number; sid: string; randomSquadOverrides?: { requestedValue: number; fraction: string } }[] = []
@@ -3482,14 +3499,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Brush-shape cursor preview (requested follow-up to the brush-radius
   // control) — same gating as the Size stepper's own visibility (Freehand
-  // mode, Terrain-non-Bucket/Level/Obstacles): shows the actual circular
-  // tilesInRadius() shape centered on the hovered tile, not just a plain
-  // single-tile square, so the brush's real footprint is visible before
-  // every click/drag rather than only after. Bounded by brushRadius (max
-  // 5 -> at most ~69 tiles), a tiny cursor-following set, not a per-map-
-  // tile render — doesn't reintroduce the one-DOM-node-per-map-tile
-  // pattern this codebase avoids.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null)
+  // mode, Terrain-non-Bucket/Level/Obstacles/Landmark/Encounter/Resource):
+  // shows the actual circular tilesInRadius() shape centered on the hovered
+  // tile, not just a plain single-tile square, so the brush's real
+  // footprint is visible before every click/drag rather than only after.
+  // Bounded by brushRadius (max 5 -> at most ~69 tiles), a tiny cursor-
+  // following set, not a per-map-tile render — doesn't reintroduce the
+  // one-DOM-node-per-map-tile pattern this codebase avoids. Ramp/Road stay
+  // deliberately excluded — always single-tile, no brush shape to preview.
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
     return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
@@ -4339,11 +4357,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               )}
               {/* Brush-size radius (issue #193 punch-list item, never wired
                   up until now) — only meaningful for a freehand per-tile
-                  brush: Terrain (non-Bucket), Level, Obstacles. Water is
-                  click-to-flood-fill regardless of interactionMode, and
-                  Bucket/Rectangle already select their own explicit region,
-                  so radius has nothing to modify for either. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null) && (
+                  brush: Terrain (non-Bucket), Level, Obstacles, Landmark,
+                  Encounter, Resource. Water is click-to-flood-fill
+                  regardless of interactionMode, and Bucket/Rectangle
+                  already select their own explicit region, so radius has
+                  nothing to modify for either. Ramp/Road are deliberately
+                  excluded too — always single-tile, no brush to size. */}
+              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
                   <Button
