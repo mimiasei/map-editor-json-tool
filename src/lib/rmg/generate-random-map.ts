@@ -30,6 +30,7 @@
 import {
   addObjectInstance,
   addObjectInstances,
+  paintClimbTiles,
   paintLevelTiles,
   paintRiverTiles,
   paintRoadTiles,
@@ -44,6 +45,7 @@ import {
   type MapContainer,
 } from '@/lib/map-write'
 import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
+import { isElevationWallTile } from '@/lib/map-grid/passability'
 import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
@@ -57,6 +59,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, s
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
+import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
@@ -92,6 +95,15 @@ export interface GenerateRandomMapOptions {
    *  island large. See generate-terrain.ts's own doc comment on this same
    *  option for the full rationale. Defaults to 0.4. */
   islandLandRatio?: number
+  /** Overall hill (level 1) amount, 0-1 — see zone-elevation.ts's own header
+   *  comment. Unlike water, hills/valleys are eligible on BOTH player and
+   *  neutral zones (a player's own spawn tile itself stays protected via
+   *  the same anchor exclusion water gets). Defaults to 0 (opt-in — no
+   *  behavior change unless set). */
+  hillChance?: number
+  /** Overall dry-valley (level -1, decoupled from water) amount, 0-1 — same
+   *  shape as `hillChance`. Defaults to 0. */
+  valleyChance?: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
   obstacleDensity?: number
   /** 0-1 fraction of the chance to have mountains in the zone boundary walls. */
@@ -209,7 +221,7 @@ export interface GenerateRandomMapResult {
 }
 
 export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): GenerateRandomMapResult {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -225,9 +237,9 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // since it returns immediately after this) to have generateTerrain
   // compute water itself.
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
-    computeWater: terrainOnly,
+    computeWater: terrainOnly, computeElevation: terrainOnly,
   })
   if (terrainOnly) {
     return { container: terrain.container, balanceReport: { score: null, findings: [], summary: { zones: 0, players: 0, totalWealth: 0, wealthPerPlayer: 0, wealthSpread: 0 } } }
@@ -366,17 +378,64 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
 
   if (waterChangesAll.length > 0) {
-    block2 = paintWaterTiles(block2, waterChangesAll)
-    block2 = paintLevelTiles(block2, levelChangesAll)
     for (const node of waterNodesAll) {
       state.blocked.add(node)
       state.usedAnchors.add(node)
     }
   }
+
+  // Elevation (hills + dry valleys) — same timing as water above (before
+  // roads/rivers, so their own BFS pathfinding already sees the real wall
+  // tiles as blocked; after object population, so blobs avoid overlapping
+  // a real mine/dwelling/guard) — see zone-elevation.ts's own header
+  // comment. Unlike water, both player AND neutral zones are eligible.
+  let climbChangesAll: { node: number; climb: 1 }[] = []
+  let elevationNodesAll = new Set<number>()
+  {
+    const excludedNodes = new Set(zoneAnchorNode.values())
+    const hillResult = scatterZoneElevation({
+      sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
+      blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'hill', chance: hillChance,
+      reservedNodes: waterNodesAll,
+    })
+    const valleyResult = scatterZoneElevation({
+      sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
+      blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'valley', chance: valleyChance,
+      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]),
+    })
+    levelChangesAll = [...levelChangesAll, ...hillResult.levelChanges, ...valleyResult.levelChanges]
+    climbChangesAll = [...hillResult.climbChanges, ...valleyResult.climbChanges]
+    elevationNodesAll = new Set([...hillResult.elevatedNodes, ...valleyResult.elevatedNodes])
+  }
+
+  if (waterChangesAll.length > 0) block2 = paintWaterTiles(block2, waterChangesAll)
+  if (levelChangesAll.length > 0) block2 = paintLevelTiles(block2, levelChangesAll)
+  if (climbChangesAll.length > 0) block2 = paintClimbTiles(block2, climbChangesAll)
+
   const levelsMapFinal = new Array(tileCount).fill(0)
   const waterMapFinal = new Array(tileCount).fill(0)
+  const climbsMapFinal = new Array(tileCount).fill(0)
   for (const { node, waterId } of waterChangesAll) waterMapFinal[node] = waterId
   for (const { node, level } of levelChangesAll) levelsMapFinal[node] = level
+  for (const { node, climb } of climbChangesAll) climbsMapFinal[node] = climb
+
+  // Only elevation WALL tiles (passability.ts's real rule) are actually
+  // impassable — most of a hill/valley (interior + any boundary tile with a
+  // ramp neighbor) is ordinary walkable ground. Added to `state.blocked`
+  // NOW, before roads/rivers route below, same reason water's own nodes
+  // were added above. Kept as its own named set (not just folded into
+  // `state.blocked`) so the road loop's own water-partition repair below
+  // can retry excluding these too, and punch a ramp through the specific
+  // wall tile a route actually needed instead of just failing to connect.
+  const elevationWallNodesAll = new Set<number>()
+  if (elevationNodesAll.size > 0) {
+    for (const node of elevationNodesAll) {
+      if (isElevationWallTile(node, sizeX, sizeZ, levelsMapFinal, climbsMapFinal)) {
+        elevationWallNodesAll.add(node)
+        state.blocked.add(node)
+      }
+    }
+  }
 
   // Roads — one per zone-graph edge, connecting each pair's own anchor
   // tiles, routed around whatever's already placed OR flooded (water is
@@ -417,6 +476,11 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const roadIdByNode = new Map<number, number>()
   const roadPathsByEdge = new Map<string, number[]>()
   const reclaimedWaterNodes = new Set<number>()
+  // A road route that needed to cross an elevation wall gets a ramp punched
+  // through the exact tile it used (never a level change — see the repair
+  // block below), same "carve exactly what a real route needed" convention
+  // as `reclaimedWaterNodes` above.
+  const roadClimbChanges: { node: number; climb: 1 }[] = []
   // "Points of interest" a road should prefer over a zone's own abstract
   // anchor — real user request. Mines (`MINE_SIDS`, this file's own local
   // copy — zone-guard-scatter.ts/zone-population.ts each keep their own
@@ -586,9 +650,16 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     // "land bridge" carved exactly where required, rather than the road
     // crossing open water (CLAUDE.md's own standing rule this session
     // already fixed once: roads can never cross water).
-    if (!path && waterNodesAll.size > 0) {
-      const blockedWithoutWater = new Set([...state.blocked].filter((n) => !waterNodesAll.has(n)))
-      const repairPath = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWater, combinedCost)
+    // Same repair, extended to elevation walls (a hill/valley whose ramps
+    // happen not to cover the one crossing a route needed) — retrying with
+    // BOTH water and elevation walls excluded at once, since either (or
+    // both together) could be the real partition; a wall tile the repair
+    // path used gets a ramp punched through it (climb=1, level UNCHANGED —
+    // unlike water, there's no "flatten it back to land" equivalent for a
+    // hill/valley, a ramp is the correct fix) instead of being reclaimed.
+    if (!path && (waterNodesAll.size > 0 || elevationWallNodesAll.size > 0)) {
+      const blockedWithoutWaterOrWalls = new Set([...state.blocked].filter((n) => !waterNodesAll.has(n) && !elevationWallNodesAll.has(n)))
+      const repairPath = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWaterOrWalls, combinedCost)
       if (repairPath) {
         for (const node of repairPath) {
           if (waterNodesAll.has(node)) {
@@ -596,6 +667,20 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
             reclaimedWaterNodes.add(node)
             state.blocked.delete(node)
             state.usedAnchors.delete(node)
+          } else if (elevationWallNodesAll.has(node)) {
+            // A ramp is only ever legal on the LOWER side of the boundary
+            // (isValidRampNode's real rule — MapGridDialog.tsx) — for a
+            // valley wall tile (level -1) that's the tile itself; for a
+            // hill wall tile (level 1) the ramp must go on the adjacent
+            // level-0 tile instead, never on the elevated tile itself (no
+            // real climbsMap===1 tile is ever found at level 1).
+            const rampNode = levelsMapFinal[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMapFinal)
+            elevationWallNodesAll.delete(node)
+            if (rampNode !== null && climbsMapFinal[rampNode] !== 1) {
+              climbsMapFinal[rampNode] = 1
+              roadClimbChanges.push({ node: rampNode, climb: 1 })
+            }
+            state.blocked.delete(node)
           }
         }
         path = repairPath
@@ -688,6 +773,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       levelsMapFinal[node] = 0
     }
   }
+  if (roadClimbChanges.length > 0) block2 = paintClimbTiles(block2, roadClimbChanges)
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
   }
@@ -846,7 +932,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     objectGroups,
     sizeX,
     sizeZ,
-    { levelsMap: levelsMapFinal, climbsMap: new Array(tileCount).fill(0), waterMap: waterMapFinal },
+    { levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal },
     catalog,
     catalogById,
     decorativeIds,
@@ -869,9 +955,17 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     sizeX, sizeZ, zoneIds: allZoneIds, zoneIdByNode, objectGroups,
     decorativePlacements: [...obstaclePlacements, ...boundaryResult.wallPlacements],
     spawnerSid: playerSpawnerSid,
-    catalog, catalogById, levelsMap: levelsMapFinal, waterMap: waterMapFinal,
+    catalog, catalogById, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal,
     portalAdjacency,
   })
+  // A zone repairSealedZones opened by adding a ramp (its own second repair
+  // tactic, for the case decorative-obstacle removal alone can't fix — a
+  // real elevation wall, not a decorative object) needs that ramp painted
+  // into the actual container too, same as every other climb tile above.
+  if (sealedResult.addedClimbChanges.length > 0) {
+    block2 = paintClimbTiles(block2, sealedResult.addedClimbChanges)
+    for (const { node } of sealedResult.addedClimbChanges) climbsMapFinal[node] = 1
+  }
   if (sealedResult.sealedZoneIds.length > 0) {
     logWarn(`Random map generation: ${sealedResult.sealedZoneIds.length} zone(s) had no reachable opening at all — repaired by removing bordering decorative obstacles`)
   }

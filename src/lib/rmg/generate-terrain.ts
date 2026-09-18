@@ -39,6 +39,7 @@
 
 import {
   buildBlankMap,
+  paintClimbTiles,
   paintLevelTiles,
   paintTerrainTiles,
   paintWaterTiles,
@@ -47,6 +48,7 @@ import {
   type MapContainer,
 } from '@/lib/map-write'
 import {computeFootprintTiles, clampAnchorToFootprintBounds, protectedNeighborNodes} from '@/lib/map-grid/footprint'
+import { isElevationWallTile } from '@/lib/map-grid/passability'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
@@ -56,6 +58,7 @@ import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
 import { computeIslandZones } from './zone-islands'
 import { scatterZoneWater } from './zone-water'
+import { scatterZoneElevation } from './zone-elevation'
 
 export { BLANK_MAP_BIOME_NAMES }
 
@@ -109,6 +112,21 @@ export interface GenerateTerrainOptions {
    *  sets this explicitly still looks like it did before this option
    *  existed. */
   islandLandRatio?: number
+  /** Overall hill (level 1) amount, 0-1, same shape as `waterChance` — see
+   *  zone-elevation.ts's own header comment. Defaults to 0 (opt-in; no
+   *  behavior change for a caller that never sets this). Only takes effect
+   *  when `computeElevation` is true. */
+  hillChance?: number
+  /** Overall dry-valley (level -1, NOT water) amount, 0-1 — same shape as
+   *  `hillChance`. Defaults to 0. */
+  valleyChance?: number
+  /** See this file's own header comment on `computeWater` — same reasoning
+   *  applies to elevation: the real full-pipeline generator computes its
+   *  own hills/valleys later (generate-random-map.ts, after object
+   *  population, so blobs avoid overlapping real placed objects) and
+   *  passes false here; the terrain-only final mode and live-preview flow
+   *  have no objects at this point anyway, so they pass true. */
+  computeElevation?: boolean
   /** false for the "terrain only" final mode (no spawners at all — the map
    *  maker places everything themselves) and for the real generator's own
    *  initial phase when its own `terrainOnly` option is set; true for the
@@ -164,6 +182,7 @@ export interface TerrainResult {
   waterNodesAll: Set<number>
   waterMapFinal: number[]
   levelsMapFinal: number[]
+  climbsMapFinal: number[]
   /** Zone-graph edge keys (`"${min}:${max}"`) a Stage 1 game-template import
    *  declared as `connectionType: "Portal"` — the road loop
    *  (generate-random-map.ts) treats these as portals unconditionally,
@@ -211,6 +230,7 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
+    hillChance = 0, valleyChance = 0, computeElevation = false,
     enabledBiomes, gameTemplateJson,
   } = options
   const tileCount = sizeX * sizeZ
@@ -344,17 +364,56 @@ export function generateTerrain(
   }
 
   if (waterChangesAll.length > 0) {
-    block2 = paintWaterTiles(block2, waterChangesAll)
-    block2 = paintLevelTiles(block2, levelChangesAll)
     for (const node of waterNodesAll) {
       state.blocked.add(node)
       state.usedAnchors.add(node)
     }
   }
+
+  // Elevation (hills + dry valleys) — see zone-elevation.ts's own header
+  // comment for why this runs at the same point water does (before any
+  // object exists, for the terrain-only/preview flows this function
+  // serves) and why it's gated behind its own `computeElevation` flag
+  // rather than `computeWater` (the real full-pipeline generator computes
+  // both later itself — see this file's own `computeWater` doc comment,
+  // same reasoning applies here).
+  let climbChangesAll: { node: number; climb: 1 }[] = []
+  if (computeElevation) {
+    const excludedNodes = new Set(zoneAnchorNode.values())
+    const hillResult = scatterZoneElevation({
+      sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
+      blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'hill', chance: hillChance,
+      reservedNodes: waterNodesAll,
+    })
+    const valleyResult = scatterZoneElevation({
+      sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
+      blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'valley', chance: valleyChance,
+      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]),
+    })
+    levelChangesAll = [...levelChangesAll, ...hillResult.levelChanges, ...valleyResult.levelChanges]
+    climbChangesAll = [...hillResult.climbChanges, ...valleyResult.climbChanges]
+  }
+
+  if (waterChangesAll.length > 0) block2 = paintWaterTiles(block2, waterChangesAll)
+  if (levelChangesAll.length > 0) block2 = paintLevelTiles(block2, levelChangesAll)
+  if (climbChangesAll.length > 0) block2 = paintClimbTiles(block2, climbChangesAll)
+
   const levelsMapFinal = new Array(tileCount).fill(0)
   const waterMapFinal = new Array(tileCount).fill(0)
+  const climbsMapFinal = new Array(tileCount).fill(0)
   for (const { node, waterId } of waterChangesAll) waterMapFinal[node] = waterId
   for (const { node, level } of levelChangesAll) levelsMapFinal[node] = level
+  for (const { node, climb } of climbChangesAll) climbsMapFinal[node] = climb
+
+  // Only elevation WALL tiles (passability.ts's real rule) are actually
+  // impassable — most of a hill/valley (interior + any boundary tile with a
+  // ramp neighbor) is ordinary walkable ground, unlike water above, which
+  // blocks every one of its own tiles unconditionally.
+  if (climbChangesAll.length > 0 || levelChangesAll.length > 0) {
+    for (let node = 0; node < tileCount; node++) {
+      if (isElevationWallTile(node, sizeX, sizeZ, levelsMapFinal, climbsMapFinal)) state.blocked.add(node)
+    }
+  }
 
   const finalChunks = container.chunks.slice()
   finalChunks[1] = block2
@@ -363,7 +422,7 @@ export function generateTerrain(
   return {
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
-    waterNodesAll, waterMapFinal, levelsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
+    waterNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
   }

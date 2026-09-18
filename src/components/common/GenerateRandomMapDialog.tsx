@@ -111,6 +111,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
   const [islandsIncludePlayerZones, setIslandsIncludePlayerZones] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
   const [islandLandRatio, setIslandLandRatio] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
+  const [hillChance, setHillChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.hillChance)
+  const [valleyChance, setValleyChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
   const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
   const [interactableDensity, setInteractableDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
   const [mountainDensity, setMountainDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
@@ -207,9 +209,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             if (seed === undefined) return // handleTogglePreview always fills a seed in before entering 'terrain'
             const result = await previewTerrain({
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
-              waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread,
+              waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread,
               enabledBiomes: enabledBiomesList, gameTemplateJson: gameTemplate?.json,
-              rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true,
+              rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true, computeElevation: true,
             })
             if (!result) return // not Tauri
             terrain = result
@@ -232,7 +234,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -262,6 +264,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         waterChance,
         islandsIncludePlayerZones,
         islandLandRatio,
+        hillChance,
+        valleyChance,
         obstacleDensity,
         treasureDensity,
         objectVariety,
@@ -334,6 +338,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       waterChance,
       islandsIncludePlayerZones,
       islandLandRatio,
+      hillChance,
+      valleyChance,
       obstacleDensity,
       interactableDensity,
       mountainDensity,
@@ -375,6 +381,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setWaterChance(template.waterChance)
       setIslandsIncludePlayerZones(template.islandsIncludePlayerZones)
       setIslandLandRatio(template.islandLandRatio)
+      setHillChance(template.hillChance)
+      setValleyChance(template.valleyChance)
       setObstacleDensity(template.obstacleDensity)
       setTreasureDensity(template.treasureDensity)
       setObjectVariety(template.objectVariety)
@@ -408,6 +416,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
       setIslandsIncludePlayerZones(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
       setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
+      setHillChance(DEFAULT_TEMPLATE_OVERRIDES.hillChance)
+      setValleyChance(DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
       setObstacleDensity(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
       setInteractableDensity(DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
       setMountainDensity(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
@@ -624,6 +634,26 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   <Slider min={0} max={1} step={0.01} value={[islandLandRatio]} onValueChange={([v]) => setIslandLandRatio(v)} disabled={terrainLocked} />
                 </div>
               )}
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="How much of each zone's free area becomes raised hill terrain, and how likely a zone is to get one at all — unlike water, both player and neutral zones are eligible (a player's own start tile itself always stays flat). Every hill gets real ramp access.">
+                    Hills
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(hillChance)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.01} value={[hillChance]} onValueChange={([v]) => setHillChance(v)} disabled={terrainLocked} />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="How much of each zone's free area becomes lowered, DRY valley terrain (decoupled from water — a low tile doesn't have to be a lake). Both player and neutral zones are eligible. Every valley gets real ramp access.">
+                    Valleys
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(valleyChance)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.01} value={[valleyChance]} onValueChange={([v]) => setValleyChance(v)} disabled={terrainLocked} />
+              </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
