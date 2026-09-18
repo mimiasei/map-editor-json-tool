@@ -63,7 +63,7 @@ import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevatio
 import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
-import { reclaimWaterCollisions, repairSealedZones } from './zone-validation'
+import { reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
 import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport } from './balance-analyzer'
 import { extractGameRulesPatch, parseGameTemplateJson, deriveWaterOverrides, deriveObstacleOverrides } from './rmg-template-import'
 
@@ -971,6 +971,28 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   }
   if (sealedResult.stillSealedZoneIds.length > 0) {
     logWarn(`Random map generation: ${sealedResult.stillSealedZoneIds.length} zone(s) remained sealed even after decorative-obstacle removal (nothing removable bordered them — a real, non-decorative placement is the blocker) — a genuinely degenerate case`)
+  }
+
+  // repairSealedZones' own blind spot, confirmed on a real generated map
+  // (user-reported): a specific player's own spawner can sit in a small
+  // local pocket fully walled off by elevation while the rest of that same
+  // zone stays reachable via a different route, so the zone-level check
+  // above never fires even though that player's own start genuinely
+  // shipped unreachable. See zone-validation.ts's own doc comment.
+  const isolatedStartResult = repairIsolatedPlayerStarts({
+    sizeX, sizeZ, players, objectGroups, catalog, catalogById,
+    levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal,
+    portalAdjacency,
+  })
+  if (isolatedStartResult.addedClimbChanges.length > 0) {
+    block2 = paintClimbTiles(block2, isolatedStartResult.addedClimbChanges)
+    for (const { node } of isolatedStartResult.addedClimbChanges) climbsMapFinal[node] = 1
+  }
+  if (isolatedStartResult.isolatedOwners.length > 0) {
+    logWarn(`Random map generation: ${isolatedStartResult.isolatedOwners.length} player start(s) were isolated by elevation from every other player — repaired by punching a ramp through the bordering wall`)
+  }
+  if (isolatedStartResult.stillIsolatedOwners.length > 0) {
+    logWarn(`Random map generation: ${isolatedStartResult.stillIsolatedOwners.length} player start(s) remained isolated (no legal, unoccupied ramp spot bordered their own local pocket) — a genuinely degenerate case`)
   }
 
   const waterCollisionResult = reclaimWaterCollisions({
