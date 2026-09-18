@@ -97,8 +97,20 @@ export interface ZoneElevationResult {
  *  own hill/valley blob rather than genuine level-0 ground, and treating
  *  that as a valid "outside" ramp spot would place climb=1 on an already-
  *  elevated tile (real bug caught by this file's own verification script:
- *  a two-zone grid with hills on both sides produced exactly this). */
-function collectBoundaryCandidates(blob: Set<number>, elevatedNodes: Set<number>, sizeX: number, sizeZ: number): number[] {
+ *  a two-zone grid with hills on both sides produced exactly this).
+ *
+ *  ALSO hard-excludes `blocked` — a real bug found on an actual generated
+ *  map, not just synthetic tests: a candidate here is only ever screened
+ *  against elevation, never against what's already standing on the tile,
+ *  so an already-placed object's own footprint (including a player's own
+ *  city-spawner/hero-spawner anchor) could become a "boundary" candidate
+ *  and get a climb=1 marker stamped directly onto it — confirmed on a real
+ *  generation (`maps/map_elevation.map`, player 4's own city-spawner
+ *  anchor tile), and the map failed to load in the actual game because of
+ *  it. A ramp marker on a tile something is already standing on is
+ *  physically nonsensical (no real sample map has ever shown this) and
+ *  must never be produced, not just deprioritized. */
+function collectBoundaryCandidates(blob: Set<number>, elevatedNodes: Set<number>, blocked: Set<number>, sizeX: number, sizeZ: number): number[] {
   const rampNodes = new Set<number>()
   for (const node of blob) {
     const x = node % sizeX
@@ -108,7 +120,7 @@ function collectBoundaryCandidates(blob: Set<number>, elevatedNodes: Set<number>
       const nz = z + dz
       if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
       const n = nz * sizeX + nx
-      if (!elevatedNodes.has(n)) rampNodes.add(n)
+      if (!elevatedNodes.has(n) && !blocked.has(n)) rampNodes.add(n)
     }
   }
   return [...rampNodes]
@@ -118,10 +130,10 @@ function collectBoundaryCandidates(blob: Set<number>, elevatedNodes: Set<number>
  *  to the zone anchor), plus a bonus ramp per ~8 boundary tiles (capped at 5
  *  total) spaced at least 3 tiles apart from every ramp already chosen, so a
  *  large plateau/valley gets a few spread-out access points instead of one
- *  narrow chokepoint. Prefers a candidate not already in `avoid` (an
- *  already-placed object's own tile) but falls back to any candidate if
- *  every one is — a ramp marker doesn't itself block anything, so sharing a
- *  tile with an object's footprint is harmless, just not the first choice. */
+ *  narrow chokepoint. `candidates` is already hard-filtered against
+ *  `blocked`/elevated tiles by the caller (`collectBoundaryCandidates`) —
+ *  `avoid` here is a defensive extra tie-break only, never the sole thing
+ *  standing between a ramp and an occupied tile. */
 function selectRampNodes(
   candidates: number[], sizeX: number, anchorNode: number | undefined, avoid: Set<number>,
 ): number[] {
@@ -149,19 +161,20 @@ function selectRampNodes(
   return selected
 }
 
-/** The first 4-neighbor of `node` at level 0 — the only legal ramp spot for
- *  repairing a HILL wall tile specifically (a ramp is never placed on the
- *  elevated tile itself — see this file's own header comment on ramp
- *  placement direction). Used both by this file's own inline ramp
+/** The first 4-neighbor of `node` at level 0 (and, if `blocked` is given,
+ *  not already occupied by something — same "never stamp a ramp on a tile
+ *  something is standing on" rule `collectBoundaryCandidates` enforces
+ *  above, real bug confirmed on `maps/map_elevation.map`) — the only legal
+ *  ramp spot for repairing a HILL wall tile specifically (a ramp is never
+ *  placed on the elevated tile itself — see this file's own header comment
+ *  on ramp placement direction). Used both by this file's own inline ramp
  *  placement and by generate-random-map.ts / zone-validation.ts's later
  *  repair passes (road-partition repair, sealed-zone repair) when they
  *  need to punch a NEW ramp through a specific wall tile a route or
- *  reachability check actually needed. Returns null in the (unexpected)
- *  case none exists — `isElevationWallTile` guarantees at least one
- *  differing neighbor, and this generator never lets a blob touch anything
- *  but level-0 ground (the 1-tile buffer above), so this should always
- *  find one in practice. */
-export function findAdjacentLevelZeroNode(node: number, sizeX: number, sizeZ: number, levelsMap: number[]): number | null {
+ *  reachability check actually needed. Returns null when no unblocked
+ *  level-0 neighbor exists — a real, disclosed "can't safely repair this
+ *  one" rather than falling back to an occupied tile. */
+export function findAdjacentLevelZeroNode(node: number, sizeX: number, sizeZ: number, levelsMap: number[], blocked: Set<number> = new Set()): number | null {
   const x = node % sizeX
   const z = Math.floor(node / sizeX)
   for (const [dx, dz] of NEIGHBOR_OFFSETS) {
@@ -169,7 +182,7 @@ export function findAdjacentLevelZeroNode(node: number, sizeX: number, sizeZ: nu
     const nz = z + dz
     if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
     const n = nz * sizeX + nx
-    if ((levelsMap[n] ?? 0) === 0) return n
+    if ((levelsMap[n] ?? 0) === 0 && !blocked.has(n)) return n
   }
   return null
 }
@@ -234,7 +247,7 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
       levelChanges.push({ node, level })
     }
 
-    const boundaryOutsideNodes = collectBoundaryCandidates(blob, elevatedNodes, sizeX, sizeZ)
+    const boundaryOutsideNodes = collectBoundaryCandidates(blob, elevatedNodes, blocked, sizeX, sizeZ)
     // Hill: the ramp sits on the LOWER (outside, level-0) tile, adjacent to
     // the strictly-higher blob tile. Valley: the blob tile itself IS the
     // lower side, adjacent to the strictly-higher outside tile — so the ramp

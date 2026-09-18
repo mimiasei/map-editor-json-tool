@@ -674,7 +674,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
             // hill wall tile (level 1) the ramp must go on the adjacent
             // level-0 tile instead, never on the elevated tile itself (no
             // real climbsMap===1 tile is ever found at level 1).
-            const rampNode = levelsMapFinal[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMapFinal)
+            const rampNode = levelsMapFinal[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMapFinal, state.blocked)
             elevationWallNodesAll.delete(node)
             if (rampNode !== null && climbsMapFinal[rampNode] !== 1) {
               climbsMapFinal[rampNode] = 1

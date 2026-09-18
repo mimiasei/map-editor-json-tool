@@ -216,9 +216,18 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
     }
   }
 
-  const computeReachable = (): Set<number> => {
+  // Factored out so the ramp-punching repair below can also know which
+  // tiles are already occupied — a candidate ramp spot must never land on
+  // one (real bug confirmed on `maps/map_elevation.map`: a stray ramp
+  // landed directly on player 4's own city-spawner anchor tile, and the
+  // map failed to load in the actual game because of it).
+  const computeBlocked = (): Set<number> => {
     const placed = buildFlatPlaced(objectGroups, sizeX)
-    const blocked = buildBlockedTileSet({ sizeX, sizeZ, placedObjects: placed, levelsMap, climbsMap, waterMap }, catalog)
+    return buildBlockedTileSet({ sizeX, sizeZ, placedObjects: placed, levelsMap, climbsMap, waterMap }, catalog)
+  }
+
+  const computeReachable = (): Set<number> => {
+    const blocked = computeBlocked()
     const spawnerGroup = objectGroups.get(spawnerSid)
     const spawnerTemplate = catalogById.get(spawnerSid)
     const seeds: number[] = []
@@ -273,10 +282,12 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
       const stillSealed = sealedNow()
       if (stillSealed.size === 0) break
       let addedAny = false
+      const blocked = computeBlocked()
       for (let node = 0; node < tileCount; node++) {
         if (!stillSealed.has(zoneIdByNode[node])) continue
         if (!isElevationWallTile(node, sizeX, sizeZ, levelsMap, climbsMap)) continue
-        const rampNode = levelsMap[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMap)
+        if (levelsMap[node] < 0 && blocked.has(node)) continue // the valley tile itself is occupied — not a usable ramp spot either
+        const rampNode = levelsMap[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMap, blocked)
         if (rampNode === null || climbsMap[rampNode] === 1) continue
         climbsMap[rampNode] = 1
         addedClimbChanges.push({ node: rampNode, climb: 1 })
