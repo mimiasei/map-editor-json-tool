@@ -117,7 +117,8 @@ import {
     ImageIcon,
     Users,
     Gem,
-    LandPlot
+    LandPlot,
+    Box
 } from 'lucide-react'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
@@ -613,6 +614,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [levelBucketMode, setLevelBucketMode] = useState(false)
   const [obstacleBucketMode, setObstacleBucketMode] = useState(false)
   const [treeBucketMode, setTreeBucketMode] = useState(false)
+  // Objects tool (Place object) gets the same Brush/Bucket/Rectangle/Size
+  // parity as Terrain/Level/Obstacles/Trees — placing a fixed sid across an
+  // area is otherwise identical to those, just always the one chosen sid
+  // rather than a sampled/scattered pick. Bucket here means "stamp this sid
+  // on every tile in the contiguous same-terrain region" (bucketFillRegion),
+  // fed through the same commitObjectPaintStroke a freehand/Rectangle stroke
+  // already uses.
+  const [objectsBucketMode, setObjectsBucketMode] = useState(false)
 
   // ── Player Areas (color-coded per-player zone painting) — same
   // freehand/Bucket/Rectangle shape as Terrain above, targeting
@@ -633,6 +642,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // brush shape, computed by src/lib/map-grid/brush.ts's tilesInRadius().
   const [brushRadius, setBrushRadius] = useState(1)
 
+  // Disperse (0-1 fraction, stepped by 0.1 in the UI) — thins tilesInRadius'
+  // own circular area rather than painting it solid: 0 (default, unchanged
+  // behavior) keeps every tile, approaching 1 leaves only a sparse scatter
+  // spread across the brush's area. Shared by every one of the same brush-
+  // radius tools Size applies to (see tilesInRadius' own doc comment for
+  // the deterministic-per-tile reasoning) — same convention as brushRadius
+  // itself: one shared control, one shared piece of geometry.
+  const [brushDisperse, setBrushDisperse] = useState(0)
+
   // ── Rectangle interaction mode (issue #193 Phase 4) — a shared toggle
   // applying uniformly to Terrain/Level/Water: drag a rectangle (live
   // outline preview, Shift=square, Alt=center from src/lib/map-grid/
@@ -644,7 +662,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (checked first in onPointerDown) since a rectangle and a flood-fill are
   // two different selection shapes for the same "batch of nodes" concept.
   const [interactionMode, setInteractionMode] = useState<'freehand' | 'rectangle'>('freehand')
-  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone'; startX: number; startZ: number } | null>(null)
+  const rectangleDragRef = useRef<{ tool: 'terrain' | 'level' | 'road' | 'ramp' | 'obstacles' | 'trees' | 'interactable' | 'squad' | 'eraser' | 'resource' | 'zone' | 'objects'; startX: number; startZ: number } | null>(null)
   const [rectanglePreview, setRectanglePreview] = useState<RectangleBounds | null>(null)
 
   const [obstacleBrushActive, setObstacleBrushActive] = useState(false)
@@ -897,14 +915,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // commitPaintStroke below (called from onPointerUp) for where this
   // actually applies to the document.
   const stagePaintNode = useCallback((node: number, biomeId: BiomeId) => {
-    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
     if (tiles.every((n) => paintStaged.get(n) === biomeId)) return
     setPaintStaged((prev) => {
       const next = new Map(prev)
       for (const n of tiles) next.set(n, biomeId)
       return next
     })
-  }, [paintStaged, brushRadius, sizeX, sizeZ])
+  }, [paintStaged, brushRadius, brushDisperse, sizeX, sizeZ])
   const commitPaintStroke = useCallback(() => {
     if (paintStaged.size === 0) return
     const changes = [...paintStaged.entries()].map(([node, biomeId]) => ({ node, biomeId }))
@@ -967,14 +985,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setPaintZoneStaged(new Map())
   }
   const stageZoneNode = useCallback((node: number, zoneId: number) => {
-    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
     if (tiles.every((n) => paintZoneStaged.get(n) === zoneId)) return
     setPaintZoneStaged((prev) => {
       const next = new Map(prev)
       for (const n of tiles) next.set(n, zoneId)
       return next
     })
-  }, [paintZoneStaged, brushRadius, sizeX, sizeZ])
+  }, [paintZoneStaged, brushRadius, brushDisperse, sizeX, sizeZ])
   const commitZoneStroke = useCallback(() => {
     if (paintZoneStaged.size === 0) return
     const changes = [...paintZoneStaged.entries()].map(([node, zoneId]) => ({ node, zoneId }))
@@ -1158,14 +1176,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // commitLevelStroke below (called from onPointerUp) for where this
   // actually applies to the document.
   const stageLevelNode = useCallback((node: number, level: -1 | 0 | 1) => {
-    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
     if (tiles.every((n) => paintLevelStaged.get(n) === level)) return
     setPaintLevelStaged((prev) => {
       const next = new Map(prev)
       for (const n of tiles) next.set(n, level)
       return next
     })
-  }, [paintLevelStaged, brushRadius, sizeX, sizeZ])
+  }, [paintLevelStaged, brushRadius, brushDisperse, sizeX, sizeZ])
   const commitLevelStroke = useCallback(() => {
     if (paintLevelStaged.size === 0) return
     const changes = [...paintLevelStaged.entries()].map(([node, level]) => ({ node, level }))
@@ -1243,14 +1261,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // isValidRampNode declared earlier (near applyRectangleFill) so that
   // callback's Rectangle-mode 'ramp' branch can reference it.
   const stageRampNode = useCallback((node: number) => {
-    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ).filter(isValidRampNode)
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse).filter(isValidRampNode)
     if (tiles.length === 0 || tiles.every((n) => paintRampStaged.has(n))) return
     setPaintRampStaged((prev) => {
       const next = new Set(prev)
       for (const n of tiles) next.add(n)
       return next
     })
-  }, [paintRampStaged, brushRadius, sizeX, sizeZ, isValidRampNode])
+  }, [paintRampStaged, brushRadius, brushDisperse, sizeX, sizeZ, isValidRampNode])
   const commitRampStroke = useCallback(() => {
     if (paintRampStaged.size === 0) return
     const changes = [...paintRampStaged].map((node) => ({ node, climb: 1 as const }))
@@ -1675,7 +1693,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
           obstacleDragRef.current.add(n)
         }
         previewObstacleStroke([...obstacleDragRef.current])
@@ -1703,7 +1721,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
           treeDragRef.current.add(n)
         }
         previewTreeStroke([...treeDragRef.current])
@@ -1726,9 +1744,31 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       e.currentTarget.setPointerCapture(e.pointerId)
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
           eraserDragRef.current.add(n)
         }
+      }
+      return
+    }
+    // Objects gets the same Bucket/Rectangle dispatch as Obstacles/Trees
+    // above — but only for placingSid (a fixed sid); placing a creature/
+    // zone marker stays single-click-only (their own doc comments), so this
+    // checks placingSid specifically, ahead of the broader click-vs-drag
+    // arm below that also covers those two.
+    if (placingSid && interactionMode === 'rectangle') {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        rectangleDragRef.current = { tool: 'objects', startX: node % sizeX, startZ: Math.floor(node / sizeX) }
+        setRectanglePreview({ minX: node % sizeX, maxX: node % sizeX, minZ: Math.floor(node / sizeX), maxZ: Math.floor(node / sizeX) })
+      }
+      return
+    }
+    if (placingSid && objectsBucketMode) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        const region = bucketFillRegion(node)
+        if (region.length > 0) commitObjectPaintStroke(region)
       }
       return
     }
@@ -1880,7 +1920,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (obstacleDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
           obstacleDragRef.current.add(n)
         }
         previewObstacleStroke([...obstacleDragRef.current])
@@ -1891,7 +1931,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (treeDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
           treeDragRef.current.add(n)
         }
         previewTreeStroke([...treeDragRef.current])
@@ -1902,7 +1942,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (eraserDragRef.current) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ)) {
+        for (const n of tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)) {
           eraserDragRef.current.add(n)
         }
       }
@@ -1989,8 +2029,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // terrain to any object): stamps a candidate at every newly-crossed
       // tile into paintObjectStaged, same "stage locally, then explicit
       // Save" convention as terrain paint — nothing here writes to disk. A
-      // plain (non-dragged) click still falls through to onPointerUp's
-      // one-shot immediate placeAt below, unchanged.
+      // plain (non-dragged) click still falls through to onPointerUp's own
+      // brush-radius-aware commit below (not a bespoke single-tile path —
+      // see that branch's own comment for why).
       const node = screenToNode(e.clientX, e.clientY, rect)
       if (node !== null && placingSid) stageObjectPaint(node, placingSid)
       setHoveredNode(node)
@@ -2033,7 +2074,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const drag = rectangleDragRef.current
       const { x, z } = screenToTileRaw(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       const bounds = computeRectangleBounds(drag.startX, drag.startZ, x, z, e.shiftKey, e.altKey, sizeX, sizeZ)
-      applyRectangleFill(drag.tool, bounds)
+      // 'objects' is handled directly (not via applyRectangleFill) since it
+      // needs placingSid/commitObjectPaintStroke, both declared later in
+      // this component — safe to reference here since onPointerUp is a
+      // plain function, not a useCallback with an eagerly-evaluated deps
+      // array, but not safe to add to applyRectangleFill's own deps list.
+      if (drag.tool === 'objects') {
+        commitObjectPaintStroke(nodesInRectangle(bounds, sizeX))
+      } else {
+        applyRectangleFill(drag.tool, bounds)
+      }
       rectangleDragRef.current = null
       setRectanglePreview(null)
       if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
@@ -2149,10 +2199,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // A plain click (not a paint stroke) while placing a new object commits
       // it immediately and stays in placing mode (issue #167 Phase B) — same
       // "fires on pointerup, not the icon's own onClick" reasoning as Move.
+      // Runs through the same brush-radius/Disperse-aware commit a drag
+      // stroke uses (not a bespoke single-tile placeAt) — Size/Disperse
+      // apply to Objects the same as every other brush tool now, where a
+      // plain click already stamps the whole brush area (e.g. Terrain
+      // stages its brush on pointerDown, before any drag distance exists),
+      // so a click here needs to do the same rather than always placing
+      // exactly one tile regardless of brush size.
       if (wasClick && placingSid) {
         const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
-        if (node !== null && isNodeInBoundsForPlacement(placingSid, node)) {
-          void placeAt(node)
+        if (node !== null) {
+          const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+          commitObjectPaintStroke(tiles)
         }
       } else if (wasClick && placingCreatureId) {
         // Single-click only — a drag here never staged anything (see
@@ -3125,18 +3183,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return isFootprintInBounds(computeFootprintTiles(template, x, z), sizeX, sizeZ)
   }, [catalog, sizeX, sizeZ])
 
-  // issue #195 follow-up: applies immediately (a single click was always
-  // one addObject edit before any staging concept existed) — isNodeBlockedForObjectPaint
-  // is declared below (safe to reference here since placeAt's BODY only
-  // runs when actually called from an event handler, well after that
-  // `const` exists; unlike a hook's dependency array, this isn't evaluated
-  // at placeAt's own definition time), reusing the same blocked-tile check
-  // the drag-paint tool already has.
-  const placeAt = (node: number) => {
-    if (!placingSid || isNodeBlockedForObjectPaint(node)) return
-    applyEdit({ kind: 'addObject', entityType: 0, sid: placingSid, node, rotation: randomInitialRotation(placingSid) }, 'place object')
-  }
-
   // Squads have no footprint template (always single-tile), so no
   // blocked-tile check — matches this handler's pre-existing behavior.
   const placeCreatureAt = (node: number) => {
@@ -3208,21 +3254,43 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     setImageMappingOpen(false)
   }, [sizeX, sizeZ, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, randomInitialRotation, applyEdit])
 
+  // Brush-radius parity with Terrain/Level/Obstacles (stagePaintNode's own
+  // tilesInRadius expansion) — every tile in the circular brush gets the
+  // same sid staged, each still individually bounds/blocked-checked (an
+  // object has a real footprint, unlike a terrain value, so a tile the
+  // brush covers isn't necessarily paintable).
   const stageObjectPaint = useCallback((node: number, sid: string) => {
-    if (!isNodeInBoundsForPlacement(sid, node) || isNodeBlockedForObjectPaint(node)) return
-    if (paintObjectStaged.get(node) === sid) return
-    setPaintObjectStaged((prev) => new Map(prev).set(node, sid))
-  }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, paintObjectStaged])
+    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
+    if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
+    setPaintObjectStaged((prev) => {
+      const next = new Map(prev)
+      for (const n of tiles) next.set(n, sid)
+      return next
+    })
+  }, [isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, paintObjectStaged, brushRadius, brushDisperse, sizeX, sizeZ])
 
-  const commitObjectPaintStroke = useCallback(() => {
-    if (paintObjectStaged.size === 0) return
-    const additions = [...paintObjectStaged.entries()].map(([node, sid]) => ({ node, sid, rotation: randomInitialRotation(sid) }))
+  // Rectangle mode and Bucket fill pass an explicit `nodes` list (freshly
+  // computed, not staged via drag) — mirrors commitObstacleStroke(nodes?)'s
+  // "Rectangle's whole region is known synchronously, freehand uses the
+  // already-staged preview" shape. Unlike Obstacles' sampled additions,
+  // `nodes` here isn't pre-filtered for validity (it's just every tile in
+  // the rectangle/region), so it needs the same per-node bounds/blocked
+  // check stageObjectPaint already does.
+  const commitObjectPaintStroke = useCallback((nodes?: number[]) => {
+    const sid = placingSid
+    const entries: [number, string][] = nodes
+      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n)).map((n): [number, string] => [n, sid]) : [])
+      : [...paintObjectStaged.entries()]
+    if (entries.length === 0) return
+    const additions = entries.map(([node, s]) => ({ node, sid: s, rotation: randomInitialRotation(s) }))
+    const targetNodes = new Set(entries.map(([n]) => n))
     const deletions = placedObjects
-      .filter((o) => o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
+      .filter((o) => o.type === 0 && targetNodes.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
       .map((o) => o.id)
     setPaintObjectStaged(new Map())
     applyEdit({ kind: 'paintObjects', additions, deletions }, 'paint objects')
-  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit])
+  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit, placingSid, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint])
 
   // ── In-progress-stroke full-fidelity preview (issue #195 Phase 1) —
   // deliberately placed here rather than up near sortedIconEntries, since a
@@ -3421,11 +3489,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // 5 -> at most ~69 tiles), a tiny cursor-following set, not a per-map-
   // tile render — doesn't reintroduce the one-DOM-node-per-map-tile
   // pattern this codebase avoids.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null)
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
-    return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ)
-  }, [brushToolActive, hoveredNode, brushRadius, sizeX, sizeZ])
+    return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+  }, [brushToolActive, hoveredNode, brushRadius, brushDisperse, sizeX, sizeZ])
 
   const hoveredScreenRow = hoveredNode !== null ? sizeZ - 1 - Math.floor(hoveredNode / sizeX) : null
   const hoveredX = hoveredNode !== null ? hoveredNode % sizeX : null
@@ -3615,9 +3683,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {placingSid ? (
                 <div className="flex items-center gap-1">
                   <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
-                    <Plus className="h-3.5 w-3.5" />
+                    <Box className="h-3.5 w-3.5" />
                     Placing… (drag to paint)
                   </Button>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!objectsBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setObjectsBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${objectsBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to stamp this object across the contiguous same-terrain region"
+                      onClick={() => setObjectsBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
                   {paintObjectStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
                   )}
@@ -3635,12 +3719,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   title="Place a new object"
                   onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Box className="h-3.5 w-3.5" />
                   Objects
                 </Button>
               ) : (
                 <ToolButton
-                  icon={<Plus className="h-3.5 w-3.5" />}
+                  icon={<Box className="h-3.5 w-3.5" />}
                   label="Objects"
                   title="Place a new object"
                   onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
@@ -4211,7 +4295,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   'rectangle' mode left over from switching from another tool
                   made Water look broken (a rectangle over ordinary ground
                   matches no level-(-1) tile, so nothing visibly happens). */}
-              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null) && (
+              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || placingSid !== null) && (
                 <>
                   <div className="flex-1" />
                   {(obstacleBrushActive || treesActive || interactableActive || squadActive || resourceActive) && (
@@ -4259,7 +4343,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   click-to-flood-fill regardless of interactionMode, and
                   Bucket/Rectangle already select their own explicit region,
                   so radius has nothing to modify for either. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null) && (
+              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || rampActive || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
                   <Button
@@ -4280,6 +4364,35 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     title="Bigger brush"
                     disabled={brushRadius >= 15}
                     onClick={() => setBrushRadius((r) => Math.min(15, r + 1))}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                  {/* Disperse — thins the same circular brush.ts area Size
+                      just sized, rather than painting it solid: 0% (default)
+                      is unchanged full-coverage behavior, 100% leaves only a
+                      sparse scatter (see tilesInRadius' own doc comment).
+                      Shares Size's own gating condition since it modifies
+                      the exact same brush area every one of these tools
+                      already gets from Size. */}
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0 ml-1">Disperse:</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="Less disperse"
+                    disabled={brushDisperse <= 0}
+                    onClick={() => setBrushDisperse((d) => Math.max(0, Math.round((d - 0.1) * 10) / 10))}
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </Button>
+                  <span className="text-xs tabular-nums w-9 text-center">{Math.round(brushDisperse * 100)}%</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    title="More disperse"
+                    disabled={brushDisperse >= 1}
+                    onClick={() => setBrushDisperse((d) => Math.min(1, Math.round((d + 0.1) * 10) / 10))}
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </Button>

@@ -5,38 +5,82 @@
 // same list — AND, not either/or), plus a name/sid search. Two browsing
 // modes (`mode` state): "Objects" lists `objects[]`-placeable catalog
 // templates (catalog.mapObjects) filtered by biome+type; "Units" lists real
-// creatures (catalog.creatures) filtered by faction instead, for placing a
-// squads[] instance. Markers/zones still have no picker.
+// creatures (catalog.creatures) filtered by faction+tier instead, for
+// placing a squads[] instance. Markers/zones still have no picker.
+//
+// Filters render as dropdown pills (multi-select checkboxes, "All" row at
+// top) mirroring the Map Grid's own Browse-mode pill+chevron pattern
+// (MapGridDialog.tsx) — Decorations/Interactables get the same split-button
+// shape (main pill toggles the whole category, chevron opens its
+// sub-category dropdown, reusing decoration-subcategories.ts /
+// interactable-subcategories.ts verbatim) since only those two have a real
+// sub-category breakdown. Animals/F/X/Spawners/Resources have no such
+// breakdown, so they stay plain pills on their own row — but single-select
+// (only one of the four active at a time), unlike Decorations/Interactables
+// which each toggle independently. Biome and (Units-mode) Tier are pure
+// multi-value dropdowns (default: everything selected) with no separate
+// master toggle.
 
 import { useMemo, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, Settings, X, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CatalogIcon, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
+import {
+  DECORATION_SUBCATEGORY_ORDER,
+  DECORATION_SUBCATEGORY_LABELS,
+  resolveDecorationSubcategory,
+  type DecorationSubcategory,
+} from '@/lib/map-grid/decoration-subcategories'
+import {
+  INTERACTABLE_SUBCATEGORY_ORDER,
+  INTERACTABLE_SUBCATEGORY_LABELS,
+  resolveInteractableSubcategory,
+  type InteractableSubcategory,
+} from '@/lib/map-grid/interactable-subcategories'
 import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
 
-// The 5 object-type filters requested — a different grouping from the
+// The 6 object-type filters requested — a different grouping from the
 // placed-object GridGroup system (tile-index.ts): this browses catalog
 // TEMPLATES (what could be placed), not placed instances, and only
 // `objects[]` (type 0) is placeable here at all, so squads/zones don't apply.
 // "Animals" maps to the `animals` category (roaming wildlife decorations,
 // e.g. camel/scorpion/chicken) — real creature squads are a separate
 // browsing mode below (`mode === 'creatures'`), not part of this filter row.
-// Resources/artifacts/test/blocks have no dedicated button — they still show
-// up whenever no type filter is active.
-type TypeFilterKey = 'environments' | 'interactables' | 'animals' | 'fxs' | 'spawns'
+// Artifacts/test/blocks have no dedicated button — they still show up
+// whenever no type filter is active.
+type TypeFilterKey = 'environments' | 'interactables' | 'animals' | 'fxs' | 'spawns' | 'resources'
 
-const TYPE_FILTER_ORDER: TypeFilterKey[] = ['environments', 'interactables', 'animals', 'fxs', 'spawns']
 const TYPE_FILTER_LABELS: Record<TypeFilterKey, string> = {
   environments: 'Decorations',
   interactables: 'Interactables',
   animals: 'Animals',
   fxs: 'F/X',
   spawns: 'Spawners',
+  resources: 'Resources',
 }
+
+// Decorations/Interactables get the split-button (pill + chevron dropdown);
+// these four have no sub-category breakdown of their own, so they stay
+// plain single-click pills like every filter used to be.
+const PLAIN_TYPE_FILTER_ORDER: TypeFilterKey[] = ['animals', 'fxs', 'spawns', 'resources']
+
+// The Decorations dropdown reuses decoration-subcategories.ts verbatim (same
+// list Browse mode's own "Decorations" chevron shows) minus its 'animals'/
+// 'fx' entries — those two are only ever returned by resolveDecorationSubcategory
+// when the real category is literally 'animals'/'fxs', which can't happen
+// here since the Decorations pill only ever matches `category === 'environments'`
+// objects; they're covered by this panel's own separate Animals/F/X pills instead.
+type PanelDecorationSubcategory = Exclude<DecorationSubcategory, 'animals' | 'fx'>
+const PANEL_DECORATION_SUBCATEGORY_ORDER: PanelDecorationSubcategory[] = DECORATION_SUBCATEGORY_ORDER.filter(
+  (c): c is PanelDecorationSubcategory => c !== 'animals' && c !== 'fx',
+)
 
 type BrowseMode = 'objects' | 'creatures'
 
@@ -54,32 +98,58 @@ const BIOME_ID_TO_CATALOG_BIOME: Record<BiomeId, string> = {
   1: 'Grass', 2: 'Desert', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt',
 }
 
+// Real creature tiers run 1-8; only neutral-fraction creatures (e.g. lich
+// dragon) ever reach tier 8 — listed uniformly here rather than special-cased,
+// since the dropdown just needs every value that can occur.
+const TIER_ORDER = [1, 2, 3, 4, 5, 6, 7, 8]
+
 // Remembered across opens, same convention as every other Map Grid filter
 // (oe-map-grid-filter, oe-map-grid-settings, etc.) — the search query is
-// deliberately NOT persisted, only the two pill-button filters.
+// deliberately NOT persisted, only the filter/settings state below.
 const FILTER_STORAGE_KEY = 'oe-object-browser-filter'
 
 interface StoredFilter {
   types: TypeFilterKey[]
-  biomes: BiomeId[]
+  plainType: TypeFilterKey | null
+  biomes: Record<BiomeId, boolean>
   mode: BrowseMode
   fractions: string[]
+  tiers: Record<number, boolean>
+  decorationSub: Record<PanelDecorationSubcategory, boolean>
+  interactableSub: Record<InteractableSubcategory, boolean>
+  showCampaign: boolean
+  showCustom: boolean
+}
+
+// Sub-category (and Biome/Tier) filters default every key to `true` ("All"
+// selected) — any key missing from a stored (older) save also defaults
+// `true`, so a newly-added sub-category doesn't silently start hidden for
+// existing users.
+function buildSubFilterDefaults<T extends string | number>(
+  order: T[],
+  stored: Partial<Record<T, boolean>> | undefined,
+): Record<T, boolean> {
+  return Object.fromEntries(order.map((k) => [k, stored?.[k] !== false])) as Record<T, boolean>
 }
 
 function loadStoredFilter(): StoredFilter {
+  let parsed: Partial<StoredFilter> = {}
   try {
     const raw = localStorage.getItem(FILTER_STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<StoredFilter>
-      return {
-        types: Array.isArray(parsed.types) ? parsed.types : [],
-        biomes: Array.isArray(parsed.biomes) ? parsed.biomes : [],
-        mode: parsed.mode === 'creatures' ? 'creatures' : 'objects',
-        fractions: Array.isArray(parsed.fractions) ? parsed.fractions : [],
-      }
-    }
+    if (raw) parsed = JSON.parse(raw) as Partial<StoredFilter>
   } catch { /* ignore */ }
-  return { types: [], biomes: [], mode: 'objects', fractions: [] }
+  return {
+    types: Array.isArray(parsed.types) ? parsed.types : [],
+    plainType: PLAIN_TYPE_FILTER_ORDER.includes(parsed.plainType as TypeFilterKey) ? (parsed.plainType as TypeFilterKey) : null,
+    biomes: buildSubFilterDefaults(BIOME_ORDER, parsed.biomes as Partial<Record<BiomeId, boolean>> | undefined),
+    mode: parsed.mode === 'creatures' ? 'creatures' : 'objects',
+    fractions: Array.isArray(parsed.fractions) ? parsed.fractions : [],
+    tiers: buildSubFilterDefaults(TIER_ORDER, parsed.tiers as Partial<Record<number, boolean>> | undefined),
+    decorationSub: buildSubFilterDefaults(PANEL_DECORATION_SUBCATEGORY_ORDER, parsed.decorationSub),
+    interactableSub: buildSubFilterDefaults(INTERACTABLE_SUBCATEGORY_ORDER, parsed.interactableSub),
+    showCampaign: parsed.showCampaign === true,
+    showCustom: parsed.showCustom === true,
+  }
 }
 
 function saveStoredFilter(filter: StoredFilter): void {
@@ -99,6 +169,16 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       {children}
     </button>
   )
+}
+
+/** The pill styling shared by every dropdown trigger and split-button half
+ *  below — `active` mirrors FilterPill's own highlight rule. */
+function pillClass(active: boolean, extra: string): string {
+  return `h-6 text-xs transition-colors border ${extra} ${
+    active
+      ? 'bg-background text-foreground border-border'
+      : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground'
+  }`
 }
 
 interface Props {
@@ -157,15 +237,27 @@ function unitTypeLabel(aiType: string | undefined): string | null {
 export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placingCreatureId, onPickCreature, onClose }: Props) {
   const initialFilter = useMemo(loadStoredFilter, [])
   const [typeFilter, setTypeFilter] = useState<Set<TypeFilterKey>>(() => new Set(initialFilter.types))
-  const [biomeFilter, setBiomeFilter] = useState<Set<BiomeId>>(() => new Set(initialFilter.biomes))
+  const [plainTypeFilter, setPlainTypeFilter] = useState<TypeFilterKey | null>(initialFilter.plainType)
+  const [biomeFilter, setBiomeFilter] = useState<Record<BiomeId, boolean>>(initialFilter.biomes)
   const [mode, setMode] = useState<BrowseMode>(initialFilter.mode)
   const [fractionFilter, setFractionFilter] = useState<Set<string>>(() => new Set(initialFilter.fractions))
+  const [tierFilter, setTierFilter] = useState<Record<number, boolean>>(initialFilter.tiers)
+  const [decorationSubFilter, setDecorationSubFilter] = useState<Record<PanelDecorationSubcategory, boolean>>(
+    initialFilter.decorationSub,
+  )
+  const [interactableSubFilter, setInteractableSubFilter] = useState<Record<InteractableSubcategory, boolean>>(
+    initialFilter.interactableSub,
+  )
+  const [showCampaign, setShowCampaign] = useState<boolean>(initialFilter.showCampaign)
+  const [showCustom, setShowCustom] = useState<boolean>(initialFilter.showCustom)
   const [query, setQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
 
   const persist = (next: Partial<StoredFilter>) => {
     saveStoredFilter({
-      types: [...typeFilter], biomes: [...biomeFilter], mode, fractions: [...fractionFilter],
+      types: [...typeFilter], plainType: plainTypeFilter, biomes: biomeFilter, mode, fractions: [...fractionFilter],
+      tiers: tierFilter, decorationSub: decorationSubFilter, interactableSub: interactableSubFilter,
+      showCampaign, showCustom,
       ...next,
     })
   }
@@ -178,14 +270,45 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       return next
     })
   }
-  const toggleBiome = (b: BiomeId) => {
-    setBiomeFilter((prev) => {
-      const next = new Set(prev)
-      if (next.has(b)) next.delete(b)
-      else next.add(b)
-      persist({ biomes: [...next] })
+  // Animals/F/X/Spawners/Resources are single-select (only one active at a
+  // time, unlike Decorations/Interactables which toggle independently) —
+  // clicking the currently-active one deselects it back to "show all four".
+  const togglePlainType = (t: TypeFilterKey) => {
+    setPlainTypeFilter((prev) => {
+      const next = prev === t ? null : t
+      persist({ plainType: next })
       return next
     })
+  }
+  // Biome/Tier use the same Record-of-booleans "All" convention as the
+  // Decorations/Interactables sub-category dropdowns above (default every
+  // key true) rather than a Set — a Set can't distinguish "everything
+  // selected" from "nothing selected" when both display as "All" collapsed
+  // to empty, which is exactly what made the "All" checkbox unable to
+  // actually deselect everything.
+  const toggleBiome = (b: BiomeId) => {
+    setBiomeFilter((prev) => {
+      const next = { ...prev, [b]: !prev[b] }
+      persist({ biomes: next })
+      return next
+    })
+  }
+  const setAllBiomes = (value: boolean) => {
+    const next = Object.fromEntries(BIOME_ORDER.map((b) => [b, value])) as Record<BiomeId, boolean>
+    setBiomeFilter(next)
+    persist({ biomes: next })
+  }
+  const toggleTier = (t: number) => {
+    setTierFilter((prev) => {
+      const next = { ...prev, [t]: !prev[t] }
+      persist({ tiers: next })
+      return next
+    })
+  }
+  const setAllTiers = (value: boolean) => {
+    const next = Object.fromEntries(TIER_ORDER.map((t) => [t, value])) as Record<number, boolean>
+    setTierFilter(next)
+    persist({ tiers: next })
   }
   const toggleFraction = (f: string) => {
     setFractionFilter((prev) => {
@@ -196,32 +319,90 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       return next
     })
   }
+  const toggleDecorationSub = (c: PanelDecorationSubcategory) => {
+    setDecorationSubFilter((prev) => {
+      const next = { ...prev, [c]: !prev[c] }
+      persist({ decorationSub: next })
+      return next
+    })
+  }
+  const setAllDecorationSub = (value: boolean) => {
+    const next = Object.fromEntries(
+      PANEL_DECORATION_SUBCATEGORY_ORDER.map((c) => [c, value]),
+    ) as Record<PanelDecorationSubcategory, boolean>
+    setDecorationSubFilter(next)
+    persist({ decorationSub: next })
+  }
+  const toggleInteractableSub = (c: InteractableSubcategory) => {
+    setInteractableSubFilter((prev) => {
+      const next = { ...prev, [c]: !prev[c] }
+      persist({ interactableSub: next })
+      return next
+    })
+  }
+  const setAllInteractableSub = (value: boolean) => {
+    const next = Object.fromEntries(
+      INTERACTABLE_SUBCATEGORY_ORDER.map((c) => [c, value]),
+    ) as Record<InteractableSubcategory, boolean>
+    setInteractableSubFilter(next)
+    persist({ interactableSub: next })
+  }
   const setModeAndPersist = (m: BrowseMode) => {
     setMode(m)
     persist({ mode: m })
+  }
+  const setShowCampaignAndPersist = (v: boolean) => {
+    setShowCampaign(v)
+    persist({ showCampaign: v })
+  }
+  const setShowCustomAndPersist = (v: boolean) => {
+    setShowCustom(v)
+    persist({ showCustom: v })
   }
 
   const entries = useMemo(() => {
     const all = catalog?.mapObjects ?? []
     const q = query.trim().toLowerCase()
-    const wantedBiomes = biomeFilter.size > 0 ? [...biomeFilter].map((b) => BIOME_ID_TO_CATALOG_BIOME[b]) : null
+    const selectedBiomes = BIOME_ORDER.filter((b) => biomeFilter[b])
+    const wantedBiomes = selectedBiomes.length < BIOME_ORDER.length
+      ? selectedBiomes.map((b) => BIOME_ID_TO_CATALOG_BIOME[b])
+      : null
+    // Decorations/Interactables (independently toggled) and the single-select
+    // Animals/F/X/Spawners/Resources group combine into one active-category
+    // set — any restriction from either narrows the list the same way the
+    // old single typeFilter Set used to.
+    const activeCategories = new Set<TypeFilterKey>(typeFilter)
+    if (plainTypeFilter) activeCategories.add(plainTypeFilter)
     return all.filter((o: CatalogMapObject) => {
-      if (typeFilter.size > 0 && !typeFilter.has(o.category as TypeFilterKey)) return false
+      if (activeCategories.size > 0 && !activeCategories.has(o.category as TypeFilterKey)) return false
       if (wantedBiomes && (!o.biome || !wantedBiomes.includes(o.biome))) return false
+      // Safe cast: resolveDecorationSubcategory only ever returns 'animals'/
+      // 'fx' when the real category is 'animals'/'fxs', which can't be true
+      // here since this branch is guarded on category === 'environments'.
+      if (o.category === 'environments'
+        && !decorationSubFilter[resolveDecorationSubcategory(o.id, o.category) as PanelDecorationSubcategory]) return false
+      if (o.category === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(o.id)]) return false
+      if (!showCampaign && o.id.includes('campaign')) return false
+      if (!showCustom && o.id.includes('custom')) return false
       if (q && !o.name.toLowerCase().includes(q) && !o.id.toLowerCase().includes(q)) return false
       return true
     })
-  }, [catalog, typeFilter, biomeFilter, query])
+  }, [catalog, typeFilter, plainTypeFilter, biomeFilter, decorationSubFilter, interactableSubFilter, showCampaign, showCustom, query])
 
   const creatureEntries = useMemo(() => {
     const all = catalog?.creatures ?? []
     const q = query.trim().toLowerCase()
+    const selectedTiers = TIER_ORDER.filter((t) => tierFilter[t])
+    const tierRestricted = selectedTiers.length < TIER_ORDER.length
     return all.filter((c) => {
       if (fractionFilter.size > 0 && !fractionFilter.has(c.fraction)) return false
+      if (tierRestricted && !selectedTiers.includes(c.tier)) return false
+      if (!showCampaign && c.id.includes('campaign')) return false
+      if (!showCustom && c.id.includes('custom')) return false
       if (q && !c.name.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q)) return false
       return true
     })
-  }, [catalog, fractionFilter, query])
+  }, [catalog, fractionFilter, tierFilter, showCampaign, showCustom, query])
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -240,21 +421,169 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
             Units
           </button>
         </div>
-        <Button variant="ghost" size="icon" className="h-6 w-6" title="Close" onClick={onClose}>
-          <X className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6" title="Browser settings">
+                <Settings className="h-3.5 w-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 space-y-3" data-nodrag>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="obj-browser-show-campaign" className="text-xs cursor-pointer">
+                  Show campaign objects
+                </Label>
+                <Switch
+                  id="obj-browser-show-campaign"
+                  checked={showCampaign}
+                  onCheckedChange={setShowCampaignAndPersist}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="obj-browser-show-custom" className="text-xs cursor-pointer">
+                  Show custom objects
+                </Label>
+                <Switch
+                  id="obj-browser-show-custom"
+                  checked={showCustom}
+                  onCheckedChange={setShowCustomAndPersist}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button variant="ghost" size="icon" className="h-6 w-6" title="Close" onClick={onClose}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
       <div className="px-3 pt-2 pb-1.5 space-y-1.5 shrink-0 border-b border-border">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1">
-            {mode === 'objects'
-              ? BIOME_ORDER.map((b) => (
-                  <FilterPill key={b} active={biomeFilter.has(b)} onClick={() => toggleBiome(b)}>
-                    {BIOME_NAMES[b]}
-                  </FilterPill>
-                ))
-              : (catalog?.factions ?? []).map((f) => (
+            {mode === 'objects' ? (
+              <>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className={pillClass(BIOME_ORDER.some((b) => !biomeFilter[b]), 'px-2 rounded flex items-center gap-0.5')}>
+                      Biomes
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-48 space-y-2" data-nodrag>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="obj-browser-biome-all"
+                        checked={BIOME_ORDER.every((b) => biomeFilter[b])}
+                        onCheckedChange={(v) => setAllBiomes(Boolean(v))}
+                      />
+                      <Label htmlFor="obj-browser-biome-all" className="text-xs cursor-pointer font-medium">All</Label>
+                    </div>
+                    <div className="border-t border-border pt-2 space-y-2">
+                      {BIOME_ORDER.map((b) => (
+                        <div key={b} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`obj-browser-biome-${b}`}
+                            checked={biomeFilter[b]}
+                            onCheckedChange={() => toggleBiome(b)}
+                          />
+                          <Label htmlFor={`obj-browser-biome-${b}`} className="text-xs cursor-pointer">{BIOME_NAMES[b]}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <div className="flex items-stretch">
+                  <button
+                    onClick={() => toggleType('environments')}
+                    className={pillClass(typeFilter.has('environments'), 'px-2 rounded-l rounded-r-none border-r-0')}
+                  >
+                    {TYPE_FILTER_LABELS.environments}
+                  </button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={pillClass(typeFilter.has('environments'), 'w-5 rounded-r flex items-center justify-center')}
+                        title="Decorations sub-categories"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 space-y-2" data-nodrag>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sub-categories</p>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="obj-browser-decoration-subcat-all"
+                          checked={PANEL_DECORATION_SUBCATEGORY_ORDER.every((c) => decorationSubFilter[c])}
+                          onCheckedChange={(v) => setAllDecorationSub(Boolean(v))}
+                        />
+                        <Label htmlFor="obj-browser-decoration-subcat-all" className="text-xs cursor-pointer font-medium">All</Label>
+                      </div>
+                      <div className="border-t border-border pt-2 space-y-2">
+                        {PANEL_DECORATION_SUBCATEGORY_ORDER.map((c) => (
+                          <div key={c} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`obj-browser-decoration-subcat-${c}`}
+                              checked={decorationSubFilter[c]}
+                              onCheckedChange={() => toggleDecorationSub(c)}
+                            />
+                            <Label htmlFor={`obj-browser-decoration-subcat-${c}`} className="text-xs cursor-pointer">
+                              {DECORATION_SUBCATEGORY_LABELS[c]}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="flex items-stretch">
+                  <button
+                    onClick={() => toggleType('interactables')}
+                    className={pillClass(typeFilter.has('interactables'), 'px-2 rounded-l rounded-r-none border-r-0')}
+                  >
+                    {TYPE_FILTER_LABELS.interactables}
+                  </button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={pillClass(typeFilter.has('interactables'), 'w-5 rounded-r flex items-center justify-center')}
+                        title="Interactables sub-categories"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-56 space-y-2" data-nodrag>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sub-categories</p>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="obj-browser-interactable-subcat-all"
+                          checked={INTERACTABLE_SUBCATEGORY_ORDER.every((c) => interactableSubFilter[c])}
+                          onCheckedChange={(v) => setAllInteractableSub(Boolean(v))}
+                        />
+                        <Label htmlFor="obj-browser-interactable-subcat-all" className="text-xs cursor-pointer font-medium">All</Label>
+                      </div>
+                      <div className="border-t border-border pt-2 space-y-2">
+                        {INTERACTABLE_SUBCATEGORY_ORDER.map((c) => (
+                          <div key={c} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`obj-browser-interactable-subcat-${c}`}
+                              checked={interactableSubFilter[c]}
+                              onCheckedChange={() => toggleInteractableSub(c)}
+                            />
+                            <Label htmlFor={`obj-browser-interactable-subcat-${c}`} className="text-xs cursor-pointer">
+                              {INTERACTABLE_SUBCATEGORY_LABELS[c]}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </>
+            ) : (
+              <>
+                {(catalog?.factions ?? []).map((f) => (
                   <FilterPill key={f.id} active={fractionFilter.has(f.id)} onClick={() => toggleFraction(f.id)}>
                     {f.name}
                   </FilterPill>
@@ -263,6 +592,38 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     Neutral
                   </FilterPill>,
                 )}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className={pillClass(TIER_ORDER.some((t) => !tierFilter[t]), 'px-2 rounded flex items-center gap-0.5')}>
+                      Tier
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-40 space-y-2" data-nodrag>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="obj-browser-tier-all"
+                        checked={TIER_ORDER.every((t) => tierFilter[t])}
+                        onCheckedChange={(v) => setAllTiers(Boolean(v))}
+                      />
+                      <Label htmlFor="obj-browser-tier-all" className="text-xs cursor-pointer font-medium">All</Label>
+                    </div>
+                    <div className="border-t border-border pt-2 space-y-2">
+                      {TIER_ORDER.map((t) => (
+                        <div key={t} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`obj-browser-tier-${t}`}
+                            checked={tierFilter[t]}
+                            onCheckedChange={() => toggleTier(t)}
+                          />
+                          <Label htmlFor={`obj-browser-tier-${t}`} className="text-xs cursor-pointer">Tier {t}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </>
+            )}
           </div>
           <Popover open={searchOpen} onOpenChange={setSearchOpen}>
             <PopoverTrigger asChild>
@@ -288,8 +649,8 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
         </div>
         {mode === 'objects' && (
           <div className="flex flex-wrap gap-1">
-            {TYPE_FILTER_ORDER.map((t) => (
-              <FilterPill key={t} active={typeFilter.has(t)} onClick={() => toggleType(t)}>
+            {PLAIN_TYPE_FILTER_ORDER.map((t) => (
+              <FilterPill key={t} active={plainTypeFilter === t} onClick={() => togglePlainType(t)}>
                 {TYPE_FILTER_LABELS[t]}
               </FilterPill>
             ))}
