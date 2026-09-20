@@ -1,6 +1,8 @@
 import type { Action } from '@/types/scenario'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { getActionCategoryIcon, formatActionSentence, isActionConfigured } from '@/lib/trigger-visual'
+import { useMapContextStore } from '@/store/useMapContextStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import { Pencil, Trash2, AlertTriangle, HelpCircle, OctagonX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -18,6 +20,8 @@ export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: 
   const Icon = def ? getActionCategoryIcon(def.category) : HelpCircle
   const configured = isActionConfigured(action)
   const breaks = action.break === true
+  const catalog = useCatalogStore((s) => s.catalog)
+  const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
 
   return (
     <div className={cn('flex items-stretch gap-2', dimmed && 'opacity-60')}>
@@ -49,7 +53,7 @@ export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className={cn('text-sm leading-snug', !configured && 'italic text-muted-foreground')}>
-              {configured ? formatActionSentence(action) : 'Needs setup — click to configure'}
+              {configured ? formatActionSentence(action, { catalog, placedObjects }) : 'Needs setup — click to configure'}
             </p>
             {breaks && (
               <span

@@ -2939,11 +2939,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // real Quest/SubQuest/Trigger, and hands off to the Scenario Editor via
   // useViewBridgeStore.
   const handleCreateRule = (item: PlacedObject) => {
+    const factionSid = item.spawnerInfo?.factionSid
+    const factionName = factionSid ? catalog?.factions.find((f) => f.id === factionSid)?.name : undefined
+    const factionToken = factionName ? factionName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') : undefined
+
     let entitySid = item.entitySid
     if (!entitySid) {
+      const base = factionToken ? `${item.sid}_${factionToken}` : item.sid
       let n = 1
-      let candidate = `${item.sid}_${n}`
-      while (existingSids.includes(candidate)) { n += 1; candidate = `${item.sid}_${n}` }
+      let candidate = `${base}_${n}`
+      while (existingSids.includes(candidate)) { n += 1; candidate = `${base}_${n}` }
       entitySid = candidate
       applyEdit({ kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid: entitySid }, 'assign entity SID')
     }
@@ -2959,7 +2964,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const ti = useScenarioStore.getState().scenario.quests[qi].subQuests[sqi].triggers.length - 1
 
     setScenarioSelection('trigger', [qi, sqi, ti])
-    requestSubjectFirst({ entitySid, displayName: item.displayName, subjectKey, path: [qi, sqi, ti] })
+    requestSubjectFirst({
+      entitySid,
+      displayName: item.displayName,
+      subjectKey,
+      path: [qi, sqi, ti],
+      factionLabel: subjectKey === 'castle' ? (factionName ?? 'Random') : undefined,
+    })
   }
 
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])

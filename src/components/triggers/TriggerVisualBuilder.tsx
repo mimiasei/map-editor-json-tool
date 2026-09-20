@@ -172,6 +172,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
           <span className="flex items-center gap-1.5">
             <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
             Creating a rule for <strong>{activeSubjectSeed.displayName || activeSubjectSeed.entitySid}</strong>
+            {activeSubjectSeed.factionLabel && <span> ({activeSubjectSeed.factionLabel})</span>}
           </span>
           <div className="flex shrink-0 items-center gap-1">
             <Button

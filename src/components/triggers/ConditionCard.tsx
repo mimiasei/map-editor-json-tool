@@ -1,6 +1,8 @@
 import type { Condition } from '@/types/scenario'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
 import { getConditionCategory, formatConditionSentence, isConditionConfigured } from '@/lib/trigger-visual'
+import { useMapContextStore } from '@/store/useMapContextStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import { Pencil, Trash2, AlertTriangle, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -16,6 +18,8 @@ export default function ConditionCard({ condition, onEdit, onRemove }: Props) {
   const category = condition.c ? getConditionCategory(condition.c) : undefined
   const Icon = category?.icon ?? HelpCircle
   const configured = isConditionConfigured(condition)
+  const catalog = useCatalogStore((s) => s.catalog)
+  const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
 
   return (
     <div
@@ -42,7 +46,7 @@ export default function ConditionCard({ condition, onEdit, onRemove }: Props) {
       )}
       <div className="min-w-0">
         <p className={cn('text-sm leading-snug', !configured && 'italic text-muted-foreground')}>
-          {configured ? formatConditionSentence(condition) : 'Needs setup — click to configure'}
+          {configured ? formatConditionSentence(condition, { catalog, placedObjects }) : 'Needs setup — click to configure'}
         </p>
         {configured && def && (
           <p className="mt-0.5 text-[11px] text-muted-foreground">{def.label}</p>

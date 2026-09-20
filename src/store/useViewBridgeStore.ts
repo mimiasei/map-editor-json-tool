@@ -34,6 +34,11 @@ export interface PendingSubjectSeed {
   subjectKey: SubjectKey
   /** [questIndex, subQuestIndex, triggerIndex] of the Trigger this seed is for. */
   path: [number, number, number]
+  /** Castle subjects only: the resolved faction display name (e.g. "Temple"),
+   *  or "Random" when the city spawner has no faction assigned yet — shown
+   *  next to the entity SID in the subject-first banner so the map maker
+   *  knows which faction's buildings/verbs they're working with. */
+  factionLabel?: string
 }
 
 interface ViewBridgeStore {

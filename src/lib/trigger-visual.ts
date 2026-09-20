@@ -9,6 +9,9 @@
 import type { Condition, Action } from '@/types/scenario'
 import { CONDITION_REGISTRY, type ParamDef } from '@/schema/conditions'
 import { ACTION_REGISTRY } from '@/schema/actions'
+import type { GameCatalog } from '@/lib/catalog/types'
+import type { PlacedObject } from '@/types/map-context'
+import { resolveCastleFaction, getBuildingLevelNames } from '@/lib/building-options'
 import {
   Hash,
   Clock,
@@ -239,7 +242,24 @@ function fallbackSentence(label: string, params: ParamDef[], values: string[]): 
   return `${label} — ${parts.join(', ')}`
 }
 
-export function formatConditionSentence(condition: Condition): string {
+/** Optional game-data context for resolving a "Building SID" param into its
+ *  real name (e.g. "Hippodrome II") instead of the raw sid + "(level N)" —
+ *  omitted entirely when the caller has no catalog/map context on hand
+ *  (falls back to the old raw-sid text). */
+export interface SentenceCtx {
+  catalog?: GameCatalog | null
+  placedObjects?: PlacedObject[]
+}
+
+function buildingLabel(sid: string, level: string, castleEntitySid: string, ctx?: SentenceCtx): string {
+  if (!sid) return q(sid)
+  const faction = resolveCastleFaction(ctx?.placedObjects, castleEntitySid)
+  const names = getBuildingLevelNames(ctx?.catalog ?? null, sid, faction)
+  const name = names[Number(level) - 1]
+  return name ? q(name) : `${q(sid)}${level ? ` (level ${level})` : ''}`
+}
+
+export function formatConditionSentence(condition: Condition, ctx?: SentenceCtx): string {
   const p = (i: number) => val(condition, i)
   switch (condition.c) {
     case 'Counter':
@@ -288,9 +308,9 @@ export function formatConditionSentence(condition: Condition): string {
     case 'ResCounter':
       return `The player has ${opWord(p(1))} ${p(2)} ${p(0)}`
     case 'BuildingConstruct':
-      return `${q(p(0))} (level ${p(1)}) is built${p(2) ? ` in ${q(p(2))}` : ''}`
+      return `${buildingLabel(p(0), p(1), p(2), ctx)} is built${p(2) ? ` in ${q(p(2))}` : ''}`
     case 'BuildingOwn':
-      return `The player owns ${q(p(0))} (level ${p(1)})${p(2) ? ` in ${q(p(2))}` : ''}`
+      return `The player owns ${buildingLabel(p(0), p(1), p(2), ctx)}${p(2) ? ` in ${q(p(2))}` : ''}`
 
     case 'SpellCast':
       return `The player casts ${q(p(0))}`
@@ -381,7 +401,7 @@ export function formatConditionSentence(condition: Condition): string {
   }
 }
 
-export function formatActionSentence(action: Action): string {
+export function formatActionSentence(action: Action, ctx?: SentenceCtx): string {
   const p = (i: number) => val(action, i)
   switch (action.a) {
     case 'NextQuest':
@@ -492,9 +512,9 @@ export function formatActionSentence(action: Action): string {
     case 'UnlockSpell':
       return `Unlock spell ${q(p(0))}`
     case 'UnlockBuildingCity':
-      return `Unlock building ${q(p(0))} (level ${p(1)}) in ${q(p(2))}`
+      return `Unlock building ${buildingLabel(p(0), p(1), p(2), ctx)} in ${q(p(2))}`
     case 'CreateBuildingCity':
-      return `Build ${q(p(0))} (level ${p(1)}) in ${q(p(2))}`
+      return `Build ${buildingLabel(p(0), p(1), p(2), ctx)} in ${q(p(2))}`
     case 'CaptureObject':
       return `Capture ${q(p(0))}`
     case 'LoseObject':
