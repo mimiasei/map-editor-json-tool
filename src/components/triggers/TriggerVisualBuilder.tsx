@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import type { Trigger } from '@/types/scenario'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
 import { ACTION_REGISTRY } from '@/schema/actions'
@@ -11,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Repeat, X } from 'lucide-react'
+import { Plus, Repeat, Wand2, X } from 'lucide-react'
 import ConditionCard from './ConditionCard'
 import ActionCard from './ActionCard'
 import AddNodePopover from './AddNodePopover'
@@ -29,9 +30,33 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   const { updateTrigger, addCondition, updateCondition, removeCondition, addAction, updateAction, removeAction } =
     useScenarioStore()
 
+  const pendingSubjectSeed = useViewBridgeStore((s) => s.pendingSubjectSeed)
+  const clearSubjectSeed = useViewBridgeStore((s) => s.clearSubjectSeed)
+  const pendingResumeSelection = useViewBridgeStore((s) => s.pendingResumeSelection)
+  const clearPendingResumeSelection = useViewBridgeStore((s) => s.clearPendingResumeSelection)
+
   const [selected, setSelected] = useState<SelectedNode | null>(null)
   const [clearConditionsConfirming, setClearConditionsConfirming] = useState(false)
   const [clearActionsConfirming, setClearActionsConfirming] = useState(false)
+
+  // Reopens whichever inspector row was open before a "pick from map" trip —
+  // TriggerVisualBuilder fully unmounts while Map Grid is showing, so this
+  // local `selected` state doesn't survive the round trip on its own.
+  useEffect(() => {
+    if (pendingResumeSelection) {
+      setSelected(pendingResumeSelection)
+      clearPendingResumeSelection()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingResumeSelection])
+
+  const activeSubjectSeed =
+    pendingSubjectSeed &&
+    pendingSubjectSeed.path[0] === questIndex &&
+    pendingSubjectSeed.path[1] === subQuestIndex &&
+    pendingSubjectSeed.path[2] === triggerIndex
+      ? pendingSubjectSeed
+      : null
 
   const conditions = trigger.conditions
   const actions = trigger.actions
@@ -47,13 +72,14 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
     })
   }
 
-  const handleAddCondition = (type: string) => {
+  const handleAddCondition = (type: string, prefillParamIndex?: number) => {
     const newIndex = conditions.length
     addCondition(questIndex, subQuestIndex, triggerIndex)
     const def = CONDITION_REGISTRY[type]
+    const seededValue = activeSubjectSeed?.entitySid ?? ''
     updateCondition(questIndex, subQuestIndex, triggerIndex, newIndex, {
       c: type,
-      p: def ? def.params.map(() => '') : [],
+      p: def ? def.params.map((_p, i) => (i === prefillParamIndex ? seededValue : '')) : [],
     })
     if (!def || def.params.length > 0) setSelected({ kind: 'condition', index: newIndex })
   }
@@ -63,10 +89,14 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
     shiftSelection('condition', index)
   }
 
-  const handleAddAction = (type: string) => {
+  const handleAddAction = (type: string, prefillParamIndex?: number) => {
     const newIndex = actions.length
     const def = ACTION_REGISTRY[type]
-    addAction(questIndex, subQuestIndex, triggerIndex, { a: type, p: def ? def.params.map(() => '') : [] })
+    const seededValue = activeSubjectSeed?.entitySid ?? ''
+    addAction(questIndex, subQuestIndex, triggerIndex, {
+      a: type,
+      p: def ? def.params.map((_p, i) => (i === prefillParamIndex ? seededValue : '')) : [],
+    })
     if (!def || def.params.length > 0) setSelected({ kind: 'action', index: newIndex })
   }
 
@@ -97,17 +127,29 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
         </button>
       </div>
 
+      {activeSubjectSeed && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+          <span className="flex items-center gap-1.5">
+            <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
+            Creating a rule for <strong>{activeSubjectSeed.displayName || activeSubjectSeed.entitySid}</strong>
+          </span>
+          <Button variant="ghost" size="sm" className="h-6 shrink-0 text-xs" onClick={clearSubjectSeed}>
+            Done
+          </Button>
+        </div>
+      )}
+
       {isEmpty ? (
         <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-6 py-8 text-center">
           <p className="text-sm font-medium">This rule doesn't do anything yet.</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <AddNodePopover kind="condition" onPick={handleAddCondition}>
+            <AddNodePopover kind="condition" onPick={handleAddCondition} subjectKey={activeSubjectSeed?.subjectKey}>
               <Button variant="outline" size="lg" className="gap-1.5 rounded-xl border-amber-300/70">
                 <Plus className="h-4 w-4" />
                 Add a condition <span className="text-muted-foreground">(the "when")</span>
               </Button>
             </AddNodePopover>
-            <AddNodePopover kind="action" onPick={handleAddAction}>
+            <AddNodePopover kind="action" onPick={handleAddAction} subjectKey={activeSubjectSeed?.subjectKey}>
               <Button variant="outline" size="lg" className="gap-1.5 rounded-xl border-teal-300/70">
                 <Plus className="h-4 w-4" />
                 Add an action <span className="text-muted-foreground">(the "then")</span>
@@ -198,7 +240,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
               </div>
             )}
 
-            <AddNodePopover kind="condition" onPick={handleAddCondition}>
+            <AddNodePopover kind="condition" onPick={handleAddCondition} subjectKey={activeSubjectSeed?.subjectKey}>
               <button
                 type="button"
                 className="mt-2 inline-flex items-center gap-1.5 rounded-2xl border border-dashed border-amber-300/70 px-3 py-1.5 text-xs text-amber-800/80 transition-colors hover:bg-amber-100/50 dark:text-amber-300/80 dark:hover:bg-amber-950/20"
@@ -265,7 +307,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
               </div>
             )}
 
-            <AddNodePopover kind="action" onPick={handleAddAction}>
+            <AddNodePopover kind="action" onPick={handleAddAction} subjectKey={activeSubjectSeed?.subjectKey}>
               <button
                 type="button"
                 className="mt-2 inline-flex items-center gap-1.5 rounded-2xl border border-dashed border-teal-300/70 px-3 py-1.5 text-xs text-teal-800/80 transition-colors hover:bg-teal-100/50 dark:text-teal-300/80 dark:hover:bg-teal-950/20"

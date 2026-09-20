@@ -75,6 +75,8 @@ import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
 import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
+import type { SubjectKey } from '@/lib/trigger-subjects'
 import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
@@ -275,6 +277,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const mapFilePath = useScenarioStore((s) => s.mapFilePath)
   const localization = useScenarioStore((s) => s.localization)
   const dialogs = useScenarioStore((s) => s.dialogs)
+  const addQuest = useScenarioStore((s) => s.addQuest)
+  const updateQuest = useScenarioStore((s) => s.updateQuest)
+  const addSubQuest = useScenarioStore((s) => s.addSubQuest)
+  const addTrigger = useScenarioStore((s) => s.addTrigger)
+  const setScenarioSelection = useScenarioStore((s) => s.setSelection)
+  const requestSubjectFirst = useViewBridgeStore((s) => s.requestSubjectFirst)
   const entities = context?.entities ?? []
 
   const sizeX = context?.sizeX ?? 0
@@ -2899,6 +2907,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
+  // Subject-first trigger creation (MapGridCellContent's "Create a rule for
+  // this") — resolves which SUBJECT_DEFS bucket applies from data already on
+  // PlacedObject (no new capability system), eagerly creates a real
+  // Quest/SubQuest/Trigger, and hands off to the Scenario Editor via
+  // useViewBridgeStore. Requires entitySid; the button itself is only shown
+  // once one is assigned (MapGridCellContent's own guard).
+  const handleCreateRule = (item: PlacedObject) => {
+    if (!item.entitySid) return
+    const subjectKey: SubjectKey =
+      item.type === 2 ? 'squad' : item.isCity ? 'castle' : item.portalInfo ? 'portal' : 'object'
+
+    addQuest()
+    const qi = useScenarioStore.getState().scenario.quests.length - 1
+    updateQuest(qi, { sid: `rule_for_${item.entitySid}` })
+    addSubQuest(qi)
+    const sqi = useScenarioStore.getState().scenario.quests[qi].subQuests.length - 1
+    addTrigger(qi, sqi)
+    const ti = useScenarioStore.getState().scenario.quests[qi].subQuests[sqi].triggers.length - 1
+
+    setScenarioSelection('trigger', [qi, sqi, ti])
+    requestSubjectFirst({ entitySid: item.entitySid, displayName: item.displayName, subjectKey, path: [qi, sqi, ti] })
+  }
+
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
   const allSpawners = useMemo(() => placedObjects.filter((p) => p.spawnerInfo), [placedObjects])
   const selectSpawner = useCallback((item: PlacedObject) => {
@@ -5193,6 +5224,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onConfirmDelete={canEditEntities ? confirmDelete : undefined}
                   onCancelDelete={canEditEntities ? cancelDelete : undefined}
                   onSelectionChange={setInspectedItem}
+                  onCreateRule={handleCreateRule}
                 />
               ) : null}
             </div>

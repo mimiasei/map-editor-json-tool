@@ -19,11 +19,14 @@ import {
   HIDDEN_CONDITION_TYPES,
   HIDDEN_ACTION_TYPES,
 } from '@/lib/trigger-visual'
+import { SUBJECT_DEFS, type SubjectKey } from '@/lib/trigger-subjects'
 
 interface Item {
   type: string
   label: string
   description: string
+  /** Set only for "This <subject>" suggested items — see subjectKey above. */
+  paramIndex?: number
 }
 
 interface Group {
@@ -34,15 +37,20 @@ interface Group {
 
 interface Props {
   kind: 'condition' | 'action'
-  onPick: (type: string) => void
+  onPick: (type: string, prefillParamIndex?: number) => void
   children: ReactNode
+  /** Subject-first trigger creation — shows a "This <subject>" group of
+   *  verbs relevant to the seeded object above everything else. The picked
+   *  verb's seeded-entity param index is reported back via onPick so the
+   *  caller (which already knows the entitySid) can pre-fill it. */
+  subjectKey?: SubjectKey
 }
 
 function toItem(def: { type: string; label: string; description: string }): Item {
   return { type: def.type, label: def.label, description: def.description }
 }
 
-export default function AddNodePopover({ kind, onPick, children }: Props) {
+export default function AddNodePopover({ kind, onPick, children, subjectKey }: Props) {
   const [open, setOpen] = useState(false)
 
   const groups = useMemo<Group[]>(() => {
@@ -70,9 +78,21 @@ export default function AddNodePopover({ kind, onPick, children }: Props) {
       .map(toItem)
   }, [kind, open])
 
-  const handlePick = (type: string) => {
+  const suggested = useMemo<Item[]>(() => {
+    if (!subjectKey) return []
+    const all = kind === 'condition' ? CONDITION_LIST : ACTION_LIST
+    return SUBJECT_DEFS[subjectKey].verbs
+      .filter((v) => v.kind === kind)
+      .map((v): Item | null => {
+        const def = all.find((d) => d.type === v.type)
+        return def ? { ...toItem(def), paramIndex: v.paramIndex } : null
+      })
+      .filter((item): item is Item => !!item)
+  }, [kind, subjectKey])
+
+  const handlePick = (type: string, prefillParamIndex?: number) => {
     recordRecentType(kind, type)
-    onPick(type)
+    onPick(type, prefillParamIndex)
     setOpen(false)
   }
 
@@ -84,6 +104,19 @@ export default function AddNodePopover({ kind, onPick, children }: Props) {
           <CommandInput placeholder={`Search ${kind}s…`} />
           <CommandList className="max-h-80">
             <CommandEmpty>No matches.</CommandEmpty>
+            {suggested.length > 0 && subjectKey && (
+              <CommandGroup heading={SUBJECT_DEFS[subjectKey].label}>
+                {suggested.map((item) => (
+                  <CommandItem
+                    key={`suggested-${item.type}`}
+                    value={`suggested ${item.label} ${item.type}`}
+                    onSelect={() => handlePick(item.type, item.paramIndex)}
+                  >
+                    {item.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
             {recent.length > 0 && (
               <CommandGroup heading="Recently used">
                 {recent.map((item) => (

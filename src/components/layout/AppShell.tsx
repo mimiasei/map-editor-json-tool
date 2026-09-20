@@ -7,6 +7,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { commitMapWithPathPrompt } from '@/lib/map-file'
 import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
@@ -115,7 +116,9 @@ export default function AppShell() {
   const [guidesOpen,    setGuidesOpen]    = useState(false)
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
-  const [mapGridOpen, setMapGridOpen] = useState(false)
+  const mapGridOpen = useViewBridgeStore((s) => s.mapGridOpen)
+  const openMapGrid = useViewBridgeStore((s) => s.openMapGrid)
+  const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
   // Desktop exit-confirmation (issue #195 follow-up) — resolved via
   // askExitChoice below, which the close-request handler awaits.
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
@@ -637,7 +640,7 @@ export default function AppShell() {
         onGuidesOpen={() => setGuidesOpen(true)}
         onDialogBrowserOpen={() => setDialogBrowserOpen(true)}
         onGameDatabaseOpen={() => setGameDatabaseOpen(true)}
-        onMapGridOpen={() => setMapGridOpen(true)}
+        onMapGridOpen={openMapGrid}
         onNew={handleNew}
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
@@ -728,7 +731,7 @@ export default function AppShell() {
         <div className="flex-1 overflow-hidden p-3">
           <MapGridDialog
             open={mapGridOpen}
-            onOpenChange={setMapGridOpen}
+            onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
             onUndock={() => handleUndock('mapGridCell')}
             undocked={isUndocked('mapGridCell')}
           />
