@@ -29,7 +29,7 @@ export default function ConditionCard({ condition, onEdit, onRemove }: Props) {
         }
       }}
       className={cn(
-        'group relative flex min-w-[180px] max-w-[260px] cursor-pointer items-start gap-2.5 rounded-2xl border-l-4 px-4 py-3 pr-9 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'group relative flex min-w-[180px] cursor-pointer items-start gap-2.5 rounded-2xl border-l-4 px-4 py-3 pr-9 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         configured
           ? 'border border-amber-100 border-l-amber-400 bg-card dark:border-amber-900/40'
           : 'border border-dashed border-amber-300/70 border-l-amber-300 bg-amber-50/50 dark:bg-amber-950/10',

@@ -180,12 +180,12 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                 No conditions yet — this will fire every time it's checked.
               </p>
             ) : (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col items-start gap-2">
                 {conditions.map((condition, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={i} className="flex flex-col items-start gap-2">
                     {i > 0 && (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-                        {logic === 'And' ? 'ALL' : 'ANY'}
+                      <span className="pl-1 text-[10px] font-semibold uppercase tracking-wider text-amber-700/80 dark:text-amber-400/80">
+                        {logic === 'And' ? 'AND' : 'OR'}
                       </span>
                     )}
                     <ConditionCard
