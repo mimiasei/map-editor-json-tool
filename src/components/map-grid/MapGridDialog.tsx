@@ -2933,25 +2933,33 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // Subject-first trigger creation (MapGridCellContent's "Create a rule for
   // this") — resolves which SUBJECT_DEFS bucket applies from data already on
-  // PlacedObject (no new capability system), eagerly creates a real
-  // Quest/SubQuest/Trigger, and hands off to the Scenario Editor via
-  // useViewBridgeStore. Requires entitySid; the button itself is only shown
-  // once one is assigned (MapGridCellContent's own guard).
+  // PlacedObject (no new capability system), auto-assigns an entity SID if
+  // the object doesn't already have one (so the button works on any object,
+  // not just ones an author already happened to name), eagerly creates a
+  // real Quest/SubQuest/Trigger, and hands off to the Scenario Editor via
+  // useViewBridgeStore.
   const handleCreateRule = (item: PlacedObject) => {
-    if (!item.entitySid) return
+    let entitySid = item.entitySid
+    if (!entitySid) {
+      let n = 1
+      let candidate = `${item.sid}_${n}`
+      while (existingSids.includes(candidate)) { n += 1; candidate = `${item.sid}_${n}` }
+      entitySid = candidate
+      applyEdit({ kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid: entitySid }, 'assign entity SID')
+    }
     const subjectKey: SubjectKey =
       item.type === 2 ? 'squad' : item.isCity ? 'castle' : item.portalInfo ? 'portal' : 'object'
 
     addQuest()
     const qi = useScenarioStore.getState().scenario.quests.length - 1
-    updateQuest(qi, { sid: `rule_for_${item.entitySid}` })
+    updateQuest(qi, { sid: `rule_for_${entitySid}` })
     addSubQuest(qi)
     const sqi = useScenarioStore.getState().scenario.quests[qi].subQuests.length - 1
     addTrigger(qi, sqi)
     const ti = useScenarioStore.getState().scenario.quests[qi].subQuests[sqi].triggers.length - 1
 
     setScenarioSelection('trigger', [qi, sqi, ti])
-    requestSubjectFirst({ entitySid: item.entitySid, displayName: item.displayName, subjectKey, path: [qi, sqi, ti] })
+    requestSubjectFirst({ entitySid, displayName: item.displayName, subjectKey, path: [qi, sqi, ti] })
   }
 
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
@@ -5259,7 +5267,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onConfirmDelete={canEditEntities ? confirmDelete : undefined}
                   onCancelDelete={canEditEntities ? cancelDelete : undefined}
                   onSelectionChange={setInspectedItem}
-                  onCreateRule={handleCreateRule}
+                  onCreateRule={canEditEntities ? handleCreateRule : undefined}
                 />
               ) : null}
             </div>

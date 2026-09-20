@@ -27,7 +27,7 @@ interface Props {
 }
 
 export default function TriggerVisualBuilder({ questIndex, subQuestIndex, triggerIndex, trigger }: Props) {
-  const { updateTrigger, addCondition, updateCondition, removeCondition, addAction, updateAction, removeAction } =
+  const { updateTrigger, addCondition, updateCondition, removeCondition, addAction, updateAction, removeAction, removeQuest } =
     useScenarioStore()
 
   const pendingSubjectSeed = useViewBridgeStore((s) => s.pendingSubjectSeed)
@@ -173,9 +173,22 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
             <Wand2 className="h-3.5 w-3.5 text-primary shrink-0" />
             Creating a rule for <strong>{activeSubjectSeed.displayName || activeSubjectSeed.entitySid}</strong>
           </span>
-          <Button variant="ghost" size="sm" className="h-6 shrink-0 text-xs" onClick={clearSubjectSeed}>
-            Done
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs text-muted-foreground hover:text-destructive"
+              onClick={() => {
+                removeQuest(activeSubjectSeed.path[0])
+                clearSubjectSeed()
+              }}
+            >
+              Cancel
+            </Button>
+            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearSubjectSeed}>
+              Done
+            </Button>
+          </div>
         </div>
       )}
 

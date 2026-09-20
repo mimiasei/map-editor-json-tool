@@ -494,7 +494,7 @@ export default function MapGridCellContent({
             </div>
           )}
 
-          {selected && (selected.type === 0 || selected.type === 2) && selected.entitySid && onCreateRule && (
+          {selected && (selected.type === 0 || selected.type === 2) && onCreateRule && (
             <div className="pt-1">
               <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onCreateRule(selected)}>
                 <Wand2 className="h-3 w-3" />
@@ -538,11 +538,6 @@ export default function MapGridCellContent({
                   <UserCog className="h-3 w-3" />
                   Edit full hero
                 </Button>
-              )}
-              {(selected.type === 0 || selected.type === 2) && onCreateRule && (
-                <p className="text-xs text-muted-foreground">
-                  Assign an entity SID above to create scripting rules for this object.
-                </p>
               )}
             </div>
           )}
