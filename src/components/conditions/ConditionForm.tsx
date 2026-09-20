@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import { MapPin, Trash2 } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
@@ -22,9 +22,14 @@ interface Props {
   condition: Condition
   onChange: (condition: Condition) => void
   onRemove: () => void
+  /** "Pick from map" button next to mapEntity/hero fields — switches to Map
+   *  Grid, then returns here with the clicked object's SID filled in. Omitted
+   *  entirely when absent (e.g. inside the subject-first seeding flow, which
+   *  doesn't have a resume point to return to). */
+  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero') => void
 }
 
-export default function ConditionForm({ condition, onChange, onRemove }: Props) {
+export default function ConditionForm({ condition, onChange, onRemove, onPickFromMap }: Props) {
   const def = CONDITION_REGISTRY[condition.c]
   const isCustom = !def
   const entities = useMapContextStore((s) => s.context?.entities)
@@ -137,11 +142,27 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                 />
               ) : param.mapEntity ? (
                 <>
-                  <MapEntityCombobox
-                    value={(condition.p ?? [])[i] ?? ''}
-                    onChange={(v) => updateParam(i, v)}
-                    placeholder={param.hint}
-                  />
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 min-w-0">
+                      <MapEntityCombobox
+                        value={(condition.p ?? [])[i] ?? ''}
+                        onChange={(v) => updateParam(i, v)}
+                        placeholder={param.hint}
+                      />
+                    </div>
+                    {onPickFromMap && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 shrink-0"
+                        title="Pick from map"
+                        onClick={() => onPickFromMap(i, 'mapEntity')}
+                      >
+                        <MapPin className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                   {(() => {
                     const coords = entityCoordsMap.get((condition.p ?? [])[i] ?? '')
                     return coords ? (
@@ -150,12 +171,28 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                   })()}
                 </>
               ) : param.entity ? (
-                <EntityCombobox
-                  value={(condition.p ?? [])[i] ?? ''}
-                  onChange={(v) => updateParam(i, v)}
-                  category={param.entity}
-                  placeholder={param.hint}
-                />
+                <div className="flex items-center gap-1">
+                  <div className="flex-1 min-w-0">
+                    <EntityCombobox
+                      value={(condition.p ?? [])[i] ?? ''}
+                      onChange={(v) => updateParam(i, v)}
+                      category={param.entity}
+                      placeholder={param.hint}
+                    />
+                  </div>
+                  {param.entity === 'hero' && onPickFromMap && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      title="Pick a hero spawner from the map"
+                      onClick={() => onPickFromMap(i, 'hero')}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <Input
                   type={param.type === 'number' ? 'number' : 'text'}

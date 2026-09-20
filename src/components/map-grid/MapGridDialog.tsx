@@ -283,6 +283,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const addTrigger = useScenarioStore((s) => s.addTrigger)
   const setScenarioSelection = useScenarioStore((s) => s.setSelection)
   const requestSubjectFirst = useViewBridgeStore((s) => s.requestSubjectFirst)
+  const pendingPick = useViewBridgeStore((s) => s.pendingPick)
+  const resolvePick = useViewBridgeStore((s) => s.resolvePick)
+  const cancelPick = useViewBridgeStore((s) => s.cancelPick)
+  const [pickHint, setPickHint] = useState<string | null>(null)
+  useEffect(() => { setPickHint(null) }, [pendingPick])
   const entities = context?.entities ?? []
 
   const sizeX = context?.sizeX ?? 0
@@ -1512,6 +1517,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     if (e.button !== 0) return
+    // Picking mode (Scenario Editor's "pick from map" button) overrides every
+    // other tool while active — a click here means "resolve the pending
+    // field," never paint/place/select.
+    if (pendingPick) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        const itemsHere = tileIndex.get(node) ?? []
+        if (pendingPick.kind === 'mapEntity') {
+          const withSid = itemsHere.find((it) => it.entitySid)
+          if (withSid?.entitySid) resolvePick(withSid.entitySid)
+          else setPickHint('This object has no entity SID yet.')
+        } else {
+          const spawner = itemsHere.find((it) => it.spawnerInfo?.spawnPointType === 1 && it.spawnerInfo.heroSid)
+          if (spawner?.spawnerInfo?.heroSid) resolvePick(spawner.spawnerInfo.heroSid)
+          else setPickHint('Click a hero spawner with a hero assigned.')
+        }
+      }
+      return
+    }
     // Paint mode replaces panning entirely while active — a pointer-down
     // starts a paint stroke (captured so it continues even if the cursor
     // briefly leaves the canvas), not a viewport drag.
@@ -3559,6 +3583,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         `open` is true, so the `open`-gated effects/guards throughout this
         file (unchanged from the dialog version) still behave correctly. */}
     <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
+        {pendingPick && (
+          <div className="flex items-center justify-between gap-2 px-4 py-1.5 bg-primary/10 border-b border-primary/30 shrink-0 text-xs">
+            <span>
+              Pick a target for <strong>{pendingPick.label}</strong> — click an object on the grid.
+              {pickHint && <span className="text-destructive ml-2">{pickHint}</span>}
+            </span>
+            <Button variant="ghost" size="sm" className="h-6 shrink-0 text-xs" onClick={cancelPick}>
+              Cancel
+            </Button>
+          </div>
+        )}
         <div className="relative flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
           <Button
             variant="ghost"

@@ -14,6 +14,9 @@ interface Props {
   onRemoveCondition: (index: number) => void
   onUpdateAction: (index: number, action: Action) => void
   onRemoveAction: (index: number) => void
+  /** "Pick from map" for a mapEntity/hero field on whichever row is open —
+   *  see ConditionForm/ActionForm's identical prop. */
+  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero') => void
 }
 
 export default function TriggerInspectorPanel({
@@ -24,6 +27,7 @@ export default function TriggerInspectorPanel({
   onRemoveCondition,
   onUpdateAction,
   onRemoveAction,
+  onPickFromMap,
 }: Props) {
   return (
     <Sheet
@@ -48,6 +52,7 @@ export default function TriggerInspectorPanel({
                 onRemoveCondition(selected.index)
                 onClose()
               }}
+              onPickFromMap={onPickFromMap}
             />
           </>
         )}
@@ -66,6 +71,7 @@ export default function TriggerInspectorPanel({
                 onRemoveAction(selected.index)
                 onClose()
               }}
+              onPickFromMap={onPickFromMap}
             />
           </>
         )}

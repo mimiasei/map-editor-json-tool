@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Trash2, ExternalLink, ClipboardCopy } from 'lucide-react'
+import { MapPin, Trash2, ExternalLink, ClipboardCopy } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
@@ -28,9 +28,12 @@ interface Props {
   action: Action
   onChange: (action: Action) => void
   onRemove: () => void
+  /** "Pick from map" button next to mapEntity/hero fields — see ConditionForm's
+   *  identical prop for the full explanation. */
+  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero') => void
 }
 
-export default function ActionForm({ action, onChange, onRemove }: Props) {
+export default function ActionForm({ action, onChange, onRemove, onPickFromMap }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const isCustom = !def
   const { openDialogEditor } = useScenarioStore()
@@ -167,11 +170,27 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
                 />
               ) : param.mapEntity ? (
                 <>
-                  <MapEntityCombobox
-                    value={(action.p ?? [])[i] ?? ''}
-                    onChange={(v) => updateParam(i, v)}
-                    placeholder={param.hint}
-                  />
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 min-w-0">
+                      <MapEntityCombobox
+                        value={(action.p ?? [])[i] ?? ''}
+                        onChange={(v) => updateParam(i, v)}
+                        placeholder={param.hint}
+                      />
+                    </div>
+                    {onPickFromMap && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 shrink-0"
+                        title="Pick from map"
+                        onClick={() => onPickFromMap(i, 'mapEntity')}
+                      >
+                        <MapPin className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                   {(() => {
                     const coords = entityCoordsMap.get((action.p ?? [])[i] ?? '')
                     return coords ? (
@@ -180,12 +199,28 @@ export default function ActionForm({ action, onChange, onRemove }: Props) {
                   })()}
                 </>
               ) : param.entity ? (
-                <EntityCombobox
-                  value={(action.p ?? [])[i] ?? ''}
-                  onChange={(v) => updateParam(i, v)}
-                  category={param.entity}
-                  placeholder={param.hint}
-                />
+                <div className="flex items-center gap-1">
+                  <div className="flex-1 min-w-0">
+                    <EntityCombobox
+                      value={(action.p ?? [])[i] ?? ''}
+                      onChange={(v) => updateParam(i, v)}
+                      category={param.entity}
+                      placeholder={param.hint}
+                    />
+                  </div>
+                  {param.entity === 'hero' && onPickFromMap && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      title="Pick a hero spawner from the map"
+                      onClick={() => onPickFromMap(i, 'hero')}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <Input
                   type={param.type === 'number' ? 'number' : 'text'}

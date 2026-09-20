@@ -34,6 +34,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   const clearSubjectSeed = useViewBridgeStore((s) => s.clearSubjectSeed)
   const pendingResumeSelection = useViewBridgeStore((s) => s.pendingResumeSelection)
   const clearPendingResumeSelection = useViewBridgeStore((s) => s.clearPendingResumeSelection)
+  const requestPick = useViewBridgeStore((s) => s.requestPick)
 
   const [selected, setSelected] = useState<SelectedNode | null>(null)
   const [clearConditionsConfirming, setClearConditionsConfirming] = useState(false)
@@ -103,6 +104,45 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   const handleRemoveAction = (index: number) => {
     removeAction(questIndex, subQuestIndex, triggerIndex, index)
     shiftSelection('action', index)
+  }
+
+  // "Pick from map" (ConditionForm/ActionForm's map-pin button) — switches to
+  // Map Grid, then writes the clicked object's SID back into this exact
+  // param once resolved. Reads the trigger fresh at resolve time (via
+  // getState()) rather than trusting this closure's captured conditions/
+  // actions, since the whole Scenario Editor unmounts for the round trip.
+  const handlePickFromMap = (paramIndex: number, kind: 'mapEntity' | 'hero') => {
+    if (!selected) return
+    const resumeSelection = selected
+    const def =
+      resumeSelection.kind === 'condition'
+        ? CONDITION_REGISTRY[conditions[resumeSelection.index]?.c]
+        : ACTION_REGISTRY[actions[resumeSelection.index]?.a]
+    const label = def?.params[paramIndex]?.label ?? 'value'
+
+    requestPick({
+      kind,
+      label,
+      resumeSelection,
+      onResolve: (value) => {
+        const liveTrigger =
+          useScenarioStore.getState().scenario.quests[questIndex]?.subQuests[subQuestIndex]?.triggers[triggerIndex]
+        if (!liveTrigger) return
+        if (resumeSelection.kind === 'condition') {
+          const current = liveTrigger.conditions[resumeSelection.index]
+          if (!current) return
+          const p = [...(current.p ?? [])]
+          p[paramIndex] = value
+          updateCondition(questIndex, subQuestIndex, triggerIndex, resumeSelection.index, { ...current, p })
+        } else {
+          const current = liveTrigger.actions[resumeSelection.index]
+          if (!current) return
+          const p = [...(current.p ?? [])]
+          p[paramIndex] = value
+          updateAction(questIndex, subQuestIndex, triggerIndex, resumeSelection.index, { ...current, p })
+        }
+      },
+    })
   }
 
   const isEmpty = conditions.length === 0 && actions.length === 0
@@ -328,6 +368,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
         onRemoveCondition={handleRemoveCondition}
         onUpdateAction={(i, a) => updateAction(questIndex, subQuestIndex, triggerIndex, i, a)}
         onRemoveAction={handleRemoveAction}
+        onPickFromMap={handlePickFromMap}
       />
     </div>
   )
