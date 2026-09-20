@@ -48,6 +48,22 @@ function genericLevelNames(building: CatalogCityBuilding): string[] {
   return building.levelNames
 }
 
+/** Display level names for a building once its real faction is known —
+ *  every faction's real dwelling name still needs its tier called out (e.g.
+ *  "Kennel" alone doesn't say which of the 7 dwelling slots it fills the way
+ *  "Griffin Rookery" not-so-obviously does either), so dwellings get a
+ *  "(Tier N)" suffix appended to their real name. Every other category's
+ *  real name already stands on its own (Main/Bank/Market/... aren't part of
+ *  a same-named family the way the 7 dwellings are). */
+function displayLevelNames(building: CatalogCityBuilding, faction: string | undefined): string[] {
+  if (!faction) return genericLevelNames(building)
+  if (building.category === 'dwelling') {
+    const tier = building.sid.match(/Tier_(\d+)/)?.[1] ?? '?'
+    return building.levelNames.map((name) => `${name} (Tier ${tier})`)
+  }
+  return building.levelNames
+}
+
 /** Building choices for the "Building SID" dropdown: that faction's real
  *  buildings, or — when the faction isn't known yet (random-faction city
  *  spawner, or no castle picked yet) — only the sids present for every
@@ -57,7 +73,11 @@ function genericLevelNames(building: CatalogCityBuilding): string[] {
  *  labels replaced by a neutral generic name (see genericLevelNames). */
 export function getBuildingOptions(catalog: GameCatalog | null, faction: string | undefined): CatalogCityBuilding[] {
   const all = catalog?.cityBuildings ?? []
-  if (faction) return all.filter((b) => b.fraction === faction)
+  if (faction) {
+    return all
+      .filter((b) => b.fraction === faction)
+      .map((b) => ({ ...b, levelNames: displayLevelNames(b, faction) }))
+  }
 
   const factionCount = new Set(all.map((b) => b.fraction)).size
   if (factionCount === 0) return []
@@ -69,21 +89,22 @@ export function getBuildingOptions(catalog: GameCatalog | null, faction: string 
   for (const b of all) {
     if (countBySid.get(b.sid) === factionCount && !seen.has(b.sid)) {
       seen.add(b.sid)
-      generic.push({ ...b, levelNames: genericLevelNames(b) })
+      generic.push({ ...b, levelNames: displayLevelNames(b, undefined) })
     }
   }
   return generic
 }
 
-/** Real level names for a specific building sid (e.g. ["Griffin Rookery",
- *  "Griffin Rookery II"]) — each building's real level count varies (Main: 3,
- *  Magic Guild: 5, dwellings: 2, most others: 1), never a uniform 1-5 range.
- *  With no faction (random-faction castle), Main/dwelling sids resolve to
- *  the same neutral generic name getBuildingOptions shows in the dropdown,
- *  not whichever faction's entry happens to be first in the catalog. Falls
- *  back to any faction carrying that sid if the given faction doesn't
- *  (shouldn't normally happen once picked from getBuildingOptions' own list,
- *  but keeps a stale/hand-typed sid from resolving to nothing). */
+/** Display level names for a specific building sid (e.g. ["Griffin Rookery
+ *  (Tier 3)", "Griffin Rookery II (Tier 3)"]) — each building's real level
+ *  count varies (Main: 3, Magic Guild: 5, dwellings: 2, most others: 1),
+ *  never a uniform 1-5 range. With no faction (random-faction castle),
+ *  Main/dwelling sids resolve to the same neutral generic name
+ *  getBuildingOptions shows in the dropdown, not whichever faction's entry
+ *  happens to be first in the catalog. Falls back to any faction carrying
+ *  that sid if the given faction doesn't (shouldn't normally happen once
+ *  picked from getBuildingOptions' own list, but keeps a stale/hand-typed
+ *  sid from resolving to nothing). */
 export function getBuildingLevelNames(
   catalog: GameCatalog | null,
   sid: string | undefined,
@@ -95,5 +116,5 @@ export function getBuildingLevelNames(
     (faction ? all.find((b) => b.sid === sid && b.fraction === faction) : undefined) ??
     all.find((b) => b.sid === sid)
   if (!match) return []
-  return faction ? match.levelNames : genericLevelNames(match)
+  return displayLevelNames(match, faction)
 }
