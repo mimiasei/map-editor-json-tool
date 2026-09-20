@@ -600,8 +600,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Economy',
     description: 'Unlocks a previously restricted building for construction in the specified castle. Level: mage_guild 1–5, main building/walls 1–3, dwellings 1–2, others 1.',
     params: [
-      { label: 'Building SID', hint: 'e.g. mage_guild', required: true },
-      { label: 'Level', hint: '1–5', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
+      { label: 'Building SID', hint: 'e.g. mage_guild', required: true, buildingSid: true },
+      { label: 'Level', hint: 'Set building level', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
       { label: 'Castle entity', hint: 'e.g. city_1', required: true, mapEntity: true },
     ],
   },
@@ -611,8 +611,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Economy',
     description: 'Creates (builds) the specified building at the specified level in the castle. Level: mage_guild 1–5, main building/walls 1–3, dwellings 1–2, others 1.',
     params: [
-      { label: 'Building SID', hint: 'e.g. mage_guild', required: true },
-      { label: 'Level', hint: '1–5', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
+      { label: 'Building SID', hint: 'e.g. mage_guild', required: true, buildingSid: true },
+      { label: 'Level', hint: 'Set building level', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
       { label: 'Castle entity', hint: 'e.g. city_1', required: true, mapEntity: true },
     ],
   },

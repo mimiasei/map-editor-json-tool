@@ -1,6 +1,8 @@
 import type { Condition } from '@/types/scenario'
 import { CONDITION_REGISTRY, CONDITION_LIST } from '@/schema/conditions'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
+import { resolveCastleFaction, getBuildingOptions, getBuildingLevelNames } from '@/lib/building-options'
 import { useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import { MapPin, Trash2 } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
@@ -22,12 +24,19 @@ interface Props {
   condition: Condition
   onChange: (condition: Condition) => void
   onRemove: () => void
+  /** "Pick from map" button next to mapEntity/hero fields — switches to Map
+   *  Grid, then returns here with the clicked object's SID filled in. Omitted
+   *  entirely when absent (e.g. inside the subject-first seeding flow, which
+   *  doesn't have a resume point to return to). */
+  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero') => void
 }
 
-export default function ConditionForm({ condition, onChange, onRemove }: Props) {
+export default function ConditionForm({ condition, onChange, onRemove, onPickFromMap }: Props) {
   const def = CONDITION_REGISTRY[condition.c]
   const isCustom = !def
   const entities = useMapContextStore((s) => s.context?.entities)
+  const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
+  const catalog = useCatalogStore((s) => s.catalog)
   const entityCoordsMap = useMemo(() => {
     const map = new Map<string, string>()
     for (const e of entities ?? []) {
@@ -35,6 +44,23 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
     }
     return map
   }, [entities])
+
+  const buildingSidIndex = def?.params.findIndex((p) => p.buildingSid) ?? -1
+  const castleEntitySid =
+    buildingSidIndex >= 0 ? (condition.p ?? [])[buildingSidIndex + 2] : undefined
+  const castleFaction = useMemo(
+    () => resolveCastleFaction(placedObjects, castleEntitySid),
+    [placedObjects, castleEntitySid],
+  )
+  const buildingOptions = useMemo(
+    () => getBuildingOptions(catalog, castleFaction),
+    [catalog, castleFaction],
+  )
+  const selectedBuildingSid = buildingSidIndex >= 0 ? (condition.p ?? [])[buildingSidIndex] : undefined
+  const buildingLevelNames = useMemo(
+    () => getBuildingLevelNames(catalog, selectedBuildingSid, castleFaction),
+    [catalog, selectedBuildingSid, castleFaction],
+  )
 
   const updateType = (type: string) => {
     if (type === '__custom__') {
@@ -106,13 +132,51 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
       {/* Known params */}
       {def && def.params.length > 0 && (
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
-          {def.params.map((param, i) => (
+          {def.params.map((param, i) => {
+            const isBuildingLevelParam = buildingSidIndex >= 0 && i === buildingSidIndex + 1
+            const buildingLevelOptions =
+              isBuildingLevelParam && buildingLevelNames.length > 0
+                ? buildingLevelNames.map((name, idx) => ({ value: String(idx + 1), label: name }))
+                : undefined
+            return (
             <div key={i} className="space-y-1">
               <div className="flex items-center gap-1">
                 <Label className="text-xs">{param.label}</Label>
                 <HelpTooltip category="conditions" id={condition.c} paramIndex={i} />
               </div>
-              {param.type === 'enum' && param.options ? (
+              {param.buildingSid && buildingOptions.length > 0 ? (
+                <Select
+                  value={(condition.p ?? [])[i] ?? ''}
+                  onValueChange={(v) => updateParam(i, v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={param.hint} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {buildingOptions.map((b) => (
+                      <SelectItem key={b.sid} value={b.sid}>
+                        {b.levelNames[0] ?? b.sid}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : buildingLevelOptions ? (
+                <Select
+                  value={(condition.p ?? [])[i] ?? ''}
+                  onValueChange={(v) => updateParam(i, v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={param.hint} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {buildingLevelOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.value} – {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : param.type === 'enum' && param.options ? (
                 <Select
                   value={(condition.p ?? [])[i] ?? ''}
                   onValueChange={(v) => updateParam(i, v)}
@@ -137,11 +201,27 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                 />
               ) : param.mapEntity ? (
                 <>
-                  <MapEntityCombobox
-                    value={(condition.p ?? [])[i] ?? ''}
-                    onChange={(v) => updateParam(i, v)}
-                    placeholder={param.hint}
-                  />
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 min-w-0">
+                      <MapEntityCombobox
+                        value={(condition.p ?? [])[i] ?? ''}
+                        onChange={(v) => updateParam(i, v)}
+                        placeholder={param.hint}
+                      />
+                    </div>
+                    {onPickFromMap && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 shrink-0"
+                        title="Pick from map"
+                        onClick={() => onPickFromMap(i, 'mapEntity')}
+                      >
+                        <MapPin className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                   {(() => {
                     const coords = entityCoordsMap.get((condition.p ?? [])[i] ?? '')
                     return coords ? (
@@ -150,12 +230,28 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                   })()}
                 </>
               ) : param.entity ? (
-                <EntityCombobox
-                  value={(condition.p ?? [])[i] ?? ''}
-                  onChange={(v) => updateParam(i, v)}
-                  category={param.entity}
-                  placeholder={param.hint}
-                />
+                <div className="flex items-center gap-1">
+                  <div className="flex-1 min-w-0">
+                    <EntityCombobox
+                      value={(condition.p ?? [])[i] ?? ''}
+                      onChange={(v) => updateParam(i, v)}
+                      category={param.entity}
+                      placeholder={param.hint}
+                    />
+                  </div>
+                  {param.entity === 'hero' && onPickFromMap && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      title="Pick a hero spawner from the map"
+                      onClick={() => onPickFromMap(i, 'hero')}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <Input
                   type={param.type === 'number' ? 'number' : 'text'}
@@ -165,7 +261,8 @@ export default function ConditionForm({ condition, onChange, onRemove }: Props) 
                 />
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

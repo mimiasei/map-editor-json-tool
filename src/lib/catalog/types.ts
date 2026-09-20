@@ -223,6 +223,26 @@ export interface CatalogSpeakerTitle {
   name: string
 }
 
+/** A real city building line (Core/DB/objects_logic/cities/*_city.json),
+ *  issue #(subject-first building dropdown) — one entry per (fraction, sid)
+ *  pair since the same sid (e.g. Build_Main) recurs across factions with its
+ *  own flavor text per faction. `levelNames[0]` is the building's base name
+ *  (e.g. "Griffin Rookery"); later entries are that same line's upgrades
+ *  (e.g. "Griffin Rookery II") — confirmed via Core/Lang/english/texts/
+ *  cities.json's `_name_level_N` convention. `levelNames.length` is the real
+ *  number of levels this specific building supports (Main: 3, Magic Guild: 5,
+ *  dwellings: 2, most others: 1) — do NOT assume a uniform 1-5 range. */
+export interface CatalogCityBuilding {
+  sid: string
+  fraction: string
+  /** 'main' | 'tavern' | 'market' | 'artifactMarket' | 'dwelling' | 'magicGuild'
+   *  | 'bank' | 'wall' | 'intelligence' | 'trainingRange' | 'graal' | 'other'
+   *  ('other' covers each faction's one unique extra building — Beelzebub's
+   *  Hand, Mycelium Roots, etc. — which have no shared category across factions). */
+  category: string
+  levelNames: string[]
+}
+
 /** A trigger-zone (marker) shape template — Core/DB/map/trigger_zones/
  *  zones.json, id 17 fixed real shapes (issue #193 Phase 3's Zones tool).
  *  No name/description strings exist for these in Lang/ — the id itself
@@ -257,6 +277,10 @@ export interface GameCatalog {
   /** Known `dialogue_title_*` speaker SIDs with resolved English names. */
   speakerTitles: CatalogSpeakerTitle[]
   zoneTemplates: CatalogZoneTemplate[]
+  /** Real per-faction city building lines (Core/DB/objects_logic/cities/), for
+   *  a faction-aware "Building SID" dropdown on BuildingConstruct/BuildingOwn/
+   *  UnlockBuildingCity/CreateBuildingCity instead of free-text. */
+  cityBuildings: CatalogCityBuilding[]
   /** Every loaded localization entry whose sid starts with `templates_`
    *  (lowercased sid -> resolved English text) — resolves a bundled game
    *  RMG template's own `description` field, which is a sid, not literal
@@ -296,4 +320,8 @@ export interface GameCatalog {
 // this field at all support rotation in-game; interactables/artifacts/
 // spawns/resources/fxs essentially never do — confirmed via a full survey
 // of Core/DB/map/objects/*.json, see the field's own doc comment above).
-export const CATALOG_SCHEMA_VERSION = 12
+// v13: added cityBuildings, parsed from Core/DB/objects_logic/cities/*.json
+// (6 faction files) — feeds a faction-aware Building SID dropdown, with real
+// per-building level counts, on the 4 building-related condition/action
+// types — same hygiene-only reasoning.
+export const CATALOG_SCHEMA_VERSION = 13

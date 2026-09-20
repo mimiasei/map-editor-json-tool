@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog } from 'lucide-react'
+import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog, Wand2 } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
@@ -166,6 +166,11 @@ export interface MapGridCellContentProps {
    *  parent-level keyboard shortcut (Delete/Backspace) can target the right
    *  item on a multi-item tile — selectedKey itself stays local/undocked-safe. */
   onSelectionChange?: (item: PlacedObject | null) => void
+  /** Subject-first trigger creation — jumps to the Scenario Editor with a new
+   *  Trigger seeded from this object. Requires an entity SID (scripting needs
+   *  a stable reference); objects/squads only, not markers/zones. Docked-only,
+   *  like the other handlers above. */
+  onCreateRule?: (item: PlacedObject) => void
 }
 
 const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
@@ -225,6 +230,7 @@ export default function MapGridCellContent({
   onConfirmDelete,
   onCancelDelete,
   onSelectionChange,
+  onCreateRule,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
@@ -485,6 +491,15 @@ export default function MapGridCellContent({
                   Edit full hero
                 </Button>
               )}
+            </div>
+          )}
+
+          {selected && (selected.type === 0 || selected.type === 2) && onCreateRule && (
+            <div className="pt-1">
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onCreateRule(selected)}>
+                <Wand2 className="h-3 w-3" />
+                Create a rule for this
+              </Button>
             </div>
           )}
 

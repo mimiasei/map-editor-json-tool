@@ -75,6 +75,8 @@ import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
 import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
+import type { SubjectKey } from '@/lib/trigger-subjects'
 import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
@@ -275,6 +277,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const mapFilePath = useScenarioStore((s) => s.mapFilePath)
   const localization = useScenarioStore((s) => s.localization)
   const dialogs = useScenarioStore((s) => s.dialogs)
+  const addQuest = useScenarioStore((s) => s.addQuest)
+  const updateQuest = useScenarioStore((s) => s.updateQuest)
+  const addSubQuest = useScenarioStore((s) => s.addSubQuest)
+  const addTrigger = useScenarioStore((s) => s.addTrigger)
+  const setScenarioSelection = useScenarioStore((s) => s.setSelection)
+  const requestSubjectFirst = useViewBridgeStore((s) => s.requestSubjectFirst)
+  const pendingPick = useViewBridgeStore((s) => s.pendingPick)
+  const resolvePick = useViewBridgeStore((s) => s.resolvePick)
+  const cancelPick = useViewBridgeStore((s) => s.cancelPick)
+  const [pickHint, setPickHint] = useState<string | null>(null)
+  useEffect(() => { setPickHint(null) }, [pendingPick])
   const entities = context?.entities ?? []
 
   const sizeX = context?.sizeX ?? 0
@@ -1504,6 +1517,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return
     }
     if (e.button !== 0) return
+    // Picking mode (Scenario Editor's "pick from map" button) overrides every
+    // other tool while active — a click here means "resolve the pending
+    // field," never paint/place/select.
+    if (pendingPick) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) {
+        const itemsHere = tileIndex.get(node) ?? []
+        if (pendingPick.kind === 'mapEntity') {
+          const withSid = itemsHere.find((it) => it.entitySid)
+          if (withSid?.entitySid) resolvePick(withSid.entitySid)
+          else setPickHint('This object has no entity SID yet.')
+        } else {
+          const spawner = itemsHere.find((it) => it.spawnerInfo?.spawnPointType === 1 && it.spawnerInfo.heroSid)
+          if (spawner?.spawnerInfo?.heroSid) resolvePick(spawner.spawnerInfo.heroSid)
+          else setPickHint('Click a hero spawner with a hero assigned.')
+        }
+      }
+      return
+    }
     // Paint mode replaces panning entirely while active — a pointer-down
     // starts a paint stroke (captured so it continues even if the cursor
     // briefly leaves the canvas), not a viewport drag.
@@ -2899,6 +2931,48 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
+  // Subject-first trigger creation (MapGridCellContent's "Create a rule for
+  // this") — resolves which SUBJECT_DEFS bucket applies from data already on
+  // PlacedObject (no new capability system), auto-assigns an entity SID if
+  // the object doesn't already have one (so the button works on any object,
+  // not just ones an author already happened to name), eagerly creates a
+  // real Quest/SubQuest/Trigger, and hands off to the Scenario Editor via
+  // useViewBridgeStore.
+  const handleCreateRule = (item: PlacedObject) => {
+    const factionSid = item.spawnerInfo?.factionSid
+    const factionName = factionSid ? catalog?.factions.find((f) => f.id === factionSid)?.name : undefined
+    const factionToken = factionName ? factionName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') : undefined
+
+    let entitySid = item.entitySid
+    if (!entitySid) {
+      const base = factionToken ? `${item.sid}_${factionToken}` : item.sid
+      let n = 1
+      let candidate = `${base}_${n}`
+      while (existingSids.includes(candidate)) { n += 1; candidate = `${base}_${n}` }
+      entitySid = candidate
+      applyEdit({ kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid: entitySid }, 'assign entity SID')
+    }
+    const subjectKey: SubjectKey =
+      item.type === 2 ? 'squad' : item.isCity ? 'castle' : item.portalInfo ? 'portal' : 'object'
+
+    addQuest()
+    const qi = useScenarioStore.getState().scenario.quests.length - 1
+    updateQuest(qi, { sid: `rule_for_${entitySid}` })
+    addSubQuest(qi)
+    const sqi = useScenarioStore.getState().scenario.quests[qi].subQuests.length - 1
+    addTrigger(qi, sqi)
+    const ti = useScenarioStore.getState().scenario.quests[qi].subQuests[sqi].triggers.length - 1
+
+    setScenarioSelection('trigger', [qi, sqi, ti])
+    requestSubjectFirst({
+      entitySid,
+      displayName: item.displayName,
+      subjectKey,
+      path: [qi, sqi, ti],
+      factionLabel: subjectKey === 'castle' ? (factionName ?? 'Random') : undefined,
+    })
+  }
+
   const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
   const allSpawners = useMemo(() => placedObjects.filter((p) => p.spawnerInfo), [placedObjects])
   const selectSpawner = useCallback((item: PlacedObject) => {
@@ -3528,6 +3602,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         `open` is true, so the `open`-gated effects/guards throughout this
         file (unchanged from the dialog version) still behave correctly. */}
     <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
+        {pendingPick && (
+          <div className="flex items-center justify-between gap-2 px-4 py-1.5 bg-primary/10 border-b border-primary/30 shrink-0 text-xs">
+            <span>
+              Pick a target for <strong>{pendingPick.label}</strong> — click an object on the grid.
+              {pickHint && <span className="text-destructive ml-2">{pickHint}</span>}
+            </span>
+            <Button variant="ghost" size="sm" className="h-6 shrink-0 text-xs" onClick={cancelPick}>
+              Cancel
+            </Button>
+          </div>
+        )}
         <div className="relative flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
           <Button
             variant="ghost"
@@ -5193,6 +5278,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onConfirmDelete={canEditEntities ? confirmDelete : undefined}
                   onCancelDelete={canEditEntities ? cancelDelete : undefined}
                   onSelectionChange={setInspectedItem}
+                  onCreateRule={canEditEntities ? handleCreateRule : undefined}
                 />
               ) : null}
             </div>
