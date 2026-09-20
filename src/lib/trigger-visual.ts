@@ -11,13 +11,10 @@ import { CONDITION_REGISTRY, type ParamDef } from '@/schema/conditions'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import {
   Hash,
-  SlidersHorizontal,
   Clock,
   Coins,
-  Sparkles,
-  Gem,
-  Users,
   Crown,
+  Users,
   MapPin,
   GraduationCap,
   ListChecks,
@@ -32,10 +29,12 @@ import {
 } from 'lucide-react'
 
 // ─── UI-only condition categories ────────────────────────────────────────────
-// Mirrors the comment-section groupings already present in schema/conditions.ts
-// verbatim, so this doesn't invent a second taxonomy — it's the same one,
-// just made clickable. Every CONDITION_REGISTRY key appears in exactly one
-// bucket (55/55 covered).
+// A friendlier, consolidated regrouping of schema/conditions.ts's comment
+// sections (which split into 10 buckets, several with just 1-3 entries) —
+// fewer top-level groups is easier to scan when adding a condition. Every
+// CONDITION_REGISTRY key still appears in exactly one bucket (55/55 covered),
+// including the Tutorial bucket, which stays defined (for icon lookups on
+// existing scenario data) even though the add-picker hides it by default.
 
 export interface UiCategory {
   label: string
@@ -45,53 +44,36 @@ export interface UiCategory {
 
 export const CONDITION_UI_CATEGORIES: UiCategory[] = [
   {
-    label: 'Counters & Checks',
+    label: 'Progress & Counters',
     icon: Hash,
     types: ['Counter', 'CompareCounters', 'CounterEqualityInDays', 'StoryCounter', 'QuestCompleted'],
   },
   {
-    label: 'Difficulty',
-    icon: SlidersHorizontal,
-    types: ['Difficulty', 'DifficultyCustomMap'],
-  },
-  {
-    label: 'Turns & Events',
+    label: 'Time & Turns',
     icon: Clock,
     types: [
-      'StartTurn', 'AnyStartTurn', 'StartWeek', 'NodeRevealed', 'PlayerDefeated',
-      'CheckLoseIfHeroKilled', 'CheckLoseIfCityLost',
+      'StartTurn', 'AnyStartTurn', 'StartWeek', 'Difficulty', 'DifficultyCustomMap', 'NodeRevealed',
+      'PlayerDefeated', 'CheckLoseIfHeroKilled', 'CheckLoseIfCityLost',
     ],
   },
   {
-    label: 'Economy',
+    label: 'Economy & Buildings',
     icon: Coins,
     types: ['ResCounter', 'BuildingConstruct', 'BuildingOwn'],
   },
   {
-    label: 'Spells',
-    icon: Sparkles,
-    types: ['SpellCast'],
-  },
-  {
-    label: 'Artifacts',
-    icon: Gem,
-    types: ['ItemOwnSide', 'ItemDestroyed'],
-  },
-  {
-    label: 'Units',
-    icon: Users,
-    types: ['UnitOwnSide', 'UnitHire', 'UnitLose', 'UnitKill'],
-  },
-  {
-    label: 'Heroes',
+    label: 'Army, Items & Heroes',
     icon: Crown,
-    types: ['HeroKill', 'ItemOwnHero', 'UnitOwnHero', 'HeroStat'],
+    types: [
+      'SpellCast', 'ItemOwnSide', 'ItemDestroyed', 'UnitOwnSide', 'UnitHire', 'UnitLose', 'UnitKill',
+      'ItemOwnHero', 'UnitOwnHero', 'HeroStat',
+    ],
   },
   {
-    label: 'Map Objects & Squads',
+    label: 'Hero & Map Events',
     icon: MapPin,
     types: [
-      'ObjectInteractionBefore', 'ObjectInteractionAfter', 'ObjectCaptureEntity',
+      'HeroKill', 'ObjectInteractionBefore', 'ObjectInteractionAfter', 'ObjectCaptureEntity',
       'ObjectCaptureSid', 'MultipleObjectOwn', 'ObjectLose', 'SquadInteraction', 'SquadKill',
     ],
   },
@@ -108,6 +90,35 @@ export const CONDITION_UI_CATEGORIES: UiCategory[] = [
     ],
   },
 ]
+
+// ─── Unfrozen campaign/tutorial-only types ───────────────────────────────────
+// These are real, fully-supported registry entries (existing scenario data
+// using them still renders/edits normally via ConditionForm/ActionForm and
+// still gets a category icon above) — they're just hidden from the "add
+// condition/action" picker's default list, since they only apply to
+// Unfrozen's own official campaign missions, not to custom maps made in TSE.
+// StoryCounter/Difficulty/Guide/StoryCounter*/EnableAiResurrect/
+// DisableAiResurrect are explicitly documented as campaign-only; the 19
+// Tutorial* conditions are onboarding checks for the official campaign's
+// tutorial mission.
+
+export const HIDDEN_CONDITION_TYPES = new Set<string>([
+  'StoryCounter',
+  'Difficulty',
+  'TutorialMovePoints', 'TutorialOpenCity', 'TutorialShowTooltipSquad', 'TutorialShowTooltipWO',
+  'TutorialResChange', 'TutorialLevelUp', 'TutorialHeroUI', 'TutorialMagicGuild',
+  'TutorialOpenFractionLaws', 'TutorialLevelUppedFractionLaws', 'TutorialOpenMagicBookMap',
+  'TutorialHeroInteractWithAllyHero', 'TutorialStartBattleForMap', 'TutorialStartBattleForCity',
+  'TutorialStartBattleForWorldObject', 'TutorialStartTurnUnit', 'TutorialOpenMagicBookBattle',
+  'TutorialBattleEnergy', 'TutorialUnitUI',
+])
+
+export const HIDDEN_ACTION_TYPES = new Set<string>([
+  'Guide',
+  'StoryCounterPlus', 'StoryCounterMinus', 'StoryCounterSet',
+  'EnableAiResurrect', 'DisableAiResurrect',
+  'ChangeCampaignOneStep',
+])
 
 const CONDITION_CATEGORY_BY_TYPE = new Map<string, UiCategory>()
 for (const category of CONDITION_UI_CATEGORIES) {

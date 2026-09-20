@@ -16,6 +16,8 @@ import {
   getActionCategoryIcon,
   getRecentTypes,
   recordRecentType,
+  HIDDEN_CONDITION_TYPES,
+  HIDDEN_ACTION_TYPES,
 } from '@/lib/trigger-visual'
 
 interface Item {
@@ -48,22 +50,23 @@ export default function AddNodePopover({ kind, onPick, children }: Props) {
       return CONDITION_UI_CATEGORIES.map((cat) => ({
         label: cat.label,
         icon: cat.icon,
-        items: CONDITION_LIST.filter((c) => cat.types.includes(c.type)).map(toItem),
+        items: CONDITION_LIST.filter((c) => cat.types.includes(c.type) && !HIDDEN_CONDITION_TYPES.has(c.type)).map(toItem),
       }))
     }
     return ACTION_CATEGORIES.map((cat) => ({
       label: cat,
       icon: getActionCategoryIcon(cat),
-      items: ACTION_LIST.filter((a) => a.category === cat).map(toItem),
+      items: ACTION_LIST.filter((a) => a.category === cat && !HIDDEN_ACTION_TYPES.has(a.type)).map(toItem),
     }))
   }, [kind])
 
   const recent = useMemo<Item[]>(() => {
     if (!open) return []
     const all = kind === 'condition' ? CONDITION_LIST : ACTION_LIST
+    const hidden = kind === 'condition' ? HIDDEN_CONDITION_TYPES : HIDDEN_ACTION_TYPES
     return getRecentTypes(kind)
       .map((type) => all.find((d) => d.type === type))
-      .filter((d): d is (typeof all)[number] => !!d)
+      .filter((d): d is (typeof all)[number] => !!d && !hidden.has(d.type))
       .map(toItem)
   }, [kind, open])
 
