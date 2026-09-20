@@ -2,6 +2,8 @@ import type { Action } from '@/types/scenario'
 import { ACTION_REGISTRY, ACTION_LIST, ACTION_CATEGORIES } from '@/schema/actions'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useCatalogStore } from '@/store/useCatalogStore'
+import { resolveCastleFaction, getBuildingOptions, getBuildingLevelNames } from '@/lib/building-options'
 import { useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,6 +40,8 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
   const isCustom = !def
   const { openDialogEditor } = useScenarioStore()
   const entities = useMapContextStore((s) => s.context?.entities)
+  const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
+  const catalog = useCatalogStore((s) => s.catalog)
   const entityCoordsMap = useMemo(() => {
     const map = new Map<string, string>()
     for (const e of entities ?? []) {
@@ -45,6 +49,23 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
     }
     return map
   }, [entities])
+
+  const buildingSidIndex = def?.params.findIndex((p) => p.buildingSid) ?? -1
+  const castleEntitySid =
+    buildingSidIndex >= 0 ? (action.p ?? [])[buildingSidIndex + 2] : undefined
+  const castleFaction = useMemo(
+    () => resolveCastleFaction(placedObjects, castleEntitySid),
+    [placedObjects, castleEntitySid],
+  )
+  const buildingOptions = useMemo(
+    () => getBuildingOptions(catalog, castleFaction),
+    [catalog, castleFaction],
+  )
+  const selectedBuildingSid = buildingSidIndex >= 0 ? (action.p ?? [])[buildingSidIndex] : undefined
+  const buildingLevelNames = useMemo(
+    () => getBuildingLevelNames(catalog, selectedBuildingSid, castleFaction),
+    [catalog, selectedBuildingSid, castleFaction],
+  )
 
   /** True when this action references a dialog key we can open in the editor */
   const isDialogAction = action.a === 'Dialog' || action.a === 'RandomDialog'
@@ -139,13 +160,51 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
       {/* Known params */}
       {def && def.params.length > 0 && (
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
-          {def.params.map((param, i) => (
+          {def.params.map((param, i) => {
+            const isBuildingLevelParam = buildingSidIndex >= 0 && i === buildingSidIndex + 1
+            const buildingLevelOptions =
+              isBuildingLevelParam && buildingLevelNames.length > 0
+                ? buildingLevelNames.map((name, idx) => ({ value: String(idx + 1), label: name }))
+                : undefined
+            return (
             <div key={i} className="space-y-1">
               <div className="flex items-center gap-1">
                 <Label className="text-xs">{param.label}</Label>
                 <HelpTooltip category="actions" id={action.a} paramIndex={i} />
               </div>
-              {param.type === 'enum' && param.options ? (
+              {param.buildingSid && buildingOptions.length > 0 ? (
+                <Select
+                  value={(action.p ?? [])[i] ?? ''}
+                  onValueChange={(v) => updateParam(i, v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={param.hint} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {buildingOptions.map((b) => (
+                      <SelectItem key={b.sid} value={b.sid}>
+                        {b.levelNames[0] ?? b.sid}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : buildingLevelOptions ? (
+                <Select
+                  value={(action.p ?? [])[i] ?? ''}
+                  onValueChange={(v) => updateParam(i, v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={param.hint} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {buildingLevelOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.value} – {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : param.type === 'enum' && param.options ? (
                 <Select
                   value={(action.p ?? [])[i] ?? ''}
                   onValueChange={(v) => updateParam(i, v)}
@@ -240,7 +299,8 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                 </button>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

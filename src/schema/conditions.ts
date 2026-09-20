@@ -15,6 +15,13 @@ export interface ParamDef {
   ref?: 'counter' | 'quest' | 'subquest' | 'interruption' | 'dialog' // SID cross-reference: show autocomplete from this pool
   entity?: EntityCategory // Entity registry: show searchable combobox from static list
   mapEntity?: true // Map entity SID: show autocomplete from user-placed entities in the loaded .map file
+  /** True on a "Building SID" param whose immediately-following param is its
+   *  Level (enum) and the one after that its Castle entity (mapEntity) —
+   *  confirmed true for all 4 real registry entries that use this. Drives a
+   *  faction-aware building dropdown (from the castle's real/assumed
+   *  faction) plus a Level dropdown restricted to that specific building's
+   *  real level count, instead of free-text SID + a generic 1-5 enum. */
+  buildingSid?: true
 }
 
 export interface ConditionDef {
@@ -204,7 +211,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Building Constructed',
     description: 'Triggers when the player constructs a building with the specified SID at the specified level in the given castle entity. Leave entityCity blank for any castle.',
     params: [
-      { label: 'Building SID', hint: 'e.g. mage_guild', required: true },
+      { label: 'Building SID', hint: 'e.g. mage_guild', required: true, buildingSid: true },
       { label: 'Level', hint: '1–5', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
       { label: 'Castle entity', hint: 'Leave blank for any castle', required: false, mapEntity: true },
     ],
@@ -214,7 +221,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Building Owned',
     description: 'Triggers if the player controls a castle with the specified entity that has the building already constructed. Leave entityCity blank for any castle.',
     params: [
-      { label: 'Building SID', hint: 'e.g. mage_guild', required: true },
+      { label: 'Building SID', hint: 'e.g. mage_guild', required: true, buildingSid: true },
       { label: 'Level', hint: '1–5', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
       { label: 'Castle entity', hint: 'Leave blank for any castle', required: false, mapEntity: true },
     ],

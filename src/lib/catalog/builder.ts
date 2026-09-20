@@ -21,6 +21,7 @@ import type {
   CatalogDialog,
   CatalogDialogSlide,
   CatalogZoneTemplate,
+  CatalogCityBuilding,
 } from './types'
 import { CATALOG_SCHEMA_VERSION } from './types'
 
@@ -546,6 +547,60 @@ function inferInteractableBiomes(mapObjects: CatalogMapObject[], factions: Catal
   }
 }
 
+// Each Core/DB/objects_logic/cities/*_city.json entry groups its buildings
+// into category arrays. Confirmed via a full survey of all 6 faction files:
+// the generic categories (main/tavern/market/dwelling/magicGuild/bank/wall)
+// recur identically (by sid) across every faction; artifactMarket is shared
+// by 4/6; the rest are each faction's one unique extra building, with no
+// shared category name worth modeling individually.
+const CITY_BUILDING_CATEGORIES: Record<string, string> = {
+  mains: 'main',
+  taverns: 'tavern',
+  markets: 'market',
+  artifactMarkets: 'artifactMarket',
+  hires: 'dwelling',
+  magicGuilds: 'magicGuild',
+  banks: 'bank',
+  walls: 'wall',
+  intelligences: 'intelligence',
+  trainingRanges: 'trainingRange',
+  graals: 'graal',
+  heroBonusBanks: 'other',
+  rebirthShrines: 'other',
+  artifactChangers: 'other',
+  myceliumRoots: 'other',
+  manaFountains: 'other',
+  unitsConverters: 'other',
+  portalSummonings: 'other',
+}
+
+async function collectCityBuildings(zip: JSZip, locMap: Map<string, string>): Promise<CatalogCityBuilding[]> {
+  const paths = zipFilesUnder(zip, 'DB/objects_logic/cities/')
+  const buildings: CatalogCityBuilding[] = []
+
+  for (const path of paths) {
+    const entries = await readJsonArray(zip, path)
+    for (const entry of entries) {
+      const fraction = str(entry.fraction)
+      if (!fraction) continue
+      for (const [key, category] of Object.entries(CITY_BUILDING_CATEGORIES)) {
+        const list = Array.isArray(entry[key]) ? (entry[key] as Record<string, unknown>[]) : []
+        for (const b of list) {
+          const sid = str(b.sid)
+          if (!sid) continue
+          const nameSids = Array.isArray(b.names) ? (b.names as unknown[]).map(str) : []
+          const levelNames =
+            nameSids.length > 0
+              ? nameSids.map((nameSid, i) => loc(locMap, nameSid) ?? `${sid} ${i + 1}`)
+              : [sid]
+          buildings.push({ sid, fraction, category, levelNames })
+        }
+      }
+    }
+  }
+  return buildings
+}
+
 /** Result of the single pass over DB/dialogs/dialogs/. */
 interface DialogCollection {
   dialogs: CatalogDialog[]
@@ -631,7 +686,7 @@ export async function buildCatalog(
 ): Promise<GameCatalog> {
   const locMap = await loadLocalization(zip)
 
-  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, objectLogics, dialogData, zoneTemplates] =
+  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, objectLogics, dialogData, zoneTemplates, cityBuildings] =
     await Promise.all([
       collectHeroes(zip, locMap),
       collectCreatures(zip, locMap),
@@ -646,6 +701,7 @@ export async function buildCatalog(
       collectObjectLogics(zip),
       collectDialogs(zip, locMap),
       collectZoneTemplates(zip),
+      collectCityBuildings(zip, locMap),
     ])
 
   inferInteractableBiomes(mapObjects, factions)
@@ -674,6 +730,7 @@ export async function buildCatalog(
     dialogAvatarIcons: dialogData.avatarIcons,
     speakerTitles: dialogData.speakerTitles,
     zoneTemplates,
+    cityBuildings,
     rmgTemplateStrings,
   }
 }
