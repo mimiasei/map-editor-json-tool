@@ -33,7 +33,7 @@ function readViewMode(): ViewMode {
     const stored = localStorage.getItem(VIEW_MODE_KEY)
     return stored === 'card' ? 'card' : 'form'
   } catch {
-    return 'form'
+    return 'card'
   }
 }
 

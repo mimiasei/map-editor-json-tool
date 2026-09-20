@@ -212,7 +212,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     description: 'Triggers when the player constructs a building with the specified SID at the specified level in the given castle entity. Leave entityCity blank for any castle.',
     params: [
       { label: 'Building SID', hint: 'e.g. mage_guild', required: true, buildingSid: true },
-      { label: 'Level', hint: '1–5', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
+      { label: 'Level', hint: 'Set building level', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
       { label: 'Castle entity', hint: 'Leave blank for any castle', required: false, mapEntity: true },
     ],
   },
@@ -222,7 +222,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     description: 'Triggers if the player controls a castle with the specified entity that has the building already constructed. Leave entityCity blank for any castle.',
     params: [
       { label: 'Building SID', hint: 'e.g. mage_guild', required: true, buildingSid: true },
-      { label: 'Level', hint: '1–5', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
+      { label: 'Level', hint: 'Set building level', required: true, type: 'enum', options: ['1', '2', '3', '4', '5'] },
       { label: 'Castle entity', hint: 'Leave blank for any castle', required: false, mapEntity: true },
     ],
   },
