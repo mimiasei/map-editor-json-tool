@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import type { DialogFlow, DialogSlide, DialogAnswer } from '@/types/dialog'
-import { RESULT_DIALOG_VALUES } from '@/types/dialog'
+import { RESULT_DIALOG_VALUES, AVATAR_POSITIONS, POSITION_LABELS } from '@/types/dialog'
 import type { Action } from '@/types/scenario'
 import type { DialogCondition } from '@/types/dialog'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
@@ -27,7 +27,8 @@ import ActionList from '@/components/actions/ActionList'
 import DialogConditionList from './DialogConditionList'
 import AvatarStrip from './AvatarStrip'
 import AssetCombobox from './AssetCombobox'
-import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine } from 'lucide-react'
+import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine, LayoutGrid } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -248,6 +249,8 @@ function SlideEditor({
   // its own tokens (tested: redefining "dungeon_hero_5" leaves the hero as Mouaren).
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
   const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
+  const [speakerPickerOpen, setSpeakerPickerOpen] = useState(false)
+  const heroesLoaded = (catalog?.heroes?.length ?? 0) > 0
   const titleSid = slide.title?.sid ?? ''
   const builtInSpeaker = (catalog?.speakerTitles ?? []).find((t) => t.sid === titleSid)
   const isBuiltInSpeaker = !!builtInSpeaker
@@ -405,17 +408,36 @@ function SlideEditor({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Speaker SID (title.sid)</Label>
-                <AssetCombobox
-                  value={titleSid}
-                  onChange={(sid) =>
-                    onChange({
-                      ...slide,
-                      title: sid ? { ...(slide.title ?? {}), sid } : undefined,
-                    })
-                  }
-                  suggestions={speakerSuggestions}
-                  placeholder="dialogue_title_hero_dungeon"
-                />
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 min-w-0">
+                    <AssetCombobox
+                      value={titleSid}
+                      onChange={(sid) =>
+                        onChange({
+                          ...slide,
+                          title: sid ? { ...(slide.title ?? {}), sid } : undefined,
+                        })
+                      }
+                      suggestions={speakerSuggestions}
+                      placeholder="dialogue_title_hero_dungeon"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 shrink-0 gap-1 px-2 text-xs"
+                    onClick={() => setSpeakerPickerOpen(true)}
+                    disabled={!heroesLoaded}
+                    title={
+                      heroesLoaded
+                        ? 'Browse heroes to name this speaker'
+                        : 'Load Core.zip via Game Data to browse heroes'
+                    }
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                    Heroes…
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">
@@ -455,22 +477,39 @@ function SlideEditor({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Speaker position</Label>
-                <Input
-                  type="number"
-                  value={slide.title?.position ?? ''}
-                  onChange={(e) => {
-                    const pos = e.target.value ? parseInt(e.target.value) : undefined
+                <Select
+                  value={slide.title?.position ? String(slide.title.position) : '__unset__'}
+                  onValueChange={(v) => {
+                    const pos = v === '__unset__' ? undefined : parseInt(v)
                     onChange({
                       ...slide,
                       title: slide.title ? { ...slide.title, position: pos } : undefined,
                     })
                   }}
-                  className="h-7 text-xs"
-                  placeholder="3"
-                />
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder="(none)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__unset__">(none)</SelectItem>
+                    {AVATAR_POSITIONS.map((position) => (
+                      <SelectItem key={position} value={String(position)}>
+                        {POSITION_LABELS[position]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
+
+          <HeroPickerDialog
+            open={speakerPickerOpen}
+            onOpenChange={setSpeakerPickerOpen}
+            mode="hero"
+            title="Choose a hero to name this speaker"
+            onSelect={(entry) => onSpeakerNameChange(entry.name)}
+          />
 
           {/* Flow mode */}
           <div className="space-y-2">

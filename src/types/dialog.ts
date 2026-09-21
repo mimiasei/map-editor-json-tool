@@ -10,6 +10,16 @@ export type AvatarAnimation = (typeof AVATAR_ANIMATIONS)[number]
 /** Avatar positions, left to right as rendered by the game. */
 export const AVATAR_POSITIONS = [1, 2, 3, 4, 5] as const
 
+/** Human-readable label for each position, shown instead of the raw 1–5 number
+ *  anywhere a position is user-facing (Speaker position, avatar slot tooltips). */
+export const POSITION_LABELS: Record<number, string> = {
+  1: 'Left-most',
+  2: 'Left',
+  3: 'Middle',
+  4: 'Right',
+  5: 'Right-most',
+}
+
 /** How the game resolves the dialog's outcome. */
 export const RESULT_DIALOG_VALUES = ['Interrupt', 'Default'] as const
 export type ResultDialog = (typeof RESULT_DIALOG_VALUES)[number]
