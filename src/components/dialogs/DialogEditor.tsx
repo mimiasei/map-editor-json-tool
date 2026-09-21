@@ -430,12 +430,12 @@ function SlideEditor({
                     disabled={!heroesLoaded}
                     title={
                       heroesLoaded
-                        ? 'Browse heroes to name this speaker'
-                        : 'Load Core.zip via Game Data to browse heroes'
+                        ? 'Browse portraits to name this speaker'
+                        : 'Load Core.zip via Game Data to browse portraits'
                     }
                   >
                     <LayoutGrid className="h-3.5 w-3.5" />
-                    Heroes…
+                    Portraits…
                   </Button>
                 </div>
               </div>
@@ -478,17 +478,16 @@ function SlideEditor({
               <div className="space-y-1">
                 <Label className="text-xs">Speaker position</Label>
                 <Select
+                  disabled={!titleSid}
                   value={slide.title?.position ? String(slide.title.position) : '__unset__'}
                   onValueChange={(v) => {
+                    if (!slide.title) return
                     const pos = v === '__unset__' ? undefined : parseInt(v)
-                    onChange({
-                      ...slide,
-                      title: slide.title ? { ...slide.title, position: pos } : undefined,
-                    })
+                    onChange({ ...slide, title: { ...slide.title, position: pos } })
                   }}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue placeholder="(none)" />
+                    <SelectValue placeholder={titleSid ? '(none)' : 'Set a Speaker SID first'} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__unset__">(none)</SelectItem>
@@ -506,8 +505,8 @@ function SlideEditor({
           <HeroPickerDialog
             open={speakerPickerOpen}
             onOpenChange={setSpeakerPickerOpen}
-            mode="hero"
-            title="Choose a hero to name this speaker"
+            mode="portrait"
+            title="Choose a portrait to name this speaker"
             onSelect={(entry) => onSpeakerNameChange(entry.name)}
           />
 
