@@ -284,7 +284,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'Dialog',
     label: 'Show Dialog',
     category: 'Dialogs',
-    description: 'Calls the dialog with the specified SID. Add "break" as the last param to interrupt all further game logic after the dialog ends.' + DIALOG_SID_HELP,
+    description: 'Calls the dialog with the specified SID.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. som_main_quest_line_start', required: true, ref: 'dialog' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },

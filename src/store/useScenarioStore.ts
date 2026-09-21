@@ -159,6 +159,12 @@ interface ScenarioStore {
   removeDialogFlow: (id: string) => void
   setLocalizationToken: (sid: string, text: string) => void
   removeLocalizationToken: (sid: string) => void
+  /** Cascade-delete: removes several dialogs and several localization tokens
+   *  (across every language) in one atomic step — used when deleting a
+   *  dialog-referencing action also orphans the dialog(s)/tokens it alone
+   *  used. See src/lib/dialog-cascade.ts for the usage-check that decides
+   *  what's safe to pass here. */
+  removeDialogsAndTokens: (dialogIds: string[], tokenSids: string[]) => void
   /** Move a token's text (and every language's translation of it) from
    *  oldSid to newSid in one step — used when editing an entity's naming SID
    *  so it updates the existing token instead of leaving it orphaned behind
@@ -408,6 +414,24 @@ export const useScenarioStore = create<ScenarioStore>()(
         translations[lang] = t
       }
       return { localization, translations, isDirty: true, zipDirty: true }
+    }),
+
+  removeDialogsAndTokens: (dialogIds, tokenSids) =>
+    set((s) => {
+      const dialogs = { ...s.dialogs }
+      for (const id of dialogIds) delete dialogs[id]
+
+      const localization = { ...s.localization }
+      for (const sid of tokenSids) delete localization[sid]
+
+      const translations: TranslationMap = {}
+      for (const [lang, tokens] of Object.entries(s.translations)) {
+        const t = { ...tokens }
+        for (const sid of tokenSids) delete t[sid]
+        translations[lang] = t
+      }
+
+      return { dialogs, localization, translations, isDirty: true, zipDirty: true }
     }),
 
   renameLocalizationToken: (oldSid, newSid, newText) =>

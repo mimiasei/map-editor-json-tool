@@ -18,6 +18,7 @@ import ActionCard from './ActionCard'
 import AddNodePopover from './AddNodePopover'
 import TriggerInspectorPanel, { type SelectedNode } from './TriggerInspectorPanel'
 import { centerMapOnNode } from '@/lib/trigger-card-links'
+import { useDialogActionCascadeGuard } from '@/hooks/useDialogActionCascadeGuard'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -30,6 +31,7 @@ interface Props {
 export default function TriggerVisualBuilder({ questIndex, subQuestIndex, triggerIndex, trigger }: Props) {
   const { updateTrigger, addCondition, updateCondition, removeCondition, addAction, updateAction, removeAction, removeQuest } =
     useScenarioStore()
+  const cascadeGuard = useDialogActionCascadeGuard()
 
   const pendingSubjectSeed = useViewBridgeStore((s) => s.pendingSubjectSeed)
   const clearSubjectSeed = useViewBridgeStore((s) => s.clearSubjectSeed)
@@ -103,6 +105,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   }
 
   const handleRemoveAction = (index: number) => {
+    if (!cascadeGuard(actions[index])) return
     removeAction(questIndex, subQuestIndex, triggerIndex, index)
     shiftSelection('action', index)
   }

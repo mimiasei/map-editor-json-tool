@@ -26,6 +26,7 @@ import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard } from '@/lib/clipboard'
+import { useDialogActionCascadeGuard } from '@/hooks/useDialogActionCascadeGuard'
 
 interface Props {
   action: Action
@@ -40,6 +41,7 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
   const def = ACTION_REGISTRY[action.a]
   const isCustom = !def
   const { openDialogEditor } = useScenarioStore()
+  const cascadeGuard = useDialogActionCascadeGuard()
   const entities = useMapContextStore((s) => s.context?.entities)
   const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
   const catalog = useCatalogStore((s) => s.catalog)
@@ -148,7 +150,9 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
           variant="ghost"
           size="icon"
           className="h-8 w-8 mt-4 text-muted-foreground hover:text-destructive"
-          onClick={onRemove}
+          onClick={() => {
+            if (cascadeGuard(action)) onRemove()
+          }}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
