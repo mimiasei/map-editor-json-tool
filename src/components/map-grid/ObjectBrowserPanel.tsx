@@ -381,6 +381,11 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
     const activeCategories = new Set<TypeFilterKey>(typeFilter)
     if (plainTypeFilter) activeCategories.add(plainTypeFilter)
     return all.filter((o: CatalogMapObject) => {
+      // Spawners is a single-select pill (see togglePlainType) — deselecting
+      // it lands back on "no filter", which the activeCategories check below
+      // treats as "show everything". Opt out explicitly here so Spawners
+      // behaves like a real toggle instead of being stuck always-visible.
+      if (o.category === 'spawns' && plainTypeFilter !== 'spawns') return false
       if (activeCategories.size > 0 && !activeCategories.has(o.category as TypeFilterKey)) return false
       if (wantedBiomes && (!o.biome || !wantedBiomes.includes(o.biome))) return false
       // Safe cast: resolveDecorationSubcategory only ever returns 'animals'/

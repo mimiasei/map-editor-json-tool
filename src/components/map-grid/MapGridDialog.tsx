@@ -3355,7 +3355,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // object has a real footprint, unlike a terrain value, so a tile the
   // brush covers isn't necessarily paintable).
   const stageObjectPaint = useCallback((node: number, sid: string) => {
-    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+    // city-spawner/hero-spawner are real player-start points, never a
+    // decorative scatter — always single-tile, brush Size/Disperse ignored.
+    const tiles = (sid === 'city-spawner' || sid === 'hero-spawner' ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
       .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
     if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
     setPaintObjectStaged((prev) => {
