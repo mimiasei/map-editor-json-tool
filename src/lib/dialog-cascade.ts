@@ -66,6 +66,7 @@ function* allActionArrays(scenario: ScenarioFile, dialogs: Record<string, Dialog
   for (const flow of Object.values(dialogs)) {
     for (const slide of flow.slides) {
       if (slide.actions) yield slide.actions
+      if (slide.closeActions) yield slide.closeActions
       if (slide.mapActions) yield slide.mapActions
       if (slide.closeMapActions) yield slide.closeMapActions
       for (const answer of slide.answers ?? []) {

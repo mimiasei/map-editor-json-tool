@@ -57,6 +57,15 @@ function defaultTitleSid(dialogId: string, slideIndex: number): string {
 const NEW_DIALOG_CONDITION = (): DialogCondition => ({ c: 'Counter', p: [] })
 const NEW_MAP_ACTION = (): Action => ({ a: 'CounterSet', p: [] })
 
+/** Per the mapmaking guide's Dialogues section: the "Global" action blocks
+ *  (`actions`/`closeActions` on a slide, the secondary list on an answer) only
+ *  ever accept these four types. */
+const RESTRICTED_DIALOG_ACTION_TYPES = ['Guide', 'StoryCounterPlus', 'StoryCounterMinus', 'StoryCounterSet']
+const isRestrictedDialogActionType = (t: string) => RESTRICTED_DIALOG_ACTION_TYPES.includes(t)
+/** The guide explicitly calls out (3x) that Story Counters must go in the
+ *  restricted "Global" block instead when used inside a dialog — not here. */
+const isStoryCounterType = (t: string) => t.startsWith('StoryCounter')
+
 // ─── And/Or selector, shared by slides and answers ──────────────────────────────
 
 function LogicToggle({
@@ -108,17 +117,30 @@ function AnswerEditor({
   const locText = answer.text ? localization[answer.text] : undefined
   const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
 
-  // Real shipped dialogs only ever use these two action shapes here — picking an
-  // answer either jumps to another slide or ends the dialog — but neither "Go" nor
-  // "End" is a registered map-script action (ACTION_REGISTRY is for a different
-  // vocabulary), so without this dedicated control it fell through to ActionForm's
-  // generic "unknown action type" editor: a free-text type field and a raw,
-  // unlabeled param list for the single most important thing an answer does.
-  const leadAction = answer.actions[0]
-  const isGoTo = answer.actions.length === 1 && leadAction?.a === 'Go'
-  const goTarget = isGoTo ? (leadAction.p?.[0] ?? '') : ''
-  const setGoTarget = (target: string) => onChange({ ...answer, actions: [{ a: 'Go', p: [target] }] })
-  const setEndDialog = () => onChange({ ...answer, actions: [{ a: 'End' }] })
+  // Per the mapmaking guide, an answer's "actions" is Go/End (picking where it
+  // leads) plus optionally Guide/StoryCounter* actions alongside — but neither
+  // "Go" nor "End" is a registered map-script action (ACTION_REGISTRY is a
+  // different vocabulary), so without a dedicated control this fell through to
+  // ActionForm's generic "unknown action type" editor: a free-text type field and
+  // a raw, unlabeled param list for the single most important thing an answer
+  // does. The primary Go/End entry (wherever it sits) gets its own control;
+  // anything else in the array is a secondary Guide/StoryCounter action.
+  const primaryIndex = answer.actions.findIndex((a) => a.a === 'Go' || a.a === 'End')
+  const primary = primaryIndex >= 0 ? answer.actions[primaryIndex] : undefined
+  const restActions = answer.actions.filter((_, i) => i !== primaryIndex)
+  const isGoTo = primary?.a === 'Go'
+  const goTarget = isGoTo ? (primary.p?.[0] ?? '') : ''
+  const endBreak = primary?.a === 'End' && (primary.p ?? []).includes('break')
+
+  const setGoTarget = (target: string) =>
+    onChange({ ...answer, actions: [{ a: 'Go', p: [target] }, ...restActions] })
+  const setEndDialog = (breakLogic: boolean) =>
+    onChange({
+      ...answer,
+      actions: [breakLogic ? { a: 'End', p: ['break'] } : { a: 'End' }, ...restActions],
+    })
+  const updateRestActions = (next: Action[]) =>
+    onChange({ ...answer, actions: [primary ?? { a: 'End' }, ...next] })
 
   return (
     <div className="rounded border border-border bg-background p-2 space-y-2">
@@ -172,13 +194,13 @@ function AnswerEditor({
             <input
               type="radio"
               checked={!isGoTo}
-              onChange={setEndDialog}
+              onChange={() => setEndDialog(endBreak)}
               className="accent-primary"
             />
             End dialog
           </label>
         </div>
-        {isGoTo && (
+        {isGoTo ? (
           <>
             <Input
               value={goTarget}
@@ -195,6 +217,44 @@ function AnswerEditor({
                 ))}
             </datalist>
           </>
+        ) : (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={endBreak}
+              onCheckedChange={(checked) => setEndDialog(checked === true)}
+            />
+            <span className="text-xs">Interrupt subsequent game logic after this dialog ends</span>
+          </label>
+        )}
+
+        {/* Secondary actions the guide allows alongside Go/End — rare in practice
+            (unused in every real Fun and Graves answer) so kept low-profile. */}
+        {restActions.length > 0 ? (
+          <div className="space-y-1 pt-1">
+            <Label className="text-xs text-muted-foreground">
+              Additional actions
+              <span className="ml-1 text-muted-foreground/70">— Guide / Story Counters</span>
+            </Label>
+            <ActionList
+              actions={restActions}
+              typeFilter={isRestrictedDialogActionType}
+              onAdd={(pasted) => updateRestActions([...restActions, pasted ?? { a: 'Guide', p: [] }])}
+              onUpdate={(i, action) => {
+                const next = [...restActions]
+                next[i] = action
+                updateRestActions(next)
+              }}
+              onRemove={(i) => updateRestActions(restActions.filter((_, j) => j !== i))}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="text-xs text-primary hover:underline"
+            onClick={() => updateRestActions([{ a: 'Guide', p: [] }])}
+          >
+            + Add Guide / Story Counter action
+          </button>
         )}
       </div>
 
@@ -230,9 +290,13 @@ function AnswerEditor({
 
       {/* Map actions fired when this answer is picked */}
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Map actions</Label>
+        <Label className="text-xs text-muted-foreground">
+          Map actions
+          <span className="ml-1 text-muted-foreground/70">— Story Counters go in "Additional actions" above instead</span>
+        </Label>
         <ActionList
           actions={answer.mapActions ?? []}
+          typeFilter={(t) => !isStoryCounterType(t)}
           onAdd={(pasted) =>
             onChange({ ...answer, mapActions: [...(answer.mapActions ?? []), pasted ?? NEW_MAP_ACTION()] })
           }
@@ -384,7 +448,8 @@ function SlideEditor({
     slide.notification ? 'notification' : null,
     slide.resultDialog ? 'resultDialog' : null,
     slide.dialogPlayConditions?.length ? 'play conditions' : null,
-    slide.actions?.length ? 'story actions' : null,
+    slide.actions?.length ? 'global actions' : null,
+    slide.closeActions?.length ? 'global close actions' : null,
     slide.closeMapActions?.length ? 'close actions' : null,
     slide.showAnimationsImmediately ? 'animation timing' : null,
   ].filter(Boolean) as string[]
@@ -784,9 +849,15 @@ function SlideEditor({
 
           {/* Map actions */}
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Map actions (this slide)</Label>
+            <Label className="text-xs text-muted-foreground">
+              Map actions
+              <span className="ml-1 text-muted-foreground/70">
+                — fire when the slide opens; Story Counters go in Advanced → "Global actions" instead
+              </span>
+            </Label>
             <ActionList
               actions={slide.mapActions ?? []}
+              typeFilter={(t) => !isStoryCounterType(t)}
               onAdd={(pasted) => onChange({ ...slide, mapActions: [...(slide.mapActions ?? []), pasted ?? { a: 'Dialog', p: [''] }] })}
               onUpdate={(i, action) => updateMapAction(i, action)}
               onRemove={(i) => onChange({ ...slide, mapActions: (slide.mapActions ?? []).filter((_, j) => j !== i) })}
@@ -978,13 +1049,17 @@ function SlideEditor({
                   />
                 </div>
 
-                {/* Story actions on show */}
+                {/* Global actions on show — the restricted Guide/StoryCounter vocabulary */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
-                    Story actions (run when the slide is shown)
+                    Global actions
+                    <span className="ml-1 text-muted-foreground/70">
+                      — Guide / Story Counters only, fire when the slide is shown
+                    </span>
                   </Label>
                   <ActionList
                     actions={slide.actions ?? []}
+                    typeFilter={isRestrictedDialogActionType}
                     onAdd={(pasted) =>
                       onChange({
                         ...slide,
@@ -1005,13 +1080,46 @@ function SlideEditor({
                   />
                 </div>
 
-                {/* Actions on close */}
+                {/* Global actions on close — same restricted vocabulary as above */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    Global actions on dialog close
+                    <span className="ml-1 text-muted-foreground/70">— Guide / Story Counters only</span>
+                  </Label>
+                  <ActionList
+                    actions={slide.closeActions ?? []}
+                    typeFilter={isRestrictedDialogActionType}
+                    onAdd={(pasted) =>
+                      onChange({
+                        ...slide,
+                        closeActions: [...(slide.closeActions ?? []), pasted ?? { a: 'StoryCounterPlus', p: [] }],
+                      })
+                    }
+                    onUpdate={(i, action) => {
+                      const closeActions = [...(slide.closeActions ?? [])]
+                      closeActions[i] = action
+                      onChange({ ...slide, closeActions })
+                    }}
+                    onRemove={(i) =>
+                      onChange({
+                        ...slide,
+                        closeActions: (slide.closeActions ?? []).filter((_, j) => j !== i),
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Map actions on close — general vocabulary, Story Counters excluded */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
                     Map actions on dialog close
+                    <span className="ml-1 text-muted-foreground/70">
+                      — Story Counters go in "Global actions on dialog close" above instead
+                    </span>
                   </Label>
                   <ActionList
                     actions={slide.closeMapActions ?? []}
+                    typeFilter={(t) => !isStoryCounterType(t)}
                     onAdd={(pasted) =>
                       onChange({
                         ...slide,

@@ -64,10 +64,17 @@ export interface DialogSlide {
   avatars?: DialogAvatar[]
   title?: { sid: string; position?: number }
   text?: string                                     // localization SID (empty = action-only)
+  /** Any quest action except the restricted "Global" ones below — run when the
+   *  slide is shown. Per the mapmaking guide, StoryCounterPlus/Minus/Set must go
+   *  in `actions` instead when used inside a dialog, not here. */
   mapActions?: Array<{ a: string; p?: string[] }>
-  /** Story/flow actions run when the slide is shown — 180 slides. */
+  /** "Global" actions (Guide / Story Counters only) — run when the slide is
+   *  shown — 180 slides. */
   actions?: Array<{ a: string; p?: string[] }>
-  /** Map actions run when the dialog closes on this slide — 9 slides. */
+  /** Same restricted "Global" vocabulary as `actions`, run when the slide closes. */
+  closeActions?: Array<{ a: string; p?: string[] }>
+  /** Same vocabulary/restriction as `mapActions`, run when the dialog closes on
+   *  this slide — 9 slides. */
   closeMapActions?: Array<{ a: string; p?: string[] }>
   /** Conditions gating whether this slide plays at all — 1544 slides. */
   dialogPlayConditions?: DialogCondition[]

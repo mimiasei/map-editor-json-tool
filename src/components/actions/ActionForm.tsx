@@ -35,9 +35,15 @@ interface Props {
   /** "Pick from map" button next to mapEntity/hero fields — see ConditionForm's
    *  identical prop for the full explanation. */
   onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => void
+  /** Narrows the type dropdown to a documented-valid subset for this specific
+   *  field (e.g. a dialog's restricted "Global" actions block) — the "Custom /
+   *  unknown type" escape hatch stays available regardless, so an already-set
+   *  type outside the filter is never made unrepresentable, just not offered
+   *  as a fresh pick. */
+  typeFilter?: (type: string) => boolean
 }
 
-export default function ActionForm({ action, onChange, onRemove, onPickFromMap }: Props) {
+export default function ActionForm({ action, onChange, onRemove, onPickFromMap, typeFilter }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const isCustom = !def
   const { openDialogEditor } = useScenarioStore()
@@ -106,16 +112,22 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                 <SelectValue placeholder="Select type…" />
               </SelectTrigger>
               <SelectContent>
-                {ACTION_CATEGORIES.map((cat) => (
-                  <SelectGroup key={cat}>
-                    <SelectLabel>{cat}</SelectLabel>
-                    {ACTION_LIST.filter((a) => a.category === cat).map((a) => (
-                      <SelectItem key={a.type} value={a.type}>
-                        {a.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
+                {ACTION_CATEGORIES.map((cat) => {
+                  const inCategory = ACTION_LIST.filter(
+                    (a) => a.category === cat && (!typeFilter || typeFilter(a.type)),
+                  )
+                  if (inCategory.length === 0) return null
+                  return (
+                    <SelectGroup key={cat}>
+                      <SelectLabel>{cat}</SelectLabel>
+                      {inCategory.map((a) => (
+                        <SelectItem key={a.type} value={a.type}>
+                          {a.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )
+                })}
                 <SelectGroup>
                   <SelectLabel>Other</SelectLabel>
                   <SelectItem value="__custom__">Custom / unknown type</SelectItem>
