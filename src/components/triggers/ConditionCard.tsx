@@ -1,19 +1,22 @@
 import type { Condition } from '@/types/scenario'
 import { CONDITION_REGISTRY } from '@/schema/conditions'
-import { getConditionCategory, formatConditionSentence, isConditionConfigured } from '@/lib/trigger-visual'
+import { getConditionCategory, getConditionSentenceSegments, isConditionConfigured } from '@/lib/trigger-visual'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
-import { Pencil, Trash2, AlertTriangle, HelpCircle } from 'lucide-react'
+import { Trash2, AlertTriangle, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import SentenceView from './SentenceView'
 import { cn } from '@/lib/utils'
 
 interface Props {
   condition: Condition
   onEdit: () => void
   onRemove: () => void
+  /** Clicking a node number in the sentence — see SentenceView's onNodeClick. */
+  onPickNode?: (paramIndex: number, node: number) => void
 }
 
-export default function ConditionCard({ condition, onEdit, onRemove }: Props) {
+export default function ConditionCard({ condition, onEdit, onRemove, onPickNode }: Props) {
   const def = CONDITION_REGISTRY[condition.c]
   const category = condition.c ? getConditionCategory(condition.c) : undefined
   const Icon = category?.icon ?? HelpCircle
@@ -46,24 +49,20 @@ export default function ConditionCard({ condition, onEdit, onRemove }: Props) {
       )}
       <div className="min-w-0">
         <p className={cn('text-sm leading-snug', !configured && 'italic text-muted-foreground')}>
-          {configured ? formatConditionSentence(condition, { catalog, placedObjects }) : 'Needs setup — click to configure'}
+          {configured ? (
+            <SentenceView
+              segments={getConditionSentenceSegments(condition, { catalog, placedObjects })}
+              onNodeClick={onPickNode}
+            />
+          ) : (
+            'Needs setup — click to configure'
+          )}
         </p>
         {configured && def && (
           <p className="mt-0.5 text-[11px] text-muted-foreground">{def.label}</p>
         )}
       </div>
       <div className="absolute right-1.5 top-1.5 flex opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-muted-foreground hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation()
-            onEdit()
-          }}
-        >
-          <Pencil className="h-3 w-3" />
-        </Button>
         <Button
           variant="ghost"
           size="icon"

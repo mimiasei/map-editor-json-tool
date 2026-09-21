@@ -448,18 +448,24 @@ export const MAP_OBJECTS: EntityEntry[] = [
 
 // ─── Lookup helpers ───────────────────────────────────────────────────────────
 
-export type EntityCategory = 'hero' | 'creature' | 'artifact' | 'mapObject' | 'spell' | 'skill' | 'buff' | 'squadTemplate'
+export type EntityCategory =
+  | 'hero' | 'creature' | 'artifact' | 'mapObject' | 'spell' | 'skill' | 'buff' | 'squadTemplate'
+  | 'vfx' | 'interactiveObject' | 'decoration'
 
 export const ENTITY_REGISTRIES: Record<EntityCategory, EntityEntry[]> = {
   hero: HEROES,
   creature: CREATURES,
   artifact: ARTIFACTS,
   mapObject: MAP_OBJECTS,
-  // spell, skill, buff, squadTemplate have no hardcoded fallbacks — catalog-only
+  // spell, skill, buff, squadTemplate, vfx, interactiveObject, decoration have
+  // no hardcoded fallbacks — catalog-only
   spell: [],
   skill: [],
   buff: [],
   squadTemplate: [],
+  vfx: [],
+  interactiveObject: [],
+  decoration: [],
 }
 
 export const ENTITY_LABELS: Record<EntityCategory, string> = {
@@ -471,4 +477,7 @@ export const ENTITY_LABELS: Record<EntityCategory, string> = {
   skill: 'skills',
   buff: 'buffs',
   squadTemplate: 'squad templates',
+  vfx: 'VFX effects',
+  interactiveObject: 'interactive objects',
+  decoration: 'decoration objects',
 }

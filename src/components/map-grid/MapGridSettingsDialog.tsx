@@ -24,6 +24,8 @@ export interface MapGridSettings {
   terrainOpacity: number
   /** When false, every cell forces its letter-badge fallback instead of a real icon. */
   iconImagesEnabled: boolean
+  /** When false, a rotated object's small green degree badge is hidden. */
+  rotationNumberEnabled: boolean
   /** 1px lines between every cell, on/off — always the same fixed thickness. */
   showGridLines: boolean
   /** 0 = off (icon fills the whole tile); otherwise the number of screen
@@ -86,6 +88,7 @@ export interface MapGridSettings {
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainOpacity: DEFAULT_TERRAIN_BLEND,
   iconImagesEnabled: true,
+  rotationNumberEnabled: true,
   showGridLines: false,
   cellBorderThickness: 0,
   showGridNumbers: false,
@@ -176,6 +179,15 @@ export default function MapGridSettingsDialog({
             id="grid-icon-images"
             checked={settings.iconImagesEnabled}
             onCheckedChange={(v) => update({ iconImagesEnabled: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-rotation-numbers" className="text-xs cursor-pointer">Rotation numbers</Label>
+          <Switch
+            id="grid-rotation-numbers"
+            checked={settings.rotationNumberEnabled}
+            onCheckedChange={(v) => update({ rotationNumberEnabled: v })}
           />
         </div>
 

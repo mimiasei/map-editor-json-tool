@@ -520,7 +520,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Camera',
     description: 'Moves the camera center of the given player to the node/cell with the specified index.',
     params: [
-      { label: 'Node index', hint: 'e.g. 47 (hover cell in editor)', required: true },
+      { label: 'Node index', hint: 'e.g. 47 (hover cell in editor)', required: true, nodeIndex: true },
     ],
   },
   MoveCameraToSelectHero: {
@@ -536,7 +536,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Camera',
     description: 'Reveals fog of war within a radius of X around the node. X=1 reveals the cell and all adjacent cells. X=0 reveals nothing.',
     params: [
-      { label: 'Node index', hint: 'e.g. 47', required: true },
+      { label: 'Node index', hint: 'e.g. 47', required: true, nodeIndex: true },
       { label: 'Radius', hint: 'e.g. 5', required: true, type: 'number' },
     ],
   },
@@ -546,7 +546,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Camera',
     description: 'Creates fog of war within a radius of X around the node. Cannot create fog in the visibility range of a hero/castle/object with an owner.',
     params: [
-      { label: 'Node index', hint: 'e.g. 47', required: true },
+      { label: 'Node index', hint: 'e.g. 47', required: true, nodeIndex: true },
       { label: 'Radius', hint: 'e.g. 5', required: true, type: 'number' },
     ],
   },
@@ -643,8 +643,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Map Objects',
     description: 'Creates an interactive object at the specified node. boolMirror: true=mirror horizontally. entityObject is optional.',
     params: [
-      { label: 'Object SID', hint: 'e.g. campaign_lost_library_empty', required: true, entity: 'mapObject' },
-      { label: 'Node index', hint: 'e.g. 1755', required: true },
+      { label: 'Object SID', hint: 'e.g. mine_gold', required: true, entity: 'interactiveObject' },
+      { label: 'Node index', hint: 'e.g. 1755', required: true, nodeIndex: true },
       { label: 'Mirror?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
     ],
@@ -655,8 +655,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Map Objects',
     description: 'Creates a non-interactive decoration object at the specified node. Rotation: 0=0°, 1=90°, 2=180°, 3=270°. entityObject is optional.',
     params: [
-      { label: 'Object SID', hint: 'e.g. hill_dead_big', required: true },
-      { label: 'Node index', hint: 'e.g. 1986', required: true },
+      { label: 'Object SID', hint: 'e.g. hill_dead_big', required: true, entity: 'decoration' },
+      { label: 'Node index', hint: 'e.g. 1986', required: true, nodeIndex: true },
       { label: 'Rotation', hint: '0', required: false, type: 'enum', options: ['0', '1', '2', '3'] },
       { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
     ],
@@ -667,8 +667,8 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Map Objects',
     description: 'Creates a visual effect at the specified node. boolRotation: random rotation. isActive: show/hide. entityVFX is optional.',
     params: [
-      { label: 'VFX SID', hint: 'e.g. fx_map_fire', required: true },
-      { label: 'Node index', hint: 'e.g. 520', required: true },
+      { label: 'VFX SID', hint: 'e.g. fx_map_fire', required: true, entity: 'vfx' as const },
+      { label: 'Node index', hint: 'e.g. 520', required: true, nodeIndex: true },
       { label: 'Random rotation?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Active?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
       { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
@@ -761,7 +761,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Map Objects',
     description: 'Deletes ONE trigger zone whose cells lie in the specified node. Used for zones without their own entity property (e.g. zones ending with "resultDialog": "Interrupt").',
     params: [
-      { label: 'Node index', hint: 'e.g. 1234', required: true },
+      { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
     ],
   },
   EntityActionsOff: {
@@ -783,7 +783,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Adds a new neutral squad at the specified node with the given total strength value. boolDifficulty: multiply value by difficulty coefficient.',
     params: [
       { label: 'Squad SID', hint: 'e.g. wolf_raiders', required: true },
-      { label: 'Node index', hint: 'e.g. 1234', required: true },
+      { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
       { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
@@ -796,7 +796,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Like SpawnSquad but combat cannot be initiated upon interaction. Used for squads that call a dialog via SquadInteraction condition.',
     params: [
       { label: 'Squad SID', hint: 'e.g. wolf_raiders', required: true },
-      { label: 'Node index', hint: 'e.g. 1234', required: true },
+      { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
       { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
@@ -898,7 +898,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Creates a hero with the specified SID belonging to the specified player at the given node. Player index starts at 0.',
     params: [
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
-      { label: 'Node index', hint: 'e.g. 47', required: true },
+      { label: 'Node index', hint: 'e.g. 47', required: true, nodeIndex: true },
       { label: 'Player index', hint: '0=Player1, 1=Player2', required: true, type: 'number' },
     ],
   },
@@ -1111,7 +1111,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Forces the specified hero to move to the node and/or interact with any object/squad in it. Works for both human and AI heroes. If path cannot be built, the hero does not move.',
     params: [
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
-      { label: 'Node index', hint: 'e.g. 47', required: true },
+      { label: 'Node index', hint: 'e.g. 47', required: true, nodeIndex: true },
     ],
   },
   HeroToHero: {
@@ -1131,11 +1131,11 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Teleports the hero to one random cell from the list of node indices. If only one node is given, the hero is guaranteed to teleport there.',
     params: [
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
-      { label: 'Node index 1', hint: 'e.g. 47', required: true },
-      { label: 'Node index 2', hint: 'optional', required: false },
-      { label: 'Node index 3', hint: 'optional', required: false },
-      { label: 'Node index 4', hint: 'optional', required: false },
-      { label: 'Node index 5', hint: 'optional', required: false },
+      { label: 'Node index 1', hint: 'e.g. 47', required: true, nodeIndex: true },
+      { label: 'Node index 2', hint: 'optional', required: false, nodeIndex: true },
+      { label: 'Node index 3', hint: 'optional', required: false, nodeIndex: true },
+      { label: 'Node index 4', hint: 'optional', required: false, nodeIndex: true },
+      { label: 'Node index 5', hint: 'optional', required: false, nodeIndex: true },
     ],
   },
   InitiateInteract: {
@@ -1192,7 +1192,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     description: 'Resurrects a defeated hero at a map node. Undocumented in the official guide — verified real via example-map usage, but the Flag parameter\'s effect is unconfirmed (always "0" in the only usage found).',
     params: [
       { label: 'Hero SID', hint: 'e.g. nature_hero_6', required: true, entity: 'hero' },
-      { label: 'Node index', hint: 'e.g. 234', required: true },
+      { label: 'Node index', hint: 'e.g. 234', required: true, nodeIndex: true },
       { label: 'Flag', hint: 'e.g. 0 — meaning unconfirmed', required: false },
     ],
   },
@@ -1205,7 +1205,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'AI',
     description: 'Blocks the AI from entering the zone containing the specified node.',
     params: [
-      { label: 'Node index', hint: 'e.g. 1816', required: true },
+      { label: 'Node index', hint: 'e.g. 1816', required: true, nodeIndex: true },
     ],
   },
   AiUnbanArea: {
@@ -1214,7 +1214,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'AI',
     description: 'Unblocks the AI for the zone containing the specified node.',
     params: [
-      { label: 'Node index', hint: 'e.g. 1816', required: true },
+      { label: 'Node index', hint: 'e.g. 1816', required: true, nodeIndex: true },
     ],
   },
   AiClearBanArea: {

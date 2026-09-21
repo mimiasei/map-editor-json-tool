@@ -1,10 +1,11 @@
 import type { Action } from '@/types/scenario'
 import { ACTION_REGISTRY } from '@/schema/actions'
-import { getActionCategoryIcon, formatActionSentence, isActionConfigured } from '@/lib/trigger-visual'
+import { getActionCategoryIcon, getActionSentenceSegments, isActionConfigured } from '@/lib/trigger-visual'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
-import { Pencil, Trash2, AlertTriangle, HelpCircle, OctagonX } from 'lucide-react'
+import { Trash2, AlertTriangle, HelpCircle, OctagonX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import SentenceView from './SentenceView'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -13,9 +14,11 @@ interface Props {
   dimmed?: boolean
   onEdit: () => void
   onRemove: () => void
+  /** Clicking a node number in the sentence — see SentenceView's onNodeClick. */
+  onPickNode?: (paramIndex: number, node: number) => void
 }
 
-export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: Props) {
+export default function ActionCard({ action, index, dimmed, onEdit, onRemove, onPickNode }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const Icon = def ? getActionCategoryIcon(def.category) : HelpCircle
   const configured = isActionConfigured(action)
@@ -25,9 +28,9 @@ export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: 
 
   return (
     <div className={cn('flex items-stretch gap-2', dimmed && 'opacity-60')}>
-      <div className="flex w-5 shrink-0 items-start justify-center pt-3 text-xs font-semibold text-muted-foreground">
-        {index + 1}
-      </div>
+      {/*<div className="flex w-5 shrink-0 items-start justify-center pt-3 text-xs font-semibold text-muted-foreground">*/}
+      {/*  {index + 1}*/}
+      {/*</div>*/}
       <div
         role="button"
         tabIndex={0}
@@ -53,7 +56,14 @@ export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className={cn('text-sm leading-snug', !configured && 'italic text-muted-foreground')}>
-              {configured ? formatActionSentence(action, { catalog, placedObjects }) : 'Needs setup — click to configure'}
+              {configured ? (
+                <SentenceView
+                  segments={getActionSentenceSegments(action, { catalog, placedObjects })}
+                  onNodeClick={onPickNode}
+                />
+              ) : (
+                'Needs setup — click to configure'
+              )}
             </p>
             {breaks && (
               <span
@@ -70,17 +80,6 @@ export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: 
           )}
         </div>
         <div className="absolute right-1.5 top-1.5 flex opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            onClick={(e) => {
-              e.stopPropagation()
-              onEdit()
-            }}
-          >
-            <Pencil className="h-3 w-3" />
-          </Button>
           <Button
             variant="ghost"
             size="icon"

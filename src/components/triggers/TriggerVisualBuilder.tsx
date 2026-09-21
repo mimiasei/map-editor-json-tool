@@ -17,6 +17,7 @@ import ConditionCard from './ConditionCard'
 import ActionCard from './ActionCard'
 import AddNodePopover from './AddNodePopover'
 import TriggerInspectorPanel, { type SelectedNode } from './TriggerInspectorPanel'
+import { centerMapOnNode } from '@/lib/trigger-card-links'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -111,7 +112,10 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   // param once resolved. Reads the trigger fresh at resolve time (via
   // getState()) rather than trusting this closure's captured conditions/
   // actions, since the whole Scenario Editor unmounts for the round trip.
-  const handlePickFromMap = (paramIndex: number, kind: 'mapEntity' | 'hero') => {
+  // 'node' behaves identically to 'mapEntity'/'hero' here — one click on the
+  // grid resolves immediately, no confirm step (that's only for a node link
+  // clicked straight off a Card view sentence — see handlePickNodeFromCard).
+  const handlePickFromMap = (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => {
     if (!selected) return
     const resumeSelection = selected
     const def =
@@ -140,6 +144,47 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
           const p = [...(current.p ?? [])]
           p[paramIndex] = value
           updateAction(questIndex, subQuestIndex, triggerIndex, resumeSelection.index, { ...current, p })
+        }
+      },
+    })
+  }
+
+  // Clicking a "node NNN" link directly on a Card view sentence — this is an
+  // *edit* of that node value, not read-only navigation (unlike hero/object
+  // links, which only open info). The Map Grid opens centered on the current
+  // value; clicking the SAME tile again is a no-op, clicking a DIFFERENT tile
+  // pops a small Change/Cancel confirm dialog (MapGridDialog's pendingPick
+  // 'node' branch) — either button returns here via the same resumeSelection
+  // mechanism handlePickFromMap already relies on, reopening this exact card's
+  // inspector row so the (possibly updated) value is visible right away.
+  const handlePickNodeFromCard = (cardKind: 'condition' | 'action', cardIndex: number, paramIndex: number, currentNode: number) => {
+    const def = cardKind === 'condition' ? CONDITION_REGISTRY[conditions[cardIndex]?.c] : ACTION_REGISTRY[actions[cardIndex]?.a]
+    const label = def?.params[paramIndex]?.label ?? 'Node index'
+    const resumeSelection: SelectedNode = { kind: cardKind, index: cardIndex }
+
+    centerMapOnNode(currentNode)
+    requestPick({
+      kind: 'node',
+      label,
+      resumeSelection,
+      currentValue: String(currentNode),
+      confirmOnChange: true,
+      onResolve: (value) => {
+        const liveTrigger =
+          useScenarioStore.getState().scenario.quests[questIndex]?.subQuests[subQuestIndex]?.triggers[triggerIndex]
+        if (!liveTrigger) return
+        if (cardKind === 'condition') {
+          const current = liveTrigger.conditions[cardIndex]
+          if (!current) return
+          const p = [...(current.p ?? [])]
+          p[paramIndex] = value
+          updateCondition(questIndex, subQuestIndex, triggerIndex, cardIndex, { ...current, p })
+        } else {
+          const current = liveTrigger.actions[cardIndex]
+          if (!current) return
+          const p = [...(current.p ?? [])]
+          p[paramIndex] = value
+          updateAction(questIndex, subQuestIndex, triggerIndex, cardIndex, { ...current, p })
         }
       },
     })
@@ -288,6 +333,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                       condition={condition}
                       onEdit={() => setSelected({ kind: 'condition', index: i })}
                       onRemove={() => handleRemoveCondition(i)}
+                      onPickNode={(paramIndex, node) => handlePickNodeFromCard('condition', i, paramIndex, node)}
                     />
                   </div>
                 ))}
@@ -309,7 +355,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
           <div className="rounded-2xl bg-teal-50/60 p-4 dark:bg-teal-950/10">
             <div className="mb-3 flex items-center justify-between gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-teal-800/80 dark:text-teal-300/80">
-                Then, in order
+                Then
               </span>
               {actions.length >= 2 &&
                 (clearActionsConfirming ? (
@@ -349,14 +395,22 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
             ) : (
               <div className="space-y-2">
                 {actions.map((action, i) => (
-                  <ActionCard
-                    key={i}
-                    action={action}
-                    index={i}
-                    dimmed={firstBreakIndex >= 0 && i > firstBreakIndex}
-                    onEdit={() => setSelected({ kind: 'action', index: i })}
-                    onRemove={() => handleRemoveAction(i)}
-                  />
+                  <div key={i}>
+                      <ActionCard
+                        key={i}
+                        action={action}
+                        index={i}
+                        dimmed={firstBreakIndex >= 0 && i > firstBreakIndex}
+                        onEdit={() => setSelected({ kind: 'action', index: i })}
+                        onRemove={() => handleRemoveAction(i)}
+                        onPickNode={(paramIndex, node) => handlePickNodeFromCard('action', i, paramIndex, node)}
+                      />
+                      {i < actions.length - 1 && (
+                          <span className="text-xs font-semibold uppercase tracking-wider text-teal-800/80 dark:text-teal-300/80">
+                            And
+                          </span>
+                      )}
+                  </div>
                 ))}
               </div>
             )}

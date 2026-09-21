@@ -20,7 +20,7 @@ interface Props {
   onRemoveAction: (index: number) => void
   /** "Pick from map" for a mapEntity/hero field on whichever row is open —
    *  see ConditionForm/ActionForm's identical prop. */
-  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero') => void
+  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => void
 }
 
 export default function TriggerInspectorPanel({
@@ -89,7 +89,7 @@ export default function TriggerInspectorPanel({
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button onClick={onClose}>Create</Button>
+              <Button onClick={onClose}>Confirm</Button>
             </div>
           </>
         )}
@@ -114,7 +114,7 @@ export default function TriggerInspectorPanel({
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button onClick={onClose}>Create</Button>
+              <Button onClick={onClose}>Confirm</Button>
             </div>
           </>
         )}

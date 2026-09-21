@@ -32,7 +32,7 @@ interface Props {
   onRemove: () => void
   /** "Pick from map" button next to mapEntity/hero fields — see ConditionForm's
    *  identical prop for the full explanation. */
-  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero') => void
+  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => void
 }
 
 export default function ActionForm({ action, onChange, onRemove, onPickFromMap }: Props) {
@@ -275,6 +275,28 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                       className="h-9 w-9 shrink-0"
                       title="Pick a hero spawner from the map"
                       onClick={() => onPickFromMap(i, 'hero')}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              ) : param.nodeIndex ? (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="text"
+                    value={(action.p ?? [])[i] ?? ''}
+                    onChange={(e) => updateParam(i, e.target.value)}
+                    placeholder={param.hint}
+                    className="flex-1 min-w-0"
+                  />
+                  {onPickFromMap && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      title="Pick a node from the map"
+                      onClick={() => onPickFromMap(i, 'node')}
                     >
                       <MapPin className="h-3.5 w-3.5" />
                     </Button>
