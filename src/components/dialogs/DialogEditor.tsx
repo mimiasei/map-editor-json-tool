@@ -306,9 +306,10 @@ function SlideEditor({
   /** "Name only" is sugar over the game's own real mechanism for a speaker
    *  with no visible portrait — simply having no DialogAvatar at the
    *  speaker's position (confirmed common in shipped dialogs, ~27% of titled
-   *  slides). Checking it removes that avatar; there's nothing sensible to
-   *  auto-add on uncheck, so unchecking is a no-op — pick a portrait above
-   *  to show one again. */
+   *  slides). Checking it removes that avatar; there's no portrait to
+   *  auto-restore on uncheck (nothing remembers what was there), so
+   *  unchecking opens the portrait picker instead — picking one adds an
+   *  avatar back at the position, which un-derives the checked state. */
   const clearSpeakerAvatar = () => {
     if (!hasAvatarAtSpeakerPos) return
     onChange({ ...slide, avatars: speakerAvatars.filter((a) => a.position !== slide.title?.position) })
@@ -541,7 +542,7 @@ function SlideEditor({
               title={
                 hasAvatarAtSpeakerPos
                   ? 'Remove the portrait at this position — the name label stays'
-                  : 'Pick a portrait above to show one again'
+                  : 'Pick a portrait to show one again'
               }
             >
               <Checkbox
@@ -549,6 +550,7 @@ function SlideEditor({
                 disabled={!titleSid || slide.title?.position == null}
                 onCheckedChange={(checked) => {
                   if (checked) clearSpeakerAvatar()
+                  else setSpeakerPickerOpen(true)
                 }}
               />
               <span className="text-xs">Name only (no portrait)</span>
