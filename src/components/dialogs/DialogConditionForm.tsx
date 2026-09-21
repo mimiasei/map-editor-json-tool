@@ -19,10 +19,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import { Trash2, ClipboardCopy } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
+import { isTauri } from '@/lib/native-fs'
+import { copyToClipboard } from '@/lib/clipboard'
 
 interface Props {
   condition: DialogCondition
@@ -96,6 +98,17 @@ export default function DialogConditionForm({ condition, onChange, onRemove }: P
             <p className="text-xs text-muted-foreground">{def.description}</p>
           )}
         </div>
+        {isTauri() && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 mt-4 text-muted-foreground hover:text-primary"
+            onClick={() => copyToClipboard('condition', condition)}
+            title="Copy condition to clipboard"
+          >
+            <ClipboardCopy className="h-3.5 w-3.5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"

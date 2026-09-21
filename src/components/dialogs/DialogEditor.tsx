@@ -88,6 +88,8 @@ function AnswerEditor({
   answer,
   answerIndex,
   slideIndex,
+  slideId,
+  allSlideIds,
   dialogId,
   localization,
   onChange,
@@ -96,6 +98,8 @@ function AnswerEditor({
   answer: DialogAnswer
   answerIndex: number
   slideIndex: number
+  slideId: string
+  allSlideIds: string[]
   dialogId: string
   localization: Record<string, string>
   onChange: (answer: DialogAnswer) => void
@@ -103,6 +107,18 @@ function AnswerEditor({
 }) {
   const locText = answer.text ? localization[answer.text] : undefined
   const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
+
+  // Real shipped dialogs only ever use these two action shapes here — picking an
+  // answer either jumps to another slide or ends the dialog — but neither "Go" nor
+  // "End" is a registered map-script action (ACTION_REGISTRY is for a different
+  // vocabulary), so without this dedicated control it fell through to ActionForm's
+  // generic "unknown action type" editor: a free-text type field and a raw,
+  // unlabeled param list for the single most important thing an answer does.
+  const leadAction = answer.actions[0]
+  const isGoTo = answer.actions.length === 1 && leadAction?.a === 'Go'
+  const goTarget = isGoTo ? (leadAction.p?.[0] ?? '') : ''
+  const setGoTarget = (target: string) => onChange({ ...answer, actions: [{ a: 'Go', p: [target] }] })
+  const setEndDialog = () => onChange({ ...answer, actions: [{ a: 'End' }] })
 
   return (
     <div className="rounded border border-border bg-background p-2 space-y-2">
@@ -139,23 +155,47 @@ function AnswerEditor({
         </Button>
       </div>
 
-      {/* Dialog flow actions for this answer */}
+      {/* Where picking this answer leads */}
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Flow actions</Label>
-        <ActionList
-          actions={answer.actions}
-          onAdd={(pasted) =>
-            onChange({ ...answer, actions: [...answer.actions, pasted ?? { a: 'Go', p: [''] }] })
-          }
-          onUpdate={(i, action) => {
-            const actions = [...answer.actions]
-            actions[i] = action
-            onChange({ ...answer, actions })
-          }}
-          onRemove={(i) =>
-            onChange({ ...answer, actions: answer.actions.filter((_, j) => j !== i) })
-          }
-        />
+        <Label className="text-xs text-muted-foreground">Leads to</Label>
+        <div className="flex items-center gap-4 text-xs">
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="radio"
+              checked={isGoTo}
+              onChange={() => setGoTarget(goTarget)}
+              className="accent-primary"
+            />
+            Go to slide
+          </label>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="radio"
+              checked={!isGoTo}
+              onChange={setEndDialog}
+              className="accent-primary"
+            />
+            End dialog
+          </label>
+        </div>
+        {isGoTo && (
+          <>
+            <Input
+              value={goTarget}
+              onChange={(e) => setGoTarget(e.target.value)}
+              placeholder={allSlideIds.find((id) => id !== slideId) ?? ''}
+              className="h-7 text-xs font-mono"
+              list={`answer-slides-${slideIndex}-${answerIndex}`}
+            />
+            <datalist id={`answer-slides-${slideIndex}-${answerIndex}`}>
+              {allSlideIds
+                .filter((id) => id !== slideId)
+                .map((id) => (
+                  <option key={id} value={id} />
+                ))}
+            </datalist>
+          </>
+        )}
       </div>
 
       {/* Availability conditions — the game hides the answer when these fail */}
@@ -171,8 +211,11 @@ function AnswerEditor({
         </div>
         <DialogConditionList
           conditions={answer.requests ?? []}
-          onAdd={() =>
-            onChange({ ...answer, requests: [...(answer.requests ?? []), NEW_DIALOG_CONDITION()] })
+          onAdd={(pasted) =>
+            onChange({
+              ...answer,
+              requests: [...(answer.requests ?? []), pasted ?? NEW_DIALOG_CONDITION()],
+            })
           }
           onUpdate={(i, condition) => {
             const requests = [...(answer.requests ?? [])]
@@ -361,6 +404,23 @@ function SlideEditor({
       mapActions: [],
     }
     onChange({ ...slide, answers: [...answers, newAnswer], end: undefined, next: undefined })
+  }
+
+  /** Switching away from "Player choices" used to silently drop the whole
+   *  answers array — each with its own actions/requirements/map actions, and
+   *  not covered by undo (dialogs/localization sit outside zundo's tracked
+   *  `scenario` field). Confirm first when there's real content to lose. */
+  const switchFlowMode = (mode: 'next' | 'end') => {
+    const n = slide.answers?.length ?? 0
+    if (n > 0) {
+      const ok = window.confirm(
+        `Switching away from "Player choices" will delete ${n} answer${n === 1 ? '' : 's'} and everything in ` +
+          `${n === 1 ? 'it' : 'them'} (actions, requirements, map actions). This isn't covered by Ctrl+Z.\n\nContinue?`,
+      )
+      if (!ok) return
+    }
+    if (mode === 'next') onChange({ ...slide, end: undefined, answers: undefined })
+    else onChange({ ...slide, end: true, next: undefined, answers: undefined })
   }
 
   const updateAnswer = (i: number, answer: DialogAnswer) => {
@@ -650,7 +710,7 @@ function SlideEditor({
                 <input
                   type="radio"
                   checked={flowMode === 'next'}
-                  onChange={() => onChange({ ...slide, end: undefined, answers: undefined })}
+                  onChange={() => switchFlowMode('next')}
                   className="accent-primary"
                 />
                 Next slide
@@ -659,9 +719,7 @@ function SlideEditor({
                 <input
                   type="radio"
                   checked={flowMode === 'end'}
-                  onChange={() =>
-                    onChange({ ...slide, end: true, next: undefined, answers: undefined })
-                  }
+                  onChange={() => switchFlowMode('end')}
                   className="accent-primary"
                 />
                 End dialog
@@ -713,6 +771,8 @@ function SlideEditor({
                   answer={answer}
                   answerIndex={ai}
                   slideIndex={slideIndex}
+                  slideId={slide.id}
+                  allSlideIds={allSlideIds}
                   dialogId={dialogId}
                   localization={localization}
                   onChange={(a) => updateAnswer(ai, a)}
@@ -893,12 +953,12 @@ function SlideEditor({
                   </div>
                   <DialogConditionList
                     conditions={slide.dialogPlayConditions ?? []}
-                    onAdd={() =>
+                    onAdd={(pasted) =>
                       onChange({
                         ...slide,
                         dialogPlayConditions: [
                           ...(slide.dialogPlayConditions ?? []),
-                          NEW_DIALOG_CONDITION(),
+                          pasted ?? NEW_DIALOG_CONDITION(),
                         ],
                       })
                     }
