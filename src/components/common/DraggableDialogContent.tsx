@@ -94,6 +94,25 @@ export const DraggableDialogContent = React.forwardRef<
     // "was this inside the layer" check comes back negative. Fixed the
     // supported way: Radix calls the caller's `onPointerDownOutside` first and
     // skips its own dismiss when that handler calls preventDefault().
+    // Snapshot (not live-query) whether a Select/DropdownMenu/Popover listbox is
+    // open, taken on a document-level CAPTURE-phase pointerdown — i.e. before
+    // Radix's own bubble-phase dismiss handler has a chance to close that
+    // listbox and flip its data-state to "closed". A live `document.querySelector`
+    // call made *inside* onPointerDownOutside races against that same Radix
+    // dismiss handler: in a Chromium/Playwright repro the query still saw
+    // data-state="open" in time, but in the packaged desktop WebView build the
+    // query consistently lost the race and saw "closed", silently reintroducing
+    // the close-the-whole-dialog bug this effect exists to prevent. Capturing
+    // the state before Radix's own handler runs sidesteps the race entirely.
+    const hadOpenPopupRef = React.useRef(false)
+    React.useEffect(() => {
+      const captureOpenState = () => {
+        hadOpenPopupRef.current = !!document.querySelector('[role="listbox"][data-state="open"]')
+      }
+      document.addEventListener('pointerdown', captureOpenState, true)
+      return () => document.removeEventListener('pointerdown', captureOpenState, true)
+    }, [])
+
     const handlePointerDownOutside = React.useCallback(
       (e: Parameters<NonNullable<typeof onPointerDownOutside>>[0]) => {
         const target = e.target as HTMLElement | null
@@ -114,11 +133,10 @@ export const DraggableDialogContent = React.forwardRef<
         // didn't cover the dismiss-click landing outside the dialog
         // entirely, which is legitimate ("outside the dialog" is literally
         // true) but still shouldn't close it while a nested Select is what's
-        // actually being dismissed. Checking whether any Select is *open at
-        // all* at pointerdown time, regardless of where the click lands,
-        // covers both cases.
-        if (target?.closest('[data-radix-popper-content-wrapper]')
-          || document.querySelector('[role="listbox"][data-state="open"]')) {
+        // actually being dismissed. Checking whether any Select was open at
+        // *pointerdown-capture time* (hadOpenPopupRef, above), regardless of
+        // where the click lands, covers both cases.
+        if (target?.closest('[data-radix-popper-content-wrapper]') || hadOpenPopupRef.current) {
           e.preventDefault()
         }
         onPointerDownOutside?.(e)

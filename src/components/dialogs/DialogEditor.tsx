@@ -281,6 +281,39 @@ function SlideEditor({
     setLocalizationToken(sid, builtInSpeakerName ?? '')
   }
 
+  const speakerAvatars = slide.avatars ?? []
+  const hasAvatarAtSpeakerPos =
+    slide.title?.position != null && speakerAvatars.some((a) => a.position === slide.title!.position)
+
+  /** Names the speaker AND places/updates their portrait at the speaker
+   *  position, in one update — picking a portrait and it only affecting the
+   *  name (with the avatar strip left untouched) was confusing, since the two
+   *  looked linked but weren't. Combined into a single onChange (rather than
+   *  calling onSpeakerNameChange separately) so the title and avatar patches
+   *  can't race against each other's stale `slide` closure. */
+  const pickSpeakerPortrait = (name: string, icon: string) => {
+    const sid = titleSid || defaultTitleSid(dialogId, slideIndex)
+    const pos = defaultTitlePosition()
+    const nextAvatars = speakerAvatars.some((a) => a.position === pos)
+      ? speakerAvatars.map((a) => (a.position === pos ? { ...a, icon } : a))
+      : [...speakerAvatars, { position: pos, icon, isForeground: 'true' as const }].sort(
+          (a, b) => a.position - b.position,
+        )
+    setLocalizationToken(sid, name)
+    onChange({ ...slide, title: { sid, position: pos }, avatars: nextAvatars })
+  }
+
+  /** "Name only" is sugar over the game's own real mechanism for a speaker
+   *  with no visible portrait — simply having no DialogAvatar at the
+   *  speaker's position (confirmed common in shipped dialogs, ~27% of titled
+   *  slides). Checking it removes that avatar; there's nothing sensible to
+   *  auto-add on uncheck, so unchecking is a no-op — pick a portrait above
+   *  to show one again. */
+  const clearSpeakerAvatar = () => {
+    if (!hasAvatarAtSpeakerPos) return
+    onChange({ ...slide, avatars: speakerAvatars.filter((a) => a.position !== slide.title?.position) })
+  }
+
   const advancedInUse = [
     slide.sound ? 'sound' : null,
     slide.notification ? 'notification' : null,
@@ -500,6 +533,26 @@ function SlideEditor({
                 </Select>
               </div>
             </div>
+
+            <label
+              className={`flex items-center gap-2 ${
+                titleSid && slide.title?.position != null ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+              }`}
+              title={
+                hasAvatarAtSpeakerPos
+                  ? 'Remove the portrait at this position — the name label stays'
+                  : 'Pick a portrait above to show one again'
+              }
+            >
+              <Checkbox
+                checked={!!titleSid && slide.title?.position != null && !hasAvatarAtSpeakerPos}
+                disabled={!titleSid || slide.title?.position == null}
+                onCheckedChange={(checked) => {
+                  if (checked) clearSpeakerAvatar()
+                }}
+              />
+              <span className="text-xs">Name only (no portrait)</span>
+            </label>
           </div>
 
           <HeroPickerDialog
@@ -507,7 +560,7 @@ function SlideEditor({
             onOpenChange={setSpeakerPickerOpen}
             mode="portrait"
             title="Choose a portrait to name this speaker"
-            onSelect={(entry) => onSpeakerNameChange(entry.name)}
+            onSelect={(entry) => pickSpeakerPortrait(entry.name, entry.icon)}
           />
 
           {/* Flow mode */}
