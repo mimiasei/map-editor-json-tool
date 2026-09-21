@@ -533,7 +533,21 @@ function SlideEditor({
                   onValueChange={(v) => {
                     if (!slide.title) return
                     const pos = v === '__unset__' ? undefined : parseInt(v)
-                    onChange({ ...slide, title: { ...slide.title, position: pos } })
+                    const oldPos = slide.title.position
+                    // Move the speaker's own portrait along with the position change —
+                    // swapping with whatever was already in the new slot, if anything —
+                    // rather than leaving it behind in the old box.
+                    const avatars =
+                      pos != null && oldPos != null && oldPos !== pos && speakerAvatars.some((a) => a.position === oldPos)
+                        ? speakerAvatars
+                            .map((a) => {
+                              if (a.position === oldPos) return { ...a, position: pos }
+                              if (a.position === pos) return { ...a, position: oldPos }
+                              return a
+                            })
+                            .sort((a, b) => a.position - b.position)
+                        : speakerAvatars
+                    onChange({ ...slide, title: { ...slide.title, position: pos }, avatars })
                   }}
                 >
                   <SelectTrigger className="h-7 text-xs">
