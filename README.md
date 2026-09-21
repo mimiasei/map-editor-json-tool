@@ -27,7 +27,7 @@ The in-game map editor does not expose scenario scripting. Quest flow, win/lose 
 This tool gives that file a visual interface:
 
 - **Import** an existing scenario JSON and browse its structure in a tree
-- **Edit** counters, interruptions, quests, sub-quests, triggers, conditions, and actions through structured forms
+- **Edit** counters, interruptions, quests, sub-quests, triggers, conditions, and actions — as structured forms, or as plain-language cards with clickable links to the objects/heroes/nodes they reference
 - **Author dialog flows** — build branching NPC conversations with player choices, speaker titles, and map actions per slide
 - **Localise** — manage text tokens for dialogs and quest names in one panel, in English and any of the game's other 15 languages
 - **Edit the map itself** (desktop) — open the binary `.map` file and use the Map Grid to move, add, delete, rotate, and paint objects and terrain directly. Good for quick changes.
@@ -63,12 +63,14 @@ It is a companion to the map editor, not a replacement for it.
 
 ## Features
 
-**Map Grid** (desktop) — Introducing a 2D alternative to the HoMM:Olden Era map editor - a live view of your actual map, not just the script, with two modes:
-- **Browse** — click any tile to inspect everything placed on it, safe to poke around without changing anything.
-- **Paint** — every edit is staged locally until you explicitly save (Ctrl+Z undoes staged edits before you do):
-  - **Objects** — move, add, delete, and rotate; place real creature squads (not just decorative wildlife) with hover tooltips for stats; assign which player starts where — city or hero.
+**Map Grid** (desktop) — a live 2D view of your actual map, not just the script, with two modes:
+- **Browse** — click any tile to inspect everything placed on it.
+- **Paint** — edits apply immediately (Ctrl+Z/Cmd+Z undoes, with its own history separate from the scenario editor's):
+  - **Objects** — move, add, delete, and rotate; place real creature squads with hover tooltips for stats; assign which player starts where — city or hero.
   - **Terrain & water** — drag-paint terrain, roads, rivers, and ramps; flood-fill water into lowered terrain; a blocked-tile overlay shows exactly what's walkable; erase anything with the Eraser tool.
-  - **Scatter brushes** — **Obstacles**, **Trees**, and **Landmarks** drop biome-appropriate scenery as you drag. Each has its own settings popover: mountain/pool chance (Obstacles), how much cross-biome mixing to allow (all three), and a switch for whether jarring "high-contrast" biome mixes are allowed at all (like palm trees on snow).
+  - **Scatter brushes** — **Obstacles**, **Trees**, and **Landmarks** drop biome-appropriate scenery as you drag, with per-brush settings for mountain/pool chance and cross-biome mixing.
+
+**Trigger builder (Card view)** — conditions and actions render as plain-language sentences instead of raw forms. Hero, object, dialog, and node references are clickable — heroes and objects jump to their Game Database entry, nodes open the Map Grid centered on that tile; dialog actions show a tooltip preview of the localized text on hover.
 
 **Dialog & localization** — a visual slide editor for branching NPC conversations: portraits, animations, voice lines, player choices, and per-slide map actions. Translate every dialog and quest name into any of the game's 16 languages side by side, with English as a safety-net fallback.
 
@@ -123,20 +125,7 @@ level, so the web build stays clean.
 
 ## Example files
 
-The `examples/` directory contains scenario JSON files that can be imported directly into the tool:
-
-| File |
-|---|
-| `example_01.json` |
-| `example_02.json` |
-| `example_03.json` |
-| `example_04.json` |
-| `example_05.json` |
-| `example_06.json` |
-| `example_07.json` |
-| `example_08.json` |
-
-> Example files are provided for reference/testing purposes only and remain property of Unfrozen.
+The `examples/` directory contains scenario JSON files (`example_01.json` – `example_08.json`) that can be imported directly into the tool. Provided for reference/testing only and remain property of Unfrozen.
 
 ---
 
@@ -170,6 +159,7 @@ src/
 │   ├── languages.ts           — The game's 16 languages + English-fallback resolution
 │   ├── factions.ts            — Faction display names and the game's faction order
 │   ├── validate.ts            — Scenario, dialog-flow and localisation checks
+│   ├── trigger-visual.ts      — Card view: plain-language sentences + clickable link segments
 │   ├── map-parser.ts          — .map binary reader (gzip + LEB128-framed JSON blocks)
 │   ├── map-extract.ts         — Derives MapContext (entities, spawns, placements) from blocks
 │   ├── map-write.ts / map-save.ts — Span-patch-and-splice .map edits, verified before write
@@ -283,21 +273,14 @@ deb/rpm installs can never self-update, so Linux users keep downloading manually
 
 ## Contributing
 
-This project is open source and contributions are welcome.
+Contributions are welcome. Good first ones: adding missing condition/action types to
+`src/schema/conditions.ts` / `src/schema/actions.ts`, bug fixes, and UX improvements.
 
-**Good first contributions:**
-- Adding missing condition or action types to `src/schema/conditions.ts` / `src/schema/actions.ts`
-- Reporting or fixing bugs
-- UX improvements
-
-**To contribute:**
-
-1. **Open an issue first.** Before writing any code, create a GitHub issue describing the feature or bug. This keeps work visible, avoids duplicate effort, and lets maintainers give feedback before you invest time in an implementation.
-2. Fork the repository and create a feature branch off `main`: `git checkout -b feature/my-feature`
+1. **Open an issue first** describing the feature or bug, so work stays visible and avoids duplication.
+2. Fork the repo and create a feature branch off `main`: `git checkout -b feature/my-feature`
 3. Commit your changes with a clear message
-4. Push the branch: `git push origin feature/my-feature`
-5. Open a pull request that references the issue (e.g. `Closes #42` in the PR description)
+4. Push the branch and open a pull request that references the issue (e.g. `Closes #42`)
 
-Please keep PRs focused — one feature or fix per PR makes review faster. PRs without a corresponding issue may be closed or asked to create one first.
-
-If you have found a new condition/action type in a scenario file not yet covered by the registry, opening an issue or PR with the type name and a `p[]` example is extremely helpful.
+Keep PRs focused — one feature or fix per PR. If you've found a condition/action type in a
+scenario file not yet covered by the registry, an issue with the type name and a `p[]` example
+is extremely helpful.
