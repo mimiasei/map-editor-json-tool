@@ -251,6 +251,11 @@ function SlideEditor({
   const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
   const [speakerPickerOpen, setSpeakerPickerOpen] = useState(false)
   const heroesLoaded = (catalog?.heroes?.length ?? 0) > 0
+  /** "Character" (a speaker with a name/portrait) vs "Narrator" (plain
+   *  informational text, no title.sid at all) — a title object with an
+   *  empty sid still counts as "Character" so the toggle doesn't snap back
+   *  to Narrator the moment it's switched on, before a SID is typed. */
+  const hasSpeaker = !!slide.title
   const titleSid = slide.title?.sid ?? ''
   const builtInSpeaker = (catalog?.speakerTitles ?? []).find((t) => t.sid === titleSid)
   const isBuiltInSpeaker = !!builtInSpeaker
@@ -453,7 +458,38 @@ function SlideEditor({
             </button>
           )}
 
+          {/* Character vs Narrator */}
+          <div className="space-y-1">
+            <Label className="text-xs">Dialog type</Label>
+            <div className="flex items-center gap-4 text-sm">
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={hasSpeaker}
+                  onChange={() => onChange({ ...slide, title: { sid: '', position: defaultTitlePosition() } })}
+                  className="accent-primary"
+                />
+                Character
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={!hasSpeaker}
+                  onChange={() => onChange({ ...slide, title: undefined })}
+                  className="accent-primary"
+                />
+                Narrator
+              </label>
+            </div>
+            {!hasSpeaker && (
+              <p className="text-[10px] text-muted-foreground">
+                Plain informational text — no speaker name or portrait shown.
+              </p>
+            )}
+          </div>
+
           {/* Title / Speaker */}
+          {hasSpeaker && (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
@@ -589,6 +625,7 @@ function SlideEditor({
               <span className="text-xs">Name only (no portrait)</span>
             </label>
           </div>
+          )}
 
           <HeroPickerDialog
             open={speakerPickerOpen}
