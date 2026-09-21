@@ -3,7 +3,7 @@ import { CONDITION_REGISTRY } from '@/schema/conditions'
 import { getConditionCategory, getConditionSentenceSegments, isConditionConfigured } from '@/lib/trigger-visual'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
-import { Pencil, Trash2, AlertTriangle, HelpCircle } from 'lucide-react'
+import { Trash2, AlertTriangle, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SentenceView from './SentenceView'
 import { cn } from '@/lib/utils'
@@ -63,17 +63,6 @@ export default function ConditionCard({ condition, onEdit, onRemove, onPickNode 
         )}
       </div>
       <div className="absolute right-1.5 top-1.5 flex opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-muted-foreground hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation()
-            onEdit()
-          }}
-        >
-          <Pencil className="h-3 w-3" />
-        </Button>
         <Button
           variant="ghost"
           size="icon"

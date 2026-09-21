@@ -683,6 +683,8 @@ const ENTITY_DB_TAB: Partial<Record<EntityCategory, string>> = {
   mapObject: 'mapObjects',
   spell: 'spells',
   skill: 'skills',
+  interactiveObject: 'mapObjects',
+  decoration: 'mapObjects',
 }
 
 function resolveHeroName(sid: string, catalog: GameCatalog | null | undefined): string | undefined {

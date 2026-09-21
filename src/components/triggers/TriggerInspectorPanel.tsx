@@ -89,7 +89,7 @@ export default function TriggerInspectorPanel({
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button onClick={onClose}>Create</Button>
+              <Button onClick={onClose}>Confirm</Button>
             </div>
           </>
         )}

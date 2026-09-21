@@ -355,7 +355,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
           <div className="rounded-2xl bg-teal-50/60 p-4 dark:bg-teal-950/10">
             <div className="mb-3 flex items-center justify-between gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-teal-800/80 dark:text-teal-300/80">
-                Then, in order
+                Then
               </span>
               {actions.length >= 2 &&
                 (clearActionsConfirming ? (
@@ -395,15 +395,22 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
             ) : (
               <div className="space-y-2">
                 {actions.map((action, i) => (
-                  <ActionCard
-                    key={i}
-                    action={action}
-                    index={i}
-                    dimmed={firstBreakIndex >= 0 && i > firstBreakIndex}
-                    onEdit={() => setSelected({ kind: 'action', index: i })}
-                    onRemove={() => handleRemoveAction(i)}
-                    onPickNode={(paramIndex, node) => handlePickNodeFromCard('action', i, paramIndex, node)}
-                  />
+                  <div key={i}>
+                      <ActionCard
+                        key={i}
+                        action={action}
+                        index={i}
+                        dimmed={firstBreakIndex >= 0 && i > firstBreakIndex}
+                        onEdit={() => setSelected({ kind: 'action', index: i })}
+                        onRemove={() => handleRemoveAction(i)}
+                        onPickNode={(paramIndex, node) => handlePickNodeFromCard('action', i, paramIndex, node)}
+                      />
+                      {i < actions.length - 1 && (
+                          <span className="text-xs font-semibold uppercase tracking-wider text-teal-800/80 dark:text-teal-300/80">
+                            And
+                          </span>
+                      )}
+                  </div>
                 ))}
               </div>
             )}

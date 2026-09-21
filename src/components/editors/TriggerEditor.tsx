@@ -31,7 +31,7 @@ const VIEW_MODE_KEY = 'tse.triggerEditorViewMode'
 function readViewMode(): ViewMode {
   try {
     const stored = localStorage.getItem(VIEW_MODE_KEY)
-    return stored === 'card' ? 'card' : 'form'
+    return stored === 'form' ? 'form' : 'card'
   } catch {
     return 'card'
   }
