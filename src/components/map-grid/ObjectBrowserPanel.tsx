@@ -119,6 +119,7 @@ interface StoredFilter {
   interactableSub: Record<InteractableSubcategory, boolean>
   showCampaign: boolean
   showCustom: boolean
+  showNoTemplate: boolean
 }
 
 // Sub-category (and Biome/Tier) filters default every key to `true` ("All"
@@ -149,6 +150,7 @@ function loadStoredFilter(): StoredFilter {
     interactableSub: buildSubFilterDefaults(INTERACTABLE_SUBCATEGORY_ORDER, parsed.interactableSub),
     showCampaign: parsed.showCampaign === true,
     showCustom: parsed.showCustom === true,
+    showNoTemplate: parsed.showNoTemplate === true,
   }
 }
 
@@ -250,6 +252,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
   )
   const [showCampaign, setShowCampaign] = useState<boolean>(initialFilter.showCampaign)
   const [showCustom, setShowCustom] = useState<boolean>(initialFilter.showCustom)
+  const [showNoTemplate, setShowNoTemplate] = useState<boolean>(initialFilter.showNoTemplate)
   const [query, setQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
 
@@ -257,7 +260,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
     saveStoredFilter({
       types: [...typeFilter], plainType: plainTypeFilter, biomes: biomeFilter, mode, fractions: [...fractionFilter],
       tiers: tierFilter, decorationSub: decorationSubFilter, interactableSub: interactableSubFilter,
-      showCampaign, showCustom,
+      showCampaign, showCustom, showNoTemplate,
       ...next,
     })
   }
@@ -359,6 +362,10 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
     setShowCustom(v)
     persist({ showCustom: v })
   }
+  const setShowNoTemplateAndPersist = (v: boolean) => {
+    setShowNoTemplate(v)
+    persist({ showNoTemplate: v })
+  }
 
   const entries = useMemo(() => {
     const all = catalog?.mapObjects ?? []
@@ -399,10 +406,11 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       if (tierRestricted && !selectedTiers.includes(c.tier)) return false
       if (!showCampaign && c.id.includes('campaign')) return false
       if (!showCustom && c.id.includes('custom')) return false
-      if (q && !c.name.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q)) return false
-      return true
+      if (!showNoTemplate && !templateForCreature(catalog, c)) return false
+
+      return !(q && !c.name.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q));
     })
-  }, [catalog, fractionFilter, tierFilter, showCampaign, showCustom, query])
+  }, [catalog, fractionFilter, tierFilter, showCampaign, showCustom, showNoTemplate, query])
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -447,6 +455,16 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                   id="obj-browser-show-custom"
                   checked={showCustom}
                   onCheckedChange={setShowCustomAndPersist}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="obj-browser-show-custom" className="text-xs cursor-pointer">
+                    Show objects without placeable template
+                </Label>
+                <Switch
+                    id="obj-browser-show-custom"
+                    checked={showNoTemplate}
+                    onCheckedChange={setShowNoTemplateAndPersist}
                 />
               </div>
             </PopoverContent>
