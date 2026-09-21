@@ -46,6 +46,11 @@ interface Props {
   subjectKey?: SubjectKey
 }
 
+// CommandItem's `value` drives cmdk's match score (earlier/whole-word hits
+// in `value` beat anything only found in `keywords`, which get appended
+// after it) — label+type (the sid) are the primary search target so typing
+// "hero" ranks a condition titled "Hero ..." above one that merely mentions
+// "hero" in its description; group label/description are secondary.
 function toItem(def: { type: string; label: string; description: string }): Item {
   return { type: def.type, label: def.label, description: def.description }
 }
@@ -109,7 +114,7 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
                 {suggested.map((item) => (
                   <CommandItem
                     key={`suggested-${item.type}`}
-                    value={`suggested ${item.label} ${item.type}`}
+                    value={`${item.label} ${item.type}`}
                     onSelect={() => handlePick(item.type, item.paramIndex)}
                   >
                     {item.label}
@@ -122,7 +127,7 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
                 {recent.map((item) => (
                   <CommandItem
                     key={`recent-${item.type}`}
-                    value={`recent ${item.label} ${item.type}`}
+                    value={`${item.label} ${item.type}`}
                     onSelect={() => handlePick(item.type)}
                   >
                     {item.label}
@@ -137,7 +142,8 @@ export default function AddNodePopover({ kind, onPick, children, subjectKey }: P
                     {group.items.map((item) => (
                       <CommandItem
                         key={item.type}
-                        value={`${group.label} ${item.label} ${item.type} ${item.description}`}
+                        value={`${item.label} ${item.type}`}
+                        keywords={[group.label, item.description]}
                         onSelect={() => handlePick(item.type)}
                       >
                         <group.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
