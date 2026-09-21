@@ -282,8 +282,24 @@ function SlideEditor({
   }
 
   const speakerAvatars = slide.avatars ?? []
-  const hasAvatarAtSpeakerPos =
-    slide.title?.position != null && speakerAvatars.some((a) => a.position === slide.title!.position)
+  const speakerAvatarAtPos = speakerAvatars.find((a) => a.position === slide.title?.position)
+  const hasAvatarAtSpeakerPos = slide.title?.position != null && !!speakerAvatarAtPos
+
+  /** Remembers the last portrait picked for this speaker so unchecking "Name
+   *  only" can put the same one straight back, instead of reopening the
+   *  picker. Seeded from whatever avatar is already at the speaker position
+   *  (covers a slide that had one before this checkbox existed). */
+  const [lastPortraitIcon, setLastPortraitIcon] = useState<string | undefined>(speakerAvatarAtPos?.icon)
+
+  const placeSpeakerAvatar = (icon: string, pos: number) => {
+    const nextAvatars = speakerAvatars.some((a) => a.position === pos)
+      ? speakerAvatars.map((a) => (a.position === pos ? { ...a, icon } : a))
+      : [...speakerAvatars, { position: pos, icon, isForeground: 'true' as const }].sort(
+          (a, b) => a.position - b.position,
+        )
+    setLastPortraitIcon(icon)
+    return nextAvatars
+  }
 
   /** Names the speaker AND places/updates their portrait at the speaker
    *  position, in one update — picking a portrait and it only affecting the
@@ -294,11 +310,7 @@ function SlideEditor({
   const pickSpeakerPortrait = (name: string, icon: string) => {
     const sid = titleSid || defaultTitleSid(dialogId, slideIndex)
     const pos = defaultTitlePosition()
-    const nextAvatars = speakerAvatars.some((a) => a.position === pos)
-      ? speakerAvatars.map((a) => (a.position === pos ? { ...a, icon } : a))
-      : [...speakerAvatars, { position: pos, icon, isForeground: 'true' as const }].sort(
-          (a, b) => a.position - b.position,
-        )
+    const nextAvatars = placeSpeakerAvatar(icon, pos)
     setLocalizationToken(sid, name)
     onChange({ ...slide, title: { sid, position: pos }, avatars: nextAvatars })
   }
@@ -306,13 +318,17 @@ function SlideEditor({
   /** "Name only" is sugar over the game's own real mechanism for a speaker
    *  with no visible portrait — simply having no DialogAvatar at the
    *  speaker's position (confirmed common in shipped dialogs, ~27% of titled
-   *  slides). Checking it removes that avatar; there's no portrait to
-   *  auto-restore on uncheck (nothing remembers what was there), so
-   *  unchecking opens the portrait picker instead — picking one adds an
-   *  avatar back at the position, which un-derives the checked state. */
+   *  slides). Checking it removes that avatar (remembering its icon);
+   *  unchecking puts the same portrait straight back at the same position. */
   const clearSpeakerAvatar = () => {
     if (!hasAvatarAtSpeakerPos) return
+    setLastPortraitIcon(speakerAvatarAtPos!.icon)
     onChange({ ...slide, avatars: speakerAvatars.filter((a) => a.position !== slide.title?.position) })
+  }
+
+  const restoreSpeakerAvatar = () => {
+    if (!lastPortraitIcon || slide.title?.position == null) return
+    onChange({ ...slide, avatars: placeSpeakerAvatar(lastPortraitIcon, slide.title.position) })
   }
 
   const advancedInUse = [
@@ -542,7 +558,9 @@ function SlideEditor({
               title={
                 hasAvatarAtSpeakerPos
                   ? 'Remove the portrait at this position — the name label stays'
-                  : 'Pick a portrait to show one again'
+                  : lastPortraitIcon
+                    ? 'Show the portrait again'
+                    : 'Pick a portrait to show one again'
               }
             >
               <Checkbox
@@ -550,6 +568,7 @@ function SlideEditor({
                 disabled={!titleSid || slide.title?.position == null}
                 onCheckedChange={(checked) => {
                   if (checked) clearSpeakerAvatar()
+                  else if (lastPortraitIcon) restoreSpeakerAvatar()
                   else setSpeakerPickerOpen(true)
                 }}
               />
