@@ -643,7 +643,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Map Objects',
     description: 'Creates an interactive object at the specified node. boolMirror: true=mirror horizontally. entityObject is optional.',
     params: [
-      { label: 'Object SID', hint: 'e.g. campaign_lost_library_empty', required: true, entity: 'mapObject' },
+      { label: 'Object SID', hint: 'e.g. mine_gold', required: true, entity: 'interactiveObject' },
       { label: 'Node index', hint: 'e.g. 1755', required: true, nodeIndex: true },
       { label: 'Mirror?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
@@ -655,7 +655,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Map Objects',
     description: 'Creates a non-interactive decoration object at the specified node. Rotation: 0=0°, 1=90°, 2=180°, 3=270°. entityObject is optional.',
     params: [
-      { label: 'Object SID', hint: 'e.g. hill_dead_big', required: true },
+      { label: 'Object SID', hint: 'e.g. hill_dead_big', required: true, entity: 'decoration' },
       { label: 'Node index', hint: 'e.g. 1986', required: true, nodeIndex: true },
       { label: 'Rotation', hint: '0', required: false, type: 'enum', options: ['0', '1', '2', '3'] },
       { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },

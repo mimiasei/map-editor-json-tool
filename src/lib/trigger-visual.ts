@@ -14,6 +14,7 @@ import type { GameCatalog } from '@/lib/catalog/types'
 import type { PlacedObject } from '@/types/map-context'
 import { STATIC_HEROES } from '@/lib/catalog/static-catalog'
 import { resolveCastleFaction, getBuildingLevelNames } from '@/lib/building-options'
+import { getVfxDisplayName } from '@/lib/vfx-options'
 import {
   Hash,
   Clock,
@@ -527,7 +528,7 @@ export function formatActionSentence(action: Action, ctx?: SentenceCtx): string 
     case 'SpawnMapObject':
       return `Create decoration ${q(p(0))} at node ${p(1)}`
     case 'CreateVFX':
-      return `Create effect ${q(p(0))} at node ${p(1)}`
+      return `Create ${getVfxDisplayName(ctx?.catalog, p(0))} effect at node ${p(1)}`
     case 'EventBankRefresh':
       return `Recharge ${q(p(0))}`
     case 'SetActiveVFX':

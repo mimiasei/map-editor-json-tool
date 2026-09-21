@@ -18,6 +18,7 @@ import { ChevronsUpDown, LayoutGrid, SlidersHorizontal } from 'lucide-react'
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import { humanizeFxId } from '@/lib/vfx-options'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -40,26 +41,16 @@ interface Props {
   groupByCategory?: boolean
 }
 
-// VFX ids (DB/map/objects/5_fxs.json) have no in-game localized display name
-// at all — confirmed no `${id}_name` (or any other) Core/Lang/english/texts
-// entry exists for any of its 22 real entries, so CatalogMapObject.name just
-// falls back to the raw id for this category. Synthesize a readable label
-// from the sid instead of showing e.g. "fx_fireflies_yellow" verbatim in the
-// dropdown — this is an editor-invented label, not real game text.
-function humanizeFxId(id: string): string {
-  return id
-    .replace(/^fx_/, '')
-    .split('_')
-    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
-    .join(' ')
-}
-
-// Excludes any fx id that looks campaign/tutorial-specific — none of the 22
-// real DB/map/objects/5_fxs.json entries currently match this (confirmed:
-// they're all generic map decoration/quest-marker effects), but this guards
-// against a future Core.zip adding some, matching the same instinct as
-// HIDDEN_CONDITION_TYPES/HIDDEN_ACTION_TYPES elsewhere in this codebase.
-const CAMPAIGN_OR_TUTORIAL_FX = /campaign|tutorial/i
+// Excludes any id that looks campaign/tutorial-specific — used by the vfx/
+// interactiveObject/decoration entity categories below, each of which wants
+// "everything a custom map maker could plausibly use," not the ~90 real
+// Core.zip entries (confirmed: 24 environments, 61 interactables, 3
+// artifacts, 1 block) that only make sense inside Unfrozen's own campaign
+// missions/tutorial. None of DB/map/objects/5_fxs.json's 22 entries match
+// this today, but the check stays in place for vfx too as a guard against a
+// future Core.zip adding some — same instinct as HIDDEN_CONDITION_TYPES/
+// HIDDEN_ACTION_TYPES elsewhere in this codebase.
+const CAMPAIGN_OR_TUTORIAL_ID = /campaign|tutorial/i
 
 // Friendly labels for CatalogMapObject.category, used only when a caller
 // opts into `groupByCategory` — confirmed exhaustive against
@@ -115,8 +106,25 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
         }))
       case 'vfx':
         return catalog.mapObjects
-          .filter((o) => o.category === 'fxs' && !CAMPAIGN_OR_TUTORIAL_FX.test(o.id))
+          .filter((o) => o.category === 'fxs' && !CAMPAIGN_OR_TUTORIAL_ID.test(o.id))
           .map((o) => ({ id: o.id, label: humanizeFxId(o.id), icon: o.icon }))
+      case 'interactiveObject':
+        // SpawnObject ("Spawn Interactive Object") isn't limited to the
+        // 'interactables' category file — some 'artifacts' entries are
+        // interactive too (per-entry isInteractable, same field the
+        // 'mapObject' filter's "Interactive only" toggle already uses) — so
+        // this filters on that flag directly rather than by category.
+        return catalog.mapObjects
+          .filter((o) => o.isInteractable && !CAMPAIGN_OR_TUTORIAL_ID.test(o.id))
+          .map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
+      case 'decoration':
+        // SpawnMapObject ("Spawn Decoration Object") is explicitly
+        // non-interactive per its own description — DB/map/objects/
+        // 1_environments.json (CatalogMapObject category 'environments') is
+        // the one category file that's non-interactive for every entry.
+        return catalog.mapObjects
+          .filter((o) => o.category === 'environments' && !CAMPAIGN_OR_TUTORIAL_ID.test(o.id))
+          .map((o) => ({ id: o.id, label: o.name, icon: o.icon }))
       case 'spell':
         return catalog.spells.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
       case 'skill':
