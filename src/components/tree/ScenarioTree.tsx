@@ -281,7 +281,7 @@ export default function ScenarioTree() {
     addInterruption,
     removeInterruption,
     duplicateInterruption,
-    addQuest,
+    addQuestWithTrigger,
     removeQuest,
     duplicateQuest,
     addSubQuest,
@@ -547,8 +547,9 @@ export default function ScenarioTree() {
           onToggle={() => toggleSection('quests')}
           onAdd={() => {
             const newIdx = scenario.quests.length
-            addQuest()
+            addQuestWithTrigger()
             setOpenQuests((s) => ({ ...s, [newIdx]: true }))
+            setOpenSubQuests((s) => ({ ...s, [`${newIdx}-0`]: true }))
           }}
           icon={<BookOpen className="h-3 w-3" />}
         />

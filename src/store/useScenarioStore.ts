@@ -210,6 +210,11 @@ interface ScenarioStore {
 
   // ── Quest operations ─────────────────────────────────────────────────────
   addQuest: () => void
+  /** Adds a quest with one subquest and one trigger already inside it, and
+   *  selects that trigger — the common case when clicking "+" on Quests is
+   *  "I want a trigger to add conditions/actions to," not an empty quest
+   *  shell requiring two more manual "+" clicks first. */
+  addQuestWithTrigger: () => void
   updateQuest: (questIndex: number, quest: Partial<Quest>) => void
   removeQuest: (questIndex: number) => void
   duplicateQuest: (questIndex: number) => void
@@ -671,6 +676,19 @@ export const useScenarioStore = create<ScenarioStore>()(
       scenario: { ...s.scenario, quests: [...s.scenario.quests, DEFAULT_QUEST()] },
       isDirty: true,
     })),
+
+  addQuestWithTrigger: () =>
+    set((s) => {
+      const quest = DEFAULT_QUEST()
+      quest.subQuests = [{ ...DEFAULT_SUBQUEST(), triggers: [DEFAULT_TRIGGER()] }]
+      const newIndex = s.scenario.quests.length
+      return {
+        scenario: { ...s.scenario, quests: [...s.scenario.quests, quest] },
+        isDirty: true,
+        selectedType: 'trigger',
+        selectedPath: [newIndex, 0, 0],
+      }
+    }),
 
   appendGeneratedContent: (quest, counters) =>
     set((s) => ({
