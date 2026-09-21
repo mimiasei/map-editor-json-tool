@@ -59,7 +59,7 @@ const UNIT_NAMES: Map<string, string> = new Map(
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type TabId = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'mapObjects'
+export type TabId = 'heroes' | 'creatures' | 'artifacts' | 'spells' | 'skills' | 'mapObjects'
 
 interface CatalogItem {
   id: string
@@ -68,9 +68,20 @@ interface CatalogItem {
   subtitle?: string
 }
 
+export interface DatabaseFocusRequest {
+  tab: string
+  id: string
+  requestId: number
+}
+
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Jumps to a specific tab + item — e.g. a hero/object sid clicked from a
+   *  Card view condition/action sentence (useViewBridgeStore's
+   *  pendingDatabaseFocus). requestId makes re-clicking the same sid while
+   *  the dialog is already open still re-apply the focus. */
+  focusRequest?: DatabaseFocusRequest | null
 }
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
@@ -348,7 +359,7 @@ function DetailPane({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
+export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }: Props) {
   const rawCatalog = useCatalogStore((s) => s.catalog)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
   const heroPlacements = useMapContextStore((s) => s.context?.heroPlacements) ?? []
@@ -425,6 +436,17 @@ export default function GameDatabaseDialog({ open, onOpenChange }: Props) {
   const [onlyUsed, setOnlyUsed] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filterState, setFilterState] = useState<GameDatabaseFilterState>(loadSavedFilter)
+
+  useEffect(() => {
+    if (!focusRequest) return
+    setActiveTab(focusRequest.tab as TabId)
+    setSelectedId(focusRequest.id)
+    setSearch('')
+    setOnlyUsed(false)
+    // Only re-run on a genuinely new request (requestId), not on every
+    // render — focusRequest is a fresh object each time by design.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusRequest?.requestId])
 
   useEffect(() => {
     if (DEBUG.gameDatabase) {

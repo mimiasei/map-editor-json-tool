@@ -1,10 +1,11 @@
 import type { Action } from '@/types/scenario'
 import { ACTION_REGISTRY } from '@/schema/actions'
-import { getActionCategoryIcon, formatActionSentence, isActionConfigured } from '@/lib/trigger-visual'
+import { getActionCategoryIcon, getActionSentenceSegments, isActionConfigured } from '@/lib/trigger-visual'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { Pencil, Trash2, AlertTriangle, HelpCircle, OctagonX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import SentenceView from './SentenceView'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -13,9 +14,11 @@ interface Props {
   dimmed?: boolean
   onEdit: () => void
   onRemove: () => void
+  /** Clicking a node number in the sentence — see SentenceView's onNodeClick. */
+  onPickNode?: (paramIndex: number, node: number) => void
 }
 
-export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: Props) {
+export default function ActionCard({ action, index, dimmed, onEdit, onRemove, onPickNode }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const Icon = def ? getActionCategoryIcon(def.category) : HelpCircle
   const configured = isActionConfigured(action)
@@ -53,7 +56,14 @@ export default function ActionCard({ action, index, dimmed, onEdit, onRemove }: 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className={cn('text-sm leading-snug', !configured && 'italic text-muted-foreground')}>
-              {configured ? formatActionSentence(action, { catalog, placedObjects }) : 'Needs setup — click to configure'}
+              {configured ? (
+                <SentenceView
+                  segments={getActionSentenceSegments(action, { catalog, placedObjects })}
+                  onNodeClick={onPickNode}
+                />
+              ) : (
+                'Needs setup — click to configure'
+              )}
             </p>
             {breaks && (
               <span

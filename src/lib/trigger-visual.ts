@@ -9,8 +9,10 @@
 import type { Condition, Action } from '@/types/scenario'
 import { CONDITION_REGISTRY, type ParamDef } from '@/schema/conditions'
 import { ACTION_REGISTRY } from '@/schema/actions'
+import type { EntityCategory } from '@/schema/entities'
 import type { GameCatalog } from '@/lib/catalog/types'
 import type { PlacedObject } from '@/types/map-context'
+import { STATIC_HEROES } from '@/lib/catalog/static-catalog'
 import { resolveCastleFaction, getBuildingLevelNames } from '@/lib/building-options'
 import {
   Hash,
@@ -339,9 +341,9 @@ export function formatConditionSentence(condition: Condition, ctx?: SentenceCtx)
       return `${p(0) ? `Hero ${q(p(0))}'s` : 'The selected hero\'s'} ${p(1)} is ${opWord(p(2))} ${p(3)}`
 
     case 'ObjectInteractionBefore':
-      return `A hero is about to interact with ${q(p(0))}`
+      return `${p(1) ? `The hero ${q(p(1))}` : 'A hero'} is about to interact with ${q(p(0))}`
     case 'ObjectInteractionAfter':
-      return `A hero finishes interacting with ${q(p(0))}`
+      return `${p(1) ? `The hero ${q(p(1))}` : 'A hero'} finishes interacting with ${q(p(0))}`
     case 'ObjectCaptureEntity':
       return `${q(p(0))} is captured`
     case 'ObjectCaptureSid':
@@ -351,7 +353,7 @@ export function formatConditionSentence(condition: Condition, ctx?: SentenceCtx)
     case 'ObjectLose':
       return `${q(p(0))} is lost`
     case 'SquadInteraction':
-      return `A hero is about to fight ${q(p(0))}`
+      return `${p(1) ? `The hero ${q(p(1))}` : 'A hero'} is about to fight ${q(p(0))}`
     case 'SquadKill':
       return `${q(p(0))} is defeated`
 
@@ -649,4 +651,118 @@ export function formatActionSentence(action: Action, ctx?: SentenceCtx): string 
       return def ? fallbackSentence(def.label, def.params, action.p ?? []) : (action.a || 'Choose an action…')
     }
   }
+}
+
+// ─── Card view: clickable sentence segments ──────────────────────────────────
+// Splits a formatted sentence back into plain-text / linked-token segments so
+// SentenceView (src/components/triggers/SentenceView.tsx) can render each sid
+// as a clickable chip instead of inert text — without duplicating the ~90
+// hand-written cases above. Every case already renders its sid params through
+// q()/quoting or, for node params, as a bare number, so this scans the
+// *already-built* sentence for each param's known raw value and re-tags that
+// substring — no case body above needs to know about links at all.
+
+export type SentenceLink =
+  | { kind: 'node'; node: number; paramIndex: number }
+  | { kind: 'database'; tab: string; id: string }
+
+export interface SentenceSegment {
+  text: string
+  bold?: boolean
+  link?: SentenceLink
+  /** Present only for a Dialog SID token — SentenceView renders an eye icon
+   *  + hover tooltip with the dialog's localized text instead of a link,
+   *  since dialogs have no Game Database tab to navigate to. */
+  dialogSid?: string
+}
+
+const ENTITY_DB_TAB: Partial<Record<EntityCategory, string>> = {
+  creature: 'creatures',
+  artifact: 'artifacts',
+  mapObject: 'mapObjects',
+  spell: 'spells',
+  skill: 'skills',
+}
+
+function resolveHeroName(sid: string, catalog: GameCatalog | null | undefined): string | undefined {
+  return catalog?.heroes.find((h) => h.id === sid)?.name ?? STATIC_HEROES.find((h) => h.id === sid)?.name
+}
+
+function resolveMapEntityCatalogSid(placedObjects: PlacedObject[] | undefined, entitySid: string): string | undefined {
+  return placedObjects?.find((o) => o.entitySid === entitySid)?.sid
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+interface PendingReplacement {
+  index: number
+  length: number
+  segment: SentenceSegment
+}
+
+function buildSentenceSegments(sentence: string, params: ParamDef[], rawValues: string[], ctx: SentenceCtx | undefined): SentenceSegment[] {
+  const pending: PendingReplacement[] = []
+
+  params.forEach((param, i) => {
+    const raw = (rawValues[i] ?? '').trim()
+    if (!raw) return
+
+    if (param.nodeIndex) {
+      const node = Number(raw)
+      if (!Number.isFinite(node)) return
+      const m = new RegExp(`\\b${escapeRegExp(raw)}\\b`).exec(sentence)
+      if (m) pending.push({ index: m.index, length: raw.length, segment: { text: raw, link: { kind: 'node', node, paramIndex: i } } })
+      return
+    }
+
+    const quoted = `"${raw}"`
+    const index = sentence.indexOf(quoted)
+    if (index === -1) return
+
+    if (param.entity === 'hero') {
+      const name = resolveHeroName(raw, ctx?.catalog)
+      pending.push({ index, length: quoted.length, segment: { text: name ?? raw, bold: true, link: { kind: 'database', tab: 'heroes', id: raw } } })
+    } else if (param.ref === 'dialog') {
+      pending.push({ index, length: quoted.length, segment: { text: quoted, dialogSid: raw } })
+    } else if (param.mapEntity) {
+      const catalogSid = resolveMapEntityCatalogSid(ctx?.placedObjects, raw)
+      pending.push({
+        index,
+        length: quoted.length,
+        segment: catalogSid ? { text: quoted, link: { kind: 'database', tab: 'mapObjects', id: catalogSid } } : { text: quoted },
+      })
+    } else if (param.entity && ENTITY_DB_TAB[param.entity]) {
+      pending.push({ index, length: quoted.length, segment: { text: quoted, link: { kind: 'database', tab: ENTITY_DB_TAB[param.entity]!, id: raw } } })
+    }
+  })
+
+  if (pending.length === 0) return [{ text: sentence }]
+
+  pending.sort((a, b) => a.index - b.index)
+  const segments: SentenceSegment[] = []
+  let cursor = 0
+  for (const p of pending) {
+    if (p.index < cursor) continue // overlapping match (e.g. two identical node values) — keep the first, drop the rest
+    if (p.index > cursor) segments.push({ text: sentence.slice(cursor, p.index) })
+    segments.push(p.segment)
+    cursor = p.index + p.length
+  }
+  if (cursor < sentence.length) segments.push({ text: sentence.slice(cursor) })
+  return segments
+}
+
+export function getConditionSentenceSegments(condition: Condition, ctx?: SentenceCtx): SentenceSegment[] {
+  const sentence = formatConditionSentence(condition, ctx)
+  const def = CONDITION_REGISTRY[condition.c]
+  if (!def) return [{ text: sentence }]
+  return buildSentenceSegments(sentence, def.params, condition.p ?? [], ctx)
+}
+
+export function getActionSentenceSegments(action: Action, ctx?: SentenceCtx): SentenceSegment[] {
+  const sentence = formatActionSentence(action, ctx)
+  const def = ACTION_REGISTRY[action.a]
+  if (!def) return [{ text: sentence }]
+  return buildSentenceSegments(sentence, def.params, action.p ?? [], ctx)
 }

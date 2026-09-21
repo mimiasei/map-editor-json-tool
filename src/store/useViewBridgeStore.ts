@@ -10,7 +10,8 @@
 //   to show a subject-filtered verb picker for the newly-created Trigger.
 // - pendingPick / pendingResumeSelection: Scenario Editor -> Map Grid. Set
 //   when the user clicks "pick from map" on a mapEntity/hero condition or
-//   action field; resolved when they click the target on the grid (or
+//   action field, or clicks a node number directly on a Card view sentence
+//   (SentenceView); resolved when they click the target on the grid (or
 //   cancelled), which also restores TriggerVisualBuilder's open inspector row
 //   (local component state that doesn't survive the view swap's unmount).
 
@@ -19,13 +20,27 @@ import type { SubjectKey } from '@/lib/trigger-subjects'
 import type { SelectedNode } from '@/components/triggers/TriggerInspectorPanel'
 
 export interface PendingPick {
-  kind: 'mapEntity' | 'hero'
+  kind: 'mapEntity' | 'hero' | 'node'
   /** Shown in the Map Grid picking banner, e.g. "Object entity". */
   label: string
   /** Writes the picked SID back into the right condition/action param. */
   onResolve: (value: string) => void
   /** Which inspector row to reopen once we're back in the Scenario Editor. */
   resumeSelection: SelectedNode
+  /** 'node' picks only: the param's value before picking, as a string (e.g.
+   *  "1458") — clicking that exact same tile again is a no-op rather than
+   *  popping the change-confirmation dialog (nothing would actually change). */
+  currentValue?: string
+}
+
+export interface PendingDatabaseFocus {
+  /** GameDatabaseDialog's TabId, kept as a plain string here so this store
+   *  doesn't need to import a components/ file just for a type. */
+  tab: string
+  id: string
+  /** Monotonic so re-clicking the same sid while the dialog is already open
+   *  still re-fires the focus effect (object identity alone wouldn't). */
+  requestId: number
 }
 
 export interface PendingSubjectSeed {
@@ -58,7 +73,15 @@ interface ViewBridgeStore {
   /** One-shot: consumed by TriggerVisualBuilder on mount, then cleared. */
   pendingResumeSelection: SelectedNode | null
   clearPendingResumeSelection: () => void
+
+  /** Opens the Game Database dialog focused on one item — used when a map
+   *  maker clicks a hero/object sid in a condition/action card (Card view). */
+  pendingDatabaseFocus: PendingDatabaseFocus | null
+  openDatabaseItem: (tab: string, id: string) => void
+  clearDatabaseFocus: () => void
 }
+
+let nextDatabaseFocusId = 0
 
 export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   mapGridOpen: false,
@@ -85,4 +108,8 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
 
   pendingResumeSelection: null,
   clearPendingResumeSelection: () => set({ pendingResumeSelection: null }),
+
+  pendingDatabaseFocus: null,
+  openDatabaseItem: (tab, id) => set({ pendingDatabaseFocus: { tab, id, requestId: ++nextDatabaseFocusId } }),
+  clearDatabaseFocus: () => set({ pendingDatabaseFocus: null }),
 }))

@@ -119,6 +119,11 @@ export default function AppShell() {
   const mapGridOpen = useViewBridgeStore((s) => s.mapGridOpen)
   const openMapGrid = useViewBridgeStore((s) => s.openMapGrid)
   const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
+  const pendingDatabaseFocus = useViewBridgeStore((s) => s.pendingDatabaseFocus)
+  const clearDatabaseFocus = useViewBridgeStore((s) => s.clearDatabaseFocus)
+  useEffect(() => {
+    if (pendingDatabaseFocus) setGameDatabaseOpen(true)
+  }, [pendingDatabaseFocus])
   // Desktop exit-confirmation (issue #195 follow-up) — resolved via
   // askExitChoice below, which the close-request handler awaits.
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
@@ -722,7 +727,11 @@ export default function AppShell() {
         undocked={isUndocked('guides')}
       />
       <DialogBrowser open={dialogBrowserOpen} onOpenChange={setDialogBrowserOpen} />
-      <GameDatabaseDialog open={gameDatabaseOpen} onOpenChange={setGameDatabaseOpen} />
+      <GameDatabaseDialog
+        open={gameDatabaseOpen}
+        onOpenChange={(o) => { setGameDatabaseOpen(o); if (!o) clearDatabaseFocus() }}
+        focusRequest={pendingDatabaseFocus}
+      />
       {mapGridOpen ? (
         // Inline view (issue #195 follow-up), not a modal — replaces this
         // whole slot instead of layering on top, so it fills the same space

@@ -22,6 +22,12 @@ export interface ParamDef {
    *  faction) plus a Level dropdown restricted to that specific building's
    *  real level count, instead of free-text SID + a generic 1-5 enum. */
   buildingSid?: true
+  /** True on a param that holds a world tile/node index (e.g. NodeRevealed,
+   *  MoveCamera, HeroToNode's target). Unlike mapEntity/entity, there's no
+   *  autocomplete pool for this — it just flags the Card view's sentence
+   *  renderer to make the node number clickable ("open Map Grid centered on
+   *  this node") instead of treating it as a hero/heroes-picker/lookup. */
+  nodeIndex?: true
 }
 
 export interface ConditionDef {
@@ -160,7 +166,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Node Revealed',
     description: 'Triggers when the node with the specified index has been revealed from fog of war.',
     params: [
-      { label: 'Node index', hint: 'e.g. 1458 (hover cell in editor)', required: true },
+      { label: 'Node index', hint: 'e.g. 1458 (hover cell in editor)', required: true, nodeIndex: true },
     ],
   },
   PlayerDefeated: {

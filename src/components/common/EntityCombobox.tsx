@@ -40,6 +40,27 @@ interface Props {
   groupByCategory?: boolean
 }
 
+// VFX ids (DB/map/objects/5_fxs.json) have no in-game localized display name
+// at all — confirmed no `${id}_name` (or any other) Core/Lang/english/texts
+// entry exists for any of its 22 real entries, so CatalogMapObject.name just
+// falls back to the raw id for this category. Synthesize a readable label
+// from the sid instead of showing e.g. "fx_fireflies_yellow" verbatim in the
+// dropdown — this is an editor-invented label, not real game text.
+function humanizeFxId(id: string): string {
+  return id
+    .replace(/^fx_/, '')
+    .split('_')
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ')
+}
+
+// Excludes any fx id that looks campaign/tutorial-specific — none of the 22
+// real DB/map/objects/5_fxs.json entries currently match this (confirmed:
+// they're all generic map decoration/quest-marker effects), but this guards
+// against a future Core.zip adding some, matching the same instinct as
+// HIDDEN_CONDITION_TYPES/HIDDEN_ACTION_TYPES elsewhere in this codebase.
+const CAMPAIGN_OR_TUTORIAL_FX = /campaign|tutorial/i
+
 // Friendly labels for CatalogMapObject.category, used only when a caller
 // opts into `groupByCategory` — confirmed exhaustive against
 // CatalogMapObject['category'] in src/lib/catalog/types.ts.
@@ -92,6 +113,10 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
           icon: o.icon,
           group: MAP_OBJECT_CATEGORY_GROUP_LABELS[o.category],
         }))
+      case 'vfx':
+        return catalog.mapObjects
+          .filter((o) => o.category === 'fxs' && !CAMPAIGN_OR_TUTORIAL_FX.test(o.id))
+          .map((o) => ({ id: o.id, label: humanizeFxId(o.id), icon: o.icon }))
       case 'spell':
         return catalog.spells.map((s) => ({ id: s.id, label: s.name, icon: s.icon }))
       case 'skill':

@@ -17,6 +17,7 @@ import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -288,6 +289,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const cancelPick = useViewBridgeStore((s) => s.cancelPick)
   const [pickHint, setPickHint] = useState<string | null>(null)
   useEffect(() => { setPickHint(null) }, [pendingPick])
+  // 'node' picks confirm before applying — unlike mapEntity/hero picks
+  // (unambiguous single click), a node click could easily be a stray
+  // misclick on the wrong tile, and there's no visual "undo" once the
+  // sentence text has already changed on the card.
+  const [nodeConfirm, setNodeConfirm] = useState<number | null>(null)
+  useEffect(() => { setNodeConfirm(null) }, [pendingPick])
   const entities = context?.entities ?? []
 
   const sizeX = context?.sizeX ?? 0
@@ -1523,15 +1530,23 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (pendingPick) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
-        const itemsHere = tileIndex.get(node) ?? []
-        if (pendingPick.kind === 'mapEntity') {
-          const withSid = itemsHere.find((it) => it.entitySid)
-          if (withSid?.entitySid) resolvePick(withSid.entitySid)
-          else setPickHint('This object has no entity SID yet.')
+        if (pendingPick.kind === 'node') {
+          if (String(node) === pendingPick.currentValue) {
+            // same tile re-clicked — nothing would actually change
+          } else {
+            setNodeConfirm(node)
+          }
         } else {
-          const spawner = itemsHere.find((it) => it.spawnerInfo?.spawnPointType === 1 && it.spawnerInfo.heroSid)
-          if (spawner?.spawnerInfo?.heroSid) resolvePick(spawner.spawnerInfo.heroSid)
-          else setPickHint('Click a hero spawner with a hero assigned.')
+          const itemsHere = tileIndex.get(node) ?? []
+          if (pendingPick.kind === 'mapEntity') {
+            const withSid = itemsHere.find((it) => it.entitySid)
+            if (withSid?.entitySid) resolvePick(withSid.entitySid)
+            else setPickHint('This object has no entity SID yet.')
+          } else {
+            const spawner = itemsHere.find((it) => it.spawnerInfo?.spawnPointType === 1 && it.spawnerInfo.heroSid)
+            if (spawner?.spawnerInfo?.heroSid) resolvePick(spawner.spawnerInfo.heroSid)
+            else setPickHint('Click a hero spawner with a hero assigned.')
+          }
         }
       }
       return
@@ -2978,6 +2993,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const selectSpawner = useCallback((item: PlacedObject) => {
     selectNode(item.node)
     centerOnTile(item.x, item.z)
+    zoomTo100()
   }, [selectNode, centerOnTile])
   const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
     applyEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch }, 'set portal target')
@@ -3605,13 +3621,33 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         {pendingPick && (
           <div className="flex items-center justify-between gap-2 px-4 py-1.5 bg-primary/10 border-b border-primary/30 shrink-0 text-xs">
             <span>
-              Pick a target for <strong>{pendingPick.label}</strong> — click an object on the grid.
+              {pendingPick.kind === 'node' ? (
+                <>Click a different tile to change <strong>{pendingPick.label}</strong> — currently at node {pendingPick.currentValue}.</>
+              ) : (
+                <>Pick a target for <strong>{pendingPick.label}</strong> — click an object on the grid.</>
+              )}
               {pickHint && <span className="text-destructive ml-2">{pickHint}</span>}
             </span>
             <Button variant="ghost" size="sm" className="h-6 shrink-0 text-xs" onClick={cancelPick}>
               Cancel
             </Button>
           </div>
+        )}
+        {pendingPick?.kind === 'node' && nodeConfirm !== null && (
+          <Dialog open onOpenChange={(o) => { if (!o) setNodeConfirm(null) }}>
+            <DialogContent className="max-w-xs">
+              <DialogHeader>
+                <DialogTitle>Change node?</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">
+                Set <strong>{pendingPick.label}</strong> to node {nodeConfirm} (was {pendingPick.currentValue})?
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={cancelPick}>Cancel</Button>
+                <Button onClick={() => resolvePick(String(nodeConfirm))}>Change</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
         <div className="relative flex flex-col gap-2 px-4 pt-2.5 pb-2 pr-10 border-b border-border shrink-0">
           <Button
@@ -4829,13 +4865,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // interactable/artifact/spawn icon would show a facing
                   // change that has no real in-game effect. Same encoding as
                   // formatRotation()/stepRotation() elsewhere: quadrant 0-3 *
-                  // 90deg, +10 offset means mirrored.
+                  // 90deg, +10 offset means mirrored. The icon itself is
+                  // never actually rotated in the DOM (most catalog icons
+                  // are generic glyphs, not directional art, so spinning
+                  // them just looked wrong) — instead a small badge shows
+                  // the degree value so the rotation is still visible.
                   const rotation = entry.pick.primary.type === 0 && catalogSupportsRotation(entry.pick.primary.sid)
                     ? entry.pick.primary.rotation
                     : undefined
-                  const rotateTransform = rotation !== undefined
-                    ? `rotate(${(rotation % 10) * 90}deg)${rotation >= 10 ? ' scaleX(-1)' : ''}`
-                    : undefined
+                  const rotationDegrees = rotation !== undefined ? (rotation % 10) * 90 : 0
                   return (
                     <div
                       key={entry.key}
@@ -4851,7 +4889,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         opacity: isDeleting || isMoveSource ? 0.35 : 1,
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
-                        transform: rotateTransform,
                       }}
                       onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) { selectNode(entry.clickNode); setSpawnerSelectorOpen(false) } }}
                     >
@@ -4890,6 +4927,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       {entry.pick.count > 1 && (
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
                           {entry.pick.count}
+                        </span>
+                      )}
+                      {settings.rotationNumberEnabled && rotationDegrees > 0 && (
+                        <span
+                          className="absolute top-0 right-0 text-[6px] font-bold leading-none pointer-events-none"
+                          style={{ color: '#1bff6e', textShadow: '0 0 2px black, 0 0 2px black' }}
+                        >
+                          {rotationDegrees}
                         </span>
                       )}
                     </div>
