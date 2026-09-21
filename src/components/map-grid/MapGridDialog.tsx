@@ -1533,8 +1533,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         if (pendingPick.kind === 'node') {
           if (String(node) === pendingPick.currentValue) {
             // same tile re-clicked — nothing would actually change
-          } else {
+          } else if (pendingPick.confirmOnChange) {
             setNodeConfirm(node)
+          } else {
+            resolvePick(String(node))
           }
         } else {
           const itemsHere = tileIndex.get(node) ?? []
@@ -3622,7 +3624,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           <div className="flex items-center justify-between gap-2 px-4 py-1.5 bg-primary/10 border-b border-primary/30 shrink-0 text-xs">
             <span>
               {pendingPick.kind === 'node' ? (
-                <>Click a different tile to change <strong>{pendingPick.label}</strong> — currently at node {pendingPick.currentValue}.</>
+                pendingPick.currentValue ? (
+                  <>Click a different tile to change <strong>{pendingPick.label}</strong> — currently at node {pendingPick.currentValue}.</>
+                ) : (
+                  <>Click a tile on the grid to set <strong>{pendingPick.label}</strong>.</>
+                )
               ) : (
                 <>Pick a target for <strong>{pendingPick.label}</strong> — click an object on the grid.</>
               )}

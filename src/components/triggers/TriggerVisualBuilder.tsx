@@ -112,7 +112,10 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
   // param once resolved. Reads the trigger fresh at resolve time (via
   // getState()) rather than trusting this closure's captured conditions/
   // actions, since the whole Scenario Editor unmounts for the round trip.
-  const handlePickFromMap = (paramIndex: number, kind: 'mapEntity' | 'hero') => {
+  // 'node' behaves identically to 'mapEntity'/'hero' here — one click on the
+  // grid resolves immediately, no confirm step (that's only for a node link
+  // clicked straight off a Card view sentence — see handlePickNodeFromCard).
+  const handlePickFromMap = (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => {
     if (!selected) return
     const resumeSelection = selected
     const def =
@@ -165,6 +168,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
       label,
       resumeSelection,
       currentValue: String(currentNode),
+      confirmOnChange: true,
       onResolve: (value) => {
         const liveTrigger =
           useScenarioStore.getState().scenario.quests[questIndex]?.subQuests[subQuestIndex]?.triggers[triggerIndex]

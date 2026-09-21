@@ -28,7 +28,7 @@ interface Props {
    *  Grid, then returns here with the clicked object's SID filled in. Omitted
    *  entirely when absent (e.g. inside the subject-first seeding flow, which
    *  doesn't have a resume point to return to). */
-  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero') => void
+  onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => void
 }
 
 export default function ConditionForm({ condition, onChange, onRemove, onPickFromMap }: Props) {
@@ -247,6 +247,28 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                       className="h-9 w-9 shrink-0"
                       title="Pick a hero spawner from the map"
                       onClick={() => onPickFromMap(i, 'hero')}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              ) : param.nodeIndex ? (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="text"
+                    value={(condition.p ?? [])[i] ?? ''}
+                    onChange={(e) => updateParam(i, e.target.value)}
+                    placeholder={param.hint}
+                    className="flex-1 min-w-0"
+                  />
+                  {onPickFromMap && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      title="Pick a node from the map"
+                      onClick={() => onPickFromMap(i, 'node')}
                     >
                       <MapPin className="h-3.5 w-3.5" />
                     </Button>

@@ -31,6 +31,13 @@ export interface PendingPick {
    *  "1458") — clicking that exact same tile again is a no-op rather than
    *  popping the change-confirmation dialog (nothing would actually change). */
   currentValue?: string
+  /** 'node' picks only: pop a Change/Cancel confirm dialog before applying a
+   *  different tile, instead of resolving immediately like every other kind.
+   *  Set when a node is picked straight off a Card view sentence (a passive-
+   *  looking click that could easily be a misclick) — not set for the form's
+   *  own "pick from map" button (ConditionForm/ActionForm), which behaves
+   *  exactly like the mapEntity/hero pick buttons: one click, done. */
+  confirmOnChange?: boolean
 }
 
 export interface PendingDatabaseFocus {
