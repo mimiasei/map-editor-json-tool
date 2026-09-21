@@ -475,7 +475,14 @@ function SlideEditor({
                 <input
                   type="radio"
                   checked={!hasSpeaker}
-                  onChange={() => onChange({ ...slide, title: undefined })}
+                  onChange={() => {
+                    // Clear the speaker's own portrait too — otherwise it keeps showing
+                    // in the avatar strip below even though "no speaker" was chosen.
+                    const oldPos = slide.title?.position
+                    const avatars =
+                      oldPos != null ? speakerAvatars.filter((a) => a.position !== oldPos) : slide.avatars
+                    onChange({ ...slide, title: undefined, avatars })
+                  }}
                   className="accent-primary"
                 />
                 Narrator
