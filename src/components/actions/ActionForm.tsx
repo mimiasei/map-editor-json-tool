@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { MapPin, Trash2, ExternalLink, ClipboardCopy } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
+import DialogSidField from '@/components/common/DialogSidField'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
@@ -66,10 +67,6 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
     () => getBuildingLevelNames(catalog, selectedBuildingSid, castleFaction),
     [catalog, selectedBuildingSid, castleFaction],
   )
-
-  /** True when this action references a dialog key we can open in the editor */
-  const isDialogAction = action.a === 'Dialog' || action.a === 'RandomDialog'
-  const dialogKey = isDialogAction ? (action.p ?? [])[0] : undefined
 
   const updateType = (type: string) => {
     if (type === '__custom__') {
@@ -220,6 +217,12 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                     ))}
                   </SelectContent>
                 </Select>
+              ) : param.ref === 'dialog' ? (
+                <DialogSidField
+                  value={(action.p ?? [])[i] ?? ''}
+                  onChange={(v) => updateParam(i, v)}
+                  placeholder={param.hint}
+                />
               ) : param.ref ? (
                 <SidCombobox
                   value={(action.p ?? [])[i] ?? ''}
@@ -310,11 +313,11 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                   placeholder={param.hint}
                 />
               )}
-              {/* "Edit dialog →" button shown next to the key param of Dialog/RandomDialog */}
-              {isDialogAction && i === 0 && dialogKey && (
+              {/* "Edit dialog →" button shown next to any populated dialog-ref param */}
+              {param.ref === 'dialog' && (action.p ?? [])[i] && (
                 <button
                   className="text-xs text-primary hover:underline flex items-center gap-0.5"
-                  onClick={() => openDialogEditor(dialogKey)}
+                  onClick={() => openDialogEditor((action.p ?? [])[i])}
                 >
                   <ExternalLink className="h-3 w-3" />
                   Edit dialog
