@@ -399,7 +399,6 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
                       <ActionCard
                         key={i}
                         action={action}
-                        index={i}
                         dimmed={firstBreakIndex >= 0 && i > firstBreakIndex}
                         onEdit={() => setSelected({ kind: 'action', index: i })}
                         onRemove={() => handleRemoveAction(i)}

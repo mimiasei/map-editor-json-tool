@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   action: Action
-  index: number
   dimmed?: boolean
   onEdit: () => void
   onRemove: () => void
@@ -18,7 +17,7 @@ interface Props {
   onPickNode?: (paramIndex: number, node: number) => void
 }
 
-export default function ActionCard({ action, index, dimmed, onEdit, onRemove, onPickNode }: Props) {
+export default function ActionCard({ action, dimmed, onEdit, onRemove, onPickNode }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const Icon = def ? getActionCategoryIcon(def.category) : HelpCircle
   const configured = isActionConfigured(action)
@@ -28,9 +27,6 @@ export default function ActionCard({ action, index, dimmed, onEdit, onRemove, on
 
   return (
     <div className={cn('flex items-stretch gap-2', dimmed && 'opacity-60')}>
-      {/*<div className="flex w-5 shrink-0 items-start justify-center pt-3 text-xs font-semibold text-muted-foreground">*/}
-      {/*  {index + 1}*/}
-      {/*</div>*/}
       <div
         role="button"
         tabIndex={0}
