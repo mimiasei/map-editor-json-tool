@@ -67,12 +67,11 @@ export default function DialogSidField({ value, onChange, placeholder }: Props) 
               if (e.key === 'Escape') cancel()
             }}
             placeholder="Type the dialog message…"
-            className="flex-1 text-xs h-8"
+            className="flex-1"
           />
           <Button
             type="button"
-            size="sm"
-            className="h-8 text-xs shrink-0"
+            className="shrink-0"
             disabled={!text.trim()}
             onClick={create}
           >
@@ -82,22 +81,23 @@ export default function DialogSidField({ value, onChange, placeholder }: Props) 
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground"
+            className="shrink-0 text-muted-foreground"
             onClick={cancel}
             title="Cancel"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-4 w-4" />
           </Button>
         </div>
       ) : (
-        <button
+        <Button
           type="button"
-          className="text-xs text-primary hover:underline flex items-center gap-0.5"
+          variant="outline"
+          className="w-full justify-center"
           onClick={() => setCreating(true)}
         >
-          <Plus className="h-3 w-3" />
-          New dialog from text
-        </button>
+          <Plus className="h-4 w-4" />
+          Create new dialog
+        </Button>
       )}
     </div>
   )
