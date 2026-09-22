@@ -28,6 +28,7 @@ import DialogConditionList from './DialogConditionList'
 import AvatarStrip from './AvatarStrip'
 import AssetCombobox from './AssetCombobox'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import FieldInfo from '@/components/common/FieldInfo'
 import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine, LayoutGrid } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -625,7 +626,10 @@ function SlideEditor({
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Speaker SID (title.sid)</Label>
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs">Speaker SID (title.sid)</Label>
+                  <FieldInfo text="The localization token id for this speaker's name — not the name itself. Typing a new sid mints a fresh token (edit its text via Speaker name or Localization). Picking one of the base game's own sids (e.g. dungeon_hero_5) reuses that character's existing name, which the game ignores map overrides of." />
+                </div>
                 <div className="flex items-center gap-1.5">
                   <div className="flex-1 min-w-0">
                     <AssetCombobox
@@ -655,13 +659,17 @@ function SlideEditor({
                     <LayoutGrid className="h-3.5 w-3.5" />
                     Portraits…
                   </Button>
+                  <FieldInfo text="Opens a visual browser of hero/unit/NPC portraits. Picking one names this speaker (writes the localization text below) and places that portrait in the avatar strip in Advanced, at the current Speaker position." />
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">
-                  Speaker name
-                  <span className="ml-1 text-muted-foreground/70">— shown in game</span>
-                </Label>
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs">
+                    Speaker name
+                    <span className="ml-1 text-muted-foreground/70">— shown in game</span>
+                  </Label>
+                  <FieldInfo text="The text shown above the dialog box next to the portrait — edits the localization token that Speaker SID points to, in the map's default language. Disabled for a built-in game speaker: the game ignores map overrides of its own tokens." />
+                </div>
                 <Input
                   value={speakerName}
                   onChange={(e) => onSpeakerNameChange(e.target.value)}
