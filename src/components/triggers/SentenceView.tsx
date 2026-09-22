@@ -7,13 +7,33 @@
 import { Eye } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { openMapAtNode } from '@/lib/trigger-card-links'
 import type { SentenceSegment } from '@/lib/trigger-visual'
 import type { GameCatalog } from '@/lib/catalog/types'
+import type { DialogFlow } from '@/types/dialog'
 import { cn } from '@/lib/utils'
 
-function dialogPreviewText(sid: string, catalog: GameCatalog | null): string {
+function dialogPreviewText(
+  sid: string,
+  catalog: GameCatalog | null,
+  scenarioDialogs: Record<string, DialogFlow>,
+  localization: Record<string, string>,
+): string {
+  // Dialogs authored in this scenario (via DialogEditor/quick-create) live in the scenario
+  // store, keyed by dialog sid, with each slide's text as a localization sid — not in the
+  // game catalog, which only holds Core.zip's own shipped dialogs. Check the scenario's own
+  // dialogs first so a freshly-created dialog's text actually resolves here.
+  const ownFlow = scenarioDialogs[sid]
+  if (ownFlow) {
+    const text = ownFlow.slides
+      .map((s) => (s.text ? localization[s.text] : undefined))
+      .filter(Boolean)
+      .join(' / ')
+    return text || 'No localized text found for this dialog SID.'
+  }
+
   const dialog = catalog?.dialogs.find((d) => d.id === sid)
   if (!dialog) return 'No localized text found for this dialog SID.'
   const text = dialog.slides.map((s) => s.text).filter(Boolean).join(' / ')
@@ -31,6 +51,8 @@ interface Props {
 
 export default function SentenceView({ segments, onNodeClick }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
+  const scenarioDialogs = useScenarioStore((s) => s.dialogs)
+  const localization = useScenarioStore((s) => s.localization)
   const openDatabaseItem = useViewBridgeStore((s) => s.openDatabaseItem)
 
   const activate = (segment: SentenceSegment) => {
@@ -59,7 +81,7 @@ export default function SentenceView({ segments, onNodeClick }: Props) {
                 </span>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs whitespace-pre-wrap text-xs">
-                {dialogPreviewText(segment.dialogSid, catalog)}
+                {dialogPreviewText(segment.dialogSid, catalog, scenarioDialogs, localization)}
               </TooltipContent>
             </Tooltip>
           )

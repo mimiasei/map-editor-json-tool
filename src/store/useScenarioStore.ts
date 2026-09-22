@@ -45,7 +45,7 @@ const DEFAULT_QUEST = (): Quest => ({
 })
 
 const DEFAULT_SUBQUEST = (): SubQuest => ({
-  sid: '1',
+  sid: '',
   activeOnStart: true,
   triggers: [],
 })
@@ -159,6 +159,12 @@ interface ScenarioStore {
   removeDialogFlow: (id: string) => void
   setLocalizationToken: (sid: string, text: string) => void
   removeLocalizationToken: (sid: string) => void
+  /** Cascade-delete: removes several dialogs and several localization tokens
+   *  (across every language) in one atomic step — used when deleting a
+   *  dialog-referencing action also orphans the dialog(s)/tokens it alone
+   *  used. See src/lib/dialog-cascade.ts for the usage-check that decides
+   *  what's safe to pass here. */
+  removeDialogsAndTokens: (dialogIds: string[], tokenSids: string[]) => void
   /** Move a token's text (and every language's translation of it) from
    *  oldSid to newSid in one step — used when editing an entity's naming SID
    *  so it updates the existing token instead of leaving it orphaned behind
@@ -204,6 +210,11 @@ interface ScenarioStore {
 
   // ── Quest operations ─────────────────────────────────────────────────────
   addQuest: () => void
+  /** Adds a quest with one subquest and one trigger already inside it, and
+   *  selects that trigger — the common case when clicking "+" on Quests is
+   *  "I want a trigger to add conditions/actions to," not an empty quest
+   *  shell requiring two more manual "+" clicks first. */
+  addQuestWithTrigger: () => void
   updateQuest: (questIndex: number, quest: Partial<Quest>) => void
   removeQuest: (questIndex: number) => void
   duplicateQuest: (questIndex: number) => void
@@ -408,6 +419,24 @@ export const useScenarioStore = create<ScenarioStore>()(
         translations[lang] = t
       }
       return { localization, translations, isDirty: true, zipDirty: true }
+    }),
+
+  removeDialogsAndTokens: (dialogIds, tokenSids) =>
+    set((s) => {
+      const dialogs = { ...s.dialogs }
+      for (const id of dialogIds) delete dialogs[id]
+
+      const localization = { ...s.localization }
+      for (const sid of tokenSids) delete localization[sid]
+
+      const translations: TranslationMap = {}
+      for (const [lang, tokens] of Object.entries(s.translations)) {
+        const t = { ...tokens }
+        for (const sid of tokenSids) delete t[sid]
+        translations[lang] = t
+      }
+
+      return { dialogs, localization, translations, isDirty: true, zipDirty: true }
     }),
 
   renameLocalizationToken: (oldSid, newSid, newText) =>
@@ -648,6 +677,22 @@ export const useScenarioStore = create<ScenarioStore>()(
       isDirty: true,
     })),
 
+  addQuestWithTrigger: () =>
+    set((s) => {
+      const newIndex = s.scenario.quests.length
+      const quest = DEFAULT_QUEST()
+      quest.sid = `${quest.sid}_${newIndex + 1}`
+      const subQuest = { ...DEFAULT_SUBQUEST(), triggers: [DEFAULT_TRIGGER()] }
+      subQuest.sid = `${quest.sid}_sub1`
+      quest.subQuests = [subQuest]
+      return {
+        scenario: { ...s.scenario, quests: [...s.scenario.quests, quest] },
+        isDirty: true,
+        selectedType: 'trigger',
+        selectedPath: [newIndex, 0, 0],
+      }
+    }),
+
   appendGeneratedContent: (quest, counters) =>
     set((s) => ({
       scenario: {
@@ -707,7 +752,10 @@ export const useScenarioStore = create<ScenarioStore>()(
     set((s) => {
       const quests = [...s.scenario.quests]
       const quest = { ...quests[questIndex] }
-      quest.subQuests = [...quest.subQuests, subQuest ?? DEFAULT_SUBQUEST()]
+      let newSubQuest = DEFAULT_SUBQUEST()
+      newSubQuest.sid = `${quest.sid}_sub${quest.subQuests.length + 1}`
+      newSubQuest = subQuest ?? newSubQuest
+      quest.subQuests = [...quest.subQuests, newSubQuest]
       quests[questIndex] = quest
       return { scenario: { ...s.scenario, quests }, isDirty: true }
     }),

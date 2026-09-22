@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { ChevronsUpDown } from 'lucide-react'
+import { ChevronsUpDown, X } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -80,9 +80,22 @@ export default function SidCombobox({ value, onChange, refType, placeholder }: P
             }}
             onFocus={() => setOpen(true)}
             placeholder={placeholder}
-            className="pr-7"
+            className={value ? 'pr-14' : 'pr-7'}
           />
         </PopoverAnchor>
+        {value && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onChange('')
+            }}
+            className="absolute right-7 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            title="Clear"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
         <ChevronsUpDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none opacity-60" />
       </div>
 

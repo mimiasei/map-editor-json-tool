@@ -20,11 +20,13 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { MapPin, Trash2, ExternalLink, ClipboardCopy } from 'lucide-react'
 import SidCombobox from '@/components/common/SidCombobox'
+import DialogSidField from '@/components/common/DialogSidField'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard } from '@/lib/clipboard'
+import { useDialogActionCascadeGuard } from '@/hooks/useDialogActionCascadeGuard'
 
 interface Props {
   action: Action
@@ -33,12 +35,19 @@ interface Props {
   /** "Pick from map" button next to mapEntity/hero fields — see ConditionForm's
    *  identical prop for the full explanation. */
   onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => void
+  /** Narrows the type dropdown to a documented-valid subset for this specific
+   *  field (e.g. a dialog's restricted "Global" actions block) — the "Custom /
+   *  unknown type" escape hatch stays available regardless, so an already-set
+   *  type outside the filter is never made unrepresentable, just not offered
+   *  as a fresh pick. */
+  typeFilter?: (type: string) => boolean
 }
 
-export default function ActionForm({ action, onChange, onRemove, onPickFromMap }: Props) {
+export default function ActionForm({ action, onChange, onRemove, onPickFromMap, typeFilter }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const isCustom = !def
   const { openDialogEditor } = useScenarioStore()
+  const cascadeGuard = useDialogActionCascadeGuard()
   const entities = useMapContextStore((s) => s.context?.entities)
   const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
   const catalog = useCatalogStore((s) => s.catalog)
@@ -66,10 +75,6 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
     () => getBuildingLevelNames(catalog, selectedBuildingSid, castleFaction),
     [catalog, selectedBuildingSid, castleFaction],
   )
-
-  /** True when this action references a dialog key we can open in the editor */
-  const isDialogAction = action.a === 'Dialog' || action.a === 'RandomDialog'
-  const dialogKey = isDialogAction ? (action.p ?? [])[0] : undefined
 
   const updateType = (type: string) => {
     if (type === '__custom__') {
@@ -107,16 +112,22 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                 <SelectValue placeholder="Select type…" />
               </SelectTrigger>
               <SelectContent>
-                {ACTION_CATEGORIES.map((cat) => (
-                  <SelectGroup key={cat}>
-                    <SelectLabel>{cat}</SelectLabel>
-                    {ACTION_LIST.filter((a) => a.category === cat).map((a) => (
-                      <SelectItem key={a.type} value={a.type}>
-                        {a.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
+                {ACTION_CATEGORIES.map((cat) => {
+                  const inCategory = ACTION_LIST.filter(
+                    (a) => a.category === cat && (!typeFilter || typeFilter(a.type)),
+                  )
+                  if (inCategory.length === 0) return null
+                  return (
+                    <SelectGroup key={cat}>
+                      <SelectLabel>{cat}</SelectLabel>
+                      {inCategory.map((a) => (
+                        <SelectItem key={a.type} value={a.type}>
+                          {a.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )
+                })}
                 <SelectGroup>
                   <SelectLabel>Other</SelectLabel>
                   <SelectItem value="__custom__">Custom / unknown type</SelectItem>
@@ -151,7 +162,9 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
           variant="ghost"
           size="icon"
           className="h-8 w-8 mt-4 text-muted-foreground hover:text-destructive"
-          onClick={onRemove}
+          onClick={() => {
+            if (cascadeGuard(action)) onRemove()
+          }}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -220,6 +233,12 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                     ))}
                   </SelectContent>
                 </Select>
+              ) : param.ref === 'dialog' ? (
+                <DialogSidField
+                  value={(action.p ?? [])[i] ?? ''}
+                  onChange={(v) => updateParam(i, v)}
+                  placeholder={param.hint}
+                />
               ) : param.ref ? (
                 <SidCombobox
                   value={(action.p ?? [])[i] ?? ''}
@@ -310,15 +329,17 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap }
                   placeholder={param.hint}
                 />
               )}
-              {/* "Edit dialog →" button shown next to the key param of Dialog/RandomDialog */}
-              {isDialogAction && i === 0 && dialogKey && (
-                <button
-                  className="text-xs text-primary hover:underline flex items-center gap-0.5"
-                  onClick={() => openDialogEditor(dialogKey)}
+              {/* "Edit dialog →" button shown next to any populated dialog-ref param */}
+              {param.ref === 'dialog' && (action.p ?? [])[i] && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-center gap-1.5"
+                  onClick={() => openDialogEditor((action.p ?? [])[i])}
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-4 w-4" />
                   Edit dialog
-                </button>
+                </Button>
               )}
             </div>
             )

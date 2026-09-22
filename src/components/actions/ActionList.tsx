@@ -11,9 +11,11 @@ interface Props {
   onAdd: (action?: Action) => void
   onUpdate: (index: number, action: Action) => void
   onRemove: (index: number) => void
+  /** Passed through to each ActionForm's type dropdown — see its own doc comment. */
+  typeFilter?: (type: string) => boolean
 }
 
-export default function ActionList({ actions, onAdd, onUpdate, onRemove }: Props) {
+export default function ActionList({ actions, onAdd, onUpdate, onRemove, typeFilter }: Props) {
   const pasteable = useClipboardHasPayload<Action>('action')
 
   return (
@@ -27,6 +29,7 @@ export default function ActionList({ actions, onAdd, onUpdate, onRemove }: Props
           action={action}
           onChange={(a) => onUpdate(i, a)}
           onRemove={() => onRemove(i)}
+          typeFilter={typeFilter}
         />
       ))}
       <div className="flex items-center gap-2">

@@ -6,7 +6,7 @@
 
 import { useState } from 'react'
 import type { DialogAvatar } from '@/types/dialog'
-import { AVATAR_ANIMATIONS, AVATAR_POSITIONS } from '@/types/dialog'
+import { AVATAR_ANIMATIONS, AVATAR_POSITIONS, POSITION_LABELS } from '@/types/dialog'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -52,7 +52,7 @@ function Slot({
     <button
       type="button"
       onClick={occupied ? onSelect : onAdd}
-      title={occupied ? iconName(avatar!.icon) || `Position ${position}` : `Add avatar at position ${position}`}
+      title={occupied ? iconName(avatar!.icon) || POSITION_LABELS[position] : `Add avatar at ${POSITION_LABELS[position]}`}
       className={`flex-1 flex min-h-[76px] flex-col items-center justify-center gap-1 rounded border px-1 py-2 transition-colors ${
         selected
           ? 'border-primary bg-primary/10'
@@ -180,7 +180,7 @@ export default function AvatarStrip({
                 style={{ objectFit: 'contain' }}
               />
             )}
-            <span className="text-xs font-medium">Position {selected.position}</span>
+            <span className="text-xs font-medium">{POSITION_LABELS[selected.position]}</span>
             {speakerPosition === selected.position ? (
               <span className="flex items-center gap-1 text-[10px] text-primary">
                 <MessageSquare className="h-2.5 w-2.5" /> speaking

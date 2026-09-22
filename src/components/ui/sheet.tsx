@@ -38,22 +38,52 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   SheetContentProps
->(({ className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants(), className)}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </SheetPortal>
-))
+>(({ className, children, onPointerDownOutside, ...props }, ref) => {
+  // Same fix as DraggableDialogContent.tsx: a nested Select/Combobox's open
+  // listbox portals elsewhere in the DOM, so a pointerdown that just dismisses
+  // it still reaches this Sheet's own outside-pointerdown check and closes the
+  // whole sheet underneath it. Snapshotting "was a listbox open" on a
+  // document-level CAPTURE-phase pointerdown (before Radix's own bubble-phase
+  // dismiss handler flips it to closed) avoids racing a live query against
+  // that same handler — see DraggableDialogContent.tsx for the full history.
+  const hadOpenPopupRef = React.useRef(false)
+  React.useEffect(() => {
+    const captureOpenState = () => {
+      hadOpenPopupRef.current = !!document.querySelector('[role="listbox"][data-state="open"]')
+    }
+    document.addEventListener('pointerdown', captureOpenState, true)
+    return () => document.removeEventListener('pointerdown', captureOpenState, true)
+  }, [])
+
+  const handlePointerDownOutside = React.useCallback(
+    (e: Parameters<NonNullable<typeof onPointerDownOutside>>[0]) => {
+      const target = e.target as HTMLElement | null
+      if (target?.closest('[data-radix-popper-content-wrapper]') || hadOpenPopupRef.current) {
+        e.preventDefault()
+      }
+      onPointerDownOutside?.(e)
+    },
+    [onPointerDownOutside]
+  )
+
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants(), className)}
+        onPointerDownOutside={handlePointerDownOutside}
+        {...props}
+      >
+        {children}
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </SheetPortal>
+  )
+})
 SheetContent.displayName = DialogPrimitive.Content.displayName
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

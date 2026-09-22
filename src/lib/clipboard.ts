@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { isTauri } from '@/lib/native-fs'
 import { logInfo, logWarn } from '@/lib/logger'
 
-export type ClipboardKind = 'trigger' | 'action' | 'subquest'
+export type ClipboardKind = 'trigger' | 'action' | 'subquest' | 'condition'
 
 /**
  * Envelope written to the clipboard instead of the bare JSON. Distinguishing `kind` is

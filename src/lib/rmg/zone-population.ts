@@ -127,6 +127,9 @@ export interface ZonePlacement {
   tempId: number
   sid: string
   node: number
+  /** 0-3 quadrant enum (0/90/180/270°) — see `isRotationallySymmetricFootprint`
+   *  below for why this is only ever set on a footprint-safe placement. */
+  rotation?: number
   randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }
   /** See `map-write.ts`'s own doc comment on `addObjectInstances`'
    *  `randomItemOverrides` param — real maps vary `propRandomItems.rarity`
@@ -212,6 +215,28 @@ export function tryPlaceAt(
     }
   }
   return true
+}
+
+/** Whether `sid`'s footprint can be safely rotated after `tryPlaceAt` already
+ *  computed collision at rotation 0 — same restriction the H3 importer's
+ *  `randomDecorRotation` (scenery-clusters.ts) applies to its own decoration
+ *  pool: 1x1, or a square where every cell shares one value (fully solid or
+ *  fully empty), so the occupied-cell pattern is identical after any 90°
+ *  turn. Anything else (e.g. an oblong fence/bridge) would need the rotated
+ *  footprint re-validated against `state.blocked`, which this generator
+ *  doesn't do — so those just keep rotation 0, as before. */
+export function isRotationallySymmetricFootprint(
+  sid: string,
+  catalogById: Map<string, CatalogMapObject>,
+): boolean {
+  const template = catalogById.get(sid)
+  if (!template?.nodes?.length) return true
+  const sizeX = template.sizeX ?? 1
+  const sizeZ = template.sizeZ ?? 1
+  if (sizeX === 1 && sizeZ === 1) return true
+  if (sizeX !== sizeZ) return false
+  const first = template.nodes[0]
+  return template.nodes.every((v) => v === first)
 }
 
 /** Claim one free tile from `zoneTiles` for a concrete `squads[]` placement

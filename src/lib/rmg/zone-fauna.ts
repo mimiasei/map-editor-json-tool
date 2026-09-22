@@ -32,7 +32,8 @@
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildAnimalPools } from '@/lib/map-grid/fuzzy-obstacle'
-import { tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
+import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type ZonePlacement } from './zone-population'
+import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import type { ZoneSpec } from './zone-graph'
 
 // Land animals go through `tryPlaceAt`'s real collision check (unlike fish/
@@ -136,11 +137,16 @@ export function scatterZoneFauna(options: ScatterZoneFaunaOptions): ZonePlacemen
   const { byBiome, fish, universal } = buildAnimalPools(mapObjects)
   const placements: ZonePlacement[] = []
 
+  // Same "randomize decorative rotation, never for an asymmetric footprint"
+  // rule as zone-decoration.ts / the H3 importer's randomDecorRotation.
+  const pickRotation = (sid: string): number | undefined =>
+    isRotationallySymmetricFootprint(sid, catalogById) ? randomDecorRotation(rng) : undefined
+
   // Land animals need real collision checking (tryPlaceAt/state.blocked) —
   // they're standing creatures that shouldn't overlap a mine/dwelling/guard.
   const placeLandAnimal = (sid: string, node: number): void => {
     if (!tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) return
-    placements.push({ tempId: state.nextTempId++, sid, node })
+    placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid) })
   }
 
   // Fish and fx deliberately do NOT go through tryPlaceAt: real bug found
@@ -158,7 +164,7 @@ export function scatterZoneFauna(options: ScatterZoneFaunaOptions): ZonePlacemen
   const placeOverlay = (occupied: Set<number>, sid: string, node: number): void => {
     if (occupied.has(node)) return
     occupied.add(node)
-    placements.push({ tempId: state.nextTempId++, sid, node })
+    placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid) })
   }
 
   for (const zone of zones) {

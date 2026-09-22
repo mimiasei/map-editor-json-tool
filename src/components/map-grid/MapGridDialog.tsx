@@ -2223,21 +2223,34 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         // cursor) without ever calling applyEdit — so by the time we get
         // here, moveState.node already equals the drop tile. Comparing
         // against drag.item.node (the pre-drag origin) instead of going
-        // through applyMoveTo's own prev.node===node guard is what actually
-        // commits the drop; applyMoveTo would see "no change" and no-op.
+        // through applyMoveTo's own moveState.node===node guard is what
+        // actually commits the drop; applyMoveTo would see "no change" and
+        // no-op.
         //
         // Unlike click/arrow-key move (which stays armed so you can keep
         // trying spots), a mouse-drag is a single self-contained gesture —
         // releasing exits move mode automatically (same as clicking "Done"),
         // so that button is never actually needed for this interaction path.
-        setMoveState((prev) => {
-          if (prev && prev.node !== drag.item.node) {
-            applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: prev.node }, 'move object')
-            selectNode(prev.node)
-            setSpawnerSelectorOpen(false)
-          }
-          return null
-        })
+        //
+        // The commit (applyEdit/selectNode) deliberately runs OUTSIDE the
+        // setMoveState call, not inside its updater — a real bug found this
+        // session (user report: "Maximum update depth exceeded" freezing TSE
+        // when moving an item off an obstacle it overlapped): this app is
+        // wrapped in <React.StrictMode> (main.tsx), which double-invokes a
+        // setState updater function in dev to catch impurity — an updater
+        // that performs a real side effect (applyEdit mutates a SEPARATE
+        // Zustand store, itself synchronously re-rendering subscribers)
+        // therefore ran that side effect twice per commit, and reading
+        // `moveState` directly here (this handler's own closure, already
+        // current by the time a real pointerup fires) is both the correct
+        // fix and the simpler code — no functional updater needed at all
+        // since nothing else can race a discrete pointerup event.
+        if (moveState && moveState.node !== drag.item.node) {
+          applyEdit({ kind: 'moveObject', entityType: moveState.type, entityId: moveState.id, newNode: moveState.node }, 'move object')
+          selectNode(moveState.node)
+          setSpawnerSelectorOpen(false)
+        }
+        setMoveState(null)
       }
       moveDragRef.current = null
       return
@@ -3044,14 +3057,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // there's no "staged, discardable" position anymore, only Ctrl+Z. Shared
   // by both the grid click handler (onPointerUp) and arrow-key nudging below.
   const applyMoveTo = useCallback((node: number) => {
-    setMoveState((prev) => {
-      if (!prev || !isNodeInBoundsForMove(prev, node) || prev.node === node) return prev
-      applyEdit({ kind: 'moveObject', entityType: prev.type, entityId: prev.id, newNode: node }, 'move object')
-      selectNode(node)
-      setSpawnerSelectorOpen(false)
-      return { ...prev, node }
-    })
-  }, [isNodeInBoundsForMove, applyEdit, selectNode])
+    // Side effect (applyEdit) deliberately runs before setMoveState, not
+    // inside its updater — see the drag-drop release handler's own comment
+    // above for why a setState updater with a real side effect is unsafe
+    // under this app's <React.StrictMode> (double-invoked in dev, so the
+    // move — and every subscriber it synchronously notifies — used to fire
+    // twice per commit).
+    if (!moveState || !isNodeInBoundsForMove(moveState, node) || moveState.node === node) return
+    applyEdit({ kind: 'moveObject', entityType: moveState.type, entityId: moveState.id, newNode: node }, 'move object')
+    selectNode(node)
+    setSpawnerSelectorOpen(false)
+    setMoveState({ ...moveState, node })
+  }, [moveState, isNodeInBoundsForMove, applyEdit, selectNode])
 
   // ── Rotate — only `objects[]` (type 0) instances ever carry a rotation.
   // Each click applies one step immediately (issue #195 follow-up) — no
@@ -3355,7 +3372,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // object has a real footprint, unlike a terrain value, so a tile the
   // brush covers isn't necessarily paintable).
   const stageObjectPaint = useCallback((node: number, sid: string) => {
-    const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+    // city-spawner/hero-spawner are real player-start points, never a
+    // decorative scatter — always single-tile, brush Size/Disperse ignored.
+    const tiles = (sid === 'city-spawner' || sid === 'hero-spawner' ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
       .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
     if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
     setPaintObjectStaged((prev) => {

@@ -125,8 +125,11 @@ export function formatCondition(condition: Condition): string {
   switch (condition.c) {
     case 'StartTurn': {
       if (p(condition, 0)) {
-        const player = p(condition, 1) ? ` (P${p(condition, 1)})` : ''
-        return `Turn ${p(condition, 0)}${player}`
+        const player = p(condition, 1) ? ` (Player ${p(condition, 1)})` : ''
+        const week = parseInt(p(condition, 0), 10)
+        const day = parseInt(p(condition, 1), 10) || 0
+        const turn = (week - 1) * 7 + day //week * 7 + day = turn
+        return `Turn ${turn} (W:${p(condition, 0)}, D:${p(condition, 1)}) ${player}`
       }
       return 'Any turn'
     }

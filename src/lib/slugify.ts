@@ -22,6 +22,11 @@ export function generateDisplayNameSid(text: string, existingSids: string[], suf
     .slice(0, 3)
 
   const base = `${words.length > 0 ? words.join('_') : 'name'}_${suffix}`
+  return dedupeSid(base, existingSids)
+}
+
+/** Appends a numeric suffix (_2, _3, ...) until `base` no longer collides with `existingSids`. */
+export function dedupeSid(base: string, existingSids: string[]): string {
   if (!existingSids.includes(base)) return base
 
   let n = 2

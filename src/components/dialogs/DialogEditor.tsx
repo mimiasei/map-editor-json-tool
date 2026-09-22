@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import type { DialogFlow, DialogSlide, DialogAnswer } from '@/types/dialog'
-import { RESULT_DIALOG_VALUES } from '@/types/dialog'
+import { RESULT_DIALOG_VALUES, AVATAR_POSITIONS, POSITION_LABELS } from '@/types/dialog'
 import type { Action } from '@/types/scenario'
 import type { DialogCondition } from '@/types/dialog'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
@@ -27,7 +27,9 @@ import ActionList from '@/components/actions/ActionList'
 import DialogConditionList from './DialogConditionList'
 import AvatarStrip from './AvatarStrip'
 import AssetCombobox from './AssetCombobox'
-import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine } from 'lucide-react'
+import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import FieldInfo from '@/components/common/FieldInfo'
+import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine, LayoutGrid } from 'lucide-react'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -55,6 +57,15 @@ function defaultTitleSid(dialogId: string, slideIndex: number): string {
 
 const NEW_DIALOG_CONDITION = (): DialogCondition => ({ c: 'Counter', p: [] })
 const NEW_MAP_ACTION = (): Action => ({ a: 'CounterSet', p: [] })
+
+/** Per the mapmaking guide's Dialogues section: the "Global" action blocks
+ *  (`actions`/`closeActions` on a slide, the secondary list on an answer) only
+ *  ever accept these four types. */
+const RESTRICTED_DIALOG_ACTION_TYPES = ['Guide', 'StoryCounterPlus', 'StoryCounterMinus', 'StoryCounterSet']
+const isRestrictedDialogActionType = (t: string) => RESTRICTED_DIALOG_ACTION_TYPES.includes(t)
+/** The guide explicitly calls out (3x) that Story Counters must go in the
+ *  restricted "Global" block instead when used inside a dialog — not here. */
+const isStoryCounterType = (t: string) => t.startsWith('StoryCounter')
 
 // ─── And/Or selector, shared by slides and answers ──────────────────────────────
 
@@ -87,6 +98,8 @@ function AnswerEditor({
   answer,
   answerIndex,
   slideIndex,
+  slideId,
+  allSlideIds,
   dialogId,
   localization,
   onChange,
@@ -95,6 +108,8 @@ function AnswerEditor({
   answer: DialogAnswer
   answerIndex: number
   slideIndex: number
+  slideId: string
+  allSlideIds: string[]
   dialogId: string
   localization: Record<string, string>
   onChange: (answer: DialogAnswer) => void
@@ -102,6 +117,31 @@ function AnswerEditor({
 }) {
   const locText = answer.text ? localization[answer.text] : undefined
   const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
+
+  // Per the mapmaking guide, an answer's "actions" is Go/End (picking where it
+  // leads) plus optionally Guide/StoryCounter* actions alongside — but neither
+  // "Go" nor "End" is a registered map-script action (ACTION_REGISTRY is a
+  // different vocabulary), so without a dedicated control this fell through to
+  // ActionForm's generic "unknown action type" editor: a free-text type field and
+  // a raw, unlabeled param list for the single most important thing an answer
+  // does. The primary Go/End entry (wherever it sits) gets its own control;
+  // anything else in the array is a secondary Guide/StoryCounter action.
+  const primaryIndex = answer.actions.findIndex((a) => a.a === 'Go' || a.a === 'End')
+  const primary = primaryIndex >= 0 ? answer.actions[primaryIndex] : undefined
+  const restActions = answer.actions.filter((_, i) => i !== primaryIndex)
+  const isGoTo = primary?.a === 'Go'
+  const goTarget = isGoTo ? (primary.p?.[0] ?? '') : ''
+  const endBreak = primary?.a === 'End' && (primary.p ?? []).includes('break')
+
+  const setGoTarget = (target: string) =>
+    onChange({ ...answer, actions: [{ a: 'Go', p: [target] }, ...restActions] })
+  const setEndDialog = (breakLogic: boolean) =>
+    onChange({
+      ...answer,
+      actions: [breakLogic ? { a: 'End', p: ['break'] } : { a: 'End' }, ...restActions],
+    })
+  const updateRestActions = (next: Action[]) =>
+    onChange({ ...answer, actions: [primary ?? { a: 'End' }, ...next] })
 
   return (
     <div className="rounded border border-border bg-background p-2 space-y-2">
@@ -138,23 +178,85 @@ function AnswerEditor({
         </Button>
       </div>
 
-      {/* Dialog flow actions for this answer */}
+      {/* Where picking this answer leads */}
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Flow actions</Label>
-        <ActionList
-          actions={answer.actions}
-          onAdd={(pasted) =>
-            onChange({ ...answer, actions: [...answer.actions, pasted ?? { a: 'Go', p: [''] }] })
-          }
-          onUpdate={(i, action) => {
-            const actions = [...answer.actions]
-            actions[i] = action
-            onChange({ ...answer, actions })
-          }}
-          onRemove={(i) =>
-            onChange({ ...answer, actions: answer.actions.filter((_, j) => j !== i) })
-          }
-        />
+        <Label className="text-xs text-muted-foreground">Leads to</Label>
+        <div className="flex items-center gap-4 text-xs">
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="radio"
+              checked={isGoTo}
+              onChange={() => setGoTarget(goTarget)}
+              className="accent-primary"
+            />
+            Go to slide
+          </label>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="radio"
+              checked={!isGoTo}
+              onChange={() => setEndDialog(endBreak)}
+              className="accent-primary"
+            />
+            End dialog
+          </label>
+        </div>
+        {isGoTo ? (
+          <>
+            <Input
+              value={goTarget}
+              onChange={(e) => setGoTarget(e.target.value)}
+              placeholder={allSlideIds.find((id) => id !== slideId) ?? ''}
+              className="h-7 text-xs font-mono"
+              list={`answer-slides-${slideIndex}-${answerIndex}`}
+            />
+            <datalist id={`answer-slides-${slideIndex}-${answerIndex}`}>
+              {allSlideIds
+                .filter((id) => id !== slideId)
+                .map((id) => (
+                  <option key={id} value={id} />
+                ))}
+            </datalist>
+          </>
+        ) : (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={endBreak}
+              onCheckedChange={(checked) => setEndDialog(checked === true)}
+            />
+            <span className="text-xs">Interrupt subsequent game logic after this dialog ends</span>
+          </label>
+        )}
+
+        {/* Secondary actions the guide allows alongside Go/End — rare in practice
+            (unused in every real Fun and Graves answer) so kept low-profile. */}
+        {restActions.length > 0 ? (
+          <div className="space-y-1 pt-1">
+            <Label className="text-xs text-muted-foreground">
+              Additional actions
+              <span className="ml-1 text-muted-foreground/70">— Guide / Story Counters</span>
+            </Label>
+            <ActionList
+              actions={restActions}
+              typeFilter={isRestrictedDialogActionType}
+              onAdd={(pasted) => updateRestActions([...restActions, pasted ?? { a: 'Guide', p: [] }])}
+              onUpdate={(i, action) => {
+                const next = [...restActions]
+                next[i] = action
+                updateRestActions(next)
+              }}
+              onRemove={(i) => updateRestActions(restActions.filter((_, j) => j !== i))}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="text-xs text-primary hover:underline"
+            onClick={() => updateRestActions([{ a: 'Guide', p: [] }])}
+          >
+            + Add Guide / Story Counter action
+          </button>
+        )}
       </div>
 
       {/* Availability conditions — the game hides the answer when these fail */}
@@ -170,8 +272,11 @@ function AnswerEditor({
         </div>
         <DialogConditionList
           conditions={answer.requests ?? []}
-          onAdd={() =>
-            onChange({ ...answer, requests: [...(answer.requests ?? []), NEW_DIALOG_CONDITION()] })
+          onAdd={(pasted) =>
+            onChange({
+              ...answer,
+              requests: [...(answer.requests ?? []), pasted ?? NEW_DIALOG_CONDITION()],
+            })
           }
           onUpdate={(i, condition) => {
             const requests = [...(answer.requests ?? [])]
@@ -186,9 +291,13 @@ function AnswerEditor({
 
       {/* Map actions fired when this answer is picked */}
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Map actions</Label>
+        <Label className="text-xs text-muted-foreground">
+          Map actions
+          <span className="ml-1 text-muted-foreground/70">— Story Counters go in "Additional actions" above instead</span>
+        </Label>
         <ActionList
           actions={answer.mapActions ?? []}
+          typeFilter={(t) => !isStoryCounterType(t)}
           onAdd={(pasted) =>
             onChange({ ...answer, mapActions: [...(answer.mapActions ?? []), pasted ?? NEW_MAP_ACTION()] })
           }
@@ -248,6 +357,13 @@ function SlideEditor({
   // its own tokens (tested: redefining "dungeon_hero_5" leaves the hero as Mouaren).
   const setLocalizationToken = useScenarioStore((s) => s.setLocalizationToken)
   const openLocalizationFor = useScenarioStore((s) => s.openLocalizationFor)
+  const [speakerPickerOpen, setSpeakerPickerOpen] = useState(false)
+  const heroesLoaded = (catalog?.heroes?.length ?? 0) > 0
+  /** "Character" (a speaker with a name/portrait) vs "Narrator" (plain
+   *  informational text, no title.sid at all) — a title object with an
+   *  empty sid still counts as "Character" so the toggle doesn't snap back
+   *  to Narrator the moment it's switched on, before a SID is typed. */
+  const hasSpeaker = !!slide.title
   const titleSid = slide.title?.sid ?? ''
   const builtInSpeaker = (catalog?.speakerTitles ?? []).find((t) => t.sid === titleSid)
   const isBuiltInSpeaker = !!builtInSpeaker
@@ -278,12 +394,63 @@ function SlideEditor({
     setLocalizationToken(sid, builtInSpeakerName ?? '')
   }
 
+  const speakerAvatars = slide.avatars ?? []
+  const speakerAvatarAtPos = speakerAvatars.find((a) => a.position === slide.title?.position)
+  const hasAvatarAtSpeakerPos = slide.title?.position != null && !!speakerAvatarAtPos
+
+  /** Remembers the last portrait picked for this speaker so unchecking "Name
+   *  only" can put the same one straight back, instead of reopening the
+   *  picker. Seeded from whatever avatar is already at the speaker position
+   *  (covers a slide that had one before this checkbox existed). */
+  const [lastPortraitIcon, setLastPortraitIcon] = useState<string | undefined>(speakerAvatarAtPos?.icon)
+
+  const placeSpeakerAvatar = (icon: string, pos: number) => {
+    const nextAvatars = speakerAvatars.some((a) => a.position === pos)
+      ? speakerAvatars.map((a) => (a.position === pos ? { ...a, icon } : a))
+      : [...speakerAvatars, { position: pos, icon, isForeground: 'true' as const }].sort(
+          (a, b) => a.position - b.position,
+        )
+    setLastPortraitIcon(icon)
+    return nextAvatars
+  }
+
+  /** Names the speaker AND places/updates their portrait at the speaker
+   *  position, in one update — picking a portrait and it only affecting the
+   *  name (with the avatar strip left untouched) was confusing, since the two
+   *  looked linked but weren't. Combined into a single onChange (rather than
+   *  calling onSpeakerNameChange separately) so the title and avatar patches
+   *  can't race against each other's stale `slide` closure. */
+  const pickSpeakerPortrait = (name: string, icon: string) => {
+    const sid = titleSid || defaultTitleSid(dialogId, slideIndex)
+    const pos = defaultTitlePosition()
+    const nextAvatars = placeSpeakerAvatar(icon, pos)
+    setLocalizationToken(sid, name)
+    onChange({ ...slide, title: { sid, position: pos }, avatars: nextAvatars })
+  }
+
+  /** "Name only" is sugar over the game's own real mechanism for a speaker
+   *  with no visible portrait — simply having no DialogAvatar at the
+   *  speaker's position (confirmed common in shipped dialogs, ~27% of titled
+   *  slides). Checking it removes that avatar (remembering its icon);
+   *  unchecking puts the same portrait straight back at the same position. */
+  const clearSpeakerAvatar = () => {
+    if (!hasAvatarAtSpeakerPos) return
+    setLastPortraitIcon(speakerAvatarAtPos!.icon)
+    onChange({ ...slide, avatars: speakerAvatars.filter((a) => a.position !== slide.title?.position) })
+  }
+
+  const restoreSpeakerAvatar = () => {
+    if (!lastPortraitIcon || slide.title?.position == null) return
+    onChange({ ...slide, avatars: placeSpeakerAvatar(lastPortraitIcon, slide.title.position) })
+  }
+
   const advancedInUse = [
     slide.sound ? 'sound' : null,
     slide.notification ? 'notification' : null,
     slide.resultDialog ? 'resultDialog' : null,
     slide.dialogPlayConditions?.length ? 'play conditions' : null,
-    slide.actions?.length ? 'story actions' : null,
+    slide.actions?.length ? 'global actions' : null,
+    slide.closeActions?.length ? 'global close actions' : null,
     slide.closeMapActions?.length ? 'close actions' : null,
     slide.showAnimationsImmediately ? 'animation timing' : null,
   ].filter(Boolean) as string[]
@@ -303,6 +470,23 @@ function SlideEditor({
       mapActions: [],
     }
     onChange({ ...slide, answers: [...answers, newAnswer], end: undefined, next: undefined })
+  }
+
+  /** Switching away from "Player choices" used to silently drop the whole
+   *  answers array — each with its own actions/requirements/map actions, and
+   *  not covered by undo (dialogs/localization sit outside zundo's tracked
+   *  `scenario` field). Confirm first when there's real content to lose. */
+  const switchFlowMode = (mode: 'next' | 'end') => {
+    const n = slide.answers?.length ?? 0
+    if (n > 0) {
+      const ok = window.confirm(
+        `Switching away from "Player choices" will delete ${n} answer${n === 1 ? '' : 's'} and everything in ` +
+          `${n === 1 ? 'it' : 'them'} (actions, requirements, map actions). This isn't covered by Ctrl+Z.\n\nContinue?`,
+      )
+      if (!ok) return
+    }
+    if (mode === 'next') onChange({ ...slide, end: undefined, answers: undefined })
+    else onChange({ ...slide, end: true, next: undefined, answers: undefined })
   }
 
   const updateAnswer = (i: number, answer: DialogAnswer) => {
@@ -400,28 +584,92 @@ function SlideEditor({
             </button>
           )}
 
+          {/* Character vs Narrator */}
+          <div className="space-y-1">
+            <Label className="text-xs">Dialog type</Label>
+            <div className="flex items-center gap-4 text-sm">
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={hasSpeaker}
+                  onChange={() => onChange({ ...slide, title: { sid: '', position: defaultTitlePosition() } })}
+                  className="accent-primary"
+                />
+                Character
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={!hasSpeaker}
+                  onChange={() => {
+                    // Clear the speaker's own portrait too — otherwise it keeps showing
+                    // in the avatar strip below even though "no speaker" was chosen.
+                    const oldPos = slide.title?.position
+                    const avatars =
+                      oldPos != null ? speakerAvatars.filter((a) => a.position !== oldPos) : slide.avatars
+                    onChange({ ...slide, title: undefined, avatars })
+                  }}
+                  className="accent-primary"
+                />
+                Narrator
+              </label>
+            </div>
+            {!hasSpeaker && (
+              <p className="text-[10px] text-muted-foreground">
+                Plain informational text — no speaker name or portrait shown.
+              </p>
+            )}
+          </div>
+
           {/* Title / Speaker */}
+          {hasSpeaker && (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Speaker SID (title.sid)</Label>
-                <AssetCombobox
-                  value={titleSid}
-                  onChange={(sid) =>
-                    onChange({
-                      ...slide,
-                      title: sid ? { ...(slide.title ?? {}), sid } : undefined,
-                    })
-                  }
-                  suggestions={speakerSuggestions}
-                  placeholder="dialogue_title_hero_dungeon"
-                />
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs">Speaker SID (title.sid)</Label>
+                  <FieldInfo text="The localization token id for this speaker's name — not the name itself. Typing a new sid mints a fresh token (edit its text via Speaker name or Localization). Picking one of the base game's own sids (e.g. dungeon_hero_5) reuses that character's existing name, which the game ignores map overrides of." />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 min-w-0">
+                    <AssetCombobox
+                      value={titleSid}
+                      onChange={(sid) =>
+                        onChange({
+                          ...slide,
+                          title: sid ? { ...(slide.title ?? {}), sid } : undefined,
+                        })
+                      }
+                      suggestions={speakerSuggestions}
+                      placeholder="dialogue_title_hero_dungeon"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 shrink-0 gap-1 px-2 text-xs"
+                    onClick={() => setSpeakerPickerOpen(true)}
+                    disabled={!heroesLoaded}
+                    title={
+                      heroesLoaded
+                        ? 'Browse portraits to name this speaker'
+                        : 'Load Core.zip via Game Data to browse portraits'
+                    }
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                    Portraits…
+                  </Button>
+                  <FieldInfo text="Opens a visual browser of hero/unit/NPC portraits. Picking one names this speaker (writes the localization text below) and places that portrait in the avatar strip in Advanced, at the current Speaker position." />
+                </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">
-                  Speaker name
-                  <span className="ml-1 text-muted-foreground/70">— shown in game</span>
-                </Label>
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs">
+                    Speaker name
+                    <span className="ml-1 text-muted-foreground/70">— shown in game</span>
+                  </Label>
+                  <FieldInfo text="The text shown above the dialog box next to the portrait — edits the localization token that Speaker SID points to, in the map's default language. Disabled for a built-in game speaker: the game ignores map overrides of its own tokens." />
+                </div>
                 <Input
                   value={speakerName}
                   onChange={(e) => onSpeakerNameChange(e.target.value)}
@@ -455,22 +703,77 @@ function SlideEditor({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Speaker position</Label>
-                <Input
-                  type="number"
-                  value={slide.title?.position ?? ''}
-                  onChange={(e) => {
-                    const pos = e.target.value ? parseInt(e.target.value) : undefined
-                    onChange({
-                      ...slide,
-                      title: slide.title ? { ...slide.title, position: pos } : undefined,
-                    })
+                <Select
+                  disabled={!titleSid}
+                  value={slide.title?.position ? String(slide.title.position) : '__unset__'}
+                  onValueChange={(v) => {
+                    if (!slide.title) return
+                    const pos = v === '__unset__' ? undefined : parseInt(v)
+                    const oldPos = slide.title.position
+                    // Move the speaker's own portrait along with the position change —
+                    // swapping with whatever was already in the new slot, if anything —
+                    // rather than leaving it behind in the old box.
+                    const avatars =
+                      pos != null && oldPos != null && oldPos !== pos && speakerAvatars.some((a) => a.position === oldPos)
+                        ? speakerAvatars
+                            .map((a) => {
+                              if (a.position === oldPos) return { ...a, position: pos }
+                              if (a.position === pos) return { ...a, position: oldPos }
+                              return a
+                            })
+                            .sort((a, b) => a.position - b.position)
+                        : speakerAvatars
+                    onChange({ ...slide, title: { ...slide.title, position: pos }, avatars })
                   }}
-                  className="h-7 text-xs"
-                  placeholder="3"
-                />
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder={titleSid ? '(none)' : 'Set a Speaker SID first'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__unset__">(none)</SelectItem>
+                    {AVATAR_POSITIONS.map((position) => (
+                      <SelectItem key={position} value={String(position)}>
+                        {POSITION_LABELS[position]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+
+            <label
+              className={`flex items-center gap-2 ${
+                titleSid && slide.title?.position != null ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+              }`}
+              title={
+                hasAvatarAtSpeakerPos
+                  ? 'Remove the portrait at this position — the name label stays'
+                  : lastPortraitIcon
+                    ? 'Show the portrait again'
+                    : 'Pick a portrait to show one again'
+              }
+            >
+              <Checkbox
+                checked={!!titleSid && slide.title?.position != null && !hasAvatarAtSpeakerPos}
+                disabled={!titleSid || slide.title?.position == null}
+                onCheckedChange={(checked) => {
+                  if (checked) clearSpeakerAvatar()
+                  else if (lastPortraitIcon) restoreSpeakerAvatar()
+                  else setSpeakerPickerOpen(true)
+                }}
+              />
+              <span className="text-xs">Name only (no portrait)</span>
+            </label>
           </div>
+          )}
+
+          <HeroPickerDialog
+            open={speakerPickerOpen}
+            onOpenChange={setSpeakerPickerOpen}
+            mode="portrait"
+            title="Choose a portrait to name this speaker"
+            onSelect={(entry) => pickSpeakerPortrait(entry.name, entry.icon)}
+          />
 
           {/* Flow mode */}
           <div className="space-y-2">
@@ -480,7 +783,7 @@ function SlideEditor({
                 <input
                   type="radio"
                   checked={flowMode === 'next'}
-                  onChange={() => onChange({ ...slide, end: undefined, answers: undefined })}
+                  onChange={() => switchFlowMode('next')}
                   className="accent-primary"
                 />
                 Next slide
@@ -489,9 +792,7 @@ function SlideEditor({
                 <input
                   type="radio"
                   checked={flowMode === 'end'}
-                  onChange={() =>
-                    onChange({ ...slide, end: true, next: undefined, answers: undefined })
-                  }
+                  onChange={() => switchFlowMode('end')}
                   className="accent-primary"
                 />
                 End dialog
@@ -543,6 +844,8 @@ function SlideEditor({
                   answer={answer}
                   answerIndex={ai}
                   slideIndex={slideIndex}
+                  slideId={slide.id}
+                  allSlideIds={allSlideIds}
                   dialogId={dialogId}
                   localization={localization}
                   onChange={(a) => updateAnswer(ai, a)}
@@ -554,9 +857,15 @@ function SlideEditor({
 
           {/* Map actions */}
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Map actions (this slide)</Label>
+            <Label className="text-xs text-muted-foreground">
+              Map actions
+              <span className="ml-1 text-muted-foreground/70">
+                — fire when the slide opens; Story Counters go in Advanced → "Global actions" instead
+              </span>
+            </Label>
             <ActionList
               actions={slide.mapActions ?? []}
+              typeFilter={(t) => !isStoryCounterType(t)}
               onAdd={(pasted) => onChange({ ...slide, mapActions: [...(slide.mapActions ?? []), pasted ?? { a: 'Dialog', p: [''] }] })}
               onUpdate={(i, action) => updateMapAction(i, action)}
               onRemove={(i) => onChange({ ...slide, mapActions: (slide.mapActions ?? []).filter((_, j) => j !== i) })}
@@ -723,12 +1032,12 @@ function SlideEditor({
                   </div>
                   <DialogConditionList
                     conditions={slide.dialogPlayConditions ?? []}
-                    onAdd={() =>
+                    onAdd={(pasted) =>
                       onChange({
                         ...slide,
                         dialogPlayConditions: [
                           ...(slide.dialogPlayConditions ?? []),
-                          NEW_DIALOG_CONDITION(),
+                          pasted ?? NEW_DIALOG_CONDITION(),
                         ],
                       })
                     }
@@ -748,13 +1057,17 @@ function SlideEditor({
                   />
                 </div>
 
-                {/* Story actions on show */}
+                {/* Global actions on show — the restricted Guide/StoryCounter vocabulary */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
-                    Story actions (run when the slide is shown)
+                    Global actions
+                    <span className="ml-1 text-muted-foreground/70">
+                      — Guide / Story Counters only, fire when the slide is shown
+                    </span>
                   </Label>
                   <ActionList
                     actions={slide.actions ?? []}
+                    typeFilter={isRestrictedDialogActionType}
                     onAdd={(pasted) =>
                       onChange({
                         ...slide,
@@ -775,13 +1088,46 @@ function SlideEditor({
                   />
                 </div>
 
-                {/* Actions on close */}
+                {/* Global actions on close — same restricted vocabulary as above */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    Global actions on dialog close
+                    <span className="ml-1 text-muted-foreground/70">— Guide / Story Counters only</span>
+                  </Label>
+                  <ActionList
+                    actions={slide.closeActions ?? []}
+                    typeFilter={isRestrictedDialogActionType}
+                    onAdd={(pasted) =>
+                      onChange({
+                        ...slide,
+                        closeActions: [...(slide.closeActions ?? []), pasted ?? { a: 'StoryCounterPlus', p: [] }],
+                      })
+                    }
+                    onUpdate={(i, action) => {
+                      const closeActions = [...(slide.closeActions ?? [])]
+                      closeActions[i] = action
+                      onChange({ ...slide, closeActions })
+                    }}
+                    onRemove={(i) =>
+                      onChange({
+                        ...slide,
+                        closeActions: (slide.closeActions ?? []).filter((_, j) => j !== i),
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Map actions on close — general vocabulary, Story Counters excluded */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
                     Map actions on dialog close
+                    <span className="ml-1 text-muted-foreground/70">
+                      — Story Counters go in "Global actions on dialog close" above instead
+                    </span>
                   </Label>
                   <ActionList
                     actions={slide.closeMapActions ?? []}
+                    typeFilter={(t) => !isStoryCounterType(t)}
                     onAdd={(pasted) =>
                       onChange({
                         ...slide,

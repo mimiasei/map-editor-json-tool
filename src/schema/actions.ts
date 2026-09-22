@@ -18,6 +18,12 @@ export interface ActionDef {
   params: ParamDef[]
 }
 
+/** Appended to every dialog-showing action's description — the Dialog SID field lets you
+ *  pick an existing dialog, or auto-generate a brand-new one (sid + its localized text)
+ *  straight from a single typed line, without opening the full dialog editor. */
+const DIALOG_SID_HELP =
+  ' Pick an existing dialog in the Dialog SID field below, or click "Create new dialog" to auto-generate a new dialog and its localized text from a single line you type — no need to open the full dialog editor for a simple message.'
+
 export const ACTION_REGISTRY: Record<string, ActionDef> = {
 
   // ── Quest Management ───────────────────────────────────────────────────────
@@ -278,7 +284,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'Dialog',
     label: 'Show Dialog',
     category: 'Dialogs',
-    description: 'Calls the dialog with the specified SID. Add "break" as the last param to interrupt all further game logic after the dialog ends.',
+    description: 'Calls the dialog with the specified SID.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. som_main_quest_line_start', required: true, ref: 'dialog' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },
@@ -288,7 +294,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogIfHero',
     label: 'Show Dialog If Hero',
     category: 'Dialogs',
-    description: 'If the currently selected hero has the specified SID, calls the dialog. Precondition action.',
+    description: 'If the currently selected hero has the specified SID, calls the dialog. Precondition action.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. hero_dialog', required: true, ref: 'dialog' },
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
@@ -299,7 +305,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogIfRes',
     label: 'Show Dialog If Resource',
     category: 'Dialogs',
-    description: 'If the player\'s resource satisfies the inequality, calls the dialog. Precondition action.',
+    description: 'If the player\'s resource satisfies the inequality, calls the dialog. Precondition action.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. gold_dialog', required: true, ref: 'dialog' },
       {
@@ -318,7 +324,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogIfCounter',
     label: 'Show Dialog If Counter',
     category: 'Dialogs',
-    description: 'If the local counter satisfies the inequality, calls the dialog. Precondition action. Works only with local counters.',
+    description: 'If the local counter satisfies the inequality, calls the dialog. Precondition action. Works only with local counters.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. stage_dialog', required: true, ref: 'dialog' },
       { label: 'Counter SID', hint: 'e.g. main_quest_stage', required: true, ref: 'counter' },
@@ -331,7 +337,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogIfItem',
     label: 'Show Dialog If Item',
     category: 'Dialogs',
-    description: 'If the currently selected hero has the item in their inventory/backpack, calls the dialog. Precondition action.',
+    description: 'If the currently selected hero has the item in their inventory/backpack, calls the dialog. Precondition action.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. artifact_dialog', required: true, ref: 'dialog' },
       { label: 'Item SID', hint: 'e.g. fallen_angel_wings_artifact', required: true, entity: 'artifact' },
@@ -342,7 +348,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'RandomDialog',
     label: 'Random Dialog',
     category: 'Dialogs',
-    description: 'Calls one random dialog from the specified list. NOTE: "break" cannot be added to RandomDialog.',
+    description: 'Calls one random dialog from the specified list. NOTE: "break" cannot be added to RandomDialog.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID 1', hint: 'e.g. god_fog_fight1', required: true, ref: 'dialog' },
       { label: 'Dialog SID 2', hint: 'optional', required: false, ref: 'dialog' },
@@ -358,7 +364,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogOne',
     label: 'Show Dialog (Once)',
     category: 'Dialogs',
-    description: 'A Dialog action that triggers only once for the rest of the match.',
+    description: 'A Dialog action that triggers only once for the rest of the match.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. som_main_quest_line_start', required: true, ref: 'dialog' },
       { label: '"break" flag', hint: 'Type "break" to stop subsequent logic', required: false },
@@ -368,7 +374,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogOneIfHero',
     label: 'Show Dialog If Hero (Once)',
     category: 'Dialogs',
-    description: 'A DialogIfHero action that triggers only once for the rest of the match.',
+    description: 'A DialogIfHero action that triggers only once for the rest of the match.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. hero_dialog', required: true, ref: 'dialog' },
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
@@ -379,7 +385,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogOneIfRes',
     label: 'Show Dialog If Resource (Once)',
     category: 'Dialogs',
-    description: 'A DialogIfRes action that triggers only once for the rest of the match.',
+    description: 'A DialogIfRes action that triggers only once for the rest of the match.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. gold_dialog', required: true, ref: 'dialog' },
       {
@@ -398,7 +404,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'DialogOneIfCounter',
     label: 'Show Dialog If Counter (Once)',
     category: 'Dialogs',
-    description: 'A DialogIfCounter action that triggers only once for the rest of the match.',
+    description: 'A DialogIfCounter action that triggers only once for the rest of the match.' + DIALOG_SID_HELP,
     params: [
       { label: 'Dialog SID', hint: 'e.g. stage_dialog', required: true, ref: 'dialog' },
       { label: 'Counter SID', hint: 'e.g. main_quest_stage', required: true, ref: 'counter' },

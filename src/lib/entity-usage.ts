@@ -68,6 +68,7 @@ function collectSlideParams(slide: DialogSlide): string[] {
   const params: string[] = [
     ...(slide.dialogPlayConditions?.flatMap((c) => c.p ?? []) ?? []),
     ...(slide.actions?.flatMap((a) => a.p ?? []) ?? []),
+    ...(slide.closeActions?.flatMap((a) => a.p ?? []) ?? []),
     ...(slide.mapActions?.flatMap((a) => a.p ?? []) ?? []),
     ...(slide.closeMapActions?.flatMap((a) => a.p ?? []) ?? []),
   ]

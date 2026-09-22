@@ -10,6 +10,16 @@ export type AvatarAnimation = (typeof AVATAR_ANIMATIONS)[number]
 /** Avatar positions, left to right as rendered by the game. */
 export const AVATAR_POSITIONS = [1, 2, 3, 4, 5] as const
 
+/** Human-readable label for each position, shown instead of the raw 1–5 number
+ *  anywhere a position is user-facing (Speaker position, avatar slot tooltips). */
+export const POSITION_LABELS: Record<number, string> = {
+  1: 'Left-most',
+  2: 'Left',
+  3: 'Middle',
+  4: 'Right',
+  5: 'Right-most',
+}
+
 /** How the game resolves the dialog's outcome. */
 export const RESULT_DIALOG_VALUES = ['Interrupt', 'Default'] as const
 export type ResultDialog = (typeof RESULT_DIALOG_VALUES)[number]
@@ -54,10 +64,17 @@ export interface DialogSlide {
   avatars?: DialogAvatar[]
   title?: { sid: string; position?: number }
   text?: string                                     // localization SID (empty = action-only)
+  /** Any quest action except the restricted "Global" ones below — run when the
+   *  slide is shown. Per the mapmaking guide, StoryCounterPlus/Minus/Set must go
+   *  in `actions` instead when used inside a dialog, not here. */
   mapActions?: Array<{ a: string; p?: string[] }>
-  /** Story/flow actions run when the slide is shown — 180 slides. */
+  /** "Global" actions (Guide / Story Counters only) — run when the slide is
+   *  shown — 180 slides. */
   actions?: Array<{ a: string; p?: string[] }>
-  /** Map actions run when the dialog closes on this slide — 9 slides. */
+  /** Same restricted "Global" vocabulary as `actions`, run when the slide closes. */
+  closeActions?: Array<{ a: string; p?: string[] }>
+  /** Same vocabulary/restriction as `mapActions`, run when the dialog closes on
+   *  this slide — 9 slides. */
   closeMapActions?: Array<{ a: string; p?: string[] }>
   /** Conditions gating whether this slide plays at all — 1544 slides. */
   dialogPlayConditions?: DialogCondition[]

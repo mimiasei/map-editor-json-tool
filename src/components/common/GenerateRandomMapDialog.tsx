@@ -51,6 +51,7 @@ import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, 
 import { Checkbox } from '@/components/ui/checkbox'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
+import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
@@ -145,6 +146,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [seedText, setSeedText] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [genProgress, setGenProgress] = useState<{ pct: number; label: string } | null>(null)
 
   const [terrainOnly, setTerrainOnly] = useState(false)
   const [previewPhase, setPreviewPhase] = useState<PreviewPhase>('off')
@@ -252,10 +254,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
   const handleGenerate = async () => {
     setGenerating(true)
+    setGenProgress({ pct: 0, label: 'Starting…' })
     try {
       const seed = seedText.trim() ? Number(seedText) : undefined
       const result = await generateRandomMapFile({
         mapName,
+        onProgress: (label, pct) => setGenProgress({ label, pct }),
         sizeX: selectedSize.sizeX,
         sizeZ: selectedSize.sizeZ,
         playerCount,
@@ -312,6 +316,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       logError(`Failed to generate random map: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
       setGenerating(false)
+      setGenProgress(null)
     }
   }
 
@@ -818,6 +823,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             scaled treasure. No zone-shape variety yet.
           </p>
         </div>
+
+        {genProgress && (
+          <div className="border-t border-border px-4 py-2.5 shrink-0">
+            <ProgressStatus value={genProgress.pct} label={genProgress.label} />
+          </div>
+        )}
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
             <div>
