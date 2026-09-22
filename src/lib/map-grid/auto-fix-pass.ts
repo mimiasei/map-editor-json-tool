@@ -12,6 +12,8 @@ import { containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { computeBoundsAutoFix } from './bounds-autofix'
 import { computeEntranceAutoFix } from './entrance-autofix'
 import { computeReachabilityAutoFix } from './reachability-validation'
+import { computeOverlapAutoFix } from './overlap-autofix'
+import { computeElevationSpikeAutoFix } from './elevation-spike-autofix'
 import { findMapValidationIssues, describeMapValidationIssue } from './map-validation'
 
 export interface PlacementAutoFixResult {
@@ -43,6 +45,11 @@ const MAX_ENTRANCE_AUTOFIX_PASSES = 5
 // round sees, and the blocking-chain BFS itself is only ever computed
 // against one static snapshot per call.
 const MAX_REACHABILITY_AUTOFIX_PASSES = 5
+
+// Same convergence rationale as the loops above — one round's relocation can
+// change what the next round's overlap scan sees (e.g. a moved item landing
+// on a different decoration's footprint).
+const MAX_OVERLAP_AUTOFIX_PASSES = 5
 
 export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalog | null): PlacementAutoFixResult {
   let fixed = container
@@ -80,9 +87,29 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
     reachabilityFixCount += reachability.deletions.length + reachability.relocations.length
   }
 
+  let overlapFixCount = 0
+  for (let pass = 0; pass < MAX_OVERLAP_AUTOFIX_PASSES; pass++) {
+    const overlapCtx = extractMapContext(containerToRawBlocks(fixed))
+    const overlap = computeOverlapAutoFix(overlapCtx, catalog)
+    if (overlap.relocations.length === 0) break
+    for (const rel of overlap.relocations) {
+      fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode }).container
+    }
+    overlapFixCount += overlap.relocations.length
+  }
+
+  const spikeCtx = extractMapContext(containerToRawBlocks(fixed))
+  const spike = computeElevationSpikeAutoFix(spikeCtx)
+  if (spike.levelChanges.length > 0) {
+    fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: spike.levelChanges }).container
+  }
+  if (spike.climbClears.length > 0) {
+    fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: spike.climbClears.map((node) => ({ node, climb: 0 as const })) }).container
+  }
+
   const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
   const warnings: string[] = []
-  const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount
+  const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount + overlapFixCount + spike.levelChanges.length
   if (fixedCount > 0) warnings.push(`Auto-fixed ${fixedCount} placement issue(s).`)
   for (const issue of remaining) {
     warnings.push(`Unresolved: ${describeMapValidationIssue(issue)}`)
