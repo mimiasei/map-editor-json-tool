@@ -27,7 +27,8 @@ import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildFuzzyObstaclePools, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
 import { randomInRange } from '@/lib/map-grid/squad-pool'
-import { tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
+import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type ZonePlacement } from './zone-population'
+import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import type { ZoneSpec } from './zone-graph'
 import type { ZoneCenter } from './zone-layout'
 
@@ -104,6 +105,14 @@ function weightedGroupSize(weights: number[], rng: () => number): number {
   return Math.round(CLUSTER_MIN_SIZE + (CLUSTER_MAX_SIZE - CLUSTER_MIN_SIZE) * t)
 }
 
+/** Same "randomize decorative rotation, never for an asymmetric footprint"
+ *  rule the H3 importer applies (scenery-clusters.ts) — real environment
+ *  scenery is marked `randomRotation: true` in the catalog, so leaving every
+ *  RMG-placed decoration at a fixed rotation 0 is an avoidable visual tell. */
+function pickRotation(sid: string, catalogById: Map<string, CatalogMapObject>, rng: () => number): number | undefined {
+  return isRotationallySymmetricFootprint(sid, catalogById) ? randomDecorRotation(rng) : undefined
+}
+
 function scatterCluster(
   seedNode: number, sizeX: number, sizeZ: number, pool: FuzzyObstaclePool,
   catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
@@ -146,7 +155,7 @@ function scatterCluster(
     const sid = pickSid()
     if (!sid) continue
     if (!tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) continue
-    placements.push({ tempId: state.nextTempId++, sid, node })
+    placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) })
     placed++
   }
   return placements
@@ -273,7 +282,7 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     const candidates = sampleFuzzyObstacles(nodeDistances, () => biome, pools, { mountainChance: 0.05, rng })
     for (const { node, sid } of candidates) {
       if (!tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) continue
-      placements.push({ tempId: state.nextTempId++, sid, node })
+      placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) })
     }
   }
 

@@ -917,7 +917,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
     group.ids.push(placement.tempId)
     group.nodes.push(placement.node)
-    group.rotations.push(0)
+    group.rotations.push(placement.rotation ?? 0)
     group.levels.push(0)
   }
   for (const placement of obstaclePlacements) decorativeIds.add(placement.tempId)
@@ -1007,7 +1007,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
 
-  const additions: { sid: string; node: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean } }[] = []
+  const additions: { sid: string; node: number; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean } }[] = []
   const additionTempIds: number[] = [] // parallel to additions — needed to remap portal temp ids to real ids below
   for (const [sid, group] of objectGroups) {
     if (sid === playerSpawnerSid) continue // already committed to the container by buildBlankMap
@@ -1015,7 +1015,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
       const tempId = group.ids[i]
       const placement = tempIdToPlacement.get(tempId)
       if (!placement) continue
-      additions.push({ sid, node: group.nodes[i], randomSquadOverrides: placement.randomSquadOverrides, randomItemOverrides: placement.randomItemOverrides, randomCityOverrides: placement.randomCityOverrides })
+      additions.push({ sid, node: group.nodes[i], rotation: placement.rotation, randomSquadOverrides: placement.randomSquadOverrides, randomItemOverrides: placement.randomItemOverrides, randomCityOverrides: placement.randomCityOverrides })
       additionTempIds.push(tempId)
     }
   }
