@@ -21,6 +21,7 @@ import { generateTerrain, type GenerateTerrainOptions, type TerrainResult } from
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { extractMapContext } from '@/lib/map-extract'
 import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
+import { yieldToUI } from '@/lib/async-utils'
 
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
@@ -68,8 +69,10 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
 
   const loaded = await readTemplateAndCatalog()
   if (!loaded) return null
-  const { container, balanceReport } = generateRandomMap(loaded.template, catalog, options)
+  const { container, balanceReport } = await generateRandomMap(loaded.template, catalog, options)
 
+  options.onProgress?.('Auto-fixing overlaps and elevation', 92)
+  await yieldToUI()
   const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog)
 
   // Whole-map reachability validation (reachability-validation.ts) —
@@ -78,6 +81,8 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // relocates the target itself as a last resort), so this final read-only
   // pass only ever reports what THAT couldn't safely resolve — a real,
   // disclosed gap in the generated map, not a pre-fix snapshot.
+  options.onProgress?.('Validating final reachability', 96)
+  await yieldToUI()
   const finalContext = extractMapContext(containerToRawBlocks(fixed))
   const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)
   // Merged-reachability's own blind spot (see reachability-validation.ts's
@@ -89,6 +94,8 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // runPlacementAutoFix.
   const isolatedPlayerStarts = findIsolatedPlayerStarts(finalContext, catalog)
 
+  options.onProgress?.('Writing map file', 98)
+  await yieldToUI()
   const gzipped = await gzipBytes(buildMapContainer(fixed))
   const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 
@@ -97,5 +104,6 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // Same reasoning as createNewMap(): a generated map has nowhere on disk
   // yet, so the dirty-dot/exit-guard must reflect that immediately.
   useMapDocumentStore.setState({ mapIsDirty: true })
+  options.onProgress?.('Done', 100)
   return { ...result, warnings: [...autoFixWarnings, ...result.warnings], balanceReport, unreachablePlacements, isolatedPlayerStarts }
 }

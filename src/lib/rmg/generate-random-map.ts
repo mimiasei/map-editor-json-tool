@@ -66,6 +66,15 @@ import { scatterProximityGuards } from './zone-guard-scatter'
 import { reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
 import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport } from './balance-analyzer'
 import { extractGameRulesPatch, parseGameTemplateJson, deriveWaterOverrides, deriveObstacleOverrides } from './rmg-template-import'
+import { yieldToUI } from '@/lib/async-utils'
+
+/** Reports a short human-readable label for the stage about to run, plus a
+ *  0-100 position on the WHOLE pipeline's own scale (including the
+ *  generate-map-file.ts steps that run after this function returns — see
+ *  that file's own use of this same callback) — not just this function's
+ *  own share of the work. Optional; a caller with no UI to update (e.g. the
+ *  balance-analyzer's own test harness) simply omits it. */
+export type RmgProgressCallback = (label: string, pct: number) => void
 
 export interface GenerateRandomMapOptions {
   sizeX: number
@@ -203,6 +212,10 @@ export interface GenerateRandomMapOptions {
    *  `GenerateTerrainOptions.gameTemplateJson`'s own doc comment (this
    *  option is threaded straight through to `generateTerrain`). */
   gameTemplateJson?: string
+  /** Optional staged-progress reporter — see `RmgProgressCallback`'s own doc
+   *  comment. Purely observational: never changes what's generated, only
+   *  when the caller finds out about it. */
+  onProgress?: RmgProgressCallback
 }
 
 /**
@@ -220,8 +233,18 @@ export interface GenerateRandomMapResult {
   balanceReport: BalanceReport
 }
 
-export function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): GenerateRandomMapResult {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson } = options
+export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, onProgress } = options
+  // Each report is immediately followed by a `yieldToUI()` — this whole
+  // pipeline is one long synchronous call stack per stage, so without an
+  // actual scheduled repaint between stages, React would batch every
+  // `setState` the callback triggers into one paint at the very end and the
+  // "progress" bar would only ever visually jump from 0 to 100.
+  const reportProgress = async (label: string, pct: number) => {
+    if (!onProgress) return
+    onProgress(label, pct)
+    await yieldToUI()
+  }
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
 
@@ -236,12 +259,14 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // terrain-only run has no objects to avoid, so it's fine (and necessary,
   // since it returns immediately after this) to have generateTerrain
   // compute water itself.
+  await reportProgress('Laying out zones and terrain', 0)
   const terrain = generateTerrain(template, catalogById, {
     sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly, computeElevation: terrainOnly,
   })
   if (terrainOnly) {
+    await reportProgress('Terrain generated', 100)
     return { container: terrain.container, balanceReport: { score: null, findings: [], summary: { zones: 0, players: 0, totalWealth: 0, wealthPerPlayer: 0, wealthSpread: 0 } } }
   }
 
@@ -272,6 +297,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     spawnerGroup.levels.push(0)
   })
 
+  await reportProgress('Populating zones with mines, dwellings and treasure', 10)
   const { placements, concreteSquads } = populateZones({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
@@ -284,6 +310,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // SEPARATE pass run right here, immediately after resources/artifacts
   // exist to guard (the user's own explicit ordering), not folded into
   // `populateZones` itself.
+  await reportProgress('Placing guards', 18)
   const playerZoneIds = graph.zones.filter((z) => z.kind === 'player').map((z) => z.id)
   const proximityGuards = scatterProximityGuards({
     sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
@@ -311,6 +338,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   const portalPlacements: ZonePlacement[] = []
   const portalAdjacency = new Map<number, number>()
 
+  await reportProgress('Adding water', 25)
   if (waterContent === 'normal') {
     const { chanceByZone, minSizeByZone } = deriveWaterOverrides(zoneLayoutByZoneId)
     const waterResult = scatterZoneWater({
@@ -389,6 +417,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // tiles as blocked; after object population, so blobs avoid overlapping
   // a real mine/dwelling/guard) — see zone-elevation.ts's own header
   // comment. Unlike water, both player AND neutral zones are eligible.
+  await reportProgress('Shaping elevation', 32)
   let climbChangesAll: { node: number; climb: 1 }[] = []
   let elevationNodesAll = new Set<number>()
   {
@@ -472,6 +501,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // second real cause the same user report raised: two independently-
   // generated roads running close together and interleaving (more likely
   // at higher player counts, with more edges sharing the same map).
+  await reportProgress('Building roads', 40)
   const roadNodes = new Set<number>()
   const roadIdByNode = new Map<number, number>()
   const roadPathsByEdge = new Map<string, number[]>()
@@ -783,6 +813,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // organically instead of a dead-straight line), then the real per-node
   // connectivity-bitmask shape codes river-shape.ts derives from actual
   // sample-map data, not a guessed texture id.
+  await reportProgress('Carving rivers', 62)
   let riverNodes = new Set<number>()
   let riverPath: number[] | null = null
   let bestDistance = -1
@@ -873,6 +904,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // other already-placed object. See zone-boundary.ts's own header comment
   // for the full design; a no-op (empty results) when `boundaryGuardStrength`
   // is `'none'` (the default).
+  await reportProgress('Fortifying zone boundaries', 68)
   const boundaryResult = fortifyZoneBoundaries({
     sizeX, sizeZ, zones: graph.zones, zoneIdByNode, zoneBiome,
     roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
@@ -884,6 +916,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // Obstacle scattering — fills whatever each zone has left over, sharing
   // the same collision state so it never overlaps a real object, a road,
   // the river, or the water.
+  await reportProgress('Scattering obstacles', 73)
   const { densityByZone, ambientPickupByZone } = deriveObstacleOverrides(zoneLayoutByZoneId)
   const obstaclePlacements = scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
@@ -896,6 +929,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // obstacles so it only fills tiles obstacles left free; every placement
   // is non-blocking, so this can never introduce a new reachability or
   // water-isolation problem for anything else.
+  await reportProgress('Adding wildlife and decoration', 78)
   const faunaPlacements = scatterZoneFauna({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, waterNodes: waterNodesAll, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state, rng,
@@ -928,6 +962,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
   // decorative either).
   for (const placement of boundaryResult.wallPlacements) decorativeIds.add(placement.tempId)
 
+  await reportProgress('Checking reachability and repairing zones', 84)
   const report = applyAccessibilityPass(
     objectGroups,
     sizeX,
@@ -1007,6 +1042,7 @@ export function generateRandomMap(template: MapContainer, catalog: GameCatalog, 
     }
   }
 
+  await reportProgress('Writing placements', 90)
   const additions: { sid: string; node: number; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean } }[] = []
   const additionTempIds: number[] = [] // parallel to additions — needed to remap portal temp ids to real ids below
   for (const [sid, group] of objectGroups) {
