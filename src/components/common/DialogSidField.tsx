@@ -53,7 +53,7 @@ export default function DialogSidField({ value, onChange, placeholder }: Props) 
   return (
     <div className="space-y-1">
       <SidCombobox value={value} onChange={onChange} refType="dialog" placeholder={placeholder} />
-      {creating ? (
+      {value ? null : creating ? (
         <div className="flex items-center gap-1">
           <Input
             autoFocus

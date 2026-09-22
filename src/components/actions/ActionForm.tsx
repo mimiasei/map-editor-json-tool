@@ -331,13 +331,15 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
               )}
               {/* "Edit dialog →" button shown next to any populated dialog-ref param */}
               {param.ref === 'dialog' && (action.p ?? [])[i] && (
-                <button
-                  className="text-xs text-primary hover:underline flex items-center gap-0.5"
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-center gap-1.5"
                   onClick={() => openDialogEditor((action.p ?? [])[i])}
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-4 w-4" />
                   Edit dialog
-                </button>
+                </Button>
               )}
             </div>
             )
