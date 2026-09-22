@@ -45,7 +45,7 @@ const DEFAULT_QUEST = (): Quest => ({
 })
 
 const DEFAULT_SUBQUEST = (): SubQuest => ({
-  sid: '1',
+  sid: '',
   activeOnStart: true,
   triggers: [],
 })
@@ -679,9 +679,12 @@ export const useScenarioStore = create<ScenarioStore>()(
 
   addQuestWithTrigger: () =>
     set((s) => {
-      const quest = DEFAULT_QUEST()
-      quest.subQuests = [{ ...DEFAULT_SUBQUEST(), triggers: [DEFAULT_TRIGGER()] }]
       const newIndex = s.scenario.quests.length
+      const quest = DEFAULT_QUEST()
+      quest.sid = `${quest.sid}_${newIndex + 1}`
+      const subQuest = { ...DEFAULT_SUBQUEST(), triggers: [DEFAULT_TRIGGER()] }
+      subQuest.sid = `${quest.sid}_sub1`
+      quest.subQuests = [subQuest]
       return {
         scenario: { ...s.scenario, quests: [...s.scenario.quests, quest] },
         isDirty: true,
@@ -749,7 +752,10 @@ export const useScenarioStore = create<ScenarioStore>()(
     set((s) => {
       const quests = [...s.scenario.quests]
       const quest = { ...quests[questIndex] }
-      quest.subQuests = [...quest.subQuests, subQuest ?? DEFAULT_SUBQUEST()]
+      let newSubQuest = DEFAULT_SUBQUEST()
+      newSubQuest.sid = `${quest.sid}_sub${quest.subQuests.length + 1}`
+      newSubQuest = subQuest ?? newSubQuest
+      quest.subQuests = [...quest.subQuests, newSubQuest]
       quests[questIndex] = quest
       return { scenario: { ...s.scenario, quests }, isDirty: true }
     }),
