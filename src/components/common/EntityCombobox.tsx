@@ -14,7 +14,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { ChevronsUpDown, LayoutGrid, SlidersHorizontal } from 'lucide-react'
+import { ChevronsUpDown, LayoutGrid, SlidersHorizontal, X } from 'lucide-react'
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
@@ -316,9 +316,25 @@ export default function EntityCombobox({ value, onChange, category, placeholder,
                 }}
                 onFocus={() => setOpen(true)}
                 placeholder={placeholder}
-                className={`h-7 text-xs ${category === 'mapObject' ? 'pr-14' : 'pr-7'}`}
+                className={`h-7 text-xs ${
+                  category === 'mapObject' ? (value ? 'pr-20' : 'pr-14') : value ? 'pr-14' : 'pr-7'
+                }`}
               />
             </PopoverAnchor>
+
+            {value && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onChange('')
+                }}
+                className={`absolute ${category === 'mapObject' ? 'right-12' : 'right-7'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}
+                title="Clear"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
 
             {/* Map object filter button */}
             {category === 'mapObject' && (
