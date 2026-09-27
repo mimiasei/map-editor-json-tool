@@ -28,6 +28,7 @@ interface CorpusEntry {
   sizeX: number
   sizeZ: number
   layers: number
+  players: number
   objectCount: number
   terrainBiomeHistogram: Record<string, number>
   waterTileCount: number
@@ -50,6 +51,7 @@ function extractOne(fileName: string): CorpusEntry | { mapFile: string; error: s
       sizeX: parsed.shape.size,
       sizeZ: parsed.shape.size,
       layers: parsed.shape.layers,
+      players: parsed.header.players.filter((p) => p.playable).length,
       objectCount: parsed.records.length,
       terrainBiomeHistogram: histogram(surface.map((t) => t.terrain)),
       waterTileCount: surface.filter((t) => t.terrain === WATER_TERRAIN_ID).length,
