@@ -53,6 +53,7 @@ import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
 import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides } from './rmg-template-import'
+import { blendZoneBordersWFC } from './terrain-wfc'
 import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
 import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
@@ -150,6 +151,12 @@ export interface GenerateTerrainOptions {
    *  imported (topology only — biome/water/decoration/population all still
    *  run as this generator's own logic on top of the imported shape). */
   gameTemplateJson?: string
+  /** Issue #224 — WFC-blend real biome variety into the `borderRadius`
+   *  tiles around each zone boundary instead of this generator's original
+   *  flat one-biome-per-zone fill (see terrain-wfc.ts's own header comment).
+   *  Defaults to false — today's original behavior for a caller that never
+   *  sets this. */
+  organicTerrainBlending?: boolean
 }
 
 export interface TerrainResult {
@@ -231,7 +238,7 @@ export function generateTerrain(
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
     hillChance = 0, valleyChance = 0, computeElevation = false,
-    enabledBiomes, gameTemplateJson,
+    enabledBiomes, gameTemplateJson, organicTerrainBlending = false,
   } = options
   const tileCount = sizeX * sizeZ
 
@@ -314,9 +321,12 @@ export function generateTerrain(
 
   let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
 
+  const perNodeBiome = organicTerrainBlending
+    ? blendZoneBordersWFC({ sizeX, sizeZ, zoneIdByNode, zoneBiome, rng })
+    : null
   const terrainChanges: { node: number; biomeId: number }[] = new Array(tileCount)
   for (let node = 0; node < tileCount; node++) {
-    terrainChanges[node] = { node, biomeId: zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0] }
+    terrainChanges[node] = { node, biomeId: perNodeBiome?.[node] ?? zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0] }
   }
   let block2 = paintTerrainTiles(container.chunks[1], terrainChanges)
 
