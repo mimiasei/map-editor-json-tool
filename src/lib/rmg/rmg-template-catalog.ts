@@ -59,10 +59,18 @@ export async function listBundledGameTemplates(catalog: GameCatalog): Promise<Bu
       const descriptionSid = typeof data.description === 'string' ? data.description.toLowerCase() : ''
       const firstVariant = data.variants?.[0]
       const playerCount = (firstVariant?.zones ?? []).filter((z) => z.mainObjects?.some((mo) => mo.type === 'Spawn')).length
+      // A real game template's own `description` is always a localization
+      // sid (resolved via rmgTemplateStrings above) — but a template mined
+      // from a real map (issue #224 M4, scripts/mine-real-zone-templates.ts)
+      // has no localization entry to reference, so it ships a literal,
+      // human-readable string there instead. Falling back to the raw field
+      // itself (rather than '') when the sid lookup misses lets that literal
+      // text show up as a real description instead of going blank forever.
+      const description = catalog.rmgTemplateStrings[descriptionSid] ?? (typeof data.description === 'string' ? data.description : '')
       infos.push({
         fileName: entry.name,
         name: typeof data.name === 'string' && data.name ? data.name : entry.name.replace(/\.rmg\.json$/, ''),
-        description: (catalog.rmgTemplateStrings[descriptionSid] ?? '').replace(/<\/?[a-z]+>/gi, ''),
+        description: description.replace(/<\/?[a-z]+>/gi, ''),
         sizeX: data.sizeX ?? 0,
         sizeZ: data.sizeZ ?? 0,
         gameMode: typeof data.gameMode === 'string' ? data.gameMode : '',

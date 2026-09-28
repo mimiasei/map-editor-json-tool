@@ -19,6 +19,23 @@ export interface ZoneSpec {
   size: number
 }
 
+// Calibration check (issue #225/#224 M2, 2026-09-28): buildZoneGraph's
+// player:neutral size ratio (3:2 = 1.5) had "zero real-data evidence" per
+// issue #224's own M2 audit — the zone-inference algorithm built for issue
+// #225 (zone-inference.ts's inferZones()) closes that gap. Run against all
+// 12 real hand-crafted OE maps (excluding one degenerate zone on
+// ascension_to_the_throne.map where a player-start's own anchor tile landed
+// on an elevation-wall tile — a known zone-inference seeding limitation, not
+// real evidence, see zone-inference.ts's header comment), the real 35
+// player-zone / 36 neutral-zone tile counts give a mean ratio of 1.449 and a
+// median ratio of 1.609 — the existing 1.5 sits inside that real range on
+// both measures. Deliberately left unchanged rather than "corrected" toward
+// either estimate alone: doing so would fabricate precision this one-
+// dimensional check doesn't actually support (the real per-map ratios
+// range from 0.7 to 4.07 map-to-map — see the calibration script's own
+// output — so a single global ratio is already an approximation of highly
+// variable real data, and 1.5 is a defensible point within it).
+
 export interface ZoneGraph {
   zones: ZoneSpec[]
   /** Undirected zone-id pairs — every required connection. */
