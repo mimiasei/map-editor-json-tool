@@ -1,11 +1,15 @@
-// ─── Raw per-tile/per-object corpus extraction for zone inference (issue #225) ─
+// ─── Raw per-tile/per-object corpus extraction for zone inference + decoration
+// calibration (issues #225, #224) ────────────────────────────────────────────
 // Sibling to extract-oe-training-corpus.ts (#224 M1a), which only ever emits
 // aggregate histograms/counts — this preserves the raw waterMap/levelsMap/
-// climbsMap arrays and every placed object's (type,id,sid,x,z) plus
-// player-start owner, the actual per-tile/per-object data zone-inference.ts's
-// inferZones() needs. Deliberately a new file, not a reshape of the existing
-// script — that aggregate-only output may still be referenced elsewhere in
-// the #224 research and shouldn't change shape underneath it.
+// climbsMap/roadsMap arrays and every placed object's (type,id,sid,x,z) plus
+// player-start owner: the per-tile/per-object data zone-inference.ts's
+// inferZones() needs (issue #225), and (roadsMap + placedObjects together)
+// what Problem 2's distance-to-road decoration-density calibration and
+// object co-occurrence calibration need (issue #224). Deliberately a new
+// file, not a reshape of the existing script — that aggregate-only output
+// may still be referenced elsewhere in the #224 research and shouldn't
+// change shape underneath it.
 //
 // Reuses map-extract.ts's buildPlacedObjects() for the real (type,id)-keyed
 // objects[]/squads[]/markers[] join rather than hand-rolling it — only
@@ -58,6 +62,9 @@ interface RawCorpusEntry {
   waterMap: number[]
   levelsMap: number[]
   climbsMap: number[]
+  /** 0 = no road — added for issue #224's decoration-density-vs-distance-
+   *  to-road calibration (Problem 2). */
+  roadsMap: number[]
   placedObjects: RawPlacedObject[]
 }
 
@@ -109,6 +116,7 @@ async function extractOne(fileName: string): Promise<RawCorpusEntry | { mapFile:
     waterMap: block2.waterMap ?? [],
     levelsMap: block2.levelsMap ?? [],
     climbsMap: block2.climbsMap ?? [],
+    roadsMap: block2.roadsMap ?? [],
     placedObjects: placed.map((p) => ({
       type: p.type,
       id: p.id,

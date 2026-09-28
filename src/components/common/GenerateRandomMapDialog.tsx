@@ -126,6 +126,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [squadDensity, setSquadDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
   const [roadWindingAmplitude, setRoadWindingAmplitude] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
   const [roadWindingWavelength, setRoadWindingWavelength] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
+  const [organicTerrainBlending, setOrganicTerrainBlending] = useState(DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending)
+  const [decorationRoadDecayStrength, setDecorationRoadDecayStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationRoadDecayStrength)
+  const [decorationCoOccurrenceStrength, setDecorationCoOccurrenceStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
   // Which of the 7 real biomes generation may use at all — a real user
   // request ("how many terrain types the RMG will use"). All on by
   // default; at least one must always stay checked (see the checkbox's
@@ -212,7 +215,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             const result = await previewTerrain({
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
               waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread,
-              enabledBiomes: enabledBiomesList, gameTemplateJson: gameTemplate?.json,
+              enabledBiomes: enabledBiomesList, gameTemplateJson: gameTemplate?.json, organicTerrainBlending,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true, computeElevation: true,
             })
             if (!result) return // not Tauri
@@ -236,7 +239,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed, organicTerrainBlending])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -280,6 +283,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         squadDensity,
         roadWindingAmplitude,
         roadWindingWavelength,
+        organicTerrainBlending,
+        decorationRoadDecayStrength,
+        decorationCoOccurrenceStrength,
         terrainOnly,
         enabledBiomes: enabledBiomesList,
         gameTemplateJson: gameTemplate?.json,
@@ -357,6 +363,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       squadDensity,
       roadWindingAmplitude,
       roadWindingWavelength,
+      organicTerrainBlending,
+      decorationRoadDecayStrength,
+      decorationCoOccurrenceStrength,
       enabledBiomes: enabledBiomesList,
       // No dedicated UI control yet for these (Phase 1's own "start small"
       // scope) — saved/loaded at their template defaults.
@@ -398,6 +407,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setSquadDensity(template.squadDensity)
       setRoadWindingAmplitude(template.roadWindingAmplitude)
       setRoadWindingWavelength(template.roadWindingWavelength)
+      setOrganicTerrainBlending(template.organicTerrainBlending)
+      setDecorationRoadDecayStrength(template.decorationRoadDecayStrength)
+      setDecorationCoOccurrenceStrength(template.decorationCoOccurrenceStrength)
       setEnabledBiomes(Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, template.enabledBiomes.includes(b)])) as Record<BiomeId, boolean>)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
@@ -435,6 +447,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setSquadDensity(DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
       setRoadWindingAmplitude(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
       setRoadWindingWavelength(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
+      setOrganicTerrainBlending(DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending)
+      setDecorationRoadDecayStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationRoadDecayStrength)
+      setDecorationCoOccurrenceStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
   }
 
   return (
@@ -680,6 +695,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 <Slider min={0.5} max={1.8} step={0.01} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
               </div>
 
+              <div className="flex items-center justify-between">
+                <Label htmlFor="rmg-organic-blending" className="text-xs" title="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill. Only tiles near a zone boundary are affected — zone interiors are unchanged.">
+                  Organic terrain blending
+                </Label>
+                <Switch id="rmg-organic-blending" checked={organicTerrainBlending} onCheckedChange={setOrganicTerrainBlending} disabled={terrainLocked} />
+              </div>
+
             </div>
           )}
 
@@ -743,6 +765,26 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                         <span className="text-xs text-muted-foreground">{pctLabel(mountainDensity)}</span>
                     </div>
                     <Slider min={0} max={0.8} step={0.02} value={[mountainDensity]} onValueChange={([v]) => setMountainDensity(v)} />
+                </div>
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs" title="How strongly decoration thins out near roads and thickens in unused pockets — a real pattern measured directly against 12 hand-crafted maps (real density near a road is ~0.78x the map's own average, rising to ~1.29x far from any road). 0 = today's flat density, no road-distance effect at all.">
+                            Decoration road-distance effect
+                        </Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(decorationRoadDecayStrength)}</span>
+                    </div>
+                    <Slider min={0} max={1} step={0.05} value={[decorationRoadDecayStrength]} onValueChange={([v]) => setDecorationRoadDecayStrength(v)} />
+                </div>
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs" title="How strongly nearby decoration influences what gets placed next to it — real hand-crafted maps show ponds cluster with more pond pieces, and mountains real-avoid pond pieces, measured directly against the same 12-map survey. 0 = today's independent placement, no co-occurrence effect at all.">
+                            Decoration clustering (co-occurrence)
+                        </Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(decorationCoOccurrenceStrength)}</span>
+                    </div>
+                    <Slider min={0} max={1} step={0.05} value={[decorationCoOccurrenceStrength]} onValueChange={([v]) => setDecorationCoOccurrenceStrength(v)} />
                 </div>
 
               <div className="space-y-1.5">

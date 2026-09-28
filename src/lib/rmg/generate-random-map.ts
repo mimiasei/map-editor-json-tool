@@ -212,6 +212,21 @@ export interface GenerateRandomMapOptions {
    *  `GenerateTerrainOptions.gameTemplateJson`'s own doc comment (this
    *  option is threaded straight through to `generateTerrain`). */
   gameTemplateJson?: string
+  /** Scoped WFC organic terrain-border blending (issue #224 M3) — see
+   *  `GenerateTerrainOptions.organicTerrainBlending`'s own doc comment (this
+   *  option is threaded straight through to `generateTerrain`). Defaults to
+   *  false — no behavior change unless explicitly enabled. */
+  organicTerrainBlending?: boolean
+  /** 0 (default) - 1: how strongly real distance-to-road decoration-density
+   *  evidence applies (issue #224 "Problem 2" — see decoration-calibration.ts
+   *  and zone-decoration.ts's own `ScatterObstaclesOptions.roadDecayStrength`
+   *  doc comment). 0 = today's exact behavior, no road-distance effect. */
+  decorationRoadDecayStrength?: number
+  /** 0 (default) - 1: how strongly real object-category co-occurrence
+   *  evidence applies (issue #224 "Problem 2" — see decoration-calibration.ts
+   *  and zone-decoration.ts's own `ScatterObstaclesOptions.coOccurrenceStrength`
+   *  doc comment). 0 = today's exact behavior, no co-occurrence effect. */
+  decorationCoOccurrenceStrength?: number
   /** Optional staged-progress reporter — see `RmgProgressCallback`'s own doc
    *  comment. Purely observational: never changes what's generated, only
    *  when the caller finds out about it. */
@@ -234,7 +249,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = false, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, onProgress } = options
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
   // actual scheduled repaint between stages, React would batch every
@@ -263,7 +278,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const terrain = generateTerrain(template, catalogById, {
     sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
-    computeWater: terrainOnly, computeElevation: terrainOnly,
+    computeWater: terrainOnly, computeElevation: terrainOnly, organicTerrainBlending,
   })
   if (terrainOnly) {
     await reportProgress('Terrain generated', 100)
@@ -918,10 +933,18 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // the river, or the water.
   await reportProgress('Scattering obstacles', 73)
   const { densityByZone, ambientPickupByZone } = deriveObstacleOverrides(zoneLayoutByZoneId)
+  // Real distance-to-road field (issue #224) — only computed when actually
+  // needed; `roadNodes` is already fully populated and painted by this
+  // point (road-painting stage above), same source zone-decoration.ts's own
+  // doc comment expects.
+  const roadDistanceField = decorationRoadDecayStrength > 0 && roadNodes.size > 0
+    ? computeRoadDistanceField(roadNodes, sizeX, sizeZ, 30)
+    : undefined
   const obstaclePlacements = scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity, densityByZone, ambientPickupByZone,
+    roadDistanceField, roadDecayStrength: decorationRoadDecayStrength, coOccurrenceStrength: decorationCoOccurrenceStrength,
   })
 
   // Ambient animal/fx decoration (issue #210 follow-up) — real-map-
