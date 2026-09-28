@@ -1,0 +1,36 @@
+{
+  "name": "Real: all cats go to heaven",
+  "gameMode": "Classic",
+  "description": "Zone graph mined from the real hand-crafted map \"all cats go to heaven\" (issue #225 zone inference, issue #224 M4) — 2 zones (1 players), 1 connections.",
+  "sizeX": 48,
+  "sizeZ": 48,
+  "variants": [
+    {
+      "zones": [
+        {
+          "name": "Zone0",
+          "size": 4.07,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player1"
+            }
+          ]
+        },
+        {
+          "name": "Zone1",
+          "size": 1
+        }
+      ],
+      "connections": [
+        {
+          "name": "Conn0",
+          "from": "Zone0",
+          "to": "Zone1",
+          "connectionType": "Direct",
+          "road": true
+        }
+      ]
+    }
+  ]
+}

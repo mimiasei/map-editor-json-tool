@@ -1,0 +1,64 @@
+{
+  "name": "Real: Fun and Graves",
+  "gameMode": "Classic",
+  "description": "Zone graph mined from the real hand-crafted map \"Fun and Graves\" (issue #225 zone inference, issue #224 M4) — 4 zones (2 players), 3 connections.",
+  "sizeX": 64,
+  "sizeZ": 48,
+  "variants": [
+    {
+      "zones": [
+        {
+          "name": "Zone0",
+          "size": 3.7,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player1"
+            }
+          ]
+        },
+        {
+          "name": "Zone1",
+          "size": 1,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player2"
+            }
+          ]
+        },
+        {
+          "name": "Zone2",
+          "size": 2.88
+        },
+        {
+          "name": "Zone3",
+          "size": 1.16
+        }
+      ],
+      "connections": [
+        {
+          "name": "Conn0",
+          "from": "Zone0",
+          "to": "Zone1",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn1",
+          "from": "Zone0",
+          "to": "Zone3",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn2",
+          "from": "Zone0",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        }
+      ]
+    }
+  ]
+}

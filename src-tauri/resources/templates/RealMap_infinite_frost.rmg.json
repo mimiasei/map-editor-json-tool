@@ -1,0 +1,106 @@
+{
+  "name": "Real: infinite frost",
+  "gameMode": "Classic",
+  "description": "Zone graph mined from the real hand-crafted map \"infinite frost\" (issue #225 zone inference, issue #224 M4) — 6 zones (3 players), 7 connections.",
+  "sizeX": 64,
+  "sizeZ": 64,
+  "variants": [
+    {
+      "zones": [
+        {
+          "name": "Zone0",
+          "size": 4.05,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player1"
+            }
+          ]
+        },
+        {
+          "name": "Zone1",
+          "size": 3.99,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player2"
+            }
+          ]
+        },
+        {
+          "name": "Zone2",
+          "size": 1.32,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player3"
+            }
+          ]
+        },
+        {
+          "name": "Zone3",
+          "size": 1
+        },
+        {
+          "name": "Zone4",
+          "size": 2.6
+        },
+        {
+          "name": "Zone5",
+          "size": 3.38
+        }
+      ],
+      "connections": [
+        {
+          "name": "Conn0",
+          "from": "Zone4",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn1",
+          "from": "Zone3",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn2",
+          "from": "Zone0",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn3",
+          "from": "Zone0",
+          "to": "Zone4",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn4",
+          "from": "Zone1",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn5",
+          "from": "Zone0",
+          "to": "Zone1",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn6",
+          "from": "Zone0",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        }
+      ]
+    }
+  ]
+}

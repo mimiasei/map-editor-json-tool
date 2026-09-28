@@ -1,0 +1,113 @@
+{
+  "name": "Real: Thirst for Power",
+  "gameMode": "Classic",
+  "description": "Zone graph mined from the real hand-crafted map \"Thirst for Power\" (issue #225 zone inference, issue #224 M4) — 6 zones (3 players), 8 connections.",
+  "sizeX": 64,
+  "sizeZ": 64,
+  "variants": [
+    {
+      "zones": [
+        {
+          "name": "Zone0",
+          "size": 2.16,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player1"
+            }
+          ]
+        },
+        {
+          "name": "Zone1",
+          "size": 4.66,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player2"
+            }
+          ]
+        },
+        {
+          "name": "Zone2",
+          "size": 5.21,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player3"
+            }
+          ]
+        },
+        {
+          "name": "Zone3",
+          "size": 2.56
+        },
+        {
+          "name": "Zone4",
+          "size": 1.56
+        },
+        {
+          "name": "Zone5",
+          "size": 1
+        }
+      ],
+      "connections": [
+        {
+          "name": "Conn0",
+          "from": "Zone1",
+          "to": "Zone4",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn1",
+          "from": "Zone2",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn2",
+          "from": "Zone2",
+          "to": "Zone4",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn3",
+          "from": "Zone1",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn4",
+          "from": "Zone2",
+          "to": "Zone3",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn5",
+          "from": "Zone0",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn6",
+          "from": "Zone0",
+          "to": "Zone1",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn7",
+          "from": "Zone0",
+          "to": "Zone3",
+          "connectionType": "Direct",
+          "road": true
+        }
+      ]
+    }
+  ]
+}
