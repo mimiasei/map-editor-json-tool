@@ -1,8 +1,10 @@
 // ─── Real-data calibration: decoration density-vs-road-distance + object
 // co-occurrence (issue #224, "Problem 2: Aesthetic detailing") ─────────────
-// Measures two real statistics directly against the 12-map OE corpus
-// (plans/training-data/oe-corpus-raw.json, via extract-oe-corpus-raw.ts —
-// needs its roadsMap field, added for this purpose) and the real Core.zip
+// Measures two real statistics directly against the real hand-crafted OE
+// corpus (plans/training-data/oe-corpus-raw.json, via extract-oe-corpus-raw.ts —
+// needs its roadsMap field, added for this purpose; corpus size grows over
+// time as more real maps are added — re-run this script and update
+// decoration-calibration.ts's cited numbers whenever it does) and the real Core.zip
 // catalog's `environments` category, classified into obstacles/clutter/
 // mountains/pools exactly as `buildFuzzyObstaclePools` (fuzzy-obstacle.ts)
 // already does — reused here rather than re-deriving sid classification
@@ -14,7 +16,7 @@
 //    normalized by the count of dry (non-water) tiles in each bucket to get
 //    a real density-per-eligible-tile curve, then expressed relative to
 //    each map's own overall density (so per-map scale differences cancel
-//    before pooling across all 12 maps).
+//    before pooling across all real maps in the corpus).
 // 2. Co-occurrence: for every (category A, category B) pair, the real
 //    fraction of A-instances with a B-instance within CLUSTER_RADIUS(3)
 //    tiles (zone-decoration.ts's own cluster radius), divided by the
@@ -207,7 +209,7 @@ async function main() {
     console.log(`  [${DIST_BUCKETS[i][0]}-${DIST_BUCKETS[i][1]}]`, 'median=', median.toFixed(3), 'n=', vals.length)
   }
 
-  console.log('\n=== Co-occurrence multipliers (observed / baseline), pooled across all 12 maps ===')
+  console.log('\n=== Co-occurrence multipliers (observed / baseline), pooled across all real maps ===')
   console.log('A\\B'.padEnd(12), ...CATEGORIES.map((c) => c.padEnd(12)))
   // Average per-tile density per category across maps (simple mean of
   // per-map densities — each map contributes one density sample).
