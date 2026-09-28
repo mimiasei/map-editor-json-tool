@@ -60,8 +60,8 @@ async function main() {
     }
   }
 
-  console.log('// Derived from scripts/derive-terrain-adjacency-stats.ts against all 12 real')
-  console.log('// OE maps under maps/ (excl. TheQuest/Stormlight) — see issue #224.')
+  console.log('// Derived from scripts/derive-terrain-adjacency-stats.ts against every real')
+  console.log('// OE map under maps/ (excl. TheQuest/Stormlight) — see issue #224.')
   console.log('// TILE_ADJACENCY_WEIGHTS[a][b] = observed 4-directional adjacency count,')
   console.log('// biome a next to biome b, symmetrized. Missing entries = never observed')
   console.log('// adjacent in any real map (hard-excluded by the WFC pass, not just low-weight).')

@@ -30,6 +30,7 @@ import {
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import { collectArtifactSids, pickInteractableSid, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
+import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
 
@@ -50,6 +51,24 @@ function dwellingFactionToken(biome: BiomeId): string {
 /** All 6 real resource mine sids (Core/DB/map/objects/4_interactables.json)
  *  — cycled through neutral zones for variety. */
 const MINE_SIDS = ['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury']
+
+/** Sand's own biome id (terrain-colors.ts's BiomeId). */
+const SAND_BIOME_ID: BiomeId = 2
+
+/** Real enrichment factor (issue #230, scripts/analyze-map-aesthetics.ts,
+ *  18 maps): of every real `mine_gold` placement, 28% (53/190) sit on a
+ *  Sand tile, vs. Sand's own ~13.9% share of total real map area (164848 of
+ *  1,188,182 tiles, from the same script's biome-adjacency self-counts) —
+ *  gold mines are ~2.02x as concentrated in Sand as land-area alone would
+ *  predict (28.0/13.9), the same observed/expected-under-uniform-null shape
+ *  this codebase already uses for decoration co-occurrence
+ *  (decoration-calibration.ts). No other mine type showed a comparable
+ *  biome enrichment in that analysis. */
+const SAND_GOLD_MINE_ENRICHMENT = 2.02
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value))
+}
 
 /** Player zones only ever cycle through these 6 real faction biomes — never
  *  Sand (biome 2), which CLAUDE.md confirms no faction natively occupies, so
@@ -348,6 +367,14 @@ export interface PopulateZonesOptions {
    *  forcing extra placements or overriding the existing count/budget/cap
    *  logic (see `placeTreasure`'s own doc comment). */
   mandatoryContentSidsByZoneId?: Map<number, string[]>
+  /** 0 (default) = today's exact behavior (a flat round-robin cycle through
+   *  MINE_SIDS with no biome awareness); 1 = the full real calibrated
+   *  Sand-biome gold-mine enrichment (see SAND_GOLD_MINE_ENRICHMENT's own
+   *  doc comment, issue #230); values in between blend toward it. Never
+   *  changes the round-robin's own advancing state — only which sid a
+   *  Sand-biome neutral zone's turn resolves to, so every OTHER zone's mine
+   *  assignment is completely unaffected. */
+  mineGoldBiomeBiasStrength?: number
 }
 
 /** Scatter each zone's own objects (see this file's header comment for what
@@ -367,6 +394,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
+    mineGoldBiomeBiasStrength = 0,
   } = options
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
@@ -600,7 +628,16 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       const mandatorySids = mandatoryContentSidsByZoneId?.get(zone.id)
       const preferredTreasureSids = mandatorySids && mandatorySids.length > 0 ? new Set(mandatorySids) : undefined
 
-      const mineSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
+      // Sand-biome gold-mine enrichment (issue #230) — an extra override
+      // roll ON TOP OF the round-robin pick below, only consumed when
+      // biome is Sand AND the strength option is active, so every non-Sand
+      // zone (and every zone at all when the option is 0/omitted) takes
+      // the exact same rng()-call path as before this feature existed.
+      const roundRobinSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
+      const goldChance = clamp01((1 / MINE_SIDS.length) * scaleMultiplier(SAND_GOLD_MINE_ENRICHMENT, mineGoldBiomeBiasStrength))
+      const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance
+        ? 'mine_gold'
+        : roundRobinSid
       place(mineSid, tiles)
       mineIndex += 1
 

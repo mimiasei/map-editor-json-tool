@@ -127,6 +127,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [organicTerrainBlending, setOrganicTerrainBlending] = useState(DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending)
   const [decorationRoadDecayStrength, setDecorationRoadDecayStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationRoadDecayStrength)
   const [decorationCoOccurrenceStrength, setDecorationCoOccurrenceStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
+  const [decorationElevationDecayStrength, setDecorationElevationDecayStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength)
+  const [mineGoldBiomeBiasStrength, setMineGoldBiomeBiasStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.mineGoldBiomeBiasStrength)
   // Which of the 7 real biomes generation may use at all — a real user
   // request ("how many terrain types the RMG will use"). All on by
   // default; at least one must always stay checked (see the checkbox's
@@ -284,6 +286,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         organicTerrainBlending,
         decorationRoadDecayStrength,
         decorationCoOccurrenceStrength,
+        decorationElevationDecayStrength,
+        mineGoldBiomeBiasStrength,
         terrainOnly,
         enabledBiomes: enabledBiomesList,
         gameTemplateJson: gameTemplate?.json,
@@ -364,6 +368,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       organicTerrainBlending,
       decorationRoadDecayStrength,
       decorationCoOccurrenceStrength,
+      decorationElevationDecayStrength,
+      mineGoldBiomeBiasStrength,
       enabledBiomes: enabledBiomesList,
       // No dedicated UI control yet for these (Phase 1's own "start small"
       // scope) — saved/loaded at their template defaults.
@@ -408,6 +414,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setOrganicTerrainBlending(template.organicTerrainBlending)
       setDecorationRoadDecayStrength(template.decorationRoadDecayStrength)
       setDecorationCoOccurrenceStrength(template.decorationCoOccurrenceStrength)
+      setDecorationElevationDecayStrength(template.decorationElevationDecayStrength)
+      setMineGoldBiomeBiasStrength(template.mineGoldBiomeBiasStrength)
       setEnabledBiomes(Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, template.enabledBiomes.includes(b)])) as Record<BiomeId, boolean>)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setAdvancedOpen(true)
@@ -448,6 +456,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setOrganicTerrainBlending(DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending)
       setDecorationRoadDecayStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationRoadDecayStrength)
       setDecorationCoOccurrenceStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
+      setDecorationElevationDecayStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength)
+      setMineGoldBiomeBiasStrength(DEFAULT_TEMPLATE_OVERRIDES.mineGoldBiomeBiasStrength)
   }
 
   if (!open) return null
@@ -800,6 +810,26 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                         <span className="text-xs text-muted-foreground">{pctLabel(decorationCoOccurrenceStrength)}</span>
                     </div>
                     <Slider min={0} max={1} step={0.05} value={[decorationCoOccurrenceStrength]} onValueChange={([v]) => setDecorationCoOccurrenceStrength(v)} />
+                </div>
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs" title="How strongly decoration density follows real elevation/climb evidence — real hand-crafted maps show valley tiles decorated ~3.19x denser than flat/hill tiles, and ramp-adjacent tiles decorated ~0.66x as densely as tiles farther away, measured directly against an 18-map survey. 0 = today's flat density, no elevation/climb effect at all.">
+                            Decoration elevation/climb effect
+                        </Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(decorationElevationDecayStrength)}</span>
+                    </div>
+                    <Slider min={0} max={1} step={0.05} value={[decorationElevationDecayStrength]} onValueChange={([v]) => setDecorationElevationDecayStrength(v)} />
+                </div>
+
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs" title="How strongly neutral-zone gold mines favor Sand-biome zones — real hand-crafted maps place gold mines on Sand tiles ~2.02x more often than Sand's own share of total map area would predict, measured directly against an 18-map survey. 0 = today's flat biome-blind mine rotation, no bias at all.">
+                            Gold mine Sand-biome bias
+                        </Label>
+                        <span className="text-xs text-muted-foreground">{pctLabel(mineGoldBiomeBiasStrength)}</span>
+                    </div>
+                    <Slider min={0} max={1} step={0.05} value={[mineGoldBiomeBiasStrength]} onValueChange={([v]) => setMineGoldBiomeBiasStrength(v)} />
                 </div>
 
               <div className="space-y-1.5">

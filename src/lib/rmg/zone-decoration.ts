@@ -23,13 +23,16 @@
 // added on top, so total coverage stays in the same ~15-22% range this
 // session's prior real-map calibration already established.
 //
-// Two more real-data-calibrated features (issue #224, "Problem 2: Aesthetic
-// detailing"), both opt-in via a 0-1 strength (0 = today's exact behavior):
-// distance-to-road density decay (`roadDecayStrength` — real maps show
-// decoration thins near roads, thickens away from them) and object-category
-// co-occurrence (`coOccurrenceStrength` — real maps show some category
-// pairs cluster more, or less, than chance alone would predict). See
-// decoration-calibration.ts for the real evidence both are built from.
+// Three more real-data-calibrated features, all opt-in via a 0-1 strength
+// (0 = today's exact behavior): distance-to-road density decay
+// (`roadDecayStrength` — issue #224, real maps show decoration thins near
+// roads, thickens away from them), object-category co-occurrence
+// (`coOccurrenceStrength` — issue #224, real maps show some category pairs
+// cluster more, or less, than chance alone would predict), and elevation/
+// climb-proximity density decay (`elevationDecayStrength` — issue #230,
+// real maps show valleys get denser decoration and ramp-adjacent tiles get
+// sparser). See decoration-calibration.ts for the real evidence all three
+// are built from.
 
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -41,6 +44,7 @@ import type { ZoneSpec } from './zone-graph'
 import type { ZoneCenter } from './zone-layout'
 import {
   type DecorationCategory, roadDistanceDensityMultiplier, coOccurrenceBias, scaleMultiplier,
+  elevationTierDensityMultiplier, climbProximityDensityMultiplier,
 } from './decoration-calibration'
 
 /** Base chance of an independent-phase (non-cluster) placement being
@@ -329,6 +333,35 @@ export interface ScatterObstaclesOptions {
    *  1 = the full real calibrated category co-occurrence table
    *  (decoration-calibration.ts); values in between blend toward it. */
   coOccurrenceStrength?: number
+  /** Per-tile elevation tier (-1/0/1), same shape generate-terrain.ts
+   *  already produces — needed for `elevationDecayStrength` below. */
+  levelsMap?: number[]
+  /** Per-tile climb/ramp marker (0 = none), same shape generate-terrain.ts
+   *  already produces — needed for `elevationDecayStrength` below. */
+  climbsMap?: number[]
+  /** 0 (default) = no elevation/climb-proximity effect at all (today's
+   *  exact behavior); 1 = the full real calibrated verticality curve
+   *  (decoration-calibration.ts, issue #230 — valleys get denser
+   *  decoration, climb/ramp-adjacent tiles get sparser); values in between
+   *  blend toward it. No effect if `levelsMap` is omitted. */
+  elevationDecayStrength?: number
+}
+
+/** Whether any of `node`'s own tile or its 4/8-neighbors within `radius` is
+ *  a climb/ramp tile — issue #230's real "decoration avoids ramps" finding
+ *  was measured at radius 1, so this defaults to matching that exactly. */
+function isNearClimb(node: number, sizeX: number, sizeZ: number, climbsMap: number[], radius = 1): boolean {
+  const x = node % sizeX
+  const z = Math.floor(node / sizeX)
+  for (let dz = -radius; dz <= radius; dz++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      if ((climbsMap[nz * sizeX + nx] ?? 0) > 0) return true
+    }
+  }
+  return false
 }
 
 /** Every candidate node's distance from its own zone's center, normalized
@@ -353,6 +386,7 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
   const {
     sizeX, sizeZ, zones, centers, tilesByZone, zoneBiome, catalogById, mapObjects, excludedNodes, state, rng,
     density = 0.35, densityByZone, ambientPickupByZone, roadDistanceField, roadDecayStrength = 0, coOccurrenceStrength = 0,
+    levelsMap, climbsMap, elevationDecayStrength = 0,
   } = options
   const pools = buildFuzzyObstaclePools(mapObjects)
   const placements: ZonePlacement[] = []
@@ -378,14 +412,24 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     const zoneDensity = densityByZone?.get(zone.id) ?? (zone.kind === 'player' ? density * 0.6 : density)
     const freeTiles = tiles.filter((node) => !excludedNodes.has(node))
     if (freeTiles.length === 0) continue
-    // Real distance-to-road density decay (issue #224) — applied as a
-    // per-tile multiplier on the SAME density roll every tile already went
-    // through, so it's still exactly one rng() call per tile either way
-    // (preserves the existing generator's seeded-RNG-call-count contract).
-    // Omitted/zero strength -> identical to the original flat roll.
+    // Real distance-to-road density decay (issue #224) and elevation/climb-
+    // proximity density decay (issue #230) — both applied as per-tile
+    // multipliers on the SAME density roll every tile already went through,
+    // so it's still exactly one rng() call per tile regardless of how many
+    // of these are active (preserves the existing generator's seeded-RNG-
+    // call-count contract). Every multiplier defaults to 1 (no effect) when
+    // its own strength is 0 or its input data is omitted, so this is
+    // byte-for-byte identical to the original flat roll unless a caller
+    // opts in.
     let candidateTiles = freeTiles.filter((node) => {
-      if (!roadDistanceField || roadDecayStrength <= 0) return rng() < zoneDensity
-      const multiplier = scaleMultiplier(roadDistanceDensityMultiplier(roadDistanceField[node] ?? Infinity), roadDecayStrength)
+      let multiplier = 1
+      if (roadDistanceField && roadDecayStrength > 0) {
+        multiplier *= scaleMultiplier(roadDistanceDensityMultiplier(roadDistanceField[node] ?? Infinity), roadDecayStrength)
+      }
+      if (levelsMap && elevationDecayStrength > 0) {
+        multiplier *= scaleMultiplier(elevationTierDensityMultiplier(levelsMap[node] ?? 0), elevationDecayStrength)
+        if (climbsMap) multiplier *= scaleMultiplier(climbProximityDensityMultiplier(isNearClimb(node, sizeX, sizeZ, climbsMap)), elevationDecayStrength)
+      }
       return rng() < zoneDensity * multiplier
     })
     // Guaranteed floor — a real user report: islands mode (especially with
