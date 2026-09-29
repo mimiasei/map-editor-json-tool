@@ -68,6 +68,21 @@ interface ViewBridgeStore {
   openMapGrid: () => void
   closeMapGrid: () => void
 
+  /** Generate Random Map — a full-pane view swapped in the same way as Map
+   *  Grid (issue #232), not a floating dialog. */
+  rmgOpen: boolean
+  openRmg: () => void
+  closeRmg: () => void
+
+  /** One-shot: Generate Random Map's own warnings, reported once generation
+   *  finishes, consumed by Toolbar's existing import-feedback dialog (the
+   *  same "Import Issues" surface New Map/Import H3/Open already use) —
+   *  needed because the RMG pane now renders from AppShell, not Toolbar,
+   *  same "pending X" one-shot shape as pendingDatabaseFocus above. */
+  pendingGeneratedWarnings: string[] | null
+  reportGeneratedWarnings: (warnings: string[]) => void
+  clearGeneratedWarnings: () => void
+
   pendingPick: PendingPick | null
   requestPick: (pick: PendingPick) => void
   resolvePick: (value: string) => void
@@ -94,6 +109,14 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   mapGridOpen: false,
   openMapGrid: () => set({ mapGridOpen: true }),
   closeMapGrid: () => set({ mapGridOpen: false }),
+
+  rmgOpen: false,
+  openRmg: () => set({ rmgOpen: true }),
+  closeRmg: () => set({ rmgOpen: false }),
+
+  pendingGeneratedWarnings: null,
+  reportGeneratedWarnings: (warnings) => set({ pendingGeneratedWarnings: warnings }),
+  clearGeneratedWarnings: () => set({ pendingGeneratedWarnings: null }),
 
   pendingPick: null,
   requestPick: (pick) => set({ pendingPick: pick, mapGridOpen: true }),
