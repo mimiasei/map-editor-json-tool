@@ -32,6 +32,15 @@
 //    also strengthened from 0.57). Kept as measured rather than rounded
 //    toward "no effect" — a weak real signal (e.g. clutter:mountains =
 //    0.61) is still real evidence, not noise to discard.
+//
+// 3. Verticality (issue #230, scripts/analyze-map-aesthetics.ts, 18 maps,
+//    dry tiles only): decoration density by level tier, relative to the
+//    corpus's own overall density — tier -1 (valley) is REAL-MEASURED at
+//    3.19x, tier 0 (flat) at 0.98x, tier 1 (hill) at 0.93x. Separately,
+//    tiles within radius 1 of a climb/ramp are decorated at 0.66x the rate
+//    of tiles farther away (0.268 vs. 0.406 density) — the same "keep
+//    pathways clear" pattern already confirmed for roads above, now also
+//    confirmed around ramps.
 
 export type DecorationCategory = 'obstacles' | 'clutter' | 'mountains' | 'pools'
 export const DECORATION_CATEGORIES: DecorationCategory[] = ['obstacles', 'clutter', 'mountains', 'pools']
@@ -60,6 +69,24 @@ export function roadDistanceDensityMultiplier(distanceToRoad: number): number {
     if (distanceToRoad <= bucket.maxDist) return bucket.multiplier
   }
   return ROAD_DISTANCE_DENSITY_BUCKETS[ROAD_DISTANCE_DENSITY_BUCKETS.length - 1].multiplier
+}
+
+const ELEVATION_TIER_DENSITY_MULTIPLIER: Record<number, number> = { [-1]: 3.19, 0: 0.98, 1: 0.93 }
+
+/** Real decoration-density multiplier for a tile's own elevation tier
+ *  (-1/0/1) — see this file's header comment (point 3) for the real
+ *  evidence. Unknown tiers (shouldn't occur — levelsMap is always -1/0/1)
+ *  fall back to 1 (no effect), matching this file's other multipliers'
+ *  "unknown input changes nothing" convention. */
+export function elevationTierDensityMultiplier(tier: number): number {
+  return ELEVATION_TIER_DENSITY_MULTIPLIER[tier] ?? 1
+}
+
+/** Real decoration-density multiplier for a tile within radius 1 of a
+ *  climb/ramp tile vs. one that isn't — see this file's header comment
+ *  (point 3) for the real evidence. */
+export function climbProximityDensityMultiplier(nearClimb: boolean): number {
+  return nearClimb ? 0.66 : 1
 }
 
 /** `CO_OCCURRENCE_MULTIPLIER[A][B]` = real observed/baseline ratio of a

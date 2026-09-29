@@ -1,15 +1,17 @@
 // ─── Raw per-tile/per-object corpus extraction for zone inference + decoration
-// calibration (issues #225, #224) ────────────────────────────────────────────
+// calibration (issues #225, #224, #230) ─────────────────────────────────────
 // Sibling to extract-oe-training-corpus.ts (#224 M1a), which only ever emits
-// aggregate histograms/counts — this preserves the raw waterMap/levelsMap/
-// climbsMap/roadsMap arrays and every placed object's (type,id,sid,x,z) plus
-// player-start owner: the per-tile/per-object data zone-inference.ts's
-// inferZones() needs (issue #225), and (roadsMap + placedObjects together)
-// what Problem 2's distance-to-road decoration-density calibration and
-// object co-occurrence calibration need (issue #224). Deliberately a new
-// file, not a reshape of the existing script — that aggregate-only output
-// may still be referenced elsewhere in the #224 research and shouldn't
-// change shape underneath it.
+// aggregate histograms/counts — this preserves the raw tilesMap/waterMap/
+// levelsMap/climbsMap/roadsMap arrays and every placed object's
+// (type,id,sid,x,z) plus player-start owner: the per-tile/per-object data
+// zone-inference.ts's inferZones() needs (issue #225), what Problem 2's
+// distance-to-road decoration-density + object co-occurrence calibration
+// needs (issue #224, roadsMap + placedObjects), and what issue #230's
+// spatial/aesthetic placement-pattern analysis needs (tilesMap, for biome
+// transitions/forbidden-combo/mine-vs-biome cross-referencing). Deliberately
+// a new file, not a reshape of the existing script — that aggregate-only
+// output may still be referenced elsewhere in the #224 research and
+// shouldn't change shape underneath it.
 //
 // Reuses map-extract.ts's buildPlacedObjects() for the real (type,id)-keyed
 // objects[]/squads[]/markers[] join rather than hand-rolling it — only
@@ -59,6 +61,10 @@ interface RawCorpusEntry {
   mapFile: string
   sizeX: number
   sizeZ: number
+  /** Biome id 1-7 per tile — added for issue #230's aesthetic/spatial
+   *  placement-pattern analysis (biome transitions, forbidden combos,
+   *  mine/decoration-vs-biome cross-referencing). */
+  tilesMap: number[]
   waterMap: number[]
   levelsMap: number[]
   climbsMap: number[]
@@ -113,6 +119,7 @@ async function extractOne(fileName: string): Promise<RawCorpusEntry | { mapFile:
     mapFile: fileName,
     sizeX,
     sizeZ,
+    tilesMap: block2.tilesMap ?? [],
     waterMap: block2.waterMap ?? [],
     levelsMap: block2.levelsMap ?? [],
     climbsMap: block2.climbsMap ?? [],

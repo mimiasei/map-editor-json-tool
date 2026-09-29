@@ -54,16 +54,22 @@ const BIOME_ID_TO_CATALOG_BIOME: Record<BiomeId, string> = {
 }
 const ALL_BIOME_IDS: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 
-/** Which biomes look visually plausible mixed together — an editor-UI
- *  judgment call (there's no game data for this, unlike everything else in
- *  this file), not confirmed against anything. User-requested: Grass(1)/
- *  Sand(2)/Autumn(5)/Dirt(7) are a mutually-compatible "temperate" cluster
- *  (plains, desert-fringe, harvest colors, and bare earth all read as
- *  plausible neighbors); Deathland(3)/Snow(4)/Lava(6) are each visually
- *  distinctive enough that decorations from one look wrong on any of the
- *  others (explicitly confirmed by the user for Snow-on-{Grass,Dirt,Sand}
- *  and Lava-on-anything-else) — so each of those three is only ever
- *  "compatible" with itself when high-contrast mixing is disallowed. */
+/** Which biomes look visually plausible mixed together — originally an
+ *  editor-UI judgment call with no game data behind it, since confirmed by
+ *  real map data (issue #230, scripts/analyze-map-aesthetics.ts, 18 real
+ *  maps): Grass's own real cross-biome tile borders split 77%
+ *  Sand/Autumn/Dirt vs. 23% Deathland/Snow/Lava — a real, meaningful
+ *  concentration (vs. ~50% a uniform null would predict), matching this
+ *  cluster almost exactly. User-requested originally: Grass(1)/Sand(2)/
+ *  Autumn(5)/Dirt(7) are a mutually-compatible "temperate" cluster (plains,
+ *  desert-fringe, harvest colors, and bare earth all read as plausible
+ *  neighbors); Deathland(3)/Snow(4)/Lava(6) are each visually distinctive
+ *  enough that decorations from one look wrong on any of the others
+ *  (explicitly confirmed by the user for Snow-on-{Grass,Dirt,Sand} and
+ *  Lava-on-anything-else) — so each of those three is only ever
+ *  "compatible" with itself when high-contrast mixing is disallowed. See
+ *  src/lib/rmg/terrain-adjacency-stats.ts for the full real adjacency
+ *  matrix this cross-check is based on. */
 const COMPATIBLE_BIOME_CLUSTERS: BiomeId[][] = [[1, 2, 5, 7]]
 
 export function areBiomesCompatible(a: BiomeId, b: BiomeId): boolean {
