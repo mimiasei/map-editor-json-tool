@@ -532,7 +532,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          <nav className="w-44 shrink-0 border-r border-border overflow-y-auto p-2 space-y-0.5">
+          <nav className="w-44 shrink-0 border-r border-border overflow-y-auto p-2 space-y-0.5 bg-[var(--column-left)] dark:bg-card">
             {CATEGORIES.map((cat) => {
               const allowed = NAV_STAGE_ALLOWED[previewPhase]
               const disabled = allowed !== null && !allowed.includes(cat.id)
@@ -550,7 +550,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             })}
           </nav>
 
-          <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4 bg-[var(--column-center)] dark:bg-background">
               {showCore && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
@@ -954,7 +954,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           {/* Live-preview column (issue #232 design) — always its own
               column, not layered inline above the category content, so the
               rendering stays visible no matter which category is open. */}
-          <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2">
+          <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2 bg-[var(--column-right)] dark:bg-card">
             <Label className="text-xs font-semibold">Map Preview</Label>
             {previewActive ? (
               <div className="space-y-1.5">
