@@ -62,6 +62,19 @@ export function blendZoneBordersWFC(options: TerrainBorderBlendOptions): number[
   }
 
   // ── Find the border band via BFS dilation from real zone-boundary tiles ──
+  // Alongside distance, also carry which zone ids are actually locally
+  // relevant at each border-band tile (its own zone plus every zone that
+  // reached it within `borderRadius` hops) — this is what confines WFC
+  // collapse to the biomes genuinely meeting at THIS seam (e.g. only
+  // Grass/Sand at a Grass/Sand border), instead of every biome that exists
+  // anywhere on the map. Without it, a border tile with no already-collapsed
+  // neighbor yet (common — tiles on both sides of a seam start uncollapsed
+  // together) picks uniformly among ALL biomes weighted only by its own
+  // zone's prior, and since `TILE_ADJACENCY_WEIGHTS` has no zero entries
+  // (every biome pair was observed adjacent somewhere in the real corpus),
+  // nothing stops it from collapsing to a totally unrelated biome (e.g.
+  // Lava at a Grass/Sand seam) before propagation can correct it — a real,
+  // confirmed bug (issue #232).
   const isBoundary = new Uint8Array(tileCount)
   const queue: number[] = []
   for (let node = 0; node < tileCount; node++) {
@@ -74,7 +87,13 @@ export function blendZoneBordersWFC(options: TerrainBorderBlendOptions): number[
     }
   }
   const distance = new Int8Array(tileCount).fill(-1)
-  for (const node of queue) distance[node] = 0
+  const relevantZones = new Map<number, Set<number>>()
+  for (const node of queue) {
+    distance[node] = 0
+    const set = new Set<number>([zoneIdByNode[node]])
+    for (const n of neighborsOf(node)) set.add(zoneIdByNode[n])
+    relevantZones.set(node, set)
+  }
   let frontier = queue
   for (let d = 1; d <= borderRadius && frontier.length > 0; d++) {
     const next: number[] = []
@@ -86,13 +105,24 @@ export function blendZoneBordersWFC(options: TerrainBorderBlendOptions): number[
         }
       }
     }
+    // Union in every already-assigned neighbor's relevant-zone set (covers
+    // both the previous wave and any same-wave sibling processed first) —
+    // a node can be within radius of more than one real zone transition
+    // (e.g. a 3-zone corner), and all of them should count.
+    for (const node of next) {
+      const set = relevantZones.get(node) ?? new Set<number>([zoneIdByNode[node]])
+      for (const n of neighborsOf(node)) {
+        const neighborSet = relevantZones.get(n)
+        if (neighborSet) for (const z of neighborSet) set.add(z)
+      }
+      relevantZones.set(node, set)
+    }
     frontier = next
   }
   const borderBand = new Set<number>()
   for (let node = 0; node < tileCount; node++) if (distance[node] !== -1) borderBand.add(node)
   if (borderBand.size === 0) return flat
 
-  const allBiomes = Object.keys(TILE_ADJACENCY_WEIGHTS).map(Number)
   const compatWeight = (a: number, b: number): number => TILE_ADJACENCY_WEIGHTS[a]?.[b] ?? 0
 
   const result = flat.slice()
@@ -100,7 +130,12 @@ export function blendZoneBordersWFC(options: TerrainBorderBlendOptions): number[
   for (let node = 0; node < tileCount; node++) if (!borderBand.has(node)) collapsed[node] = 1
 
   const domain = new Map<number, number[]>()
-  for (const node of borderBand) domain.set(node, allBiomes.slice())
+  for (const node of borderBand) {
+    const zones = relevantZones.get(node) ?? new Set<number>([zoneIdByNode[node]])
+    const biomes = new Set<number>()
+    for (const zid of zones) biomes.add(zoneBiome.get(zid) ?? 1)
+    domain.set(node, [...biomes])
+  }
 
   const uncollapsed = new Set(borderBand)
   while (uncollapsed.size > 0) {
