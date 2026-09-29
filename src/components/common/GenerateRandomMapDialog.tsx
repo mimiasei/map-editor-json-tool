@@ -899,7 +899,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <Label className="text-xs">Treasure density</Label>
-                    <FieldInfo text="Multiplier on neutral-zone treasure-pile count. 1× is the generator's own default zone-size scaling, 2× doubles it, 0 removes treasure piles entirely." />
+                    <FieldInfo text="Multiplier on neutral-zone treasure-pile count, 0-3×. 1× is the generator's own default zone-size scaling, 3× (the max) triples it, 0 removes treasure piles entirely." />
                   </div>
                   <span className="text-xs text-muted-foreground">{treasureDensity.toFixed(1)}×</span>
                 </div>
