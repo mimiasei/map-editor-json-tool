@@ -19,6 +19,7 @@ import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-reque
 import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog } from '@/lib/native-fs'
 import { openAndLoadMapFile, commitMapWithPathPrompt } from '@/lib/map-file'
 import NewMapDialog from '@/components/common/NewMapDialog'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { saveMapFile } from '@/lib/map-save'
 import { logInfo, logWarn, logError } from '@/lib/logger'
 import { Button } from '@/components/ui/button'
@@ -82,7 +83,6 @@ import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import ImportH3mDialog from '@/components/common/ImportH3mDialog'
-import GenerateRandomMapDialog from '@/components/common/GenerateRandomMapDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
@@ -102,6 +102,10 @@ interface ToolbarProps {
   onGameDatabaseOpen?: () => void
   onMapGridOpen?: () => void
   mapGridOpen?: boolean
+  /** Called when the Generate Random Map action is triggered (menu item) —
+   *  AppShell renders the actual pane (issue #232: full-pane view, same
+   *  swap pattern as Map Grid, not a floating dialog rendered here). */
+  onGenerateMapOpen?: () => void
   /** Called when the New action is triggered (button or native menu) */
   onNew?: () => void
   /** Called when the Open/Import action is triggered */
@@ -124,6 +128,7 @@ export default function Toolbar({
   onGameDatabaseOpen,
   onMapGridOpen,
   mapGridOpen,
+  onGenerateMapOpen,
   onNew,
 }: ToolbarProps) {
   const {
@@ -182,7 +187,6 @@ export default function Toolbar({
   const [aboutOpen,           setAboutOpen]           = useState(false)
   const [newMapOpen,          setNewMapOpen]          = useState(false)
   const [importH3mOpen,       setImportH3mOpen]       = useState(false)
-  const [generateMapOpen,     setGenerateMapOpen]     = useState(false)
 
   const selectNode = useMapGridStore((s) => s.selectNode)
   const requestMapGridFocus = useMapGridStore((s) => s.requestFocus)
@@ -192,6 +196,19 @@ export default function Toolbar({
     selectNode(node)
     requestMapGridFocus(x, z)
   }
+
+  // Generate Random Map now renders as a full pane from AppShell (issue
+  // #232), not a dialog here — its own warnings arrive via this one-shot
+  // store field instead of a direct callback, feeding the same import-
+  // feedback dialog New Map/Import H3/Open already use below.
+  const pendingGeneratedWarnings = useViewBridgeStore((s) => s.pendingGeneratedWarnings)
+  const clearGeneratedWarnings = useViewBridgeStore((s) => s.clearGeneratedWarnings)
+  useEffect(() => {
+    if (!pendingGeneratedWarnings) return
+    setImportWarnings(pendingGeneratedWarnings)
+    setImportFeedbackOpen(true)
+    clearGeneratedWarnings()
+  }, [pendingGeneratedWarnings, clearGeneratedWarnings])
 
   // ── Manual update check ──────────────────────────────────────────────────────
   // The startup check is silent by design, so this is the only way to learn that
@@ -357,7 +374,7 @@ export default function Toolbar({
       )
       if (!ok) return
     }
-    setGenerateMapOpen(true)
+    onGenerateMapOpen?.()
   }
 
   // ── Open .map file ────────────────────────────────────────────────────────────
@@ -1301,19 +1318,6 @@ export default function Toolbar({
           open={newMapOpen}
           onOpenChange={setNewMapOpen}
           onCreated={({ warnings }) => {
-            if (warnings.length > 0) {
-              setImportWarnings(warnings)
-              setImportFeedbackOpen(true)
-            }
-          }}
-        />
-      )}
-
-      {isTauri() && (
-        <GenerateRandomMapDialog
-          open={generateMapOpen}
-          onOpenChange={setGenerateMapOpen}
-          onGenerated={({ warnings }) => {
             if (warnings.length > 0) {
               setImportWarnings(warnings)
               setImportFeedbackOpen(true)

@@ -41,6 +41,7 @@ import ScriptTemplateDialog from '@/components/tree/ScriptTemplateDialog'
 import DialogBrowser from '@/components/catalog/DialogBrowser'
 import GameDatabaseDialog from '@/components/catalog/GameDatabaseDialog'
 import MapGridDialog from '@/components/map-grid/MapGridDialog'
+import GenerateRandomMapDialog from '@/components/common/GenerateRandomMapDialog'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import SetupDialog from '@/components/common/SetupDialog'
 import { SquareArrowOutUpRight } from 'lucide-react'
@@ -119,6 +120,10 @@ export default function AppShell() {
   const mapGridOpen = useViewBridgeStore((s) => s.mapGridOpen)
   const openMapGrid = useViewBridgeStore((s) => s.openMapGrid)
   const closeMapGrid = useViewBridgeStore((s) => s.closeMapGrid)
+  const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
+  const openRmg = useViewBridgeStore((s) => s.openRmg)
+  const closeRmg = useViewBridgeStore((s) => s.closeRmg)
+  const reportGeneratedWarnings = useViewBridgeStore((s) => s.reportGeneratedWarnings)
   const pendingDatabaseFocus = useViewBridgeStore((s) => s.pendingDatabaseFocus)
   const clearDatabaseFocus = useViewBridgeStore((s) => s.clearDatabaseFocus)
   useEffect(() => {
@@ -646,6 +651,7 @@ export default function AppShell() {
         onDialogBrowserOpen={() => setDialogBrowserOpen(true)}
         onGameDatabaseOpen={() => setGameDatabaseOpen(true)}
         onMapGridOpen={openMapGrid}
+        onGenerateMapOpen={openRmg}
         onNew={handleNew}
         onSave={handleSave}
         onSaveAs={() => window.dispatchEvent(new Event('oe:save-as'))}
@@ -743,6 +749,18 @@ export default function AppShell() {
             onOpenChange={(o) => (o ? openMapGrid() : closeMapGrid())}
             onUndock={() => handleUndock('mapGridCell')}
             undocked={isUndocked('mapGridCell')}
+          />
+        </div>
+      ) : rmgOpen ? (
+        // Same inline-view pattern as Map Grid above (issue #232) — Generate
+        // Random Map is a full-pane view now, not a floating dialog.
+        <div className="flex-1 overflow-hidden p-3">
+          <GenerateRandomMapDialog
+            open={rmgOpen}
+            onOpenChange={(o) => (o ? openRmg() : closeRmg())}
+            onGenerated={({ warnings }) => {
+              if (warnings.length > 0) reportGeneratedWarnings(warnings)
+            }}
           />
         </div>
       ) : (

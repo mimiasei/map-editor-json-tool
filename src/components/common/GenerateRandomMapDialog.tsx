@@ -32,8 +32,6 @@
 // guaranteed identical for the same seed (one shared implementation).
 
 import { useEffect, useRef, useState } from 'react'
-import { Dialog, DialogTitle } from '@/components/ui/dialog'
-import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,7 +39,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ChevronDown, ChevronRight, Dices, Info } from 'lucide-react'
+import { ChevronDown, ChevronRight, Dices, Info, X } from 'lucide-react'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
 import { previewRoads } from '@/lib/rmg/preview-roads'
@@ -452,12 +450,29 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setDecorationCoOccurrenceStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
   }
 
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent className="p-0 gap-0 overflow-hidden" defaultWidth={420} defaultHeight={advancedOpen ? 620 : 400} minWidth={360} minHeight={320} storageKey="generate-random-map">
-        <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
-          <DialogTitle className="text-sm font-semibold">Generate Random Map</DialogTitle>
-        </DraggableDialogDragHandle>
+    <>
+    {/* Inline view (issue #232), not a modal Dialog — same reasoning/pattern
+        as Map Grid (issue #195 follow-up): replaces the main editor's layout
+        slot in AppShell instead of layering on top, so it fills the whole
+        window and needs no resize/drag chrome of its own. AppShell only
+        mounts this component while `open` is true, so the `open`-gated
+        state/effects throughout this file still behave correctly. */}
+    <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
+        <div className="relative flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 h-7 w-7"
+            title="Close Generate Random Map"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-semibold">Generate Random Map</span>
+        </div>
 
         <div className="p-4 space-y-4 overflow-y-auto">
           <div className="space-y-1.5">
@@ -886,13 +901,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 {footerLabel}
               </Button>
         </div>
-      </DraggableDialogContent>
+    </div>
 
       <SelectGameTemplateDialog
         open={templatePickerOpen}
         onOpenChange={setTemplatePickerOpen}
         onSelect={setGameTemplate}
       />
-    </Dialog>
+    </>
   )
 }
