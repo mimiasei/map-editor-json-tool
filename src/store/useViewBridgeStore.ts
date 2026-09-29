@@ -107,11 +107,16 @@ let nextDatabaseFocusId = 0
 
 export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
   mapGridOpen: false,
-  openMapGrid: () => set({ mapGridOpen: true }),
+  // Map Grid and Generate Random Map are mutually exclusive full-pane views
+  // (AppShell's own mapGridOpen ? MapGrid : rmgOpen ? RMG : normal editor
+  // ternary checks mapGridOpen first) — opening one must close the other,
+  // otherwise triggering Generate Random Map while Map Grid is open leaves
+  // mapGridOpen still true and the ternary never reaches the RMG branch.
+  openMapGrid: () => set({ mapGridOpen: true, rmgOpen: false }),
   closeMapGrid: () => set({ mapGridOpen: false }),
 
   rmgOpen: false,
-  openRmg: () => set({ rmgOpen: true }),
+  openRmg: () => set({ rmgOpen: true, mapGridOpen: false }),
   closeRmg: () => set({ rmgOpen: false }),
 
   pendingGeneratedWarnings: null,

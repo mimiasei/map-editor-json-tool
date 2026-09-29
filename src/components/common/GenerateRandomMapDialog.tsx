@@ -3,11 +3,14 @@
 // access to the bundled template.map resource (plus a loaded GameCatalog —
 // see generate-map-file.ts). Terrain is zone-driven (each zone gets its own
 // biome, see zone-population.ts) so there's no single map-wide biome to
-// pick. The Advanced section exposes the real template parameters this
-// generator supports (water/obstacle/treasure density, a reproducibility
-// seed) via template.ts's own RandomMapTemplate format, with Save/Load
-// buttons reusing native-fs.ts's generic JSON open/save (works in both
-// builds, even though generation itself is Tauri-only) — deliberately
+// pick. Outside live preview, every tunable beyond Core Configuration lives
+// behind a left-nav category picker (issue #232 — Terrain & Elevation /
+// Biomes / Roads & Rivers / Scenery & Decoration / Economy & Encounters /
+// Connectivity & Portals / Advanced), one category's fields visible at a
+// time instead of one long flat "Advanced" accordion. These map straight
+// onto template.ts's own RandomMapTemplate format, with Save/Load Template
+// buttons (footer) reusing native-fs.ts's generic JSON open/save (works in
+// both builds, even though generation itself is Tauri-only) — deliberately
 // scoped down from VCMI's own per-zone template authoring (no zone-graph
 // topology editor exists yet; see issue #210's Milestone 4/5 notes).
 //
@@ -16,16 +19,18 @@
 // map maker who wants the random fractal terrain shape but places
 // everything else themselves), and a three-stage live preview:
 //   1. 'terrain' — a fixed-size canvas shows live biome/water/elevation;
-//      only water/zone/seed controls are visible (everything else would be
-//      inert at this point anyway). A "Reroll" button next to Seed picks a
-//      fresh random one.
+//      only water/zone/biome controls are visible (everything else would be
+//      inert at this point anyway). The Seed reroll die (Core Configuration,
+//      always visible regardless of stage) picks a fresh random one.
 //   2. 'roads' — the canvas adds roads/rivers on top of the now-locked
 //      terrain; only the winding sliders are visible, plus their OWN
 //      independent "road seed" + reroll (deliberately separate from the
 //      terrain seed — rerolling road shape must never silently change the
 //      terrain the user already confirmed).
-//   3. 'all' — every control (including terrain/road sliders again, for one
-//      last adjustment) is visible, exactly like the pre-preview dialog.
+//   3. 'all' — every remaining category's fields (scenery, economy,
+//      connectivity) are all visible at once, for one last adjustment
+//      pass — the same fields the left-nav shows one at a time outside
+//      live preview.
 // See generate-terrain.ts's own header comment for why the roads preview is
 // NOT pixel-guaranteed identical to the eventual real roads (it's a
 // cosmetic tuning aid, not a forecast) while the terrain phase IS
@@ -37,14 +42,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ChevronDown, ChevronRight, Dices, Info, X } from 'lucide-react'
+import { Dices, X } from 'lucide-react'
+import FieldInfo from '@/components/common/FieldInfo'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
 import { previewRoads } from '@/lib/rmg/preview-roads'
 import type { TerrainResult } from '@/lib/rmg/generate-terrain'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -73,12 +79,78 @@ const PREVIEW_CANVAS_SIZE = 300
 
 type PreviewPhase = 'off' | 'terrain' | 'roads' | 'all'
 
+/** Left-nav categories (issue #232) — a real sidebar column (not just an
+ *  inline nav within the scrolling content), same 3-column shape as the
+ *  design mockup: nav | content | live-preview. 'core' ("Start") holds Map
+ *  name/Size/Players/Game template/Seed/Terrain only/Live preview — the
+ *  same fields that used to sit permanently above the old flat "Advanced"
+ *  accordion, now just another nav destination, and the one always
+ *  reachable regardless of live-preview stage (see NAV_STAGE_ALLOWED)
+ *  since that's where the Live preview off-switch lives. */
+type Category = 'core' | 'terrain' | 'biomes' | 'roads' | 'scenery' | 'economy' | 'connectivity' | 'advanced'
+const CATEGORIES: { id: Category; label: string }[] = [
+  { id: 'core', label: 'Start' },
+  { id: 'terrain', label: 'Terrain & Elevation' },
+  { id: 'biomes', label: 'Biomes' },
+  { id: 'roads', label: 'Roads & Rivers' },
+  { id: 'scenery', label: 'Scenery & Decoration' },
+  { id: 'economy', label: 'Economy & Encounters' },
+  { id: 'connectivity', label: 'Connectivity & Portals' },
+  { id: 'advanced', label: 'Advanced' },
+]
+/** During live preview, only these categories have anything to show (see
+ *  the showXFields derivations below) — everything else's nav button is
+ *  disabled rather than clickable-but-blank. 'core' is always included:
+ *  the Live preview switch (to turn it back off) lives there. */
+const NAV_STAGE_ALLOWED: Record<PreviewPhase, Category[] | null> = {
+  off: null,
+  terrain: ['core', 'terrain', 'biomes'],
+  roads: ['core', 'roads'],
+  all: ['core', 'scenery', 'economy', 'connectivity'],
+}
+
 function randomSeedValue(): number {
   return Math.floor(Math.random() * 1_000_000_000)
 }
 
 function pctLabel(value: number): string {
   return `${Math.round(value * 100)}%`
+}
+
+/** Consolidated 0-100 "Water" slider (issue #232) — spans `waterContent`'s
+ *  three modes and `waterChance`'s amount within whichever mode is active
+ *  in one control: 0 = 'none', 1-50 = 'normal' with waterChance 0-1, 51-100
+ *  = 'islands' with waterChance 0-1. Kept as pure mapping functions (no new
+ *  state) so Save/Load Template and the real generator options keep using
+ *  waterContent/waterChance completely unchanged underneath. */
+function waterSliderValue(waterContent: 'none' | 'normal' | 'islands', waterChance: number): number {
+  if (waterContent === 'none') return 0
+  if (waterContent === 'normal') return Math.round(waterChance * 50)
+  return Math.round(50 + waterChance * 50)
+}
+function waterSliderLabel(v: number): string {
+  if (v <= 0) return 'None'
+  if (v <= 50) return `Water ${Math.round((v / 50) * 100)}%`
+  return `Islands ${Math.round(((v - 50) / 50) * 100)}%`
+}
+
+/** Consolidated "Elevation variation" slider — drives `hillChance` and
+ *  `valleyChance` equally (same pure-mapping approach as the water slider
+ *  above). Displays the average of the two so loading an old template with
+ *  different hill/valley values still shows something sensible. */
+function elevationSliderValue(hillChance: number, valleyChance: number): number {
+  return Math.round(((hillChance + valleyChance) / 2) * 100)
+}
+
+/** Consolidated "Road windiness" slider — drives `roadWindingAmplitude`
+ *  (0-6) and `roadWindingWavelength` (100-20, inversely) together. Display
+ *  value derives from amplitude alone (same "pick one direction of truth"
+ *  approach as the elevation slider above). */
+function roadWindinessValue(amplitude: number): number {
+  return Math.round((amplitude / 6) * 100)
+}
+function roadWindinessToState(v: number): { roadWindingAmplitude: number; roadWindingWavelength: number } {
+  return { roadWindingAmplitude: (v / 100) * 6, roadWindingWavelength: 100 - (v / 100) * 80 }
 }
 
 /** The preset closest in tile area to `(sizeX, sizeZ)` — used when loading
@@ -108,7 +180,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [playerCount, setPlayerCount] = useState(2)
   const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
-  const [islandsIncludePlayerZones, setIslandsIncludePlayerZones] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
+  // No longer a user-editable toggle (issue #232 — a player's own start
+  // being an island is now always on whenever water content is 'islands';
+  // previously an off-by-default switch most people never turned on).
+  // Still a real field in RandomMapTemplate/GenerateRandomMapOptions, so
+  // every read below just derives it from waterContent instead of storing
+  // separate state that could drift out of sync.
+  const islandsIncludePlayerZones = waterContent === 'islands'
   const [islandLandRatio, setIslandLandRatio] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
   const [hillChance, setHillChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.hillChance)
   const [valleyChance, setValleyChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
@@ -145,9 +223,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // slider-driven template format).
   const [gameTemplate, setGameTemplate] = useState<{ fileName: string; name: string; json: string } | null>(null)
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
-  const [terrainTypesOpen, setTerrainTypesOpen] = useState(false)
   const [seedText, setSeedText] = useState('')
-  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState<Category>('core')
   const [generating, setGenerating] = useState(false)
   const [genProgress, setGenProgress] = useState<{ pct: number; label: string } | null>(null)
 
@@ -177,25 +254,52 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const terrainLocked = previewPhase === 'roads' || previewPhase === 'all'
   // Visibility (not just enablement) — a real user request: while live
   // preview is running, only show sliders relevant to the CURRENT stage;
-  // outside live preview, "Advanced" reveals everything at once, same as
-  // before this feature existed.
+  // outside live preview, the left-nav category picker reveals one group
+  // at a time instead (issue #232 — replaces the old single flat
+  // "Advanced" accordion that showed everything at once).
   // Each stage shows ONLY its own relevant sliders, strictly — once
   // terrain (or roads) is confirmed, there's no reason to keep adjusting
   // it, so the 'all' stage (a real user request) only ever shows the
-  // object/guard/decoration sliders, not a "one more pass" reopening of
+  // object/guard/decoration categories, not a "one more pass" reopening of
   // the earlier stages' own controls.
-  const showTerrainSliders = previewPhase === 'off' ? advancedOpen : previewPhase === 'terrain'
-  const showRoadSliders = previewPhase === 'off' ? advancedOpen : previewPhase === 'roads'
-  const showObjectSliders = previewPhase === 'off' ? advancedOpen : previewPhase === 'all'
+  const showCore = activeCategory === 'core'
+  const showTerrainSliders = activeCategory === 'terrain' && (previewPhase === 'off' || previewPhase === 'terrain')
+  const showBiomesFields = activeCategory === 'biomes' && (previewPhase === 'off' || previewPhase === 'terrain')
+  const showRoadSliders = activeCategory === 'roads' && (previewPhase === 'off' || previewPhase === 'roads')
+  // The 'all' stage is a real user request: every remaining category shown
+  // at once for one last adjustment pass, not gated by nav selection (see
+  // this file's own header comment, stage 3) — so these three ignore
+  // activeCategory entirely once previewPhase reaches 'all'.
+  const showSceneryFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'scenery')
+  const showEconomyFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'economy')
+  const showConnectivityFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'connectivity')
 
-  const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], roadNodes?: Set<number>) => {
+  const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], levelsMap?: number[], roadNodes?: Set<number>) => {
     const canvas = canvasRef.current
     if (!canvas) return
-    canvas.width = selectedSize.sizeX
-    canvas.height = selectedSize.sizeZ
+    const sizeX = selectedSize.sizeX
+    const sizeZ = selectedSize.sizeZ
+    canvas.width = sizeX
+    canvas.height = sizeZ
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    paintTerrainCanvas(ctx, selectedSize.sizeX, selectedSize.sizeZ, tilesMap, waterMap, undefined, roadNodes)
+    // Full-strength biome colors (blendAmount 1) — the shared default
+    // (DEFAULT_TERRAIN_BLEND, 0.16) is tuned for Map Grid's own overview
+    // canvas, where a pale backdrop keeps icons/overlays legible on top;
+    // this preview has nothing else drawn over it, so a pale fill just
+    // reads as washed-out/transparent-looking rather than helping anything.
+    paintTerrainCanvas(ctx, sizeX, sizeZ, tilesMap, waterMap, 1, roadNodes)
+    // Elevation tint (same darker/lighter overlay Map Grid itself uses,
+    // elevation-shading.ts) — a real user request: hills/valleys previously
+    // had no visual representation at all in this canvas.
+    if (levelsMap) {
+      for (const [node, tint] of buildElevationTintMap(levelsMap)) {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        ctx.fillStyle = tint === 'lighter' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.3)'
+        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      }
+    }
   }
 
   // Live preview — debounced on every field relevant to whatever's
@@ -223,12 +327,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             lockedTerrainRef.current = result
           }
           if (!terrain) return
-          const b2 = JSON.parse(new TextDecoder().decode(terrain.container.chunks[1])) as { tilesMap: number[]; waterMap: number[] }
+          const b2 = JSON.parse(new TextDecoder().decode(terrain.container.chunks[1])) as { tilesMap: number[]; waterMap: number[]; levelsMap?: number[] }
           if (previewPhase === 'roads' || previewPhase === 'all') {
             const { roadNodes, riverNodes } = previewRoads(terrain, { roadWindingAmplitude, roadWindingWavelength, rng: createSeededRng(roadSeed) })
-            drawTerrainCanvas(b2.tilesMap, b2.waterMap, new Set([...roadNodes, ...riverNodes]))
+            drawTerrainCanvas(b2.tilesMap, b2.waterMap, b2.levelsMap, new Set([...roadNodes, ...riverNodes]))
           } else {
-            drawTerrainCanvas(b2.tilesMap, b2.waterMap)
+            drawTerrainCanvas(b2.tilesMap, b2.waterMap, b2.levelsMap)
           }
         } catch (e) {
           setPreviewError(e instanceof Error ? e.message : String(e))
@@ -249,9 +353,11 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       if (!seedText.trim()) setSeedText(String(randomSeedValue()))
       setPreviewError(null)
       setPreviewPhase('terrain')
+      setActiveCategory('terrain')
     } else {
       setPreviewPhase('off')
       lockedTerrainRef.current = null
+      setActiveCategory('core')
     }
   }
 
@@ -334,10 +440,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       return
     }
     setPreviewPhase('roads')
+    setActiveCategory('roads')
   }
 
   const handleConfirmRoads = () => {
     setPreviewPhase('all')
+    setActiveCategory('scenery')
   }
 
   const handleSaveTemplate = async () => {
@@ -397,7 +505,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setPlayerCount(template.playerCount)
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
-      setIslandsIncludePlayerZones(template.islandsIncludePlayerZones)
       setIslandLandRatio(template.islandLandRatio)
       setHillChance(template.hillChance)
       setValleyChance(template.valleyChance)
@@ -418,7 +525,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setMineGoldBiomeBiasStrength(template.mineGoldBiomeBiasStrength)
       setEnabledBiomes(Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, template.enabledBiomes.includes(b)])) as Record<BiomeId, boolean>)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
-      setAdvancedOpen(true)
+      setActiveCategory('terrain')
       logInfo(`Loaded RMG template: ${file.name}`)
     } catch (e) {
       logError(`Failed to load RMG template: ${e instanceof Error ? e.message : String(e)}`)
@@ -437,7 +544,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const handleResetAll= () => {
       setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
       setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
-      setIslandsIncludePlayerZones(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
       setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
       setHillChance(DEFAULT_TEMPLATE_OVERRIDES.hillChance)
       setValleyChance(DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
@@ -471,7 +577,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         mounts this component while `open` is true, so the `open`-gated
         state/effects throughout this file still behave correctly. */}
     <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
-        <div className="relative flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
+        <div className="relative flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0 bg-[var(--column-left)] dark:bg-card">
           <Button
             variant="ghost"
             size="icon"
@@ -484,196 +590,167 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           <span className="text-sm font-semibold">Generate Random Map</span>
         </div>
 
-        <div className="p-4 space-y-4 overflow-y-auto">
-          <div className="space-y-1.5">
-            <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
-            <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
-          </div>
+        <div className="flex-1 flex overflow-hidden">
+          <nav className="w-60 shrink-0 border-r border-border overflow-y-auto p-2 space-y-1 bg-[var(--column-left)] dark:bg-card">
+            {CATEGORIES.map((cat) => {
+              const allowed = NAV_STAGE_ALLOWED[previewPhase]
+              const disabled = allowed !== null && !allowed.includes(cat.id)
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`w-full text-left text-sm px-3 py-2 rounded disabled:opacity-40 disabled:cursor-not-allowed ${activeCategory === cat.id ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                >
+                  {cat.label}
+                </button>
+              )
+            })}
+          </nav>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Size</Label>
-            <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
-              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {MAP_SIZE_PRESETS.map((p) => (
-                  <SelectItem key={presetKey(p)} value={presetKey(p)}>{p.sizeX} × {p.sizeZ}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Players</Label>
-            <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
-              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {PLAYER_COUNT_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {gameTemplate && <p className="text-xs text-muted-foreground">Ignored — the game template below sets its own player count.</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Game template</Label>
-            {gameTemplate ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm flex-1 truncate" title={gameTemplate.name}>{gameTemplate.name}</span>
-                <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setGameTemplate(null)} disabled={terrainLocked}>
-                  Clear
-                </Button>
-              </div>
-            ) : (
-              <Button type="button" variant="outline" size="sm" className="h-8 w-full justify-start text-sm font-normal" onClick={() => setTemplatePickerOpen(true)} disabled={terrainLocked}>
-                Use a game template…
-              </Button>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="rmg-terrain-only" className="text-xs" title="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves.">
-              Terrain only
-            </Label>
-            <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="rmg-live-preview" className="text-xs" title="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage.">
-              Live preview
-            </Label>
-            <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
-          </div>
-
-          {previewActive && (
-            <div className="space-y-1.5">
-              <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
-                <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
-              </div>
-              {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
-              {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
-              <p className="text-xs text-muted-foreground">
-                {previewPhase === 'terrain'
-                  ? 'Tune terrain below, then confirm to move on.'
-                  : previewPhase === 'roads'
-                    ? 'Tune road/river winding below, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
-                    : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else below, then Generate.'}
-              </p>
-            </div>
-          )}
-
-          {showTerrainSliders && (
-            <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => setTerrainTypesOpen((v) => !v)}
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-              >
-                {terrainTypesOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                Terrain types
-                <span className="font-normal">({ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b]).length}/{ALL_TEMPLATE_BIOMES.length} enabled)</span>
-              </button>
-              {terrainTypesOpen && (
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pl-1">
-                  {ALL_TEMPLATE_BIOMES.map((biomeId) => (
-                    <div key={biomeId} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`rmg-biome-${biomeId}`}
-                        checked={enabledBiomes[biomeId]}
-                        disabled={terrainLocked}
-                        onCheckedChange={(checked) => {
-                          setEnabledBiomes((prev) => {
-                            // At least one biome must always stay enabled —
-                            // generation needs at least one usable biome.
-                            if (!checked && Object.values(prev).filter(Boolean).length <= 1) return prev
-                            return { ...prev, [biomeId]: !!checked }
-                          })
-                        }}
-                      />
-                      <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{BIOME_NAMES[biomeId]}</Label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {previewPhase === 'off' && (
-            <button
-              type="button"
-              onClick={() => setAdvancedOpen((v) => !v)}
-              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              {advancedOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-              Advanced
-            </button>
-          )}
-
-          {showTerrainSliders && (
-            <div className="space-y-4 pl-1">
-                <div className="space-y-1.5">
-                    <Label htmlFor="rmg-seed" className="text-xs">Seed (optional — same seed, same map)</Label>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            id="rmg-seed"
-                            value={seedText}
-                            onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, ''))}
-                            placeholder="Random"
-                            className="h-8 text-sm"
-                            disabled={terrainLocked}
-                        />
-                        <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
-                    </div>
-                </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
-                  Water content
-                </Label>
-                <Select value={waterContent} onValueChange={(v) => setWaterContent(v as 'none' | 'normal' | 'islands')} disabled={terrainLocked}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="islands">Islands</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {waterContent !== 'none' && (
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      className="text-xs"
-                      title={
-                        waterContent === 'islands'
-                          ? 'How many zones become islands (their individual size is the separate Land/water ratio slider below).'
-                          : 'How much of each neutral zone\'s free area becomes a lake, and how likely a zone is to get one at all. Player zones never get water.'
-                      }
-                    >
-                      {waterContent === 'islands' ? 'Island amount' : 'Water amount'}
-                    </Label>
-                    <span className="text-xs text-muted-foreground">{pctLabel(waterChance)}</span>
+          <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-6 bg-[var(--column-center)] dark:bg-background">
+              {showCore && (
+                <div className="space-y-6">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
+                    <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
                   </div>
-                  <Slider min={0} max={1} step={0.01} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} disabled={terrainLocked} />
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Size</Label>
+                    <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {MAP_SIZE_PRESETS.map((p) => (
+                          <SelectItem key={presetKey(p)} value={presetKey(p)}>{p.sizeX} × {p.sizeZ}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Players</Label>
+                    <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {PLAYER_COUNT_OPTIONS.map((n) => (
+                          <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {gameTemplate && <p className="text-xs text-muted-foreground">Ignored — the game template below sets its own player count.</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Game template</Label>
+                    {gameTemplate ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm flex-1 truncate" title={gameTemplate.name}>{gameTemplate.name}</span>
+                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setGameTemplate(null)} disabled={terrainLocked}>
+                          Clear
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="button" variant="outline" size="sm" className="h-8 w-full justify-start text-sm font-normal" onClick={() => setTemplatePickerOpen(true)} disabled={terrainLocked}>
+                        Use a game template…
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs">Seed</Label>
+                      <FieldInfo text="Same seed, same map. The number field for typing an exact seed lives in the Advanced category — this is the quick way to get a fresh random terrain result immediately." />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground flex-1 truncate">{seedText || 'Random'}</span>
+                      <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-terrain-only" className="text-xs">Terrain only</Label>
+                      <FieldInfo text="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves." />
+                    </div>
+                    <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-live-preview" className="text-xs">Live preview</Label>
+                      <FieldInfo text="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage." />
+                    </div>
+                    <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    One zone per player plus a neutral zone between each pair, each
+                    with its own biome/faction, roads connecting every zone, one
+                    river, and biome-appropriate scenery. Player zones get a
+                    faction-matched starting dwelling, mine, and guard; neutral
+                    zones get a mine (guarded to its own real economic value) and
+                    scaled treasure. No zone-shape variety yet.
+                  </p>
                 </div>
               )}
 
-              {waterContent === 'islands' && (
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="rmg-islands-players" className="text-xs" title="Off (default): every player's own start always stays on real, land-connected ground — only neutral zones can become islands. On: a player's own start can be an island too, reachable only by its own portal — at high Island amount the whole map can end up looking flooded, with islands scattered across it instead of a mostly-solid mainland. Either way, an island is ALWAYS reached by portal, never a road, even if Use portals is off.">
-                    Player zones can be islands
-                  </Label>
-                  <Switch id="rmg-islands-players" checked={islandsIncludePlayerZones} onCheckedChange={setIslandsIncludePlayerZones} disabled={terrainLocked} />
+              {showBiomesFields && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Terrain types ({ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b]).length}/{ALL_TEMPLATE_BIOMES.length} enabled)</Label>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                    {ALL_TEMPLATE_BIOMES.map((biomeId) => (
+                      <div key={biomeId} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`rmg-biome-${biomeId}`}
+                          checked={enabledBiomes[biomeId]}
+                          disabled={terrainLocked}
+                          onCheckedChange={(checked) => {
+                            setEnabledBiomes((prev) => {
+                              // At least one biome must always stay enabled —
+                              // generation needs at least one usable biome.
+                              if (!checked && Object.values(prev).filter(Boolean).length <= 1) return prev
+                              return { ...prev, [biomeId]: !!checked }
+                            })
+                          }}
+                        />
+                        <Label htmlFor={`rmg-biome-${biomeId}`} className="text-xs font-normal">{BIOME_NAMES[biomeId]}</Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
+
+          {showTerrainSliders && (
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Water</Label>
+                    <FieldInfo text="0: no water at all. 1-50: Normal — lakes inside some neutral zones, amount scaling with the slider. 51-100: Islands — some neutral zones (and, per this generator's own default, every player's own zone) are fully cut off by water and reached only through a portal — Olden Era has no boats." />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{waterSliderLabel(waterSliderValue(waterContent, waterChance))}</span>
+                </div>
+                <Slider
+                  min={0} max={100} step={1}
+                  value={[waterSliderValue(waterContent, waterChance)]}
+                  onValueChange={([v]) => {
+                    if (v <= 0) { setWaterContent('none'); setWaterChance(0) }
+                    else if (v <= 50) { setWaterContent('normal'); setWaterChance(v / 50) }
+                    else { setWaterContent('islands'); setWaterChance((v - 50) / 50) }
+                  }}
+                  disabled={terrainLocked}
+                />
+              </div>
 
               {waterContent === 'islands' && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs" title="Independent from Island amount (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water.">
-                      Land/water ratio
-                    </Label>
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs">Land/water ratio</Label>
+                      <FieldInfo text="Independent from the Water slider (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water." />
+                    </div>
                     <span className="text-xs text-muted-foreground">{Math.round(islandLandRatio * 100)}% land</span>
                   </div>
                   <Slider min={0} max={1} step={0.01} value={[islandLandRatio]} onValueChange={([v]) => setIslandLandRatio(v)} disabled={terrainLocked} />
@@ -682,29 +759,26 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How much of each zone's free area becomes raised hill terrain, and how likely a zone is to get one at all — unlike water, both player and neutral zones are eligible (a player's own start tile itself always stays flat). Every hill gets real ramp access.">
-                    Hills
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(hillChance)}</span>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Elevation variation</Label>
+                    <FieldInfo text="How much of each zone's free area becomes raised (hill) or lowered (dry valley) terrain, and how likely a zone is to get either at all — both player and neutral zones are eligible (a player's own start tile itself always stays flat). Drives Hills and Valleys equally. Every hill/valley gets real ramp access." />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{pctLabel(elevationSliderValue(hillChance, valleyChance) / 100)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.01} value={[hillChance]} onValueChange={([v]) => setHillChance(v)} disabled={terrainLocked} />
+                <Slider
+                  min={0} max={100} step={1}
+                  value={[elevationSliderValue(hillChance, valleyChance)]}
+                  onValueChange={([v]) => { setHillChance(v / 100); setValleyChance(v / 100) }}
+                  disabled={terrainLocked}
+                />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How much of each zone's free area becomes lowered, DRY valley terrain (decoupled from water — a low tile doesn't have to be a lake). Both player and neutral zones are eligible. Every valley gets real ramp access.">
-                    Valleys
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(valleyChance)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.01} value={[valleyChance]} onValueChange={([v]) => setValleyChance(v)} disabled={terrainLocked} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones.">
-                    Zone jaggedness
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Zone jaggedness</Label>
+                    <FieldInfo text="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.01} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} disabled={terrainLocked} />
@@ -712,51 +786,56 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads.">
-                    Zone spread
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Zone spread</Label>
+                    <FieldInfo text="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
                 </div>
                 <Slider min={0.5} max={1.8} step={0.01} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="rmg-organic-blending" className="text-xs" title="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill. Only tiles near a zone boundary are affected — zone interiors are unchanged.">
-                  Organic terrain blending
-                </Label>
-                <Switch id="rmg-organic-blending" checked={organicTerrainBlending} onCheckedChange={setOrganicTerrainBlending} disabled={terrainLocked} />
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Organic terrain blending</Label>
+                    <FieldInfo text="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill — only tiles near a zone boundary are affected, zone interiors are unchanged. 0 = today's flat fill, no blending at all. Higher values widen the blended band and weaken each tile's bias toward its own zone's biome, so the max setting blends noticeably more than this feature's old on/off switch ever did." />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{pctLabel(organicTerrainBlending)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.05} value={[organicTerrainBlending]} onValueChange={([v]) => setOrganicTerrainBlending(v)} disabled={terrainLocked} />
               </div>
 
             </div>
           )}
 
           {showRoadSliders && (
-            <div className="space-y-4 pl-1">
+            <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How far roads/rivers swing away from a straight line, in tiles.">
-                    Road/river winding amplitude
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{roadWindingAmplitude.toFixed(1)}</span>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Road windiness</Label>
+                    <FieldInfo text="How much roads/rivers curve. Low: mostly straight, broad sweeps if any. High: swings noticeably away from a straight line, with tighter, more frequent curves." />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{pctLabel(roadWindinessValue(roadWindingAmplitude) / 100)}</span>
                 </div>
-                <Slider min={0} max={6} step={0.5} value={[roadWindingAmplitude]} onValueChange={([v]) => setRoadWindingAmplitude(v)} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How often roads/rivers curve, in tiles per curve. Lower = more frequent curves (can look jagged if pushed too low); higher = fewer, broader sweeps.">
-                    Road/river winding wavelength
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{roadWindingWavelength}</span>
-                </div>
-                <Slider min={20} max={100} step={5} value={[roadWindingWavelength]} onValueChange={([v]) => setRoadWindingWavelength(v)} />
+                <Slider
+                  min={0} max={100} step={1}
+                  value={[roadWindinessValue(roadWindingAmplitude)]}
+                  onValueChange={([v]) => {
+                    const { roadWindingAmplitude: amp, roadWindingWavelength: wave } = roadWindinessToState(v)
+                    setRoadWindingAmplitude(amp)
+                    setRoadWindingWavelength(wave)
+                  }}
+                />
               </div>
 
               {previewActive && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs" title="The roads/rivers preview's own randomness — independent from the terrain seed, so rerolling it never changes the terrain you already confirmed.">
-                    Road/river randomness
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Road/river randomness</Label>
+                    <FieldInfo text="The roads/rivers preview's own randomness — independent from the terrain seed, so rerolling it never changes the terrain you already confirmed." />
+                  </div>
                   <div className="flex items-center gap-2">
                     <Input value={String(roadSeed)} readOnly className="h-8 text-sm text-muted-foreground" />
                     <RerollButton onClick={() => setRoadSeed(randomSeedValue())} title="Reroll road/river randomness" />
@@ -766,8 +845,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             </div>
           )}
 
-          {showObjectSliders && (
-            <div className="space-y-4 pl-1">
+          {showSceneryFields && (
+            <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Obstacle density</Label>
@@ -776,65 +855,52 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 <Slider min={0} max={0.5} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} />
               </div>
 
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-xs">Interactable density</Label>
-                        <span className="text-xs text-muted-foreground">{pctLabel(interactableDensity)}</span>
-                    </div>
-                    <Slider min={0} max={0.5} step={0.02} value={[interactableDensity]} onValueChange={([v]) => setInteractableDensity(v)} />
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Interactable density</Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(interactableDensity)}</span>
                 </div>
-
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-xs">Mountain density in zone boundaries</Label>
-                        <span className="text-xs text-muted-foreground">{pctLabel(mountainDensity)}</span>
-                    </div>
-                    <Slider min={0} max={0.8} step={0.02} value={[mountainDensity]} onValueChange={([v]) => setMountainDensity(v)} />
-                </div>
-
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-xs" title="How strongly decoration thins out near roads and thickens in unused pockets — a real pattern measured directly against 12 hand-crafted maps (real density near a road is ~0.78x the map's own average, rising to ~1.29x far from any road). 0 = today's flat density, no road-distance effect at all.">
-                            Decoration road-distance effect
-                        </Label>
-                        <span className="text-xs text-muted-foreground">{pctLabel(decorationRoadDecayStrength)}</span>
-                    </div>
-                    <Slider min={0} max={1} step={0.05} value={[decorationRoadDecayStrength]} onValueChange={([v]) => setDecorationRoadDecayStrength(v)} />
-                </div>
-
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-xs" title="How strongly nearby decoration influences what gets placed next to it — real hand-crafted maps show ponds cluster with more pond pieces, and mountains real-avoid pond pieces, measured directly against the same 12-map survey. 0 = today's independent placement, no co-occurrence effect at all.">
-                            Decoration clustering (co-occurrence)
-                        </Label>
-                        <span className="text-xs text-muted-foreground">{pctLabel(decorationCoOccurrenceStrength)}</span>
-                    </div>
-                    <Slider min={0} max={1} step={0.05} value={[decorationCoOccurrenceStrength]} onValueChange={([v]) => setDecorationCoOccurrenceStrength(v)} />
-                </div>
-
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-xs" title="How strongly decoration density follows real elevation/climb evidence — real hand-crafted maps show valley tiles decorated ~3.19x denser than flat/hill tiles, and ramp-adjacent tiles decorated ~0.66x as densely as tiles farther away, measured directly against an 18-map survey. 0 = today's flat density, no elevation/climb effect at all.">
-                            Decoration elevation/climb effect
-                        </Label>
-                        <span className="text-xs text-muted-foreground">{pctLabel(decorationElevationDecayStrength)}</span>
-                    </div>
-                    <Slider min={0} max={1} step={0.05} value={[decorationElevationDecayStrength]} onValueChange={([v]) => setDecorationElevationDecayStrength(v)} />
-                </div>
-
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-xs" title="How strongly neutral-zone gold mines favor Sand-biome zones — real hand-crafted maps place gold mines on Sand tiles ~2.02x more often than Sand's own share of total map area would predict, measured directly against an 18-map survey. 0 = today's flat biome-blind mine rotation, no bias at all.">
-                            Gold mine Sand-biome bias
-                        </Label>
-                        <span className="text-xs text-muted-foreground">{pctLabel(mineGoldBiomeBiasStrength)}</span>
-                    </div>
-                    <Slider min={0} max={1} step={0.05} value={[mineGoldBiomeBiasStrength]} onValueChange={([v]) => setMineGoldBiomeBiasStrength(v)} />
-                </div>
+                <Slider min={0} max={0.5} step={0.02} value={[interactableDensity]} onValueChange={([v]) => setInteractableDensity(v)} />
+              </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Treasure density</Label>
+                  <Label className="text-xs">Mountain density in zone boundaries</Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(mountainDensity)}</span>
+                </div>
+                <Slider min={0} max={0.8} step={0.02} value={[mountainDensity]} onValueChange={([v]) => setMountainDensity(v)} />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Authentic real-map patterns</Label>
+                    <FieldInfo text="How strongly real hand-crafted-map evidence steers placement: decoration thinning near roads (real density near a road ~0.78x the map's own average, rising to ~1.29x far from any road), decoration clustering by category (ponds cluster with ponds, mountains avoid ponds), decoration density by elevation/climb proximity (valley tiles ~3.19x denser, ramp-adjacent tiles ~0.66x as dense), and gold mines favoring Sand-biome zones (~2.02x more than Sand's own area share) — all four calibrated from the same real 18-map survey. 0 = today's flat, evidence-blind behavior for all four; higher looks progressively more like a hand-crafted map's own placement patterns." />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{pctLabel(decorationRoadDecayStrength)}</span>
+                </div>
+                <Slider
+                  min={0} max={1} step={0.05}
+                  value={[decorationRoadDecayStrength]}
+                  onValueChange={([v]) => {
+                    setDecorationRoadDecayStrength(v)
+                    setDecorationCoOccurrenceStrength(v)
+                    setDecorationElevationDecayStrength(v)
+                    setMineGoldBiomeBiasStrength(v)
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {showEconomyFields && (
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Treasure density</Label>
+                    <FieldInfo text="Multiplier on neutral-zone treasure-pile count, 0-3×. 1× is the generator's own default zone-size scaling, 3× (the max) triples it, 0 removes treasure piles entirely." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{treasureDensity.toFixed(1)}×</span>
                 </div>
                 <Slider min={0} max={3} step={0.1} value={[treasureDensity]} onValueChange={([v]) => setTreasureDensity(v)} />
@@ -842,43 +908,31 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                    <div className="flex gap-1.5">
-                      <Label className="text-xs">
-                        Object variety
-                      </Label>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Info className="h-3 w-3 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random type.</TooltipContent>
-                        </Tooltip>
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Object variety</Label>
+                    <FieldInfo text="Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random type." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.01} value={[objectVariety]} onValueChange={([v]) => setObjectVariety(v)} />
               </div>
 
-                <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label className="text-xs" title="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty.">
-                            Squad density
-                        </Label>
-                        <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
-                    </div>
-                    <Slider min={0} max={1} step={0.01} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Squad density</Label>
+                    <FieldInfo text="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty." />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
                 </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="rmg-use-portals" className="text-xs" title="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement.">
-                  Use portals
-                </Label>
-                <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} />
+                <Slider min={0} max={1} step={0.01} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs" title="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints, each at least Impossible difficulty. 'Strong'/'Very strong' scale that value up further.">
-                  Boundary guards
-                </Label>
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs">Boundary guards</Label>
+                  <FieldInfo text="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints, each at least Impossible difficulty. 'Strong'/'Very strong' scale that value up further." />
+                </div>
                 <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong' | 'very strong')}>
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -889,26 +943,62 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          )}
 
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={handleSaveTemplate} className="flex-1">
-                  Save Template…
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleLoadTemplate} className="flex-1">
-                  Load Template…
-                </Button>
+          {showConnectivityFields && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="rmg-use-portals" className="text-xs">Use portals</Label>
+                  <FieldInfo text="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement." />
+                </div>
+                <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} />
               </div>
             </div>
           )}
 
-          <p className="text-xs text-muted-foreground">
-            One zone per player plus a neutral zone between each pair, each
-            with its own biome/faction, roads connecting every zone, one
-            river, and biome-appropriate scenery. Player zones get a
-            faction-matched starting dwelling, mine, and guard; neutral
-            zones get a mine (guarded to its own real economic value) and
-            scaled treasure. No zone-shape variety yet.
-          </p>
+          {activeCategory === 'advanced' && (
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <Label htmlFor="rmg-seed-manual" className="text-xs">Seed (optional — same seed, same map)</Label>
+                <Input
+                  id="rmg-seed-manual"
+                  value={seedText}
+                  onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="Random"
+                  className="h-8 text-sm"
+                  disabled={terrainLocked}
+                />
+              </div>
+            </div>
+          )}
+          </div>
+
+          {/* Live-preview column (issue #232 design) — always its own
+              column, not layered inline above the category content, so the
+              rendering stays visible no matter which category is open. */}
+          <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2 bg-[var(--column-right)] dark:bg-card">
+            <Label className="text-xs font-semibold">Map Preview</Label>
+            {previewActive ? (
+              <div className="space-y-1.5">
+                <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
+                  <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
+                </div>
+                {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
+                {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
+                <p className="text-xs text-muted-foreground">
+                  {previewPhase === 'terrain'
+                    ? 'Tune terrain in the sidebar, then confirm to move on.'
+                    : previewPhase === 'roads'
+                      ? 'Tune road/river winding in the sidebar, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
+                      : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else in the sidebar, then Generate.'}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Turn on Live preview (Start page) to see a live rendering here.</p>
+            )}
+          </div>
         </div>
 
         {genProgress && (
@@ -917,8 +1007,14 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           </div>
         )}
 
-        <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
-            <div>
+        <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0 bg-[var(--column-left)] dark:bg-card">
+            <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={handleSaveTemplate}>
+                    Save Template…
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleLoadTemplate}>
+                    Load Template…
+                </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleResetAll()} disabled={generating}>
                     Reset all to defaults
                 </Button>
