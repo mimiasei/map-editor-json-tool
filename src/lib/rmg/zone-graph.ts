@@ -19,22 +19,24 @@ export interface ZoneSpec {
   size: number
 }
 
-// Calibration check (issue #225/#224 M2, 2026-09-28): buildZoneGraph's
+// Calibration check (issue #225/#224 M2, 2026-09-28, refreshed same day
+// after 6 more real maps were added to the corpus): buildZoneGraph's
 // player:neutral size ratio (3:2 = 1.5) had "zero real-data evidence" per
 // issue #224's own M2 audit — the zone-inference algorithm built for issue
 // #225 (zone-inference.ts's inferZones()) closes that gap. Run against all
-// 12 real hand-crafted OE maps (excluding one degenerate zone on
-// ascension_to_the_throne.map where a player-start's own anchor tile landed
-// on an elevation-wall tile — a known zone-inference seeding limitation, not
-// real evidence, see zone-inference.ts's header comment), the real 35
-// player-zone / 36 neutral-zone tile counts give a mean ratio of 1.449 and a
-// median ratio of 1.609 — the existing 1.5 sits inside that real range on
-// both measures. Deliberately left unchanged rather than "corrected" toward
-// either estimate alone: doing so would fabricate precision this one-
-// dimensional check doesn't actually support (the real per-map ratios
-// range from 0.7 to 4.07 map-to-map — see the calibration script's own
-// output — so a single global ratio is already an approximation of highly
-// variable real data, and 1.5 is a defensible point within it).
+// 18 real hand-crafted OE maps (excluding one degenerate zone on
+// ascension_to_the_throne.map and one on Gargantuesque.map, both where a
+// player-start's own anchor tile landed on an elevation-wall tile — a known
+// zone-inference seeding limitation, not real evidence, see zone-
+// inference.ts's header comment), the real per-map mean ratio is 1.821 and
+// the median is 1.713 — both now sit above the existing 1.5, though 1.5
+// remains within the real per-map range (0.70 to 4.07 map-to-map — see the
+// calibration script's own output). Deliberately left unchanged rather than
+// nudged upward: a single global ratio is already an approximation of
+// highly variable real data, moving it now on one incremental corpus update
+// would be chasing noise, and 1.5 is still a defensible point within the
+// observed range. Revisit if the mean/median keep drifting upward as more
+// real maps are added.
 
 export interface ZoneGraph {
   zones: ZoneSpec[]

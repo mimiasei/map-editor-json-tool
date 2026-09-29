@@ -22,6 +22,14 @@
 // path unchanged — clusters are carved OUT of the existing budget, never
 // added on top, so total coverage stays in the same ~15-22% range this
 // session's prior real-map calibration already established.
+//
+// Two more real-data-calibrated features (issue #224, "Problem 2: Aesthetic
+// detailing"), both opt-in via a 0-1 strength (0 = today's exact behavior):
+// distance-to-road density decay (`roadDecayStrength` — real maps show
+// decoration thins near roads, thickens away from them) and object-category
+// co-occurrence (`coOccurrenceStrength` — real maps show some category
+// pairs cluster more, or less, than chance alone would predict). See
+// decoration-calibration.ts for the real evidence both are built from.
 
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -31,6 +39,94 @@ import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import type { ZoneSpec } from './zone-graph'
 import type { ZoneCenter } from './zone-layout'
+import {
+  type DecorationCategory, roadDistanceDensityMultiplier, coOccurrenceBias, scaleMultiplier,
+} from './decoration-calibration'
+
+/** Base chance of an independent-phase (non-cluster) placement being
+ *  specifically a pool WHEN a pool (or another category real evidence
+ *  biases toward pools) is already nearby — the independent phase never
+ *  placed pools at all before co-occurrence calibration (issue #224);
+ *  `poolChance` was simply omitted, defaulting to 0. Only ever reached via
+ *  `biasedChance`'s `whenNoEvidence: 0` gate (see its own doc comment) — a
+ *  tile with nothing nearby yet stays at exactly 0, matching prior behavior.
+ *  An earlier version of this feature applied this base UNCONDITIONALLY
+ *  once `coOccurrenceStrength > 0` (no gate) and was verified to actively
+ *  HURT the real signal: total pools placed roughly doubled, but the
+ *  pools-near-pools rate went DOWN, because most of the new pools landed
+ *  with no real nearby evidence at all — pure dilution, not clustering. */
+const INDEPENDENT_PHASE_POOL_BASE_CHANCE = 0.03
+/** Same reasoning as `INDEPENDENT_PHASE_POOL_BASE_CHANCE`, for the existing
+ *  independent-phase `mountainChance` — see the call site: this one already
+ *  has a real nonzero baseline (0.05) regardless of co-occurrence, so it's
+ *  passed straight to `biasedChance` rather than gated. */
+const INDEPENDENT_PHASE_MOUNTAIN_BASE_CHANCE = 0.05
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value))
+}
+
+/** Every distinct decoration category already placed within `radius` tiles
+ *  of `node` (issue #224 co-occurrence calibration) — deduplicated, so one
+ *  large existing cluster never outweighs a single other-category neighbor
+ *  in `coOccurrenceBias`'s own averaging. */
+function nearbyCategories(node: number, sizeX: number, sizeZ: number, placedCategoryByNode: Map<number, DecorationCategory>, radius: number): DecorationCategory[] {
+  const x = node % sizeX
+  const z = Math.floor(node / sizeX)
+  const found = new Set<DecorationCategory>()
+  for (let dz = -radius; dz <= radius; dz++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      if (dx === 0 && dz === 0) continue
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const cat = placedCategoryByNode.get(nz * sizeX + nx)
+      if (cat) found.add(cat)
+    }
+  }
+  return [...found]
+}
+
+/** Applies real co-occurrence evidence to a base chance for placing `target`
+ *  near whatever's already at `node`'s neighborhood. Returns `whenNoEvidence`
+ *  whenever `strength` is 0, nothing is nearby yet, OR (only when
+ *  `whenNoEvidence` is 0 — see below) nothing nearby is a real ATTRACTIVE
+ *  signal (bias > 1) for `target`.
+ *
+ *  For a chance that already existed unconditionally before this feature
+ *  (mountainChance), pass `whenNoEvidence === baseChance` — a real
+ *  repulsive signal (bias < 1) legitimately suppresses an already-real
+ *  chance, so both directions apply.
+ *
+ *  For a chance this feature INTRODUCES from a zero baseline (independent-
+ *  phase poolChance, previously always 0), pass `whenNoEvidence: 0` AND rely
+ *  on the bias > 1 gate below — verified empirically necessary, not just a
+ *  nicety: an earlier version unlocked this chance whenever ANYTHING was
+ *  nearby (attractive or repulsive alike), and since pools are real-rare
+ *  (most nearby evidence is some OTHER category, whose bias toward pools is
+ *  repulsive/neutral, not attractive), that version roughly doubled total
+ *  pool placements while the pools-near-pools rate went DOWN — diluting the
+ *  very signal it was meant to encode, since a chance that can only ever go
+ *  UP from zero has no meaningful way to express "and here it should stay
+ *  zero" once merely unlocked by proximity to anything at all. */
+function biasedChance(baseChance: number, whenNoEvidence: number, node: number, sizeX: number, sizeZ: number, placedCategoryByNode: Map<number, DecorationCategory>, target: DecorationCategory, strength: number, radius: number): number {
+  if (strength <= 0) return whenNoEvidence
+  const nearby = nearbyCategories(node, sizeX, sizeZ, placedCategoryByNode, radius)
+  if (nearby.length === 0) return whenNoEvidence
+  const bias = coOccurrenceBias(nearby, target)
+  if (whenNoEvidence === 0 && bias <= 1) return 0
+  return clamp01(baseChance * scaleMultiplier(bias, strength))
+}
+
+/** Classifies a real, already-resolved sid into its decoration category —
+ *  the same buckets `buildFuzzyObstaclePools` sorts the catalog into,
+ *  reversed for a single sid within one zone's own biome pool. */
+function categoryOf(sid: string, pool: FuzzyObstaclePool): DecorationCategory {
+  if (pool.mountains.includes(sid)) return 'mountains'
+  if (pool.pools.includes(sid)) return 'pools'
+  if (pool.obstacles.includes(sid)) return 'obstacles'
+  return 'clutter'
+}
 
 /** One cluster seed per this many candidate tiles — tuned so a typical
  *  zone (a few hundred candidate tiles) gets a handful of clumps, not
@@ -117,25 +213,42 @@ function scatterCluster(
   seedNode: number, sizeX: number, sizeZ: number, pool: FuzzyObstaclePool,
   catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
   groupSizeWeights?: number[],
+  coOccurrenceStrength = 0,
+  placedCategoryByNode?: Map<number, DecorationCategory>,
 ): ZonePlacement[] {
-  const mountainHeavy = pool.mountains.length > 0 && rng() < CLUSTER_MOUNTAIN_HEAVY_CHANCE
+  // Both archetype-choice rolls (mountain-heavy vs obstacle-heavy, and the
+  // pool sub-chance) are biased ONCE per cluster from whatever's already
+  // placed near the seed — a cluster is a single archetype throughout, so
+  // per-member re-biasing would just repeat the same seed-neighborhood
+  // context every time for no real gain.
+  const seedNearby = coOccurrenceStrength > 0 && placedCategoryByNode ? nearbyCategories(seedNode, sizeX, sizeZ, placedCategoryByNode, CLUSTER_RADIUS) : []
+  const mountainHeavyChance = seedNearby.length > 0
+    ? clamp01(CLUSTER_MOUNTAIN_HEAVY_CHANCE * scaleMultiplier(coOccurrenceBias(seedNearby, 'mountains'), coOccurrenceStrength))
+    : CLUSTER_MOUNTAIN_HEAVY_CHANCE
+  const poolChance = seedNearby.length > 0
+    ? clamp01(CLUSTER_POOL_CHANCE * scaleMultiplier(coOccurrenceBias(seedNearby, 'pools'), coOccurrenceStrength))
+    : CLUSTER_POOL_CHANCE
+
+  const mountainHeavy = pool.mountains.length > 0 && rng() < mountainHeavyChance
   const primaryPool = mountainHeavy ? pool.mountains : pool.obstacles
   const accentPool = mountainHeavy ? pool.obstacles : pool.mountains
   if (primaryPool.length === 0) return []
 
-  const pickSid = (): string | null => {
-    if (pool.pools.length > 0 && rng() < CLUSTER_POOL_CHANCE) {
-      return pool.pools[Math.floor(rng() * pool.pools.length)]
+  const pickSid = (): { sid: string; category: DecorationCategory } | null => {
+    if (pool.pools.length > 0 && rng() < poolChance) {
+      return { sid: pool.pools[Math.floor(rng() * pool.pools.length)], category: 'pools' }
     }
     const roll = rng()
+    const primaryCategory: DecorationCategory = mountainHeavy ? 'mountains' : 'obstacles'
+    const accentCategory: DecorationCategory = mountainHeavy ? 'obstacles' : 'mountains'
     if (roll < CLUSTER_PRIMARY_CHANCE || accentPool.length === 0) {
-      return primaryPool[Math.floor(rng() * primaryPool.length)]
+      return { sid: primaryPool[Math.floor(rng() * primaryPool.length)], category: primaryCategory }
     }
     if (roll < CLUSTER_PRIMARY_CHANCE + CLUSTER_ACCENT_CHANCE) {
-      return accentPool[Math.floor(rng() * accentPool.length)]
+      return { sid: accentPool[Math.floor(rng() * accentPool.length)], category: accentCategory }
     }
-    if (pool.clutter.length > 0) return pool.clutter[Math.floor(rng() * pool.clutter.length)]
-    return primaryPool[Math.floor(rng() * primaryPool.length)]
+    if (pool.clutter.length > 0) return { sid: pool.clutter[Math.floor(rng() * pool.clutter.length)], category: 'clutter' }
+    return { sid: primaryPool[Math.floor(rng() * primaryPool.length)], category: primaryCategory }
   }
 
   const targetSize = groupSizeWeights && groupSizeWeights.length > 0
@@ -152,10 +265,11 @@ function scatterCluster(
     const z = cz + dz
     if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
     const node = z * sizeX + x
-    const sid = pickSid()
-    if (!sid) continue
-    if (!tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) continue
-    placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) })
+    const picked = pickSid()
+    if (!picked) continue
+    if (!tryPlaceAt(picked.sid, node, sizeX, sizeZ, catalogById, state)) continue
+    placements.push({ tempId: state.nextTempId++, sid: picked.sid, node, rotation: pickRotation(picked.sid, catalogById, rng) })
+    placedCategoryByNode?.set(node, picked.category)
     placed++
   }
   return placements
@@ -200,6 +314,21 @@ export interface ScatterObstaclesOptions {
    *  real per-tile distance-to-road field, a larger change deferred for
    *  now — not silently ignored, just not attempted). */
   ambientPickupByZone?: Map<number, { groupSizeWeights?: number[]; obstacleAttraction?: number; repulsion?: number }>
+  /** Real per-tile distance-to-nearest-road-tile (issue #224 — the
+   *  `roadAttraction`/`noise` gap this file used to flag as deferred above),
+   *  same shape `computeRoadDistanceField` (zone-connections.ts) already
+   *  produces from `generate-random-map.ts`'s own `roadNodes`. Combined with
+   *  `roadDecayStrength` below — omitted or `roadDecayStrength <= 0` means
+   *  byte-for-byte the same density roll as before this feature existed. */
+  roadDistanceField?: Int32Array
+  /** 0 (default) = no road-distance effect at all (today's exact behavior);
+   *  1 = the full real calibrated density-vs-road-distance curve
+   *  (decoration-calibration.ts); values in between blend toward it. */
+  roadDecayStrength?: number
+  /** 0 (default) = no co-occurrence effect at all (today's exact behavior);
+   *  1 = the full real calibrated category co-occurrence table
+   *  (decoration-calibration.ts); values in between blend toward it. */
+  coOccurrenceStrength?: number
 }
 
 /** Every candidate node's distance from its own zone's center, normalized
@@ -221,9 +350,17 @@ function zoneNodeDistances(candidateTiles: number[], sizeX: number, center: Zone
 }
 
 export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, centers, tilesByZone, zoneBiome, catalogById, mapObjects, excludedNodes, state, rng, density = 0.35, densityByZone, ambientPickupByZone } = options
+  const {
+    sizeX, sizeZ, zones, centers, tilesByZone, zoneBiome, catalogById, mapObjects, excludedNodes, state, rng,
+    density = 0.35, densityByZone, ambientPickupByZone, roadDistanceField, roadDecayStrength = 0, coOccurrenceStrength = 0,
+  } = options
   const pools = buildFuzzyObstaclePools(mapObjects)
   const placements: ZonePlacement[] = []
+  // Shared across every zone (in generation order) — co-occurrence bias
+  // looks at whatever's already been placed nearby, regardless of which
+  // zone it came from, matching how a real cross-zone treeline/pond doesn't
+  // stop respecting a Voronoi boundary.
+  const placedCategoryByNode = new Map<number, DecorationCategory>()
 
   for (const zone of zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
@@ -241,7 +378,16 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     const zoneDensity = densityByZone?.get(zone.id) ?? (zone.kind === 'player' ? density * 0.6 : density)
     const freeTiles = tiles.filter((node) => !excludedNodes.has(node))
     if (freeTiles.length === 0) continue
-    let candidateTiles = freeTiles.filter(() => rng() < zoneDensity)
+    // Real distance-to-road density decay (issue #224) — applied as a
+    // per-tile multiplier on the SAME density roll every tile already went
+    // through, so it's still exactly one rng() call per tile either way
+    // (preserves the existing generator's seeded-RNG-call-count contract).
+    // Omitted/zero strength -> identical to the original flat roll.
+    let candidateTiles = freeTiles.filter((node) => {
+      if (!roadDistanceField || roadDecayStrength <= 0) return rng() < zoneDensity
+      const multiplier = scaleMultiplier(roadDistanceDensityMultiplier(roadDistanceField[node] ?? Infinity), roadDecayStrength)
+      return rng() < zoneDensity * multiplier
+    })
     // Guaranteed floor — a real user report: islands mode (especially with
     // player-start islands enabled) can leave a zone's own free-tile pool
     // small enough — a thin Penrose slice further shrunk by an island's
@@ -274,16 +420,35 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     for (let i = 0; i < clusterSeedCount; i++) {
       const seedIndex = Math.floor(rng() * candidateTiles.length)
       const [seedNode] = candidateTiles.splice(seedIndex, 1)
-      placements.push(...scatterCluster(seedNode, sizeX, sizeZ, pool, catalogById, state, rng, ambientPickup?.groupSizeWeights))
+      placements.push(...scatterCluster(seedNode, sizeX, sizeZ, pool, catalogById, state, rng, ambientPickup?.groupSizeWeights, coOccurrenceStrength, placedCategoryByNode))
     }
     if (candidateTiles.length === 0) continue
 
     const nodeDistances = zoneNodeDistances(candidateTiles, sizeX, center, tiles.length)
-    const candidates = sampleFuzzyObstacles(nodeDistances, () => biome, pools, { mountainChance: 0.05, rng })
-    for (const { node, sid } of candidates) {
-      if (!tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) continue
-      placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) })
-    }
+    // Co-occurrence bias (issue #224): mountainChanceFor/poolChanceFor are
+    // called LIVE, per node, as sampleFuzzyObstacles iterates — and
+    // onDecided runs the real tryPlaceAt collision check + updates
+    // placedCategoryByNode IMMEDIATELY for a real, validated placement, so
+    // a later node in this SAME batch really does see an earlier one's
+    // outcome. Confirmed necessary: an earlier version computed bias once
+    // per zone BEFORE the batch ran (a static snapshot) and was measurably
+    // weaker — see biasedChance's own doc comment for the specific
+    // pools-near-pools regression that caught it.
+    const mountainChanceFor = coOccurrenceStrength > 0
+      ? (node: number) => biasedChance(INDEPENDENT_PHASE_MOUNTAIN_BASE_CHANCE, INDEPENDENT_PHASE_MOUNTAIN_BASE_CHANCE, node, sizeX, sizeZ, placedCategoryByNode, 'mountains', coOccurrenceStrength, CLUSTER_RADIUS)
+      : undefined
+    const poolChanceFor = coOccurrenceStrength > 0
+      ? (node: number) => biasedChance(INDEPENDENT_PHASE_POOL_BASE_CHANCE, 0, node, sizeX, sizeZ, placedCategoryByNode, 'pools', coOccurrenceStrength, CLUSTER_RADIUS)
+      : undefined
+    sampleFuzzyObstacles(nodeDistances, () => biome, pools, {
+      mountainChance: 0.05, rng, mountainChanceFor, poolChanceFor,
+      onDecided: (node, addition) => {
+        if (!addition) return
+        if (!tryPlaceAt(addition.sid, node, sizeX, sizeZ, catalogById, state)) return
+        placements.push({ tempId: state.nextTempId++, sid: addition.sid, node, rotation: pickRotation(addition.sid, catalogById, rng) })
+        if (coOccurrenceStrength > 0) placedCategoryByNode.set(node, categoryOf(addition.sid, pool))
+      },
+    })
   }
 
   return placements

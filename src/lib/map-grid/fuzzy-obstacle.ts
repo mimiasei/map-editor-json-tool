@@ -281,6 +281,25 @@ export interface FuzzyObstacleOptions {
   poolChance?: number
   /** Injectable for deterministic tests; defaults to Math.random. */
   rng?: () => number
+  /** Per-node override for `mountainChance` (issue #224 real-data
+   *  co-occurrence calibration), called live as this function iterates —
+   *  a FUNCTION rather than a precomputed map so a caller can react to
+   *  `onDecided` calls from earlier nodes in this SAME batch (see below),
+   *  not just to placements that existed before this call started. Absent
+   *  entirely for every existing caller (the Fuzzy Obstacle brush editor
+   *  tool), so this never changes behavior unless a caller opts in. */
+  mountainChanceFor?: (node: number) => number
+  /** Same idea as `mountainChanceFor`, for `poolChance`. */
+  poolChanceFor?: (node: number) => number
+  /** Called immediately after EVERY node's fate is decided (an addition, or
+   *  none) — lets a caller maintain its own live spatial index as this
+   *  function iterates, so `mountainChanceFor`/`poolChanceFor` on a LATER
+   *  node in this same batch can react to an EARLIER one's real outcome.
+   *  Confirmed necessary, not just a nicety: an earlier version without this
+   *  (a static per-node map computed once before the whole batch ran) was
+   *  verified to produce a much weaker real co-occurrence signal, since
+   *  most within-batch neighbors never saw each other's placements at all. */
+  onDecided?: (node: number, addition: { sid: string } | undefined) => void
 }
 
 function pickRandom(list: string[], rng: () => number): string {
@@ -298,7 +317,7 @@ export function sampleFuzzyObstacles(
   pools: Record<BiomeId, FuzzyObstaclePool>,
   options: FuzzyObstacleOptions = {},
 ): { node: number; sid: string }[] {
-  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, allowHighContrastBiomes = true, mountainChance = 0, poolChance = 0, rng = Math.random } = options
+  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, allowHighContrastBiomes = true, mountainChance = 0, poolChance = 0, rng = Math.random, mountainChanceFor, poolChanceFor, onDecided } = options
   const pObstacleFloor = 0.15
   const additions: { node: number; sid: string }[] = []
 
@@ -317,6 +336,7 @@ export function sampleFuzzyObstacles(
     const pool = pools[biomeId]
     const hasAnyObstacleRole = pool.obstacles.length > 0 || pool.mountains.length > 0 || pool.pools.length > 0
 
+    let addition: { sid: string } | undefined
     const pObstacle = Math.max(pObstacleFloor, 1 - distance * edgeFalloff)
     if (hasAnyObstacleRole && rng() < pObstacle) {
       // Which obstacle-role sub-type: mountain > pool > regular obstacle,
@@ -325,39 +345,43 @@ export function sampleFuzzyObstacles(
       // actually has entries for this biome (e.g. Desert has mountains but
       // never pools_/trees never have mountains at all, per the real
       // catalog — see isMountainDecoration/isTreeDecoration's own comments).
-      if (pool.mountains.length > 0 && rng() < mountainChance) {
-        additions.push({ node, sid: pickRandom(pool.mountains, rng) })
-      } else if (pool.pools.length > 0 && rng() < poolChance) {
-        additions.push({ node, sid: pickRandom(pool.pools, rng) })
+      const effectiveMountainChance = mountainChanceFor?.(node) ?? mountainChance
+      const effectivePoolChance = poolChanceFor?.(node) ?? poolChance
+      if (pool.mountains.length > 0 && rng() < effectiveMountainChance) {
+        addition = { sid: pickRandom(pool.mountains, rng) }
+      } else if (pool.pools.length > 0 && rng() < effectivePoolChance) {
+        addition = { sid: pickRandom(pool.pools, rng) }
       } else if (pool.obstacles.length > 0) {
-        additions.push({ node, sid: pickRandom(pool.obstacles, rng) })
+        addition = { sid: pickRandom(pool.obstacles, rng) }
       } else if (pool.mountains.length > 0) {
-        additions.push({ node, sid: pickRandom(pool.mountains, rng) })
+        addition = { sid: pickRandom(pool.mountains, rng) }
       } else {
-        additions.push({ node, sid: pickRandom(pool.pools, rng) })
+        addition = { sid: pickRandom(pool.pools, rng) }
       }
-      continue
+    } else {
+      // Not an obstacle this pass — a distance-scaled chance of clutter
+      // instead of leaving the tile untouched (the "soft taper" toward edges).
+      const pClutter = 0.2 + distance * 0.3
+      if (pool.clutter.length > 0 && rng() < pClutter) {
+        addition = { sid: pool.clutter[Math.floor(rng() * pool.clutter.length)] }
+      } else if (pool.clutter.length === 0 && hasAnyObstacleRole) {
+        // Dirt biome's real, sparse case (2 clutter entries in real catalog
+        // data) — documented fallback, not a silent degrade: a thin/absent
+        // clutter pool still gets an obstacle-role edge at a lower rate
+        // rather than nothing at all. Regular obstacles preferred over
+        // mountains/pools here — an edge tile is a poor spot for a big
+        // mountain or pool feature.
+        const fallbackCandidates = pool.obstacles.length > 0 ? pool.obstacles : pool.mountains.length > 0 ? pool.mountains : pool.pools
+        if (rng() < pObstacle * 0.5) {
+          addition = { sid: pickRandom(fallbackCandidates, rng) }
+        }
+      }
+      // else: nothing placed at this node this pass — a real, expected
+      // outcome for a fuzzy edge, not a bug.
     }
 
-    // Not an obstacle this pass — a distance-scaled chance of clutter
-    // instead of leaving the tile untouched (the "soft taper" toward edges).
-    const pClutter = 0.2 + distance * 0.3
-    if (pool.clutter.length > 0 && rng() < pClutter) {
-      additions.push({ node, sid: pool.clutter[Math.floor(rng() * pool.clutter.length)] })
-    } else if (pool.clutter.length === 0 && hasAnyObstacleRole) {
-      // Dirt biome's real, sparse case (2 clutter entries in real catalog
-      // data) — documented fallback, not a silent degrade: a thin/absent
-      // clutter pool still gets an obstacle-role edge at a lower rate
-      // rather than nothing at all. Regular obstacles preferred over
-      // mountains/pools here — an edge tile is a poor spot for a big
-      // mountain or pool feature.
-      const fallbackCandidates = pool.obstacles.length > 0 ? pool.obstacles : pool.mountains.length > 0 ? pool.mountains : pool.pools
-      if (rng() < pObstacle * 0.5) {
-        additions.push({ node, sid: pickRandom(fallbackCandidates, rng) })
-      }
-    }
-    // else: nothing placed at this node this pass — a real, expected outcome
-    // for a fuzzy edge, not a bug.
+    if (addition) additions.push({ node, sid: addition.sid })
+    onDecided?.(node, addition)
   }
   return additions
 }

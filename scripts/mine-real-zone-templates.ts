@@ -1,15 +1,16 @@
 // ─── Mine real OE maps' inferred zone graphs into .rmg.json templates
 // (issue #224 M4) ──────────────────────────────────────────────────────────
-// Runs zone-inference.ts's inferZones() (issue #225) against all 12 real
-// hand-crafted maps and writes each CONNECTED result as a real .rmg.json
-// game template (this repo's existing external template format, parsed
-// unchanged by rmg-template-import.ts) into both maps/templates/ and
+// Runs zone-inference.ts's inferZones() (issue #225) against every real
+// hand-crafted map in the corpus and writes each CONNECTED result as a real
+// .rmg.json game template (this repo's existing external template format,
+// parsed unchanged by rmg-template-import.ts) into both maps/templates/ and
 // src-tauri/resources/templates/ (kept in sync, same convention as every
 // other bundled template).
 //
-// Only 6 of the 12 real maps' inferred zone graphs come out CONNECTED under
-// this first-pass, terrain-only (water + elevation-wall) blocked-tile model
-// — the other 6 (Broken_Alliance, Glittering_Strait, The_Mysterious_Island,
+// As of the 18-map corpus (2026-09-28), 11 of 18 real maps' inferred zone
+// graphs come out CONNECTED under this first-pass, terrain-only (water +
+// elevation-wall) blocked-tile model — the other 7 (Broken_Alliance,
+// Gargantuesque, Glittering_Strait, The_Mysterious_Island,
 // The_Slaughterfield_(II), ascension_to_the_throne, song_of_murmurwood) are
 // deliberately excluded, not silently fixed: generate-terrain.ts's own
 // zoneDistanceMatrix() throws on a disconnected imported topology, so

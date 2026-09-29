@@ -1,0 +1,78 @@
+{
+  "name": "Real: Casino",
+  "gameMode": "Classic",
+  "description": "Zone graph mined from the real hand-crafted map \"Casino\" (issue #225 zone inference, issue #224 M4) — 4 zones (2 players), 5 connections.",
+  "sizeX": 64,
+  "sizeZ": 64,
+  "variants": [
+    {
+      "zones": [
+        {
+          "name": "Zone0",
+          "size": 1.34,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player1"
+            }
+          ]
+        },
+        {
+          "name": "Zone1",
+          "size": 1.53,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player2"
+            }
+          ]
+        },
+        {
+          "name": "Zone2",
+          "size": 1.27
+        },
+        {
+          "name": "Zone3",
+          "size": 1
+        }
+      ],
+      "connections": [
+        {
+          "name": "Conn0",
+          "from": "Zone0",
+          "to": "Zone3",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn1",
+          "from": "Zone1",
+          "to": "Zone3",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn2",
+          "from": "Zone0",
+          "to": "Zone1",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn3",
+          "from": "Zone0",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn4",
+          "from": "Zone1",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        }
+      ]
+    }
+  ]
+}

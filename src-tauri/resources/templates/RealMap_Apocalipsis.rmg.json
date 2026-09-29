@@ -1,0 +1,260 @@
+{
+  "name": "Real: Apocalipsis",
+  "gameMode": "Classic",
+  "description": "Zone graph mined from the real hand-crafted map \"Apocalipsis\" (issue #225 zone inference, issue #224 M4) — 12 zones (6 players), 23 connections.",
+  "sizeX": 96,
+  "sizeZ": 96,
+  "variants": [
+    {
+      "zones": [
+        {
+          "name": "Zone0",
+          "size": 4.95,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player1"
+            }
+          ]
+        },
+        {
+          "name": "Zone1",
+          "size": 4.75,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player2"
+            }
+          ]
+        },
+        {
+          "name": "Zone2",
+          "size": 4.94,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player3"
+            }
+          ]
+        },
+        {
+          "name": "Zone3",
+          "size": 4.58,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player4"
+            }
+          ]
+        },
+        {
+          "name": "Zone4",
+          "size": 4.36,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player5"
+            }
+          ]
+        },
+        {
+          "name": "Zone5",
+          "size": 4.52,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player6"
+            }
+          ]
+        },
+        {
+          "name": "Zone6",
+          "size": 4.34
+        },
+        {
+          "name": "Zone7",
+          "size": 8.19
+        },
+        {
+          "name": "Zone8",
+          "size": 4.35
+        },
+        {
+          "name": "Zone9",
+          "size": 8.09
+        },
+        {
+          "name": "Zone10",
+          "size": 1
+        },
+        {
+          "name": "Zone11",
+          "size": 1.78
+        }
+      ],
+      "connections": [
+        {
+          "name": "Conn0",
+          "from": "Zone0",
+          "to": "Zone6",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn1",
+          "from": "Zone6",
+          "to": "Zone10",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn2",
+          "from": "Zone5",
+          "to": "Zone6",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn3",
+          "from": "Zone5",
+          "to": "Zone10",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn4",
+          "from": "Zone0",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn5",
+          "from": "Zone6",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn6",
+          "from": "Zone5",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn7",
+          "from": "Zone4",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn8",
+          "from": "Zone0",
+          "to": "Zone1",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn9",
+          "from": "Zone1",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn10",
+          "from": "Zone4",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn11",
+          "from": "Zone7",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn12",
+          "from": "Zone4",
+          "to": "Zone7",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn13",
+          "from": "Zone1",
+          "to": "Zone7",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn14",
+          "from": "Zone4",
+          "to": "Zone11",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn15",
+          "from": "Zone7",
+          "to": "Zone11",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn16",
+          "from": "Zone1",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn17",
+          "from": "Zone2",
+          "to": "Zone7",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn18",
+          "from": "Zone3",
+          "to": "Zone7",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn19",
+          "from": "Zone3",
+          "to": "Zone11",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn20",
+          "from": "Zone7",
+          "to": "Zone8",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn21",
+          "from": "Zone2",
+          "to": "Zone8",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn22",
+          "from": "Zone3",
+          "to": "Zone8",
+          "connectionType": "Direct",
+          "road": true
+        }
+      ]
+    }
+  ]
+}

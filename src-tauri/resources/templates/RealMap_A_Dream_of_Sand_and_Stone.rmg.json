@@ -1,0 +1,246 @@
+{
+  "name": "Real: A Dream of Sand and Stone",
+  "gameMode": "Classic",
+  "description": "Zone graph mined from the real hand-crafted map \"A Dream of Sand and Stone\" (issue #225 zone inference, issue #224 M4) — 12 zones (6 players), 21 connections.",
+  "sizeX": 128,
+  "sizeZ": 128,
+  "variants": [
+    {
+      "zones": [
+        {
+          "name": "Zone0",
+          "size": 3.48,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player1"
+            }
+          ]
+        },
+        {
+          "name": "Zone1",
+          "size": 4.03,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player2"
+            }
+          ]
+        },
+        {
+          "name": "Zone2",
+          "size": 3.79,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player3"
+            }
+          ]
+        },
+        {
+          "name": "Zone3",
+          "size": 3.89,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player4"
+            }
+          ]
+        },
+        {
+          "name": "Zone4",
+          "size": 4.23,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player5"
+            }
+          ]
+        },
+        {
+          "name": "Zone5",
+          "size": 4.32,
+          "mainObjects": [
+            {
+              "type": "Spawn",
+              "spawn": "Player6"
+            }
+          ]
+        },
+        {
+          "name": "Zone6",
+          "size": 1
+        },
+        {
+          "name": "Zone7",
+          "size": 1.07
+        },
+        {
+          "name": "Zone8",
+          "size": 2.02
+        },
+        {
+          "name": "Zone9",
+          "size": 4.46
+        },
+        {
+          "name": "Zone10",
+          "size": 2.75
+        },
+        {
+          "name": "Zone11",
+          "size": 2.49
+        }
+      ],
+      "connections": [
+        {
+          "name": "Conn0",
+          "from": "Zone3",
+          "to": "Zone7",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn1",
+          "from": "Zone4",
+          "to": "Zone8",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn2",
+          "from": "Zone7",
+          "to": "Zone10",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn3",
+          "from": "Zone3",
+          "to": "Zone4",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn4",
+          "from": "Zone3",
+          "to": "Zone10",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn5",
+          "from": "Zone5",
+          "to": "Zone8",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn6",
+          "from": "Zone4",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn7",
+          "from": "Zone4",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn8",
+          "from": "Zone3",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn9",
+          "from": "Zone2",
+          "to": "Zone10",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn10",
+          "from": "Zone2",
+          "to": "Zone3",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn11",
+          "from": "Zone5",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn12",
+          "from": "Zone2",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn13",
+          "from": "Zone0",
+          "to": "Zone5",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn14",
+          "from": "Zone0",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn15",
+          "from": "Zone1",
+          "to": "Zone2",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn16",
+          "from": "Zone1",
+          "to": "Zone9",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn17",
+          "from": "Zone9",
+          "to": "Zone11",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn18",
+          "from": "Zone1",
+          "to": "Zone11",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn19",
+          "from": "Zone0",
+          "to": "Zone11",
+          "connectionType": "Direct",
+          "road": true
+        },
+        {
+          "name": "Conn20",
+          "from": "Zone6",
+          "to": "Zone11",
+          "connectionType": "Direct",
+          "road": true
+        }
+      ]
+    }
+  ]
+}
