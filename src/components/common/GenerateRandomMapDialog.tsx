@@ -78,13 +78,17 @@ const PREVIEW_CANVAS_SIZE = 300
 
 type PreviewPhase = 'off' | 'terrain' | 'roads' | 'all'
 
-/** Left-nav categories (issue #232) — replaces the old single flat
- *  "Advanced" accordion once live preview is off. During live preview the
- *  existing stage-gated reveal (showTerrainSliders/showRoadSliders/etc.)
- *  still drives visibility directly, same as before this change; the nav
- *  only applies when there's no forced sequence to follow. */
-type Category = 'terrain' | 'biomes' | 'roads' | 'scenery' | 'economy' | 'connectivity' | 'advanced'
+/** Left-nav categories (issue #232) — a real sidebar column (not just an
+ *  inline nav within the scrolling content), same 3-column shape as the
+ *  design mockup: nav | content | live-preview. 'core' ("Start") holds Map
+ *  name/Size/Players/Game template/Seed/Terrain only/Live preview — the
+ *  same fields that used to sit permanently above the old flat "Advanced"
+ *  accordion, now just another nav destination, and the one always
+ *  reachable regardless of live-preview stage (see NAV_STAGE_ALLOWED)
+ *  since that's where the Live preview off-switch lives. */
+type Category = 'core' | 'terrain' | 'biomes' | 'roads' | 'scenery' | 'economy' | 'connectivity' | 'advanced'
 const CATEGORIES: { id: Category; label: string }[] = [
+  { id: 'core', label: 'Start' },
   { id: 'terrain', label: 'Terrain & Elevation' },
   { id: 'biomes', label: 'Biomes' },
   { id: 'roads', label: 'Roads & Rivers' },
@@ -93,6 +97,16 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'connectivity', label: 'Connectivity & Portals' },
   { id: 'advanced', label: 'Advanced' },
 ]
+/** During live preview, only these categories have anything to show (see
+ *  the showXFields derivations below) — everything else's nav button is
+ *  disabled rather than clickable-but-blank. 'core' is always included:
+ *  the Live preview switch (to turn it back off) lives there. */
+const NAV_STAGE_ALLOWED: Record<PreviewPhase, Category[] | null> = {
+  off: null,
+  terrain: ['core', 'terrain', 'biomes'],
+  roads: ['core', 'roads'],
+  all: ['core', 'scenery', 'economy', 'connectivity'],
+}
 
 function randomSeedValue(): number {
   return Math.floor(Math.random() * 1_000_000_000)
@@ -167,7 +181,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [gameTemplate, setGameTemplate] = useState<{ fileName: string; name: string; json: string } | null>(null)
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false)
   const [seedText, setSeedText] = useState('')
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null)
+  const [activeCategory, setActiveCategory] = useState<Category>('core')
   const [generating, setGenerating] = useState(false)
   const [genProgress, setGenProgress] = useState<{ pct: number; label: string } | null>(null)
 
@@ -205,12 +219,17 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // it, so the 'all' stage (a real user request) only ever shows the
   // object/guard/decoration categories, not a "one more pass" reopening of
   // the earlier stages' own controls.
-  const showTerrainSliders = previewPhase === 'off' ? activeCategory === 'terrain' : previewPhase === 'terrain'
-  const showBiomesFields = previewPhase === 'off' ? activeCategory === 'biomes' : previewPhase === 'terrain'
-  const showRoadSliders = previewPhase === 'off' ? activeCategory === 'roads' : previewPhase === 'roads'
-  const showSceneryFields = previewPhase === 'off' ? activeCategory === 'scenery' : previewPhase === 'all'
-  const showEconomyFields = previewPhase === 'off' ? activeCategory === 'economy' : previewPhase === 'all'
-  const showConnectivityFields = previewPhase === 'off' ? activeCategory === 'connectivity' : previewPhase === 'all'
+  const showCore = activeCategory === 'core'
+  const showTerrainSliders = activeCategory === 'terrain' && (previewPhase === 'off' || previewPhase === 'terrain')
+  const showBiomesFields = activeCategory === 'biomes' && (previewPhase === 'off' || previewPhase === 'terrain')
+  const showRoadSliders = activeCategory === 'roads' && (previewPhase === 'off' || previewPhase === 'roads')
+  // The 'all' stage is a real user request: every remaining category shown
+  // at once for one last adjustment pass, not gated by nav selection (see
+  // this file's own header comment, stage 3) — so these three ignore
+  // activeCategory entirely once previewPhase reaches 'all'.
+  const showSceneryFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'scenery')
+  const showEconomyFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'economy')
+  const showConnectivityFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'connectivity')
 
   const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], roadNodes?: Set<number>) => {
     const canvas = canvasRef.current
@@ -273,9 +292,11 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       if (!seedText.trim()) setSeedText(String(randomSeedValue()))
       setPreviewError(null)
       setPreviewPhase('terrain')
+      setActiveCategory('terrain')
     } else {
       setPreviewPhase('off')
       lockedTerrainRef.current = null
+      setActiveCategory('core')
     }
   }
 
@@ -358,10 +379,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       return
     }
     setPreviewPhase('roads')
+    setActiveCategory('roads')
   }
 
   const handleConfirmRoads = () => {
     setPreviewPhase('all')
+    setActiveCategory('scenery')
   }
 
   const handleSaveTemplate = async () => {
@@ -508,112 +531,107 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           <span className="text-sm font-semibold">Generate Random Map</span>
         </div>
 
-        <div className="p-4 space-y-4 overflow-y-auto">
-          <div className="space-y-1.5">
-            <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
-            <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
-          </div>
+        <div className="flex-1 flex overflow-hidden">
+          <nav className="w-44 shrink-0 border-r border-border overflow-y-auto p-2 space-y-0.5">
+            {CATEGORIES.map((cat) => {
+              const allowed = NAV_STAGE_ALLOWED[previewPhase]
+              const disabled = allowed !== null && !allowed.includes(cat.id)
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`w-full text-left text-xs px-2 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed ${activeCategory === cat.id ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                >
+                  {cat.label}
+                </button>
+              )
+            })}
+          </nav>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Size</Label>
-            <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
-              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {MAP_SIZE_PRESETS.map((p) => (
-                  <SelectItem key={presetKey(p)} value={presetKey(p)}>{p.sizeX} × {p.sizeZ}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
+              {showCore && (
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
+                    <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
+                  </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Players</Label>
-            <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
-              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {PLAYER_COUNT_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {gameTemplate && <p className="text-xs text-muted-foreground">Ignored — the game template below sets its own player count.</p>}
-          </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Size</Label>
+                    <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {MAP_SIZE_PRESETS.map((p) => (
+                          <SelectItem key={presetKey(p)} value={presetKey(p)}>{p.sizeX} × {p.sizeZ}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Game template</Label>
-            {gameTemplate ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm flex-1 truncate" title={gameTemplate.name}>{gameTemplate.name}</span>
-                <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setGameTemplate(null)} disabled={terrainLocked}>
-                  Clear
-                </Button>
-              </div>
-            ) : (
-              <Button type="button" variant="outline" size="sm" className="h-8 w-full justify-start text-sm font-normal" onClick={() => setTemplatePickerOpen(true)} disabled={terrainLocked}>
-                Use a game template…
-              </Button>
-            )}
-          </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Players</Label>
+                    <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {PLAYER_COUNT_OPTIONS.map((n) => (
+                          <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {gameTemplate && <p className="text-xs text-muted-foreground">Ignored — the game template below sets its own player count.</p>}
+                  </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs" title="Same seed, same map. The number field for typing an exact seed lives in the Advanced category below — this is the quick way to get a fresh random terrain result immediately.">
-              Seed
-            </Label>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground flex-1 truncate">{seedText || 'Random'}</span>
-              <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
-            </div>
-          </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Game template</Label>
+                    {gameTemplate ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm flex-1 truncate" title={gameTemplate.name}>{gameTemplate.name}</span>
+                        <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setGameTemplate(null)} disabled={terrainLocked}>
+                          Clear
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="button" variant="outline" size="sm" className="h-8 w-full justify-start text-sm font-normal" onClick={() => setTemplatePickerOpen(true)} disabled={terrainLocked}>
+                        Use a game template…
+                      </Button>
+                    )}
+                  </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="rmg-terrain-only" className="text-xs" title="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves.">
-              Terrain only
-            </Label>
-            <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
-          </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" title="Same seed, same map. The number field for typing an exact seed lives in the Advanced category — this is the quick way to get a fresh random terrain result immediately.">
+                      Seed
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground flex-1 truncate">{seedText || 'Random'}</span>
+                      <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
+                    </div>
+                  </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="rmg-live-preview" className="text-xs" title="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage.">
-              Live preview
-            </Label>
-            <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
-          </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="rmg-terrain-only" className="text-xs" title="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves.">
+                      Terrain only
+                    </Label>
+                    <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
+                  </div>
 
-          {previewActive && (
-            <div className="space-y-1.5">
-              <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
-                <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
-              </div>
-              {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
-              {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
-              <p className="text-xs text-muted-foreground">
-                {previewPhase === 'terrain'
-                  ? 'Tune terrain below, then confirm to move on.'
-                  : previewPhase === 'roads'
-                    ? 'Tune road/river winding below, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
-                    : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else below, then Generate.'}
-              </p>
-            </div>
-          )}
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="rmg-live-preview" className="text-xs" title="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage.">
+                      Live preview
+                    </Label>
+                    <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
+                  </div>
 
-          <div className="flex gap-4">
-            {previewPhase === 'off' && (
-              <nav className="w-40 shrink-0 space-y-0.5">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setActiveCategory((c) => (c === cat.id ? null : cat.id))}
-                    className={`w-full text-left text-xs px-2 py-1.5 rounded ${activeCategory === cat.id ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </nav>
-            )}
-            <div className={previewPhase === 'off' ? 'flex-1 min-w-0 space-y-4 pl-3 border-l border-border' : 'flex-1 min-w-0 space-y-4'}>
-              {previewPhase === 'off' && !activeCategory && (
-                <p className="text-xs text-muted-foreground pt-1">Pick a category to configure it — anything you don't touch uses its default.</p>
+                  <p className="text-xs text-muted-foreground">
+                    One zone per player plus a neutral zone between each pair, each
+                    with its own biome/faction, roads connecting every zone, one
+                    river, and biome-appropriate scenery. Player zones get a
+                    faction-matched starting dwelling, mine, and guard; neutral
+                    zones get a mine (guarded to its own real economic value) and
+                    scaled treasure. No zone-shape variety yet.
+                  </p>
+                </div>
               )}
 
               {showBiomesFields && (
@@ -916,7 +934,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             </div>
           )}
 
-          {previewPhase === 'off' && activeCategory === 'advanced' && (
+          {activeCategory === 'advanced' && (
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="rmg-seed-manual" className="text-xs">Seed (optional — same seed, same map)</Label>
@@ -931,17 +949,32 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               </div>
             </div>
           )}
-            </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            One zone per player plus a neutral zone between each pair, each
-            with its own biome/faction, roads connecting every zone, one
-            river, and biome-appropriate scenery. Player zones get a
-            faction-matched starting dwelling, mine, and guard; neutral
-            zones get a mine (guarded to its own real economic value) and
-            scaled treasure. No zone-shape variety yet.
-          </p>
+          {/* Live-preview column (issue #232 design) — always its own
+              column, not layered inline above the category content, so the
+              rendering stays visible no matter which category is open. */}
+          <div className="w-80 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2">
+            <Label className="text-xs font-semibold">Map Preview</Label>
+            {previewActive ? (
+              <div className="space-y-1.5">
+                <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
+                  <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
+                </div>
+                {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
+                {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
+                <p className="text-xs text-muted-foreground">
+                  {previewPhase === 'terrain'
+                    ? 'Tune terrain in the sidebar, then confirm to move on.'
+                    : previewPhase === 'roads'
+                      ? 'Tune road/river winding in the sidebar, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
+                      : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else in the sidebar, then Generate.'}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Turn on Live preview (Start page) to see a live rendering here.</p>
+            )}
+          </div>
         </div>
 
         {genProgress && (
