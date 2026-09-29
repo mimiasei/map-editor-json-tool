@@ -151,12 +151,30 @@ export interface GenerateTerrainOptions {
    *  imported (topology only — biome/water/decoration/population all still
    *  run as this generator's own logic on top of the imported shape). */
   gameTemplateJson?: string
-  /** Issue #224 — WFC-blend real biome variety into the `borderRadius`
-   *  tiles around each zone boundary instead of this generator's original
-   *  flat one-biome-per-zone fill (see terrain-wfc.ts's own header comment).
-   *  Defaults to false — today's original behavior for a caller that never
-   *  sets this. */
-  organicTerrainBlending?: boolean
+  /** Issue #224/#232 — 0-1 strength of WFC-blended real biome variety
+   *  around each zone boundary instead of this generator's original flat
+   *  one-biome-per-zone fill (see terrain-wfc.ts's own header comment).
+   *  0 (the default) reproduces today's original flat-fill behavior exactly
+   *  — a caller that never sets this gets byte-identical output. Above 0,
+   *  scales both `blendZoneBordersWFC`'s own `borderRadius` (2 tiles at a
+   *  low strength, up to 6 at strength 1 — a much wider blended band) and
+   *  `zonePriorWeight` (8 at a low strength, down to 1 at strength 1 — a
+   *  much weaker bias toward each tile's own zone biome, i.e. much more
+   *  blending) — see `organicBlendParams` below. */
+  organicTerrainBlending?: number
+}
+
+/** Maps the 0-1 UI strength onto `blendZoneBordersWFC`'s own two real
+ *  parameters. Chosen so a small positive strength reproduces this
+ *  feature's original fixed defaults (borderRadius 2, zonePriorWeight 8)
+ *  closely, while strength 1 pushes noticeably further in both directions
+ *  than that original fixed point ever did — a real user request ("make
+ *  the slider max create much more blending than the switch does now"). */
+export function organicBlendParams(strength: number): { borderRadius: number; zonePriorWeight: number } {
+  return {
+    borderRadius: Math.round(2 + strength * 4),
+    zonePriorWeight: Math.max(1, 8 - strength * 7),
+  }
 }
 
 export interface TerrainResult {
@@ -238,7 +256,7 @@ export function generateTerrain(
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
     hillChance = 0, valleyChance = 0, computeElevation = false,
-    enabledBiomes, gameTemplateJson, organicTerrainBlending = false,
+    enabledBiomes, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
 
@@ -321,8 +339,8 @@ export function generateTerrain(
 
   let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
 
-  const perNodeBiome = organicTerrainBlending
-    ? blendZoneBordersWFC({ sizeX, sizeZ, zoneIdByNode, zoneBiome, rng })
+  const perNodeBiome = organicTerrainBlending > 0
+    ? blendZoneBordersWFC({ sizeX, sizeZ, zoneIdByNode, zoneBiome, rng, ...organicBlendParams(organicTerrainBlending) })
     : null
   const terrainChanges: { node: number; biomeId: number }[] = new Array(tileCount)
   for (let node = 0; node < tileCount; node++) {

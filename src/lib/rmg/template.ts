@@ -154,11 +154,12 @@ export interface RandomMapTemplate {
    *  purely cosmetic (never gate walkability), so skipping some is a
    *  style choice, not a connectivity risk. Defaults to 0.8. */
   roadFullConnectivityChance: number
-  /** Scoped WFC organic terrain-border blending (issue #224 M3 — see
-   *  generate-terrain.ts's own `organicTerrainBlending` doc comment for the
-   *  full design). Defaults to false — reproduces this generator's original
+  /** 0-1: strength of scoped WFC organic terrain-border blending (issue
+   *  #224 M3, issue #232 — was boolean, see generate-terrain.ts's own
+   *  `organicTerrainBlending`/`organicBlendParams` doc comments for the
+   *  full design). 0 (the default) reproduces this generator's original
    *  flat per-zone terrain fill exactly. */
-  organicTerrainBlending: boolean
+  organicTerrainBlending: number
   /** 0-1: how strongly real distance-to-road decoration-density evidence
    *  applies (issue #224 "Problem 2" — decoration-calibration.ts, zone-
    *  decoration.ts's own `roadDecayStrength` doc comment). 0 (the default)
@@ -224,7 +225,7 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   stoneRoadChance: 0.35,
   roadPointOfInterestChance: 0.8,
   roadFullConnectivityChance: 0.8,
-  organicTerrainBlending: false,
+  organicTerrainBlending: 0,
   decorationRoadDecayStrength: 0,
   decorationCoOccurrenceStrength: 0,
   decorationElevationDecayStrength: 0,
@@ -321,7 +322,11 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     stoneRoadChance: typeof data.stoneRoadChance === 'number' ? data.stoneRoadChance : DEFAULT_TEMPLATE_OVERRIDES.stoneRoadChance,
     roadPointOfInterestChance: typeof data.roadPointOfInterestChance === 'number' ? data.roadPointOfInterestChance : DEFAULT_TEMPLATE_OVERRIDES.roadPointOfInterestChance,
     roadFullConnectivityChance: typeof data.roadFullConnectivityChance === 'number' ? data.roadFullConnectivityChance : DEFAULT_TEMPLATE_OVERRIDES.roadFullConnectivityChance,
-    organicTerrainBlending: typeof data.organicTerrainBlending === 'boolean' ? data.organicTerrainBlending : DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending,
+    // Migrates old boolean-shaped templates (pre-issue #232: true/false)
+    // to the new 0-1 strength — true becomes a modest 0.3 rather than 1,
+    // since 1 now means much heavier blending than the old switch ever
+    // produced (see generate-terrain.ts's own organicBlendParams).
+    organicTerrainBlending: typeof data.organicTerrainBlending === 'number' ? data.organicTerrainBlending : data.organicTerrainBlending === true ? 0.3 : DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending,
     decorationRoadDecayStrength: typeof data.decorationRoadDecayStrength === 'number' ? data.decorationRoadDecayStrength : DEFAULT_TEMPLATE_OVERRIDES.decorationRoadDecayStrength,
     decorationCoOccurrenceStrength: typeof data.decorationCoOccurrenceStrength === 'number' ? data.decorationCoOccurrenceStrength : DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength,
     decorationElevationDecayStrength: typeof data.decorationElevationDecayStrength === 'number' ? data.decorationElevationDecayStrength : DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength,

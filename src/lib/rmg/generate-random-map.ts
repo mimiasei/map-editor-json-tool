@@ -212,11 +212,12 @@ export interface GenerateRandomMapOptions {
    *  `GenerateTerrainOptions.gameTemplateJson`'s own doc comment (this
    *  option is threaded straight through to `generateTerrain`). */
   gameTemplateJson?: string
-  /** Scoped WFC organic terrain-border blending (issue #224 M3) — see
+  /** Scoped WFC organic terrain-border blending (issue #224 M3, issue #232
+   *  — 0-1 strength, was boolean) — see
    *  `GenerateTerrainOptions.organicTerrainBlending`'s own doc comment (this
    *  option is threaded straight through to `generateTerrain`). Defaults to
-   *  false — no behavior change unless explicitly enabled. */
-  organicTerrainBlending?: boolean
+   *  0 — no behavior change unless explicitly enabled. */
+  organicTerrainBlending?: number
   /** 0 (default) - 1: how strongly real distance-to-road decoration-density
    *  evidence applies (issue #224 "Problem 2" — see decoration-calibration.ts
    *  and zone-decoration.ts's own `ScatterObstaclesOptions.roadDecayStrength`
@@ -260,7 +261,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = false, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, onProgress } = options
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
   // actual scheduled repaint between stages, React would batch every

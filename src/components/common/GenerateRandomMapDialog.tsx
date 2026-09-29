@@ -117,6 +117,42 @@ function pctLabel(value: number): string {
   return `${Math.round(value * 100)}%`
 }
 
+/** Consolidated 0-100 "Water" slider (issue #232) — spans `waterContent`'s
+ *  three modes and `waterChance`'s amount within whichever mode is active
+ *  in one control: 0 = 'none', 1-50 = 'normal' with waterChance 0-1, 51-100
+ *  = 'islands' with waterChance 0-1. Kept as pure mapping functions (no new
+ *  state) so Save/Load Template and the real generator options keep using
+ *  waterContent/waterChance completely unchanged underneath. */
+function waterSliderValue(waterContent: 'none' | 'normal' | 'islands', waterChance: number): number {
+  if (waterContent === 'none') return 0
+  if (waterContent === 'normal') return Math.round(waterChance * 50)
+  return Math.round(50 + waterChance * 50)
+}
+function waterSliderLabel(v: number): string {
+  if (v <= 0) return 'None'
+  if (v <= 50) return `Water ${Math.round((v / 50) * 100)}%`
+  return `Islands ${Math.round(((v - 50) / 50) * 100)}%`
+}
+
+/** Consolidated "Elevation variation" slider — drives `hillChance` and
+ *  `valleyChance` equally (same pure-mapping approach as the water slider
+ *  above). Displays the average of the two so loading an old template with
+ *  different hill/valley values still shows something sensible. */
+function elevationSliderValue(hillChance: number, valleyChance: number): number {
+  return Math.round(((hillChance + valleyChance) / 2) * 100)
+}
+
+/** Consolidated "Road windiness" slider — drives `roadWindingAmplitude`
+ *  (0-6) and `roadWindingWavelength` (100-20, inversely) together. Display
+ *  value derives from amplitude alone (same "pick one direction of truth"
+ *  approach as the elevation slider above). */
+function roadWindinessValue(amplitude: number): number {
+  return Math.round((amplitude / 6) * 100)
+}
+function roadWindinessToState(v: number): { roadWindingAmplitude: number; roadWindingWavelength: number } {
+  return { roadWindingAmplitude: (v / 100) * 6, roadWindingWavelength: 100 - (v / 100) * 80 }
+}
+
 /** The preset closest in tile area to `(sizeX, sizeZ)` — used when loading
  *  a template whose size doesn't exactly match a preset, so the dialog's
  *  preset-only Size selector still shows something sensible rather than
@@ -144,7 +180,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [playerCount, setPlayerCount] = useState(2)
   const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
-  const [islandsIncludePlayerZones, setIslandsIncludePlayerZones] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
+  // No longer a user-editable toggle (issue #232 — a player's own start
+  // being an island is now always on whenever water content is 'islands';
+  // previously an off-by-default switch most people never turned on).
+  // Still a real field in RandomMapTemplate/GenerateRandomMapOptions, so
+  // every read below just derives it from waterContent instead of storing
+  // separate state that could drift out of sync.
+  const islandsIncludePlayerZones = waterContent === 'islands'
   const [islandLandRatio, setIslandLandRatio] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
   const [hillChance, setHillChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.hillChance)
   const [valleyChance, setValleyChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
@@ -463,7 +505,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setPlayerCount(template.playerCount)
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
-      setIslandsIncludePlayerZones(template.islandsIncludePlayerZones)
       setIslandLandRatio(template.islandLandRatio)
       setHillChance(template.hillChance)
       setValleyChance(template.valleyChance)
@@ -503,7 +544,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const handleResetAll= () => {
       setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
       setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
-      setIslandsIncludePlayerZones(DEFAULT_TEMPLATE_OVERRIDES.islandsIncludePlayerZones)
       setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
       setHillChance(DEFAULT_TEMPLATE_OVERRIDES.hillChance)
       setValleyChance(DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
@@ -682,51 +722,28 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           {showTerrainSliders && (
             <div className="space-y-6">
               <div className="space-y-1.5">
-                <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
-                  Water content
-                </Label>
-                <Select value={waterContent} onValueChange={(v) => setWaterContent(v as 'none' | 'normal' | 'islands')} disabled={terrainLocked}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="islands">Islands</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="0: no water at all. 1-50: Normal — lakes inside some neutral zones, amount scaling with the slider. 51-100: Islands — some neutral zones (and, per this generator's own default, every player's own zone) are fully cut off by water and reached only through a portal — Olden Era has no boats.">
+                    Water
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{waterSliderLabel(waterSliderValue(waterContent, waterChance))}</span>
+                </div>
+                <Slider
+                  min={0} max={100} step={1}
+                  value={[waterSliderValue(waterContent, waterChance)]}
+                  onValueChange={([v]) => {
+                    if (v <= 0) { setWaterContent('none'); setWaterChance(0) }
+                    else if (v <= 50) { setWaterContent('normal'); setWaterChance(v / 50) }
+                    else { setWaterContent('islands'); setWaterChance((v - 50) / 50) }
+                  }}
+                  disabled={terrainLocked}
+                />
               </div>
 
-              {waterContent !== 'none' && (
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      className="text-xs"
-                      title={
-                        waterContent === 'islands'
-                          ? 'How many zones become islands (their individual size is the separate Land/water ratio slider below).'
-                          : 'How much of each neutral zone\'s free area becomes a lake, and how likely a zone is to get one at all. Player zones never get water.'
-                      }
-                    >
-                      {waterContent === 'islands' ? 'Island amount' : 'Water amount'}
-                    </Label>
-                    <span className="text-xs text-muted-foreground">{pctLabel(waterChance)}</span>
-                  </div>
-                  <Slider min={0} max={1} step={0.01} value={[waterChance]} onValueChange={([v]) => setWaterChance(v)} disabled={terrainLocked} />
-                </div>
-              )}
-
-              {waterContent === 'islands' && (
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="rmg-islands-players" className="text-xs" title="Off (default): every player's own start always stays on real, land-connected ground — only neutral zones can become islands. On: a player's own start can be an island too, reachable only by its own portal — at high Island amount the whole map can end up looking flooded, with islands scattered across it instead of a mostly-solid mainland. Either way, an island is ALWAYS reached by portal, never a road, even if Use portals is off.">
-                    Player zones can be islands
-                  </Label>
-                  <Switch id="rmg-islands-players" checked={islandsIncludePlayerZones} onCheckedChange={setIslandsIncludePlayerZones} disabled={terrainLocked} />
-                </div>
-              )}
-
               {waterContent === 'islands' && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs" title="Independent from Island amount (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water.">
+                    <Label className="text-xs" title="Independent from the Water slider (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water.">
                       Land/water ratio
                     </Label>
                     <span className="text-xs text-muted-foreground">{Math.round(islandLandRatio * 100)}% land</span>
@@ -737,22 +754,17 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How much of each zone's free area becomes raised hill terrain, and how likely a zone is to get one at all — unlike water, both player and neutral zones are eligible (a player's own start tile itself always stays flat). Every hill gets real ramp access.">
-                    Hills
+                  <Label className="text-xs" title="How much of each zone's free area becomes raised (hill) or lowered (dry valley) terrain, and how likely a zone is to get either at all — both player and neutral zones are eligible (a player's own start tile itself always stays flat). Drives Hills and Valleys equally. Every hill/valley gets real ramp access.">
+                    Elevation variation
                   </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(hillChance)}</span>
+                  <span className="text-xs text-muted-foreground">{pctLabel(elevationSliderValue(hillChance, valleyChance) / 100)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.01} value={[hillChance]} onValueChange={([v]) => setHillChance(v)} disabled={terrainLocked} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How much of each zone's free area becomes lowered, DRY valley terrain (decoupled from water — a low tile doesn't have to be a lake). Both player and neutral zones are eligible. Every valley gets real ramp access.">
-                    Valleys
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(valleyChance)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.01} value={[valleyChance]} onValueChange={([v]) => setValleyChance(v)} disabled={terrainLocked} />
+                <Slider
+                  min={0} max={100} step={1}
+                  value={[elevationSliderValue(hillChance, valleyChance)]}
+                  onValueChange={([v]) => { setHillChance(v / 100); setValleyChance(v / 100) }}
+                  disabled={terrainLocked}
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -775,11 +787,14 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 <Slider min={0.5} max={1.8} step={0.01} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="rmg-organic-blending" className="text-xs" title="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill. Only tiles near a zone boundary are affected — zone interiors are unchanged.">
-                  Organic terrain blending
-                </Label>
-                <Switch id="rmg-organic-blending" checked={organicTerrainBlending} onCheckedChange={setOrganicTerrainBlending} disabled={terrainLocked} />
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs" title="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill — only tiles near a zone boundary are affected, zone interiors are unchanged. 0 = today's flat fill, no blending at all. Higher values widen the blended band and weaken each tile's bias toward its own zone's biome, so the max setting blends noticeably more than this feature's old on/off switch ever did.">
+                    Organic terrain blending
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{pctLabel(organicTerrainBlending)}</span>
+                </div>
+                <Slider min={0} max={1} step={0.05} value={[organicTerrainBlending]} onValueChange={([v]) => setOrganicTerrainBlending(v)} disabled={terrainLocked} />
               </div>
 
             </div>
@@ -789,22 +804,20 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How far roads/rivers swing away from a straight line, in tiles.">
-                    Road/river winding amplitude
+                  <Label className="text-xs" title="How much roads/rivers curve. Low: mostly straight, broad sweeps if any. High: swings noticeably away from a straight line, with tighter, more frequent curves.">
+                    Road windiness
                   </Label>
-                  <span className="text-xs text-muted-foreground">{roadWindingAmplitude.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground">{pctLabel(roadWindinessValue(roadWindingAmplitude) / 100)}</span>
                 </div>
-                <Slider min={0} max={6} step={0.5} value={[roadWindingAmplitude]} onValueChange={([v]) => setRoadWindingAmplitude(v)} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How often roads/rivers curve, in tiles per curve. Lower = more frequent curves (can look jagged if pushed too low); higher = fewer, broader sweeps.">
-                    Road/river winding wavelength
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{roadWindingWavelength}</span>
-                </div>
-                <Slider min={20} max={100} step={5} value={[roadWindingWavelength]} onValueChange={([v]) => setRoadWindingWavelength(v)} />
+                <Slider
+                  min={0} max={100} step={1}
+                  value={[roadWindinessValue(roadWindingAmplitude)]}
+                  onValueChange={([v]) => {
+                    const { roadWindingAmplitude: amp, roadWindingWavelength: wave } = roadWindinessToState(v)
+                    setRoadWindingAmplitude(amp)
+                    setRoadWindingWavelength(wave)
+                  }}
+                />
               </div>
 
               {previewActive && (
@@ -849,32 +862,21 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How strongly decoration thins out near roads and thickens in unused pockets — a real pattern measured directly against 12 hand-crafted maps (real density near a road is ~0.78x the map's own average, rising to ~1.29x far from any road). 0 = today's flat density, no road-distance effect at all.">
-                    Decoration road-distance effect
+                  <Label className="text-xs" title="How strongly real hand-crafted-map evidence steers placement: decoration thinning near roads (real density near a road ~0.78x the map's own average, rising to ~1.29x far from any road), decoration clustering by category (ponds cluster with ponds, mountains avoid ponds), decoration density by elevation/climb proximity (valley tiles ~3.19x denser, ramp-adjacent tiles ~0.66x as dense), and gold mines favoring Sand-biome zones (~2.02x more than Sand's own area share) — all four calibrated from the same real 18-map survey. 0 = today's flat, evidence-blind behavior for all four; higher looks progressively more like a hand-crafted map's own placement patterns.">
+                    Authentic real-map patterns
                   </Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(decorationRoadDecayStrength)}</span>
                 </div>
-                <Slider min={0} max={1} step={0.05} value={[decorationRoadDecayStrength]} onValueChange={([v]) => setDecorationRoadDecayStrength(v)} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How strongly nearby decoration influences what gets placed next to it — real hand-crafted maps show ponds cluster with more pond pieces, and mountains real-avoid pond pieces, measured directly against the same 12-map survey. 0 = today's independent placement, no co-occurrence effect at all.">
-                    Decoration clustering (co-occurrence)
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(decorationCoOccurrenceStrength)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.05} value={[decorationCoOccurrenceStrength]} onValueChange={([v]) => setDecorationCoOccurrenceStrength(v)} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How strongly decoration density follows real elevation/climb evidence — real hand-crafted maps show valley tiles decorated ~3.19x denser than flat/hill tiles, and ramp-adjacent tiles decorated ~0.66x as densely as tiles farther away, measured directly against an 18-map survey. 0 = today's flat density, no elevation/climb effect at all.">
-                    Decoration elevation/climb effect
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(decorationElevationDecayStrength)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.05} value={[decorationElevationDecayStrength]} onValueChange={([v]) => setDecorationElevationDecayStrength(v)} />
+                <Slider
+                  min={0} max={1} step={0.05}
+                  value={[decorationRoadDecayStrength]}
+                  onValueChange={([v]) => {
+                    setDecorationRoadDecayStrength(v)
+                    setDecorationCoOccurrenceStrength(v)
+                    setDecorationElevationDecayStrength(v)
+                    setMineGoldBiomeBiasStrength(v)
+                  }}
+                />
               </div>
             </div>
           )}
@@ -913,16 +915,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.01} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How strongly neutral-zone gold mines favor Sand-biome zones — real hand-crafted maps place gold mines on Sand tiles ~2.02x more often than Sand's own share of total map area would predict, measured directly against an 18-map survey. 0 = today's flat biome-blind mine rotation, no bias at all.">
-                    Gold mine Sand-biome bias
-                  </Label>
-                  <span className="text-xs text-muted-foreground">{pctLabel(mineGoldBiomeBiasStrength)}</span>
-                </div>
-                <Slider min={0} max={1} step={0.05} value={[mineGoldBiomeBiasStrength]} onValueChange={([v]) => setMineGoldBiomeBiasStrength(v)} />
               </div>
 
               <div className="space-y-1.5">
