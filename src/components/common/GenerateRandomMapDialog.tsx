@@ -954,7 +954,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           {/* Live-preview column (issue #232 design) — always its own
               column, not layered inline above the category content, so the
               rendering stays visible no matter which category is open. */}
-          <div className="w-80 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2">
+          <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2">
             <Label className="text-xs font-semibold">Map Preview</Label>
             {previewActive ? (
               <div className="space-y-1.5">
