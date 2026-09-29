@@ -42,9 +42,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dices, Info, X } from 'lucide-react'
+import { Dices, X } from 'lucide-react'
+import FieldInfo from '@/components/common/FieldInfo'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
 import { previewRoads } from '@/lib/rmg/preview-roads'
@@ -659,9 +659,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs" title="Same seed, same map. The number field for typing an exact seed lives in the Advanced category — this is the quick way to get a fresh random terrain result immediately.">
-                      Seed
-                    </Label>
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs">Seed</Label>
+                      <FieldInfo text="Same seed, same map. The number field for typing an exact seed lives in the Advanced category — this is the quick way to get a fresh random terrain result immediately." />
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground flex-1 truncate">{seedText || 'Random'}</span>
                       <RerollButton onClick={() => setSeedText(String(randomSeedValue()))} disabled={terrainLocked} title="Reroll seed" />
@@ -669,16 +670,18 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="rmg-terrain-only" className="text-xs" title="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves.">
-                      Terrain only
-                    </Label>
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-terrain-only" className="text-xs">Terrain only</Label>
+                      <FieldInfo text="Produces just the tile arrays (biome/water/elevation) — no player spawners, no roads/rivers, no objects/guards/decoration. For a map maker who wants the random fractal terrain shape but places everything else themselves." />
+                    </div>
                     <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="rmg-live-preview" className="text-xs" title="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage.">
-                      Live preview
-                    </Label>
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-live-preview" className="text-xs">Live preview</Label>
+                      <FieldInfo text="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage." />
+                    </div>
                     <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
                   </div>
 
@@ -723,9 +726,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="0: no water at all. 1-50: Normal — lakes inside some neutral zones, amount scaling with the slider. 51-100: Islands — some neutral zones (and, per this generator's own default, every player's own zone) are fully cut off by water and reached only through a portal — Olden Era has no boats.">
-                    Water
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Water</Label>
+                    <FieldInfo text="0: no water at all. 1-50: Normal — lakes inside some neutral zones, amount scaling with the slider. 51-100: Islands — some neutral zones (and, per this generator's own default, every player's own zone) are fully cut off by water and reached only through a portal — Olden Era has no boats." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{waterSliderLabel(waterSliderValue(waterContent, waterChance))}</span>
                 </div>
                 <Slider
@@ -743,9 +747,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               {waterContent === 'islands' && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs" title="Independent from the Water slider (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water.">
-                      Land/water ratio
-                    </Label>
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs">Land/water ratio</Label>
+                      <FieldInfo text="Independent from the Water slider (how MANY islands) — this controls how BIG each one is. Water side: mostly ocean, each island small (this mode's original look). Land side: mostly land, each island large, little open water." />
+                    </div>
                     <span className="text-xs text-muted-foreground">{Math.round(islandLandRatio * 100)}% land</span>
                   </div>
                   <Slider min={0} max={1} step={0.01} value={[islandLandRatio]} onValueChange={([v]) => setIslandLandRatio(v)} disabled={terrainLocked} />
@@ -754,9 +759,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How much of each zone's free area becomes raised (hill) or lowered (dry valley) terrain, and how likely a zone is to get either at all — both player and neutral zones are eligible (a player's own start tile itself always stays flat). Drives Hills and Valleys equally. Every hill/valley gets real ramp access.">
-                    Elevation variation
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Elevation variation</Label>
+                    <FieldInfo text="How much of each zone's free area becomes raised (hill) or lowered (dry valley) terrain, and how likely a zone is to get either at all — both player and neutral zones are eligible (a player's own start tile itself always stays flat). Drives Hills and Valleys equally. Every hill/valley gets real ramp access." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(elevationSliderValue(hillChance, valleyChance) / 100)}</span>
                 </div>
                 <Slider
@@ -769,9 +775,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones.">
-                    Zone jaggedness
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Zone jaggedness</Label>
+                    <FieldInfo text="Controls the Penrose-tiling zone-shaping pass's own vertex density — low values give coarser, blockier zone/biome boundaries, high values give finer, more jagged ones." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(zoneJaggedness)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.01} value={[zoneJaggedness]} onValueChange={([v]) => setZoneJaggedness(v)} disabled={terrainLocked} />
@@ -779,9 +786,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads.">
-                    Zone spread
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Zone spread</Label>
+                    <FieldInfo text="How tightly zones pack together. Below 1×: denser, more crowded zone interiors. Above 1×: more open space per zone, generally cleaner-looking roads." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{zoneSpread.toFixed(2)}×</span>
                 </div>
                 <Slider min={0.5} max={1.8} step={0.01} value={[zoneSpread]} onValueChange={([v]) => setZoneSpread(v)} disabled={terrainLocked} />
@@ -789,9 +797,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill — only tiles near a zone boundary are affected, zone interiors are unchanged. 0 = today's flat fill, no blending at all. Higher values widen the blended band and weaken each tile's bias toward its own zone's biome, so the max setting blends noticeably more than this feature's old on/off switch ever did.">
-                    Organic terrain blending
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Organic terrain blending</Label>
+                    <FieldInfo text="Blends terrain biomes organically across zone borders (a real-data-calibrated Wave Function Collapse pass) instead of each zone's flat, sharply-edged biome fill — only tiles near a zone boundary are affected, zone interiors are unchanged. 0 = today's flat fill, no blending at all. Higher values widen the blended band and weaken each tile's bias toward its own zone's biome, so the max setting blends noticeably more than this feature's old on/off switch ever did." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(organicTerrainBlending)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.05} value={[organicTerrainBlending]} onValueChange={([v]) => setOrganicTerrainBlending(v)} disabled={terrainLocked} />
@@ -804,9 +813,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How much roads/rivers curve. Low: mostly straight, broad sweeps if any. High: swings noticeably away from a straight line, with tighter, more frequent curves.">
-                    Road windiness
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Road windiness</Label>
+                    <FieldInfo text="How much roads/rivers curve. Low: mostly straight, broad sweeps if any. High: swings noticeably away from a straight line, with tighter, more frequent curves." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(roadWindinessValue(roadWindingAmplitude) / 100)}</span>
                 </div>
                 <Slider
@@ -822,9 +832,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               {previewActive && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs" title="The roads/rivers preview's own randomness — independent from the terrain seed, so rerolling it never changes the terrain you already confirmed.">
-                    Road/river randomness
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Road/river randomness</Label>
+                    <FieldInfo text="The roads/rivers preview's own randomness — independent from the terrain seed, so rerolling it never changes the terrain you already confirmed." />
+                  </div>
                   <div className="flex items-center gap-2">
                     <Input value={String(roadSeed)} readOnly className="h-8 text-sm text-muted-foreground" />
                     <RerollButton onClick={() => setRoadSeed(randomSeedValue())} title="Reroll road/river randomness" />
@@ -862,9 +873,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="How strongly real hand-crafted-map evidence steers placement: decoration thinning near roads (real density near a road ~0.78x the map's own average, rising to ~1.29x far from any road), decoration clustering by category (ponds cluster with ponds, mountains avoid ponds), decoration density by elevation/climb proximity (valley tiles ~3.19x denser, ramp-adjacent tiles ~0.66x as dense), and gold mines favoring Sand-biome zones (~2.02x more than Sand's own area share) — all four calibrated from the same real 18-map survey. 0 = today's flat, evidence-blind behavior for all four; higher looks progressively more like a hand-crafted map's own placement patterns.">
-                    Authentic real-map patterns
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Authentic real-map patterns</Label>
+                    <FieldInfo text="How strongly real hand-crafted-map evidence steers placement: decoration thinning near roads (real density near a road ~0.78x the map's own average, rising to ~1.29x far from any road), decoration clustering by category (ponds cluster with ponds, mountains avoid ponds), decoration density by elevation/climb proximity (valley tiles ~3.19x denser, ramp-adjacent tiles ~0.66x as dense), and gold mines favoring Sand-biome zones (~2.02x more than Sand's own area share) — all four calibrated from the same real 18-map survey. 0 = today's flat, evidence-blind behavior for all four; higher looks progressively more like a hand-crafted map's own placement patterns." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(decorationRoadDecayStrength)}</span>
                 </div>
                 <Slider
@@ -893,14 +905,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex gap-1.5">
+                  <div className="flex items-center gap-1">
                     <Label className="text-xs">Object variety</Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3 w-3 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random type.</TooltipContent>
-                    </Tooltip>
+                    <FieldInfo text="Chance a treasure/guard slot places a real, specific object (a resource pile, a named artifact, a pre-composed army) instead of a random type." />
                   </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(objectVariety)}</span>
                 </div>
@@ -909,18 +916,20 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs" title="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty.">
-                    Squad density
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs">Squad density</Label>
+                    <FieldInfo text="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty." />
+                  </div>
                   <span className="text-xs text-muted-foreground">{pctLabel(squadDensity)}</span>
                 </div>
                 <Slider min={0} max={1} step={0.01} value={[squadDensity]} onValueChange={([v]) => setSquadDensity(v)} />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs" title="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints, each at least Impossible difficulty. 'Strong'/'Very strong' scale that value up further.">
-                  Boundary guards
-                </Label>
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs">Boundary guards</Label>
+                  <FieldInfo text="Walls every zone-to-zone boundary solid except at each connection's own road crossing, and places one guard at each of those gates — VCMI-style chokepoints, each at least Impossible difficulty. 'Strong'/'Very strong' scale that value up further." />
+                </div>
                 <Select value={boundaryGuardStrength} onValueChange={(v) => setBoundaryGuardStrength(v as 'none' | 'normal' | 'strong' | 'very strong')}>
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -937,9 +946,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           {showConnectivityFields && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <Label htmlFor="rmg-use-portals" className="text-xs" title="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement.">
-                  Use portals
-                </Label>
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="rmg-use-portals" className="text-xs">Use portals</Label>
+                  <FieldInfo text="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement." />
+                </div>
                 <Switch id="rmg-use-portals" checked={usePortals} onCheckedChange={setUsePortals} />
               </div>
             </div>
