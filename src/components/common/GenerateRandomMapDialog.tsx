@@ -50,6 +50,7 @@ import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-fi
 import { previewRoads } from '@/lib/rmg/preview-roads'
 import type { TerrainResult } from '@/lib/rmg/generate-terrain'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -231,14 +232,32 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const showEconomyFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'economy')
   const showConnectivityFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'connectivity')
 
-  const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], roadNodes?: Set<number>) => {
+  const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], levelsMap?: number[], roadNodes?: Set<number>) => {
     const canvas = canvasRef.current
     if (!canvas) return
-    canvas.width = selectedSize.sizeX
-    canvas.height = selectedSize.sizeZ
+    const sizeX = selectedSize.sizeX
+    const sizeZ = selectedSize.sizeZ
+    canvas.width = sizeX
+    canvas.height = sizeZ
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    paintTerrainCanvas(ctx, selectedSize.sizeX, selectedSize.sizeZ, tilesMap, waterMap, undefined, roadNodes)
+    // Full-strength biome colors (blendAmount 1) — the shared default
+    // (DEFAULT_TERRAIN_BLEND, 0.16) is tuned for Map Grid's own overview
+    // canvas, where a pale backdrop keeps icons/overlays legible on top;
+    // this preview has nothing else drawn over it, so a pale fill just
+    // reads as washed-out/transparent-looking rather than helping anything.
+    paintTerrainCanvas(ctx, sizeX, sizeZ, tilesMap, waterMap, 1, roadNodes)
+    // Elevation tint (same darker/lighter overlay Map Grid itself uses,
+    // elevation-shading.ts) — a real user request: hills/valleys previously
+    // had no visual representation at all in this canvas.
+    if (levelsMap) {
+      for (const [node, tint] of buildElevationTintMap(levelsMap)) {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        ctx.fillStyle = tint === 'lighter' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.3)'
+        ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
+      }
+    }
   }
 
   // Live preview — debounced on every field relevant to whatever's
@@ -266,12 +285,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             lockedTerrainRef.current = result
           }
           if (!terrain) return
-          const b2 = JSON.parse(new TextDecoder().decode(terrain.container.chunks[1])) as { tilesMap: number[]; waterMap: number[] }
+          const b2 = JSON.parse(new TextDecoder().decode(terrain.container.chunks[1])) as { tilesMap: number[]; waterMap: number[]; levelsMap?: number[] }
           if (previewPhase === 'roads' || previewPhase === 'all') {
             const { roadNodes, riverNodes } = previewRoads(terrain, { roadWindingAmplitude, roadWindingWavelength, rng: createSeededRng(roadSeed) })
-            drawTerrainCanvas(b2.tilesMap, b2.waterMap, new Set([...roadNodes, ...riverNodes]))
+            drawTerrainCanvas(b2.tilesMap, b2.waterMap, b2.levelsMap, new Set([...roadNodes, ...riverNodes]))
           } else {
-            drawTerrainCanvas(b2.tilesMap, b2.waterMap)
+            drawTerrainCanvas(b2.tilesMap, b2.waterMap, b2.levelsMap)
           }
         } catch (e) {
           setPreviewError(e instanceof Error ? e.message : String(e))
@@ -518,7 +537,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         mounts this component while `open` is true, so the `open`-gated
         state/effects throughout this file still behave correctly. */}
     <div className="h-full flex flex-col overflow-hidden rounded-lg bg-[var(--column-center)] dark:bg-background">
-        <div className="relative flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0">
+        <div className="relative flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0 bg-[var(--column-left)] dark:bg-card">
           <Button
             variant="ghost"
             size="icon"
@@ -532,7 +551,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          <nav className="w-44 shrink-0 border-r border-border overflow-y-auto p-2 space-y-0.5 bg-[var(--column-left)] dark:bg-card">
+          <nav className="w-60 shrink-0 border-r border-border overflow-y-auto p-2 space-y-1 bg-[var(--column-left)] dark:bg-card">
             {CATEGORIES.map((cat) => {
               const allowed = NAV_STAGE_ALLOWED[previewPhase]
               const disabled = allowed !== null && !allowed.includes(cat.id)
@@ -542,7 +561,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   type="button"
                   disabled={disabled}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`w-full text-left text-xs px-2 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed ${activeCategory === cat.id ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+                  className={`w-full text-left text-sm px-3 py-2 rounded disabled:opacity-40 disabled:cursor-not-allowed ${activeCategory === cat.id ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
                 >
                   {cat.label}
                 </button>
@@ -550,9 +569,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             })}
           </nav>
 
-          <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4 bg-[var(--column-center)] dark:bg-background">
+          <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-6 bg-[var(--column-center)] dark:bg-background">
               {showCore && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="space-y-1.5">
                     <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
                     <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
@@ -661,7 +680,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               )}
 
           {showTerrainSliders && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="space-y-1.5">
                 <Label className="text-xs" title="None: no water at all. Normal: lakes inside some neutral zones. Islands: some neutral zones are fully cut off by water and reached only through a portal — Olden Era has no boats.">
                   Water content
@@ -767,7 +786,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           )}
 
           {showRoadSliders && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs" title="How far roads/rivers swing away from a straight line, in tiles.">
@@ -803,7 +822,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           )}
 
           {showSceneryFields && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Obstacle density</Label>
@@ -861,7 +880,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           )}
 
           {showEconomyFields && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Treasure density</Label>
@@ -924,7 +943,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           )}
 
           {showConnectivityFields && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <Label htmlFor="rmg-use-portals" className="text-xs" title="Adds one bonus portal-pair shortcut between the map's two most distant zones, on top of the normal roads — a shortcut, not a replacement.">
                   Use portals
@@ -935,7 +954,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           )}
 
           {activeCategory === 'advanced' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="space-y-1.5">
                 <Label htmlFor="rmg-seed-manual" className="text-xs">Seed (optional — same seed, same map)</Label>
                 <Input
@@ -983,7 +1002,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           </div>
         )}
 
-        <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0">
+        <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0 bg-[var(--column-left)] dark:bg-card">
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={handleSaveTemplate}>
                     Save Template…
