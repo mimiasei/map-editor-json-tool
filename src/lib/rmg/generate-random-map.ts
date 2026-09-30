@@ -45,7 +45,7 @@ import {
   type MapContainer,
 } from '@/lib/map-write'
 import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
-import { isElevationWallTile } from '@/lib/map-grid/passability'
+import { buildBlockedTileSet, isElevationWallTile } from '@/lib/map-grid/passability'
 import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
@@ -63,7 +63,7 @@ import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevatio
 import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
-import { reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
+import { buildFlatPlaced, reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
 import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport } from './balance-analyzer'
 import { extractGameRulesPatch, parseGameTemplateJson, deriveWaterOverrides, deriveObstacleOverrides } from './rmg-template-import'
 import { yieldToUI } from '@/lib/async-utils'
@@ -1219,7 +1219,19 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   for (let node = 0; node < tileCount; node++) tilesByZoneFull.get(zoneIdByNode[node])!.push(node)
   const zoneBiomeName = new Map<number, string>()
   for (const [zoneId, biomeId] of zoneBiome) zoneBiomeName.set(zoneId, BLANK_MAP_BIOME_NAMES[biomeId] ?? 'Grass')
-  const areas = computeZoneAreas(sizeX, sizeZ, zoneIdByNode, tilesByZoneFull, zoneAnchorNode, zoneBiomeName, playerZoneIndex)
+  // A player zone's `zoneAnchorNode` IS that player's own city-spawner/
+  // hero-spawner footprint tile (see generate-terrain.ts's own comment) —
+  // a genuinely solid/blocked tile, never a legal `areas[].rootNode` value
+  // (issue #237 real crash: the AI's own per-player "areas" territory check
+  // hit a repeatable `IndexOutOfRangeException` on every load attempt).
+  // Recomputed fresh here (not reusing `state.blocked`, which stops
+  // updating after the last obstacle-scatter pass) so it reflects every
+  // repair/reclaim above.
+  const finalBlocked = buildBlockedTileSet(
+    { sizeX, sizeZ, placedObjects: buildFlatPlaced(objectGroups, sizeX), levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal },
+    catalog,
+  )
+  const areas = computeZoneAreas(sizeX, sizeZ, zoneIdByNode, tilesByZoneFull, zoneAnchorNode, zoneBiomeName, playerZoneIndex, finalBlocked)
   finalBlock2 = setAreas(finalBlock2, areas)
 
   // Stage 4 (issue #210) — a game-template import's own gameRules/

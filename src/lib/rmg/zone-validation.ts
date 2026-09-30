@@ -83,7 +83,7 @@ function floodFillReachable(seeds: number[], blocked: Set<number>, sizeX: number
  *  16×16/2-player/`boundaryGuardStrength:'strong'` generation that came out
  *  with 3 of its 4 zones fully walled in with zero openings, silently,
  *  because this exact bug made the check believe everything was fine. */
-function buildFlatPlaced(objectGroups: Map<string, ObjectPlacementGroup>, sizeX: number): PlacedObject[] {
+export function buildFlatPlaced(objectGroups: Map<string, ObjectPlacementGroup>, sizeX: number): PlacedObject[] {
   const flat: PlacedObject[] = []
   for (const [sid, group] of objectGroups) {
     for (let i = 0; i < group.ids.length; i++) {

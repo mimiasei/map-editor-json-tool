@@ -13,11 +13,24 @@
 // 15 areas): `neighbors` is a real, SYMMETRIC adjacency list (0/15 real
 // areas had an asymmetric edge), and a non-`-1` `keyObjectId` always
 // refers to a real id present in `objects[]` (6/15 real areas had one —
-// not every area needs one). `rootNode`'s exact in-game meaning is less
-// certain; used here as the zone's own anchor tile (already computed for
-// spawn/road purposes elsewhere in this generator) — a defensible choice,
-// not independently confirmed against real data the way neighbors'/
-// keyObjectId's shape was.
+// not every area needs one).
+//
+// `rootNode` (issue #237 real crash): originally reused a player zone's own
+// anchor tile verbatim — which, for a player zone, IS that player's
+// city-spawner/hero-spawner footprint cell (see generate-terrain.ts's own
+// `zoneAnchorNode` comment). That cell is a genuinely solid/blocked tile
+// (`passability.ts` deliberately never treats city-spawner/hero-spawner as
+// non-blocking). Checked against several real shipped maps
+// (Gorges_of_Discord.map, Broken_Alliance.map, etc.): a real `rootNode` is
+// NEVER the same tile as its own area's `keyObjectId` object — confirming
+// this codebase's blocked anchor tile was never something GME itself would
+// emit. A real, user-reported crash (`player.log`: repeated
+// `IndexOutOfRangeException` inside the AI's own per-player "areas"
+// territory check, on every single load attempt) reproduced on two
+// independently-generated maps with this exact defect. Fix: `rootNode` now
+// falls back to the first genuinely walkable tile in the zone (per the
+// generator's own FINAL blocked-tile set, computed after every repair
+// pass) whenever the anchor tile itself is blocked.
 
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
@@ -69,15 +82,18 @@ export function computeZoneAreas(
   zoneAnchorNode: Map<number, number>,
   zoneBiomeName: Map<number, string>,
   keyObjectIdByZone: Map<number, number>,
+  blocked: Set<number>,
 ): ZoneArea[] {
   const neighborSets = computeZoneNeighbors(sizeX, sizeZ, zoneIdByNode)
   const areas: ZoneArea[] = []
   for (const [zoneId, nodes] of tilesByZone) {
     if (nodes.length === 0) continue
+    const anchor = zoneAnchorNode.get(zoneId) ?? nodes[0]
+    const rootNode = blocked.has(anchor) ? (nodes.find((n) => !blocked.has(n)) ?? anchor) : anchor
     areas.push({
       id: zoneId,
       keyObjectId: keyObjectIdByZone.get(zoneId) ?? -1,
-      rootNode: zoneAnchorNode.get(zoneId) ?? nodes[0],
+      rootNode,
       nodes,
       neighbors: [...(neighborSets.get(zoneId) ?? [])].sort((a, b) => a - b),
       biome: zoneBiomeName.get(zoneId) ?? 'Grass',
