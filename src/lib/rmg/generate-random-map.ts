@@ -35,6 +35,7 @@ import {
   paintRiverTiles,
   paintRoadTiles,
   paintWaterTiles,
+  paintZoneTiles,
   setAreas,
   setCityFaction,
   setCitySpawnHero,
@@ -1251,6 +1252,23 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   )
   const areas = computeZoneAreas(sizeX, sizeZ, zoneIdByNode, tilesByZoneFull, zoneAnchorNode, zoneBiomeName, playerZoneIndex, finalBlocked)
   finalBlock2 = setAreas(finalBlock2, areas)
+
+  // Auto-paint each player zone's own `customAreasPainting` color (issue
+  // #237 part 3) — the Map Grid's own `findUnreachablePlacements` already
+  // scopes its reachability check per-zone whenever this is populated
+  // (`groupPlayerStartsByZone`, zone-ownership.ts), it just never had
+  // anything to read before since this generator never wrote to it.
+  // Neutral zones are deliberately left unpainted (0, the format's own
+  // "unpainted" sentinel — zone-colors.ts's `colorForZone` doc comment),
+  // matching the real user request. `+ 1` avoids colliding with that same
+  // 0 sentinel for whichever player zone this generator's own zone graph
+  // happened to number 0.
+  const zoneAreaPaint: { node: number; zoneId: number }[] = []
+  for (const zone of graph.zones) {
+    if (zone.kind !== 'player') continue
+    for (const node of tilesByZoneFull.get(zone.id) ?? []) zoneAreaPaint.push({ node, zoneId: zone.id + 1 })
+  }
+  finalBlock2 = paintZoneTiles(finalBlock2, zoneAreaPaint)
 
   // Stage 4 (issue #210) — a game-template import's own gameRules/
   // globalBans, mapped onto Block2's `settings`/both blocks' `banInfoData`
