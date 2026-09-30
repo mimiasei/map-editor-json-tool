@@ -380,6 +380,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         hillChance,
         valleyChance,
         obstacleDensity,
+        interactableDensity,
+        mountainDensity,
         treasureDensity,
         objectVariety,
         usePortals,
@@ -852,7 +854,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   <Label className="text-xs">Obstacle density</Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(obstacleDensity)}</span>
                 </div>
-                <Slider min={0} max={0.5} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} />
+                <Slider min={0} max={1} step={0.02} value={[obstacleDensity]} onValueChange={([v]) => setObstacleDensity(v)} />
               </div>
 
               <div className="space-y-1.5">

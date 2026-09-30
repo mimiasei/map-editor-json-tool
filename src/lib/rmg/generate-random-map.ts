@@ -54,6 +54,7 @@ import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
+import { scatterZoneInteractables } from './zone-interactables'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
@@ -115,6 +116,12 @@ export interface GenerateRandomMapOptions {
   valleyChance?: number
   /** 0-1 fraction of each zone's own tiles considered for obstacle scattering (zone-decoration.ts). Defaults to that module's own default. */
   obstacleDensity?: number
+  /** 0-1 per-tile roll chance for a dedicated interactable scatter pass
+   *  (zone-interactables.ts) — a real, direct density control (issue #237
+   *  parts 1/2), independent of `treasureDensity`'s own, separate
+   *  interactable share via `objectVariety`. Defaults to that module's own
+   *  default (0.25). */
+  interactableDensity?: number
   /** 0-1 fraction of the chance to have mountains in the zone boundary walls. */
   mountainDensity?: number
   /** Multiplier on neutral-zone treasure-pile count (zone-population.ts). Defaults to 1. */
@@ -261,7 +268,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, onProgress } = options
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
   // actual scheduled repaint between stages, React would batch every
@@ -961,6 +968,17 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, elevationDecayStrength: decorationElevationDecayStrength,
   })
 
+  // Dedicated interactable scatter (issue #237 parts 1/2) — runs after
+  // obstacles so it only fills tiles obstacles left free, same collision
+  // state. See zone-interactables.ts's own header comment for why this is
+  // independent of (not layered onto) `treasureDensity`'s own interactable
+  // share.
+  const interactablePlacements = scatterZoneInteractables({
+    sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
+    excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
+    density: interactableDensity,
+  })
+
   // Ambient animal/fx decoration (issue #210 follow-up) — real-map-
   // calibrated density, see zone-fauna.ts's own header comment. Runs after
   // obstacles so it only fills tiles obstacles left free; every placement
@@ -982,7 +1000,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
   const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads, ...proximityGuards.concreteSquads]
-  for (const placement of [...placements, ...obstaclePlacements, ...faunaPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
+  for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
