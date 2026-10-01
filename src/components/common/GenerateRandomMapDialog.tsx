@@ -862,7 +862,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   <Label className="text-xs">Interactable density</Label>
                   <span className="text-xs text-muted-foreground">{pctLabel(interactableDensity)}</span>
                 </div>
-                <Slider min={0} max={0.5} step={0.02} value={[interactableDensity]} onValueChange={([v]) => setInteractableDensity(v)} />
+                <Slider min={0} max={0.4} step={0.007} value={[interactableDensity]} onValueChange={([v]) => setInteractableDensity(v)} />
               </div>
 
               <div className="space-y-1.5">
