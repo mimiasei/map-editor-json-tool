@@ -34,6 +34,7 @@ import {
   paintLevelTiles,
   paintRiverTiles,
   paintRoadTiles,
+  paintTerrainTiles,
   paintWaterTiles,
   paintZoneTiles,
   setAreas,
@@ -57,6 +58,7 @@ import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone
 import { scatterZoneObstacles } from './zone-decoration'
 import { scatterZoneInteractables } from './zone-interactables'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
+import { scatterBeaches } from './zone-beaches'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
@@ -1000,6 +1002,13 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes]), state, rng,
   })
 
+  // Beaches (user-requested) — runs here specifically because `waterNodesAll`
+  // is in its final, fully-repaired state by this point (the road-partition
+  // water-reclaim repair above has already run) — see zone-beaches.ts's own
+  // header comment for the full design.
+  const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, catalogById, state, rng })
+  if (beachResult.terrainChanges.length > 0) block2 = paintTerrainTiles(block2, beachResult.terrainChanges)
+
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain
   // carving" milestone item) — reuses the H3-import accessibility pass
   // verbatim rather than inventing a second flood-fill repair algorithm.
@@ -1010,7 +1019,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
   const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads, ...proximityGuards.concreteSquads]
-  for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
+  for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...beachResult.placements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
@@ -1021,6 +1030,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   }
   for (const placement of obstaclePlacements) decorativeIds.add(placement.tempId)
   for (const placement of faunaPlacements) decorativeIds.add(placement.tempId)
+  for (const placement of beachResult.placements) decorativeIds.add(placement.tempId)
   // Wall obstacles are decorative too (deletable if one seals off a real
   // target) — gate GUARDS are deliberately NOT, matching every other real
   // guard this generator places (a dwelling/mine/treasure guard is never

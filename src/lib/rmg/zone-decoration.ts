@@ -33,10 +33,27 @@
 // real maps show valleys get denser decoration and ramp-adjacent tiles get
 // sparser). See decoration-calibration.ts for the real evidence all three
 // are built from.
+//
+// Four more features, all direct user design requests rather than measured
+// real-map data (unlike the three above) — see each constant's own doc
+// comment for the exact numbers: `scatterCluster` now has a real THIRD
+// archetype, forest-heavy (drawn from this biome's own real `tree_*`/
+// `pinetree_*` family via `buildTreePools`), biased to appear more often
+// near an already-placed mountain-heavy cluster, with its own small-biased
+// size distribution and a soft walkable-grass/flower (plus occasional
+// stump/log) edge halo around the finished blob. A mountain-heavy cluster
+// now also has a real big-center/small-edge size gradient (real sid
+// naming — `_big_`/`_small_` — confirmed consistent across every biome
+// except Desert/Sand, which has no such split in the real catalog at all).
+// Any placed `rocks_*`/`hill_*` (both the independent phase and cluster
+// members) gets its own halo of trees in its 8-neighborhood. `CLUSTER_SEED_
+// SPACING` was also lowered so clustering happens noticeably more often
+// overall, addressing a direct user report that single dispersed trees/
+// rocks/hills/mountains still dominated the look.
 
 import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, pickWeighted, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, buildTreePools, pickWeighted, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
 import { randomInRange } from '@/lib/map-grid/squad-pool'
 import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type ZonePlacement } from './zone-population'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
@@ -132,12 +149,16 @@ function categoryOf(sid: string, pool: FuzzyObstaclePool): DecorationCategory {
   return 'clutter'
 }
 
-/** One cluster seed per this many candidate tiles — tuned so a typical
- *  zone (a few hundred candidate tiles) gets a handful of clumps, not
- *  dozens; empirically checked against a real regeneration pass (see this
- *  file's own verification notes) to keep total coverage within the
- *  already-calibrated ~15-22% range rather than inflating it. */
-const CLUSTER_SEED_SPACING = 70
+/** One cluster seed per this many candidate tiles — originally tuned so a
+ *  typical zone (a few hundred candidate tiles) got a handful of clumps, not
+ *  dozens, keeping total coverage within the already-calibrated ~15-22%
+ *  range. Lowered from the original 70 per a direct user report that the
+ *  generator still read as "single trees/rocks/hills/mountains dispersed"
+ *  rather than naturally clumped — more, smaller seeds spend roughly the
+ *  same total decoration budget (each cluster's own member count/size is
+ *  unchanged) on more INDIVIDUAL clumps instead of fewer bigger ones, which
+ *  is what actually reads as "less dispersed" on screen. */
+const CLUSTER_SEED_SPACING = 45
 const CLUSTER_MIN_SIZE = 3
 const CLUSTER_MAX_SIZE = 10
 /** Tight enough that a cluster reads as one clump on screen — deliberately
@@ -158,6 +179,106 @@ export const CLUSTER_PRIMARY_CHANCE = 0.7
 const CLUSTER_ACCENT_CHANCE = 0.2
 /** Chance of placing a pool as obstacle **/
 const CLUSTER_POOL_CHANCE = 0.15
+
+const EIGHT_NEIGHBOR_OFFSETS: [number, number][] = [
+  [-1, -1], [0, -1], [1, -1],
+  [-1, 0], [1, 0],
+  [-1, 1], [0, 1], [1, 1],
+]
+
+/** Of every cluster that ISN'T mountain-heavy (see `CLUSTER_MOUNTAIN_HEAVY_
+ *  CHANCE`), how often it's forest-heavy (drawn mostly from this biome's own
+ *  real `tree_*`/`pinetree_*` family, via `buildTreePools`) instead of a
+ *  plain mixed-obstacle cluster (rocks/stumps/logs) — a direct user design
+ *  request ("trees should come in clusters more often"), not measured real-
+ *  map data. Zero real tree entries for a biome (Sand has none) makes every
+ *  cluster fall through to plain obstacle-heavy regardless, same spirit as
+ *  `CLUSTER_MOUNTAIN_HEAVY_CHANCE`'s own zero-mountains fallback. */
+const CLUSTER_FOREST_HEAVY_CHANCE = 0.6
+/** A forest cluster seeded near an already-placed mountain cluster is this
+ *  much MORE likely to actually become forest-heavy — a direct user design
+ *  request ("forests commonly sit next to mountain clusters"), not measured
+ *  data (unlike `decoration-calibration.ts`'s own real co-occurrence table,
+ *  which has no tree-specific finding — see object-variety.ts's sibling
+ *  research this session). Applied as a flat multiplier on
+ *  `CLUSTER_FOREST_HEAVY_CHANCE`, not blended by a 0-1 strength dial like
+ *  the real-data-calibrated features above, since there is no "before this
+ *  feature existed" behavior to preserve here — forest clustering is itself
+ *  new. */
+const FOREST_NEAR_MOUNTAIN_MULTIPLIER = 2
+/** A forest cluster's own target size, in tiles — a direct user design
+ *  request ("2x2 up to 5x5 tiles, rarer as size increases"), read as an
+ *  approximate AREA (4-25 tiles) onto this generator's own organic blob-
+ *  growth member count (never a literal square — see `shuffledClusterOffsets`'s
+ *  own randomized-neighborhood growth, which every other cluster in this
+ *  file already uses instead of a rigid shape). Weights fall off 2:1 per
+ *  step so the smallest size is 8x as likely as the largest. */
+const FOREST_CLUSTER_SIZE_WEIGHTS: { size: number; weight: number }[] = [
+  { size: 4, weight: 8 },
+  { size: 9, weight: 4 },
+  { size: 16, weight: 2 },
+  { size: 25, weight: 1 },
+]
+/** A forest cluster's own outer boundary ring gets walkable grass/flower
+ *  clutter at this chance per tile, and (despite not being walkable) a
+ *  stump/log at this lower chance — a direct user design request ("add
+ *  walkables like grass, flowers and also some stumps at the edges... for a
+ *  more organic, natural look"), not measured data. */
+const FOREST_EDGE_GRASS_CHANCE = 0.5
+const FOREST_EDGE_STUMP_CHANCE = 0.15
+/** A placed rock/hill (identified by real sid naming — `rocks_*`/`hill_*`,
+ *  confirmed real, distinct families from `mountain_*`/tree prefixes this
+ *  session) gets a halo of trees in its own 8-neighborhood at a density
+ *  randomized once per instance within this range — a direct user design
+ *  request ("rocks and hills usually have trees 30-70% around them"), not
+ *  measured data. Sampling a fresh density per instance (rather than one
+ *  fixed percentage) gives real variety — some rocks read as nearly bare,
+ *  others as almost fully treed in, both "around 30-70%" on average. */
+const ROCK_HILL_TREE_HALO_MIN = 0.3
+const ROCK_HILL_TREE_HALO_MAX = 0.7
+const ROCK_OR_HILL_PATTERN = /(^|_)(rocks?|hill)(_|$)/i
+
+/** Splits a biome's own `mountain_*` sids by real naming convention —
+ *  confirmed this session (every mountain sid across all 7 biomes):
+ *  `_big_`/`_small_` is a consistent split for Grass/Dirt/Autumn/Snow/
+ *  Deathland/Lava; Desert/Sand (`mountain_desert_1..6`) is the one real
+ *  exception with no size split at all, landing entirely in `other`. */
+function splitMountainsBySize(mountains: string[]): { big: string[]; small: string[]; other: string[] } {
+  const big: string[] = []
+  const small: string[] = []
+  const other: string[] = []
+  for (const sid of mountains) {
+    if (sid.includes('big')) big.push(sid)
+    else if (sid.includes('small')) small.push(sid)
+    else other.push(sid)
+  }
+  return { big, small, other }
+}
+
+/** User design request: "mountains should also be in clusters, where the
+ *  inner part is large mountains and outer (edges) smaller ones" — picks
+ *  `big` within `innerRadius` tiles of the cluster's own seed, `small`
+ *  beyond it, falling back to `other` (Desert/Sand's own un-split family)
+ *  and finally the full combined pool so a biome with no real size split at
+ *  all still gets a mountain, just with no gradient (a disclosed real-data
+ *  limitation, not a bug). */
+const MOUNTAIN_CLUSTER_INNER_RADIUS = 1.5
+function pickGradientMountainPool(distFromSeed: number, big: string[], small: string[], other: string[], fullPool: string[]): string[] {
+  const preferred = distFromSeed <= MOUNTAIN_CLUSTER_INNER_RADIUS ? big : small
+  if (preferred.length > 0) return preferred
+  if (other.length > 0) return other
+  return fullPool
+}
+
+function pickForestClusterSize(rng: () => number): number {
+  const total = FOREST_CLUSTER_SIZE_WEIGHTS.reduce((sum, w) => sum + w.weight, 0)
+  let roll = rng() * total
+  for (const { size, weight } of FOREST_CLUSTER_SIZE_WEIGHTS) {
+    if (roll < weight) return size
+    roll -= weight
+  }
+  return FOREST_CLUSTER_SIZE_WEIGHTS[0].size
+}
 
 function shuffledClusterOffsets(radius: number, rng: () => number): [number, number][] {
   const offsets: [number, number][] = []
@@ -213,6 +334,76 @@ function pickRotation(sid: string, catalogById: Map<string, CatalogMapObject>, r
   return isRotationallySymmetricFootprint(sid, catalogById) ? randomDecorRotation(rng) : undefined
 }
 
+/** User design request: "rocks and hills usually have trees 30-70% around
+ *  them" — called right after ANY real `rocks_*`/`hill_*` placement (both
+ *  the independent per-tile phase and cluster members) succeeds, rolling
+ *  each of its 8 neighbors independently against one density sampled fresh
+ *  per instance (see `ROCK_HILL_TREE_HALO_MIN`/`MAX`'s own doc comment).
+ *  No-op for a biome with no real tree entries at all (`treePool` empty —
+ *  e.g. Sand). Pushes any successful placement straight into `placements`. */
+function addRockHillTreeHalo(
+  seedNode: number, sizeX: number, sizeZ: number, treePool: string[],
+  catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number, placements: ZonePlacement[],
+): void {
+  if (treePool.length === 0) return
+  const density = ROCK_HILL_TREE_HALO_MIN + rng() * (ROCK_HILL_TREE_HALO_MAX - ROCK_HILL_TREE_HALO_MIN)
+  const x = seedNode % sizeX
+  const z = Math.floor(seedNode / sizeX)
+  for (const [dx, dz] of EIGHT_NEIGHBOR_OFFSETS) {
+    const nx = x + dx
+    const nz = z + dz
+    if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+    if (rng() >= density) continue
+    const node = nz * sizeX + nx
+    const sid = treePool[Math.floor(rng() * treePool.length)]
+    if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
+      placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) })
+    }
+  }
+}
+
+/** User design request: "for forests, add walkables like grass, flowers and
+ *  also some stubs (even though they're not walkable) at the edges... for a
+ *  more organic, natural look" — computes `members`' own outer boundary ring
+ *  (one tile out, excluding tiles the cluster itself already claimed) and,
+ *  per boundary tile, rolls a walkable grass/flower clutter pick (real sids
+ *  matched by name — `grass`/`flower` substrings within this biome's own
+ *  clutter pool) at `FOREST_EDGE_GRASS_CHANCE`, else a stump/log pick
+ *  (`stump`/`log` substrings, wherever they land in this biome's clutter/
+ *  obstacle pools) at the lower `FOREST_EDGE_STUMP_CHANCE`. */
+function addForestEdgeHalo(
+  members: number[], sizeX: number, sizeZ: number, pool: FuzzyObstaclePool,
+  catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number, placements: ZonePlacement[],
+): void {
+  const memberSet = new Set(members)
+  const boundary = new Set<number>()
+  for (const node of members) {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of EIGHT_NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (!memberSet.has(n)) boundary.add(n)
+    }
+  }
+  const grassFlower = pool.clutter.filter((sid) => /grass|flower/i.test(sid))
+  const stumpOrLog = [...pool.clutter, ...pool.obstacles].filter((sid) => /stump|log/i.test(sid))
+  for (const node of boundary) {
+    let sid: string | null = null
+    if (grassFlower.length > 0 && rng() < FOREST_EDGE_GRASS_CHANCE) {
+      sid = grassFlower[Math.floor(rng() * grassFlower.length)]
+    } else if (stumpOrLog.length > 0 && rng() < FOREST_EDGE_STUMP_CHANCE) {
+      sid = stumpOrLog[Math.floor(rng() * stumpOrLog.length)]
+    }
+    if (!sid) continue
+    if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
+      placements.push({ tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) })
+    }
+  }
+}
+
 function scatterCluster(
   seedNode: number, sizeX: number, sizeZ: number, pool: FuzzyObstaclePool,
   catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
@@ -220,26 +411,42 @@ function scatterCluster(
   coOccurrenceStrength = 0,
   placedCategoryByNode?: Map<number, DecorationCategory>,
   sidWeights?: Record<string, number>,
+  treePool: string[] = [],
 ): ZonePlacement[] {
-  // Both archetype-choice rolls (mountain-heavy vs obstacle-heavy, and the
-  // pool sub-chance) are biased ONCE per cluster from whatever's already
-  // placed near the seed — a cluster is a single archetype throughout, so
-  // per-member re-biasing would just repeat the same seed-neighborhood
-  // context every time for no real gain.
-  const seedNearby = coOccurrenceStrength > 0 && placedCategoryByNode ? nearbyCategories(seedNode, sizeX, sizeZ, placedCategoryByNode, CLUSTER_RADIUS) : []
-  const mountainHeavyChance = seedNearby.length > 0
+  // Archetype-choice rolls (mountain-heavy / forest-heavy / plain obstacle-
+  // heavy, and the pool sub-chance) are decided ONCE per cluster from
+  // whatever's already placed near the seed — a cluster is a single
+  // archetype throughout, so per-member re-biasing would just repeat the
+  // same seed-neighborhood context every time for no real gain.
+  const seedNearby = (coOccurrenceStrength > 0 || treePool.length > 0) && placedCategoryByNode
+    ? nearbyCategories(seedNode, sizeX, sizeZ, placedCategoryByNode, CLUSTER_RADIUS)
+    : []
+  const mountainHeavyChance = coOccurrenceStrength > 0 && seedNearby.length > 0
     ? clamp01(CLUSTER_MOUNTAIN_HEAVY_CHANCE * scaleMultiplier(coOccurrenceBias(seedNearby, 'mountains'), coOccurrenceStrength))
     : CLUSTER_MOUNTAIN_HEAVY_CHANCE
-  const poolChance = seedNearby.length > 0
+  const poolChance = coOccurrenceStrength > 0 && seedNearby.length > 0
     ? clamp01(CLUSTER_POOL_CHANCE * scaleMultiplier(coOccurrenceBias(seedNearby, 'pools'), coOccurrenceStrength))
     : CLUSTER_POOL_CHANCE
 
   const mountainHeavy = pool.mountains.length > 0 && rng() < mountainHeavyChance
-  const primaryPool = mountainHeavy ? pool.mountains : pool.obstacles
-  const accentPool = mountainHeavy ? pool.obstacles : pool.mountains
+  // User design request: a forest cluster seeded near an already-placed
+  // mountain cluster is more likely to actually become forest-heavy (see
+  // FOREST_NEAR_MOUNTAIN_MULTIPLIER's own doc comment) — checked
+  // regardless of `coOccurrenceStrength` (a real-data-calibrated dial this
+  // new, hand-specified rule doesn't gate on).
+  const nearMountains = seedNearby.includes('mountains')
+  const forestHeavyChance = clamp01(CLUSTER_FOREST_HEAVY_CHANCE * (nearMountains ? FOREST_NEAR_MOUNTAIN_MULTIPLIER : 1))
+  const forestHeavy = !mountainHeavy && treePool.length > 0 && rng() < forestHeavyChance
+
+  const primaryPool = mountainHeavy ? pool.mountains : forestHeavy ? treePool : pool.obstacles
+  const accentPool = mountainHeavy ? pool.obstacles : forestHeavy ? pool.obstacles : pool.mountains
   if (primaryPool.length === 0) return []
 
-  const pickSid = (): { sid: string; category: DecorationCategory } | null => {
+  const { big: bigMountains, small: smallMountains, other: otherMountains } = mountainHeavy
+    ? splitMountainsBySize(pool.mountains)
+    : { big: [], small: [], other: [] }
+
+  const pickSid = (distFromSeed: number): { sid: string; category: DecorationCategory } | null => {
     if (pool.pools.length > 0 && rng() < poolChance) {
       return { sid: pickWeighted(pool.pools, rng, sidWeights), category: 'pools' }
     }
@@ -247,7 +454,8 @@ function scatterCluster(
     const primaryCategory: DecorationCategory = mountainHeavy ? 'mountains' : 'obstacles'
     const accentCategory: DecorationCategory = mountainHeavy ? 'obstacles' : 'mountains'
     if (roll < CLUSTER_PRIMARY_CHANCE || accentPool.length === 0) {
-      return { sid: pickWeighted(primaryPool, rng, sidWeights), category: primaryCategory }
+      const sidPool = mountainHeavy ? pickGradientMountainPool(distFromSeed, bigMountains, smallMountains, otherMountains, primaryPool) : primaryPool
+      return { sid: pickWeighted(sidPool, rng, sidWeights), category: primaryCategory }
     }
     if (roll < CLUSTER_PRIMARY_CHANCE + CLUSTER_ACCENT_CHANCE) {
       return { sid: pickWeighted(accentPool, rng, sidWeights), category: accentCategory }
@@ -256,9 +464,11 @@ function scatterCluster(
     return { sid: pickWeighted(primaryPool, rng, sidWeights), category: primaryCategory }
   }
 
-  const targetSize = groupSizeWeights && groupSizeWeights.length > 0
-    ? weightedGroupSize(groupSizeWeights, rng)
-    : Math.round(randomInRange(CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, rng))
+  const targetSize = forestHeavy
+    ? pickForestClusterSize(rng)
+    : groupSizeWeights && groupSizeWeights.length > 0
+      ? weightedGroupSize(groupSizeWeights, rng)
+      : Math.round(randomInRange(CLUSTER_MIN_SIZE, CLUSTER_MAX_SIZE, rng))
   const placements: ZonePlacement[] = []
   const cx = seedNode % sizeX
   const cz = Math.floor(seedNode / sizeX)
@@ -270,12 +480,18 @@ function scatterCluster(
     const z = cz + dz
     if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
     const node = z * sizeX + x
-    const picked = pickSid()
+    const picked = pickSid(Math.hypot(dx, dz))
     if (!picked) continue
     if (!tryPlaceAt(picked.sid, node, sizeX, sizeZ, catalogById, state)) continue
     placements.push({ tempId: state.nextTempId++, sid: picked.sid, node, rotation: pickRotation(picked.sid, catalogById, rng) })
     placedCategoryByNode?.set(node, picked.category)
+    if (ROCK_OR_HILL_PATTERN.test(picked.sid)) {
+      addRockHillTreeHalo(node, sizeX, sizeZ, treePool, catalogById, state, rng, placements)
+    }
     placed++
+  }
+  if (forestHeavy && placements.length > 0) {
+    addForestEdgeHalo(placements.map((p) => p.node), sizeX, sizeZ, pool, catalogById, state, rng, placements)
   }
   return placements
 }
@@ -401,6 +617,7 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     levelsMap, climbsMap, elevationDecayStrength = 0, rmgEnvironmentAssets,
   } = options
   const pools = buildFuzzyObstaclePools(mapObjects)
+  const treePools = buildTreePools(mapObjects)
   const environmentWeights = rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined
   const placements: ZonePlacement[] = []
   // Shared across every zone (in generation order) — co-occurrence bias
@@ -474,10 +691,11 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
       : 1
     const clusterSeedCount = Math.floor(candidateTiles.length / (CLUSTER_SEED_SPACING * spacingScale))
     const pool = pools[biome]
+    const treePool = treePools[biome]?.obstacles ?? []
     for (let i = 0; i < clusterSeedCount; i++) {
       const seedIndex = Math.floor(rng() * candidateTiles.length)
       const [seedNode] = candidateTiles.splice(seedIndex, 1)
-      placements.push(...scatterCluster(seedNode, sizeX, sizeZ, pool, catalogById, state, rng, ambientPickup?.groupSizeWeights, coOccurrenceStrength, placedCategoryByNode, environmentWeights?.[biome]))
+      placements.push(...scatterCluster(seedNode, sizeX, sizeZ, pool, catalogById, state, rng, ambientPickup?.groupSizeWeights, coOccurrenceStrength, placedCategoryByNode, environmentWeights?.[biome], treePool))
     }
     if (candidateTiles.length === 0) continue
 
@@ -504,6 +722,9 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
         if (!tryPlaceAt(addition.sid, node, sizeX, sizeZ, catalogById, state)) return
         placements.push({ tempId: state.nextTempId++, sid: addition.sid, node, rotation: pickRotation(addition.sid, catalogById, rng) })
         if (coOccurrenceStrength > 0) placedCategoryByNode.set(node, categoryOf(addition.sid, pool))
+        if (ROCK_OR_HILL_PATTERN.test(addition.sid)) {
+          addRockHillTreeHalo(node, sizeX, sizeZ, treePool, catalogById, state, rng, placements)
+        }
       },
     })
   }
