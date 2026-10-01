@@ -254,6 +254,120 @@ export interface CatalogZoneTemplate {
   sizeZ: number
 }
 
+/** A content_list entry (Core/generator/content_lists/*.json) — issue #240
+ *  Phase 0. A `biome`-tagged entry is an additional, biome-gated weight
+ *  override alongside the sid's own flat entry (confirmed: the engine
+ *  appears to prefer the biome-matching entry when the current zone's
+ *  biome matches, otherwise falls back to the flat one — see
+ *  plans/rmg-core-generator-data-research.md §1). `variant` picks a
+ *  specific sub-skin of a multi-variant object (e.g. Pandora Box). */
+export interface CatalogContentListEntry {
+  sid: string
+  weight: number
+  biome?: string
+  variant?: string
+}
+
+/** A named, weighted sid pick-table (Core/generator/content_lists/*.json) —
+ *  the real RMG's "ingredients" layer, referenced by CatalogContentPool's
+ *  `groups[].includeLists`. Generic/non-template files only — see
+ *  CATALOG_SCHEMA_VERSION's v14 doc comment for the exact file list. */
+export interface CatalogContentList {
+  name: string
+  content: CatalogContentListEntry[]
+}
+
+/** A named pool (Core/generator/content_pools/*.json + content_pools/
+ *  random_pools/**) — issue #240 Phase 0, the real RMG's "recipe" layer:
+ *  a real weighted gold-value price histogram (`valueDistribution`, not
+ *  every pool has one — e.g. the zone-richness pools in
+ *  basic_pools_resources.json don't) plus weighted references into
+ *  CatalogContentList by name. `groups[].content` is an inline weight
+ *  override/extension of specific sids within an `includeLists`-referenced
+ *  list, not a replacement of the list itself. `bans` is a hard, pool-wide
+ *  exclusion, separate from weight-zeroing. Generic/non-template pools
+ *  only — see CATALOG_SCHEMA_VERSION's v14 doc comment. */
+export interface CatalogContentPool {
+  name: string
+  valueDistribution?: { priceBounds: number[]; weights: number[] }
+  groups: { weight: number; includeLists?: string[]; content?: CatalogContentListEntry[] }[]
+  bans?: { sid: string }[]
+}
+
+/** One real per-biome decoration/obstacle tileset
+ *  (generator_environment_assets.json's `biomes[].tilesets[]`) — issue #240
+ *  Phase 0. `obstacles`/`skirt` kept as opaque raw bags (each entry is
+ *  `{name, sids[], weight, rules[]}`) since the consuming scatter logic
+ *  needs the whole shape, not a reshaped subset. `tags` includes
+ *  `zone_border` (confirmed: e.g. `mountains_border` is always weight 0 but
+ *  tagged zone_border — placed only at zone boundaries, never randomly
+ *  rolled) and `filler`. */
+export interface CatalogEnvironmentTileset {
+  sid: string
+  weight: number
+  skirtFill: number
+  tags: string[]
+  obstacles: Record<string, unknown>[]
+  skirt: Record<string, unknown>[]
+}
+
+export interface CatalogEnvironmentBiome {
+  sid: string
+  tilesets: CatalogEnvironmentTileset[]
+}
+
+/** One entry of generator_config.json's `metaObjects[]` — issue #240 Phase 0,
+ *  real gold-value economy anchors: the 4 `random_item_*` tiers (value only)
+ *  and the 7 `random_hire_N` tiers (value + a separate, strictly-increasing
+ *  guardValue). TSE's own generator currently places only a flat, untiered
+ *  `random-hire` placeholder with no tiering at all. */
+export interface CatalogGeneratorMetaObject {
+  sid: string
+  value: number
+  guardValue?: number
+  type: string
+  args?: string[]
+}
+
+/** generator_config.json's real global economy/config anchors — issue #240
+ *  Phase 0. `waterForBiome`/`resourceByMine` are sid->sid maps; TSE already
+ *  hardcodes the same resourceByMine facts elsewhere, this is the first-party
+ *  source for them. */
+export interface CatalogGeneratorConfig {
+  metaObjects: CatalogGeneratorMetaObject[]
+  portals: string[]
+  waterForBiome: Record<string, string>
+  resourceByMine: Record<string, string>
+}
+
+/** zone_layouts/default_zone_layouts.json's single generic parameter bundle
+ *  — issue #240 Phase 0. `obstaclesFill`/`lakesFill`/`minLakeArea` are
+ *  already parsed by rmg-template-import.ts; every other field here is not
+ *  parsed anywhere yet (see plans/rmg-core-generator-data-research.md §3).
+ *  `elevationModes` is a real bimodal "mostly flat" vs "mostly elevated"
+ *  choice (weighted bands), not a continuous range. */
+export interface CatalogRmgZoneLayout {
+  name: string
+  obstaclesFill: number
+  lakesFill: number
+  minLakeArea: number
+  elevationClusterScale: number
+  elevationModes: { weight: number; minElevatedFraction: number; maxElevatedFraction: number }[]
+  roadClusterArea: number
+  guardedEncounterDencity: number
+  guardedEncounterSizeDistribution: number[]
+  unguardedEncounterDencity: number
+  unguardedEncounterSizeDistribution: number[]
+  ambientPickupDensity: number
+  ambientPickupDistribution: {
+    repulsion: number
+    noise: number
+    roadAttraction: number
+    obstacleAttraction: number
+    groupSizeWeights: number[]
+  }
+}
+
 export interface GameCatalog {
   /** Schema version — bump on breaking changes */
   version: number
@@ -286,6 +400,38 @@ export interface GameCatalog {
    *  RMG template's own `description` field, which is a sid, not literal
    *  text (see `CATALOG_SCHEMA_VERSION`'s v11 doc comment). */
   rmgTemplateStrings: Record<string, string>
+  /** Real RMG content lists/pools (Core/generator/content_lists|content_pools/,
+   *  generic/non-template subset only — excludes the ~48 content_pools/
+   *  template_*_pools.json + templates_*_pools.json files, the 15
+   *  content_lists/custom_content_lists_*.json files, and
+   *  content_pools/generator_content_pools.json, which despite its generic
+   *  filename is Jebus-Cross-specific), issue #240 Phase 0. Pool/list names
+   *  are globally unique strings — resolved by name at the consuming layer,
+   *  same "raw here, resolved where shown" split used elsewhere. */
+  rmgContentLists: CatalogContentList[]
+  rmgContentPools: CatalogContentPool[]
+  /** generator_environment_assets.json's real per-biome decoration/obstacle
+   *  weights, issue #240 Phase 0 — all 7 biomes. */
+  rmgEnvironmentAssets: CatalogEnvironmentBiome[]
+  /** generator_config.json's real global economy anchors, issue #240 Phase 0.
+   *  undefined only if the file is missing/malformed in the source Core.zip. */
+  rmgGeneratorConfig: CatalogGeneratorConfig | undefined
+  /** generator_stats_config.json's `statSids[]` — a flat whitelist of every
+   *  "contentful" placeable sid, issue #240 Phase 0. Likely the real game's
+   *  own map-balance/stats-scoring input list. */
+  rmgStatSids: string[]
+  /** zone_layouts/default_zone_layouts.json's single entry, issue #240
+   *  Phase 0. undefined only if the file is missing/malformed. */
+  rmgZoneLayout: CatalogRmgZoneLayout | undefined
+  /** sid -> real gold value, read from the top-level `goodsValue` field
+   *  found pervasively across Core/DB/objects_logic/**\/*.json and
+   *  Core/DB/items/items/*.json entries — issue #240 Phase 0. This is the
+   *  real backing data for rmgContentPools' valueDistribution price-bucket
+   *  gating (confirmed this session: several of TSE's own
+   *  INTERACTABLE_RARE_SIDS carry a goodsValue landing in the priciest
+   *  bucket of the t5 pools). Only entries that actually carry the field
+   *  are present — most objects_logic entries (event banks, etc.) don't. */
+  goodsValueBySid: Record<string, number>
 }
 
 // v3: mapObjects now covers all 9 DB/map/objects/*.json category files
@@ -324,4 +470,14 @@ export interface GameCatalog {
 // (6 faction files) — feeds a faction-aware Building SID dropdown, with real
 // per-building level counts, on the 4 building-related condition/action
 // types — same hygiene-only reasoning.
-export const CATALOG_SCHEMA_VERSION = 13
+// v14: added rmgContentLists/rmgContentPools/rmgEnvironmentAssets/
+// rmgGeneratorConfig/rmgStatSids/rmgZoneLayout/goodsValueBySid — the real
+// game's own Core/generator/ RMG data (issue #240 Phase 0), parsed for the
+// first time this session. content_lists/content_pools are the generic/
+// non-template subset only (see rmgContentPools' own doc comment for the
+// exact exclusion list — this includes templates_square_pools.json, which
+// despite not matching the `template_*` naming pattern the rest of the
+// per-template files use, is confirmed per-template data for the "Fair'n
+// Square" map). Nothing persists a built catalog across sessions, so this
+// bump is hygiene-only, not a migration, same as v3-v13.
+export const CATALOG_SCHEMA_VERSION = 14
