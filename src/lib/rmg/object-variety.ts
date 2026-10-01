@@ -10,32 +10,175 @@
 import type { CatalogSquadTemplate, GameCatalog } from '@/lib/catalog/types'
 import { TIER_MEDIAN_SQUAD_VALUE } from '@/lib/h3-import/neutral-strength'
 
-/** Real weighted random-hire tier table (Core/generator/content_lists/
- *  generator_content_lists.json's `content_list_building_random_hires` — one
- *  of issue #240 Phase 0's collected generic content lists, weights 250/
- *  250/225/225/200/200/150 for tiers 1-7, favoring cheaper tiers but not
- *  flat) combined with `generator_config.json`'s real `random_hire_1..7`
- *  value/guardValue curve (also Phase 0) — replaces the flat, always-tier-1
- *  `random-hire` placeholder this generator never actually varied. Returns
- *  `null` when this catalog has no generator-data (the static fallback
- *  catalog, or an older Core.zip with no `Core/generator/` files) rather
- *  than guessing a tier with no real weight/value data behind it. */
-export function pickRandomHireTier(catalog: GameCatalog, rng: () => number): { tier: number; value: number; guardValue: number } | null {
-  const list = catalog.rmgContentLists.find((l) => l.name === 'content_list_building_random_hires')
-  const metaObjects = catalog.rmgGeneratorConfig?.metaObjects
-  if (!list || !metaObjects || list.content.length === 0) return null
-  const totalWeight = list.content.reduce((sum, c) => sum + c.weight, 0)
-  if (totalWeight <= 0) return null
-  let roll = rng() * totalWeight
-  let chosenSid = list.content[0].sid
-  for (const c of list.content) {
-    if (roll < c.weight) { chosenSid = c.sid; break }
+/** `sid -> real gold value`, folding `goodsValueBySid` (objects_logic/items,
+ *  sparse — most buildings don't carry it) together with `generator_config
+ *  .json`'s own `metaObjects` curve (the `random_item_*`/`random_hire_*`
+ *  abstract tiers, which never appear in objects_logic at all) — issue #240
+ *  Phase 2's one real value lookup, used by `rollContentPool`'s value-bucket
+ *  gating below and by `zone-population.ts` for a resolved pick's guard
+ *  value. */
+export function resolveGoodsValue(catalog: GameCatalog, sid: string): number | undefined {
+  return catalog.goodsValueBySid[sid] ?? catalog.rmgGeneratorConfig?.metaObjects.find((m) => m.sid === sid)?.value
+}
+
+/** Real weighted sid pick straight out of one named `Core/generator/
+ *  content_pools/*.json` pool (issue #240 Phase 2) — no copied/hardcoded
+ *  weight numbers, reads `catalog.rmgContentPools`/`rmgContentLists` live
+ *  every call. Flattens every group's `includeLists` entries into one
+ *  candidate list (a group's own inline `content` is an override/extension
+ *  of a specific sid's weight within that group, per `CatalogContentPool`'s
+ *  own doc comment — it replaces, not adds to, a same-sid list entry's
+ *  weight), each candidate's effective pick weight = `group.weight *
+ *  entry.weight`, additionally scaled by the pool's own `valueDistribution`
+ *  price-bucket weight when the sid's real gold value is known
+ *  (`resolveGoodsValue`) — an unknown-value sid (most buildings;
+ *  `goodsValueBySid` is sparse) gets no value-bucket scaling at all
+ *  (neutral, not excluded), since there's no real data to bias it by.
+ *  `bans` and `isExcluded` both hard-exclude a sid from the whole pool
+ *  (effectively an instant resample, no retry loop needed), unlike a
+ *  zeroed weight which still participates in `includeLists` resolution but
+ *  never gets picked. Returns `null` only if the pool is unknown or every
+ *  candidate ended up excluded/zero-weight. */
+export function rollContentPool(
+  catalog: GameCatalog,
+  poolName: string,
+  rng: () => number,
+  isExcluded?: (sid: string) => boolean,
+): string | null {
+  const pool = catalog.rmgContentPools.find((p) => p.name === poolName)
+  if (!pool) return null
+  const banned = new Set((pool.bans ?? []).map((b) => b.sid))
+  const candidates: { sid: string; weight: number }[] = []
+  for (const group of pool.groups) {
+    if (group.weight <= 0) continue
+    const overrides = new Map((group.content ?? []).map((c) => [c.sid, c.weight]))
+    const seen = new Set<string>()
+    for (const listName of group.includeLists ?? []) {
+      const list = catalog.rmgContentLists.find((l) => l.name === listName)
+      for (const entry of list?.content ?? []) {
+        if (seen.has(entry.sid) || banned.has(entry.sid) || isExcluded?.(entry.sid)) continue
+        seen.add(entry.sid)
+        const weight = overrides.get(entry.sid) ?? entry.weight
+        if (weight <= 0) continue
+        let bucketScale = 1
+        if (pool.valueDistribution) {
+          const value = resolveGoodsValue(catalog, entry.sid)
+          if (value !== undefined) {
+            const { priceBounds, weights } = pool.valueDistribution
+            let bucket = priceBounds.findIndex((bound) => value <= bound)
+            if (bucket === -1) bucket = weights.length - 1
+            bucketScale = weights[bucket] ?? 1
+          }
+        }
+        candidates.push({ sid: entry.sid, weight: group.weight * weight * bucketScale })
+      }
+    }
+    // Override entries whose sid wasn't already in one of this group's own
+    // includeLists (e.g. basic_pools_resources.json's richness pools add
+    // sids like `resource_gold` directly, with no matching list entry at
+    // all for some of them).
+    for (const [sid, weight] of overrides) {
+      if (seen.has(sid) || banned.has(sid) || isExcluded?.(sid) || weight <= 0) continue
+      candidates.push({ sid, weight: group.weight * weight })
+    }
+  }
+  const total = candidates.reduce((sum, c) => sum + c.weight, 0)
+  if (total <= 0) return null
+  let roll = rng() * total
+  for (const c of candidates) {
+    if (roll < c.weight) return c.sid
     roll -= c.weight
   }
-  const tierMatch = /^random_hire_(\d)$/.exec(chosenSid)
-  const meta = metaObjects.find((m) => m.sid === chosenSid)
-  if (!tierMatch || !meta || meta.guardValue === undefined) return null
-  return { tier: Number(tierMatch[1]), value: meta.value, guardValue: meta.guardValue }
+  return candidates[candidates.length - 1].sid
+}
+
+/** Real sid families rolled out of the generic content pools excluded for
+ *  lack of CONFIRMED placement support — issue #240 Phase 2. `pandora_box`/
+ *  `scroll_box`/`enchanted_scroll_box` are NOT excluded: `map-write.ts`'s own
+ *  `SIDS_WITH_VARIANTS_ONLY` already backfills their real `propVariants` row
+ *  on every fresh placement, confirmed by that file's own real-map survey
+ *  (100% consistent across every sampled instance) — this module's own
+ *  `place()` call routes through that exact backfill automatically, so no
+ *  extra wiring is needed here. `mythic_scroll_box` is the one real
+ *  exception: absent from every one of `map-write.ts`'s three confirmed-sid
+ *  lists (not even its "mixed/partial coverage, default to neither table"
+ *  bucket — just never surveyed at all, likely too rare in the sampled real
+ *  maps), so there's no real-data backing for its placement behavior yet —
+ *  left out rather than guessed, same spirit as Phase 1's `fickle_shrine`
+ *  exclusion and CLAUDE.md's "editor-time validity ≠ game-runtime validity"
+ *  lesson. Passed as `rollContentPool`'s `isExcluded` so a hit resamples
+ *  into something else from the same pool instead of silently dropping a
+ *  placement. */
+export const UNSUPPORTED_CONTENT_POOL_SIDS = new Set(['mythic_scroll_box'])
+
+/** Maps `generator_config.json`'s 4 named value-tier sids (abstract entries
+ *  that only ever appear inside the real content-lists/pools system, never
+ *  placed literally) to the `random-item` placeholder's own real `rarity`
+ *  field (0-3) — confirmed one-for-one against Core/DB/items/items/*.json's
+ *  own `rarity` string (`common`/`rare`/`epic`/`legendary`), issue #240
+ *  Phase 2. */
+const RANDOM_ITEM_TIER_TO_RARITY: Record<string, number> = {
+  random_item_common: 0,
+  random_item_rare: 1,
+  random_item_epic: 2,
+  random_item_legendary: 3,
+}
+
+export interface ResolvedContentPoolPick {
+  sid: string
+  randomItemOverrides?: { rarity: number }
+  randomHireOverrides?: { tier: number }
+  /** Only set for a `random_hire_N` resolution — its real, separate
+   *  `guardValue` from `generator_config.json`, reused directly (the tier
+   *  is already decided, by this sid itself, so there's no need to re-roll
+   *  a weighted tier pick a second time). */
+  guardValue?: number
+}
+
+/** Turns one real sid rolled out of `rollContentPool` (issue #240 Phase 2)
+ *  into something this generator can actually place. Most sids need no
+ *  translation at all (a real, already-placeable building/storage/resource
+ *  sid, same "no extra config" universe this module's other exports already
+ *  document) — only the two abstract bookkeeping families (`random_item_*`/
+ *  `random_hire_*`, which are never real placeable objects themselves) need
+ *  resolving into a concrete sid or a placeholder + override. A
+ *  `random_item_*` tier prefers a real, concrete artifact of the matching
+ *  real rarity (keeping this generator's existing "concrete over
+ *  placeholder" feature) over the bare `random-item` placeholder, falling
+ *  back to the placeholder only once every matching-rarity artifact is
+ *  already used/capped this zone. Returns `null` only for `random_hire_N`
+ *  when this Core.zip is missing `generator_config.json`'s matching entry
+ *  (old data) — every other case always resolves to something placeable. */
+export function resolveContentPoolPick(
+  sid: string,
+  catalog: GameCatalog,
+  usedArtifactSids: Set<string>,
+  preferredSids: Set<string> | undefined,
+  isAtCap: (sid: string) => boolean,
+  rng: () => number,
+): ResolvedContentPoolPick | null {
+  const rarity = RANDOM_ITEM_TIER_TO_RARITY[sid]
+  if (rarity !== undefined) {
+    const rarityLabel = ['common', 'rare', 'epic', 'legendary'][rarity]
+    const available = catalog.artifacts.filter(
+      (a) => a.rarity === rarityLabel && !a.id.startsWith('shadow_of_death_') && !usedArtifactSids.has(a.id) && !isAtCap(a.id),
+    )
+    if (available.length > 0) {
+      const preferred = preferredSids ? available.filter((a) => preferredSids.has(a.id)) : []
+      const pool = preferred.length > 0 && rng() < 0.7 ? preferred : available
+      const artifact = pool[Math.floor(rng() * pool.length)]
+      usedArtifactSids.add(artifact.id)
+      return { sid: artifact.id }
+    }
+    return { sid: 'random-item', randomItemOverrides: { rarity } }
+  }
+  const hireMatch = /^random_hire_(\d)$/.exec(sid)
+  if (hireMatch) {
+    const meta = catalog.rmgGeneratorConfig?.metaObjects.find((m) => m.sid === sid)
+    if (!meta || meta.guardValue === undefined) return null
+    return { sid: 'random-hire', randomHireOverrides: { tier: Number(hireMatch[1]) }, guardValue: meta.guardValue }
+  }
+  return { sid }
 }
 
 /** Real, concrete resource-pile sids (Core/DB/map/objects/4_interactables.json)
