@@ -22,6 +22,12 @@ import type {
   CatalogDialogSlide,
   CatalogZoneTemplate,
   CatalogCityBuilding,
+  CatalogContentList,
+  CatalogContentListEntry,
+  CatalogContentPool,
+  CatalogEnvironmentBiome,
+  CatalogGeneratorConfig,
+  CatalogRmgZoneLayout,
 } from './types'
 import { CATALOG_SCHEMA_VERSION } from './types'
 
@@ -44,6 +50,25 @@ function zipFilesUnder(zip: JSZip, prefix: string): string[] {
   return Object.keys(zip.files).filter(
     (name) => name.startsWith(prefix) && name.endsWith('.json') && !zip.files[name].dir,
   )
+}
+
+/** Reads one zip entry as arbitrary parsed JSON, or undefined on missing/
+ *  malformed entry — for Core/generator/ files, which (unlike most DB/ files)
+ *  are a mix of bare top-level arrays and plain objects, never `{"array":[]}`. */
+async function readJsonFile<T>(zip: JSZip, path: string): Promise<T | undefined> {
+  try {
+    const text = await readZipEntry(zip, path)
+    return JSON.parse(text) as T
+  } catch {
+    return undefined
+  }
+}
+
+/** Returns a zip entry's bare top-level JSON array, or [] on missing/
+ *  malformed/non-array entry. */
+async function readBareJsonArray(zip: JSZip, path: string): Promise<Record<string, unknown>[]> {
+  const parsed = await readJsonFile<unknown>(zip, path)
+  return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : []
 }
 
 // ─── Localization loader ──────────────────────────────────────────────────────
@@ -678,6 +703,244 @@ async function collectDialogs(
   }
 }
 
+// ─── RMG Core/generator data (issue #240 Phase 0) ─────────────────────────────
+// Generic/non-template subset only. Deliberately an explicit file allowlist,
+// not a prefix/pattern exclusion — `content_pools/templates_square_pools.json`
+// looks generic (no `template_` prefix) but is confirmed per-template data for
+// the "Fair'n Square" map, and `generator_content_pools.json` looks generic by
+// filename alone but is confirmed Jebus-Cross-specific. A pattern match would
+// silently leak these in; an allowlist can't.
+
+const RMG_CONTENT_LIST_FILES = [
+  'generator/content_lists/basic_content_lists.json',
+  'generator/content_lists/basic_content_lists_variants_table.json',
+  'generator/content_lists/generator_content_lists.json',
+  'generator/content_lists/test_content_lists.json',
+]
+
+const RMG_GENERIC_CONTENT_POOL_FILES = [
+  'generator/content_pools/test_content_pool.json',
+  'generator/content_pools/default_content_pools.json',
+  'generator/content_pools/basic_pools_default.json',
+  'generator/content_pools/basic_pools_resources.json',
+]
+
+/** The 24 `content_pools/random_pools/**` files: t0-t5 x guarded/unguarded x
+ *  classic/normal. Every tier shares byte-identical group/content/ban data —
+ *  only valueDistribution.weights changes — confirmed via
+ *  plans/rmg-core-generator-data-research.md §2. */
+function rmgRandomPoolFiles(): string[] {
+  const files: string[] = []
+  for (const classic of [false, true]) {
+    for (const guarded of [true, false]) {
+      for (let tier = 0; tier <= 5; tier++) {
+        const base = `template_pools_random${guarded ? '' : '_unguarded'}_t${tier}.json`
+        files.push(
+          classic
+            ? `generator/content_pools/random_pools/classic_version/classic_${base}`
+            : `generator/content_pools/random_pools/${base}`,
+        )
+      }
+    }
+  }
+  return files
+}
+
+function parseContentListEntry(entry: Record<string, unknown>): CatalogContentListEntry {
+  return {
+    sid: str(entry.sid),
+    weight: num(entry.weight),
+    biome: str(entry.biome || '') || undefined,
+    variant: str(entry.variant || '') || undefined,
+  }
+}
+
+async function collectRmgContentLists(zip: JSZip): Promise<CatalogContentList[]> {
+  const lists: CatalogContentList[] = []
+  const seen = new Set<string>()
+
+  for (const path of RMG_CONTENT_LIST_FILES) {
+    const entries = await readBareJsonArray(zip, path)
+    for (const entry of entries) {
+      const name = str(entry.name)
+      if (!name || seen.has(name)) continue
+      seen.add(name)
+      const content = Array.isArray(entry.content)
+        ? (entry.content as Record<string, unknown>[]).map(parseContentListEntry)
+        : []
+      lists.push({ name, content })
+    }
+  }
+  return lists
+}
+
+function parseContentPoolEntry(entry: Record<string, unknown>): CatalogContentPool | undefined {
+  const name = str(entry.name)
+  if (!name) return undefined
+
+  const vd = entry.valueDistribution as Record<string, unknown> | undefined
+  const valueDistribution =
+    vd && Array.isArray(vd.priceBounds) && Array.isArray(vd.weights)
+      ? { priceBounds: vd.priceBounds as number[], weights: vd.weights as number[] }
+      : undefined
+
+  const groups = Array.isArray(entry.groups)
+    ? (entry.groups as Record<string, unknown>[]).map((g) => ({
+        weight: num(g.weight),
+        includeLists: Array.isArray(g.includeLists) ? (g.includeLists as string[]) : undefined,
+        content: Array.isArray(g.content)
+          ? (g.content as Record<string, unknown>[]).map(parseContentListEntry)
+          : undefined,
+      }))
+    : []
+
+  const bans = Array.isArray(entry.bans)
+    ? (entry.bans as Record<string, unknown>[]).map((b) => ({ sid: str(b.sid) }))
+    : undefined
+
+  return { name, valueDistribution, groups, bans }
+}
+
+async function collectRmgContentPools(zip: JSZip): Promise<CatalogContentPool[]> {
+  const pools: CatalogContentPool[] = []
+  const seen = new Set<string>()
+  const files = [...RMG_GENERIC_CONTENT_POOL_FILES, ...rmgRandomPoolFiles()]
+
+  for (const path of files) {
+    const entries = await readBareJsonArray(zip, path)
+    for (const entry of entries) {
+      const pool = parseContentPoolEntry(entry)
+      if (!pool || seen.has(pool.name)) continue
+      seen.add(pool.name)
+      pools.push(pool)
+    }
+  }
+  return pools
+}
+
+async function collectRmgEnvironmentAssets(zip: JSZip): Promise<CatalogEnvironmentBiome[]> {
+  const parsed = await readJsonFile<{ biomes?: Record<string, unknown>[] }>(
+    zip,
+    'generator/generator_environment_assets.json',
+  )
+  const biomes = Array.isArray(parsed?.biomes) ? parsed.biomes : []
+  return biomes.map((biome) => ({
+    sid: str(biome.sid),
+    tilesets: Array.isArray(biome.tilesets)
+      ? (biome.tilesets as Record<string, unknown>[]).map((t) => ({
+          sid: str(t.sid),
+          weight: num(t.weight),
+          skirtFill: num(t.skirtFill),
+          tags: Array.isArray(t.tags) ? (t.tags as string[]) : [],
+          obstacles: Array.isArray(t.obstacles) ? (t.obstacles as Record<string, unknown>[]) : [],
+          skirt: Array.isArray(t.skirt) ? (t.skirt as Record<string, unknown>[]) : [],
+        }))
+      : [],
+  }))
+}
+
+async function collectRmgGeneratorConfig(zip: JSZip): Promise<CatalogGeneratorConfig | undefined> {
+  const parsed = await readJsonFile<Record<string, unknown>>(zip, 'generator/generator_config.json')
+  if (!parsed) return undefined
+
+  const metaObjects = Array.isArray(parsed.metaObjects)
+    ? (parsed.metaObjects as Record<string, unknown>[]).map((m) => ({
+        sid: str(m.sid),
+        value: num(m.value),
+        guardValue: typeof m.guardValue === 'number' ? m.guardValue : undefined,
+        type: str(m.type),
+        args: Array.isArray(m.args) ? (m.args as string[]) : undefined,
+      }))
+    : []
+
+  const toMap = (arr: unknown): Record<string, string> => {
+    const out: Record<string, string> = {}
+    if (Array.isArray(arr)) {
+      for (const e of arr as Record<string, unknown>[]) {
+        const key = str(e.key)
+        if (key) out[key] = str(e.val)
+      }
+    }
+    return out
+  }
+
+  return {
+    metaObjects,
+    portals: Array.isArray(parsed.portals) ? (parsed.portals as string[]) : [],
+    waterForBiome: toMap(parsed.waterForBiome),
+    resourceByMine: toMap(parsed.resourceByMine),
+  }
+}
+
+async function collectRmgStatSids(zip: JSZip): Promise<string[]> {
+  const parsed = await readJsonFile<{ statSids?: string[] }>(zip, 'generator/generator_stats_config.json')
+  return Array.isArray(parsed?.statSids) ? parsed.statSids : []
+}
+
+async function collectRmgZoneLayout(zip: JSZip): Promise<CatalogRmgZoneLayout | undefined> {
+  const entries = await readBareJsonArray(zip, 'generator/zone_layouts/default_zone_layouts.json')
+  const entry = entries[0]
+  if (!entry) return undefined
+
+  const ambient = entry.ambientPickupDistribution as Record<string, unknown> | undefined
+
+  return {
+    name: str(entry.name),
+    obstaclesFill: num(entry.obstaclesFill),
+    lakesFill: num(entry.lakesFill),
+    minLakeArea: num(entry.minLakeArea),
+    elevationClusterScale: num(entry.elevationClusterScale),
+    elevationModes: Array.isArray(entry.elevationModes)
+      ? (entry.elevationModes as Record<string, unknown>[]).map((m) => ({
+          weight: num(m.weight),
+          minElevatedFraction: num(m.minElevatedFraction),
+          maxElevatedFraction: num(m.maxElevatedFraction),
+        }))
+      : [],
+    roadClusterArea: num(entry.roadClusterArea),
+    guardedEncounterDencity: num(entry.guardedEncounterDencity),
+    guardedEncounterSizeDistribution: Array.isArray(entry.guardedEncounterSizeDistribution)
+      ? (entry.guardedEncounterSizeDistribution as number[])
+      : [],
+    unguardedEncounterDencity: num(entry.unguardedEncounterDencity),
+    unguardedEncounterSizeDistribution: Array.isArray(entry.unguardedEncounterSizeDistribution)
+      ? (entry.unguardedEncounterSizeDistribution as number[])
+      : [],
+    ambientPickupDensity: num(entry.ambientPickupDensity),
+    ambientPickupDistribution: {
+      repulsion: num(ambient?.repulsion),
+      noise: num(ambient?.noise),
+      roadAttraction: num(ambient?.roadAttraction),
+      obstacleAttraction: num(ambient?.obstacleAttraction),
+      groupSizeWeights: Array.isArray(ambient?.groupSizeWeights) ? (ambient.groupSizeWeights as number[]) : [],
+    },
+  }
+}
+
+/**
+ * sid -> real gold value, issue #240 Phase 0 — read from the top-level
+ * `goodsValue` field found pervasively (578 occurrences, confirmed this
+ * session) across Core/DB/objects_logic/**\/*.json and
+ * Core/DB/items/items/*.json entries. Both prefixes use the standard
+ * `{"array": [...]}` wrapper (readJsonArray), unlike the bare-array
+ * Core/generator/ files above.
+ */
+async function collectGoodsValueBySid(zip: JSZip): Promise<Record<string, number>> {
+  const result: Record<string, number> = {}
+  for (const prefix of ['DB/objects_logic/', 'DB/items/items/']) {
+    const paths = zipFilesUnder(zip, prefix)
+    for (const path of paths) {
+      const entries = await readJsonArray(zip, path)
+      for (const entry of entries) {
+        const id = str(entry.id)
+        if (!id || typeof entry.goodsValue !== 'number') continue
+        result[id] = entry.goodsValue
+      }
+    }
+  }
+  return result
+}
+
 // ─── Main build function ──────────────────────────────────────────────────────
 
 export async function buildCatalog(
@@ -686,7 +949,12 @@ export async function buildCatalog(
 ): Promise<GameCatalog> {
   const locMap = await loadLocalization(zip)
 
-  const [heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations, squadTemplates, objectLogics, dialogData, zoneTemplates, cityBuildings] =
+  const [
+    heroes, creatures, artifacts, spells, skills, buffs, mapObjects, factions, specializations,
+    squadTemplates, objectLogics, dialogData, zoneTemplates, cityBuildings,
+    rmgContentLists, rmgContentPools, rmgEnvironmentAssets, rmgGeneratorConfig, rmgStatSids,
+    rmgZoneLayout, goodsValueBySid,
+  ] =
     await Promise.all([
       collectHeroes(zip, locMap),
       collectCreatures(zip, locMap),
@@ -702,6 +970,13 @@ export async function buildCatalog(
       collectDialogs(zip, locMap),
       collectZoneTemplates(zip),
       collectCityBuildings(zip, locMap),
+      collectRmgContentLists(zip),
+      collectRmgContentPools(zip),
+      collectRmgEnvironmentAssets(zip),
+      collectRmgGeneratorConfig(zip),
+      collectRmgStatSids(zip),
+      collectRmgZoneLayout(zip),
+      collectGoodsValueBySid(zip),
     ])
 
   inferInteractableBiomes(mapObjects, factions)
@@ -732,5 +1007,12 @@ export async function buildCatalog(
     zoneTemplates,
     cityBuildings,
     rmgTemplateStrings,
+    rmgContentLists,
+    rmgContentPools,
+    rmgEnvironmentAssets,
+    rmgGeneratorConfig,
+    rmgStatSids,
+    rmgZoneLayout,
+    goodsValueBySid,
   }
 }

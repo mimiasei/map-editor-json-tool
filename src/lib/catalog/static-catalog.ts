@@ -126,4 +126,11 @@ export const STATIC_CATALOG: GameCatalog = {
   zoneTemplates: [],
   cityBuildings: [],
   rmgTemplateStrings: {},
+  rmgContentLists: [],
+  rmgContentPools: [],
+  rmgEnvironmentAssets: [],
+  rmgGeneratorConfig: undefined,
+  rmgStatSids: [],
+  rmgZoneLayout: undefined,
+  goodsValueBySid: {},
 }
