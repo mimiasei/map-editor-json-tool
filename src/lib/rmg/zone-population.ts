@@ -466,14 +466,24 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   /** Within the "building" branch, how often this slot rolls from the real
    *  GUARDED pool (gets its own guard below) vs. the UNGUARDED one — real
    *  data (`template_pools_random_t2.json` vs `..._unguarded_t2.json`,
-   *  diffed this session) shows items/pandora/scroll-boxes/epic-interact are
+   *  diffed in Phase 2) shows items/pandora/scroll-boxes/epic-interact are
    *  zeroed out entirely in the unguarded variant (guarded-by-nature
    *  content, not a squad toggle), while ordinary buildings/random-hire are
    *  unaffected — so this share is really "how often this slot becomes one
    *  of the guarded-only categories (incl. a real artifact pick) instead of
-   *  a bare building", not a precise measured in-game ratio (none is exposed
-   *  by the static data alone). */
-  const GUARDED_TREASURE_SHARE = 0.35
+   *  a bare building". Phase 2 had no real measured ratio for this and used
+   *  a conservative 0.35 guess; issue #240 Phase 3 found one:
+   *  `zone_layouts/default_zone_layouts.json`'s own `guardedEncounterDencity`
+   *  (1.4) vs `unguardedEncounterDencity` (1) — real relative site-density
+   *  figures for exactly this guarded-vs-unguarded split — giving a real
+   *  ratio of 1.4/(1.4+1) ≈ 0.58. Falls back to the old 0.35 guess only when
+   *  `rmgZoneLayout` is unavailable (the static fallback catalog, or an
+   *  older Core.zip missing this file). */
+  const guardedDencity = catalog?.rmgZoneLayout?.guardedEncounterDencity
+  const unguardedDencity = catalog?.rmgZoneLayout?.unguardedEncounterDencity
+  const GUARDED_TREASURE_SHARE = guardedDencity !== undefined && unguardedDencity !== undefined && guardedDencity + unguardedDencity > 0
+    ? guardedDencity / (guardedDencity + unguardedDencity)
+    : 0.35
 
   /** issue #240 Phase 2 — the real `content_pool_general_resources_*`/
    *  `template_pool_random_t{0-5}_*` pool families are both explicitly

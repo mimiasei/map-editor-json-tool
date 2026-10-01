@@ -44,7 +44,7 @@
 //   new "Trees" tool restricted to tree_*/pinetree_* entries only.
 
 import type { BiomeId } from './terrain-colors'
-import type { CatalogMapObject } from '@/lib/catalog/types'
+import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/types'
 
 /** catalog.mapObjects' own `biome` string differs from tile-side BIOME_NAMES
  *  only at id 2 ("Desert" vs "Sand") — see CatalogMapObject.biome's doc
@@ -166,6 +166,68 @@ export function buildTreePools(mapObjects: CatalogMapObject[]): Record<BiomeId, 
     pools[biomeId].obstacles.push(obj.id)
   }
   return pools
+}
+
+/** Real per-sid pick bias for RMG obstacle scattering (issue #240 Phase 3) —
+ *  flattens `generator_environment_assets.json`'s per-biome tileset ->
+ *  obstacle/skirt-group hierarchy (`GameCatalog.rmgEnvironmentAssets`,
+ *  already live-read from the user's Core.zip by Phase 0) into one real
+ *  `sid -> weight` map per biome: `effectiveWeight(sid) = sum over every
+ *  (tileset, group) containing it of tileset.weight * group.weight` — a sid
+ *  repeated across multiple tilesets/groups (real, confirmed: e.g.
+ *  `hill_small_1` appears in both Grass's `pine_forest` and `mountains`
+ *  tilesets) accumulates weight from every one of them, matching how often
+ *  it really shows up across the biome's own tileset mix. A
+ *  `zone_border`/`filler`-tagged tileset is excluded — confirmed via this
+ *  session's own research (`mountains_border` is always weight 0 anyway;
+ *  `filler` isn't, but is deliberately never randomly rolled per its own
+ *  tag) — real tileset/group weights are themselves relative-only numbers
+ *  with no further meaning, so this is the simplest faithful reduction, not
+ *  a literal reproduction of the real engine's own tileset-selection
+ *  algorithm (unconfirmed — no engine source to check against). Purely
+ *  additive: `sampleFuzzyObstacles`/this file's other pool builders are
+ *  unaffected unless a caller explicitly passes the result in. */
+export function buildFuzzyObstacleWeights(rmgEnvironmentAssets: CatalogEnvironmentBiome[]): Partial<Record<BiomeId, Record<string, number>>> {
+  const catalogBiomeToId = new Map<string, BiomeId>(
+    ALL_BIOME_IDS.map((id) => [BIOME_ID_TO_CATALOG_BIOME[id], id]),
+  )
+  const weights: Partial<Record<BiomeId, Record<string, number>>> = {}
+  for (const biome of rmgEnvironmentAssets) {
+    const biomeId = catalogBiomeToId.get(biome.sid)
+    if (!biomeId) continue
+    const sidWeights: Record<string, number> = {}
+    for (const tileset of biome.tilesets) {
+      if (tileset.weight <= 0 || tileset.tags.includes('zone_border') || tileset.tags.includes('filler')) continue
+      for (const group of [...tileset.obstacles, ...tileset.skirt]) {
+        const sids = Array.isArray(group.sids) ? (group.sids as unknown[]).filter((s): s is string => typeof s === 'string') : []
+        const groupWeight = typeof group.weight === 'number' ? group.weight : 0
+        if (groupWeight <= 0 || sids.length === 0) continue
+        const effective = tileset.weight * groupWeight
+        for (const sid of sids) sidWeights[sid] = (sidWeights[sid] ?? 0) + effective
+      }
+    }
+    weights[biomeId] = sidWeights
+  }
+  return weights
+}
+
+/** Weighted pick from `list` using `weights` (real sid -> weight, see
+ *  `buildFuzzyObstacleWeights`) when given, falling back to today's uniform
+ *  random pick when `weights` is omitted (every existing caller — the Fuzzy
+ *  Obstacle brush editor tool) or when every sid in `list` has no real
+ *  weight data (an unexpected sid not covered by `rmgEnvironmentAssets`,
+ *  e.g. an older Core.zip) — never a silent empty pick either way. */
+export function pickWeighted(list: string[], rng: () => number, weights?: Record<string, number>): string {
+  if (!weights) return list[Math.floor(rng() * list.length)]
+  const total = list.reduce((sum, sid) => sum + (weights[sid] ?? 0), 0)
+  if (total <= 0) return list[Math.floor(rng() * list.length)]
+  let roll = rng() * total
+  for (const sid of list) {
+    const w = weights[sid] ?? 0
+    if (roll < w) return sid
+    roll -= w
+  }
+  return list[list.length - 1]
 }
 
 export interface AnimalPools {
@@ -306,10 +368,13 @@ export interface FuzzyObstacleOptions {
    *  verified to produce a much weaker real co-occurrence signal, since
    *  most within-batch neighbors never saw each other's placements at all. */
   onDecided?: (node: number, addition: { sid: string } | undefined) => void
-}
-
-function pickRandom(list: string[], rng: () => number): string {
-  return list[Math.floor(rng() * list.length)]
+  /** Real per-sid pick weighting (issue #240 Phase 3 — see
+   *  `buildFuzzyObstacleWeights`), keyed by the SID'S OWN biome (which may
+   *  differ from the node's tile biome after a cross-biome pick above).
+   *  Omitted entirely for every existing caller (the Fuzzy Obstacle brush
+   *  editor tool), so this never changes behavior unless a caller — RMG's
+   *  own zone-decoration.ts — opts in. */
+  weights?: Partial<Record<BiomeId, Record<string, number>>>
 }
 
 /**
@@ -323,7 +388,7 @@ export function sampleFuzzyObstacles(
   pools: Record<BiomeId, FuzzyObstaclePool>,
   options: FuzzyObstacleOptions = {},
 ): { node: number; sid: string }[] {
-  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, allowHighContrastBiomes = true, mountainChance = 0, poolChance = 0, rng = Math.random, mountainChanceFor, poolChanceFor, onDecided } = options
+  const { edgeFalloff = 0.7, crossBiomeChance = 0.1, allowHighContrastBiomes = true, mountainChance = 0, poolChance = 0, rng = Math.random, mountainChanceFor, poolChanceFor, onDecided, weights } = options
   const pObstacleFloor = 0.15
   const additions: { node: number; sid: string }[] = []
 
@@ -341,6 +406,7 @@ export function sampleFuzzyObstacles(
     }
     const pool = pools[biomeId]
     const hasAnyObstacleRole = pool.obstacles.length > 0 || pool.mountains.length > 0 || pool.pools.length > 0
+    const biomeWeights = weights?.[biomeId]
 
     let addition: { sid: string } | undefined
     const pObstacle = Math.max(pObstacleFloor, 1 - distance * edgeFalloff)
@@ -354,22 +420,22 @@ export function sampleFuzzyObstacles(
       const effectiveMountainChance = mountainChanceFor?.(node) ?? mountainChance
       const effectivePoolChance = poolChanceFor?.(node) ?? poolChance
       if (pool.mountains.length > 0 && rng() < effectiveMountainChance) {
-        addition = { sid: pickRandom(pool.mountains, rng) }
+        addition = { sid: pickWeighted(pool.mountains, rng, biomeWeights) }
       } else if (pool.pools.length > 0 && rng() < effectivePoolChance) {
-        addition = { sid: pickRandom(pool.pools, rng) }
+        addition = { sid: pickWeighted(pool.pools, rng, biomeWeights) }
       } else if (pool.obstacles.length > 0) {
-        addition = { sid: pickRandom(pool.obstacles, rng) }
+        addition = { sid: pickWeighted(pool.obstacles, rng, biomeWeights) }
       } else if (pool.mountains.length > 0) {
-        addition = { sid: pickRandom(pool.mountains, rng) }
+        addition = { sid: pickWeighted(pool.mountains, rng, biomeWeights) }
       } else {
-        addition = { sid: pickRandom(pool.pools, rng) }
+        addition = { sid: pickWeighted(pool.pools, rng, biomeWeights) }
       }
     } else {
       // Not an obstacle this pass — a distance-scaled chance of clutter
       // instead of leaving the tile untouched (the "soft taper" toward edges).
       const pClutter = 0.2 + distance * 0.3
       if (pool.clutter.length > 0 && rng() < pClutter) {
-        addition = { sid: pool.clutter[Math.floor(rng() * pool.clutter.length)] }
+        addition = { sid: pickWeighted(pool.clutter, rng, biomeWeights) }
       } else if (pool.clutter.length === 0 && hasAnyObstacleRole) {
         // Dirt biome's real, sparse case (2 clutter entries in real catalog
         // data) — documented fallback, not a silent degrade: a thin/absent
@@ -379,7 +445,7 @@ export function sampleFuzzyObstacles(
         // mountain or pool feature.
         const fallbackCandidates = pool.obstacles.length > 0 ? pool.obstacles : pool.mountains.length > 0 ? pool.mountains : pool.pools
         if (rng() < pObstacle * 0.5) {
-          addition = { sid: pickRandom(fallbackCandidates, rng) }
+          addition = { sid: pickWeighted(fallbackCandidates, rng, biomeWeights) }
         }
       }
       // else: nothing placed at this node this pass — a real, expected

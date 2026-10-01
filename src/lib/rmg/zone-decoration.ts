@@ -34,9 +34,9 @@
 // sparser). See decoration-calibration.ts for the real evidence all three
 // are built from.
 
-import type { CatalogMapObject } from '@/lib/catalog/types'
+import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { buildFuzzyObstaclePools, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, pickWeighted, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
 import { randomInRange } from '@/lib/map-grid/squad-pool'
 import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type ZonePlacement } from './zone-population'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
@@ -219,6 +219,7 @@ function scatterCluster(
   groupSizeWeights?: number[],
   coOccurrenceStrength = 0,
   placedCategoryByNode?: Map<number, DecorationCategory>,
+  sidWeights?: Record<string, number>,
 ): ZonePlacement[] {
   // Both archetype-choice rolls (mountain-heavy vs obstacle-heavy, and the
   // pool sub-chance) are biased ONCE per cluster from whatever's already
@@ -240,19 +241,19 @@ function scatterCluster(
 
   const pickSid = (): { sid: string; category: DecorationCategory } | null => {
     if (pool.pools.length > 0 && rng() < poolChance) {
-      return { sid: pool.pools[Math.floor(rng() * pool.pools.length)], category: 'pools' }
+      return { sid: pickWeighted(pool.pools, rng, sidWeights), category: 'pools' }
     }
     const roll = rng()
     const primaryCategory: DecorationCategory = mountainHeavy ? 'mountains' : 'obstacles'
     const accentCategory: DecorationCategory = mountainHeavy ? 'obstacles' : 'mountains'
     if (roll < CLUSTER_PRIMARY_CHANCE || accentPool.length === 0) {
-      return { sid: primaryPool[Math.floor(rng() * primaryPool.length)], category: primaryCategory }
+      return { sid: pickWeighted(primaryPool, rng, sidWeights), category: primaryCategory }
     }
     if (roll < CLUSTER_PRIMARY_CHANCE + CLUSTER_ACCENT_CHANCE) {
-      return { sid: accentPool[Math.floor(rng() * accentPool.length)], category: accentCategory }
+      return { sid: pickWeighted(accentPool, rng, sidWeights), category: accentCategory }
     }
-    if (pool.clutter.length > 0) return { sid: pool.clutter[Math.floor(rng() * pool.clutter.length)], category: 'clutter' }
-    return { sid: primaryPool[Math.floor(rng() * primaryPool.length)], category: primaryCategory }
+    if (pool.clutter.length > 0) return { sid: pickWeighted(pool.clutter, rng, sidWeights), category: 'clutter' }
+    return { sid: pickWeighted(primaryPool, rng, sidWeights), category: primaryCategory }
   }
 
   const targetSize = groupSizeWeights && groupSizeWeights.length > 0
@@ -345,6 +346,17 @@ export interface ScatterObstaclesOptions {
    *  decoration, climb/ramp-adjacent tiles get sparser); values in between
    *  blend toward it. No effect if `levelsMap` is omitted. */
   elevationDecayStrength?: number
+  /** Real per-biome decoration/obstacle data (`generator_environment_assets
+   *  .json`, `GameCatalog.rmgEnvironmentAssets` — issue #240 Phase 3) —
+   *  flattened once into a real sid-weight map (`buildFuzzyObstacleWeights`)
+   *  and used to bias every pick this function makes (both the independent
+   *  per-tile phase and cluster members) toward the real relative
+   *  frequency each sid actually has in the real game's own per-biome
+   *  tileset mix, instead of a uniform pick within its bucket. Omitted
+   *  falls back to today's exact uniform behavior (e.g. the static
+   *  fallback catalog, or an older Core.zip with no `Core/generator/`
+   *  files). */
+  rmgEnvironmentAssets?: CatalogEnvironmentBiome[]
 }
 
 /** Whether any of `node`'s own tile or its 4/8-neighbors within `radius` is
@@ -386,9 +398,10 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
   const {
     sizeX, sizeZ, zones, centers, tilesByZone, zoneBiome, catalogById, mapObjects, excludedNodes, state, rng,
     density = 0.35, densityByZone, ambientPickupByZone, roadDistanceField, roadDecayStrength = 0, coOccurrenceStrength = 0,
-    levelsMap, climbsMap, elevationDecayStrength = 0,
+    levelsMap, climbsMap, elevationDecayStrength = 0, rmgEnvironmentAssets,
   } = options
   const pools = buildFuzzyObstaclePools(mapObjects)
+  const environmentWeights = rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined
   const placements: ZonePlacement[] = []
   // Shared across every zone (in generation order) — co-occurrence bias
   // looks at whatever's already been placed nearby, regardless of which
@@ -464,7 +477,7 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     for (let i = 0; i < clusterSeedCount; i++) {
       const seedIndex = Math.floor(rng() * candidateTiles.length)
       const [seedNode] = candidateTiles.splice(seedIndex, 1)
-      placements.push(...scatterCluster(seedNode, sizeX, sizeZ, pool, catalogById, state, rng, ambientPickup?.groupSizeWeights, coOccurrenceStrength, placedCategoryByNode))
+      placements.push(...scatterCluster(seedNode, sizeX, sizeZ, pool, catalogById, state, rng, ambientPickup?.groupSizeWeights, coOccurrenceStrength, placedCategoryByNode, environmentWeights?.[biome]))
     }
     if (candidateTiles.length === 0) continue
 
@@ -485,7 +498,7 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
       ? (node: number) => biasedChance(INDEPENDENT_PHASE_POOL_BASE_CHANCE, 0, node, sizeX, sizeZ, placedCategoryByNode, 'pools', coOccurrenceStrength, CLUSTER_RADIUS)
       : undefined
     sampleFuzzyObstacles(nodeDistances, () => biome, pools, {
-      mountainChance: 0.05, rng, mountainChanceFor, poolChanceFor,
+      mountainChance: 0.05, rng, mountainChanceFor, poolChanceFor, weights: environmentWeights,
       onDecided: (node, addition) => {
         if (!addition) return
         if (!tryPlaceAt(addition.sid, node, sizeX, sizeZ, catalogById, state)) return

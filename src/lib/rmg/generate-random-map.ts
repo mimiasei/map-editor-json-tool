@@ -461,12 +461,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const hillResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'hill', chance: hillChance,
-      reservedNodes: waterNodesAll,
+      reservedNodes: waterNodesAll, elevationModes: catalog.rmgZoneLayout?.elevationModes,
     })
     const valleyResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'valley', chance: valleyChance,
-      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]),
+      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]), elevationModes: catalog.rmgZoneLayout?.elevationModes,
     })
     levelChangesAll = [...levelChangesAll, ...hillResult.levelChanges, ...valleyResult.levelChanges]
     climbChangesAll = [...hillResult.climbChanges, ...valleyResult.climbChanges]
@@ -967,6 +967,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     density: obstacleDensity, densityByZone, ambientPickupByZone,
     roadDistanceField, roadDecayStrength: decorationRoadDecayStrength, coOccurrenceStrength: decorationCoOccurrenceStrength,
     levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, elevationDecayStrength: decorationElevationDecayStrength,
+    rmgEnvironmentAssets: catalog.rmgEnvironmentAssets,
   })
 
   // Dedicated interactable scatter (issue #237 parts 1/2) — runs after

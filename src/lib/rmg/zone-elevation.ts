@@ -67,6 +67,19 @@ export interface ScatterZoneElevationOptions {
   maxSize?: number
   chanceByZone?: Map<number, number>
   minSizeByZone?: Map<number, number>
+  /** Real bimodal elevated-fraction choice (`zone_layouts/
+   *  default_zone_layouts.json`'s `elevationModes[]`, `GameCatalog
+   *  .rmgZoneLayout` — issue #240 Phase 3): a weighted pick of ONE band
+   *  (typically "mostly flat, 0-40%" vs "mostly elevated, 60-80%"), then a
+   *  uniform pick within that band, REPLACING this function's own
+   *  `minSizeFraction`/`maxSizeFraction` continuous interpolation below
+   *  (confirmed by this session's own research: the real data is a real,
+   *  deliberate bimodal choice, not a continuous range — a zone is either
+   *  mostly flat or mostly elevated, never reliably in between). Omitted
+   *  (the default) keeps today's exact continuous-interpolation behavior —
+   *  e.g. the static fallback catalog, or an older Core.zip with no
+   *  `Core/generator/` files. */
+  elevationModes?: { weight: number; minElevatedFraction: number; maxElevatedFraction: number }[]
   /** Nodes already claimed by water or the OPPOSITE elevation kind this same
    *  run (pass hills' own `elevatedNodes` in when generating valleys, and
    *  vice versa, plus water's `waterNodes`) — kept ineligible, along with a
@@ -194,8 +207,20 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneAnchorNode, excludedNodes, blocked, usedAnchors, rng, kind,
     chance = 0, minSize = 8, minSizeFraction = 0.08, maxSizeFraction = 0.5, maxSize = 250,
-    chanceByZone, minSizeByZone, reservedNodes = new Set(),
+    chanceByZone, minSizeByZone, reservedNodes = new Set(), elevationModes,
   } = options
+  const pickSizeFraction = (zoneChance: number): number => {
+    if (!elevationModes || elevationModes.length === 0) return minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
+    const total = elevationModes.reduce((sum, m) => sum + m.weight, 0)
+    if (total <= 0) return minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
+    let roll = rng() * total
+    let band = elevationModes[0]
+    for (const m of elevationModes) {
+      if (roll < m.weight) { band = m; break }
+      roll -= m.weight
+    }
+    return band.minElevatedFraction + rng() * (band.maxElevatedFraction - band.minElevatedFraction)
+  }
   const level = kind === 'hill' ? 1 : -1
   const elevatedNodes = new Set<number>()
   const climbNodes = new Set<number>()
@@ -236,7 +261,7 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     )
     if (eligible.size < zoneMinSize) continue
 
-    const sizeFraction = minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
+    const sizeFraction = pickSizeFraction(zoneChance)
     const targetSize = Math.max(zoneMinSize, Math.min(eligible.size, maxSize, Math.round(eligible.size * sizeFraction)))
     const seed = [...eligible][Math.floor(rng() * eligible.size)]
     const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng, protectedTiles, elevatedNodes)
