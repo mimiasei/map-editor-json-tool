@@ -111,6 +111,31 @@ export function rollContentPool(
  *  placement. */
 export const UNSUPPORTED_CONTENT_POOL_SIDS = new Set(['mythic_scroll_box'])
 
+/** Real interactable sids the actual game doesn't support as regular
+ *  placeable content — not a guess: the 6 faction `*_city` hall objects are
+ *  confirmed unsupported by Unfrozen's own Map Editor manual (per direct
+ *  user confirmation, issue #238 follow-up); `campaign_`/`_campaign`-tagged
+ *  sids are scripted campaign props (confirmed absent from every real
+ *  `Core/generator/content_lists/*.json` entry and from this module's own
+ *  curated interactable tiers); `block`/`block_2`/`block_campaign_*` are
+ *  invisible collision markers, not real content; `custom_*` are per-map
+ *  custom object clones (CLAUDE.md's own "raw here, resolved where shown"
+ *  convention — not generic placeable content); `pvp_*` (`pvp_promo_
+ *  barracks`/`pvp_promo_barracks_necropolis`) are PvP-mode-only promotional
+ *  dwellings. Checked by substring/suffix, not just prefix, since several
+ *  real sids embed `campaign`/`block` mid-string (`stinging_sword_campaign`,
+ *  `block_campaign_tree_grass`, `campaign_M9_block_angel1`) — confirmed safe
+ *  against false positives: every real interactable sid containing
+ *  "campaign" or "block" is one of these, none legitimate. Shared by every
+ *  RMG interactable pick path (`rollContentPool`'s `isExcluded`,
+ *  `pickInteractableSid`'s cap-check) AND `InteractableSelectorDialog.tsx`'s
+ *  own browser, so a sid can never leak into generation through one path
+ *  while only being hidden in another. */
+export function isRmgIneligibleInteractableSid(sid: string): boolean {
+  return sid.includes('campaign') || sid.includes('block') || sid.endsWith('_city')
+    || sid.startsWith('custom_') || sid.startsWith('pvp_')
+}
+
 /** Maps `generator_config.json`'s 4 named value-tier sids (abstract entries
  *  that only ever appear inside the real content-lists/pools system, never
  *  placed literally) to the `random-item` placeholder's own real `rarity`

@@ -247,6 +247,13 @@ export interface GenerateRandomMapOptions {
    *  `PopulateZonesOptions.mineGoldBiomeBiasStrength` doc comment). 0 =
    *  today's exact behavior, a flat biome-blind mine round-robin. */
   mineGoldBiomeBiasStrength?: number
+  /** Real, placeable interactable sids the RMG is NOT allowed to pick —
+   *  issue #238's own interactable browser/selector dialog
+   *  (`InteractableSelectorDialog.tsx`), threaded into both
+   *  `populateZones`'s content-pool roll and `scatterZoneInteractables`'s
+   *  own dedicated scatter pass. Empty/omitted (the default) is today's
+   *  exact behavior — every real interactable stays eligible. */
+  disabledInteractableSids?: string[]
   /** Optional staged-progress reporter — see `RmgProgressCallback`'s own doc
    *  comment. Purely observational: never changes what's generated, only
    *  when the caller finds out about it. */
@@ -269,7 +276,8 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, onProgress } = options
+  const disabledInteractableSidSet = disabledInteractableSids && disabledInteractableSids.length > 0 ? new Set(disabledInteractableSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
   // actual scheduled repaint between stages, React would batch every
@@ -336,7 +344,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const { placements, concreteSquads } = populateZones({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
-    mineGoldBiomeBiasStrength,
+    mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
@@ -978,7 +986,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const interactablePlacements = scatterZoneInteractables({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
     excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
-    density: interactableDensity,
+    density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet,
   })
 
   // Ambient animal/fx decoration (issue #210 follow-up) — real-map-

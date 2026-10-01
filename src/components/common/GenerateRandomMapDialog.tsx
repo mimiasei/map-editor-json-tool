@@ -55,6 +55,7 @@ import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, 
 import { Checkbox } from '@/components/ui/checkbox'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
+import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { openFile, saveFile } from '@/lib/native-fs'
@@ -207,6 +208,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [decorationCoOccurrenceStrength, setDecorationCoOccurrenceStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
   const [decorationElevationDecayStrength, setDecorationElevationDecayStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength)
   const [mineGoldBiomeBiasStrength, setMineGoldBiomeBiasStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.mineGoldBiomeBiasStrength)
+  // Real interactable sids excluded from the RMG's own picks (issue #238) —
+  // a Set locally (cheap membership checks for the picker dialog), always
+  // converted to/from DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids'
+  // own string[] shape at the template/generation boundary.
+  const [disabledInteractableSids, setDisabledInteractableSids] = useState<Set<string>>(() => new Set(DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids))
+  const [interactablePickerOpen, setInteractablePickerOpen] = useState(false)
   // Which of the 7 real biomes generation may use at all — a real user
   // request ("how many terrain types the RMG will use"). All on by
   // default; at least one must always stay checked (see the checkbox's
@@ -396,6 +403,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         decorationCoOccurrenceStrength,
         decorationElevationDecayStrength,
         mineGoldBiomeBiasStrength,
+        disabledInteractableSids: [...disabledInteractableSids],
         terrainOnly,
         enabledBiomes: enabledBiomesList,
         gameTemplateJson: gameTemplate?.json,
@@ -480,6 +488,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       decorationCoOccurrenceStrength,
       decorationElevationDecayStrength,
       mineGoldBiomeBiasStrength,
+      disabledInteractableSids: [...disabledInteractableSids],
       enabledBiomes: enabledBiomesList,
       // No dedicated UI control yet for these (Phase 1's own "start small"
       // scope) — saved/loaded at their template defaults.
@@ -525,6 +534,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setDecorationCoOccurrenceStrength(template.decorationCoOccurrenceStrength)
       setDecorationElevationDecayStrength(template.decorationElevationDecayStrength)
       setMineGoldBiomeBiasStrength(template.mineGoldBiomeBiasStrength)
+      setDisabledInteractableSids(new Set(template.disabledInteractableSids))
       setEnabledBiomes(Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, template.enabledBiomes.includes(b)])) as Record<BiomeId, boolean>)
       setSeedText(template.seed !== undefined ? String(template.seed) : '')
       setActiveCategory('terrain')
@@ -566,6 +576,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setDecorationCoOccurrenceStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
       setDecorationElevationDecayStrength(DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength)
       setMineGoldBiomeBiasStrength(DEFAULT_TEMPLATE_OVERRIDES.mineGoldBiomeBiasStrength)
+      setDisabledInteractableSids(new Set(DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids))
   }
 
   if (!open) return null
@@ -922,6 +933,18 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
+                    <Label className="text-xs">Interactables</Label>
+                    <FieldInfo text="Which real interactable buildings/sites the RMG is allowed to pick from at all — every one is enabled by default." />
+                  </div>
+                  <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setInteractablePickerOpen(true)}>
+                    {disabledInteractableSids.size > 0 ? `${disabledInteractableSids.size} disabled` : 'All enabled'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
                     <Label className="text-xs">Squad density</Label>
                     <FieldInfo text="Chance a real mine/dwelling/resource/artifact gets an extra nearby guard, on top of its own zone's usual guard. Guards near a player's own starting city are kept easy/normal difficulty." />
                   </div>
@@ -1035,6 +1058,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         open={templatePickerOpen}
         onOpenChange={setTemplatePickerOpen}
         onSelect={setGameTemplate}
+      />
+      <InteractableSelectorDialog
+        open={interactablePickerOpen}
+        onOpenChange={setInteractablePickerOpen}
+        disabledSids={disabledInteractableSids}
+        onChange={setDisabledInteractableSids}
       />
     </>
   )
