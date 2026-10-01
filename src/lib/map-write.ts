@@ -1844,8 +1844,9 @@ export function addObjectInstances(
     randomCityOverrides?: { factionSid: string; spawnHero: boolean }
     /** `random-hire` only — issue #240 Phase 1's real tier (1-7), from
      *  `generator_config.json`'s real `random_hire_1..7` value/guardValue
-     *  curve (see `object-variety.ts`'s `pickRandomHireTier`). Omit to keep
-     *  `RANDOM_SPAWNER_TABLE_DEFAULTS`'s flat `tier: 1` default. */
+     *  curve (resolved by `object-variety.ts`'s `resolveContentPoolPick` as
+     *  of Phase 2). Omit to keep `RANDOM_SPAWNER_TABLE_DEFAULTS`'s flat
+     *  `tier: 1` default. */
     randomHireOverrides?: { tier: number }
   }[],
 ): { block2Chunk: Uint8Array; newIds: number[] } {

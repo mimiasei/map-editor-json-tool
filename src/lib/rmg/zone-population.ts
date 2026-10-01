@@ -29,7 +29,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
-import { collectArtifactSids, pickInteractableSid, pickRandomHireTier, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
+import { pickSquadTemplate, resolveContentPoolPick, resolveGoodsValue, rollContentPool, UNSUPPORTED_CONTENT_POOL_SIDS } from './object-variety'
 import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
@@ -404,7 +404,6 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   } = options
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
-  const artifactSids = catalog ? collectArtifactSids(catalog) : []
   // True overall span of RMG_GUARD_DIFFICULTY_RANGES' real bands (Easy
   // through Lethal) — NOT `pickSquadRange(['Random'], ...)`'s own return
   // value, which resolves 'Random' to one weighted-random SPECIFIC band
@@ -437,126 +436,100 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides, randomCityOverrides, randomHireOverrides })
   }
 
-  /** `random-item.rarity` "cost" table for the value-budget treasure loop
-   *  below — weights are the exact real distribution surveyed this session
-   *  (`maps/*.map`'s own `propRandomItems.rarity`, 140 rows: 88/30/19/3 for
-   *  rarity 0/1/2/3), matching Olden Era's own real RMG templates'
-   *  "spend a value budget on progressively rarer things" shape
-   *  (`guardedContentValue`/`resourcesValue` in `maps/templates/*.rmg.json`)
-   *  instead of this generator's old flat `rarity: 0` for every placement.
-   *  `cost` itself is a synthetic increasing scale (not real data — there's
-   *  no real per-rarity "value" field to read) chosen only so pricier
-   *  rarities are rolled less often, same spirit as `zone-boundary.ts`'s own
-   *  `depthToDifficultyLabel` doc comment on synthetic-but-reasonable
-   *  defaults. */
-  const RARITY_TABLE = [
-    { rarity: 0, weight: 88, cost: 1 },
-    { rarity: 1, weight: 30, cost: 2 },
-    { rarity: 2, weight: 19, cost: 4 },
-    { rarity: 3, weight: 3, cost: 10 },
-  ]
-  const RARITY_TOTAL_WEIGHT = RARITY_TABLE.reduce((sum, r) => sum + r.weight, 0)
-  /** Expected cost of one `pickRarity` roll — used as every OTHER treasure
-   *  kind's (concrete pile/artifact) budget cost too, so which branch a given
-   *  budget iteration takes doesn't itself skew the loop's average
-   *  iteration count away from the real density this generator already
-   *  calibrated last session (see `baseTreasureCount`'s own doc comment). */
-  const RARITY_AVERAGE_COST = RARITY_TABLE.reduce((sum, r) => sum + (r.weight / RARITY_TOTAL_WEIGHT) * r.cost, 0)
-  const pickRarity = (): { rarity: number; cost: number } => {
-    let roll = rng() * RARITY_TOTAL_WEIGHT
-    for (const r of RARITY_TABLE) {
-      if (roll < r.weight) return r
-      roll -= r.weight
+  /** `random-item.rarity` fallback weights — the exact real distribution
+   *  surveyed this session (`maps/*.map`'s own `propRandomItems.rarity`, 140
+   *  rows: 88/30/19/3 for rarity 0/1/2/3). Only reached when `catalog` is
+   *  absent or `rollContentPool` can't produce anything (an older Core.zip
+   *  missing `Core/generator/` data entirely) — issue #240 Phase 2 made the
+   *  real content-pool roll below the normal path, so this is a graceful
+   *  degrade, not the primary mechanism any more. */
+  const FALLBACK_RARITY_WEIGHTS = [88, 30, 19, 3]
+  const pickFallbackRarity = (): number => {
+    const total = FALLBACK_RARITY_WEIGHTS.reduce((sum, w) => sum + w, 0)
+    let roll = rng() * total
+    for (let i = 0; i < FALLBACK_RARITY_WEIGHTS.length; i++) {
+      if (roll < FALLBACK_RARITY_WEIGHTS[i]) return i
+      roll -= FALLBACK_RARITY_WEIGHTS[i]
     }
-    return RARITY_TABLE[0]
+    return 0
   }
 
-  /** A treasure slot: usually `random-item` (now with a real, varied
-   *  `rarity` roll instead of a flat 0 — see `RARITY_TABLE`'s own doc
-   *  comment), but with `objectVariety` probability places a real resource
-   *  pile or a real artifact instead (`object-variety.ts`) — the
-   *  user-reported "only random items" gap. Returns the budget cost this
-   *  placement spent, for the value-budget loop below. `usedArtifactSids`
-   *  (per-zone) mirrors Olden Era's own real RMG templates'
-   *  `contentCountLimits` `maxCount: 1` pattern for named/notable objects —
-   *  a specific artifact can't repeat within one zone purely by chance;
-   *  ordinary storage/resource piles are NOT capped, matching how real
-   *  templates only cap notable objects, not plain resources. */
-  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number, preferredSids?: Set<string>): number => {
+  /** How often a "concrete" treasure slot draws from the real `content_pool_
+   *  general_resources_*` pool (storage/resource piles, zone-richness-aware)
+   *  vs. the real `template_pool_random[_unguarded]_t{0-5}_base` pool
+   *  (buildings/items/random-hire, value-bucket-aware) — issue #240 Phase 2.
+   *  Kept at the same macro balance the old hand-split used (0.45 for
+   *  storage-or-resource, 0.55 for artifact+interactable+hire combined)
+   *  since nothing in the real data suggests a different top-level split;
+   *  only the WITHIN-branch distribution is now real instead of guessed. */
+  const RESOURCE_POOL_SHARE = 0.45
+  /** Within the "building" branch, how often this slot rolls from the real
+   *  GUARDED pool (gets its own guard below) vs. the UNGUARDED one — real
+   *  data (`template_pools_random_t2.json` vs `..._unguarded_t2.json`,
+   *  diffed this session) shows items/pandora/scroll-boxes/epic-interact are
+   *  zeroed out entirely in the unguarded variant (guarded-by-nature
+   *  content, not a squad toggle), while ordinary buildings/random-hire are
+   *  unaffected — so this share is really "how often this slot becomes one
+   *  of the guarded-only categories (incl. a real artifact pick) instead of
+   *  a bare building", not a precise measured in-game ratio (none is exposed
+   *  by the static data alone). */
+  const GUARDED_TREASURE_SHARE = 0.35
+
+  /** issue #240 Phase 2 — the real `content_pool_general_resources_*`/
+   *  `template_pool_random_t{0-5}_*` pool families are both explicitly
+   *  richness-tiered (`very_poor/poor/medium/rich` resp. t0-t5's sliding
+   *  value-bucket curve — see rmg-core-generator-data-research.md §2/§5),
+   *  but this generator has no dedicated "Map Richness" UI control matching
+   *  the real game's own 4-option selector yet. `richness01` folds the two
+   *  EXISTING dials that already proxy richness — `treasureDensity` (0-3
+   *  map-wide slider) and `treasureScale` (0.4-2.5 per-zone relative
+   *  richness from a real imported template, 1 when none) — into one 0-1
+   *  value, then into each real tier system's own discrete buckets. Revisit
+   *  with a real dedicated slider if/when that UI work happens. Reset per
+   *  neutral zone below (`treasureScale` is itself zone-specific), same
+   *  "mutable, reassigned per zone" pattern as `currentZoneContentLimitBySid`
+   *  above. */
+  let currentRichnessLabel = 'medium'
+  let currentBuildingTier = 2
+
+  /** A treasure slot: with `objectVariety` probability rolls a real sid
+   *  straight out of the real content-pool system (`object-variety.ts`'s
+   *  `rollContentPool`/`resolveContentPoolPick`) — real per-sid weights,
+   *  real value-bucket gating, real guarded/unguarded composition
+   *  differences, replacing this generator's old hand-guessed `RARITY_TABLE`
+   *  and hand-split artifact/storage/interactable branches entirely (issue
+   *  #240 Phase 2). Falls back to a flat `random-item` placement (real
+   *  surveyed rarity weights, see `FALLBACK_RARITY_WEIGHTS`) when no catalog
+   *  is available or a roll comes back empty. `usedArtifactSids` (per-zone)
+   *  mirrors Olden Era's own real RMG templates' `contentCountLimits`
+   *  `maxCount: 1` pattern for named/notable objects. */
+  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number, preferredSids?: Set<string>): void => {
     if (catalog && rng() < objectVariety) {
-      const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid) && !isAtContentCap(sid))
-      // Three-way split for what a "concrete" treasure slot becomes: artifact
-      // / storage-or-resource / interactable building. The interactable
-      // branch is new (issue #210 follow-up — user-reported "RMG never
-      // places anything but dwellings/mines/storage piles"; before this,
-      // nothing in this function ever sampled `object-variety.ts`'s
-      // `pickInteractableSid` pool at all). Weights (0.3/0.45/0.25)
-      // approximate real RMG templates' own content-pool mixing ratios
-      // (`pickInteractableSid`'s own doc comment has the real-data source),
-      // well above the previous 0% for interactables.
-      const branchRoll = rng()
-      if (availableArtifacts.length > 0 && branchRoll < 0.3) {
-        // Bias toward a real per-zone `mandatoryContent` sid when this
-        // zone has one available (issue #210 second follow-up milestone) —
-        // real, template-authored "this zone should have this" data,
-        // without forcing an extra placement or disturbing the existing
-        // count/budget logic. 0.7 (not 1.0) so a mismatched/emptied
-        // preference list never fully starves the normal random variety.
-        const preferredArtifacts = preferredSids ? availableArtifacts.filter((sid) => preferredSids.has(sid)) : []
-        const artifactPool = preferredArtifacts.length > 0 && rng() < 0.7 ? preferredArtifacts : availableArtifacts
-        const sid = artifactPool[Math.floor(rng() * artifactPool.length)]
-        usedArtifactSids.add(sid)
-        recordContentPlacement(sid)
-        place(sid, tiles)
-        return RARITY_AVERAGE_COST
-      }
-      if (branchRoll < 0.75) {
-        const concretePool = (rng() < 0.5 ? STORAGE_SIDS : RESOURCE_SIDS).filter((sid) => !isAtContentCap(sid))
-        if (concretePool.length > 0) {
-          const preferredConcrete = preferredSids ? concretePool.filter((sid) => preferredSids.has(sid)) : []
-          const pool = preferredConcrete.length > 0 && rng() < 0.7 ? preferredConcrete : concretePool
-          const sid = pool[Math.floor(rng() * pool.length)]
-          recordContentPlacement(sid)
-          place(sid, tiles)
-          return RARITY_AVERAGE_COST
-        }
-      } else {
-        // issue #240 Phase 1: within this "building" share, a real-tiered
-        // `random-hire` (mercenary guild) is a further ~30% sub-roll
-        // against a plain interactable — modest/conservative on purpose.
-        // The real `content_pool_default_guarded`/`_unguarded` pools put
-        // every `random_hire_N` tier's own weight (150-250 each, ~1500
-        // total) directly alongside individual interactable sids' weights
-        // (25-250 each) in one flat pick table, which would make
-        // random-hire roughly a third of ALL building picks if replicated
-        // exactly — this generator doesn't consume that flat-pool model
-        // (that's issue #240 Phase 2 scope), so 0.3 here is a deliberately
-        // conservative share in the same spirit, not a reproduction of the
-        // exact real ratio. Needs its own guard (unlike every other
-        // interactable sid placed below): `random_hire_N`'s real
-        // `guardValue` is a separate, always-present field in
-        // `generator_config.json`, confirming this building is meant to be
-        // guarded, not a free-standing pickup.
-        if (rng() < 0.3) {
-          const hire = pickRandomHireTier(catalog, rng)
-          if (hire) {
-            recordContentPlacement('random-hire')
-            place('random-hire', tiles, undefined, undefined, undefined, { tier: hire.tier })
-            placeGuard(tiles, hire.guardValue, sampleFraction(biome, 0.5, rng), guardCutoff)
-            return RARITY_AVERAGE_COST
-          }
-        }
-        const sid = pickInteractableSid(rng, isAtContentCap)
+      const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid)
+      if (rng() < RESOURCE_POOL_SHARE) {
+        const sid = rollContentPool(catalog, `content_pool_general_resources_treasure_zone_${currentRichnessLabel}`, rng, isExcluded)
         if (sid) {
           recordContentPlacement(sid)
           place(sid, tiles)
-          return RARITY_AVERAGE_COST
+          return
+        }
+      } else {
+        const guarded = rng() < GUARDED_TREASURE_SHARE
+        const poolName = `template_pool_random${guarded ? '' : '_unguarded'}_t${currentBuildingTier}_base`
+        const rolled = rollContentPool(catalog, poolName, rng, isExcluded)
+        const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, preferredSids, isAtContentCap, rng) : null
+        if (resolved) {
+          recordContentPlacement(resolved.sid)
+          place(resolved.sid, tiles, undefined, resolved.randomItemOverrides, undefined, resolved.randomHireOverrides)
+          if (guarded) {
+            const guardValue = resolved.guardValue ?? resolveGoodsValue(catalog, resolved.sid)
+            if (guardValue !== undefined) placeGuard(tiles, guardValue, sampleFraction(biome, 0.5, rng), guardCutoff)
+          }
+          return
         }
       }
     }
-    const { rarity, cost } = pickRarity()
-    place('random-item', tiles, undefined, { rarity })
-    return cost
+    place('random-item', tiles, undefined, { rarity: pickFallbackRarity() })
   }
 
   /** A guard slot: usually `random-squad`, but with a heavily-scaled-down
@@ -696,35 +669,33 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // realistic zone sizes anyway).
       const baseTreasureCount = 1 + Math.floor(tiles.length / 150)
 
-      // Value-budget spend-down (Olden Era's own real RMG templates' own
-      // `guardedContentValue`/`resourcesValue` + `*PerArea` concept —
-      // guard-value-bands.ts's sibling doc comment... see RARITY_TABLE
-      // above): rather than looping a FIXED item count, spend a budget sized
-      // so the EXPECTED iteration count matches this generator's own already
-      // real-map-calibrated density (`baseTreasureCount`'s own doc comment
-      // above still holds — this is the same target, spent probabilistically
-      // instead of deterministically) — `RARITY_AVERAGE_COST` is exactly the
-      // expected cost of one `placeTreasure` call, so `budget /
-      // RARITY_AVERAGE_COST` reproduces `baseTreasureCount * treasureDensity`
-      // on average, while richer zones now more often roll a few pricier
-      // (rarer) items instead of only ever adding more identical ones.
       // `treasureScale`: this zone's own real `resourcesValue` relative to
       // its neutral-zone siblings (see `medianResourceValue` above) — a
       // "Poor" template zone gets proportionally less, a "Rich" one
       // proportionally more, clamped to a sane range so one extreme outlier
-      // zone can't blow the loop's iteration budget. Stays exactly 1 (no
+      // zone can't blow the loop's iteration count. Stays exactly 1 (no
       // change) whenever no template provided this data.
       const zoneResourceValue = zoneContentValueByZoneId?.get(zone.id)?.resourcesValue
       const treasureScale = medianResourceValue !== undefined && zoneResourceValue !== undefined
         ? Math.min(2.5, Math.max(0.4, zoneResourceValue / medianResourceValue))
         : 1
-      const treasureBudget = Math.max(0, baseTreasureCount * treasureDensity * treasureScale) * RARITY_AVERAGE_COST
+      // issue #240 Phase 2: this zone's own richness label/tier, consumed by
+      // `placeTreasure`'s real content-pool rolls above (`currentRichnessLabel`
+      // doc comment has the full reasoning) — recomputed per neutral zone
+      // since `treasureScale` itself is zone-specific.
+      const zoneRichness01 = clamp01((treasureDensity * treasureScale) / 3)
+      currentRichnessLabel = zoneRichness01 < 0.25 ? 'very_poor' : zoneRichness01 < 0.5 ? 'poor' : zoneRichness01 < 0.75 ? 'medium' : 'rich'
+      currentBuildingTier = Math.round(zoneRichness01 * 5)
+      // A deterministic item count, not a probabilistic value-budget spend —
+      // issue #240 Phase 2 removed `RARITY_AVERAGE_COST`'s role as a per-item
+      // "cost" unit (there's no real per-item cost figure once sampling
+      // directly from the real, mixed-category content pools above), so the
+      // loop now just runs this many times directly. Still reproduces the
+      // same real-map-calibrated density `baseTreasureCount` documents above.
+      const treasureCount = Math.max(0, Math.round(baseTreasureCount * treasureDensity * treasureScale))
       const usedArtifactSids = new Set<string>()
-      let spent = 0
-      let iterations = 0
-      while (spent < treasureBudget && iterations < 400) {
-        spent += placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF, preferredTreasureSids)
-        iterations++
+      for (let i = 0; i < treasureCount; i++) {
+        placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF, preferredTreasureSids)
       }
 
       // The guard's value comes from the mine's own real guard-value data
