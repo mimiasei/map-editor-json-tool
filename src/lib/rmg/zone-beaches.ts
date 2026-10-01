@@ -27,6 +27,12 @@ import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 const SAND_BIOME_ID: BiomeId = 2
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
+/** User-requested: a sand beach fringe only makes sense against the biomes
+ *  that read as "normal ground" next to water — Grass, Dirt, Deathland,
+ *  Autumn. Excluded: Sand itself (already sand, nothing to fringe), and
+ *  Snow/Lava (a beach reads wrong next to ice or molten rock). */
+const BEACH_ELIGIBLE_BIOMES = new Set<BiomeId>([1, 3, 5, 7])
+
 /** No real "dry grass" sid exists in the game catalog (confirmed this
  *  session) — these are the closest real stand-in: `grass_desert_1`/
  *  `grass_desert_2`, the only real decorations tagged for the Desert/Sand
@@ -80,6 +86,11 @@ export interface ScatterBeachesOptions {
   sizeX: number
   sizeZ: number
   waterNodes: Set<number>
+  /** Per-tile zone id, used to look up each beach candidate's land biome
+   *  via `zoneBiome` — a beach only ever repaints a tile whose zone biome
+   *  is in `BEACH_ELIGIBLE_BIOMES`. */
+  zoneIdByNode: number[]
+  zoneBiome: Map<number, BiomeId>
   catalogById: Map<string, CatalogMapObject>
   state: PlacementState
   rng: () => number
@@ -93,7 +104,7 @@ export interface ScatterBeachesResult {
 }
 
 export function scatterBeaches(options: ScatterBeachesOptions): ScatterBeachesResult {
-  const { sizeX, sizeZ, waterNodes, catalogById, state, rng } = options
+  const { sizeX, sizeZ, waterNodes, zoneIdByNode, zoneBiome, catalogById, state, rng } = options
   const terrainChanges: { node: number; biomeId: number }[] = []
   const placements: ZonePlacement[] = []
   if (waterNodes.size === 0) return { terrainChanges, placements }
@@ -106,6 +117,8 @@ export function scatterBeaches(options: ScatterBeachesOptions): ScatterBeachesRe
     for (let node = 0; node < dist.length; node++) {
       if (waterNodes.has(node) || beachNodes.has(node)) continue
       if (dist[node] >= 1 && dist[node] <= width) {
+        const nodeBiome = zoneBiome.get(zoneIdByNode[node])
+        if (nodeBiome === undefined || !BEACH_ELIGIBLE_BIOMES.has(nodeBiome)) continue
         beachNodes.add(node)
         terrainChanges.push({ node, biomeId: SAND_BIOME_ID })
       }
