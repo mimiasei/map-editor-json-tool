@@ -1842,6 +1842,11 @@ export function addObjectInstances(
      *  placement time (never left blank, see `RANDOM_CITY_DEFAULT_TABLES`'
      *  own doc comment). */
     randomCityOverrides?: { factionSid: string; spawnHero: boolean }
+    /** `random-hire` only — issue #240 Phase 1's real tier (1-7), from
+     *  `generator_config.json`'s real `random_hire_1..7` value/guardValue
+     *  curve (see `object-variety.ts`'s `pickRandomHireTier`). Omit to keep
+     *  `RANDOM_SPAWNER_TABLE_DEFAULTS`'s flat `tier: 1` default. */
+    randomHireOverrides?: { tier: number }
   }[],
 ): { block2Chunk: Uint8Array; newIds: number[] } {
   if (additions.length === 0) return { block2Chunk, newIds: [] }
@@ -1862,7 +1867,7 @@ export function addObjectInstances(
     else propRowsByTable.set(table, [row])
   }
 
-  for (const { sid, node, rotation, level, randomSquadOverrides, randomItemOverrides, randomCityOverrides } of additions) {
+  for (const { sid, node, rotation, level, randomSquadOverrides, randomItemOverrides, randomCityOverrides, randomHireOverrides } of additions) {
     const id = nextId++
     newIds.push(id)
     let group = groupsBySid.get(sid)
@@ -1886,6 +1891,7 @@ export function addObjectInstances(
         if (randomSquadOverrides.weeklyIncrementBonus !== undefined) row.weeklyIncrementBonus = randomSquadOverrides.weeklyIncrementBonus
       }
       if (sid === 'random-item' && randomItemOverrides) row.rarity = randomItemOverrides.rarity
+      if (sid === 'random-hire' && randomHireOverrides) row.tier = randomHireOverrides.tier
       appendRow(randomSpawnerDefault.table, row)
     }
     if (sid === 'random-city' && randomCityOverrides) {

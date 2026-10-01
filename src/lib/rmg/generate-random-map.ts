@@ -1099,7 +1099,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   }
 
   await reportProgress('Writing placements', 90)
-  const additions: { sid: string; node: number; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean } }[] = []
+  const additions: { sid: string; node: number; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean }; randomHireOverrides?: { tier: number } }[] = []
   const additionTempIds: number[] = [] // parallel to additions — needed to remap portal temp ids to real ids below
   for (const [sid, group] of objectGroups) {
     if (sid === playerSpawnerSid) continue // already committed to the container by buildBlankMap
@@ -1107,7 +1107,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       const tempId = group.ids[i]
       const placement = tempIdToPlacement.get(tempId)
       if (!placement) continue
-      additions.push({ sid, node: group.nodes[i], rotation: placement.rotation, randomSquadOverrides: placement.randomSquadOverrides, randomItemOverrides: placement.randomItemOverrides, randomCityOverrides: placement.randomCityOverrides })
+      additions.push({ sid, node: group.nodes[i], rotation: placement.rotation, randomSquadOverrides: placement.randomSquadOverrides, randomItemOverrides: placement.randomItemOverrides, randomCityOverrides: placement.randomCityOverrides, randomHireOverrides: placement.randomHireOverrides })
       additionTempIds.push(tempId)
     }
   }

@@ -29,7 +29,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
-import { collectArtifactSids, pickInteractableSid, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
+import { collectArtifactSids, pickInteractableSid, pickRandomHireTier, pickSquadTemplate, RESOURCE_SIDS, STORAGE_SIDS } from './object-variety'
 import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
@@ -159,6 +159,12 @@ export interface ZonePlacement {
    *  "unconfigured random-city never verified in-game" trap), never left
    *  for later configuration the way a manually-added one is. */
   randomCityOverrides?: { factionSid: string; spawnHero: boolean }
+  /** `random-hire` (mercenary guild) placements only — issue #240 Phase 1's
+   *  real tier (1-7), replacing the previous flat always-tier-1 default
+   *  (`map-write.ts`'s `RANDOM_SPAWNER_TABLE_DEFAULTS`). See
+   *  `object-variety.ts`'s `pickRandomHireTier` for the real weight/value
+   *  data this comes from. */
+  randomHireOverrides?: { tier: number }
 }
 
 /** A concrete, pre-composed army (`squads[]`, entityType 2 — structurally
@@ -425,10 +431,10 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     if (currentZoneContentLimitBySid.has(sid)) currentZoneContentSoFar.set(sid, (currentZoneContentSoFar.get(sid) ?? 0) + 1)
   }
 
-  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides']): void => {
+  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides'], randomHireOverrides?: ZonePlacement['randomHireOverrides']): void => {
     const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, rng)
     if (node === null) return
-    placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides, randomCityOverrides })
+    placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides, randomCityOverrides, randomHireOverrides })
   }
 
   /** `random-item.rarity` "cost" table for the value-budget treasure loop
@@ -476,7 +482,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  a specific artifact can't repeat within one zone purely by chance;
    *  ordinary storage/resource piles are NOT capped, matching how real
    *  templates only cap notable objects, not plain resources. */
-  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, preferredSids?: Set<string>): number => {
+  const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number, preferredSids?: Set<string>): number => {
     if (catalog && rng() < objectVariety) {
       const availableArtifacts = artifactSids.filter((sid) => !usedArtifactSids.has(sid) && !isAtContentCap(sid))
       // Three-way split for what a "concrete" treasure slot becomes: artifact
@@ -515,6 +521,31 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
           return RARITY_AVERAGE_COST
         }
       } else {
+        // issue #240 Phase 1: within this "building" share, a real-tiered
+        // `random-hire` (mercenary guild) is a further ~30% sub-roll
+        // against a plain interactable — modest/conservative on purpose.
+        // The real `content_pool_default_guarded`/`_unguarded` pools put
+        // every `random_hire_N` tier's own weight (150-250 each, ~1500
+        // total) directly alongside individual interactable sids' weights
+        // (25-250 each) in one flat pick table, which would make
+        // random-hire roughly a third of ALL building picks if replicated
+        // exactly — this generator doesn't consume that flat-pool model
+        // (that's issue #240 Phase 2 scope), so 0.3 here is a deliberately
+        // conservative share in the same spirit, not a reproduction of the
+        // exact real ratio. Needs its own guard (unlike every other
+        // interactable sid placed below): `random_hire_N`'s real
+        // `guardValue` is a separate, always-present field in
+        // `generator_config.json`, confirming this building is meant to be
+        // guarded, not a free-standing pickup.
+        if (rng() < 0.3) {
+          const hire = pickRandomHireTier(catalog, rng)
+          if (hire) {
+            recordContentPlacement('random-hire')
+            place('random-hire', tiles, undefined, undefined, undefined, { tier: hire.tier })
+            placeGuard(tiles, hire.guardValue, sampleFraction(biome, 0.5, rng), guardCutoff)
+            return RARITY_AVERAGE_COST
+          }
+        }
         const sid = pickInteractableSid(rng, isAtContentCap)
         if (sid) {
           recordContentPlacement(sid)
@@ -692,7 +723,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       let spent = 0
       let iterations = 0
       while (spent < treasureBudget && iterations < 400) {
-        spent += placeTreasure(tiles, usedArtifactSids, preferredTreasureSids)
+        spent += placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF, preferredTreasureSids)
         iterations++
       }
 
