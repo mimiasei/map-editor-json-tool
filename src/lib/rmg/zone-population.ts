@@ -29,7 +29,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUARD_MULTIPLIER, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
-import { pickSquadTemplate, resolveContentPoolPick, resolveGoodsValue, rollContentPool, UNSUPPORTED_CONTENT_POOL_SIDS } from './object-variety'
+import { isRmgIneligibleInteractableSid, pickSquadTemplate, resolveContentPoolPick, resolveGoodsValue, rollContentPool, UNSUPPORTED_CONTENT_POOL_SIDS } from './object-variety'
 import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
@@ -523,7 +523,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  `maxCount: 1` pattern for named/notable objects. */
   const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number, preferredSids?: Set<string>): void => {
     if (catalog && rng() < objectVariety) {
-      const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || (disabledInteractableSids?.has(sid) ?? false)
+      const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || isRmgIneligibleInteractableSid(sid) || (disabledInteractableSids?.has(sid) ?? false)
       if (rng() < RESOURCE_POOL_SHARE) {
         const sid = rollContentPool(catalog, `content_pool_general_resources_treasure_zone_${currentRichnessLabel}`, rng, isExcluded)
         if (sid) {

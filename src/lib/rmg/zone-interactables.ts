@@ -20,7 +20,7 @@
 
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { ZoneSpec } from './zone-graph'
-import { pickInteractableSid } from './object-variety'
+import { isRmgIneligibleInteractableSid, pickInteractableSid } from './object-variety'
 import { tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
 
 export interface ScatterInteractablesOptions {
@@ -60,7 +60,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
     for (const node of tiles) {
       if (excludedNodes.has(node)) continue
       if (rng() >= zoneDensity) continue
-      const sid = pickInteractableSid(rng, (candidate) => disabledInteractableSids?.has(candidate) ?? false)
+      const sid = pickInteractableSid(rng, (candidate) => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false))
       if (!sid) continue
       if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
         placements.push({ tempId: state.nextTempId++, sid, node })

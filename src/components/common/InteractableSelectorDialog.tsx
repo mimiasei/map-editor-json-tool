@@ -10,11 +10,13 @@
 // zone-population.ts's content-pool roll and zone-interactables.ts's own
 // pickInteractableSid — see GenerateRandomMapDialog.tsx's own wiring).
 //
-// `campaign_`-prefixed and `custom_`-prefixed sids are never shown at all —
-// per the issue's own requirement, these aren't real RMG-eligible content
-// (confirmed: neither prefix appears anywhere in object-variety.ts's curated
-// interactable tiers nor in any real Core/generator/content_lists/*.json
-// entry this generator's content-pool roll can produce).
+// Sids `object-variety.ts`'s `isRmgIneligibleInteractableSid` flags (the 6
+// faction `*_city` halls, `campaign_`/`_campaign`-tagged scripted props,
+// `block`/`block_*` collision markers, `custom_*` clones, `pvp_*` promo
+// dwellings) are never shown at all — the SAME predicate also gates every
+// real RMG pick path (zone-population.ts's content-pool roll, zone-
+// interactables.ts's pickInteractableSid), so a sid can never be visible
+// here while still reachable by generation, or vice versa.
 //
 // Four more subcategories are excluded too, found during real-generation
 // verification rather than guessed: `dwellings`/`mines` are placed by
@@ -49,6 +51,7 @@ import {
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
+import { isRmgIneligibleInteractableSid } from '@/lib/rmg/object-variety'
 
 /** Not part of the RMG's own discretionary interactable-choice roll (see this
  *  file's own header comment for the real-generation evidence behind each) —
@@ -74,7 +77,9 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
 
   const allInteractables = useMemo(
     () => (catalog?.mapObjects ?? [])
-      .filter((o) => o.category === 'interactables' && !o.id.startsWith('campaign_') && !o.id.startsWith('custom_') && !NON_BROWSABLE_SUBCATEGORIES.has(resolveInteractableSubcategory(o.id)))
+      .filter((o) => o.category === 'interactables' &&
+          !isRmgIneligibleInteractableSid(o.id) &&
+          !NON_BROWSABLE_SUBCATEGORIES.has(resolveInteractableSubcategory(o.id)))
       .sort((a, b) => a.name.localeCompare(b.name)),
     [catalog],
   )
@@ -217,8 +222,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
                         <Checkbox checked={enabled} onCheckedChange={() => toggleOne(o.id)} />
                         <CatalogIcon iconId={o.icon} name={o.name} size={28} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate">{o.name}</p>
-                          <p className="text-[9px] text-muted-foreground truncate font-mono">{o.id}</p>
+                          <p className="text-[9px] font-medium">{o.name}</p>
                         </div>
                       </label>
                     )
