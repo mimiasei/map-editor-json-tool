@@ -10,6 +10,34 @@
 import type { CatalogSquadTemplate, GameCatalog } from '@/lib/catalog/types'
 import { TIER_MEDIAN_SQUAD_VALUE } from '@/lib/h3-import/neutral-strength'
 
+/** Real weighted random-hire tier table (Core/generator/content_lists/
+ *  generator_content_lists.json's `content_list_building_random_hires` — one
+ *  of issue #240 Phase 0's collected generic content lists, weights 250/
+ *  250/225/225/200/200/150 for tiers 1-7, favoring cheaper tiers but not
+ *  flat) combined with `generator_config.json`'s real `random_hire_1..7`
+ *  value/guardValue curve (also Phase 0) — replaces the flat, always-tier-1
+ *  `random-hire` placeholder this generator never actually varied. Returns
+ *  `null` when this catalog has no generator-data (the static fallback
+ *  catalog, or an older Core.zip with no `Core/generator/` files) rather
+ *  than guessing a tier with no real weight/value data behind it. */
+export function pickRandomHireTier(catalog: GameCatalog, rng: () => number): { tier: number; value: number; guardValue: number } | null {
+  const list = catalog.rmgContentLists.find((l) => l.name === 'content_list_building_random_hires')
+  const metaObjects = catalog.rmgGeneratorConfig?.metaObjects
+  if (!list || !metaObjects || list.content.length === 0) return null
+  const totalWeight = list.content.reduce((sum, c) => sum + c.weight, 0)
+  if (totalWeight <= 0) return null
+  let roll = rng() * totalWeight
+  let chosenSid = list.content[0].sid
+  for (const c of list.content) {
+    if (roll < c.weight) { chosenSid = c.sid; break }
+    roll -= c.weight
+  }
+  const tierMatch = /^random_hire_(\d)$/.exec(chosenSid)
+  const meta = metaObjects.find((m) => m.sid === chosenSid)
+  if (!tierMatch || !meta || meta.guardValue === undefined) return null
+  return { tier: Number(tierMatch[1]), value: meta.value, guardValue: meta.guardValue }
+}
+
 /** Real, concrete resource-pile sids (Core/DB/map/objects/4_interactables.json)
  *  — confirmed real across every shipped sample map with zero extra
  *  objectsProperties config needed: every real instance surveyed has
@@ -95,41 +123,54 @@ export function pickSquadTemplate(
  *  file's own grouping). `chest` is excluded here: it's already covered by
  *  `RESOURCE_SIDS` above as a treasure pickup, not a building.
  *
- *  Hand-tiered into three rarity bands by cross-referencing this game's own
- *  real weighted content lists (`Core/generator/content_lists/
- *  basic_content_lists.json`), which are never parsed directly by this
- *  generator (per-template pool filenames vary, more moving parts than
- *  warranted here) but confirm a real common/uncommon/rare split: simple
- *  hero-buff/utility sites are weighted ~75-150 in the real "tier 1" lists,
- *  bigger named buildings ~50-100 in an "uncommon" list, and unique lore
- *  sites appear only in a separate, much-less-often-selected "epic" list. */
+ *  Re-tiered for issue #240 Phase 1 by cross-referencing every explicitly
+ *  rarity-labeled real content list across BOTH generic content-list files
+ *  (`basic_content_lists.json` and `generator_content_lists.json` — e.g.
+ *  `content_list_building_common_hero_stats` vs `..._uncommon_hero_stats`
+ *  vs `basic_content_list_building_epic_interact`), not just one file's
+ *  numbered tiers as the original hand-tiering did. 29 sids moved tier
+ *  (e.g. `fort`: real data groups it into `..._uncommon_hero_stats` with
+ *  `orb_observatory`/`college_of_wonder`, not common — the mistiering this
+ *  phase was scoped to fix; `learning_stone`/`lost_library`/`magic_wheel`/
+ *  `stinging_sword`/`armory_automaton`/`knowledge_garden` all turned out to
+ *  be real COMMON tier despite TSE previously filing them as uncommon).
+ *  Sids with no explicit common/uncommon/epic label anywhere (e.g.
+ *  `market`, `camp_fire`, `mystical_tower`) were left at their original
+ *  tier — no real data to move them, in either direction. `fickle_shrine`
+ *  (real, placeable, confirmed in `Core/DB/map/objects/4_interactables.json`)
+ *  was found but excluded: it's tagged BOTH uncommon and epic across the two
+ *  files, an unresolvable conflict, not a confident tier. `tree_of_abundance`
+ *  has the same two-file conflict (uncommon in `generator_content_lists
+ *  .json`, epic in `basic_content_lists.json`) but was already RARE here
+ *  pre-phase-1, so it's left unchanged rather than un-asserted. */
 export const INTERACTABLE_COMMON_SIDS = [
-  'mystical_tower', 'beer_fountain', 'camp_fire', 'crow_nest', 'crystal_trail',
-  'huntsmans_camp', 'fountain', 'gardener', 'pile_of_books', 'quixs_path',
-  'watchtower', 'stables', 'tear_of_truth', 'mana_well', 'mysterious_stone',
-  'wind_rose', 'windmill', 'flattering_mirror', 'peasant_cart', 'wise_owl',
-  'jousting_range', 'maze', 'fort', 'petrified_memorial', 'abandoned_corpse',
-  'gingerbread_house', 'goblin_cache', 'pandora_box', 'monty_hall', 'village',
+  'abandoned_corpse', 'abandoned_mansion', 'armory_automaton', 'beer_fountain',
+  'black_tower', 'camp_fire', 'crow_nest', 'crystal_trail', 'flattering_mirror',
+  'fountain', 'fountain_2', 'gardener', 'gingerbread_house', 'goblin_cache',
+  'huntsmans_camp', 'insaras_eye', 'knowledge_garden', 'learning_stone',
+  'lost_library', 'magic_wheel', 'mana_well', 'mereas_shrine', 'mysterious_stone',
+  'mystical_tower', 'pandora_box', 'peasant_cart', 'pile_of_books', 'quixs_path',
+  'stables', 'stinging_sword', 'tear_of_truth', 'village', 'watchtower',
+  'wind_rose', 'windmill',
 ]
 
 export const INTERACTABLE_UNCOMMON_SIDS = [
-  'market', 'forge', 'alchemy_lab', 'university', 'circus', 'infernal_cirque',
-  'arena', 'gladiator_arena', 'gladiator_spire', 'tavern', 'celestial_sphere',
-  'chimerologist', 'knowledge_garden', 'learning_stone', 'legions_memorial',
-  'lost_library', 'magic_wheel', 'college_of_wonder', 'research_laboratory',
-  'orb_observatory', 'unstable_ruins', 'raiders_camp', 'point_of_balance',
-  'trial_scales', 'stinging_sword', 'armory_automaton', 'circle_of_life',
-  'boreal_call', 'the_gorge', 'unforgotten_grave', 'cursed_old_house',
-  'overgrown_grave', 'mereas_shrine',
+  'alchemy_lab', 'alvars_eye', 'arena', 'boreal_call', 'celestial_sphere',
+  'chimerologist', 'circle_of_life', 'circus', 'college_of_wonder',
+  'cursed_old_house', 'forge', 'fort', 'gladiator_arena', 'gladiator_spire',
+  'heros_crypt', 'infernal_cirque', 'iridescent_abbey', 'jousting_range',
+  'legions_memorial', 'market', 'maze', 'mercenary_guild', 'monty_hall',
+  'orb_observatory', 'overgrown_grave', 'petrified_memorial', 'point_of_balance',
+  'prismatic_lair', 'raiders_camp', 'ritual_pyre', 'sacrificial_shrine',
+  'shady_den', 'tavern', 'the_gorge', 'tree_of_knowledge', 'trial_scales',
+  'uncanny_rite', 'unforgotten_grave', 'university', 'wise_owl',
 ]
 
 export const INTERACTABLE_RARE_SIDS = [
-  'tree_of_abundance', 'eternal_dragon', 'prison', 'insaras_eye', 'mirage',
-  'remote_foothold', 'abandoned_outpost', 'dragon_utopia', 'black_tower',
-  'prismatic_lair', 'iridescent_abbey', 'tree_of_knowledge', 'troglodyte_throne',
-  'shady_den', 'twilight_bloom', 'uncanny_rite', 'underground_lair',
-  'abandoned_mansion', 'abnormal_structure', 'alvars_eye', 'ritual_pyre',
-  'heros_crypt',
+  'abandoned_outpost', 'abnormal_structure', 'dragon_utopia', 'eternal_dragon',
+  'mirage', 'prison', 'remote_foothold', 'research_laboratory',
+  'tree_of_abundance', 'troglodyte_throne', 'twilight_bloom', 'underground_lair',
+  'unstable_ruins',
 ]
 
 /** Weighted tier pick (common:uncommon:rare ≈ 6:3:1, matching the real
