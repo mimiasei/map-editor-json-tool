@@ -41,10 +41,17 @@ export interface ScatterInteractablesOptions {
    *  tree/rock. Defaults to 0.25 (matches `object-variety.ts`'s own
    *  treasure-budget interactable share for continuity, not a hard rule). */
   density?: number
+  /** Real, placeable interactable sids the RMG is NOT allowed to pick —
+   *  issue #238's own interactable browser/selector dialog, same disabled
+   *  set `zone-population.ts`'s content-pool roll respects. Composed into
+   *  the cap-check `pickInteractableSid` already takes, so a disabled sid
+   *  just falls through to another tier/sid rather than being placed.
+   *  Empty/omitted (the default) is today's exact behavior. */
+  disabledInteractableSids?: Set<string>
 }
 
 export function scatterZoneInteractables(options: ScatterInteractablesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25 } = options
+  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids } = options
   const placements: ZonePlacement[] = []
   for (const zone of zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
@@ -53,7 +60,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
     for (const node of tiles) {
       if (excludedNodes.has(node)) continue
       if (rng() >= zoneDensity) continue
-      const sid = pickInteractableSid(rng, () => false)
+      const sid = pickInteractableSid(rng, (candidate) => disabledInteractableSids?.has(candidate) ?? false)
       if (!sid) continue
       if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
         placements.push({ tempId: state.nextTempId++, sid, node })

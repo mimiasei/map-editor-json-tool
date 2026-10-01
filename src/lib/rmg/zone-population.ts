@@ -381,6 +381,14 @@ export interface PopulateZonesOptions {
    *  Sand-biome neutral zone's turn resolves to, so every OTHER zone's mine
    *  assignment is completely unaffected. */
   mineGoldBiomeBiasStrength?: number
+  /** Real, placeable interactable sids the RMG is NOT allowed to pick —
+   *  issue #238's own interactable browser/selector dialog. Composed into
+   *  the same `isExcluded` check `placeTreasure`'s content-pool rolls
+   *  already use for content caps/unsupported sids, so a disabled sid
+   *  resamples into something else from the same real pool rather than
+   *  silently dropping a placement. Empty/omitted (the default) is today's
+   *  exact behavior — every real interactable stays eligible. */
+  disabledInteractableSids?: Set<string>
 }
 
 /** Scatter each zone's own objects (see this file's header comment for what
@@ -400,7 +408,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
-    mineGoldBiomeBiasStrength = 0,
+    mineGoldBiomeBiasStrength = 0, disabledInteractableSids,
   } = options
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
@@ -515,7 +523,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  `maxCount: 1` pattern for named/notable objects. */
   const placeTreasure = (tiles: number[], usedArtifactSids: Set<string>, biome: BiomeId, guardCutoff: number, preferredSids?: Set<string>): void => {
     if (catalog && rng() < objectVariety) {
-      const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid)
+      const isExcluded = (sid: string): boolean => isAtContentCap(sid) || UNSUPPORTED_CONTENT_POOL_SIDS.has(sid) || (disabledInteractableSids?.has(sid) ?? false)
       if (rng() < RESOURCE_POOL_SHARE) {
         const sid = rollContentPool(catalog, `content_pool_general_resources_treasure_zone_${currentRichnessLabel}`, rng, isExcluded)
         if (sid) {

@@ -180,6 +180,14 @@ export interface RandomMapTemplate {
    *  comment). 0 (the default) reproduces this generator's original
    *  biome-blind mine round-robin exactly. */
   mineGoldBiomeBiasStrength: number
+  /** Real, placeable interactable sids the RMG is NOT allowed to pick —
+   *  issue #238's own interactable browser/selector dialog. Stores only the
+   *  DISABLED sids (not the full enabled list) — most templates leave this
+   *  empty, matching this generator's own "every real interactable stays
+   *  eligible" default, and a sid added to the game in a future Core.zip
+   *  update stays enabled by default rather than silently missing from a
+   *  stale saved "enabled" list. Defaults to `[]` (nothing disabled). */
+  disabledInteractableSids: string[]
 }
 
 /** Default map-wide interactable caps (issue #210 follow-up — interactables
@@ -200,7 +208,7 @@ const DEFAULT_INTERACTABLE_CONTENT_LIMITS = [
 /** Every field a template can omit and still be valid — the same defaults
  *  zone-water.ts/zone-decoration.ts/zone-population.ts themselves fall
  *  back to when a caller doesn't pass these at all. */
-export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'hillChance' | 'valleyChance' | 'obstacleDensity' | 'interactableDensity' | 'mountainDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance' | 'organicTerrainBlending' | 'decorationRoadDecayStrength' | 'decorationCoOccurrenceStrength' | 'decorationElevationDecayStrength' | 'mineGoldBiomeBiasStrength'> = {
+export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' | 'waterChance' | 'islandsIncludePlayerZones' | 'islandLandRatio' | 'hillChance' | 'valleyChance' | 'obstacleDensity' | 'interactableDensity' | 'mountainDensity' | 'treasureDensity' | 'objectVariety' | 'usePortals' | 'zoneJaggedness' | 'zoneSpread' | 'boundaryGuardStrength' | 'squadDensity' | 'roadWindingAmplitude' | 'roadWindingWavelength' | 'enabledBiomes' | 'randomCityCount' | 'contentCountLimits' | 'stoneRoadChance' | 'roadPointOfInterestChance' | 'roadFullConnectivityChance' | 'organicTerrainBlending' | 'decorationRoadDecayStrength' | 'decorationCoOccurrenceStrength' | 'decorationElevationDecayStrength' | 'mineGoldBiomeBiasStrength' | 'disabledInteractableSids'> = {
   waterContent: 'normal',
   waterChance: 0.4,
   islandsIncludePlayerZones: false,
@@ -230,10 +238,11 @@ export const DEFAULT_TEMPLATE_OVERRIDES: Pick<RandomMapTemplate, 'waterContent' 
   decorationCoOccurrenceStrength: 0,
   decorationElevationDecayStrength: 0,
   mineGoldBiomeBiasStrength: 0,
+  disabledInteractableSids: [],
 }
 
 export function templateToOptions(template: RandomMapTemplate): GenerateRandomMapOptions {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, enabledBiomes, randomCityCount, contentCountLimits, stoneRoadChance, roadPointOfInterestChance, roadFullConnectivityChance, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, seed } = template
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, enabledBiomes, randomCityCount, contentCountLimits, stoneRoadChance, roadPointOfInterestChance, roadFullConnectivityChance, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids, seed } = template
   return {
     sizeX,
     sizeZ,
@@ -266,6 +275,7 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     decorationCoOccurrenceStrength,
     decorationElevationDecayStrength,
     mineGoldBiomeBiasStrength,
+    disabledInteractableSids,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -331,6 +341,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     decorationCoOccurrenceStrength: typeof data.decorationCoOccurrenceStrength === 'number' ? data.decorationCoOccurrenceStrength : DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength,
     decorationElevationDecayStrength: typeof data.decorationElevationDecayStrength === 'number' ? data.decorationElevationDecayStrength : DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength,
     mineGoldBiomeBiasStrength: typeof data.mineGoldBiomeBiasStrength === 'number' ? data.mineGoldBiomeBiasStrength : DEFAULT_TEMPLATE_OVERRIDES.mineGoldBiomeBiasStrength,
+    disabledInteractableSids: Array.isArray(data.disabledInteractableSids) ? data.disabledInteractableSids : DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids,
     seed: typeof data.seed === 'number' ? data.seed : undefined,
   }
 }
