@@ -1006,7 +1006,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // is in its final, fully-repaired state by this point (the road-partition
   // water-reclaim repair above has already run) — see zone-beaches.ts's own
   // header comment for the full design.
-  const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, catalogById, state, rng })
+  const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, zoneIdByNode, zoneBiome, catalogById, state, rng })
   if (beachResult.terrainChanges.length > 0) block2 = paintTerrainTiles(block2, beachResult.terrainChanges)
 
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain
