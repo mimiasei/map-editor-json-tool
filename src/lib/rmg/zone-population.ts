@@ -652,12 +652,13 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
 
   let mineIndex = 0
   const neutralContentSeed = Math.floor(posRng() * 0x7fffffff)
+  const playerContentSeed = Math.floor(posRng() * 0x7fffffff)
   const neutralTileCounts = zones.filter((z) => z.kind === 'neutral').map((z) => tilesByZone.get(z.id)?.length ?? 0)
   const meanNeutralTiles = neutralTileCounts.length > 0 ? Math.round(neutralTileCounts.reduce((a, b) => a + b, 0) / neutralTileCounts.length) : 0
   for (const zone of zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
     if (tiles.length === 0) continue
-    contentRng = symmetricZones && zone.kind === 'neutral' ? createSeededRng(neutralContentSeed) : posRng
+    contentRng = symmetricZones ? createSeededRng(zone.kind === 'neutral' ? neutralContentSeed : playerContentSeed) : posRng
     const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
 
     if (zone.kind === 'player') {

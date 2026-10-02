@@ -1025,7 +1025,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const interactablePlacements = scatterZoneInteractables({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
     excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
-    density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet,
+    density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet, symmetricZones: !gameTemplateJson,
   })
 
   // Ambient animal/fx decoration (issue #210 follow-up) — real-map-

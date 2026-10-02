@@ -58,6 +58,8 @@ import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDial
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
+import PlayerBalancePanel from '@/components/common/PlayerBalancePanel'
+import type { PlayerBalance } from '@/lib/map-grid/player-balance'
 import {
     COMPLEXITY_LEVELS,
     DEFAULT_CLASSIC_SETTINGS,
@@ -246,6 +248,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [seedText, setSeedText] = useState('')
   const [activeCategory, setActiveCategory] = useState<Category>('core')
   const [generating, setGenerating] = useState(false)
+  // Result step (issue #255): the dialog stays open after generating so the
+  // balance report can be read and the map re-rolled before committing.
+  const [generated, setGenerated] = useState<{ name: string; warnings: string[]; balance: PlayerBalance | null } | null>(null)
   const [genProgress, setGenProgress] = useState<{ pct: number; label: string } | null>(null)
 
   const [terrainOnly, setTerrainOnly] = useState(false)
@@ -396,11 +401,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     classicRandoms.hillChance = elevation
     classicRandoms.valleyChance = elevation
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (freshSeed = false) => {
     setGenerating(true)
     setGenProgress({ pct: 0, label: 'Starting…' })
     try {
-      const seed = seedText.trim() ? Number(seedText) : undefined
+      // Regenerate (issue #255) always rolls a new random map, even if a seed
+      // was typed — re-running the same seed would just give the same map.
+      const seed = freshSeed ? undefined : seedText.trim() ? Number(seedText) : undefined
       const opts = classicMode
         ? { ...DEFAULT_TEMPLATE_OVERRIDES, ...resolveClassicSettings(classic), ...classicRandoms, disabledInteractableSids: [] as string[] }
         : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined }
@@ -466,8 +473,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         logWarn(`Reachability check: ${result.isolatedPlayerStarts.length} player start(s) isolated from every other player`)
         for (const issue of result.isolatedPlayerStarts) logWarn(`  ${describeIsolatedPlayerStart(issue)}`)
       }
-      onGenerated({ name: result.name, warnings: result.warnings })
-      onOpenChange(false)
+      setGenerated({ name: result.name, warnings: result.warnings, balance: result.playerBalance })
     } catch (e) {
       logError(`Failed to generate random map: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
@@ -584,7 +590,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       : previewPhase === 'roads'
         ? 'Confirm roads'
         : 'Generate'
-  const footerAction = previewPhase === 'terrain' ? handleConfirmTerrain : previewPhase === 'roads' ? handleConfirmRoads : handleGenerate
+  const footerAction = previewPhase === 'terrain' ? handleConfirmTerrain : previewPhase === 'roads' ? handleConfirmRoads : () => void handleGenerate()
 
   const handleResetAll= () => {
       setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
@@ -644,6 +650,29 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             </div>
         </div>
 
+        {generated ? (
+          <div className="flex-1 overflow-y-auto p-6 bg-[var(--column-center)] dark:bg-background">
+            <div className="mx-auto max-w-2xl space-y-5">
+              <div>
+                <h2 className="text-base font-semibold">Map generated</h2>
+                <p className="text-xs text-muted-foreground">{generated.name} is loaded. Open it, or roll a new one with the same settings.</p>
+              </div>
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Player Balance</h3>
+                <PlayerBalancePanel balance={generated.balance} />
+              </div>
+              {generated.warnings.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Notes</h3>
+                  <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
+                    {generated.warnings.map((w) => <li key={w}>{w}</li>)}
+                  </ul>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">The full report stays available later under Stats → Player Balance.</p>
+            </div>
+          </div>
+        ) : (
         <div className="flex-1 flex overflow-hidden">
           {!classicMode && <nav className="w-60 shrink-0 border-r border-border overflow-y-auto p-2 space-y-1 bg-[var(--column-left)] dark:bg-card">
             {CATEGORIES.map((cat) => {
@@ -1105,6 +1134,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               </div>
             )}
         </div>
+        )}
 
         {genProgress && (
           <div className="border-t border-border px-4 py-2.5 shrink-0">
@@ -1113,6 +1143,29 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         )}
 
         <div className="flex items-center gap-2 border-t border-border px-4 py-3 shrink-0 bg-[var(--column-left)] dark:bg-card">
+          {generated ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setGenerated(null)} disabled={generating}>
+                Back to settings
+              </Button>
+              <div className="flex-1" />
+              <Button variant="outline" size="sm" onClick={() => void handleGenerate(true)} disabled={generating}>
+                {generating ? 'Generating…' : 'Regenerate'}
+              </Button>
+              <Button
+                size="sm"
+                disabled={generating}
+                onClick={() => {
+                  onGenerated({ name: generated.name, warnings: generated.warnings })
+                  setGenerated(null)
+                  onOpenChange(false)
+                }}
+              >
+                Open map
+              </Button>
+            </>
+          ) : (
+            <>
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={handleSaveTemplate}>
                     Save Template…
@@ -1131,6 +1184,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
               <Button size="sm" onClick={footerAction} disabled={generating || previewBusy || !mapName.trim()}>
                 {footerLabel}
               </Button>
+            </>
+          )}
         </div>
     </div>
 

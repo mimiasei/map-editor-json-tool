@@ -257,13 +257,13 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   } = options
   const playerKindSeed = Math.floor(rng() * 0x7fffffff)
   const neutralKindSeed = Math.floor(rng() * 0x7fffffff)
-  const zoneRolls = new Map<number, () => number>()
   const kindOf = new Map(zones.map((z) => [z.id, z.kind]))
+  // A FRESH seeded stream per crossing (not one stream per zone): the number
+  // and order of crossings a zone gets depends on road geometry, so a shared
+  // sequence handed equivalent entrances different values (issue #255).
   const rollsFor = (zoneId: number): (() => number) => {
     if (!symmetricZones) return rng
-    let r = zoneRolls.get(zoneId)
-    if (!r) { r = createSeededRng(kindOf.get(zoneId) === 'player' ? playerKindSeed : neutralKindSeed); zoneRolls.set(zoneId, r) }
-    return r
+    return createSeededRng(kindOf.get(zoneId) === 'player' ? playerKindSeed : neutralKindSeed)
   }
 
   const playerZoneIds = zones.filter((z) => z.kind === 'player').map((z) => z.id)
