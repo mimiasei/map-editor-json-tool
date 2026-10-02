@@ -70,7 +70,7 @@ import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { buildFlatPlaced, reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
-import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport } from './balance-analyzer'
+import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport, type PlayerStartStats } from './balance-analyzer'
 import { extractGameRulesPatch, parseGameTemplateJson, deriveWaterOverrides, deriveObstacleOverrides } from './rmg-template-import'
 import { yieldToUI } from '@/lib/async-utils'
 
@@ -352,6 +352,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
     richness: richness ? RICHNESS_LEVELS.find((r) => r.id === richness) : undefined,
+    zoneAnchorNode, symmetricZones: !gameTemplateJson,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
@@ -365,7 +366,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const playerZoneIds = graph.zones.filter((z) => z.kind === 'player').map((z) => z.id)
   const proximityGuards = scatterProximityGuards({
     sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
-    catalogById, catalog, objectVariety, squadDensity, state, rng,
+    catalogById, catalog, objectVariety, squadDensity, state, rng, symmetricZones: !gameTemplateJson,
   })
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
@@ -611,6 +612,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // short zigzags the same way it always did.
   const roadSmoothWindow = Math.max(4, Math.round(roadWindingWavelength / 10))
   let unroutableEdges = 0
+  const ringEdgeSkipRoll = [rng(), rng()]
   // Islands: a real, hard rule (zone-islands.ts's own header comment has
   // the full story) — an island is reachable ONLY by portal, never a road,
   // regardless of the separate `usePortals` bonus-shortcut toggle. Every
@@ -711,7 +713,11 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // exist as real edges at all (a Proximity/GladiatorArena connection
     // was never added as one), so every edge that survives here is one the
     // template author actually wanted painted.
-    if (!gameTemplateJson && rng() >= roadFullConnectivityChance) continue
+    // Ring layout: the skip roll is shared by every edge of the same kind
+    // (player-to-own-neutral vs neutral-to-next-player), so no player ends up
+    // with a road/gate where another has none (issue #254).
+    const edgeSide = Math.min(a, b) % 2 === 0 && Math.abs(a - b) === 1 ? 0 : 1
+    if (!gameTemplateJson && ringEdgeSkipRoll[edgeSide] >= roadFullConnectivityChance) continue
     const from = roadEndpointForZone(a)
     const to = roadEndpointForZone(b)
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
@@ -987,7 +993,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
     zoneDistances, catalogById, mapObjects: catalog.mapObjects,
     catalog, objectVariety, mountainDensity, strength: boundaryGuardStrength, state, rng,
-    islandZoneIds, waterNodes: waterNodesAll,
+    islandZoneIds, waterNodes: waterNodesAll, symmetricZones: !gameTemplateJson,
   })
 
   // Obstacle scattering — fills whatever each zone has left over, sharing
@@ -1345,11 +1351,28 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // the zone-boundary chokepoint guards (empty if `boundaryGuardStrength`
   // was 'none').
   const zoneWealth = computeZoneWealth(
-    [...placements, ...proximityGuards.guardPlacements, ...boundaryResult.guardPlacements],
+    // Gate guards deliberately excluded: they obstruct a passage, they aren't
+    // wealth to collect, and `computeExitGuardsByZone` below already scores them
+    // as the players' exits (issue #254).
+    [...placements, ...proximityGuards.guardPlacements],
     zoneIdByNode,
   )
   const exitGuardsByZone = computeExitGuardsByZone(boundaryResult.guardPlacements, zoneIdByNode)
-  const balanceReport = analyzeBalance(graph, zoneWealth, exitGuardsByZone)
+  const MINE_SIDS_FOR_STATS = new Set(['mine_wood', 'mine_ore', 'mine_gold'])
+  const playerStats: PlayerStartStats[] = graph.zones.filter((z) => z.kind === 'player').map((zone) => {
+    const tiles = tilesByZoneFull.get(zone.id) ?? []
+    const anchor = zoneAnchorNode.get(zone.id) as number
+    const ax = anchor % sizeX
+    const az = Math.floor(anchor / sizeX)
+    const mines = placements.filter((p) => MINE_SIDS_FOR_STATS.has(p.sid) && zoneIdByNode[p.node] === zone.id)
+    const meanMineDistance = mines.length > 0
+      ? mines.reduce((sum, m) => sum + Math.hypot((m.node % sizeX) - ax, Math.floor(m.node / sizeX) - az), 0) / mines.length
+      : 0
+    const dry = tiles.filter((n) => waterMapFinal[n] === 0)
+    const elevatedFraction = dry.length > 0 ? dry.filter((n) => levelsMapFinal[n] !== 0).length / dry.length : 0
+    return { zoneId: zone.id, area: tiles.length, meanMineDistance, elevatedFraction }
+  })
+  const balanceReport = analyzeBalance(graph, zoneWealth, exitGuardsByZone, playerStats)
 
   return { container: { ...container, chunks: finalChunks }, balanceReport }
 }

@@ -280,7 +280,15 @@ export function generateTerrain(
       : 'RMG zone graph is disconnected — buildZoneGraph should never produce this')
   }
 
-  const centers = relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
+  // The built-in ring is laid out SYMMETRICALLY and left unrelaxed (issue
+  // #254): the force-directed relaxation pushed zones against the map border
+  // unevenly, so player zones ended up differing in area by up to ~65% at 4-6
+  // players (measured over 12 seeds). Equal angular spacing on one ring gives
+  // every player the same surroundings by construction. An imported game
+  // template keeps the relaxed layout — its own zone graph is authoritative.
+  const centers = importedTopology
+    ? relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
+    : layoutZoneCenters(sizeX, sizeZ, graph, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25)
   const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
   const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes, biomeIdByZoneId)
 

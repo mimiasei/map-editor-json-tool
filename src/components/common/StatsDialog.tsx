@@ -145,7 +145,7 @@ function FreqBar({
   const pct = max > 0 ? Math.max(4, Math.round((count / max) * 100)) : 4
   return (
     <div className="flex items-center gap-3 min-w-0">
-      <div className="w-44 shrink-0 truncate text-xs text-right text-muted-foreground" title={label}>
+      <div className="w-32 shrink-0 truncate text-xs text-right text-muted-foreground" title={label}>
         {sublabel ?? label}
       </div>
       <div className="flex-1 flex items-center gap-2 min-w-0">

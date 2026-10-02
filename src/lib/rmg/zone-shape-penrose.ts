@@ -53,6 +53,9 @@ function collectVertices(tiles: RhombusTile[], scale: number, cx: number, cz: nu
   return vertices
 }
 
+const AREA_BALANCE_ITERATIONS = 160
+const AREA_BALANCE_TOLERANCE = 0.02
+
 export function assignTilesToZonesPenrose(
   sizeX: number,
   sizeZ: number,
@@ -69,26 +72,6 @@ export function assignTilesToZonesPenrose(
   const gammas = randomPentagridOffsets(rng)
   const tiles = generatePenroseTiling(gammas, gridRange)
   const vertices = collectVertices(tiles, scale, cx, cz)
-
-  // Each vertex -> nearest (size-weighted) zone center. Same weighting
-  // convention zone-layout.ts's own Voronoi assignment uses.
-  const weightByZone = new Map(zones.map((z) => [z.id, Math.sqrt(z.size)]))
-  const vertexZoneId = new Array<number>(vertices.length)
-  for (let i = 0; i < vertices.length; i++) {
-    const [vx, vz] = vertices[i]
-    let bestZoneId = centers[0].zoneId
-    let bestScore = Infinity
-    for (const center of centers) {
-      const dx = vx - center.x
-      const dz = vz - center.z
-      const score = Math.sqrt(dx * dx + dz * dz) / (weightByZone.get(center.zoneId) ?? 1)
-      if (score < bestScore) {
-        bestScore = score
-        bestZoneId = center.zoneId
-      }
-    }
-    vertexZoneId[i] = bestZoneId
-  }
 
   // Spatially bucket vertices for fast approximate-nearest-vertex lookup
   // per map tile — a plain O(tiles × vertices) scan would be too slow at
@@ -109,8 +92,7 @@ export function assignTilesToZonesPenrose(
     else buckets.set(bi, [i])
   }
 
-  const zoneIdByNode = new Array<number>(sizeX * sizeZ)
-  const tilesByZone = new Map<number, number[]>(zones.map((z) => [z.id, []]))
+  const tileVertex = new Int32Array(sizeX * sizeZ)
   const maxRing = Math.max(bucketCols, bucketRows)
 
   for (let z = 0; z < sizeZ; z++) {
@@ -136,11 +118,74 @@ export function assignTilesToZonesPenrose(
         }
         if (bestVertex !== -1 && ring * bucketSize > Math.sqrt(bestDist)) break
       }
-      const zoneId = bestVertex !== -1 ? vertexZoneId[bestVertex] : centers[0].zoneId
-      const node = z * sizeX + x
-      zoneIdByNode[node] = zoneId
-      tilesByZone.get(zoneId)!.push(node)
+      tileVertex[z * sizeX + x] = bestVertex
     }
+  }
+
+  // Each vertex -> nearest (size-weighted) zone center. Same weighting
+  // convention zone-layout.ts's own Voronoi assignment uses — then the
+  // weights are nudged until every zone's tile count matches its share of
+  // the map by `size` (issue #254): a plain weighted Voronoi left player
+  // zones differing in area by up to ~65% at 4-6 players (measured over
+  // 12 seeds), so one player simply owned far more land than another. The
+  // per-zone correction is clamped so no zone's reach can balloon enough to
+  // wrap around its neighbors (disconnected enclaves).
+  const baseWeight = new Map(zones.map((z) => [z.id, Math.sqrt(z.size)]))
+  const weightByZone = new Map(baseWeight)
+  const vertexZoneId = new Array<number>(vertices.length)
+  const assignVertices = (): void => {
+    for (let i = 0; i < vertices.length; i++) {
+      const [vx, vz] = vertices[i]
+      let bestZoneId = centers[0].zoneId
+      let bestScore = Infinity
+      for (const center of centers) {
+        const dx = vx - center.x
+        const dz = vz - center.z
+        const score = Math.sqrt(dx * dx + dz * dz) / (weightByZone.get(center.zoneId) ?? 1)
+        if (score < bestScore) {
+          bestScore = score
+          bestZoneId = center.zoneId
+        }
+      }
+      vertexZoneId[i] = bestZoneId
+    }
+  }
+  const countAreas = (): Map<number, number> => {
+    const areas = new Map<number, number>(zones.map((z) => [z.id, 0]))
+    for (let node = 0; node < tileVertex.length; node++) {
+      const v = tileVertex[node]
+      const zoneId = v !== -1 ? vertexZoneId[v] : centers[0].zoneId
+      areas.set(zoneId, (areas.get(zoneId) ?? 0) + 1)
+    }
+    return areas
+  }
+  assignVertices()
+  const totalSize = zones.reduce((sum, z) => sum + z.size, 0)
+  const totalTiles = sizeX * sizeZ
+  for (let iter = 0; iter < AREA_BALANCE_ITERATIONS; iter++) {
+    const areas = countAreas()
+    let worst = 0
+    for (const z of zones) {
+      const target = (totalTiles * z.size) / totalSize
+      worst = Math.max(worst, Math.abs((areas.get(z.id) ?? 0) - target) / target)
+    }
+    if (worst < AREA_BALANCE_TOLERANCE) break
+    for (const z of zones) {
+      const target = (totalTiles * z.size) / totalSize
+      const step = Math.min(1.1, Math.max(0.9, Math.pow(target / Math.max(1, areas.get(z.id) ?? 0), 0.3)))
+      const base = baseWeight.get(z.id) ?? 1
+      weightByZone.set(z.id, Math.min(base * 3, Math.max(base * 0.35, (weightByZone.get(z.id) ?? base) * step)))
+    }
+    assignVertices()
+  }
+
+  const zoneIdByNode = new Array<number>(sizeX * sizeZ)
+  const tilesByZone = new Map<number, number[]>(zones.map((z) => [z.id, []]))
+  for (let node = 0; node < tileVertex.length; node++) {
+    const v = tileVertex[node]
+    const zoneId = v !== -1 ? vertexZoneId[v] : centers[0].zoneId
+    zoneIdByNode[node] = zoneId
+    tilesByZone.get(zoneId)!.push(node)
   }
 
   return { zoneIdByNode, tilesByZone }

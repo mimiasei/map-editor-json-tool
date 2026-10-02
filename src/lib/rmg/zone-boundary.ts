@@ -40,6 +40,7 @@
 // formula, since this codebase already has an equivalent value-to-squad
 // pipeline.
 
+import { createSeededRng } from './seeded-rng'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
@@ -186,6 +187,11 @@ export interface FortifyZoneBoundariesOptions {
   strength: BoundaryGuardStrength
   state: PlacementState
   rng: () => number
+  /** Built-in ring layout (no imported template): gate-guard value rolls
+   *  are replayed per zone kind (player/neutral) in crossing order, so
+   *  equivalent entrances get equivalent guards (issue #254). Tile positions
+   *  are unaffected. */
+  symmetricZones?: boolean
   /** Zone ids that became real islands (`islandLandmassByZone`'s own keys
    *  in generate-random-map.ts) — these zones' own boundary tiles are
    *  skipped entirely by the wall-placement loop below. Real bug confirmed
@@ -247,8 +253,18 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   const {
     sizeX, sizeZ, zones, zoneIdByNode, zoneBiome, roadPaths, zoneDistances,
     catalogById, mapObjects, catalog, objectVariety, mountainDensity, strength, state, rng,
-    islandZoneIds, waterNodes,
+    islandZoneIds, waterNodes, symmetricZones = false,
   } = options
+  const playerKindSeed = Math.floor(rng() * 0x7fffffff)
+  const neutralKindSeed = Math.floor(rng() * 0x7fffffff)
+  const zoneRolls = new Map<number, () => number>()
+  const kindOf = new Map(zones.map((z) => [z.id, z.kind]))
+  const rollsFor = (zoneId: number): (() => number) => {
+    if (!symmetricZones) return rng
+    let r = zoneRolls.get(zoneId)
+    if (!r) { r = createSeededRng(kindOf.get(zoneId) === 'player' ? playerKindSeed : neutralKindSeed); zoneRolls.set(zoneId, r) }
+    return r
+  }
 
   const playerZoneIds = zones.filter((z) => z.kind === 'player').map((z) => z.id)
   const depthByZone = new Map<number, number>()
@@ -279,17 +295,18 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
       if (guardedNodes.has(crossing.enteringNode)) continue
       guardedNodes.add(crossing.enteringNode)
 
+      const roll = rollsFor(crossing.enteringZone)
       const depth = depthByZone.get(crossing.enteringZone) ?? 0
       const difficultyLabel = depthToDifficultyLabel(depth)
-      const range = pickSquadRange([difficultyLabel], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
-      const requestedValue = Math.round(randomInRange(range.min, range.max, rng) * multiplier)
+      const range = pickSquadRange([difficultyLabel], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, roll)
+      const requestedValue = Math.round(randomInRange(range.min, range.max, roll) * multiplier)
 
       const guardNode = crossing.enteringNode
       const biome = zoneBiome.get(crossing.enteringZone) ?? ZONE_BIOMES[0]
-      const fraction = sampleFraction(biome, 0.7, rng)
+      const fraction = sampleFraction(biome, 0.7, roll)
 
-      if (catalog && objectVariety !== undefined && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
-        const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
+      if (catalog && objectVariety !== undefined && roll() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
+        const template = pickSquadTemplate(catalog, fraction, requestedValue, roll)
         if (template && !state.usedAnchors.has(guardNode)) {
           state.usedAnchors.add(guardNode)
           concreteSquads.push({ tempId: state.nextTempId++, sid: template.id, node: guardNode })
@@ -310,7 +327,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
         // "every gate guard" still pushed the map-wide nonzero rate to
         // 45-75%, nowhere near the real minority — this roll brings it back
         // toward a genuine minority without losing the mechanic entirely.
-        const weeklyIncrementBonus = rng() < 0.5 ? 0.15 : undefined
+        const weeklyIncrementBonus = roll() < 0.5 ? 0.15 : undefined
         guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction, weeklyIncrementBonus } })
       }
     }

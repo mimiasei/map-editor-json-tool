@@ -394,6 +394,8 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
   const levelChanges: { node: number; level: number }[] = []
   const climbChanges: { node: number; climb: 1 }[] = []
   const protectedTiles = new Set<number>([...excludedNodes, ...blocked, ...usedAnchors])
+  let sharedPlayerPresence: boolean | undefined
+  let sharedPlayerSizeFraction: number | undefined
 
   const reservedBuffer = new Set<number>(reservedNodes)
   for (const n of reservedNodes) {
@@ -412,7 +414,17 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     if (zoneChance <= 0) continue
     const zoneMinSize = minSizeByZone?.get(zone.id) ?? minSize
     const presenceChance = Math.min(1, zoneChance * 2)
-    if (rng() >= presenceChance) continue
+    // Every PLAYER zone shares one presence roll and one size fraction
+    // (issue #254): independent rolls left one start walled in by cliffs while
+    // another was open ground (elevated share differed by up to ~37 points).
+    let present: boolean
+    if (zone.kind === 'player') {
+      sharedPlayerPresence ??= rng() < presenceChance
+      present = sharedPlayerPresence
+    } else {
+      present = rng() < presenceChance
+    }
+    if (!present) continue
 
     // `!climbNodes.has(n)` matters: an EARLIER zone in this same loop may
     // have already placed a ramp on a then-level-0 tile — without this, a
@@ -428,7 +440,13 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     )
     if (eligible.size < zoneMinSize) continue
 
-    const sizeFraction = pickSizeFraction(zoneChance)
+    let sizeFraction: number
+    if (zone.kind === 'player') {
+      sharedPlayerSizeFraction ??= pickSizeFraction(zoneChance)
+      sizeFraction = sharedPlayerSizeFraction
+    } else {
+      sizeFraction = pickSizeFraction(zoneChance)
+    }
     const targetSize = Math.max(zoneMinSize, Math.min(eligible.size, maxSize, Math.round(eligible.size * sizeFraction)))
     const seed = [...eligible][Math.floor(rng() * eligible.size)]
     const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng, protectedTiles, elevatedNodes)

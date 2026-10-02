@@ -23,6 +23,11 @@ import { extractMapContext } from '@/lib/map-extract'
 import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 import { yieldToUI } from '@/lib/async-utils'
 
+/** A generation scoring below this is re-rolled (up to `MAX_BALANCE_ATTEMPTS`
+ *  total); the best-scoring attempt wins. */
+const BALANCE_TARGET_SCORE = 85
+const MAX_BALANCE_ATTEMPTS = 4
+
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
 }
@@ -69,7 +74,31 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
 
   const loaded = await readTemplateAndCatalog()
   if (!loaded) return null
-  const { container, balanceReport } = await generateRandomMap(loaded.template, catalog, options)
+  // Retry until the layout is fair (issue #254): the built-in layout is
+  // already near-symmetric, but guard/content rolls and road geometry still
+  // leave the odd lopsided map. A re-roll continues the same RNG stream, so a
+  // seeded generation stays reproducible. An imported game template is
+  // authoritative about its own (possibly asymmetric) layout — never re-rolled.
+  // Progress: the first attempt fills 0-60%; each re-roll then gets its own
+  // 10% slice (60-90%) with a "Rebalancing" label that names the attempt and
+  // the score it is trying to beat, so a longer run reads as deliberate work
+  // rather than a stalled bar.
+  const reportWindow = (lo: number, hi: number, prefix: string) => (label: string, pct: number): void => {
+    options.onProgress?.(`${prefix}${label}`, Math.round(lo + (pct / 100) * (hi - lo)))
+  }
+  let best = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(0, 60, '') })
+  options.onProgress?.(`Checking fairness of player zones (score ${best.balanceReport.score ?? 'n/a'}/100)`, 60)
+  await yieldToUI()
+  for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && !options.gameTemplateJson && !options.terrainOnly && (best.balanceReport.score ?? 100) < BALANCE_TARGET_SCORE; attempt++) {
+    const lo = 60 + (attempt - 2) * 10
+    const prefix = `Rebalancing players (try ${attempt}/${MAX_BALANCE_ATTEMPTS}, best fairness ${best.balanceReport.score}/100) — `
+    options.onProgress?.(`${prefix}starting over`, lo)
+    await yieldToUI()
+    const next = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(lo, lo + 10, prefix) })
+    if ((next.balanceReport.score ?? 0) > (best.balanceReport.score ?? 0)) best = next
+  }
+  options.onProgress?.('Player zones balanced', 90)
+  const { container, balanceReport } = best
 
   options.onProgress?.('Auto-fixing overlaps and elevation', 92)
   await yieldToUI()
@@ -105,5 +134,8 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // yet, so the dirty-dot/exit-guard must reflect that immediately.
   useMapDocumentStore.setState({ mapIsDirty: true })
   options.onProgress?.('Done', 100)
-  return { ...result, warnings: [...autoFixWarnings, ...result.warnings], balanceReport, unreachablePlacements, isolatedPlayerStarts }
+  const balanceWarnings = balanceReport.score !== null && balanceReport.score < BALANCE_TARGET_SCORE
+    ? [`Balance score ${balanceReport.score}/100 — ${balanceReport.findings.filter((f) => f.severity !== 'ok').map((f) => f.message).join(' ')}`]
+    : []
+  return { ...result, warnings: [...balanceWarnings, ...autoFixWarnings, ...result.warnings], balanceReport, unreachablePlacements, isolatedPlayerStarts }
 }

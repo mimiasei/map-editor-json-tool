@@ -58,7 +58,15 @@ import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDial
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
-import { COMPLEXITY_LEVELS, DEFAULT_CLASSIC_SETTINGS, RICHNESS_LEVELS, WATER_LEVELS, resolveClassicSettings, type ClassicSettings } from '@/lib/rmg/classic-presets'
+import {
+    COMPLEXITY_LEVELS,
+    DEFAULT_CLASSIC_SETTINGS,
+    RICHNESS_LEVELS,
+    WATER_LEVELS,
+    resolveClassicSettings,
+    type ClassicSettings,
+    randomInSliderBand
+} from '@/lib/rmg/classic-presets'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
 import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
@@ -375,13 +383,26 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }
   }
 
+    const random = Math.random
+    const classicRandoms = {
+        zoneJaggedness: randomInSliderBand(0, 1, 0, 0.70, random),
+        zoneSpread: randomInSliderBand(0.5, 1.8, 0.10, 1.0, random),
+        organicTerrainBlending: randomInSliderBand(0, 1, 0, 0.50, random),
+        // elevation: random 0–50%, same value for hills and valleys
+        // (the Elevation slider drives both equally, see elevationSliderValue)
+        hillChance: 0, valleyChance: 0,
+    }
+    const elevation = random() * 0.4
+    classicRandoms.hillChance = elevation
+    classicRandoms.valleyChance = elevation
+
   const handleGenerate = async () => {
     setGenerating(true)
     setGenProgress({ pct: 0, label: 'Starting…' })
     try {
       const seed = seedText.trim() ? Number(seedText) : undefined
       const opts = classicMode
-        ? { ...DEFAULT_TEMPLATE_OVERRIDES, ...resolveClassicSettings(classic), disabledInteractableSids: [] as string[] }
+        ? { ...DEFAULT_TEMPLATE_OVERRIDES, ...resolveClassicSettings(classic), ...classicRandoms, disabledInteractableSids: [] as string[] }
         : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined }
       const result = await generateRandomMapFile({
         mapName,

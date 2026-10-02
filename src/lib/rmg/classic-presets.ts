@@ -79,3 +79,9 @@ export function resolveClassicSettings(settings: ClassicSettings): {
     richness: settings.richness,
   }
 }
+
+/** Random value within [lo%, hi%] of the slider's own min..max range. */
+export function randomInSliderBand(min: number, max: number, loPct: number, hiPct: number, rng: () => number): number {
+    const t = loPct + rng() * (hiPct - loPct)
+    return min + t * (max - min)
+}
