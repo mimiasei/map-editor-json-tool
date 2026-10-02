@@ -70,7 +70,7 @@ import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
 import { scatterProximityGuards } from './zone-guard-scatter'
 import { buildFlatPlaced, reclaimWaterCollisions, repairIsolatedPlayerStarts, repairSealedZones } from './zone-validation'
-import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport } from './balance-analyzer'
+import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport, type PlayerStartStats } from './balance-analyzer'
 import { extractGameRulesPatch, parseGameTemplateJson, deriveWaterOverrides, deriveObstacleOverrides } from './rmg-template-import'
 import { yieldToUI } from '@/lib/async-utils'
 
@@ -1358,7 +1358,21 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     zoneIdByNode,
   )
   const exitGuardsByZone = computeExitGuardsByZone(boundaryResult.guardPlacements, zoneIdByNode)
-  const balanceReport = analyzeBalance(graph, zoneWealth, exitGuardsByZone)
+  const MINE_SIDS_FOR_STATS = new Set(['mine_wood', 'mine_ore', 'mine_gold'])
+  const playerStats: PlayerStartStats[] = graph.zones.filter((z) => z.kind === 'player').map((zone) => {
+    const tiles = tilesByZoneFull.get(zone.id) ?? []
+    const anchor = zoneAnchorNode.get(zone.id) as number
+    const ax = anchor % sizeX
+    const az = Math.floor(anchor / sizeX)
+    const mines = placements.filter((p) => MINE_SIDS_FOR_STATS.has(p.sid) && zoneIdByNode[p.node] === zone.id)
+    const meanMineDistance = mines.length > 0
+      ? mines.reduce((sum, m) => sum + Math.hypot((m.node % sizeX) - ax, Math.floor(m.node / sizeX) - az), 0) / mines.length
+      : 0
+    const dry = tiles.filter((n) => waterMapFinal[n] === 0)
+    const elevatedFraction = dry.length > 0 ? dry.filter((n) => levelsMapFinal[n] !== 0).length / dry.length : 0
+    return { zoneId: zone.id, area: tiles.length, meanMineDistance, elevatedFraction }
+  })
+  const balanceReport = analyzeBalance(graph, zoneWealth, exitGuardsByZone, playerStats)
 
   return { container: { ...container, chunks: finalChunks }, balanceReport }
 }

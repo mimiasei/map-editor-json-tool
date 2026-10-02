@@ -51,6 +51,19 @@ export interface BalanceReport {
   }
 }
 
+/** Per player zone, measured from the finished map (issue #254) — the
+ *  fairness dimensions that wealth/distance/exit-guard alone don't see. */
+export interface PlayerStartStats {
+  zoneId: number
+  /** Tile count of the player's own zone. */
+  area: number
+  /** Mean straight-line distance from the player's city to its own wood/ore/
+   *  gold mines. 0 when the zone has none. */
+  meanMineDistance: number
+  /** Share (0-1) of the zone's dry tiles that are hill or valley. */
+  elevatedFraction: number
+}
+
 /** Same cost scale `zone-population.ts`'s own `RARITY_TABLE` uses for
  *  `random-item.rarity` (0-3) — kept as a small local duplicate here rather
  *  than exporting that file's private const for one array's sake. */
@@ -110,6 +123,7 @@ export function analyzeBalance(
   graph: ZoneGraph,
   zoneWealth: Map<number, number>,
   exitGuardsByZone: Map<number, number[]>,
+  playerStats: PlayerStartStats[] = [],
 ): BalanceReport {
   const dist = zoneDistanceMatrix(graph)
   const players = graph.zones.filter((z) => z.kind === 'player')
@@ -142,7 +156,12 @@ export function analyzeBalance(
     const neighborZoneIds = graph.edges
       .filter(([a, b]) => a === player.id || b === player.id)
       .map(([a, b]) => (a === player.id ? b : a))
-    const exitGuards = neighborZoneIds.flatMap((zoneId) => exitGuardsByZone.get(zoneId) ?? [])
+    // A gate guard stands on the entered side of a crossing, so a border with
+    // a neighbor is guarded either in that neighbor's zone or in the player's
+    // own — both are this player's exits (issue #254: counting only the
+    // neighbor side scored a player with a perfectly guarded own-side gate as
+    // having no exit guard at all).
+    const exitGuards = [player.id, ...neighborZoneIds].flatMap((zoneId) => exitGuardsByZone.get(zoneId) ?? [])
     return {
       player,
       gravity,
@@ -179,6 +198,22 @@ export function analyzeBalance(
     score -= Math.min(15, Math.round(guardSpread * 50))
     if (guardSpread > 0.3) {
       findings.push({ severity: 'warn', message: `Exit-guard spread ${Math.round(guardSpread * 100)}% — some players have a much cheaper way out than others.` })
+    }
+
+    if (playerStats.length > 1) {
+      const areaSpread = spread(playerStats.map((p) => p.area))
+      score -= Math.min(15, Math.round(areaSpread * 100))
+      if (areaSpread > 0.15) findings.push({ severity: 'bad', message: `Zone size spread ${Math.round(areaSpread * 100)}% — some players own much more land than others.` })
+      else if (areaSpread > 0.07) findings.push({ severity: 'warn', message: `Zone size spread ${Math.round(areaSpread * 100)}%.` })
+
+      const mineSpread = spread(playerStats.map((p) => p.meanMineDistance))
+      score -= Math.min(10, Math.round(mineSpread * 50))
+      if (mineSpread > 0.3) findings.push({ severity: 'warn', message: `Start-mine distance spread ${Math.round(mineSpread * 100)}% — some players have to travel much further to their mines.` })
+
+      const elevations = playerStats.map((p) => p.elevatedFraction)
+      const elevationRange = Math.max(...elevations) - Math.min(...elevations)
+      score -= Math.min(10, Math.round(elevationRange * 50))
+      if (elevationRange > 0.15) findings.push({ severity: 'warn', message: `Terrain differs around the starts — elevated share ranges ${Math.round(elevationRange * 100)} points between players.` })
     }
 
     const pairDistances: number[] = []

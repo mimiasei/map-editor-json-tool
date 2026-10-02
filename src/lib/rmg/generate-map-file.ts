@@ -23,6 +23,11 @@ import { extractMapContext } from '@/lib/map-extract'
 import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 import { yieldToUI } from '@/lib/async-utils'
 
+/** A generation scoring below this is re-rolled (up to `MAX_BALANCE_ATTEMPTS`
+ *  total); the best-scoring attempt wins. */
+const BALANCE_TARGET_SCORE = 85
+const MAX_BALANCE_ATTEMPTS = 4
+
 export interface GenerateRandomMapFileOptions extends GenerateRandomMapOptions {
   mapName: string
 }
@@ -69,7 +74,19 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
 
   const loaded = await readTemplateAndCatalog()
   if (!loaded) return null
-  const { container, balanceReport } = await generateRandomMap(loaded.template, catalog, options)
+  // Retry until the layout is fair (issue #254): the built-in layout is
+  // already near-symmetric, but guard/content rolls and road geometry still
+  // leave the odd lopsided map. A re-roll continues the same RNG stream, so a
+  // seeded generation stays reproducible. An imported game template is
+  // authoritative about its own (possibly asymmetric) layout — never re-rolled.
+  let best = await generateRandomMap(loaded.template, catalog, options)
+  for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && !options.gameTemplateJson && !options.terrainOnly && (best.balanceReport.score ?? 100) < BALANCE_TARGET_SCORE; attempt++) {
+    options.onProgress?.(`Re-rolling for fairness (attempt ${attempt}/${MAX_BALANCE_ATTEMPTS}, best score ${best.balanceReport.score})`, 5)
+    await yieldToUI()
+    const next = await generateRandomMap(loaded.template, catalog, options)
+    if ((next.balanceReport.score ?? 0) > (best.balanceReport.score ?? 0)) best = next
+  }
+  const { container, balanceReport } = best
 
   options.onProgress?.('Auto-fixing overlaps and elevation', 92)
   await yieldToUI()
@@ -105,5 +122,8 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // yet, so the dirty-dot/exit-guard must reflect that immediately.
   useMapDocumentStore.setState({ mapIsDirty: true })
   options.onProgress?.('Done', 100)
-  return { ...result, warnings: [...autoFixWarnings, ...result.warnings], balanceReport, unreachablePlacements, isolatedPlayerStarts }
+  const balanceWarnings = balanceReport.score !== null && balanceReport.score < BALANCE_TARGET_SCORE
+    ? [`Balance score ${balanceReport.score}/100 — ${balanceReport.findings.filter((f) => f.severity !== 'ok').map((f) => f.message).join(' ')}`]
+    : []
+  return { ...result, warnings: [...balanceWarnings, ...autoFixWarnings, ...result.warnings], balanceReport, unreachablePlacements, isolatedPlayerStarts }
 }

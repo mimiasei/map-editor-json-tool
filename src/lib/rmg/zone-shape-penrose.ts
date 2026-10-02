@@ -53,8 +53,8 @@ function collectVertices(tiles: RhombusTile[], scale: number, cx: number, cz: nu
   return vertices
 }
 
-const AREA_BALANCE_ITERATIONS = 40
-const AREA_BALANCE_TOLERANCE = 0.04
+const AREA_BALANCE_ITERATIONS = 160
+const AREA_BALANCE_TOLERANCE = 0.02
 
 export function assignTilesToZonesPenrose(
   sizeX: number,
@@ -172,9 +172,9 @@ export function assignTilesToZonesPenrose(
     if (worst < AREA_BALANCE_TOLERANCE) break
     for (const z of zones) {
       const target = (totalTiles * z.size) / totalSize
-      const step = Math.min(1.25, Math.max(0.8, Math.sqrt(target / Math.max(1, areas.get(z.id) ?? 0))))
+      const step = Math.min(1.1, Math.max(0.9, Math.pow(target / Math.max(1, areas.get(z.id) ?? 0), 0.3)))
       const base = baseWeight.get(z.id) ?? 1
-      weightByZone.set(z.id, Math.min(base * 1.8, Math.max(base * 0.55, (weightByZone.get(z.id) ?? base) * step)))
+      weightByZone.set(z.id, Math.min(base * 3, Math.max(base * 0.35, (weightByZone.get(z.id) ?? base) * step)))
     }
     assignVertices()
   }
