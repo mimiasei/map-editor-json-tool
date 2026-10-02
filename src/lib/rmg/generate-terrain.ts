@@ -288,7 +288,7 @@ export function generateTerrain(
   // template keeps the relaxed layout — its own zone graph is authoritative.
   const centers = importedTopology
     ? relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
-    : layoutZoneCenters(sizeX, sizeZ, graph, Math.min(1, 0.5 + 0.5 * zoneSpread))
+    : layoutZoneCenters(sizeX, sizeZ, graph, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25)
   const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
   const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes, biomeIdByZoneId)
 
