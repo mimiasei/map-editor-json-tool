@@ -59,6 +59,7 @@ import { assignTilesToZonesPenrose } from './zone-shape-penrose'
 import { assignZoneBiomes, createPlacementState, ZONE_BIOMES, type PlacementState } from './zone-population'
 import { computeIslandZones } from './zone-islands'
 import { scatterZoneWater } from './zone-water'
+import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation } from './zone-elevation'
 
 export { BLANK_MAP_BIOME_NAMES }
@@ -388,6 +389,19 @@ export function generateTerrain(
         waterChangesAll.push({ node, waterId: 1 })
         levelChangesAll.push({ node, level: -1 })
       }
+    }
+  }
+
+  if (waterContent === 'normal' && waterNodesAll.size > 0) {
+    // Empty land specks cut off inside a lake (issue #248) — same rule as the
+    // full pipeline's own pass (generate-random-map.ts), minus roads/rivers
+    // (this terrain-only flow has none yet).
+    const occupied = new Set<number>([...state.blocked, ...state.usedAnchors, ...zoneAnchorNode.values()])
+    const zeros = new Array(sizeX * sizeZ).fill(0)
+    for (const node of findEmptyLandSpecks(sizeX, sizeZ, waterNodesAll, occupied, zeros, zeros)) {
+      waterNodesAll.add(node)
+      waterChangesAll.push({ node, waterId: waterChangesAll[0]?.waterId ?? 1 })
+      levelChangesAll.push({ node, level: -1 })
     }
   }
 

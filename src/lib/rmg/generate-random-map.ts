@@ -63,6 +63,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, s
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
+import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
 import { fortifyZoneBoundaries, type BoundaryGuardStrength } from './zone-boundary'
@@ -942,6 +943,38 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // the road/river computation above (each already ran before this point).
   for (const node of roadNodes) state.blocked.add(node)
   for (const node of riverNodes) state.blocked.add(node)
+
+  // Empty land specks cut off inside water (issue #248) — runs after roads/
+  // rivers (so a road's own land bridge is never flooded) and before any
+  // decoration/fauna placement (nothing can be standing on a speck yet).
+  {
+    const occupied = new Set<number>([...state.blocked, ...state.usedAnchors, ...roadNodes, ...riverNodes, ...zoneAnchorNode.values()])
+    const specks = findEmptyLandSpecks(sizeX, sizeZ, waterNodesAll, occupied, levelsMapFinal, climbsMapFinal)
+    if (specks.length > 0) {
+      const changes = specks.map((node) => {
+        const x = node % sizeX
+        const z = Math.floor(node / sizeX)
+        let waterId = 1
+        for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+          const nx = x + dx
+          const nz = z + dz
+          if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+          const w = waterMapFinal[nz * sizeX + nx]
+          if (w) { waterId = w; break }
+        }
+        return { node, waterId }
+      })
+      block2 = paintWaterTiles(block2, changes)
+      block2 = paintLevelTiles(block2, changes.map(({ node }) => ({ node, level: -1 })))
+      for (const { node, waterId } of changes) {
+        waterMapFinal[node] = waterId
+        levelsMapFinal[node] = -1
+        waterNodesAll.add(node)
+        state.blocked.add(node)
+        state.usedAnchors.add(node)
+      }
+    }
+  }
 
   // Guarded zone boundaries (issue #210 Milestone 6) — runs BEFORE the
   // density-based interior obstacle scattering below so its own wall

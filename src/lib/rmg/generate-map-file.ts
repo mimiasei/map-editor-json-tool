@@ -73,7 +73,7 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
 
   options.onProgress?.('Auto-fixing overlaps and elevation', 92)
   await yieldToUI()
-  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog)
+  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog, { guaranteeReachability: true })
 
   // Whole-map reachability validation (reachability-validation.ts) —
   // runPlacementAutoFix above already ran its own reachability auto-fix

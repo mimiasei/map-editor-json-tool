@@ -42,6 +42,13 @@ export const NON_BLOCKING_SPAWNER_SIDS = new Set(['random-res', 'random-squad', 
 /**
  * Whether `node` is an elevation "wall" tile: its own level is not 0, at
  * least one 4-neighbor is a *different* level, and no 4-neighbor is a ramp.
+ * A ramp tile itself is never a wall — confirmed against every real sample
+ * map with any climbsMap data: level -1 ramp tiles are common (Fun_and_Graves
+ * 11 of 28, Glittering_Strait 78 of 171, Gorges_of_Discord 11 of 21, ...) and
+ * most of them (e.g. 52 of 78 on Glittering_Strait) have no OTHER ramp
+ * neighbor, so without this exemption the ramp itself — the one tile whose
+ * whole purpose is to be walked across — read as impassable, which made every
+ * valley ramp a false "sealed by elevation" / unreachable report.
  */
 export function isElevationWallTile(
   node: number,
@@ -52,6 +59,7 @@ export function isElevationWallTile(
 ): boolean {
   const level = levelsMap[node]
   if (!level) return false // 0 or undefined — ground itself is never a wall
+  if (climbsMap[node] === 1) return false
   const x = node % sizeX
   const z = Math.floor(node / sizeX)
   let isWall = false
