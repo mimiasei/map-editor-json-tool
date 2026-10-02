@@ -26,25 +26,30 @@ export const EXIT_NO_CATALOG = 3
 
 type ArgValue = string | undefined
 
-function pick<T extends string>(raw: ArgValue, levels: { id: T }[], fallback: T, flag: string): T {
+/** 0-based index into the same array the dialog's dropdown renders, so the
+ *  mod can send the GME dropdown's selected index directly. */
+function pickIndex<T extends string>(raw: ArgValue, levels: { id: T }[], fallback: T, flag: string): T {
   if (raw === undefined) return fallback
-  const hit = levels.find((l) => l.id === raw)
-  if (!hit) throw new Error(`--${flag} must be one of: ${levels.map((l) => l.id).join(', ')} (got "${raw}")`)
+  const valid = `0-${levels.length - 1} (${levels.map((l, i) => `${i}=${l.id}`).join(', ')})`
+  if (!/^\d+$/.test(raw.trim())) throw new Error(`--${flag} must be an integer ${valid} (got "${raw}")`)
+  const hit = levels[Number(raw)]
+  if (!hit) throw new Error(`--${flag} must be an integer ${valid} (got "${raw}")`)
   return hit.id
 }
 
-/** `size` is `N` (square) or `WxH`. Must be one of the dialog's presets —
- *  generation was only ever tuned/verified at those sizes. */
+/** Only the first number is read, so `64` and `"64x64"` both mean 64x64
+ *  (a square map). Must be one of the dialog's presets — generation was only
+ *  ever tuned/verified at those sizes — which makes only the square presets
+ *  reachable. */
 function parseSize(raw: ArgValue): { sizeX: number; sizeZ: number } {
   if (raw === undefined) return { sizeX: 64, sizeZ: 64 }
-  const m = /^(\d+)(?:x(\d+))?$/i.exec(raw.trim())
-  if (!m) throw new Error(`--size must be N or WxH (got "${raw}")`)
-  const sizeX = Number(m[1])
-  const sizeZ = m[2] !== undefined ? Number(m[2]) : sizeX
-  if (!MAP_SIZE_PRESETS.some((p) => p.sizeX === sizeX && p.sizeZ === sizeZ)) {
-    throw new Error(`--size ${sizeX}x${sizeZ} is not supported; use one of: ${MAP_SIZE_PRESETS.map((p) => `${p.sizeX}x${p.sizeZ}`).join(', ')}`)
+  const m = /\d+/.exec(raw)
+  if (!m) throw new Error(`--size must contain a number, e.g. 64 or 64x64 (got "${raw}")`)
+  const size = Number(m[0])
+  if (!MAP_SIZE_PRESETS.some((p) => p.sizeX === size && p.sizeZ === size)) {
+    throw new Error(`--size ${size} is not supported; use one of: ${MAP_SIZE_PRESETS.filter((p) => p.sizeX === p.sizeZ).map((p) => p.sizeX).join(', ')}`)
   }
-  return { sizeX, sizeZ }
+  return { sizeX: size, sizeZ: size }
 }
 
 export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
@@ -71,9 +76,9 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
     seed,
     mapName: raw.name?.trim() || 'Random Map',
     classic: {
-      richness: pick(raw.richness, RICHNESS_LEVELS, DEFAULT_CLASSIC_SETTINGS.richness, 'richness'),
-      complexity: pick(raw.complexity, COMPLEXITY_LEVELS, DEFAULT_CLASSIC_SETTINGS.complexity, 'complexity'),
-      water: pick(raw.water, WATER_LEVELS, DEFAULT_CLASSIC_SETTINGS.water, 'water'),
+      richness: pickIndex(raw.richness, RICHNESS_LEVELS, DEFAULT_CLASSIC_SETTINGS.richness, 'richness'),
+      complexity: pickIndex(raw.complexity, COMPLEXITY_LEVELS, DEFAULT_CLASSIC_SETTINGS.complexity, 'complexity'),
+      water: pickIndex(raw.water, WATER_LEVELS, DEFAULT_CLASSIC_SETTINGS.water, 'water'),
     },
   }
 }

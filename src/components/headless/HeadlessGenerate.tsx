@@ -90,6 +90,7 @@ export default function HeadlessGenerate({ args }: Props) {
           sizeX: parsed.sizeX,
           sizeZ: parsed.sizeZ,
           playerCount: parsed.playerCount,
+          ...parsed.classic,
           fairness: generated.playerBalance?.score ?? null,
           warnings: generated.warnings,
           unreachablePlacements: generated.unreachablePlacements.length,
