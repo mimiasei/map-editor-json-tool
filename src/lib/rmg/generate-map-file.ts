@@ -79,13 +79,25 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // leave the odd lopsided map. A re-roll continues the same RNG stream, so a
   // seeded generation stays reproducible. An imported game template is
   // authoritative about its own (possibly asymmetric) layout — never re-rolled.
-  let best = await generateRandomMap(loaded.template, catalog, options)
+  // Progress: the first attempt fills 0-60%; each re-roll then gets its own
+  // 10% slice (60-90%) with a "Rebalancing" label that names the attempt and
+  // the score it is trying to beat, so a longer run reads as deliberate work
+  // rather than a stalled bar.
+  const reportWindow = (lo: number, hi: number, prefix: string) => (label: string, pct: number): void => {
+    options.onProgress?.(`${prefix}${label}`, Math.round(lo + (pct / 100) * (hi - lo)))
+  }
+  let best = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(0, 60, '') })
+  options.onProgress?.(`Checking fairness of player zones (score ${best.balanceReport.score ?? 'n/a'}/100)`, 60)
+  await yieldToUI()
   for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && !options.gameTemplateJson && !options.terrainOnly && (best.balanceReport.score ?? 100) < BALANCE_TARGET_SCORE; attempt++) {
-    options.onProgress?.(`Re-rolling for fairness (attempt ${attempt}/${MAX_BALANCE_ATTEMPTS}, best score ${best.balanceReport.score})`, 5)
+    const lo = 60 + (attempt - 2) * 10
+    const prefix = `Rebalancing players (try ${attempt}/${MAX_BALANCE_ATTEMPTS}, best fairness ${best.balanceReport.score}/100) — `
+    options.onProgress?.(`${prefix}starting over`, lo)
     await yieldToUI()
-    const next = await generateRandomMap(loaded.template, catalog, options)
+    const next = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(lo, lo + 10, prefix) })
     if ((next.balanceReport.score ?? 0) > (best.balanceReport.score ?? 0)) best = next
   }
+  options.onProgress?.('Player zones balanced', 90)
   const { container, balanceReport } = best
 
   options.onProgress?.('Auto-fixing overlaps and elevation', 92)
