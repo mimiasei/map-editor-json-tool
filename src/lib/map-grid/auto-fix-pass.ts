@@ -11,7 +11,10 @@ import { extractMapContext } from '@/lib/map-extract'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { computeBoundsAutoFix } from './bounds-autofix'
 import { computeEntranceAutoFix } from './entrance-autofix'
-import { computeReachabilityAutoFix } from './reachability-validation'
+import { computeReachabilityAutoFix, computeReachabilityGuarantee } from './reachability-validation'
+import { computeElevationRampGuarantee } from './elevation-ramp-guarantee'
+import { computeConnectivityGuarantee } from './connectivity-guarantee'
+import { computeWaterSpeckGuarantee } from './water-specks'
 import { computeOverlapAutoFix } from './overlap-autofix'
 import { computeElevationSpikeAutoFix } from './elevation-spike-autofix'
 import { findMapValidationIssues, describeMapValidationIssue } from './map-validation'
@@ -51,7 +54,16 @@ const MAX_REACHABILITY_AUTOFIX_PASSES = 5
 // on a different decoration's footprint).
 const MAX_OVERLAP_AUTOFIX_PASSES = 5
 
-export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalog | null): PlacementAutoFixResult {
+export interface PlacementAutoFixOptions {
+  /** Generated maps only (issue #248): after the normal passes, additionally
+   *  guarantee every elevated area has a working ramp and every placement is
+   *  reachable — by MOVING an unreachable target to a safe reachable tile
+   *  (deleting it only if none exists). Off for H3 import and the Map Grid,
+   *  where the target is human-authored content that must never be moved. */
+  guaranteeReachability?: boolean
+}
+
+export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalog | null, options: PlacementAutoFixOptions = {}): PlacementAutoFixResult {
   let fixed = container
   const boundsCtx = extractMapContext(containerToRawBlocks(fixed))
   const bounds = computeBoundsAutoFix(boundsCtx, catalog)
@@ -107,9 +119,61 @@ export function runPlacementAutoFix(container: MapContainer, catalog: GameCatalo
     fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: spike.climbClears.map((node) => ({ node, climb: 0 as const })) }).container
   }
 
+  let guaranteeFixCount = 0
+  if (options.guaranteeReachability) {
+    const rampCtx = extractMapContext(containerToRawBlocks(fixed))
+    const ramps = computeElevationRampGuarantee(rampCtx, catalog)
+    if (ramps.levelChanges.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: ramps.levelChanges }).container
+    if (ramps.climbClears.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: ramps.climbClears.map((node) => ({ node, climb: 0 as const })) }).container
+    if (ramps.climbAdds.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: ramps.climbAdds.map((node) => ({ node, climb: 1 as const })) }).container
+    guaranteeFixCount += ramps.climbAdds.length + ramps.levelChanges.length
+
+    const connectivity = computeConnectivityGuarantee(extractMapContext(containerToRawBlocks(fixed)), catalog)
+    for (const del of connectivity.decorationDeletions) {
+      fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: del.id }).container
+    }
+    if (connectivity.waterReclaims.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintWater', changes: connectivity.waterReclaims.map((node) => ({ node, waterId: 0 })) }).container
+    if (connectivity.levelChanges.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: connectivity.levelChanges }).container
+    if (connectivity.climbClears.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: connectivity.climbClears.map((node) => ({ node, climb: 0 as const })) }).container
+    if (connectivity.climbAdds.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: connectivity.climbAdds.map((node) => ({ node, climb: 1 as const })) }).container
+    guaranteeFixCount += connectivity.decorationDeletions.length + connectivity.waterReclaims.length + connectivity.climbAdds.length + connectivity.levelChanges.length
+
+    for (let pass = 0; pass < MAX_REACHABILITY_AUTOFIX_PASSES; pass++) {
+      const guaranteeCtx = extractMapContext(containerToRawBlocks(fixed))
+      const guarantee = computeReachabilityGuarantee(guaranteeCtx, catalog)
+      if (guarantee.relocations.length === 0 && guarantee.deletions.length === 0) break
+      for (const rel of guarantee.relocations) {
+        fixed = applyMapEdit(fixed, { kind: 'moveObject', entityType: rel.entityType, entityId: rel.id, newNode: rel.toNode }).container
+      }
+      for (const del of guarantee.deletions) {
+        fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: del.entityType, entityId: del.id }).container
+      }
+      guaranteeFixCount += guarantee.relocations.length + guarantee.deletions.length
+    }
+  }
+
+  if (options.guaranteeReachability) {
+    // The relocation loop above can bury a ramp's tile under a moved object
+    // — re-run the ramp guarantee on the finished placements.
+    const finalRamps = computeElevationRampGuarantee(extractMapContext(containerToRawBlocks(fixed)), catalog)
+    if (finalRamps.levelChanges.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: finalRamps.levelChanges }).container
+    if (finalRamps.climbClears.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: finalRamps.climbClears.map((node) => ({ node, climb: 0 as const })) }).container
+    if (finalRamps.climbAdds.length > 0) fixed = applyMapEdit(fixed, { kind: 'paintClimb', changes: finalRamps.climbAdds.map((node) => ({ node, climb: 1 as const })) }).container
+    guaranteeFixCount += finalRamps.climbAdds.length + finalRamps.levelChanges.length
+
+    const specks = computeWaterSpeckGuarantee(extractMapContext(containerToRawBlocks(fixed)), catalog)
+    for (const id of specks.decorationDeletions) {
+      fixed = applyMapEdit(fixed, { kind: 'deleteObject', entityType: 0, entityId: id }).container
+    }
+    if (specks.floodChanges.length > 0) {
+      fixed = applyMapEdit(fixed, { kind: 'paintWater', changes: specks.floodChanges }).container
+      fixed = applyMapEdit(fixed, { kind: 'paintLevel', changes: specks.floodChanges.map(({ node }) => ({ node, level: -1 })) }).container
+    }
+  }
+
   const remaining = findMapValidationIssues(extractMapContext(containerToRawBlocks(fixed)), catalog)
   const warnings: string[] = []
-  const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount + overlapFixCount + spike.levelChanges.length
+  const fixedCount = bounds.fixes.length + entranceFixCount + reachabilityFixCount + overlapFixCount + spike.levelChanges.length + guaranteeFixCount
   if (fixedCount > 0) warnings.push(`Auto-fixed ${fixedCount} placement issue(s).`)
   for (const issue of remaining) {
     warnings.push(`Unresolved: ${describeMapValidationIssue(issue)}`)

@@ -200,6 +200,173 @@ export function findAdjacentLevelZeroNode(node: number, sizeX: number, sizeZ: nu
   return null
 }
 
+/** A hill/valley smaller than this (in tiles) after pocket repair is dropped
+ *  instead of kept — a 1-3 tile bump reads as noise, and each one would still
+ *  need its own ramp. */
+const MIN_ELEVATION_COMPONENT_SIZE = 4
+
+/** Largest enclosed level-0 pocket that is simply filled in with elevation
+ *  (when every tile in it is a legal elevation tile) — anything bigger is
+ *  opened to the outside instead, so a hill never swallows a big stretch of
+ *  a zone's own ground just because it happened to be cut off. */
+const MAX_FILLED_POCKET_SIZE = 120
+
+/** A level-0 area this small that's walled in by elevation/water counts as a
+ *  pocket even if a zone anchor sits in it (a player start ringed by a hill is
+ *  as stranded as an empty speck). */
+const SMALL_ENCLOSED_SIZE = 60
+
+/** Every 4-connected group of non-`solid` tiles on the whole map that holds
+ *  none of the zone anchors (`anchors`), or is tiny — i.e. level-0 "pockets" cut off from
+ *  every zone's own ground by hills/valleys/water (a real user report:
+ *  stranded objects in exactly these spots, where every neighbor is an
+ *  elevation wall and no ramp can serve them). Whole-map (not just this
+ *  blob's own bounding box) so a pocket enclosed jointly by two different
+ *  blobs, or by a blob and water, is found too. `solid` is a per-tile mask. */
+function findEnclosedPockets(solid: Uint8Array, blobMask: Uint8Array, anchors: Set<number>, sizeX: number, sizeZ: number): number[][] {
+  const tileCount = sizeX * sizeZ
+  const seen = new Uint8Array(tileCount)
+  const stack = new Int32Array(tileCount)
+  const pockets: number[][] = []
+  for (let start = 0; start < tileCount; start++) {
+    if (seen[start] || solid[start]) continue
+    const comp: number[] = []
+    let top = 0
+    stack[top++] = start
+    seen[start] = 1
+    let hasAnchor = false
+    let touchesBlob = false
+    while (top > 0) {
+      const node = stack[--top]
+      comp.push(node)
+      if (!hasAnchor && anchors.has(node)) hasAnchor = true
+      const x = node % sizeX
+      const z = (node - x) / sizeX
+      if (!touchesBlob && ((x > 0 && blobMask[node - 1]) || (x < sizeX - 1 && blobMask[node + 1]) || (z > 0 && blobMask[node - sizeX]) || (z < sizeZ - 1 && blobMask[node + sizeX]))) touchesBlob = true
+      if (x > 0 && !seen[node - 1] && !solid[node - 1]) { seen[node - 1] = 1; stack[top++] = node - 1 }
+      if (x < sizeX - 1 && !seen[node + 1] && !solid[node + 1]) { seen[node + 1] = 1; stack[top++] = node + 1 }
+      if (z > 0 && !seen[node - sizeX] && !solid[node - sizeX]) { seen[node - sizeX] = 1; stack[top++] = node - sizeX }
+      if (z < sizeZ - 1 && !seen[node + sizeX] && !solid[node + sizeX]) { seen[node + sizeX] = 1; stack[top++] = node + sizeX }
+    }
+    // Only a pocket THIS blob borders is this blob's doing — a land patch
+    // water alone cut off is not (and dropping the hill over it would just
+    // lose elevation for nothing).
+    if (touchesBlob && (!hasAnchor || comp.length <= SMALL_ENCLOSED_SIZE)) pockets.push(comp)
+  }
+  return pockets
+}
+
+/** Opens `pocket` to the outside by removing the fewest `blob` tiles on a
+ *  shortest 4-connected path through `blob` from the pocket to any tile that
+ *  isn't solid and isn't part of any pocket. Used when a pocket can't just be
+ *  filled in (an already-placed object stands in it, it's too big, or it
+ *  borders water / the opposite elevation kind) — the pocket's contents end
+ *  up on ordinary, reachable level-0 ground instead of inside a sealed cell.
+ *  Returns false when no such path exists through `blob` itself. */
+function openPocketToOutside(
+  pocket: number[], blob: Set<number>, solid: Uint8Array, allPocketNodes: Set<number>, sizeX: number, sizeZ: number,
+): boolean {
+  const prev = new Map<number, number | null>()
+  let queue: number[] = []
+  for (const p of pocket) {
+    const x = p % sizeX
+    const z = Math.floor(p / sizeX)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (blob.has(n) && !prev.has(n)) { prev.set(n, null); queue.push(n) }
+    }
+  }
+  while (queue.length > 0) {
+    const next: number[] = []
+    for (const node of queue) {
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+        const n = nz * sizeX + nx
+        if (!solid[n] && !allPocketNodes.has(n)) {
+          for (let cur: number | null = node; cur !== null; cur = prev.get(cur) ?? null) blob.delete(cur)
+          return true
+        }
+        if (blob.has(n) && !prev.has(n)) { prev.set(n, node); next.push(n) }
+      }
+    }
+    queue = next
+  }
+  return false
+}
+
+/** Makes `blob` a solid area: every enclosed level-0 pocket is either filled
+ *  in (when small and all its tiles are legal elevation tiles) or opened to
+ *  the outside (when something already placed stands in it, it's big, or it
+ *  borders water / the opposite elevation kind — `otherObstacles`, which
+ *  count as walls for the enclosure test but are never filled, since a hill
+ *  and a valley must never touch directly). Loops because opening one pocket
+ *  can reshape another; bounded so it can never spin. Returns false when a
+ *  pocket is left that nothing can open — the caller drops the whole blob
+ *  then, rather than ship a hill with a sealed hole in it. */
+function removeEnclosedPockets(
+  blob: Set<number>, elevatedNodes: Set<number>, otherObstacles: Set<number>, canFill: (node: number) => boolean, anchors: Set<number>,
+  sizeX: number, sizeZ: number,
+): boolean {
+  const tileCount = sizeX * sizeZ
+  for (let round = 0; round < 8; round++) {
+    const solid = new Uint8Array(tileCount)
+    const blobMask = new Uint8Array(tileCount)
+    for (const n of elevatedNodes) solid[n] = 1
+    for (const n of otherObstacles) solid[n] = 1
+    for (const n of blob) { solid[n] = 1; blobMask[n] = 1 }
+    const pockets = findEnclosedPockets(solid, blobMask, anchors, sizeX, sizeZ)
+    if (pockets.length === 0) return true
+    const allPocketNodes = new Set<number>(pockets.flat())
+    let changed = false
+    for (const pocket of pockets) {
+      if (pocket.length <= MAX_FILLED_POCKET_SIZE && pocket.every(canFill)) {
+        for (const n of pocket) { blob.add(n); solid[n] = 1; blobMask[n] = 1 }
+        changed = true
+      } else if (openPocketToOutside(pocket, blob, solid, allPocketNodes, sizeX, sizeZ)) {
+        changed = true
+      }
+    }
+    if (!changed) return false // a pocket nothing here can open (e.g. walled in by water on every other side)
+  }
+  return false
+}
+
+/** 4-connected components of `nodes`. */
+function connectedComponents(nodes: Set<number>, sizeX: number, sizeZ: number): number[][] {
+  const seen = new Set<number>()
+  const comps: number[][] = []
+  for (const start of nodes) {
+    if (seen.has(start)) continue
+    const comp: number[] = []
+    const queue = [start]
+    seen.add(start)
+    while (queue.length > 0) {
+      const node = queue.pop() as number
+      comp.push(node)
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+        const n = nz * sizeX + nx
+        if (!nodes.has(n) || seen.has(n)) continue
+        seen.add(n)
+        queue.push(n)
+      }
+    }
+    comps.push(comp)
+  }
+  return comps
+}
+
 /** Adds hill (`kind: 'hill'`) or valley (`kind: 'valley'`) blobs to a subset
  *  of zones (both player and neutral — see this file's own header comment),
  *  each with real, legal ramp access. Call once per kind to get both. */
@@ -266,45 +433,63 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     const seed = [...eligible][Math.floor(rng() * eligible.size)]
     const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng, protectedTiles, elevatedNodes)
     if (blob.size === 0) continue
+    // A pocket tile may belong to a neighboring zone (a hill and its
+    // neighbor's hill can jointly enclose it) — fillable as long as nothing
+    // forbids elevating it, zone ownership aside.
+    const canFill = (n: number): boolean =>
+      !excludedNodes.has(n) && !blocked.has(n) && !usedAnchors.has(n) && !elevatedNodes.has(n) && !reservedBuffer.has(n) && !climbNodes.has(n)
+    if (!removeEnclosedPockets(blob, elevatedNodes, reservedNodes, canFill, excludedNodes, sizeX, sizeZ)) continue
 
-    for (const node of blob) {
-      elevatedNodes.add(node)
-      levelChanges.push({ node, level })
-    }
+    // Pocket removal can split a blob (opening a channel through it) — each
+    // piece is its own hill/valley and needs its OWN ramp, and a piece too
+    // small to matter, or one with nowhere legal to put a ramp, is dropped
+    // rather than shipped as unreachable elevation (a real user report:
+    // elevation areas with no ramp at all, which must never happen).
+    for (const comp of connectedComponents(blob, sizeX, sizeZ)) {
+      if (comp.length < MIN_ELEVATION_COMPONENT_SIZE) continue
+      const compSet = new Set(comp)
+      for (const node of comp) elevatedNodes.add(node)
 
-    const boundaryOutsideNodes = collectBoundaryCandidates(blob, elevatedNodes, blocked, sizeX, sizeZ)
-    // Hill: the ramp sits on the LOWER (outside, level-0) tile, adjacent to
-    // the strictly-higher blob tile. Valley: the blob tile itself IS the
-    // lower side, adjacent to the strictly-higher outside tile — so the ramp
-    // sits inside the blob instead. Either way this matches isValidRampNode
-    // (MapGridDialog.tsx) / the ramp-direction.ts real-data model exactly.
-    const rampCandidateNodes = kind === 'hill'
-      ? boundaryOutsideNodes
-      : boundaryOutsideNodes.map((outside) => {
-        // any blob neighbor of this outside tile is a valid valley-side ramp spot
-        const x = outside % sizeX
-        const z = Math.floor(outside / sizeX)
-        for (const [dx, dz] of NEIGHBOR_OFFSETS) {
-          const nx = x + dx
-          const nz = z + dz
-          if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
-          const n = nz * sizeX + nx
-          if (blob.has(n)) return n
-        }
-        return outside // unreachable in practice — outside came from collectBoundaryCandidates, which guarantees a blob neighbor
-      })
-    const anchor = zoneAnchorNode.get(zone.id)
-    const chosenRampNodes = selectRampNodes([...new Set(rampCandidateNodes)], sizeX, anchor, blocked)
-    for (const rampNode of chosenRampNodes) {
-      if (climbNodes.has(rampNode)) continue
-      climbNodes.add(rampNode)
-      climbChanges.push({ node: rampNode, climb: 1 })
-      // Also protected against a LATER zone's own blob fully encircling
-      // it — same reasoning as every other protected tile (an object
-      // anchor etc.): a ramp surrounded on every side would still be
-      // walkable itself (level 0 is never a wall) but could get cut off
-      // from the rest of the level-0 world, defeating its own purpose.
-      protectedTiles.add(rampNode)
+      const boundaryOutsideNodes = collectBoundaryCandidates(compSet, elevatedNodes, blocked, sizeX, sizeZ)
+      // Hill: the ramp sits on the LOWER (outside, level-0) tile, adjacent to
+      // the strictly-higher blob tile. Valley: the blob tile itself IS the
+      // lower side, adjacent to the strictly-higher outside tile — so the ramp
+      // sits inside the blob instead. Either way this matches isValidRampNode
+      // (MapGridDialog.tsx) / the ramp-direction.ts real-data model exactly.
+      const rampCandidateNodes = kind === 'hill'
+        ? boundaryOutsideNodes
+        : boundaryOutsideNodes.map((outside) => {
+          // any blob neighbor of this outside tile is a valid valley-side ramp spot
+          const x = outside % sizeX
+          const z = Math.floor(outside / sizeX)
+          for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+            const nx = x + dx
+            const nz = z + dz
+            if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+            const n = nz * sizeX + nx
+            if (compSet.has(n)) return n
+          }
+          return outside // unreachable in practice — outside came from collectBoundaryCandidates, which guarantees a blob neighbor
+        })
+      const anchor = zoneAnchorNode.get(zone.id)
+      const usableRampCandidates = [...new Set(rampCandidateNodes)].filter((n) => !climbNodes.has(n) && !blocked.has(n))
+      const chosenRampNodes = selectRampNodes(usableRampCandidates, sizeX, anchor, blocked)
+      if (chosenRampNodes.length === 0) {
+        for (const node of comp) elevatedNodes.delete(node)
+        continue
+      }
+
+      for (const node of comp) levelChanges.push({ node, level })
+      for (const rampNode of chosenRampNodes) {
+        climbNodes.add(rampNode)
+        climbChanges.push({ node: rampNode, climb: 1 })
+        // Also protected against a LATER zone's own blob fully encircling
+        // it — same reasoning as every other protected tile (an object
+        // anchor etc.): a ramp surrounded on every side would still be
+        // walkable itself (level 0 is never a wall) but could get cut off
+        // from the rest of the level-0 world, defeating its own purpose.
+        protectedTiles.add(rampNode)
+      }
     }
   }
 

@@ -87,14 +87,19 @@
 
 import type { MapContext, PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
-import { computeFootprintTiles, isFootprintInBounds } from './footprint'
+import { computeFootprintTiles, entranceGroups, isFootprintInBounds } from './footprint'
 import { buildBlockedTileSet, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from './passability'
 import { groupOf } from './tile-index'
 import { groupPlayerStartsByZone } from './zone-ownership'
+import { findNearestValidPosition } from './relocate'
+import { findBlockedEntrancePlacements } from './entrance-validation'
 
 export interface UnreachablePlacement {
   sid: string
   id: number
+  /** 0 = objects[], 2 = squads[] — `id` alone is never a safe join key
+   *  (separate id namespaces), see CLAUDE.md. */
+  entityType: 0 | 2
   x: number
   z: number
   node: number
@@ -147,7 +152,7 @@ export interface ReachabilityAutoFixResult {
 
 type ReachabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap' | 'customAreasPainting'>
 
-const PLAYER_START_SIDS = new Set(['city-spawner', 'hero-spawner'])
+export const PLAYER_START_SIDS = new Set(['city-spawner', 'hero-spawner'])
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
 /** Every footprint cell a hero must actually stand on to use this instance:
@@ -158,7 +163,7 @@ const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
  *  and accessibility-pass.ts. Returns an empty array for placements with no
  *  entrance concept at all (plain decoration, player starts, unresolved sid)
  *  — those are never reachability targets. */
-function accessNodesFor(item: PlacedObject, catalogById: Map<string, CatalogMapObject>, sizeX: number): number[] {
+export function accessNodesFor(item: PlacedObject, catalogById: Map<string, CatalogMapObject>, sizeX: number): number[] {
   if (item.type === 2 || NON_BLOCKING_SPAWNER_SIDS.has(item.sid)) return [item.node]
   if (item.type !== 0) return []
   const template = catalogById.get(item.sid)
@@ -172,7 +177,7 @@ function accessNodesFor(item: PlacedObject, catalogById: Map<string, CatalogMapO
  *  entrance node) — see this file's header comment for exactly when an edge
  *  exists. Every real sample places portal linkage between type-0 (objects[])
  *  instances only, matching map-extract.ts's own join assumption. */
-function buildPortalEdges(placedObjects: PlacedObject[], catalogById: Map<string, CatalogMapObject>, sizeX: number): Map<number, number[]> {
+export function buildPortalEdges(placedObjects: PlacedObject[], catalogById: Map<string, CatalogMapObject>, sizeX: number): Map<number, number[]> {
   const type0ById = new Map<number, PlacedObject>()
   for (const o of placedObjects) if (o.type === 0) type0ById.set(o.id, o)
 
@@ -194,7 +199,7 @@ function buildPortalEdges(placedObjects: PlacedObject[], catalogById: Map<string
   return edges
 }
 
-function floodFill(seeds: number[], blocked: Set<number>, sizeX: number, sizeZ: number, portalEdges: Map<number, number[]>): Set<number> {
+export function floodFill(seeds: number[], blocked: Set<number>, sizeX: number, sizeZ: number, portalEdges: Map<number, number[]>): Set<number> {
   const visited = new Set<number>()
   const queue: number[] = []
   for (const seed of seeds) {
@@ -242,7 +247,7 @@ type ReachTarget = { item: PlacedObject; accessNodes: number[] }
  *  once per analyzeReachability call and reused across every scoped
  *  resolveUnreachable run below (it doesn't depend on which seeds/targets
  *  are in play). */
-function buildNodeOwners(placedObjects: PlacedObject[], catalogById: Map<string, CatalogMapObject>, sizeX: number): Map<number, { id: number; sid: string }[]> {
+export function buildNodeOwners(placedObjects: PlacedObject[], catalogById: Map<string, CatalogMapObject>, sizeX: number): Map<number, { id: number; sid: string }[]> {
   const nodeOwners = new Map<number, { id: number; sid: string }[]>()
   for (const obj of placedObjects) {
     if (obj.type !== 0) continue
@@ -447,6 +452,7 @@ export function findUnreachablePlacements(context: ReachabilityContext, catalog:
   return unreachable.map(({ item, accessNodes, blockedBy }) => ({
     sid: item.sid,
     id: item.id,
+    entityType: item.type as 0 | 2,
     x: item.x,
     z: item.z,
     node: item.node,
@@ -607,6 +613,7 @@ export function computeReachabilityAutoFix(context: ReachabilityContext, catalog
       unresolved.push({
         sid: item.sid,
         id: item.id,
+        entityType: item.type as 0 | 2,
         x: item.x,
         z: item.z,
         node: item.node,
@@ -637,6 +644,183 @@ export function computeReachabilityAutoFix(context: ReachabilityContext, catalog
   }
 
   return { deletions, relocations, unresolved }
+}
+
+export interface ReachabilityGuaranteeResult {
+  relocations: { entityType: 0 | 2; id: number; sid: string; fromNode: number; toNode: number }[]
+  /** Only when no legal reachable tile exists anywhere on the map. */
+  deletions: { entityType: 0 | 2; id: number; sid: string }[]
+}
+
+/**
+ * Last-resort guarantee for generated maps (issue #248): every placement
+ * `findUnreachablePlacements` still flags after the normal auto-fix is
+ * MOVED to the nearest tile where it is reachable and blocks nothing — the
+ * exact fix a map author makes by hand — or, if no such tile exists
+ * anywhere, deleted. Unlike `computeReachabilityAutoFix` (shared with H3
+ * import and the Map Grid's own auto-fix, which deliberately never moves
+ * the target itself — that would silently rewrite a human-authored map),
+ * this is only for maps this app just generated, where no human placed
+ * anything yet. A relocation is accepted only if, with the object's new
+ * solid footprint added, its own entrance AND every other already-reachable
+ * placement stays reachable.
+ */
+export function computeReachabilityGuarantee(context: ReachabilityContext, catalog: GameCatalog | null): ReachabilityGuaranteeResult {
+  const result: ReachabilityGuaranteeResult = { relocations: [], deletions: [] }
+  const { sizeX, sizeZ } = context
+  // A blocked entrance (entrance-validation.ts) is the same class of defect
+  // as an unreachable placement for this guarantee's purposes — either way a
+  // hero can't actually use the object where it stands.
+  const targets: { entityType: 0 | 2; id: number; viaReachability: boolean }[] = [
+    ...findUnreachablePlacements(context, catalog).map((u) => ({ entityType: u.entityType, id: u.id, viaReachability: true })),
+    ...findBlockedEntrancePlacements(context, catalog).map((b) => ({ entityType: 0 as const, id: b.id, viaReachability: false })),
+  ]
+  if (targets.length === 0) return result
+
+  const catalogById = new Map((catalog?.mapObjects ?? []).map((o) => [o.id, o]))
+  const working = [...(context.placedObjects as PlacedObject[])]
+  const startsOf = (placed: PlacedObject[]): { item: PlacedObject; access: number[] }[] =>
+    placed.filter((p) => p.type === 0 && PLAYER_START_SIDS.has(p.sid)).map((p) => {
+      const nodes = accessNodesFor(p, catalogById, sizeX)
+      return { item: p, access: nodes.length > 0 ? nodes : [p.node] }
+    })
+  const portalEdges = buildPortalEdges(working, catalogById, sizeX)
+  const claimed = new Set<number>()
+  const handled = new Set<string>()
+
+  for (const target of targets) {
+    const handledKey = `${target.entityType}:${target.id}`
+    if (handled.has(handledKey)) continue
+    handled.add(handledKey)
+    const idx = working.findIndex((o) => o.type === target.entityType && o.id === target.id)
+    if (idx < 0) continue
+    const mover = working[idx]
+    const zoneOf = (node: number): number => context.customAreasPainting[node] ?? 0
+    if (target.viaReachability) {
+      // Same per-zone scoping analyzeReachability applies (Player Areas): a
+      // placement inside a player's own painted zone only counts as
+      // reachable from THAT zone's start(s), anywhere else from every start.
+      const fullStarts = startsOf(working)
+      const zonedZones = new Set(fullStarts.map((st) => zoneOf(st.item.node)).filter((z) => z !== 0))
+      const key = zonedZones.has(zoneOf(mover.node)) ? zoneOf(mover.node) : 0
+      const seeds = fullStarts.filter((st) => key === 0 || zoneOf(st.item.node) === key).flatMap((st) => st.access)
+      const fullBlocked = buildBlockedTileSet({ ...context, placedObjects: working }, catalog)
+      const fullReach = floodFill(seeds, fullBlocked, sizeX, sizeZ, portalEdges)
+      if (accessNodesFor(mover, catalogById, sizeX).some((n) => fullReach.has(n))) continue // an earlier fix this pass already opened it
+    }
+
+    const others = working.filter((_, i) => i !== idx)
+    const starts = startsOf(others)
+    const blocked = buildBlockedTileSet({ ...context, placedObjects: others }, catalog)
+
+    // A destination reachable only from some other player's start (under the
+    // same per-zone scoping as above) would just move the flagged placement
+    // into a new flagged position.
+    const zonedStartZones = new Set(starts.map((s) => zoneOf(s.item.node)).filter((z) => z !== 0))
+    const reachCache = new Map<number, Set<number>>()
+    const reachFor = (node: number): Set<number> => {
+      const zone = zoneOf(node)
+      const key = zonedStartZones.has(zone) ? zone : 0
+      let cached = reachCache.get(key)
+      if (!cached) {
+        const seeds = starts.filter((s) => key === 0 || zoneOf(s.item.node) === key).flatMap((s) => s.access)
+        cached = floodFill(seeds, blocked, sizeX, sizeZ, portalEdges)
+        reachCache.set(key, cached)
+      }
+      return cached
+    }
+    const allSeeds = starts.flatMap((s) => s.access)
+    const seedSet = new Set(allSeeds)
+    const baseReach = reachFor(-1)
+    // Player starts must stay mutually connected too — a relocated solid
+    // object dropped into a corridor can sever the one path between two
+    // starts without making any single placement unreachable.
+    const startsConnected = (blockedSet: Set<number>): boolean => {
+      if (starts.length < 2) return true
+      const reach = floodFill(starts[0].access, blockedSet, sizeX, sizeZ, portalEdges)
+      return starts.every((s) => s.access.some((n) => reach.has(n)))
+    }
+    const startsConnectedBefore = startsConnected(blocked)
+    const keepTargets = others.map((o) => accessNodesFor(o, catalogById, sizeX)).filter((nodes) => nodes.length > 0 && nodes.some((n) => baseReach.has(n)))
+    const occupiedNodes = new Set<number>()
+    for (const o of others) {
+      occupiedNodes.add(o.node)
+      for (const n of accessNodesFor(o, catalogById, sizeX)) occupiedNodes.add(n)
+    }
+    // Every other object's entrance approach ring (entrance-validation.ts's
+    // `protectedNodes`) — a solid cell landing there would flag THAT object's
+    // entrance as blocked, which is how one relocation used to create the
+    // next one's problem.
+    const ringNodes = new Set<number>()
+    for (const o of others) {
+      if (o.type !== 0) continue
+      for (const g of entranceGroups(computeFootprintTiles(catalogById.get(o.sid), o.x, o.z), sizeX, sizeZ)) {
+        for (const n of g.protectedNodes) ringNodes.add(n)
+      }
+    }
+    const template = mover.type === 0 ? catalogById.get(mover.sid) : undefined
+    const blocks = mover.type === 0 && !NON_BLOCKING_SPAWNER_SIDS.has(mover.sid)
+
+    const isValid = (x: number, z: number): boolean => {
+      if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) return false
+      const node = z * sizeX + x
+      if (occupiedNodes.has(node) || claimed.has(node)) return false
+      const reach = reachFor(node)
+      if (mover.type !== 0) return reach.has(node) && !blocked.has(node)
+      const cells = computeFootprintTiles(template, x, z)
+      if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
+      const solid: number[] = []
+      for (const c of cells) {
+        const n = c.z * sizeX + c.x
+        if (c.value !== 1) continue
+        if (blocked.has(n) || claimed.has(n) || occupiedNodes.has(n) || seedSet.has(n)) return false
+        // A solid object on a ramp tile makes the ramp unusable.
+        if (blocks && (ringNodes.has(n) || context.climbsMap[n] === 1)) return false
+        // A walk-onto placeholder (random-res/-squad/-item) has solid-valued
+        // template cells too, but they never block anything (passability.ts).
+        if (blocks) solid.push(n)
+      }
+      const blockedAfter = new Set([...blocked, ...solid])
+      const groups = entranceGroups(cells, sizeX, sizeZ)
+      // A walk-onto placeholder is reachable via its own anchor tile
+      // (accessNodesFor), but the separate blocked-entrance validation still
+      // judges its template's entrance cell — both must hold.
+      if (!blocks && !(reach.has(node) && !blocked.has(node))) return false
+      if (groups.length === 0) return true
+      const openGroups = groups.filter((g) => !blockedAfter.has(g.entranceNode) && [...g.protectedNodes].every((n) => !blockedAfter.has(n)))
+      if (openGroups.length === 0) return false
+      if (blocks && !openGroups.some((g) => reach.has(g.entranceNode))) return false
+      if (!blocks) return true
+      const after = new Map<number, Set<number>>()
+      const afterReach = (n: number): Set<number> => {
+        const key = zonedStartZones.has(zoneOf(n)) ? zoneOf(n) : 0
+        let set = after.get(key)
+        if (!set) {
+          set = floodFill(starts.filter((s) => key === 0 || zoneOf(s.item.node) === key).flatMap((s) => s.access), blockedAfter, sizeX, sizeZ, portalEdges)
+          after.set(key, set)
+        }
+        return set
+      }
+      if (!openGroups.some((g) => afterReach(g.entranceNode).has(g.entranceNode))) return false
+      if (startsConnectedBefore && !startsConnected(blockedAfter)) return false
+      const wholeMap = afterReach(-1)
+      return keepTargets.every((nodes) => nodes.some((n) => wholeMap.has(n)))
+    }
+
+    const found = findNearestValidPosition(mover.x, mover.z, sizeX, sizeZ, isValid)
+    if (!found) {
+      result.deletions.push({ entityType: target.entityType, id: mover.id, sid: mover.sid })
+      working.splice(idx, 1)
+      continue
+    }
+    const toNode = found.z * sizeX + found.x
+    if (toNode === mover.node) continue
+    result.relocations.push({ entityType: target.entityType, id: mover.id, sid: mover.sid, fromNode: mover.node, toNode })
+    working[idx] = { ...mover, x: found.x, z: found.z, node: toNode }
+    for (const c of computeFootprintTiles(template, found.x, found.z)) claimed.add(c.z * sizeX + c.x)
+    claimed.add(toNode)
+  }
+  return result
 }
 
 export function describeUnreachablePlacement(issue: UnreachablePlacement): string {
