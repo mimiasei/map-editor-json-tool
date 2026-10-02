@@ -612,7 +612,15 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           >
             <X className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold">Generate Random Map</span>
+            <div className="flex gap-1.5">
+                <span className="text-sm font-semibold">Generate Random Map</span>
+                <FieldInfo text="One zone per player plus a neutral zone between each pair, each
+                                with its own biome/faction, roads connecting every zone, one
+                                river, and biome-appropriate scenery. Player zones get a
+                                faction-matched starting dwelling, mine, and guard; neutral
+                                zones get a mine (guarded to its own real economic value) and
+                                scaled treasure. No zone-shape variety yet." />
+            </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
@@ -636,13 +644,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-6 bg-[var(--column-center)] dark:bg-background">
               {showCore && (
-                <div className="space-y-6">
+                <div className={classicMode ? 'space-y-6 w-1/2 min-w-80 mx-auto' : 'space-y-6'}>
                   <div className="space-y-1.5">
                     <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
                     <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 w-60 min-w-60">
                     <div className="flex items-center gap-1">
                       <Label className="text-xs">Settings</Label>
                       <FieldInfo text="Classic: pick Richness, Complexity and Water below — everything else uses sensible defaults. Advanced: tune every slider yourself in the categories on the left. The two are never mixed: Classic ignores the Advanced sliders, and Advanced ignores the Classic selectors." />
@@ -755,15 +763,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     </div>
                     <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
                   </div>}
-
-                  <p className="text-xs text-muted-foreground">
-                    One zone per player plus a neutral zone between each pair, each
-                    with its own biome/faction, roads connecting every zone, one
-                    river, and biome-appropriate scenery. Player zones get a
-                    faction-matched starting dwelling, mine, and guard; neutral
-                    zones get a mine (guarded to its own real economic value) and
-                    scaled treasure. No zone-shape variety yet.
-                  </p>
                 </div>
               )}
 
@@ -1061,27 +1060,29 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           {/* Live-preview column (issue #232 design) — always its own
               column, not layered inline above the category content, so the
               rendering stays visible no matter which category is open. */}
-          <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2 bg-[var(--column-right)] dark:bg-card">
-            <Label className="text-xs font-semibold">Map Preview</Label>
-            {previewActive ? (
-              <div className="space-y-1.5">
-                <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
-                  <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
-                </div>
-                {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
-                {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
-                <p className="text-xs text-muted-foreground">
-                  {previewPhase === 'terrain'
-                    ? 'Tune terrain in the sidebar, then confirm to move on.'
-                    : previewPhase === 'roads'
-                      ? 'Tune road/river winding in the sidebar, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
-                      : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else in the sidebar, then Generate.'}
-                </p>
+            {!classicMode && (
+              <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2 bg-[var(--column-right)] dark:bg-card">
+                <Label className="text-xs font-semibold">Map Preview</Label>
+                {previewActive ? (
+                  <div className="space-y-1.5">
+                    <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
+                      <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
+                    </div>
+                    {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
+                    {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {previewPhase === 'terrain'
+                        ? 'Tune terrain in the sidebar, then confirm to move on.'
+                        : previewPhase === 'roads'
+                          ? 'Tune road/river winding in the sidebar, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
+                          : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else in the sidebar, then Generate.'}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Turn on Live preview (Start page) to see a live rendering here.</p>
+                )}
               </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">Turn on Live preview (Start page) to see a live rendering here.</p>
             )}
-          </div>
         </div>
 
         {genProgress && (
