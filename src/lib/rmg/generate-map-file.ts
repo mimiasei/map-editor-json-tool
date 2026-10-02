@@ -63,12 +63,20 @@ export async function previewTerrain(options: GenerateTerrainOptions): Promise<T
   return generateTerrain(loaded.template, loaded.catalogById, options)
 }
 
-/**
- * Build a brand-new random `.map` document in memory and load it into the
- * app exactly like Import Map/New Map would — with no file path yet.
- * Returns null only when not running in Tauri.
- */
-export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<(OpenMapResult & { balanceReport: BalanceReport; playerBalance: PlayerBalance | null; unreachablePlacements: UnreachablePlacement[]; isolatedPlayerStarts: IsolatedPlayerStart[] }) | null> {
+export interface GeneratedMapBytes {
+  bytes: Uint8Array
+  balanceReport: BalanceReport
+  playerBalance: PlayerBalance | null
+  unreachablePlacements: UnreachablePlacement[]
+  isolatedPlayerStarts: IsolatedPlayerStart[]
+  warnings: string[]
+}
+
+/** The whole generation pipeline up to the finished gzipped `.map` bytes,
+ *  with no editor-store side effects — shared by the dialog (via
+ *  `generateRandomMapFile`) and the headless CLI path (issue #258). Returns
+ *  `null` only when not running in Tauri. */
+export async function generateRandomMapBytes(options: GenerateRandomMapFileOptions): Promise<GeneratedMapBytes | null> {
   if (!isTauri()) return null
   const catalog = useCatalogStore.getState().catalog
   if (!catalog) throw new Error('Load Game Data first (More → Game Data) so map objects can be resolved.')
@@ -133,17 +141,29 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   options.onProgress?.('Writing map file', 98)
   await yieldToUI()
   const gzipped = await gzipBytes(buildMapContainer(fixed))
-  const buffer = gzipped.buffer.slice(gzipped.byteOffset, gzipped.byteOffset + gzipped.byteLength) as ArrayBuffer
 
-  const name = options.mapName.endsWith('.map') ? options.mapName : `${options.mapName}.map`
-  const result = await loadParsedMapFile(name, null, buffer)
-  // Same reasoning as createNewMap(): a generated map has nowhere on disk
-  // yet, so the dirty-dot/exit-guard must reflect that immediately.
-  useMapDocumentStore.setState({ mapIsDirty: true })
   options.onProgress?.('Done', 100)
   const playerBalance = computePlayerBalance(finalContext, catalog)
   const balanceWarnings = playerBalance && playerBalance.score < BALANCE_TARGET_SCORE && !options.gameTemplateJson
     ? [`Player fairness ${playerBalance.score}/100 (${playerBalance.verdict})${playerBalance.reasons.length > 0 ? ` — ${playerBalance.reasons.join('; ')}` : ''}`]
     : []
-  return { ...result, warnings: [...balanceWarnings, ...autoFixWarnings, ...result.warnings], balanceReport, playerBalance, unreachablePlacements, isolatedPlayerStarts }
+  return { bytes: gzipped, warnings: [...balanceWarnings, ...autoFixWarnings], balanceReport, playerBalance, unreachablePlacements, isolatedPlayerStarts }
+}
+
+/**
+ * Build a brand-new random `.map` document in memory and load it into the
+ * app exactly like Import Map/New Map would — with no file path yet.
+ * Returns null only when not running in Tauri.
+ */
+export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<(OpenMapResult & { balanceReport: BalanceReport; playerBalance: PlayerBalance | null; unreachablePlacements: UnreachablePlacement[]; isolatedPlayerStarts: IsolatedPlayerStart[] }) | null> {
+  const generated = await generateRandomMapBytes(options)
+  if (!generated) return null
+  const { bytes, warnings, ...reports } = generated
+  const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+  const name = options.mapName.endsWith('.map') ? options.mapName : `${options.mapName}.map`
+  const result = await loadParsedMapFile(name, null, buffer)
+  // Same reasoning as createNewMap(): a generated map has nowhere on disk
+  // yet, so the dirty-dot/exit-guard must reflect that immediately.
+  useMapDocumentStore.setState({ mapIsDirty: true })
+  return { ...result, warnings: [...warnings, ...result.warnings], ...reports }
 }

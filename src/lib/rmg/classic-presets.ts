@@ -85,3 +85,24 @@ export function randomInSliderBand(min: number, max: number, loPct: number, hiPc
     const t = loPct + rng() * (hiPct - loPct)
     return min + t * (max - min)
 }
+
+/** Classic mode's full option set: the resolved presets plus the per-
+ *  generation random terrain-feel values. Takes the generation's own `rng`
+ *  so a seeded run reproduces a Classic map exactly (these randoms used to
+ *  be drawn from `Math.random` regardless of the seed). Shared by the
+ *  dialog and the headless CLI path (issue #258). */
+export function buildClassicOptions(settings: ClassicSettings, rng: () => number) {
+  // Elevation: random 0–40%, same value for hills and valleys (the Elevation
+  // slider drives both equally, see elevationSliderValue in the dialog).
+  const elevation = rng() * 0.4
+  return {
+    ...DEFAULT_TEMPLATE_OVERRIDES,
+    ...resolveClassicSettings(settings),
+    zoneJaggedness: randomInSliderBand(0, 1, 0, 0.70, rng),
+    zoneSpread: randomInSliderBand(0.5, 1.8, 0.10, 1.0, rng),
+    organicTerrainBlending: randomInSliderBand(0, 1, 0, 0.50, rng),
+    hillChance: elevation,
+    valleyChance: elevation,
+    disabledInteractableSids: [] as string[],
+  }
+}
