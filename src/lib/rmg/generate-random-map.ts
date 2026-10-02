@@ -352,6 +352,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
     richness: richness ? RICHNESS_LEVELS.find((r) => r.id === richness) : undefined,
+    zoneAnchorNode, symmetricZones: !gameTemplateJson,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
@@ -365,7 +366,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const playerZoneIds = graph.zones.filter((z) => z.kind === 'player').map((z) => z.id)
   const proximityGuards = scatterProximityGuards({
     sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
-    catalogById, catalog, objectVariety, squadDensity, state, rng,
+    catalogById, catalog, objectVariety, squadDensity, state, rng, symmetricZones: !gameTemplateJson,
   })
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
@@ -611,6 +612,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // short zigzags the same way it always did.
   const roadSmoothWindow = Math.max(4, Math.round(roadWindingWavelength / 10))
   let unroutableEdges = 0
+  const ringEdgeSkipRoll = [rng(), rng()]
   // Islands: a real, hard rule (zone-islands.ts's own header comment has
   // the full story) — an island is reachable ONLY by portal, never a road,
   // regardless of the separate `usePortals` bonus-shortcut toggle. Every
@@ -711,7 +713,11 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // exist as real edges at all (a Proximity/GladiatorArena connection
     // was never added as one), so every edge that survives here is one the
     // template author actually wanted painted.
-    if (!gameTemplateJson && rng() >= roadFullConnectivityChance) continue
+    // Ring layout: the skip roll is shared by every edge of the same kind
+    // (player-to-own-neutral vs neutral-to-next-player), so no player ends up
+    // with a road/gate where another has none (issue #254).
+    const edgeSide = Math.min(a, b) % 2 === 0 && Math.abs(a - b) === 1 ? 0 : 1
+    if (!gameTemplateJson && ringEdgeSkipRoll[edgeSide] >= roadFullConnectivityChance) continue
     const from = roadEndpointForZone(a)
     const to = roadEndpointForZone(b)
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
@@ -987,7 +993,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
     zoneDistances, catalogById, mapObjects: catalog.mapObjects,
     catalog, objectVariety, mountainDensity, strength: boundaryGuardStrength, state, rng,
-    islandZoneIds, waterNodes: waterNodesAll,
+    islandZoneIds, waterNodes: waterNodesAll, symmetricZones: !gameTemplateJson,
   })
 
   // Obstacle scattering — fills whatever each zone has left over, sharing
@@ -1345,7 +1351,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // the zone-boundary chokepoint guards (empty if `boundaryGuardStrength`
   // was 'none').
   const zoneWealth = computeZoneWealth(
-    [...placements, ...proximityGuards.guardPlacements, ...boundaryResult.guardPlacements],
+    // Gate guards deliberately excluded: they obstruct a passage, they aren't
+    // wealth to collect, and `computeExitGuardsByZone` below already scores them
+    // as the players' exits (issue #254).
+    [...placements, ...proximityGuards.guardPlacements],
     zoneIdByNode,
   )
   const exitGuardsByZone = computeExitGuardsByZone(boundaryResult.guardPlacements, zoneIdByNode)

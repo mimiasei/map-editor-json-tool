@@ -19,6 +19,7 @@ import {
   randomInRange,
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
+import { createSeededRng } from './seeded-rng'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import {
@@ -115,6 +116,13 @@ export interface ScatterProximityGuardsOptions {
   squadDensity: number
   state: PlacementState
   rng: () => number
+  /** Built-in ring layout (no imported template): every player zone — and
+   *  separately every neutral zone — replays the same roll sequence, in
+   *  candidate order, so equivalent mines/dwellings get equivalent guards
+   *  (issue #254: random per-candidate rolls left one player's start with no
+   *  proximity guards at all and another's with 68k worth). Tile positions
+   *  stay independent. */
+  symmetricZones?: boolean
 }
 
 export interface ScatterProximityGuardsResult {
@@ -127,7 +135,16 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
   const concreteSquads: ConcreteSquadPlacement[] = []
   if (options.squadDensity <= 0) return { guardPlacements, concreteSquads }
 
-  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng } = options
+  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false } = options
+  const playerZoneSet = new Set(playerZoneIds)
+  const kindSeed = { player: Math.floor(posRng() * 0x7fffffff), neutral: Math.floor(posRng() * 0x7fffffff) }
+  const zoneRolls = new Map<number, () => number>()
+  const rollsFor = (zoneId: number): (() => number) => {
+    if (!symmetricZones) return posRng
+    let r = zoneRolls.get(zoneId)
+    if (!r) { r = createSeededRng(playerZoneSet.has(zoneId) ? kindSeed.player : kindSeed.neutral); zoneRolls.set(zoneId, r) }
+    return r
+  }
   const artifactSids = new Set(catalog ? collectArtifactSids(catalog) : [])
 
   const depthByZone = new Map<number, number>()
@@ -143,21 +160,24 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
 
   for (const candidate of placements) {
     if (!isGuardCandidate(candidate.sid, artifactSids)) continue
-    if (rng() >= squadDensity) continue
-
-    const guardNode = nearbyFreeTile(candidate.node, sizeX, sizeZ, state, rng)
-    if (guardNode === null) continue
-
     const zoneId = zoneIdByNode[candidate.node]
+    const rng = rollsFor(zoneId)
+    // Every roll happens BEFORE the (non-deterministic) position search, so a
+    // failed position can never desync a zone's replayed roll sequence.
+    if (rng() >= squadDensity) continue
     const depth = depthOf(zoneId)
     const labels = difficultyLabelsForDepth(depth)
     const range = pickSquadRange(labels, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
     const requestedValue = randomInRange(range.min, range.max, rng)
-    if (requestedValue < GUARD_VALUE_CUTOFF) continue
     const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
     const fraction = sampleFraction(biome, 0.7, rng)
+    const wantsConcrete = !!catalog && objectVariety !== undefined && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE
+    if (requestedValue < GUARD_VALUE_CUTOFF) continue
 
-    if (catalog && objectVariety !== undefined && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
+    const guardNode = nearbyFreeTile(candidate.node, sizeX, sizeZ, state, posRng)
+    if (guardNode === null) continue
+
+    if (wantsConcrete && catalog) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
       if (template) {
         state.usedAnchors.add(guardNode)

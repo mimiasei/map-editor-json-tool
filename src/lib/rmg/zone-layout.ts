@@ -35,6 +35,23 @@ function bfsOrder(graph: ZoneGraph): number[] {
     adjacency[a].push(b)
     adjacency[b].push(a)
   }
+  // A pure ring (every zone has exactly 2 neighbors — `buildZoneGraph`'s own
+  // topology) is walked around the cycle instead: a breadth-first order
+  // visits both neighbors of each zone before moving on, which zig-zags
+  // between the ring's two sides and spaced the players unevenly (issue #254).
+  if (n >= 3 && adjacency.every((nbrs) => new Set(nbrs).size === 2)) {
+    const walk = [0]
+    let prev = -1
+    let cur = 0
+    for (;;) {
+      const next = adjacency[cur].find((x) => x !== prev && x !== cur) as number
+      if (next === 0 || walk.length === n) break
+      walk.push(next)
+      prev = cur
+      cur = next
+    }
+    if (walk.length === n) return walk
+  }
   const visited = new Set<number>([0])
   const order = [0]
   const queue = [0]
@@ -59,14 +76,14 @@ function bfsOrder(graph: ZoneGraph): number[] {
 /** One center point per zone, indexed by zone id (`centers[zone.id]`),
  *  evenly spaced around an inset ring so no zone center sits at the very
  *  map edge. */
-export function layoutZoneCenters(sizeX: number, sizeZ: number, graph: ZoneGraph): ZoneCenter[] {
+export function layoutZoneCenters(sizeX: number, sizeZ: number, graph: ZoneGraph, radiusScale = 1): ZoneCenter[] {
   const order = bfsOrder(graph)
   const insetX = Math.max(1, Math.floor(sizeX * 0.12))
   const insetZ = Math.max(1, Math.floor(sizeZ * 0.12))
   const cx = (sizeX - 1) / 2
   const cz = (sizeZ - 1) / 2
-  const rx = cx - insetX
-  const rz = cz - insetZ
+  const rx = (cx - insetX) * radiusScale
+  const rz = (cz - insetZ) * radiusScale
   const n = order.length
 
   const centers: ZoneCenter[] = new Array(n)

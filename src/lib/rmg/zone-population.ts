@@ -18,6 +18,7 @@
 // (value-model.ts) rather than a flat difficulty pick — the "treasure zone"
 // VCMI's own template format calls this same role.
 
+import { createSeededRng } from './seeded-rng'
 import type { CatalogMapObject, CatalogObjectLogic, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import {computeFootprintTiles, protectedNeighborNodes} from '@/lib/map-grid/footprint'
@@ -328,6 +329,15 @@ export interface PopulateZonesOptions {
    *  `treasureDensity` x per-zone `treasureScale`. Treasure COUNT still follows
    *  `treasureDensity`. */
   richness?: { pool: 'poor' | 'medium' | 'rich'; tier: number }
+  /** zone id -> its anchor tile (a player zone's own city node). Lets every
+   *  player's starting mines/dwelling/dust be placed at the SAME distance from
+   *  their own city (issue #254). Omitted: placed anywhere in the zone, as before. */
+  zoneAnchorNode?: Map<number, number>
+  /** Built-in ring layout (no imported template): every neutral zone replays
+   *  the SAME content roll sequence (same mine type, treasure count, pool
+   *  picks, guard values) so each player's neighbouring neutral zones are
+   *  worth the same (issue #254). Tile positions stay independent. */
+  symmetricZones?: boolean
   /** Needed for object-variety.ts's concrete-alternative pools (real
    *  artifact sids, squad templates) — omit to keep every treasure/guard a
    *  `random-item`/`random-squad` placeholder (this function's original
@@ -411,10 +421,15 @@ export interface PopulateZonesResult {
 
 export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
   const {
-    sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
+    sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
-    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness,
+    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, zoneAnchorNode, symmetricZones = false,
   } = options
+  // `rng` is the CONTENT stream (what gets rolled: pool picks, guard values,
+  // counts); `posRng` is the positional one (which free tile). Splitting them
+  // lets neutral zones replay identical content despite differing tile layouts.
+  let contentRng: () => number = posRng
+  const rng = (): number => contentRng()
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
   // True overall span of RMG_GUARD_DIFFICULTY_RANGES' real bands (Easy
@@ -444,9 +459,44 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   }
 
   const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides'], randomHireOverrides?: ZonePlacement['randomHireOverrides']): void => {
-    const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, rng)
+    const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, posRng)
     if (node === null) return
     placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides, randomCityOverrides, randomHireOverrides })
+  }
+
+  /** Places `sid` on a free tile whose distance from `anchorNode` is within
+   *  1.5 of `targetDistance` — the building block for giving every player the
+   *  same start layout (issue #254). Falls back to an unconstrained `place`
+   *  when no such tile is free. */
+  const placeAtDistance = (sid: string, tiles: number[], anchorNode: number | undefined, targetDistance: number): void => {
+    if (anchorNode !== undefined) {
+      const ax = anchorNode % sizeX
+      const az = Math.floor(anchorNode / sizeX)
+      const ring = tiles.filter((n) => Math.abs(Math.hypot((n % sizeX) - ax, Math.floor(n / sizeX) - az) - targetDistance) <= 1.5)
+      if (ring.length > 0) {
+        const node = tryPlace(sid, ring, sizeX, sizeZ, catalogById, state, posRng, 40)
+        if (node !== null) {
+          placements.push({ tempId: state.nextTempId++, sid, node })
+          return
+        }
+      }
+    }
+    place(sid, tiles)
+  }
+
+  /** The player start kit is rolled ONCE per generation and reused for every
+   *  player (issue #254): measured over 12 seeds, per-player mine distances
+   *  differed by ~60% and start-guard strength by whatever the random band
+   *  produced. Distances are ranges the real maps show (see the player-zone
+   *  comment below: wood/ore 3-17, dust 2-10, gold 7-45 tiles from spawn). */
+  const startKit = {
+    dwelling: randomInRange(3, 6, rng),
+    mine_wood: randomInRange(5, 11, rng),
+    mine_ore: randomInRange(5, 11, rng),
+    resource_dust: randomInRange(3, 8, rng),
+    mine_gold: randomInRange(9, 17, rng),
+    guardRange: pickSquadRange(['Easy'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng),
+    guardRoll: rng(),
   }
 
   /** `random-item.rarity` fallback weights — the exact real distribution
@@ -572,7 +622,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     if (catalog && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
       if (template) {
-        const node = pickFreeTile(tiles, state, rng)
+        const node = pickFreeTile(tiles, state, posRng)
         if (node !== null) {
           concreteSquads.push({ tempId: state.nextTempId++, sid: template.id, node })
           return
@@ -601,13 +651,18 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const medianResourceValue = neutralResourceValues.length > 0 ? neutralResourceValues[Math.floor(neutralResourceValues.length / 2)] : undefined
 
   let mineIndex = 0
+  const neutralContentSeed = Math.floor(posRng() * 0x7fffffff)
+  const neutralTileCounts = zones.filter((z) => z.kind === 'neutral').map((z) => tilesByZone.get(z.id)?.length ?? 0)
+  const meanNeutralTiles = neutralTileCounts.length > 0 ? Math.round(neutralTileCounts.reduce((a, b) => a + b, 0) / neutralTileCounts.length) : 0
   for (const zone of zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
     if (tiles.length === 0) continue
+    contentRng = symmetricZones && zone.kind === 'neutral' ? createSeededRng(neutralContentSeed) : posRng
     const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
 
     if (zone.kind === 'player') {
-      place(`barracks_${dwellingFactionToken(biome)}_1`, tiles)
+      const cityNode = zoneAnchorNode?.get(zone.id)
+      placeAtDistance(`barracks_${dwellingFactionToken(biome)}_1`, tiles, cityNode, startKit.dwelling)
 
       // Every player start needs its own wood + ore mine (this game's real
       // "wood + ore" building-cost pair — there is no `mine_stone`), a gold
@@ -633,16 +688,16 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // diluted the map-wide guard-value median on small maps just from
       // sheer guard-count volume, and the user's own request was about
       // resource PRESENCE at player start, not guard density there.
-      for (const mineSid of ['mine_wood', 'mine_ore', 'mine_gold']) place(mineSid, tiles)
-      place('resource_dust', tiles)
-      const range = pickSquadRange(['Easy'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
+      for (const mineSid of ['mine_wood', 'mine_ore', 'mine_gold'] as const) placeAtDistance(mineSid, tiles, cityNode, startKit[mineSid])
+      placeAtDistance('resource_dust', tiles, cityNode, startKit.resource_dust)
+      const range = startKit.guardRange
       // PLAYER_ZONE_GUARD_MULTIPLIER: real RMG templates' own spawn-zone
       // guardMultiplier (0.5-0.84) softens guards in the player's own start
       // zone specifically — guard-value-bands.ts's own doc comment has the
       // full rationale.
       placeGuard(
         tiles,
-        Math.round(randomInRange(range.min, range.max, rng) * PLAYER_ZONE_GUARD_MULTIPLIER),
+        Math.round((range.min + startKit.guardRoll * (range.max - range.min)) * PLAYER_ZONE_GUARD_MULTIPLIER),
         sampleFraction(biome, 0.8, rng),
         guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF,
       )
@@ -660,7 +715,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // biome is Sand AND the strength option is active, so every non-Sand
       // zone (and every zone at all when the option is 0/omitted) takes
       // the exact same rng()-call path as before this feature existed.
-      const roundRobinSid = MINE_SIDS[mineIndex % MINE_SIDS.length]
+      const roundRobinSid = MINE_SIDS[(symmetricZones ? neutralContentSeed : mineIndex) % MINE_SIDS.length]
       const goldChance = clamp01((1 / MINE_SIDS.length) * scaleMultiplier(SAND_GOLD_MINE_ENRICHMENT, mineGoldBiomeBiasStrength))
       const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance
         ? 'mine_gold'
@@ -690,7 +745,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // Fun_and_Graves.map (123) almost exactly — while a typical smaller
       // zone's own count is unchanged (the cap essentially never fired for
       // realistic zone sizes anyway).
-      const baseTreasureCount = 1 + Math.floor(tiles.length / 150)
+      const baseTreasureCount = 1 + Math.floor((symmetricZones ? meanNeutralTiles : tiles.length) / 150)
 
       // `treasureScale`: this zone's own real `resourcesValue` relative to
       // its neutral-zone siblings (see `medianResourceValue` above) — a
@@ -773,6 +828,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),
     )
     const allFactions = ZONE_BIOMES.map((b) => BIOME_FACTION[b]).filter((f): f is string => !!f)
+    contentRng = posRng
     const remainingZones = [...neutralZones]
     for (let i = 0; i < randomCityCount && remainingZones.length > 0; i++) {
       const zoneIndex = Math.floor(rng() * remainingZones.length)
