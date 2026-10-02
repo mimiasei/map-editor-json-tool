@@ -41,7 +41,7 @@ const ROAD_AVOIDANCE_STRENGTH = 1.5
  */
 export function previewRoads(terrain: TerrainResult, options: PreviewRoadsOptions = {}): PreviewRoadsResult {
   const { roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random } = options
-  const { sizeX, sizeZ, graph, zoneDistances, zoneAnchorNode, waterNodesAll } = terrain
+  const { sizeX, sizeZ, graph, zoneDistances, zoneAnchorNode } = terrain
   const blocked = new Set(terrain.state.blocked)
 
   const roadNodes = new Set<number>()
@@ -53,11 +53,7 @@ export function previewRoads(terrain: TerrainResult, options: PreviewRoadsOption
     const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
     const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
     const combinedCost = (x: number, z: number): number => windingCost(x, z) + avoidanceCost(x, z)
-    let path = shortestPath(sizeX, sizeZ, from, to, blocked, combinedCost)
-    if (!path && waterNodesAll.size > 0) {
-      const blockedWithoutWater = new Set([...blocked].filter((n) => !waterNodesAll.has(n)))
-      path = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWater, combinedCost)
-    }
+    const path = shortestPath(sizeX, sizeZ, from, to, blocked, combinedCost)
     if (path) {
       const smoothed = smoothPath(path, sizeX, blocked, roadSmoothWindow)
       for (const node of smoothed) roadNodes.add(node)

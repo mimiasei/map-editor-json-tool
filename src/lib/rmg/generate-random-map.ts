@@ -389,12 +389,19 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const portalPlacements: ZonePlacement[] = []
   const portalAdjacency = new Map<number, number>()
 
+  // Road endpoints besides zone anchors (see `roadEndpointForZone`) — lakes
+  // must leave these reachable too, or a road to one has no land route.
+  const MINE_SIDS_LOCAL = new Set(['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury'])
+  const WEEKLY_RESOURCE_SIDS = new Set(['windmill'])
+  const isNotableSid = (sid: string): boolean => MINE_SIDS_LOCAL.has(sid) || WEEKLY_RESOURCE_SIDS.has(sid) || sid === 'random-city'
+  const roadPoiNodes = [...placements, ...concreteSquads].filter((p) => isNotableSid(p.sid)).map((p) => p.node)
+
   await reportProgress('Adding water', 25)
   if (waterContent === 'normal') {
     const { chanceByZone, minSizeByZone } = deriveWaterOverrides(zoneLayoutByZoneId)
     const waterResult = scatterZoneWater({
       sizeX, sizeZ, zones: graph.zones, tilesByZone,
-      excludedNodes: new Set(zoneAnchorNode.values()),
+      excludedNodes: new Set(zoneAnchorNode.values()), connectNodes: roadPoiNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
       chanceByZone, minSizeByZone,
     })
@@ -556,11 +563,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const roadNodes = new Set<number>()
   const roadIdByNode = new Map<number, number>()
   const roadPathsByEdge = new Map<string, number[]>()
-  const reclaimedWaterNodes = new Set<number>()
   // A road route that needed to cross an elevation wall gets a ramp punched
   // through the exact tile it used (never a level change — see the repair
   // block below), same "carve exactly what a real route needed" convention
-  // as `reclaimedWaterNodes` above.
+  // as a road's own land route.
   const roadClimbChanges: { node: number; climb: 1 }[] = []
   // "Points of interest" a road should prefer over a zone's own abstract
   // anchor — real user request. Mines (`MINE_SIDS`, this file's own local
@@ -569,9 +575,6 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // in one place) + weekly-resource interactables (`windmill` confirmed
   // real via Core/DB/map/objects/4_interactables.json; a short starter
   // list, not claimed exhaustive) + `random-city` (Phase 2, this session).
-  const MINE_SIDS_LOCAL = new Set(['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury'])
-  const WEEKLY_RESOURCE_SIDS = new Set(['windmill'])
-  const isNotableSid = (sid: string): boolean => MINE_SIDS_LOCAL.has(sid) || WEEKLY_RESOURCE_SIDS.has(sid) || sid === 'random-city'
   const notableNodesByZone = new Map<number, number[]>()
   for (const p of [...placements, ...concreteSquads]) {
     if (!isNotableSid(p.sid)) continue
@@ -738,17 +741,16 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // path used gets a ramp punched through it (climb=1, level UNCHANGED —
     // unlike water, there's no "flatten it back to land" equivalent for a
     // hill/valley, a ramp is the correct fix) instead of being reclaimed.
-    if (!path && (waterNodesAll.size > 0 || elevationWallNodesAll.size > 0)) {
-      const blockedWithoutWaterOrWalls = new Set([...state.blocked].filter((n) => !waterNodesAll.has(n) && !elevationWallNodesAll.has(n)))
-      const repairPath = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWaterOrWalls, combinedCost)
+    // Water is deliberately NOT part of this retry any more (issue #251): it
+    // used to reclaim the lake tiles a route crossed back to land, drawing a
+    // road straight across the lake. Lakes now can't disconnect the map in
+    // the first place (scatterZoneWater), so a road never needs to.
+    if (!path && elevationWallNodesAll.size > 0) {
+      const blockedWithoutWalls = new Set([...state.blocked].filter((n) => !elevationWallNodesAll.has(n)))
+      const repairPath = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWalls, combinedCost)
       if (repairPath) {
         for (const node of repairPath) {
-          if (waterNodesAll.has(node)) {
-            waterNodesAll.delete(node)
-            reclaimedWaterNodes.add(node)
-            state.blocked.delete(node)
-            state.usedAnchors.delete(node)
-          } else if (elevationWallNodesAll.has(node)) {
+          if (elevationWallNodesAll.has(node)) {
             // A ramp is only ever legal on the LOWER side of the boundary
             // (isValidRampNode's real rule — MapGridDialog.tsx) — for a
             // valley wall tile (level -1) that's the tile itself; for a
@@ -846,14 +848,6 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
   }
 
-  if (reclaimedWaterNodes.size > 0) {
-    block2 = paintWaterTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, waterId: 0 })))
-    block2 = paintLevelTiles(block2, [...reclaimedWaterNodes].map((node) => ({ node, level: 0 })))
-    for (const node of reclaimedWaterNodes) {
-      waterMapFinal[node] = 0
-      levelsMapFinal[node] = 0
-    }
-  }
   if (roadClimbChanges.length > 0) block2 = paintClimbTiles(block2, roadClimbChanges)
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
