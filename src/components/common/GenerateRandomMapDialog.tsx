@@ -58,6 +58,7 @@ import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDial
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
+import { COMPLEXITY_LEVELS, DEFAULT_CLASSIC_SETTINGS, RICHNESS_LEVELS, WATER_LEVELS, resolveClassicSettings, type ClassicSettings } from '@/lib/rmg/classic-presets'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
 import { describeUnreachablePlacement, describeIsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
@@ -176,6 +177,10 @@ function RerollButton({ onClick, disabled, title }: { onClick: () => void; disab
 }
 
 export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerated }: Props) {
+  // Classic (3 word selectors) vs Advanced (the category nav + sliders) —
+  // either-or, never mixed (issue #250).
+  const [mode, setMode] = useState<'classic' | 'advanced'>('classic')
+  const [classic, setClassic] = useState<ClassicSettings>(DEFAULT_CLASSIC_SETTINGS)
   const [mapName, setMapName] = useState('Random Map')
   const [sizeKey, setSizeKey] = useState(DEFAULT_SIZE_KEY)
   const [playerCount, setPlayerCount] = useState(2)
@@ -269,17 +274,19 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // it, so the 'all' stage (a real user request) only ever shows the
   // object/guard/decoration categories, not a "one more pass" reopening of
   // the earlier stages' own controls.
-  const showCore = activeCategory === 'core'
-  const showTerrainSliders = activeCategory === 'terrain' && (previewPhase === 'off' || previewPhase === 'terrain')
-  const showBiomesFields = activeCategory === 'biomes' && (previewPhase === 'off' || previewPhase === 'terrain')
-  const showRoadSliders = activeCategory === 'roads' && (previewPhase === 'off' || previewPhase === 'roads')
+  const classicMode = mode === 'classic'
+  const shownCategory: Category = classicMode ? 'core' : activeCategory
+  const showCore = shownCategory === 'core'
+  const showTerrainSliders = shownCategory === 'terrain' && (previewPhase === 'off' || previewPhase === 'terrain')
+  const showBiomesFields = shownCategory === 'biomes' && (previewPhase === 'off' || previewPhase === 'terrain')
+  const showRoadSliders = shownCategory === 'roads' && (previewPhase === 'off' || previewPhase === 'roads')
   // The 'all' stage is a real user request: every remaining category shown
   // at once for one last adjustment pass, not gated by nav selection (see
   // this file's own header comment, stage 3) — so these three ignore
   // activeCategory entirely once previewPhase reaches 'all'.
-  const showSceneryFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'scenery')
-  const showEconomyFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'economy')
-  const showConnectivityFields = previewPhase === 'all' || (previewPhase === 'off' && activeCategory === 'connectivity')
+  const showSceneryFields = (!classicMode && previewPhase === 'all') || (previewPhase === 'off' && shownCategory === 'scenery')
+  const showEconomyFields = (!classicMode && previewPhase === 'all') || (previewPhase === 'off' && shownCategory === 'economy')
+  const showConnectivityFields = (!classicMode && previewPhase === 'all') || (previewPhase === 'off' && shownCategory === 'connectivity')
 
   const drawTerrainCanvas = (tilesMap: number[], waterMap: number[], levelsMap?: number[], roadNodes?: Set<number>) => {
     const canvas = canvasRef.current
@@ -373,6 +380,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     setGenProgress({ pct: 0, label: 'Starting…' })
     try {
       const seed = seedText.trim() ? Number(seedText) : undefined
+      const opts = classicMode
+        ? { ...DEFAULT_TEMPLATE_OVERRIDES, ...resolveClassicSettings(classic), disabledInteractableSids: [] as string[] }
+        : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined }
       const result = await generateRandomMapFile({
         mapName,
         onProgress: (label, pct) => setGenProgress({ label, pct }),
@@ -380,32 +390,33 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         sizeZ: selectedSize.sizeZ,
         playerCount,
         playerSpawnerSid: 'city-spawner',
-        waterContent,
-        waterChance,
-        islandsIncludePlayerZones,
-        islandLandRatio,
-        hillChance,
-        valleyChance,
-        obstacleDensity,
-        interactableDensity,
-        mountainDensity,
-        treasureDensity,
-        objectVariety,
-        usePortals,
-        zoneJaggedness,
-        zoneSpread,
-        boundaryGuardStrength,
-        squadDensity,
-        roadWindingAmplitude,
-        roadWindingWavelength,
-        organicTerrainBlending,
-        decorationRoadDecayStrength,
-        decorationCoOccurrenceStrength,
-        decorationElevationDecayStrength,
-        mineGoldBiomeBiasStrength,
-        disabledInteractableSids: [...disabledInteractableSids],
+        waterContent: opts.waterContent,
+        waterChance: opts.waterChance,
+        islandsIncludePlayerZones: opts.islandsIncludePlayerZones,
+        islandLandRatio: opts.islandLandRatio,
+        hillChance: opts.hillChance,
+        valleyChance: opts.valleyChance,
+        obstacleDensity: opts.obstacleDensity,
+        interactableDensity: opts.interactableDensity,
+        mountainDensity: opts.mountainDensity,
+        treasureDensity: opts.treasureDensity,
+        objectVariety: opts.objectVariety,
+        usePortals: opts.usePortals,
+        zoneJaggedness: opts.zoneJaggedness,
+        zoneSpread: opts.zoneSpread,
+        boundaryGuardStrength: opts.boundaryGuardStrength,
+        squadDensity: opts.squadDensity,
+        roadWindingAmplitude: opts.roadWindingAmplitude,
+        roadWindingWavelength: opts.roadWindingWavelength,
+        organicTerrainBlending: opts.organicTerrainBlending,
+        decorationRoadDecayStrength: opts.decorationRoadDecayStrength,
+        decorationCoOccurrenceStrength: opts.decorationCoOccurrenceStrength,
+        decorationElevationDecayStrength: opts.decorationElevationDecayStrength,
+        mineGoldBiomeBiasStrength: opts.mineGoldBiomeBiasStrength,
+        disabledInteractableSids: opts.disabledInteractableSids,
+        richness: opts.richness,
         terrainOnly,
-        enabledBiomes: enabledBiomesList,
+        enabledBiomes: opts.enabledBiomes,
         gameTemplateJson: gameTemplate?.json,
         rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
       })
@@ -513,6 +524,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       }
       const size = matchedPreset ?? closestPreset(template.sizeX, template.sizeZ)
       setSizeKey(presetKey(size))
+      setMode('advanced') // a loaded template's values live in the Advanced sliders
       setPlayerCount(template.playerCount)
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
@@ -600,11 +612,19 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           >
             <X className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold">Generate Random Map</span>
+            <div className="flex gap-1.5">
+                <span className="text-sm font-semibold">Generate Random Map</span>
+                <FieldInfo text="One zone per player plus a neutral zone between each pair, each
+                                with its own biome/faction, roads connecting every zone, one
+                                river, and biome-appropriate scenery. Player zones get a
+                                faction-matched starting dwelling, mine, and guard; neutral
+                                zones get a mine (guarded to its own real economic value) and
+                                scaled treasure. No zone-shape variety yet." />
+            </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          <nav className="w-60 shrink-0 border-r border-border overflow-y-auto p-2 space-y-1 bg-[var(--column-left)] dark:bg-card">
+          {!classicMode && <nav className="w-60 shrink-0 border-r border-border overflow-y-auto p-2 space-y-1 bg-[var(--column-left)] dark:bg-card">
             {CATEGORIES.map((cat) => {
               const allowed = NAV_STAGE_ALLOWED[previewPhase]
               const disabled = allowed !== null && !allowed.includes(cat.id)
@@ -620,14 +640,34 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                 </button>
               )
             })}
-          </nav>
+          </nav>}
 
           <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-6 bg-[var(--column-center)] dark:bg-background">
               {showCore && (
-                <div className="space-y-6">
+                <div className={classicMode ? 'space-y-6 w-1/2 min-w-80 mx-auto' : 'space-y-6'}>
                   <div className="space-y-1.5">
                     <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
                     <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
+                  </div>
+
+                  <div className="space-y-1.5 w-60 min-w-60">
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs">Settings</Label>
+                      <FieldInfo text="Classic: pick Richness, Complexity and Water below — everything else uses sensible defaults. Advanced: tune every slider yourself in the categories on the left. The two are never mixed: Classic ignores the Advanced sliders, and Advanced ignores the Classic selectors." />
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+                      {(['classic', 'advanced'] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          disabled={previewActive}
+                          onClick={() => setMode(m)}
+                          className={`text-sm rounded px-3 py-1 disabled:opacity-50 ${mode === m ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          {m === 'classic' ? 'Classic' : 'Advanced'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -656,7 +696,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Game template</Label>
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs">Game template</Label>
+                      <FieldInfo text="A game template is a real Olden Era map-generator layout. Using one replaces this generator's own zone layout with the template's zones and connections (and its player count), and applies its per-zone settings: zone size, lake amount, guard strength, how rich each zone's content is, content limits, road types, and the template's game rules and bans. Terrain, objects and decoration are still generated by this tool." />
+                    </div>
                     {gameTemplate ? (
                       <div className="flex items-center gap-2">
                         <span className="text-sm flex-1 truncate" title={gameTemplate.name}>{gameTemplate.name}</span>
@@ -670,6 +713,29 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                       </Button>
                     )}
                   </div>
+
+                  {classicMode && (
+                    <>
+                      {([
+                        ['Richness', 'How valuable the treasure is — from poor piles and cheap buildings to rich ones with powerful artifacts. Uses the game\'s own richness tiers.', classic.richness, 'richness', RICHNESS_LEVELS],
+                        ['Complexity', 'How busy the map is — scales decoration, interactable objects, treasure piles and guard squads together.', classic.complexity, 'complexity', COMPLEXITY_LEVELS],
+                        ['Water', 'How much water: none, a few to many lakes, or islands reached by portals.', classic.water, 'water', WATER_LEVELS],
+                      ] as const).map(([label, info, value, key, options]) => (
+                        <div key={key} className="space-y-1.5">
+                          <div className="flex items-center gap-1">
+                            <Label className="text-xs">{label}</Label>
+                            <FieldInfo text={info} />
+                          </div>
+                          <Select value={value} onValueChange={(v) => setClassic((prev) => ({ ...prev, [key]: v }))} disabled={terrainLocked}>
+                            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {options.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ))}
+                    </>
+                  )}
 
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
@@ -690,22 +756,13 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     <Switch id="rmg-terrain-only" checked={terrainOnly} onCheckedChange={setTerrainOnly} disabled={previewActive} />
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  {!classicMode && <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <Label htmlFor="rmg-live-preview" className="text-xs">Live preview</Label>
                       <FieldInfo text="Preview the terrain (and, unless Terrain only, roads/rivers) live before committing — tune sliders, watch the canvas update, then confirm each stage." />
                     </div>
                     <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    One zone per player plus a neutral zone between each pair, each
-                    with its own biome/faction, roads connecting every zone, one
-                    river, and biome-appropriate scenery. Player zones get a
-                    faction-matched starting dwelling, mine, and guard; neutral
-                    zones get a mine (guarded to its own real economic value) and
-                    scaled treasure. No zone-shape variety yet.
-                  </p>
+                  </div>}
                 </div>
               )}
 
@@ -1003,27 +1060,29 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
           {/* Live-preview column (issue #232 design) — always its own
               column, not layered inline above the category content, so the
               rendering stays visible no matter which category is open. */}
-          <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2 bg-[var(--column-right)] dark:bg-card">
-            <Label className="text-xs font-semibold">Map Preview</Label>
-            {previewActive ? (
-              <div className="space-y-1.5">
-                <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
-                  <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
-                </div>
-                {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
-                {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
-                <p className="text-xs text-muted-foreground">
-                  {previewPhase === 'terrain'
-                    ? 'Tune terrain in the sidebar, then confirm to move on.'
-                    : previewPhase === 'roads'
-                      ? 'Tune road/river winding in the sidebar, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
-                      : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else in the sidebar, then Generate.'}
-                </p>
+            {!classicMode && (
+              <div className="w-96 shrink-0 border-l border-border overflow-y-auto p-4 space-y-2 bg-[var(--column-right)] dark:bg-card">
+                <Label className="text-xs font-semibold">Map Preview</Label>
+                {previewActive ? (
+                  <div className="space-y-1.5">
+                    <div className="mx-auto rounded border border-border overflow-hidden bg-muted/30" style={{ width: PREVIEW_CANVAS_SIZE, height: PREVIEW_CANVAS_SIZE }}>
+                      <canvas ref={canvasRef} className="w-full h-full [image-rendering:pixelated]" />
+                    </div>
+                    {previewBusy && <p className="text-xs text-muted-foreground text-center">Rendering preview…</p>}
+                    {previewError && <p className="text-xs text-destructive text-center">{previewError}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {previewPhase === 'terrain'
+                        ? 'Tune terrain in the sidebar, then confirm to move on.'
+                        : previewPhase === 'roads'
+                          ? 'Tune road/river winding in the sidebar, then confirm. Final roads (and any water an object later needs to avoid) may shift slightly once the rest of the map generates.'
+                          : 'Terrain and roads/rivers are confirmed. Adjust obstacles, treasure, guards, and everything else in the sidebar, then Generate.'}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Turn on Live preview (Start page) to see a live rendering here.</p>
+                )}
               </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">Turn on Live preview (Start page) to see a live rendering here.</p>
             )}
-          </div>
         </div>
 
         {genProgress && (

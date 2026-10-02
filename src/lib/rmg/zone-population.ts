@@ -323,6 +323,11 @@ export interface PopulateZonesOptions {
    *  own default zone-size scaling, 2 = double, 0 = none. Template-driven
    *  (see template.ts), defaults to 1 for callers that don't care. */
   treasureDensity?: number
+  /** Classic mode's explicit richness (issue #250): pins every neutral zone's
+   *  content-pool label and building tier instead of deriving them from
+   *  `treasureDensity` x per-zone `treasureScale`. Treasure COUNT still follows
+   *  `treasureDensity`. */
+  richness?: { pool: 'poor' | 'medium' | 'rich'; tier: number }
   /** Needed for object-variety.ts's concrete-alternative pools (real
    *  artifact sids, squad templates) — omit to keep every treasure/guard a
    *  `random-item`/`random-squad` placeholder (this function's original
@@ -408,7 +413,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
-    mineGoldBiomeBiasStrength = 0, disabledInteractableSids,
+    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness,
   } = options
   const placements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
@@ -702,8 +707,10 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // doc comment has the full reasoning) — recomputed per neutral zone
       // since `treasureScale` itself is zone-specific.
       const zoneRichness01 = clamp01((treasureDensity * treasureScale) / 3)
-      currentRichnessLabel = zoneRichness01 < 0.25 ? 'very_poor' : zoneRichness01 < 0.5 ? 'poor' : zoneRichness01 < 0.75 ? 'medium' : 'rich'
-      currentBuildingTier = Math.round(zoneRichness01 * 5)
+      // No `treasure_zone_very_poor` pool exists in Core/generator (only
+      // zero/poor/medium/rich), so the lowest bucket uses `poor`.
+      currentRichnessLabel = richness ? richness.pool : zoneRichness01 < 0.5 ? 'poor' : zoneRichness01 < 0.75 ? 'medium' : 'rich'
+      currentBuildingTier = richness ? richness.tier : Math.round(zoneRichness01 * 5)
       // A deterministic item count, not a probabilistic value-budget spend —
       // issue #240 Phase 2 removed `RARITY_AVERAGE_COST`'s role as a per-item
       // "cost" unit (there's no real per-item cost figure once sampling

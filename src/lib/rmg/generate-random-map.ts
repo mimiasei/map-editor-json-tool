@@ -63,6 +63,7 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, s
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
+import { RICHNESS_LEVELS, type RmgRichness } from './classic-presets'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { PORTAL_SIDS, selectIslandConnections } from './zone-islands'
@@ -257,6 +258,8 @@ export interface GenerateRandomMapOptions {
    *  own dedicated scatter pass. Empty/omitted (the default) is today's
    *  exact behavior — every real interactable stays eligible. */
   disabledInteractableSids?: string[]
+  /** Classic mode's richness selector (issue #250) — see `populateZones`. */
+  richness?: RmgRichness
   /** Optional staged-progress reporter — see `RmgProgressCallback`'s own doc
    *  comment. Purely observational: never changes what's generated, only
    *  when the caller finds out about it. */
@@ -279,7 +282,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, onProgress } = options
   const disabledInteractableSidSet = disabledInteractableSids && disabledInteractableSids.length > 0 ? new Set(disabledInteractableSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
@@ -348,6 +351,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
+    richness: richness ? RICHNESS_LEVELS.find((r) => r.id === richness) : undefined,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
