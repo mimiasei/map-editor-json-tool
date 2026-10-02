@@ -22,6 +22,7 @@ import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { extractMapContext } from '@/lib/map-extract'
 import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
 import { yieldToUI } from '@/lib/async-utils'
+import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
 
 /** A generation scoring below this is re-rolled (up to `MAX_BALANCE_ATTEMPTS`
  *  total); the best-scoring attempt wins. */
@@ -67,7 +68,7 @@ export async function previewTerrain(options: GenerateTerrainOptions): Promise<T
  * app exactly like Import Map/New Map would — with no file path yet.
  * Returns null only when not running in Tauri.
  */
-export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<(OpenMapResult & { balanceReport: BalanceReport; unreachablePlacements: UnreachablePlacement[]; isolatedPlayerStarts: IsolatedPlayerStart[] }) | null> {
+export async function generateRandomMapFile(options: GenerateRandomMapFileOptions): Promise<(OpenMapResult & { balanceReport: BalanceReport; playerBalance: PlayerBalance | null; unreachablePlacements: UnreachablePlacement[]; isolatedPlayerStarts: IsolatedPlayerStart[] }) | null> {
   if (!isTauri()) return null
   const catalog = useCatalogStore.getState().catalog
   if (!catalog) throw new Error('Load Game Data first (More → Game Data) so map objects can be resolved.')
@@ -86,16 +87,22 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   const reportWindow = (lo: number, hi: number, prefix: string) => (label: string, pct: number): void => {
     options.onProgress?.(`${prefix}${label}`, Math.round(lo + (pct / 100) * (hi - lo)))
   }
+  // One fairness score everywhere (issue #255): the same `computePlayerBalance`
+  // the Stats panel shows, measured on the finished map, decides the re-roll.
+  const fairnessOf = (result: { container: MapContainer }): number =>
+    computePlayerBalance(extractMapContext(containerToRawBlocks(result.container)), catalog)?.score ?? 100
   let best = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(0, 60, '') })
-  options.onProgress?.(`Checking fairness of player zones (score ${best.balanceReport.score ?? 'n/a'}/100)`, 60)
+  let bestScore = fairnessOf(best)
+  options.onProgress?.(`Checking fairness of player zones (score ${bestScore}/100)`, 60)
   await yieldToUI()
-  for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && !options.gameTemplateJson && !options.terrainOnly && (best.balanceReport.score ?? 100) < BALANCE_TARGET_SCORE; attempt++) {
+  for (let attempt = 2; attempt <= MAX_BALANCE_ATTEMPTS && !options.gameTemplateJson && !options.terrainOnly && bestScore < BALANCE_TARGET_SCORE; attempt++) {
     const lo = 60 + (attempt - 2) * 10
-    const prefix = `Rebalancing players (try ${attempt}/${MAX_BALANCE_ATTEMPTS}, best fairness ${best.balanceReport.score}/100) — `
+    const prefix = `Rebalancing players (try ${attempt}/${MAX_BALANCE_ATTEMPTS}, best fairness ${bestScore}/100) — `
     options.onProgress?.(`${prefix}starting over`, lo)
     await yieldToUI()
     const next = await generateRandomMap(loaded.template, catalog, { ...options, onProgress: reportWindow(lo, lo + 10, prefix) })
-    if ((next.balanceReport.score ?? 0) > (best.balanceReport.score ?? 0)) best = next
+    const nextScore = fairnessOf(next)
+    if (nextScore > bestScore) { best = next; bestScore = nextScore }
   }
   options.onProgress?.('Player zones balanced', 90)
   const { container, balanceReport } = best
@@ -134,8 +141,9 @@ export async function generateRandomMapFile(options: GenerateRandomMapFileOption
   // yet, so the dirty-dot/exit-guard must reflect that immediately.
   useMapDocumentStore.setState({ mapIsDirty: true })
   options.onProgress?.('Done', 100)
-  const balanceWarnings = balanceReport.score !== null && balanceReport.score < BALANCE_TARGET_SCORE
-    ? [`Balance score ${balanceReport.score}/100 — ${balanceReport.findings.filter((f) => f.severity !== 'ok').map((f) => f.message).join(' ')}`]
+  const playerBalance = computePlayerBalance(finalContext, catalog)
+  const balanceWarnings = playerBalance && playerBalance.score < BALANCE_TARGET_SCORE && !options.gameTemplateJson
+    ? [`Player fairness ${playerBalance.score}/100 (${playerBalance.verdict})${playerBalance.reasons.length > 0 ? ` — ${playerBalance.reasons.join('; ')}` : ''}`]
     : []
-  return { ...result, warnings: [...balanceWarnings, ...autoFixWarnings, ...result.warnings], balanceReport, unreachablePlacements, isolatedPlayerStarts }
+  return { ...result, warnings: [...balanceWarnings, ...autoFixWarnings, ...result.warnings], balanceReport, playerBalance, unreachablePlacements, isolatedPlayerStarts }
 }

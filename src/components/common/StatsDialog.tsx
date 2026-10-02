@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button'
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import UndockButton from '@/components/panels/UndockButton'
 import { computeMapStats, type MapStats } from '@/lib/map-grid/map-stats'
+import { computePlayerBalance } from '@/lib/map-grid/player-balance'
+import PlayerBalancePanel from '@/components/common/PlayerBalancePanel'
 import type { MapContext } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 
@@ -443,6 +445,7 @@ function CountList({ rows, emptyLabel }: { rows: [string, number][]; emptyLabel:
 
 export function MapStatsContent({ context, catalog }: { context: MapContext; catalog: GameCatalog | null }) {
   const stats: MapStats = useMemo(() => computeMapStats(context, catalog), [context, catalog])
+  const playerBalance = useMemo(() => computePlayerBalance(context, catalog), [context, catalog])
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-6">
@@ -482,6 +485,11 @@ export function MapStatsContent({ context, catalog }: { context: MapContext; cat
             </tbody>
           </table>
         )}
+      </div>
+
+      <div>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Player Balance</h3>
+        <PlayerBalancePanel balance={playerBalance} />
       </div>
 
       <div>

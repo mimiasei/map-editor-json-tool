@@ -48,11 +48,38 @@ export interface ScatterInteractablesOptions {
    *  just falls through to another tier/sid rather than being placed.
    *  Empty/omitted (the default) is today's exact behavior. */
   disabledInteractableSids?: Set<string>
+  /** Built-in ring layout (issue #255): instead of a per-tile coin flip (whose
+   *  count varies by chance from player to player), every zone of the same kind
+   *  gets the same fixed number of interactables — the kind's mean tile count
+   *  times the density — at random free tiles. */
+  symmetricZones?: boolean
 }
 
 export function scatterZoneInteractables(options: ScatterInteractablesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids } = options
+  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids, symmetricZones = false } = options
   const placements: ZonePlacement[] = []
+  const isDisabled = (candidate: string): boolean => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false)
+  if (symmetricZones) {
+    const meanTiles = (kind: 'player' | 'neutral'): number => {
+      const counts = zones.filter((z) => z.kind === kind).map((z) => tilesByZone.get(z.id)?.length ?? 0)
+      return counts.length > 0 ? counts.reduce((a, b) => a + b, 0) / counts.length : 0
+    }
+    const target = { player: Math.round(meanTiles('player') * density * 0.4), neutral: Math.round(meanTiles('neutral') * density) }
+    for (const zone of zones) {
+      const free = (tilesByZone.get(zone.id) ?? []).filter((n) => !excludedNodes.has(n))
+      if (free.length === 0) continue
+      // One attempt per roll (not retried until it fits): the per-tile roll this
+      // replaces also lost rolls to collisions, and retrying would raise the
+      // map's interactable density well above what the slider has always meant.
+      for (let roll = 0; roll < target[zone.kind]; roll++) {
+        const node = free[Math.floor(rng() * free.length)]
+        const sid = pickInteractableSid(rng, isDisabled)
+        if (!sid) continue
+        if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) placements.push({ tempId: state.nextTempId++, sid, node })
+      }
+    }
+    return placements
+  }
   for (const zone of zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
     if (tiles.length === 0) continue
@@ -60,7 +87,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
     for (const node of tiles) {
       if (excludedNodes.has(node)) continue
       if (rng() >= zoneDensity) continue
-      const sid = pickInteractableSid(rng, (candidate) => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false))
+      const sid = pickInteractableSid(rng, isDisabled)
       if (!sid) continue
       if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
         placements.push({ tempId: state.nextTempId++, sid, node })
