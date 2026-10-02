@@ -106,6 +106,36 @@ export function growBlob(
   return blob
 }
 
+/** Whether every `anchors` tile can still reach every other over non-water
+ *  land (4-neighbor) once `barrier` is flooded — a lake that fails this would
+ *  cut the zone graph in two, and the only way the road generator could then
+ *  connect the halves is by drawing a road across the lake (issue #251).
+ *  `barrier` should hold everything the road router can't cross (water AND
+ *  already-placed object footprints), since a gap that is open on paper but
+ *  plugged by a mine is no gap. */
+function anchorsStayConnected(anchors: number[], barrier: Set<number>, sizeX: number, sizeZ: number): boolean {
+  if (anchors.length < 2) return true
+  for (const a of anchors) barrier.delete(a)
+  const seen = new Uint8Array(sizeX * sizeZ)
+  const stack = [anchors[0]]
+  seen[anchors[0]] = 1
+  while (stack.length > 0) {
+    const node = stack.pop() as number
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (seen[n] || barrier.has(n)) continue
+      seen[n] = 1
+      stack.push(n)
+    }
+  }
+  return anchors.every((a) => seen[a])
+}
+
 export interface ScatterZoneWaterOptions {
   sizeX: number
   sizeZ: number
@@ -115,8 +145,12 @@ export interface ScatterZoneWaterOptions {
    *  random-map.ts calls this BEFORE roads/rivers are computed
    *  specifically so their own pathfinding already sees the water as
    *  blocked, so a lake must never flood the exact point a road/river is
-   *  about to target). */
+   *  about to target). Also the set of anchors every lake must leave
+   *  mutually connected by land (issue #251). */
   excludedNodes: Set<number>
+  /** More tiles every lake must leave land-connected to the anchors — the
+   *  road generator's own non-anchor endpoints (mines etc.). */
+  connectNodes?: number[]
   /** Already-claimed solid footprint cells and anchors — never flood a
    *  mine/dwelling/guard's own tile. */
   blocked: Set<number>
@@ -170,7 +204,7 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
   const {
     sizeX, sizeZ, zones, tilesByZone, excludedNodes, blocked, usedAnchors, rng,
     chance = 0.4, minSize = 8, minSizeFraction = 0.08, maxSizeFraction = 0.6, maxSize = 400,
-    chanceByZone, minSizeByZone,
+    chanceByZone, minSizeByZone, connectNodes = [],
   } = options
   const waterNodes = new Set<number>()
   const waterChanges: { node: number; waterId: number }[] = []
@@ -200,8 +234,16 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
 
     const sizeFraction = minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
     const targetSize = Math.max(zoneMinSize, Math.min(eligible.size, maxSize, Math.round(eligible.size * sizeFraction)))
-    const seed = [...eligible][Math.floor(rng() * eligible.size)]
-    const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng, protectedTiles, waterNodes)
+    // A lake that would disconnect any zone anchor is retried at 70% size (new
+    // seed) up to 8 times, then skipped — never kept for a road to be drawn across later (issue #251).
+    const anchors = [...excludedNodes, ...connectNodes]
+    let blob = new Set<number>()
+    for (let attempt = 0, size = targetSize; attempt < 8 && size >= zoneMinSize; attempt++, size = Math.floor(size * 0.7)) {
+      const seed = [...eligible][Math.floor(rng() * eligible.size)]
+      const candidate = growBlob(seed, sizeX, sizeZ, size, eligible, rng, protectedTiles, waterNodes)
+      if (anchorsStayConnected(anchors, new Set([...blocked, ...waterNodes, ...candidate]), sizeX, sizeZ)) { blob = candidate; break }
+    }
+    if (blob.size === 0) continue
     const waterId = WATER_IDS[Math.floor(rng() * WATER_IDS.length)]
 
     for (const node of blob) {
