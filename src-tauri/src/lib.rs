@@ -173,6 +173,31 @@ pub fn run() {
             app.handle()
                 .plugin(tauri_plugin_updater::Builder::new().build())?;
 
+            // ── CLI mode (headless RMG for the GME mod, issue #258) ──────────
+            // The main window starts hidden (tauri.conf.json) so a normal launch
+            // never depends on JS to reveal it; shown here instead — small and
+            // centered for a --generate run, normal size otherwise.
+            #[cfg(desktop)]
+            {
+                use tauri::Manager;
+                use tauri_plugin_cli::CliExt;
+                app.handle().plugin(tauri_plugin_cli::init())?;
+                let generate = app
+                    .cli()
+                    .matches()
+                    .map(|m| m.args.get("generate").map_or(false, |a| a.occurrences > 0))
+                    .unwrap_or(false);
+                if let Some(window) = app.get_webview_window("main") {
+                    if generate {
+                        let _ = window.set_min_size(None::<tauri::LogicalSize<f64>>);
+                        let _ = window.set_size(tauri::LogicalSize::new(460.0, 150.0));
+                        let _ = window.set_title("Generating map…");
+                        let _ = window.center();
+                    }
+                    let _ = window.show();
+                }
+            }
+
             // ── Native menu bar ──────────────────────────────────────────────
             let new_item = MenuItemBuilder::with_id("new", "New")
                 .accelerator("CmdOrCtrl+N")

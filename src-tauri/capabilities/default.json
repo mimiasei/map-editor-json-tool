@@ -27,6 +27,7 @@
     "process:allow-exit",
     "process:allow-restart",
     "updater:default",
+    "cli:default",
     "shell:allow-execute",
     "shell:allow-open",
     "clipboard-manager:allow-read-text",
