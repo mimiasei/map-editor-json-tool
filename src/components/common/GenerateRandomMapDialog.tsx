@@ -65,9 +65,8 @@ import {
     DEFAULT_CLASSIC_SETTINGS,
     RICHNESS_LEVELS,
     WATER_LEVELS,
-    resolveClassicSettings,
-    type ClassicSettings,
-    randomInSliderBand
+    buildClassicOptions,
+    type ClassicSettings
 } from '@/lib/rmg/classic-presets'
 import { openFile, saveFile } from '@/lib/native-fs'
 import { logError, logInfo, logWarn } from '@/lib/logger'
@@ -388,18 +387,6 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }
   }
 
-    const random = Math.random
-    const classicRandoms = {
-        zoneJaggedness: randomInSliderBand(0, 1, 0, 0.70, random),
-        zoneSpread: randomInSliderBand(0.5, 1.8, 0.10, 1.0, random),
-        organicTerrainBlending: randomInSliderBand(0, 1, 0, 0.50, random),
-        // elevation: random 0–50%, same value for hills and valleys
-        // (the Elevation slider drives both equally, see elevationSliderValue)
-        hillChance: 0, valleyChance: 0,
-    }
-    const elevation = random() * 0.4
-    classicRandoms.hillChance = elevation
-    classicRandoms.valleyChance = elevation
 
   const handleGenerate = async (freshSeed = false) => {
     setGenerating(true)
@@ -408,8 +395,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       // Regenerate (issue #255) always rolls a new random map, even if a seed
       // was typed — re-running the same seed would just give the same map.
       const seed = freshSeed ? undefined : seedText.trim() ? Number(seedText) : undefined
+      const rng = seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : Math.random
       const opts = classicMode
-        ? { ...DEFAULT_TEMPLATE_OVERRIDES, ...resolveClassicSettings(classic), ...classicRandoms, disabledInteractableSids: [] as string[] }
+        ? buildClassicOptions(classic, rng)
         : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined }
       const result = await generateRandomMapFile({
         mapName,
@@ -446,7 +434,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         terrainOnly,
         enabledBiomes: opts.enabledBiomes,
         gameTemplateJson: gameTemplate?.json,
-        rng: seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : undefined,
+        rng,
       })
       if (!result) return // not Tauri — no filesystem access to read the template
       logInfo(`Generated random map: ${result.name}`)
