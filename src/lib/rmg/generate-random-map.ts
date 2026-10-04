@@ -366,7 +366,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   })
 
   await reportProgress('Populating zones with mines, dwellings and treasure', 10)
-  const { placements, concreteSquads } = populateZones({
+  const { placements, concreteSquads, decidedNodes } = populateZones({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
@@ -377,9 +377,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
-  // Proximity guards (real user request) — a random chance of a guard next
-  // to a real mine/dwelling/resource/artifact `populateZones` just placed,
-  // ON TOP OF that zone's own single mine/treasure guard. Deliberately a
+  // Proximity guards (real user request) — a random chance of a guard at the
+  // entrance of a real mine/dwelling/resource/artifact `populateZones` just
+  // placed; objects whose guard `populateZones` already decided (neutral
+  // mines, guarded treasure — `decidedNodes`) are skipped. Deliberately a
   // SEPARATE pass run right here, immediately after resources/artifacts
   // exist to guard (the user's own explicit ordering), not folded into
   // `populateZones` itself.
@@ -390,6 +391,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     catalogById, catalog, objectVariety, squadDensity, state, rng, symmetricZones: !gameTemplateJson,
     difficulty: difficultyValues,
     guardTuning: tuning.guards,
+    decidedNodes,
   })
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)

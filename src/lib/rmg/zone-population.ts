@@ -297,6 +297,83 @@ function pickFreeTile(zoneTiles: number[], state: PlacementState, rng: () => num
   return null
 }
 
+/** How far from an object's entrance a guard may stand when no tile touching
+ *  the entrance is free (entranceGuardTile's fallback). */
+export const NEARBY_GUARD_RADIUS = 4
+
+/** The tile a guard should stand on to block the entrance of `sid` placed at
+ *  `node`, or null when there's no free tile within NEARBY_GUARD_RADIUS.
+ *
+ *  A `random-squad` occupies one tile and triggers combat on all 8 tiles
+ *  around it, so a squad on any tile touching an entrance (value 2) cell
+ *  blocks that entrance. Preference: the tile straight out from an entrance
+ *  (away from the object's solid cells), then the other tiles touching an
+ *  entrance outside the object's footprint, then the nearest free tile to an
+ *  entrance (which may no longer cover it — the best that's left). Objects
+ *  without an entrance cell fall back to the nearest free tile to `node`. */
+export function entranceGuardTile(
+  sid: string, node: number, sizeX: number, sizeZ: number,
+  catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
+): number | null {
+  const cells = computeFootprintTiles(catalogById.get(sid), node % sizeX, Math.floor(node / sizeX))
+  const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+  const solid = new Set(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
+  const entrances = cells.filter((c) => c.value === 2)
+  const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
+  const free = (n: number): boolean => !state.blocked.has(n) && !state.usedAnchors.has(n) && !footprint.has(n)
+
+  if (entrances.length > 0) {
+    const front: number[] = []
+    const sides: number[] = []
+    const diagonals: number[] = []
+    for (const e of entrances) {
+      for (let dz = -1; dz <= 1; dz++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dz === 0) continue
+          const x = e.x + dx
+          const z = e.z + dz
+          if (!inBounds(x, z)) continue
+          const n = z * sizeX + x
+          if (footprint.has(n)) continue
+          if (dx !== 0 && dz !== 0) { diagonals.push(n); continue }
+          // Straight out: the solid cell on the opposite side of the entrance.
+          const behind = (e.z - dz) * sizeX + (e.x - dx)
+          if (inBounds(e.x - dx, e.z - dz) && solid.has(behind)) front.push(n)
+          else sides.push(n)
+        }
+      }
+    }
+    const shuffle = (list: number[]): number[] => {
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1))
+        ;[list[i], list[j]] = [list[j], list[i]]
+      }
+      return list
+    }
+    for (const group of [front, sides, diagonals]) {
+      const hit = shuffle([...new Set(group)]).find(free)
+      if (hit !== undefined) return hit
+    }
+  }
+
+  // Nothing touching an entrance is free: the nearest free tile instead.
+  const origins = entrances.length > 0 ? entrances.map((e) => [e.x, e.z] as const) : [[node % sizeX, Math.floor(node / sizeX)] as const]
+  for (let r = 1; r <= NEARBY_GUARD_RADIUS; r++) {
+    const ring: number[] = []
+    for (const [ox, oz] of origins) {
+      for (let dz = -r; dz <= r; dz++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dz)) !== r || !inBounds(ox + dx, oz + dz)) continue
+          ring.push((oz + dz) * sizeX + ox + dx)
+        }
+      }
+    }
+    const candidates = ring.filter(free)
+    if (candidates.length > 0) return candidates[Math.floor(rng() * candidates.length)]
+  }
+  return null
+}
+
 /** Try up to `maxAttempts` random tiles from `zoneTiles` for `sid`'s anchor,
  *  accepting the first `tryPlaceAt` accepts. Returns `null` if nothing fits
  *  within `maxAttempts` — a disclosed degrade for a small/crowded zone, not
@@ -439,6 +516,9 @@ export interface PopulateZonesResult {
    *  see `ConcreteSquadPlacement`'s own doc comment for why these are kept
    *  separate rather than folded into `placements`. */
   concreteSquads: ConcreteSquadPlacement[]
+  /** Anchor nodes of objects whose guard was decided here (neutral mines,
+   *  guarded treasure) — the proximity-guard pass skips them. */
+  decidedNodes: Set<number>
 }
 
 export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
@@ -453,6 +533,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   let contentRng: () => number = posRng
   const rng = (): number => contentRng()
   const placements: ZonePlacement[] = []
+  const decidedNodes = new Set<number>()
   const concreteSquads: ConcreteSquadPlacement[] = []
   // True overall span of RMG_GUARD_DIFFICULTY_RANGES' real bands (Easy
   // through Lethal) — NOT `pickSquadRange(['Random'], ...)`'s own return
@@ -613,10 +694,11 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
         const resolved = rolled ? resolveContentPoolPick(rolled, catalog, usedArtifactSids, preferredSids, isAtContentCap, rng) : null
         if (resolved) {
           recordContentPlacement(resolved.sid)
-          place(resolved.sid, tiles, undefined, resolved.randomItemOverrides, undefined, resolved.randomHireOverrides)
-          if (guarded) {
+          const treasureNode = place(resolved.sid, tiles, undefined, resolved.randomItemOverrides, undefined, resolved.randomHireOverrides)
+          if (guarded && treasureNode !== null) {
+            decidedNodes.add(treasureNode)
             const guardValue = resolved.guardValue ?? resolveGoodsValue(catalog, resolved.sid)
-            if (guardValue !== undefined) placeGuard(tiles, guardValue, sampleFraction(biome, 0.5, rng), guardCutoff)
+            if (guardValue !== undefined) placeGuard(tiles, guardValue, sampleFraction(biome, 0.5, rng), guardCutoff, { sid: resolved.sid, node: treasureNode })
           }
           return
         }
@@ -636,23 +718,65 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  real RMG templates' `guardCutoffValue` concept, overridden per-zone
    *  with that zone's own real value when a template provides one — issue
    *  #210 runner-up milestone), no guard is placed at all — the resource
-   *  stays free rather than getting a near-worthless guard. */
-  const placeGuard = (tiles: number[], baseValue: number, fraction: string, cutoff: number = GUARD_VALUE_CUTOFF): void => {
+   *  stays free rather than getting a near-worthless guard.
+   *
+   *  With a `target` (the object this guard protects), the guard stands at
+   *  that object's entrance (`entranceGuardTile`) so it blocks it; only when
+   *  no tile near the entrance is free does it fall back to anywhere in the
+   *  zone, like an untargeted zone guard. */
+  const placeGuard = (tiles: number[], baseValue: number, fraction: string, cutoff: number = GUARD_VALUE_CUTOFF, target?: { sid: string; node: number }): void => {
     // Difficulty scales the value before the cutoff check, like the game's
     // own perProgressionPointZoneGuardValue (level 0 = ×1, unchanged).
     const requestedValue = difficulty ? Math.round(baseValue * difficulty.zoneGuardMultiplier) : baseValue
     if (requestedValue < cutoff) return
+    const guardTile = target ? entranceGuardTile(target.sid, target.node, sizeX, sizeZ, catalogById, state, posRng) : null
     if (catalog && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
       if (template) {
-        const node = pickFreeTile(tiles, state, posRng)
+        let node = guardTile
+        if (node !== null) state.usedAnchors.add(node)
+        else node = pickFreeTile(tiles, state, posRng)
         if (node !== null) {
           concreteSquads.push({ tempId: state.nextTempId++, sid: template.id, node })
           return
         }
       }
     }
-    place('random-squad', tiles, { requestedValue, fraction, weeklyIncrementBonus: difficulty?.zoneGuardWeeklyIncrement })
+    const overrides = { requestedValue, fraction, weeklyIncrementBonus: difficulty?.zoneGuardWeeklyIncrement }
+    if (guardTile !== null && tryPlaceAt('random-squad', guardTile, sizeX, sizeZ, catalogById, state)) {
+      placements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardTile, randomSquadOverrides: overrides })
+      return
+    }
+    place('random-squad', tiles, overrides)
+  }
+
+  /** A neutral zone's mine guard, standing at the mine's entrance. Decided
+   *  here and recorded in `decidedNodes`, so the proximity-guard pass
+   *  (zone-guard-scatter.ts) doesn't roll for the same mine again. Chance:
+   *  the tuning file's (per sid, else `mine`), else always — this guard has
+   *  always been placed. The roll uses the positional stream so symmetric
+   *  neutral zones (which replay one content stream) don't all get the same
+   *  result.
+   *
+   *  The guard's value comes from the mine's own real guard-value data when
+   *  available (value-model.ts, scaled up to real hand-crafted maps' own
+   *  median guard-value band) — not a flat difficulty-band roll — so a gold
+   *  mine is still defended harder than a wood mine, falling back to the
+   *  flat roll only if this Core.zip has no matching objects_logic entry.
+   *  A real imported template's own `guardedContentValue` for the zone takes
+   *  priority over both (the template author's explicit design), clamped
+   *  into RMG_GUARD_DIFFICULTY_RANGES' overall span (400-150000) — its value
+   *  scale matches this generator's guard `requestedValue` units. */
+  const placeMineGuard = (zoneId: number, tiles: number[], biome: BiomeId, mineSid: string, mineNode: number): void => {
+    decidedNodes.add(mineNode)
+    const chance = guardTuning?.chanceBySid[mineSid] ?? guardTuning?.chance.mine ?? 1
+    if (chance < 1 && posRng() >= chance) return
+    const fallbackRange = pickSquadRange(['Random'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
+    const templateGuardedValue = zoneContentValueByZoneId?.get(zoneId)?.guardedContentValue
+    const requestedValue = templateGuardedValue !== undefined
+      ? Math.min(guardValueBandMax, Math.max(guardValueBandMin, Math.round(templateGuardedValue)))
+      : mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
+    placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng), guardCutoffValueByZoneId?.get(zoneId) ?? GUARD_VALUE_CUTOFF, { sid: mineSid, node: mineNode })
   }
 
   // Per-zone treasure-budget scaling from a real template's own
@@ -744,8 +868,9 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance
         ? 'mine_gold'
         : roundRobinSid
-      place(mineSid, tiles)
+      const mineNode = place(mineSid, tiles)
       mineIndex += 1
+      if (mineNode !== null) placeMineGuard(zone.id, tiles, biome, mineSid, mineNode)
 
       // Per-zone treasure density: bigger Voronoi regions (more tiles) get
       // proportionally more treasure piles, scaled again by the template's
@@ -801,33 +926,6 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       for (let i = 0; i < treasureCount; i++) {
         placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF, preferredTreasureSids)
       }
-
-      // The guard's value comes from the mine's own real guard-value data
-      // when available (value-model.ts, scaled up to real hand-crafted maps'
-      // own median guard-value band — see that file's own doc comment) —
-      // not a flat difficulty-band roll — so a gold mine is still defended
-      // harder than a wood mine, matching the real game's own economic
-      // weighting, falling back to the same flat roll only if this Core.zip
-      // has no matching objects_logic entry for some reason.
-      //
-      // Runner-up milestone: when a real imported template gives THIS zone
-      // its own `guardedContentValue`, that takes priority over both —
-      // it's the template author's own explicit difficulty design for this
-      // specific zone, more authoritative than this generator's generic
-      // per-resource heuristic. Clamped into RMG_GUARD_DIFFICULTY_RANGES'
-      // own overall span (400-150000, the same real-map-calibrated band
-      // guard-value-bands.ts already uses everywhere else) since a real
-      // template's own value scale is confirmed to match this generator's
-      // guard `requestedValue` units (both top out in the low hundreds of
-      // thousands) — unlike `resourcesValue` above, which has no comparably
-      // scaled destination in this generator's own data model and so is
-      // only ever used as a relative multiplier, never directly.
-      const fallbackRange = pickSquadRange(['Random'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
-      const templateGuardedValue = zoneContentValueByZoneId?.get(zone.id)?.guardedContentValue
-      const requestedValue = templateGuardedValue !== undefined
-        ? Math.min(guardValueBandMax, Math.max(guardValueBandMin, Math.round(templateGuardedValue)))
-        : mineGuardValue(mineSid, objectLogicsById) ?? randomInRange(fallbackRange.min, fallbackRange.max, rng)
-      placeGuard(tiles, requestedValue, sampleFraction(biome, 0.5, rng), guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF)
     }
   }
 
@@ -896,5 +994,5 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     }
   }
 
-  return { placements, concreteSquads }
+  return { placements, concreteSquads, decidedNodes }
 }

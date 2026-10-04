@@ -133,7 +133,7 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
     },
     difficulty: Object.fromEntries(DIFFICULTY_LEVELS.map((d, i) => [d.id, schema.difficulties[i]])),
     guards: {
-      _about: 'Chance (0-1) that a guard is placed. null = built-in behavior: mine..artifact follow complexity (the guard squad density: sparse 0.18, light 0.32, medium 0.45, dense 0.63, very_dense 0.81), randomCity follows difficulty.cityGuardChance. chanceBySid overrides a category for one object sid (e.g. "windmill").',
+      _about: 'Chance (0-1) that a guard is placed in front of the object\'s entrance, blocking it. null = built-in behavior: mines in neutral zones are always guarded; mines in player zones and dwelling..artifact follow complexity (the guard squad density: sparse 0.18, light 0.32, medium 0.45, dense 0.63, very_dense 0.81); randomCity follows difficulty.cityGuardChance. chanceBySid overrides a category for one object sid (e.g. "windmill").',
       chance: {
         mine: null, dwelling: null, resource: null,
         interactableCommon: null, interactableUncommon: null, interactableRare: null,
