@@ -3,6 +3,8 @@
 // The `thumbnailPath()` utility (thumbnails.ts) will resolve these to PNG paths
 // once thumbnails are extracted — no UI changes needed at that point.
 
+import type { RmgSchema } from '@/lib/rmg/rmg-schema'
+
 export interface CatalogHero {
   id: string
   name: string       // resolved English name from heroInfo.json
@@ -423,6 +425,11 @@ export interface GameCatalog {
   /** zone_layouts/default_zone_layouts.json's single entry, issue #240
    *  Phase 0. undefined only if the file is missing/malformed. */
   rmgZoneLayout: CatalogRmgZoneLayout | undefined
+  /** The game's own RMG schema (map_schemas/Default.mrmg.json, next to
+   *  Core.zip) — elevation layouts and difficulty values. Attached by the
+   *  catalog store after building; consumers fall back to
+   *  `BUILTIN_RMG_SCHEMA` when absent (rmg-schema.ts). */
+  rmgSchema?: RmgSchema
   /** sid -> real gold value, read from the top-level `goodsValue` field
    *  found pervasively across Core/DB/objects_logic/**\/*.json and
    *  Core/DB/items/items/*.json entries — issue #240 Phase 0. This is the

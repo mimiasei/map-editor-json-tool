@@ -24,6 +24,10 @@ const STEAM_PATHS = [
 const APP_INFO_SUFFIX = 'HeroesOldenEra_Data/app.info'
 const CORE_ZIP_SUFFIX = 'HeroesOldenEra_Data/StreamingAssets/Core.zip'
 
+/** The default Steam installs' StreamingAssets folders (Core.zip's folder),
+ *  for files that sit next to Core.zip such as map_schemas/. */
+export const STEAM_STREAMING_ASSETS_DIRS = STEAM_PATHS.map((base) => `${base}/HeroesOldenEra_Data/StreamingAssets`)
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Read a ZIP entry as UTF-8 text, stripping BOM if present. */

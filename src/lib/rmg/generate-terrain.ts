@@ -61,6 +61,7 @@ import { computeIslandZones } from './zone-islands'
 import { scatterZoneWater } from './zone-water'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation } from './zone-elevation'
+import type { RmgZoneLayoutPick } from './rmg-schema'
 
 export { BLANK_MAP_BIOME_NAMES }
 
@@ -122,6 +123,9 @@ export interface GenerateTerrainOptions {
   /** Overall dry-valley (level -1, NOT water) amount, 0-1 — same shape as
    *  `hillChance`. Defaults to 0. */
   valleyChance?: number
+  /** The game's per-zone elevation layouts for hills (zone-elevation.ts
+   *  `zoneLayouts`); undefined keeps the `hillChance` presence roll. */
+  hillLayouts?: RmgZoneLayoutPick[]
   /** See this file's own header comment on `computeWater` — same reasoning
    *  applies to elevation: the real full-pipeline generator computes its
    *  own hills/valleys later (generate-random-map.ts, after object
@@ -256,7 +260,7 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
-    hillChance = 0, valleyChance = 0, computeElevation = false,
+    hillChance = 0, valleyChance = 0, hillLayouts, computeElevation = false,
     enabledBiomes, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
@@ -433,7 +437,7 @@ export function generateTerrain(
     const hillResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'hill', chance: hillChance,
-      reservedNodes: waterNodesAll,
+      reservedNodes: waterNodesAll, zoneLayouts: hillLayouts,
     })
     const valleyResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,

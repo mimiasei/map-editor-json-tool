@@ -33,6 +33,7 @@
 // wall tile as a repair, not just remove a decorative obstacle.
 
 import { growBlob } from './zone-water'
+import type { RmgZoneLayoutPick } from './rmg-schema'
 
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
@@ -80,6 +81,14 @@ export interface ScatterZoneElevationOptions {
    *  e.g. the static fallback catalog, or an older Core.zip with no
    *  `Core/generator/` files. */
   elevationModes?: { weight: number; minElevatedFraction: number; maxElevatedFraction: number }[]
+  /** The game's own per-zone layout choice (map_schemas/Default.mrmg.json,
+   *  `RmgSchema.zoneLayouts`): each zone picks a layout by weight, then one of
+   *  its `elevationModes`, then a fraction in that band — exactly how the
+   *  in-game RMG decides. A fraction of 0 (flat) or near 1 (the whole zone
+   *  raised, which reads as flat ground one level up) leaves the zone flat.
+   *  When set, this decides presence AND size and replaces `elevationModes`
+   *  and the `chance`-based presence roll (`chance` > 0 just enables it). */
+  zoneLayouts?: RmgZoneLayoutPick[]
   /** Nodes already claimed by water or the OPPOSITE elevation kind this same
    *  run (pass hills' own `elevatedNodes` in when generating valleys, and
    *  vice versa, plus water's `waterNodes`) — kept ineligible, along with a
@@ -200,10 +209,58 @@ export function findAdjacentLevelZeroNode(node: number, sizeX: number, sizeZ: nu
   return null
 }
 
+/** Minimum width of every part of a hill/valley along both x and z. Narrower
+ *  strips/necks left objects and ramps on them unreachable (a real user
+ *  report), so every elevated tile must lie inside a fully elevated
+ *  MIN_ELEVATION_SPAN × MIN_ELEVATION_SPAN square. */
+export const MIN_ELEVATION_SPAN = 6
+
 /** A hill/valley smaller than this (in tiles) after pocket repair is dropped
- *  instead of kept — a 1-3 tile bump reads as noise, and each one would still
- *  need its own ramp. */
-const MIN_ELEVATION_COMPONENT_SIZE = 4
+ *  instead of kept — one minimum-width square. */
+const MIN_ELEVATION_COMPONENT_SIZE = MIN_ELEVATION_SPAN * MIN_ELEVATION_SPAN
+
+/** Above this elevated fraction a zone counts as "all raised" — flat ground
+ *  one level up, which the game's plane layout means as flat. */
+const FULL_ZONE_FRACTION = 0.95
+
+/** Morphological opening of `blob` with a `span`×`span` square: keeps exactly
+ *  the tiles covered by at least one such square lying fully inside `blob`,
+ *  dropping every strip, neck and corner spur narrower than `span` in x or z. */
+export function openWithSquare(blob: Set<number>, span: number, sizeX: number, sizeZ: number): Set<number> {
+  if (blob.size === 0) return new Set()
+  let minX = sizeX, minZ = sizeZ, maxX = -1, maxZ = -1
+  for (const n of blob) {
+    const x = n % sizeX
+    const z = (n - x) / sizeX
+    if (x < minX) minX = x
+    if (x > maxX) maxX = x
+    if (z < minZ) minZ = z
+    if (z > maxZ) maxZ = z
+  }
+  const w = maxX - minX + 1
+  const h = maxZ - minZ + 1
+  if (w < span || h < span) return new Set()
+  // prefix[(z+1)*(w+1) + (x+1)] = number of blob tiles in [0..x]×[0..z] of the box
+  const prefix = new Int32Array((w + 1) * (h + 1))
+  for (let z = 0; z < h; z++) {
+    for (let x = 0; x < w; x++) {
+      const inBlob = blob.has((minZ + z) * sizeX + (minX + x)) ? 1 : 0
+      prefix[(z + 1) * (w + 1) + (x + 1)] = inBlob + prefix[z * (w + 1) + (x + 1)] + prefix[(z + 1) * (w + 1) + x] - prefix[z * (w + 1) + x]
+    }
+  }
+  const full = span * span
+  const kept = new Set<number>()
+  for (let z = 0; z + span <= h; z++) {
+    for (let x = 0; x + span <= w; x++) {
+      const count = prefix[(z + span) * (w + 1) + (x + span)] - prefix[z * (w + 1) + (x + span)] - prefix[(z + span) * (w + 1) + x] + prefix[z * (w + 1) + x]
+      if (count !== full) continue
+      for (let dz = 0; dz < span; dz++) {
+        for (let dx = 0; dx < span; dx++) kept.add((minZ + z + dz) * sizeX + (minX + x + dx))
+      }
+    }
+  }
+  return kept
+}
 
 /** Largest enclosed level-0 pocket that is simply filled in with elevation
  *  (when every tile in it is a legal elevation tile) — anything bigger is
@@ -374,20 +431,31 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneAnchorNode, excludedNodes, blocked, usedAnchors, rng, kind,
     chance = 0, minSize = 8, minSizeFraction = 0.08, maxSizeFraction = 0.5, maxSize = 250,
-    chanceByZone, minSizeByZone, reservedNodes = new Set(), elevationModes,
+    chanceByZone, minSizeByZone, reservedNodes = new Set(), elevationModes, zoneLayouts,
   } = options
-  const pickSizeFraction = (zoneChance: number): number => {
-    if (!elevationModes || elevationModes.length === 0) return minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
-    const total = elevationModes.reduce((sum, m) => sum + m.weight, 0)
-    if (total <= 0) return minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
+  const pickWeighted = <T extends { weight: number }>(items: T[]): T | undefined => {
+    const total = items.reduce((sum, m) => sum + m.weight, 0)
+    if (total <= 0) return undefined
     let roll = rng() * total
-    let band = elevationModes[0]
-    for (const m of elevationModes) {
-      if (roll < m.weight) { band = m; break }
+    for (const m of items) {
+      if (roll < m.weight) return m
       roll -= m.weight
     }
-    return band.minElevatedFraction + rng() * (band.maxElevatedFraction - band.minElevatedFraction)
+    return items[items.length - 1]
   }
+  const pickInBand = (modes: { weight: number; minElevatedFraction: number; maxElevatedFraction: number }[] | undefined): number | undefined => {
+    const band = modes && modes.length > 0 ? pickWeighted(modes) : undefined
+    return band ? band.minElevatedFraction + rng() * (band.maxElevatedFraction - band.minElevatedFraction) : undefined
+  }
+  const pickSizeFraction = (zoneChance: number): number =>
+    pickInBand(elevationModes) ?? minSizeFraction + (maxSizeFraction - minSizeFraction) * zoneChance
+  /** Game layout pick: the zone's elevated fraction, or null when it stays flat. */
+  const pickLayoutFraction = (layouts: RmgZoneLayoutPick[]): number | null => {
+    const fraction = pickInBand(pickWeighted(layouts)?.elevationModes) ?? 0
+    return fraction <= 0 || fraction >= FULL_ZONE_FRACTION ? null : fraction
+  }
+  const useLayouts = zoneLayouts !== undefined && zoneLayouts.length > 0
+  let sharedPlayerLayoutFraction: number | null | undefined
   const level = kind === 'hill' ? 1 : -1
   const elevatedNodes = new Set<number>()
   const climbNodes = new Set<number>()
@@ -412,19 +480,30 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
   for (const zone of zones) {
     const zoneChance = chanceByZone?.get(zone.id) ?? chance
     if (zoneChance <= 0) continue
-    const zoneMinSize = minSizeByZone?.get(zone.id) ?? minSize
-    const presenceChance = Math.min(1, zoneChance * 2)
+    const zoneMinSize = Math.max(MIN_ELEVATION_COMPONENT_SIZE, minSizeByZone?.get(zone.id) ?? minSize)
     // Every PLAYER zone shares one presence roll and one size fraction
     // (issue #254): independent rolls left one start walled in by cliffs while
     // another was open ground (elevated share differed by up to ~37 points).
-    let present: boolean
-    if (zone.kind === 'player') {
-      sharedPlayerPresence ??= rng() < presenceChance
-      present = sharedPlayerPresence
+    let layoutFraction: number | null = null
+    if (useLayouts) {
+      if (zone.kind === 'player') {
+        if (sharedPlayerLayoutFraction === undefined) sharedPlayerLayoutFraction = pickLayoutFraction(zoneLayouts)
+        layoutFraction = sharedPlayerLayoutFraction
+      } else {
+        layoutFraction = pickLayoutFraction(zoneLayouts)
+      }
+      if (layoutFraction === null) continue
     } else {
-      present = rng() < presenceChance
+      const presenceChance = Math.min(1, zoneChance * 2)
+      let present: boolean
+      if (zone.kind === 'player') {
+        sharedPlayerPresence ??= rng() < presenceChance
+        present = sharedPlayerPresence
+      } else {
+        present = rng() < presenceChance
+      }
+      if (!present) continue
     }
-    if (!present) continue
 
     // `!climbNodes.has(n)` matters: an EARLIER zone in this same loop may
     // have already placed a ramp on a then-level-0 tile — without this, a
@@ -441,7 +520,9 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     if (eligible.size < zoneMinSize) continue
 
     let sizeFraction: number
-    if (zone.kind === 'player') {
+    if (layoutFraction !== null) {
+      sizeFraction = layoutFraction
+    } else if (zone.kind === 'player') {
       sharedPlayerSizeFraction ??= pickSizeFraction(zoneChance)
       sizeFraction = sharedPlayerSizeFraction
     } else {
@@ -449,14 +530,27 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     }
     const targetSize = Math.max(zoneMinSize, Math.min(eligible.size, maxSize, Math.round(eligible.size * sizeFraction)))
     const seed = [...eligible][Math.floor(rng() * eligible.size)]
-    const blob = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng, protectedTiles, elevatedNodes)
-    if (blob.size === 0) continue
+    const grown = growBlob(seed, sizeX, sizeZ, targetSize, eligible, rng, protectedTiles, elevatedNodes)
+    if (grown.size === 0) continue
     // A pocket tile may belong to a neighboring zone (a hill and its
     // neighbor's hill can jointly enclose it) — fillable as long as nothing
     // forbids elevating it, zone ownership aside.
     const canFill = (n: number): boolean =>
       !excludedNodes.has(n) && !blocked.has(n) && !usedAnchors.has(n) && !elevatedNodes.has(n) && !reservedBuffer.has(n) && !climbNodes.has(n)
-    if (!removeEnclosedPockets(blob, elevatedNodes, reservedNodes, canFill, excludedNodes, sizeX, sizeZ)) continue
+    // Pocket repair and the minimum-width opening can each undo the other
+    // (filling a pocket can add a thin bit; opening a pocket cuts a 1-wide
+    // channel), so alternate until a round of pocket repair changes nothing.
+    let blob = grown
+    let sealed = false
+    for (let round = 0; round < 3; round++) {
+      blob = openWithSquare(blob, MIN_ELEVATION_SPAN, sizeX, sizeZ)
+      if (blob.size === 0) break
+      const before = new Set(blob)
+      if (!removeEnclosedPockets(blob, elevatedNodes, reservedNodes, canFill, excludedNodes, sizeX, sizeZ)) { sealed = true; break }
+      if (blob.size === before.size && [...blob].every((n) => before.has(n))) break
+      if (round === 2) blob = openWithSquare(blob, MIN_ELEVATION_SPAN, sizeX, sizeZ)
+    }
+    if (sealed || blob.size === 0) continue
 
     // Pocket removal can split a blob (opening a channel through it) — each
     // piece is its own hill/valley and needs its OWN ramp, and a piece too

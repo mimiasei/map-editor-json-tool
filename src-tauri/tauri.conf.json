@@ -64,7 +64,7 @@
         },
         {
           "name": "size",
-          "description": "Optional. Square map size: N or NxN (only the first number is read), e.g. 64 or 64x64. One of 16, 32, 48, 64, 80, 96, 128, 256. Default 64",
+          "description": "Optional. Map size XxZ, or N for a square NxN map, e.g. 64 or 128x64. One of 16x16, 32x32, 48x32, 48x48, 64x32, 64x48, 64x64, 80x80, 96x64, 96x96, 128x64, 128x128, 256x128, 256x256. Default 64x64",
           "takesValue": true
         },
         {
@@ -90,6 +90,11 @@
         {
           "name": "complexity",
           "description": "Optional. Classic complexity, 0-4 index: 0=sparse 1=light 2=medium (default) 3=dense 4=very_dense",
+          "takesValue": true
+        },
+        {
+          "name": "difficulty",
+          "description": "Optional. Classic difficulty (guard strength), 0-5 index: 0=easy 1=normal (default) 2=hard 3=impossible 4=deadly 5=hell",
           "takesValue": true
         },
         {

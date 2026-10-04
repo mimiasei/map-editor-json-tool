@@ -34,6 +34,7 @@ import { isRmgIneligibleInteractableSid, pickSquadTemplate, resolveContentPoolPi
 import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
+import type { RmgDifficultyValues } from './rmg-schema'
 
 /** Dwelling sids use `necropolis`, not `undead`, as undead's faction token
  *  (CLAUDE.md's own documented sid/id mismatch: dwelling files are named
@@ -51,6 +52,9 @@ function dwellingFactionToken(biome: BiomeId): string {
 
 /** All 6 real resource mine sids (Core/DB/map/objects/4_interactables.json)
  *  — cycled through neutral zones for variety. */
+/** A neutral city's guard is placed within this many tiles of the city. */
+const CITY_GUARD_RADIUS = 3
+
 const MINE_SIDS = ['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury']
 
 /** Sand's own biome id (terrain-colors.ts's BiomeId). */
@@ -329,6 +333,10 @@ export interface PopulateZonesOptions {
    *  `treasureDensity` x per-zone `treasureScale`. Treasure COUNT still follows
    *  `treasureDensity`. */
   richness?: { pool: 'poor' | 'medium' | 'rich'; tier: number }
+  /** Classic mode's difficulty (the game's RMG schema values for the chosen
+   *  level): scales every guard here, sets its weekly growth, and guards
+   *  neutral cities. Omitted: guard values unchanged, cities unguarded. */
+  difficulty?: RmgDifficultyValues
   /** zone id -> its anchor tile (a player zone's own city node). Lets every
    *  player's starting mines/dwelling/dust be placed at the SAME distance from
    *  their own city (issue #254). Omitted: placed anywhere in the zone, as before. */
@@ -423,7 +431,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
-    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, zoneAnchorNode, symmetricZones = false,
+    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, zoneAnchorNode, symmetricZones = false,
   } = options
   // `rng` is the CONTENT stream (what gets rolled: pool picks, guard values,
   // counts); `posRng` is the positional one (which free tile). Splitting them
@@ -458,10 +466,11 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     if (currentZoneContentLimitBySid.has(sid)) currentZoneContentSoFar.set(sid, (currentZoneContentSoFar.get(sid) ?? 0) + 1)
   }
 
-  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides'], randomHireOverrides?: ZonePlacement['randomHireOverrides']): void => {
+  const place = (sid: string, tiles: number[], randomSquadOverrides?: ZonePlacement['randomSquadOverrides'], randomItemOverrides?: ZonePlacement['randomItemOverrides'], randomCityOverrides?: ZonePlacement['randomCityOverrides'], randomHireOverrides?: ZonePlacement['randomHireOverrides']): number | null => {
     const node = tryPlace(sid, tiles, sizeX, sizeZ, catalogById, state, posRng)
-    if (node === null) return
+    if (node === null) return null
     placements.push({ tempId: state.nextTempId++, sid, node, randomSquadOverrides, randomItemOverrides, randomCityOverrides, randomHireOverrides })
+    return node
   }
 
   /** Places `sid` on a free tile whose distance from `anchorNode` is within
@@ -617,7 +626,10 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  with that zone's own real value when a template provides one — issue
    *  #210 runner-up milestone), no guard is placed at all — the resource
    *  stays free rather than getting a near-worthless guard. */
-  const placeGuard = (tiles: number[], requestedValue: number, fraction: string, cutoff: number = GUARD_VALUE_CUTOFF): void => {
+  const placeGuard = (tiles: number[], baseValue: number, fraction: string, cutoff: number = GUARD_VALUE_CUTOFF): void => {
+    // Difficulty scales the value before the cutoff check, like the game's
+    // own perProgressionPointZoneGuardValue (level 0 = ×1, unchanged).
+    const requestedValue = difficulty ? Math.round(baseValue * difficulty.zoneGuardMultiplier) : baseValue
     if (requestedValue < cutoff) return
     if (catalog && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE) {
       const template = pickSquadTemplate(catalog, fraction, requestedValue, rng)
@@ -629,7 +641,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
         }
       }
     }
-    place('random-squad', tiles, { requestedValue, fraction })
+    place('random-squad', tiles, { requestedValue, fraction, weeklyIncrementBonus: difficulty?.zoneGuardWeeklyIncrement })
   }
 
   // Per-zone treasure-budget scaling from a real template's own
@@ -853,7 +865,22 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // setCitySpawnHero()-based wiring (using the ids addObjectInstances
       // returns) to stay invariant-safe — not a bare boolean here.
       const spawnHero = false
-      place('random-city', tiles, undefined, undefined, { factionSid, spawnHero })
+      const cityNode = place('random-city', tiles, undefined, undefined, { factionSid, spawnHero })
+      // The game's BasicCity main object: a guard with difficulty-dependent
+      // chance/value/growth (map_schemas/Default.mrmg.json), placed close to
+      // the city it protects.
+      if (cityNode !== null && difficulty && rng() < difficulty.cityGuardChance) {
+        const cx = cityNode % sizeX
+        const cz = Math.floor(cityNode / sizeX)
+        const near = tiles.filter((n) => Math.hypot((n % sizeX) - cx, Math.floor(n / sizeX) - cz) <= CITY_GUARD_RADIUS)
+        if (near.length > 0) {
+          place('random-squad', near, {
+            requestedValue: difficulty.cityGuardValue,
+            fraction: sampleFraction(zoneBiome.get(zone.id) ?? 1, 0.5, rng),
+            weeklyIncrementBonus: difficulty.cityGuardWeeklyIncrement,
+          })
+        }
+      }
     }
   }
 

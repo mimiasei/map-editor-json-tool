@@ -50,6 +50,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
+import type { RmgDifficultyValues } from './rmg-schema'
 import { pickSquadTemplate } from './object-variety'
 import {
   tryPlaceAt,
@@ -192,6 +193,9 @@ export interface FortifyZoneBoundariesOptions {
    *  equivalent entrances get equivalent guards (issue #254). Tile positions
    *  are unaffected. */
   symmetricZones?: boolean
+  /** Classic mode's difficulty (game RMG schema values): border guard
+   *  multiplier (on top of `strength`) and weekly growth. Omitted: unchanged. */
+  difficulty?: RmgDifficultyValues
   /** Zone ids that became real islands (`islandLandmassByZone`'s own keys
    *  in generate-random-map.ts) — these zones' own boundary tiles are
    *  skipped entirely by the wall-placement loop below. Real bug confirmed
@@ -253,7 +257,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   const {
     sizeX, sizeZ, zones, zoneIdByNode, zoneBiome, roadPaths, zoneDistances,
     catalogById, mapObjects, catalog, objectVariety, mountainDensity, strength, state, rng,
-    islandZoneIds, waterNodes, symmetricZones = false,
+    islandZoneIds, waterNodes, symmetricZones = false, difficulty,
   } = options
   const playerKindSeed = Math.floor(rng() * 0x7fffffff)
   const neutralKindSeed = Math.floor(rng() * 0x7fffffff)
@@ -299,7 +303,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
       const depth = depthByZone.get(crossing.enteringZone) ?? 0
       const difficultyLabel = depthToDifficultyLabel(depth)
       const range = pickSquadRange([difficultyLabel], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, roll)
-      const requestedValue = Math.round(randomInRange(range.min, range.max, roll) * multiplier)
+      const requestedValue = Math.round(randomInRange(range.min, range.max, roll) * multiplier * (difficulty?.borderGuardMultiplier ?? 1))
 
       const guardNode = crossing.enteringNode
       const biome = zoneBiome.get(crossing.enteringZone) ?? ZONE_BIOMES[0]
@@ -327,7 +331,11 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
         // "every gate guard" still pushed the map-wide nonzero rate to
         // 45-75%, nowhere near the real minority — this roll brings it back
         // toward a genuine minority without losing the mechanic entirely.
-        const weeklyIncrementBonus = roll() < 0.5 ? 0.15 : undefined
+        // With a Classic difficulty, the game's own per-level zone guard
+        // growth replaces this roll (the roll still runs, keeping seeded
+        // sequences unchanged).
+        const rolledBonus = roll() < 0.5 ? 0.15 : undefined
+        const weeklyIncrementBonus = difficulty ? difficulty.zoneGuardWeeklyIncrement : rolledBonus
         guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction, weeklyIncrementBonus } })
       }
     }

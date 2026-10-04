@@ -63,6 +63,7 @@ import type { PlayerBalance } from '@/lib/map-grid/player-balance'
 import {
     COMPLEXITY_LEVELS,
     DEFAULT_CLASSIC_SETTINGS,
+    DIFFICULTY_LEVELS,
     RICHNESS_LEVELS,
     WATER_LEVELS,
     buildClassicOptions,
@@ -398,7 +399,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       const rng = seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : Math.random
       const opts = classicMode
         ? buildClassicOptions(classic, rng)
-        : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined }
+        : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined, difficulty: undefined, gameElevationLayouts: false }
       const result = await generateRandomMapFile({
         mapName,
         onProgress: (label, pct) => setGenProgress({ label, pct }),
@@ -431,6 +432,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         mineGoldBiomeBiasStrength: opts.mineGoldBiomeBiasStrength,
         disabledInteractableSids: opts.disabledInteractableSids,
         richness: opts.richness,
+        difficulty: opts.difficulty,
+        gameElevationLayouts: opts.gameElevationLayouts,
         terrainOnly,
         enabledBiomes: opts.enabledBiomes,
         gameTemplateJson: gameTemplate?.json,
@@ -757,6 +760,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                       {([
                         ['Richness', 'How valuable the treasure is — from poor piles and cheap buildings to rich ones with powerful artifacts. Uses the game\'s own richness tiers.', classic.richness, 'richness', RICHNESS_LEVELS],
                         ['Complexity', 'How busy the map is — scales decoration, interactable objects, treasure piles and guard squads together.', classic.complexity, 'complexity', COMPLEXITY_LEVELS],
+                        ['Difficulty', 'How strong the guard squads are and how fast they grow each week, using the game\'s own six difficulty levels. Neutral cities get guards at higher levels, and the map\'s lobby difficulty is set to match.', classic.difficulty, 'difficulty', DIFFICULTY_LEVELS],
                         ['Water', 'How much water: none, a few to many lakes, or islands reached by portals.', classic.water, 'water', WATER_LEVELS],
                       ] as const).map(([label, info, value, key, options]) => (
                         <div key={key} className="space-y-1.5">
