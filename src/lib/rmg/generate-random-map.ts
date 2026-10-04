@@ -64,7 +64,7 @@ import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
-import { EMPTY_TUNING, applySchemaTuning, type RmgTuning } from './rmg-tuning'
+import { EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
@@ -373,6 +373,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     richness: richness ? resolveRichness(richness, tuning) : undefined,
     difficulty: difficultyValues,
     guardTuning: tuning.guards,
+    mines: resolveMineDistribution(tuning),
     zoneAnchorNode, symmetricZones: !gameTemplateJson,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped

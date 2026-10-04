@@ -6,7 +6,7 @@
 // which mode was used.
 
 import { DEFAULT_TEMPLATE_OVERRIDES } from './template'
-import { EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_MINE_DISTRIBUTION, EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
 import { MIN_ELEVATION_SPAN } from './zone-elevation'
 import type { RmgSchema } from './rmg-schema'
 import { LAYOUT_ARCHETYPES } from './zone-archetypes'
@@ -133,8 +133,12 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       zoneLayouts: schema.zoneLayouts,
     },
     difficulty: Object.fromEntries(DIFFICULTY_LEVELS.map((d, i) => [d.id, schema.difficulties[i]])),
+    mines: {
+      _about: 'Mines per neutral zone = round(zone tiles / tilesPerMine), clamped to min..max; types drawn by these relative weights without repeats until every type was used. Player zones always get wood + ore, plus one extra mine with extraMineChance (the same for every player), its type by playerExtraTypeWeights. Defaults come from the game\'s own maps (6-13 mines per player, ~40% gemstones/crystals/mercury).',
+      ...DEFAULT_MINE_DISTRIBUTION,
+    },
     layout: {
-      _about: 'Relative chance of each zone layout per map (0 disables one). ring: players and neutral zones alternate on one ring; ringCenter: ring plus a richer treasure zone in the middle; innerRing: players outside, neutral zones in an inner ring; doubleNeutral: two neutral zones between neighbours; pockets: ring plus a dead-end treasure pocket per player; hub: every player has a spoke to a shared center. Some layouts are only used up to a player count (doubleNeutral, pockets, hub: 4; innerRing: 7) or on maps big enough for their zones; otherwise ring is used.',
+      _about:'Relative chance of each zone layout per map (0 disables one). ring: players and neutral zones alternate on one ring; ringCenter: ring plus a richer treasure zone in the middle; innerRing: players outside, neutral zones in an inner ring; doubleNeutral: two neutral zones between neighbours; pockets: ring plus a dead-end treasure pocket per player; hub: every player has a spoke to a shared center. Some layouts are only used up to a player count (doubleNeutral, pockets, hub: 4; innerRing: 7) or on maps big enough for their zones; otherwise ring is used.',
       weights: Object.fromEntries(LAYOUT_ARCHETYPES.map((a) => [a, 1])),
     },
     guards: {

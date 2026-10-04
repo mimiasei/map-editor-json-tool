@@ -35,7 +35,7 @@ import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import { NEUTRAL_ROLES, type NeutralZoneRole, type ZoneSpec } from './zone-graph'
 import type { RmgDifficultyValues } from './rmg-schema'
-import type { RmgTuning } from './rmg-tuning'
+import { DEFAULT_MINE_DISTRIBUTION, MINE_TYPES, type MineDistribution, type MineType, type RmgTuning } from './rmg-tuning'
 
 /** Dwelling sids use `necropolis`, not `undead`, as undead's faction token
  *  (CLAUDE.md's own documented sid/id mismatch: dwelling files are named
@@ -65,8 +65,6 @@ export function defaultTreasureGuardShare(catalog: GameCatalog | undefined): num
   return guarded !== undefined && unguarded !== undefined && guarded + unguarded > 0 ? guarded / (guarded + unguarded) : 0.35
 }
 
-const MINE_SIDS = ['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury']
-
 /** Sand's own biome id (terrain-colors.ts's BiomeId). */
 const SAND_BIOME_ID: BiomeId = 2
 
@@ -80,6 +78,38 @@ const SAND_BIOME_ID: BiomeId = 2
  *  (decoration-calibration.ts). No other mine type showed a comparable
  *  biome enrichment in that analysis. */
 const SAND_GOLD_MINE_ENRICHMENT = 2.02
+
+/** A weighted random pick among the types with weight > 0, or null if none. */
+function pickWeightedMine(weights: Partial<Record<MineType, number>>, rng: () => number): MineType | null {
+  const options = MINE_TYPES.filter((t) => (weights[t] ?? 0) > 0)
+  const total = options.reduce((s, t) => s + (weights[t] ?? 0), 0)
+  if (total <= 0) return null
+  let roll = rng() * total
+  for (const t of options) {
+    roll -= weights[t] ?? 0
+    if (roll < 0) return t
+  }
+  return options[options.length - 1]
+}
+
+/** `count` weighted mine types, without repeating a type until every type
+ *  with weight > 0 was used once (so a 4-mine zone isn't 4× wood). */
+function drawMineTypes(count: number, weights: Partial<Record<MineType, number>>, rng: () => number): MineType[] {
+  const out: MineType[] = []
+  let bag: Partial<Record<MineType, number>> = {}
+  for (let i = 0; i < count; i++) {
+    if (!MINE_TYPES.some((t) => (bag[t] ?? 0) > 0)) bag = { ...weights }
+    const t = pickWeightedMine(bag, rng)
+    if (t === null) break
+    out.push(t)
+    bag[t] = 0
+  }
+  return out
+}
+
+/** Neutral-zone mines are kept at least this many tiles apart (when the zone
+ *  has room) so they spread out instead of clumping. */
+const MINE_SPACING = 6
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
@@ -428,6 +458,9 @@ export interface PopulateZonesOptions {
    *  guarded-treasure share, `randomCity` (or chanceBySid["random-city"])
    *  the neutral city guard chance. */
   guardTuning?: RmgTuning['guards']
+  /** How many mines and which types (rmg-tuning.ts DEFAULT_MINE_DISTRIBUTION,
+   *  tuning overrides merged in). */
+  mines?: MineDistribution
   /** zone id -> its anchor tile (a player zone's own city node). Lets every
    *  player's starting mines/dwelling/dust be placed at the SAME distance from
    *  their own city (issue #254). Omitted: placed anywhere in the zone, as before. */
@@ -488,7 +521,7 @@ export interface PopulateZonesOptions {
    *  logic (see `placeTreasure`'s own doc comment). */
   mandatoryContentSidsByZoneId?: Map<number, string[]>
   /** 0 (default) = today's exact behavior (a flat round-robin cycle through
-   *  MINE_SIDS with no biome awareness); 1 = the full real calibrated
+   *  MINE_TYPES with no biome awareness); 1 = the full real calibrated
    *  Sand-biome gold-mine enrichment (see SAND_GOLD_MINE_ENRICHMENT's own
    *  doc comment, issue #230); values in between blend toward it. Never
    *  changes the round-robin's own advancing state — only which sid a
@@ -525,7 +558,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
-    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, guardTuning, zoneAnchorNode, symmetricZones = false,
+    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, guardTuning, mines = DEFAULT_MINE_DISTRIBUTION, zoneAnchorNode, symmetricZones = false,
   } = options
   // `rng` is the CONTENT stream (what gets rolled: pool picks, guard values,
   // counts); `posRng` is the positional one (which free tile). Splitting them
@@ -592,13 +625,17 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  player (issue #254): measured over 12 seeds, per-player mine distances
    *  differed by ~60% and start-guard strength by whatever the random band
    *  produced. Distances are ranges the real maps show (see the player-zone
-   *  comment below: wood/ore 3-17, dust 2-10, gold 7-45 tiles from spawn). */
+   *  comment below: wood/ore 3-17, dust 2-10, gold 7-45 tiles from spawn).
+   *  Besides wood + ore, a start gets one extra mine only with
+   *  `mines.player.extraMineChance` — the game's own maps have gold within 12
+   *  tiles of only 10% of starts and a rare mine near 28%. */
   const startKit = {
     dwelling: randomInRange(3, 6, rng),
     mine_wood: randomInRange(5, 11, rng),
     mine_ore: randomInRange(5, 11, rng),
     resource_dust: randomInRange(3, 8, rng),
-    mine_gold: randomInRange(9, 17, rng),
+    extraMine: rng() < mines.player.extraMineChance ? pickWeightedMine(mines.playerExtraTypeWeights, rng) : null,
+    extraMineDistance: randomInRange(9, 17, rng),
     guardRange: pickSquadRange(['Easy'], RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng),
     guardRoll: rng(),
   }
@@ -803,7 +840,6 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     ? 1
     : neutralResourceValues.length > 0 ? neutralResourceValues[Math.floor(neutralResourceValues.length / 2)] : undefined
 
-  let mineIndex = 0
   const neutralContentSeed = Math.floor(posRng() * 0x7fffffff)
   const playerContentSeed = Math.floor(posRng() * 0x7fffffff)
   // Symmetric content is replayed per neutral ROLE (between/inner/center/
@@ -827,30 +863,26 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       placeAtDistance(`barracks_${dwellingFactionToken(biome)}_1`, tiles, cityNode, startKit.dwelling)
 
       // Every player start needs its own wood + ore mine (this game's real
-      // "wood + ore" building-cost pair — there is no `mine_stone`), a gold
-      // mine, and a dust source (required to upgrade troops) — confirmed by
-      // measuring real spawn-to-nearest-mine distance across all three
-      // analyzed maps: EVERY player spawn in Broken_Alliance.map,
-      // Prisoners.map, and The_Mysterious_Island.map has a wood mine and an
-      // ore mine within 3-17 tiles, and a dust source within 2-10 tiles
-      // (`resource_dust`, or `storage_dust` on the largest map) — this used
-      // to place only ONE mine, alternating wood/ore by an incrementing
-      // index, so roughly half of all generated starts got no wood mine (or
-      // no ore mine) and none ever got a guaranteed gold mine or dust
-      // source at all. Gold is guaranteed too (present in real maps, though
-      // consistently farther out than wood/ore — 7-45 tiles — matching a
-      // real, less-adjacent economic role rather than a starter resource).
-      // Mercury/crystals/gemstones need no such guarantee — real maps show
-      // no consistent near-spawn pattern for them, matching their own
-      // "nice to have" framing; they still come from bordering neutral
-      // zones unforced. Deliberately still just ONE shared light guard for
+      // "wood + ore" building-cost pair — there is no `mine_stone`) and a
+      // dust source (required to upgrade troops) — confirmed by measuring
+      // real spawn-to-nearest-mine distance across all three analyzed maps:
+      // EVERY player spawn in Broken_Alliance.map, Prisoners.map, and
+      // The_Mysterious_Island.map has a wood mine and an ore mine within
+      // 3-17 tiles, and a dust source within 2-10 tiles (`resource_dust`, or
+      // `storage_dust` on the largest map). Gold is NOT guaranteed: across
+      // the game's 9 official maps with mines only 10% of starts have gold
+      // within 12 tiles (it mostly sits 12-25 tiles out, in neighbouring
+      // zones) — so a start gets one optional extra mine instead
+      // (`startKit.extraMine`: gold or gemstones/crystals/mercury, at 9-17
+      // tiles). Deliberately still just ONE shared light guard for
       // the whole player zone (unchanged from before this fix) rather than
       // one per resource — a real regeneration/stats pass found that
       // guarding each of the 4 resources separately (at Easy strength)
       // diluted the map-wide guard-value median on small maps just from
       // sheer guard-count volume, and the user's own request was about
       // resource PRESENCE at player start, not guard density there.
-      for (const mineSid of ['mine_wood', 'mine_ore', 'mine_gold'] as const) placeAtDistance(mineSid, tiles, cityNode, startKit[mineSid])
+      for (const mineSid of ['mine_wood', 'mine_ore'] as const) placeAtDistance(mineSid, tiles, cityNode, startKit[mineSid])
+      if (startKit.extraMine) placeAtDistance(startKit.extraMine, tiles, cityNode, startKit.extraMineDistance)
       placeAtDistance('resource_dust', tiles, cityNode, startKit.resource_dust)
       const range = startKit.guardRange
       // PLAYER_ZONE_GUARD_MULTIPLIER: real RMG templates' own spawn-zone
@@ -872,19 +904,31 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       const mandatorySids = mandatoryContentSidsByZoneId?.get(zone.id)
       const preferredTreasureSids = mandatorySids && mandatorySids.length > 0 ? new Set(mandatorySids) : undefined
 
-      // Sand-biome gold-mine enrichment (issue #230) — an extra override
-      // roll ON TOP OF the round-robin pick below, only consumed when
-      // biome is Sand AND the strength option is active, so every non-Sand
-      // zone (and every zone at all when the option is 0/omitted) takes
-      // the exact same rng()-call path as before this feature existed.
-      const roundRobinSid = MINE_SIDS[(symmetricZones ? roleSeed(roleOf(zone)) : mineIndex) % MINE_SIDS.length]
-      const goldChance = clamp01((1 / MINE_SIDS.length) * scaleMultiplier(SAND_GOLD_MINE_ENRICHMENT, mineGoldBiomeBiasStrength))
-      const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance
-        ? 'mine_gold'
-        : roundRobinSid
-      const mineNode = place(mineSid, tiles)
-      mineIndex += 1
-      if (mineNode !== null) placeMineGuard(zone.id, tiles, biome, mineSid, mineNode)
+      // Mines, like the game's own maps (6-13 per player, ~40% gemstones/
+      // crystals/mercury — see rmg-tuning.ts DEFAULT_MINE_DISTRIBUTION): one
+      // per `tilesPerMine` zone tiles, clamped to min..max, types drawn by
+      // weight without repeats until every type was used. In symmetric
+      // layouts the count comes from the role's mean zone size and the draw
+      // from the role's content stream, so same-role zones get the same set.
+      const mineZoneTiles = symmetricZones ? meanNeutralTilesByRole.get(roleOf(zone)) ?? tiles.length : tiles.length
+      const mineCount = Math.min(mines.neutral.max, Math.max(mines.neutral.min, Math.round(mineZoneTiles / mines.neutral.tilesPerMine)))
+      const placedMineNodes: number[] = []
+      for (const drawnSid of drawMineTypes(mineCount, mines.neutralTypeWeights, rng)) {
+        // Sand-biome gold-mine enrichment (issue #230) — an extra override
+        // roll per mine, only consumed when biome is Sand AND the strength
+        // option is active, so every other zone takes the same rng() path.
+        const goldChance = clamp01((1 / MINE_TYPES.length) * scaleMultiplier(SAND_GOLD_MINE_ENRICHMENT, mineGoldBiomeBiasStrength))
+        const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance ? 'mine_gold' : drawnSid
+        // Spread the zone's mines out: prefer tiles MINE_SPACING away from
+        // the ones already placed; any tile when the zone has no such room.
+        const spaced = placedMineNodes.length === 0
+          ? tiles
+          : tiles.filter((n) => placedMineNodes.every((m) => Math.max(Math.abs((n % sizeX) - (m % sizeX)), Math.abs(Math.floor(n / sizeX) - Math.floor(m / sizeX))) >= MINE_SPACING))
+        const mineNode = (spaced.length > 0 ? place(mineSid, spaced) : null) ?? place(mineSid, tiles)
+        if (mineNode === null) continue
+        placedMineNodes.push(mineNode)
+        placeMineGuard(zone.id, tiles, biome, mineSid, mineNode)
+      }
 
       // Per-zone treasure density: bigger Voronoi regions (more tiles) get
       // proportionally more treasure piles, scaled again by the template's

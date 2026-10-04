@@ -131,7 +131,7 @@ every generation — in the editor and from the game map editor mod. Next to it,
 to change into `rmg-tuning.json` (all keys optional, `_`-keys are comments). It covers complexity
 scales, richness pools/tiers, water chances, elevation (valley chance, minimum hill width, zone
 layouts), how often each zone layout is picked (ring, ring with center, inner ring, double neutral,
-pockets, hub), the difficulty levels' guard values, and the chance of a guard per object category (mines,
+pockets, hub), how many mines of which types neutral and player zones get, the difficulty levels' guard values, and the chance of a guard per object category (mines,
 dwellings, resources, interactables by rarity, artifacts, treasure, random cities) or per object sid.
 Invalid entries are skipped and listed in the app log. Shape and rules: `src/lib/rmg/rmg-tuning.ts`.
 

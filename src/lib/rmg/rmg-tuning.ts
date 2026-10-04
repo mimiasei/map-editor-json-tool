@@ -17,6 +17,8 @@
 //                     "elevationModes": [{ "weight": 10, "minElevatedFraction": 0.2, "maxElevatedFraction": 0.4 }] }] },
 //   "difficulty": { "<easy|normal|hard|impossible|deadly|hell>": { "zoneGuardMultiplier": 1.2, "borderGuardMultiplier": 1.2,
 //                   "zoneGuardWeeklyIncrement": 0.1, "cityGuardChance": 0.4, "cityGuardValue": 3000, "cityGuardWeeklyIncrement": 0.05 } },
+//   "mines":      { "neutral": { "tilesPerMine": 250, "min": 2, "max": 8 }, "neutralTypeWeights": { "<mine sid>": 0-1000 },
+//                   "player": { "extraMineChance": 0-1 }, "playerExtraTypeWeights": { "<mine sid>": 0-1000 } },
 //   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
 //   "guards": {
 //     "chance": { "mine": 0-1, "dwelling": 0-1, "resource": 0-1, "interactableCommon": 0-1, "interactableUncommon": 0-1,
@@ -57,9 +59,39 @@ export interface RmgTuning {
   guards: { chance: Partial<Record<GuardCategory, number>>; chanceBySid: Record<string, number> }
   /** Relative weights of the built-in layout archetypes (zone-archetypes.ts); 0 disables one. */
   layout: { weights: Partial<Record<LayoutArchetype, number>> }
+  /** Overrides of DEFAULT_MINE_DISTRIBUTION; unset parts keep the default. */
+  mines: { neutral: Partial<MineDistribution['neutral']>; neutralTypeWeights?: Partial<Record<MineType, number>>; player: Partial<MineDistribution['player']>; playerExtraTypeWeights?: Partial<Record<MineType, number>> }
 }
 
-export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} } }
+/** Mine sids the RMG places. */
+export const MINE_TYPES = ['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury'] as const
+export type MineType = (typeof MINE_TYPES)[number]
+
+export interface MineDistribution {
+  /** Mines per neutral zone: round(zone tiles / tilesPerMine), clamped to min..max. */
+  neutral: { tilesPerMine: number; min: number; max: number }
+  /** Relative weight of each mine type in neutral zones (drawn without repeats until all were used). */
+  neutralTypeWeights: Partial<Record<MineType, number>>
+  /** Chance of one extra mine in every player zone (besides wood + ore), the same for every player. */
+  player: { extraMineChance: number }
+  /** Relative weight of the extra player-zone mine's type. */
+  playerExtraTypeWeights: Partial<Record<MineType, number>>
+}
+
+/** Built-in mine distribution, from the game's 9 official maps that have
+ *  mines: 6-13 mines per player, ~40% gemstones/crystals/mercury. Neutral
+ *  weights = real counts of mines 12+ tiles from any player start; player
+ *  extra = real non-wood/ore mines within 12 tiles of a start (gold only 10%
+ *  of starts, a rare mine 28%). */
+export const DEFAULT_MINE_DISTRIBUTION: MineDistribution = {
+  neutral: { tilesPerMine: 250, min: 2, max: 8 },
+  neutralTypeWeights: { mine_wood: 26, mine_ore: 25, mine_gold: 36, mine_gemstones: 24, mine_crystals: 26, mine_mercury: 24 },
+  player: { extraMineChance: 0.4 },
+  playerExtraTypeWeights: { mine_gold: 10, mine_gemstones: 9, mine_crystals: 9, mine_mercury: 9 },
+}
+
+
+export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} }, mines: { neutral: {}, player: {} } }
 
 type Json = Record<string, unknown>
 const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -68,7 +100,7 @@ const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null 
  *  warning per ignored entry. */
 export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: string[] } {
   const warnings: string[] = []
-  const tuning: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} } }
+  const tuning: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} }, mines: { neutral: {}, player: {} } }
   if (!isObject(json)) {
     warnings.push('top level is not a JSON object — file ignored')
     return { tuning, warnings }
@@ -106,7 +138,7 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
 
   for (const k of Object.keys(json)) {
     if (k.startsWith('_')) continue
-    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
+    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout', 'mines'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
   }
 
   for (const [id, v] of levels('complexity', section('complexity'), COMPLEXITY_IDS)) {
@@ -163,6 +195,41 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
     if (Object.keys(entry).length > 0) tuning.difficulty[id] = entry
   }
 
+  const mines = section('mines')
+  if (mines) {
+    known('mines', mines, ['neutral', 'neutralTypeWeights', 'player', 'playerExtraTypeWeights'])
+    if (isObject(mines.neutral)) {
+      known('mines.neutral', mines.neutral, ['tilesPerMine', 'min', 'max'])
+      const n = tuning.mines.neutral
+      n.tilesPerMine = num('mines.neutral.tilesPerMine', mines.neutral.tilesPerMine, 20, 100000)
+      for (const k of ['min', 'max'] as const) {
+        const v = num(`mines.neutral.${k}`, mines.neutral[k], 0, 50)
+        if (v !== undefined && !Number.isInteger(v)) warnings.push(`mines.neutral.${k}: must be a whole number — ignored`)
+        else n[k] = v
+      }
+      const min = n.min ?? DEFAULT_MINE_DISTRIBUTION.neutral.min
+      const max = n.max ?? DEFAULT_MINE_DISTRIBUTION.neutral.max
+      if (min > max) { warnings.push(`mines.neutral: min ${min} is above max ${max} — both ignored`); delete n.min; delete n.max }
+    }
+    if (isObject(mines.player)) {
+      known('mines.player', mines.player, ['extraMineChance'])
+      tuning.mines.player.extraMineChance = num('mines.player.extraMineChance', mines.player.extraMineChance, 0, 1)
+    }
+    for (const key of ['neutralTypeWeights', 'playerExtraTypeWeights'] as const) {
+      const raw = mines[key]
+      if (raw === undefined || raw === null) continue
+      if (!isObject(raw)) { warnings.push(`mines.${key}: not an object — ignored`); continue }
+      const weights: Partial<Record<MineType, number>> = {}
+      for (const [sid, v] of Object.entries(raw)) {
+        if (sid.startsWith('_')) continue
+        if (!(MINE_TYPES as readonly string[]).includes(sid)) { warnings.push(`mines.${key}.${sid}: unknown mine (expected ${MINE_TYPES.join(', ')}) — ignored`); continue }
+        const w = num(`mines.${key}.${sid}`, v, 0, 1000)
+        if (w !== undefined) weights[sid as MineType] = w
+      }
+      if (Object.keys(weights).length > 0) tuning.mines[key] = weights
+    }
+  }
+
   const layout = section('layout')
   if (layout) {
     known('layout', layout, ['weights'])
@@ -214,6 +281,21 @@ function parseZoneLayouts(raw: unknown): RmgZoneLayoutPick[] | undefined {
     layouts.push({ name: typeof l.name === 'string' ? l.name : `layout ${layouts.length + 1}`, weight: l.weight, elevationModes: modes })
   }
   return layouts
+}
+
+/** DEFAULT_MINE_DISTRIBUTION with the tuning's overrides merged in (weights
+ *  per mine type, so one changed weight keeps the others). */
+export function resolveMineDistribution(tuning: RmgTuning): MineDistribution {
+  const t = tuning.mines
+  const d = DEFAULT_MINE_DISTRIBUTION
+  const pick = <T extends object>(base: T, over: Partial<T>): T =>
+    ({ ...base, ...Object.fromEntries(Object.entries(over).filter(([, v]) => v !== undefined)) })
+  return {
+    neutral: pick(d.neutral, t.neutral),
+    neutralTypeWeights: { ...d.neutralTypeWeights, ...t.neutralTypeWeights },
+    player: pick(d.player, t.player),
+    playerExtraTypeWeights: { ...d.playerExtraTypeWeights, ...t.playerExtraTypeWeights },
+  }
 }
 
 /** `schema` with the tuning's elevation layouts and per-level difficulty
