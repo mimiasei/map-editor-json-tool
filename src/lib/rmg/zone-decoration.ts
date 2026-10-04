@@ -162,7 +162,7 @@ const CLUSTER_SEED_SPACING = 45
 const CLUSTER_MIN_SIZE = 3
 const CLUSTER_MAX_SIZE = 10
 /** Tight enough that a cluster reads as one clump on screen — deliberately
- *  smaller than zone-guard-scatter.ts's own `NEARBY_GUARD_RADIUS` (4),
+ *  smaller than zone-population.ts's own `NEARBY_GUARD_RADIUS` (4),
  *  which is placing a single object near another, not building a clump. */
 const CLUSTER_RADIUS = 3
 /** Of a mountain-capable zone's own clusters, the fraction that lean

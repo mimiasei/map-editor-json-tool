@@ -89,6 +89,9 @@ export interface ScatterZoneElevationOptions {
    *  When set, this decides presence AND size and replaces `elevationModes`
    *  and the `chance`-based presence roll (`chance` > 0 just enables it). */
   zoneLayouts?: RmgZoneLayoutPick[]
+  /** Minimum width of every part of a hill/valley in x and z (default
+   *  MIN_ELEVATION_SPAN). */
+  minSpan?: number
   /** Nodes already claimed by water or the OPPOSITE elevation kind this same
    *  run (pass hills' own `elevatedNodes` in when generating valleys, and
    *  vice versa, plus water's `waterNodes`) — kept ineligible, along with a
@@ -212,12 +215,9 @@ export function findAdjacentLevelZeroNode(node: number, sizeX: number, sizeZ: nu
 /** Minimum width of every part of a hill/valley along both x and z. Narrower
  *  strips/necks left objects and ramps on them unreachable (a real user
  *  report), so every elevated tile must lie inside a fully elevated
- *  MIN_ELEVATION_SPAN × MIN_ELEVATION_SPAN square. */
+ *  MIN_ELEVATION_SPAN × MIN_ELEVATION_SPAN square (default of the `minSpan`
+ *  option; a hill/valley piece smaller than one such square is dropped). */
 export const MIN_ELEVATION_SPAN = 6
-
-/** A hill/valley smaller than this (in tiles) after pocket repair is dropped
- *  instead of kept — one minimum-width square. */
-const MIN_ELEVATION_COMPONENT_SIZE = MIN_ELEVATION_SPAN * MIN_ELEVATION_SPAN
 
 /** Above this elevated fraction a zone counts as "all raised" — flat ground
  *  one level up, which the game's plane layout means as flat. */
@@ -431,8 +431,9 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneAnchorNode, excludedNodes, blocked, usedAnchors, rng, kind,
     chance = 0, minSize = 8, minSizeFraction = 0.08, maxSizeFraction = 0.5, maxSize = 250,
-    chanceByZone, minSizeByZone, reservedNodes = new Set(), elevationModes, zoneLayouts,
+    chanceByZone, minSizeByZone, reservedNodes = new Set(), elevationModes, zoneLayouts, minSpan = MIN_ELEVATION_SPAN,
   } = options
+  const minComponentSize = minSpan * minSpan
   const pickWeighted = <T extends { weight: number }>(items: T[]): T | undefined => {
     const total = items.reduce((sum, m) => sum + m.weight, 0)
     if (total <= 0) return undefined
@@ -480,7 +481,7 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
   for (const zone of zones) {
     const zoneChance = chanceByZone?.get(zone.id) ?? chance
     if (zoneChance <= 0) continue
-    const zoneMinSize = Math.max(MIN_ELEVATION_COMPONENT_SIZE, minSizeByZone?.get(zone.id) ?? minSize)
+    const zoneMinSize = Math.max(minComponentSize, minSizeByZone?.get(zone.id) ?? minSize)
     // Every PLAYER zone shares one presence roll and one size fraction
     // (issue #254): independent rolls left one start walled in by cliffs while
     // another was open ground (elevated share differed by up to ~37 points).
@@ -543,12 +544,12 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     let blob = grown
     let sealed = false
     for (let round = 0; round < 3; round++) {
-      blob = openWithSquare(blob, MIN_ELEVATION_SPAN, sizeX, sizeZ)
+      blob = openWithSquare(blob, minSpan, sizeX, sizeZ)
       if (blob.size === 0) break
       const before = new Set(blob)
       if (!removeEnclosedPockets(blob, elevatedNodes, reservedNodes, canFill, excludedNodes, sizeX, sizeZ)) { sealed = true; break }
       if (blob.size === before.size && [...blob].every((n) => before.has(n))) break
-      if (round === 2) blob = openWithSquare(blob, MIN_ELEVATION_SPAN, sizeX, sizeZ)
+      if (round === 2) blob = openWithSquare(blob, minSpan, sizeX, sizeZ)
     }
     if (sealed || blob.size === 0) continue
 
@@ -558,7 +559,7 @@ export function scatterZoneElevation(options: ScatterZoneElevationOptions): Zone
     // rather than shipped as unreachable elevation (a real user report:
     // elevation areas with no ramp at all, which must never happen).
     for (const comp of connectedComponents(blob, sizeX, sizeZ)) {
-      if (comp.length < MIN_ELEVATION_COMPONENT_SIZE) continue
+      if (comp.length < minComponentSize) continue
       const compSet = new Set(comp)
       for (const node of comp) elevatedNodes.add(node)
 

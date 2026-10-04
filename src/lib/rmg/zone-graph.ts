@@ -17,7 +17,15 @@ export interface ZoneSpec {
   /** Relative tile-count weight for the Voronoi zone-shaping pass
    *  (zone-layout.ts) — a bigger `size` claims more map tiles. */
   size: number
+  /** A neutral zone's place in a built-in layout (zone-archetypes.ts):
+   *  between two players, on an inner ring/spoke, the shared center, or a
+   *  dead-end pocket. Zones with the same role get the same content in the
+   *  symmetric built-in layouts. Unset for game-template zones. */
+  role?: NeutralZoneRole
 }
+
+export type NeutralZoneRole = 'between' | 'inner' | 'center' | 'pocket'
+export const NEUTRAL_ROLES: NeutralZoneRole[] = ['between', 'inner', 'center', 'pocket']
 
 // Calibration check (issue #225/#224 M2, 2026-09-28, refreshed same day
 // after 6 more real maps were added to the corpus): buildZoneGraph's

@@ -58,6 +58,8 @@ import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDial
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
+import { loadClassicTuning } from '@/lib/rmg/load-tuning'
+import { useCatalogStore } from '@/store/useCatalogStore'
 import PlayerBalancePanel from '@/components/common/PlayerBalancePanel'
 import type { PlayerBalance } from '@/lib/map-grid/player-balance'
 import {
@@ -397,9 +399,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       // was typed — re-running the same seed would just give the same map.
       const seed = freshSeed ? undefined : seedText.trim() ? Number(seedText) : undefined
       const rng = seed !== undefined && Number.isFinite(seed) ? createSeededRng(seed) : Math.random
+      // Classic mode reads the RMG tuning file on every generation (rmg-tuning.ts).
       const opts = classicMode
-        ? buildClassicOptions(classic, rng)
-        : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined, difficulty: undefined, gameElevationLayouts: false }
+        ? buildClassicOptions(classic, rng, await loadClassicTuning(useCatalogStore.getState().catalog))
+        : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined, difficulty: undefined, gameElevationLayouts: false, tuning: undefined }
       const result = await generateRandomMapFile({
         mapName,
         onProgress: (label, pct) => setGenProgress({ label, pct }),
@@ -434,6 +437,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         richness: opts.richness,
         difficulty: opts.difficulty,
         gameElevationLayouts: opts.gameElevationLayouts,
+        tuning: opts.tuning,
         terrainOnly,
         enabledBiomes: opts.enabledBiomes,
         gameTemplateJson: gameTemplate?.json,
