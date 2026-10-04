@@ -21,6 +21,7 @@ import { Loader2, FolderOpen, AlertTriangle, CheckCircle2, Database, ImageIcon }
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
 import { buildIconRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
+import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,41 +52,12 @@ interface DoneState {
 
 /** Derive the Core.zip path from a game installation root. */
 function coreZipPath(gameDir: string): string {
-  const sep = gameDir.includes('\\') ? '\\' : '/'
-  return [gameDir, 'HeroesOldenEra_Data', 'StreamingAssets', 'Core.zip'].join(sep)
+  return streamingAssetsPath(gameDir, 'Core.zip')
 }
 
-/** Try to auto-detect the game installation directory from common Steam paths. */
-async function detectGameDir(): Promise<string | null> {
-  try {
-    const { homeDir } = await import('@tauri-apps/api/path')
-    const home = await homeDir()
-    const { exists } = await import('@tauri-apps/plugin-fs')
-
-    const candidates = [
-      // Windows — Steam default (two folder-name variants seen in the wild)
-      'C:/Program Files (x86)/Steam/steamapps/common/Heroes of Might and Magic Olden Era',
-      'C:/Program Files (x86)/Steam/steamapps/common/Heroes of Might & Magic Olden Era',
-      'C:/Program Files/Steam/steamapps/common/Heroes of Might and Magic Olden Era',
-      'C:/Program Files/Steam/steamapps/common/Heroes of Might & Magic Olden Era',
-      // macOS — Steam default
-      `${home}/Library/Application Support/Steam/steamapps/common/Heroes of Might and Magic Olden Era`,
-      `${home}/Library/Application Support/Steam/steamapps/common/Heroes of Might & Magic Olden Era`,
-      // Linux — Steam default (multiple common paths)
-      `${home}/.steam/steam/steamapps/common/Heroes of Might and Magic Olden Era`,
-      `${home}/.steam/steam/steamapps/common/Heroes of Might & Magic Olden Era`,
-      `${home}/.local/share/Steam/steamapps/common/Heroes of Might and Magic Olden Era`,
-      `${home}/.local/share/Steam/steamapps/common/Heroes of Might & Magic Olden Era`,
-    ]
-
-    for (const c of candidates) {
-      if (await exists(c)) return c
-    }
-  } catch {
-    // ignore — runs on Tauri only, errors are non-fatal
-  }
-  return null
-}
+/** The game folder as found by the app — chosen in the Windows installer, or
+ *  the Steam library holding the game (game-dir.ts / src-tauri game_dir.rs). */
+const detectGameDir = getGameDir
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -101,13 +73,17 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
 
   const unlistenRef = useRef<(() => void) | undefined>(undefined)
 
-  // Auto-detect game dir on first open
+  // Auto-detect the game dir on first open — and when found, run the whole
+  // setup right away (no click needed); the manual fields stay as a fallback.
   useEffect(() => {
     if (!open || gameDir) return
     setDetecting(true)
     detectGameDir().then((dir) => {
-      if (dir) setGameDir(dir)
       setDetecting(false)
+      if (dir) {
+        setGameDir(dir)
+        void handleSetup(dir)
+      }
     })
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -173,9 +149,9 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
   }
 
   // ── Main setup handler ────────────────────────────────────────────────────────
-  const handleSetup = async () => {
-    if (!gameDir.trim()) return
-    const dir = gameDir.trim()
+  const handleSetup = async (detectedDir?: string) => {
+    const dir = (detectedDir ?? gameDir).trim()
+    if (!dir) return
 
     // Phase 1
     setPhase('loading-zip')
@@ -441,7 +417,7 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                 <Button variant="ghost" size="sm" onClick={handleSkip}>
                   Skip
                 </Button>
-                <Button onClick={handleSetup} disabled={!gameDir.trim() || detecting}>
+                <Button onClick={() => void handleSetup()} disabled={!gameDir.trim() || detecting}>
                   Set up editor
                 </Button>
               </>

@@ -2,7 +2,8 @@
 // Finds and reads Core.zip from the appropriate source depending on platform.
 //
 // Priority order:
-// 1. Tauri + Windows: probe default Steam install paths
+// 1. Tauri: the game folder found by the app (game-dir.ts — the folder chosen
+//    in the Windows installer, else the Steam library holding the game)
 // 2. Tauri (all platforms): Core.zip next to the binary (developer local copy)
 // 3. Web: returns null — user must call loadFromFile() manually
 //
@@ -11,22 +12,7 @@
 
 import JSZip from 'jszip'
 import { isTauri } from '@/lib/native-fs'
-
-// ─── Steam install path candidates (Windows only) ────────────────────────────
-
-const STEAM_PATHS = [
-  'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Heroes of Might & Magic Olden Era',
-  'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Heroes of Might and Magic Olden Era',
-  'C:\\Program Files\\Steam\\steamapps\\common\\Heroes of Might & Magic Olden Era',
-  'C:\\Program Files\\Steam\\steamapps\\common\\Heroes of Might and Magic Olden Era',
-]
-
-const APP_INFO_SUFFIX = 'HeroesOldenEra_Data/app.info'
-const CORE_ZIP_SUFFIX = 'HeroesOldenEra_Data/StreamingAssets/Core.zip'
-
-/** The default Steam installs' StreamingAssets folders (Core.zip's folder),
- *  for files that sit next to Core.zip such as map_schemas/. */
-export const STEAM_STREAMING_ASSETS_DIRS = STEAM_PATHS.map((base) => `${base}/HeroesOldenEra_Data/StreamingAssets`)
+import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -54,29 +40,26 @@ export async function readZipJson(zip: JSZip, path: string): Promise<unknown | n
  * Attempts to find and load Core.zip automatically.
  *
  * Returns:
- * - `{ zip, sourceHint }` on success
+ * - `{ zip, sourceHint, path }` on success (`path` = the Core.zip file read)
  * - `null` if not found (web build or no install detected)
  *
  * On the web build, always returns null — use `loadZipFromFile()` instead.
  */
-export async function findCoreZip(): Promise<{ zip: JSZip; sourceHint: string } | null> {
+export async function findCoreZip(): Promise<{ zip: JSZip; sourceHint: string; path: string } | null> {
   if (!isTauri()) return null
 
   try {
     const { exists, readFile } = await import('@tauri-apps/plugin-fs')
 
-    // 1. Probe Steam install paths (Windows)
-    for (const base of STEAM_PATHS) {
-      const infoPath = `${base}/${APP_INFO_SUFFIX}`.replace(/\//g, '\\')
+    // 1. The detected game folder
+    const gameDir = await getGameDir()
+    if (gameDir) {
+      const zipPath = streamingAssetsPath(gameDir, 'Core.zip')
       try {
-        if (await exists(infoPath)) {
-          const zipPath = `${base}/${CORE_ZIP_SUFFIX}`.replace(/\//g, '\\')
-          const bytes = await readFile(zipPath)
-          const zip = await JSZip.loadAsync(bytes)
-          return { zip, sourceHint: 'Steam install' }
-        }
+        const zip = await JSZip.loadAsync(await readFile(zipPath))
+        return { zip, sourceHint: `game folder: ${gameDir}`, path: zipPath }
       } catch {
-        // not found at this path — try next
+        // unreadable — fall through to the developer copy
       }
     }
 
@@ -88,7 +71,7 @@ export async function findCoreZip(): Promise<{ zip: JSZip; sourceHint: string } 
       if (await exists(fallbackPath)) {
         const bytes = await readFile(fallbackPath)
         const zip = await JSZip.loadAsync(bytes)
-        return { zip, sourceHint: 'resource directory' }
+        return { zip, sourceHint: 'resource directory', path: fallbackPath }
       }
     } catch {
       // not found

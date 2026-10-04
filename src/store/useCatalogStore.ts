@@ -3,18 +3,25 @@
 // On failure, store remains usable and all dropdowns fall back to hardcoded lists.
 
 import { create } from 'zustand'
-import { findCoreZip, loadZipFromFile, loadZipFromPath, STEAM_STREAMING_ASSETS_DIRS } from '@/lib/catalog/zip-loader'
+import { findCoreZip, loadZipFromFile, loadZipFromPath } from '@/lib/catalog/zip-loader'
 import { buildCatalog } from '@/lib/catalog/builder'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { loadRmgSchema } from '@/lib/rmg/rmg-schema'
+import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
 import { logInfo, logError } from '@/lib/logger'
 import { isTauri } from '@/lib/native-fs'
 
 /** Attach the game's RMG schema (map_schemas/Default.mrmg.json, next to
- *  Core.zip) to a freshly built catalog. Never fails — falls back to the
- *  built-in copy of the values. */
+ *  Core.zip) to a freshly built catalog. Without a known Core.zip path (a
+ *  browsed-for file), looks in the detected game folder. Never fails — falls
+ *  back to the built-in copy of the values. */
 async function withRmgSchema(catalog: GameCatalog, coreZipPath: string | null): Promise<GameCatalog> {
-  const { schema, path, fromFile } = await loadRmgSchema(coreZipPath, STEAM_STREAMING_ASSETS_DIRS)
+  let zipPath = coreZipPath
+  if (!zipPath) {
+    const gameDir = await getGameDir()
+    if (gameDir) zipPath = streamingAssetsPath(gameDir, 'Core.zip')
+  }
+  const { schema, path, fromFile } = await loadRmgSchema(zipPath)
   if (path) logInfo(`RMG schema loaded from ${path} (${fromFile.length > 0 ? fromFile.join(', ') : 'no usable fields — built-in values'})`)
   else logInfo('RMG schema: Default.mrmg.json not found — using built-in values')
   return { ...catalog, rmgSchema: schema }
@@ -97,7 +104,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
         }
         return
       }
-      const catalog = await withRmgSchema(await buildCatalog(result.zip, result.sourceHint), null)
+      const catalog = await withRmgSchema(await buildCatalog(result.zip, result.sourceHint), result.path)
       logInfo(`Catalog loaded (${catalog.heroes.length} heroes, ${catalog.spells.length} spells, ${catalog.dialogs.length} dialogs)`)
       set({ catalog, loading: false })
     } catch (e) {

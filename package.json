@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build && npm run tauri:sweep",
+    "tauri:sweep": "cargo sweep --time 7 src-tauri || echo Skipped target cleanup: install it with \"cargo install cargo-sweep\""
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",

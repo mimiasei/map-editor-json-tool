@@ -10,7 +10,9 @@ rust-version = "1.77.2"
 
 [lib]
 name = "app_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+# Desktop only needs rlib. staticlib/cdylib (Tauri's template default) are
+# for iOS/Android and each wrote another full copy of the app (~1 GB in debug).
+crate-type = ["rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -35,3 +37,12 @@ tauri-plugin-clipboard-manager = "2"
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-updater = "2"
 tauri-plugin-cli = "2"
+
+# Debug builds: no debug info for third-party crates (never debugged here) —
+# most of target/debug's size. The app's own code keeps full debug info.
+[profile.dev.package."*"]
+debug = false
+
+# Steam install path lookup for game-folder detection (game_dir.rs).
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"

@@ -187,19 +187,17 @@ export function parseRmgSchema(json: unknown): { schema: RmgSchema; fromFile: st
 
 const SCHEMA_SUFFIX = 'map_schemas/Default.mrmg.json'
 
-/** Find and parse Default.mrmg.json (Tauri only). Looks next to the given
- *  Core.zip path first, then in the default Steam install locations. Never
- *  throws — returns the built-in schema when nothing usable is found. */
+/** Find and parse Default.mrmg.json (Tauri only), which sits in the same
+ *  folder as Core.zip. Never throws — returns the built-in schema when
+ *  nothing usable is found. */
 export async function loadRmgSchema(
   coreZipPath: string | null,
-  steamStreamingAssetsDirs: string[],
 ): Promise<{ schema: RmgSchema; path: string | null; fromFile: string[] }> {
   const candidates: string[] = []
   if (coreZipPath) {
     const dir = coreZipPath.replace(/[\\/][^\\/]*$/, '')
     candidates.push(`${dir}/${SCHEMA_SUFFIX}`)
   }
-  for (const dir of steamStreamingAssetsDirs) candidates.push(`${dir}/${SCHEMA_SUFFIX}`)
 
   try {
     const { exists, readTextFile } = await import('@tauri-apps/plugin-fs')
