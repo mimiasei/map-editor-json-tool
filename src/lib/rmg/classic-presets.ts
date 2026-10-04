@@ -9,6 +9,7 @@ import { DEFAULT_TEMPLATE_OVERRIDES } from './template'
 import { EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
 import { MIN_ELEVATION_SPAN } from './zone-elevation'
 import type { RmgSchema } from './rmg-schema'
+import { LAYOUT_ARCHETYPES } from './zone-archetypes'
 
 export type RmgRichness = 'poor' | 'modest' | 'medium' | 'rich' | 'very_rich'
 export type RmgComplexity = 'sparse' | 'light' | 'medium' | 'dense' | 'very_dense'
@@ -132,6 +133,10 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       zoneLayouts: schema.zoneLayouts,
     },
     difficulty: Object.fromEntries(DIFFICULTY_LEVELS.map((d, i) => [d.id, schema.difficulties[i]])),
+    layout: {
+      _about: 'Relative chance of each zone layout per map (0 disables one). ring: players and neutral zones alternate on one ring; ringCenter: ring plus a richer treasure zone in the middle; innerRing: players outside, neutral zones in an inner ring; doubleNeutral: two neutral zones between neighbours; pockets: ring plus a dead-end treasure pocket per player; hub: every player has a spoke to a shared center. Some layouts are only used up to a player count (doubleNeutral, pockets, hub: 4; innerRing: 7) or on maps big enough for their zones; otherwise ring is used.',
+      weights: Object.fromEntries(LAYOUT_ARCHETYPES.map((a) => [a, 1])),
+    },
     guards: {
       _about: 'Chance (0-1) that a guard is placed in front of the object\'s entrance, blocking it. null = built-in behavior: mines in neutral zones are always guarded; mines in player zones and dwelling..artifact follow complexity (the guard squad density: sparse 0.18, light 0.32, medium 0.45, dense 0.63, very_dense 0.81); randomCity follows difficulty.cityGuardChance. chanceBySid overrides a category for one object sid (e.g. "windmill").',
       chance: {

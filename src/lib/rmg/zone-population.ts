@@ -33,7 +33,7 @@ import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, PLAYER_ZONE_GUAR
 import { isRmgIneligibleInteractableSid, pickSquadTemplate, resolveContentPoolPick, resolveGoodsValue, rollContentPool, UNSUPPORTED_CONTENT_POOL_SIDS } from './object-variety'
 import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
-import type { ZoneSpec } from './zone-graph'
+import { NEUTRAL_ROLES, type NeutralZoneRole, type ZoneSpec } from './zone-graph'
 import type { RmgDifficultyValues } from './rmg-schema'
 import type { RmgTuning } from './rmg-tuning'
 
@@ -789,23 +789,37 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   // than its siblings gets proportionally more/less treasure instead.
   // `medianResourceValue` stays undefined (every zone's scale stays exactly
   // 1, unchanged from before this milestone) whenever no template provided
-  // this data at all.
+  // this data at all. Built-in layouts (zones carry a `role`) give values
+  // already relative to an ordinary zone's 1 (zone-archetypes.ts
+  // ROLE_TREASURE_SCALE), so their baseline is 1, not the median — in a
+  // layout where half the neutral zones are pockets the median would be the
+  // pocket value and shrink every ordinary zone instead.
   const neutralResourceValues = zones
     .filter((z) => z.kind === 'neutral')
     .map((z) => zoneContentValueByZoneId?.get(z.id)?.resourcesValue)
     .filter((v): v is number => v !== undefined && v > 0)
     .sort((a, b) => a - b)
-  const medianResourceValue = neutralResourceValues.length > 0 ? neutralResourceValues[Math.floor(neutralResourceValues.length / 2)] : undefined
+  const medianResourceValue = zones.some((z) => z.role !== undefined)
+    ? 1
+    : neutralResourceValues.length > 0 ? neutralResourceValues[Math.floor(neutralResourceValues.length / 2)] : undefined
 
   let mineIndex = 0
   const neutralContentSeed = Math.floor(posRng() * 0x7fffffff)
   const playerContentSeed = Math.floor(posRng() * 0x7fffffff)
-  const neutralTileCounts = zones.filter((z) => z.kind === 'neutral').map((z) => tilesByZone.get(z.id)?.length ?? 0)
-  const meanNeutralTiles = neutralTileCounts.length > 0 ? Math.round(neutralTileCounts.reduce((a, b) => a + b, 0) / neutralTileCounts.length) : 0
+  // Symmetric content is replayed per neutral ROLE (between/inner/center/
+  // pocket — zone-archetypes.ts): zones with the same role get identical
+  // content and share one mean tile count; different roles differ.
+  const roleOf = (z: ZoneSpec): NeutralZoneRole => z.role ?? 'between'
+  const roleSeed = (role: NeutralZoneRole): number => (neutralContentSeed + NEUTRAL_ROLES.indexOf(role) * 0x9e3779b1) % 0x7fffffff
+  const meanNeutralTilesByRole = new Map<NeutralZoneRole, number>()
+  for (const role of NEUTRAL_ROLES) {
+    const counts = zones.filter((z) => z.kind === 'neutral' && roleOf(z) === role).map((z) => tilesByZone.get(z.id)?.length ?? 0)
+    if (counts.length > 0) meanNeutralTilesByRole.set(role, Math.round(counts.reduce((a, b) => a + b, 0) / counts.length))
+  }
   for (const zone of zones) {
     const tiles = tilesByZone.get(zone.id) ?? []
     if (tiles.length === 0) continue
-    contentRng = symmetricZones ? createSeededRng(zone.kind === 'neutral' ? neutralContentSeed : playerContentSeed) : posRng
+    contentRng = symmetricZones ? createSeededRng(zone.kind === 'neutral' ? roleSeed(roleOf(zone)) : playerContentSeed) : posRng
     const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
 
     if (zone.kind === 'player') {
@@ -863,7 +877,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // biome is Sand AND the strength option is active, so every non-Sand
       // zone (and every zone at all when the option is 0/omitted) takes
       // the exact same rng()-call path as before this feature existed.
-      const roundRobinSid = MINE_SIDS[(symmetricZones ? neutralContentSeed : mineIndex) % MINE_SIDS.length]
+      const roundRobinSid = MINE_SIDS[(symmetricZones ? roleSeed(roleOf(zone)) : mineIndex) % MINE_SIDS.length]
       const goldChance = clamp01((1 / MINE_SIDS.length) * scaleMultiplier(SAND_GOLD_MINE_ENRICHMENT, mineGoldBiomeBiasStrength))
       const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance
         ? 'mine_gold'
@@ -894,7 +908,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // Fun_and_Graves.map (123) almost exactly — while a typical smaller
       // zone's own count is unchanged (the cap essentially never fired for
       // realistic zone sizes anyway).
-      const baseTreasureCount = 1 + Math.floor((symmetricZones ? meanNeutralTiles : tiles.length) / 150)
+      const baseTreasureCount = 1 + Math.floor((symmetricZones ? meanNeutralTilesByRole.get(roleOf(zone)) ?? tiles.length : tiles.length) / 150)
 
       // `treasureScale`: this zone's own real `resourcesValue` relative to
       // its neutral-zone siblings (see `medianResourceValue` above) — a

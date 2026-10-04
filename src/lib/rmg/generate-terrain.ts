@@ -51,7 +51,9 @@ import {computeFootprintTiles, clampAnchorToFootprintBounds, protectedNeighborNo
 import { isElevationWallTile } from '@/lib/map-grid/passability'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
-import { buildZoneGraph, zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
+import { zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
+import { buildBuiltInLayout, ROLE_TREASURE_SCALE, type BuiltInLayout, type LayoutArchetype } from './zone-archetypes'
+import { logInfo } from '@/lib/logger'
 import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides } from './rmg-template-import'
 import { blendZoneBordersWFC } from './terrain-wfc'
 import { layoutZoneCenters, nearestTile, relaxZoneCenters, type ZoneCenter } from './zone-layout'
@@ -128,6 +130,9 @@ export interface GenerateTerrainOptions {
   hillLayouts?: RmgZoneLayoutPick[]
   /** Minimum hill/valley width (zone-elevation.ts `minSpan`); undefined = its default. */
   elevationMinSpan?: number
+  /** Relative weights of the built-in layout archetypes (zone-archetypes.ts,
+   *  tuning file `layout.weights`); unset = 1 each. Ignored with a game template. */
+  layoutWeights?: Partial<Record<LayoutArchetype, number>>
   /** See this file's own header comment on `computeWater` — same reasoning
    *  applies to elevation: the real full-pipeline generator computes its
    *  own hills/valleys later (generate-random-map.ts, after object
@@ -244,6 +249,8 @@ export interface TerrainResult {
   biomeIdByZoneId: Map<number, BiomeId>
   mandatoryContentSidsByZoneId: Map<number, string[]>
   roadMaterialByEdgeKey: Map<string, 'Stone' | 'Dirt'>
+  /** The built-in layout archetype picked for this map; null with a game template. */
+  layoutArchetype: LayoutArchetype | null
 }
 
 /**
@@ -262,18 +269,29 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
-    hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, computeElevation = false,
+    hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, layoutWeights, computeElevation = false,
     enabledBiomes, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
 
   const importedTopology = gameTemplateJson ? importGameTemplateTopology(gameTemplateJson, rng) : null
-  const graph = importedTopology ? importedTopology.graph : buildZoneGraph(playerCount)
+  // Built-in maps pick one of several symmetric layout archetypes
+  // (zone-archetypes.ts) instead of always the same ring (issue #254 fairness
+  // holds: every archetype repeats one sector unit per player).
+  const builtInLayout = importedTopology
+    ? null
+    : buildBuiltInLayout(sizeX, sizeZ, playerCount, rng, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25, layoutWeights)
+  if (builtInLayout) logInfo(`RMG layout: ${builtInLayout.archetype} (${builtInLayout.graph.zones.length} zones)`)
+  const graph = importedTopology ? importedTopology.graph : (builtInLayout as BuiltInLayout).graph
   const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
   const unpaintedEdges = importedTopology?.unpaintedEdges ?? new Set<string>()
   const zoneLayoutByZoneId = importedTopology?.zoneLayoutByZoneId ?? new Map<number, ZoneLayoutOverrides>()
   const guardCutoffValueByZoneId = importedTopology?.guardCutoffValueByZoneId ?? new Map<number, number>()
-  const zoneContentValueByZoneId = importedTopology?.zoneContentValueByZoneId ?? new Map<number, ZoneContentValueOverrides>()
+  // Built-in layouts: center/pocket zones get extra treasure through the same
+  // relative `resourcesValue` scaling game templates use (zone-population.ts).
+  const zoneContentValueByZoneId = importedTopology?.zoneContentValueByZoneId ?? new Map<number, ZoneContentValueOverrides>(
+    graph.zones.filter((z) => z.kind === 'neutral').map((z) => [z.id, { resourcesValue: ROLE_TREASURE_SCALE[z.role ?? 'between'] }]),
+  )
   const contentCountLimitsByZoneId = importedTopology?.contentCountLimitsByZoneId ?? new Map<number, { sid: string; maxCount: number }[]>()
   const neutralCityExclusionsByZoneId = importedTopology?.neutralCityExclusionsByZoneId ?? new Map<number, Set<number>>()
   const biomeIdByZoneId = importedTopology?.biomeIdByZoneId ?? new Map<number, BiomeId>()
@@ -283,18 +301,19 @@ export function generateTerrain(
   if (zoneDistances.some((row) => row.some((d) => !Number.isFinite(d)))) {
     throw new Error(importedTopology
       ? 'RMG game template graph is disconnected — its own zones/connections do not form a single connected graph'
-      : 'RMG zone graph is disconnected — buildZoneGraph should never produce this')
+      : 'RMG zone graph is disconnected — a built-in layout archetype (zone-archetypes.ts) should never produce this')
   }
 
-  // The built-in ring is laid out SYMMETRICALLY and left unrelaxed (issue
+  // Built-in layouts are laid out SYMMETRICALLY and left unrelaxed (issue
   // #254): the force-directed relaxation pushed zones against the map border
   // unevenly, so player zones ended up differing in area by up to ~65% at 4-6
-  // players (measured over 12 seeds). Equal angular spacing on one ring gives
-  // every player the same surroundings by construction. An imported game
-  // template keeps the relaxed layout — its own zone graph is authoritative.
+  // players (measured over 12 seeds). Repeating one sector unit per player at
+  // equal angles gives every player the same surroundings by construction.
+  // An imported game template keeps the relaxed layout — its own zone graph
+  // is authoritative.
   const centers = importedTopology
     ? relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
-    : layoutZoneCenters(sizeX, sizeZ, graph, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25)
+    : (builtInLayout as BuiltInLayout).centers
   const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
   const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes, biomeIdByZoneId)
 
@@ -481,5 +500,6 @@ export function generateTerrain(
     waterNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
+    layoutArchetype: builtInLayout?.archetype ?? null,
   }
 }

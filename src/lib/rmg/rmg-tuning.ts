@@ -17,6 +17,7 @@
 //                     "elevationModes": [{ "weight": 10, "minElevatedFraction": 0.2, "maxElevatedFraction": 0.4 }] }] },
 //   "difficulty": { "<easy|normal|hard|impossible|deadly|hell>": { "zoneGuardMultiplier": 1.2, "borderGuardMultiplier": 1.2,
 //                   "zoneGuardWeeklyIncrement": 0.1, "cityGuardChance": 0.4, "cityGuardValue": 3000, "cityGuardWeeklyIncrement": 0.05 } },
+//   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
 //   "guards": {
 //     "chance": { "mine": 0-1, "dwelling": 0-1, "resource": 0-1, "interactableCommon": 0-1, "interactableUncommon": 0-1,
 //                 "interactableRare": 0-1, "artifact": 0-1, "treasure": 0-1, "randomCity": 0-1 },
@@ -26,6 +27,7 @@
 
 import { logInfo, logWarn } from '@/lib/logger'
 import type { RmgDifficultyValues, RmgElevationMode, RmgSchema, RmgZoneLayoutPick } from './rmg-schema'
+import { LAYOUT_ARCHETYPES, type LayoutArchetype } from './zone-archetypes'
 
 export const COMPLEXITY_IDS = ['sparse', 'light', 'medium', 'dense', 'very_dense'] as const
 export const RICHNESS_IDS = ['poor', 'modest', 'medium', 'rich', 'very_rich'] as const
@@ -53,9 +55,11 @@ export interface RmgTuning {
   elevation: { valleyChanceMax?: number; minAreaSpan?: number; zoneLayouts?: RmgZoneLayoutPick[] }
   difficulty: Partial<Record<(typeof DIFFICULTY_IDS)[number], Partial<RmgDifficultyValues>>>
   guards: { chance: Partial<Record<GuardCategory, number>>; chanceBySid: Record<string, number> }
+  /** Relative weights of the built-in layout archetypes (zone-archetypes.ts); 0 disables one. */
+  layout: { weights: Partial<Record<LayoutArchetype, number>> }
 }
 
-export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} } }
+export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} } }
 
 type Json = Record<string, unknown>
 const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -64,7 +68,7 @@ const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null 
  *  warning per ignored entry. */
 export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: string[] } {
   const warnings: string[] = []
-  const tuning: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} } }
+  const tuning: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} } }
   if (!isObject(json)) {
     warnings.push('top level is not a JSON object — file ignored')
     return { tuning, warnings }
@@ -102,7 +106,7 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
 
   for (const k of Object.keys(json)) {
     if (k.startsWith('_')) continue
-    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
+    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
   }
 
   for (const [id, v] of levels('complexity', section('complexity'), COMPLEXITY_IDS)) {
@@ -157,6 +161,19 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
       if (value !== undefined) entry[field] = value
     }
     if (Object.keys(entry).length > 0) tuning.difficulty[id] = entry
+  }
+
+  const layout = section('layout')
+  if (layout) {
+    known('layout', layout, ['weights'])
+    if (isObject(layout.weights)) {
+      for (const [k, v] of Object.entries(layout.weights)) {
+        if (k.startsWith('_')) continue
+        if (!(LAYOUT_ARCHETYPES as readonly string[]).includes(k)) { warnings.push(`layout.weights.${k}: unknown layout (expected ${LAYOUT_ARCHETYPES.join(', ')}) — ignored`); continue }
+        const weight = num(`layout.weights.${k}`, v, 0, 1000)
+        if (weight !== undefined) tuning.layout.weights[k as LayoutArchetype] = weight
+      }
+    } else if (layout.weights !== undefined && layout.weights !== null) warnings.push('layout.weights: not an object — ignored')
   }
 
   const guards = section('guards')

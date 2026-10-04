@@ -329,7 +329,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // compute water itself.
   await reportProgress('Laying out zones and terrain', 0)
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly, computeElevation: terrainOnly, organicTerrainBlending,
   })
@@ -553,8 +553,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // Roads — one per zone-graph edge, connecting each pair's own anchor
   // tiles, routed around whatever's already placed OR flooded (water is
   // already in `state.blocked` by this point, so a road can never cross
-  // open water — buildZoneGraph's ring guarantees the underlying zone
-  // graph is connected, but a specific road can still fail to route
+  // open water — every built-in layout archetype (zone-archetypes.ts) is a
+  // connected zone graph, but a specific road can still fail to route
   // around a crowded/watery zone, which is why this is a real search with
   // a real "not found" case, not an assumed-successful straight line — an
   // island zone's own road edges are expected to fail this way, since the
@@ -726,10 +726,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     }
     // Progressively-uncertain long-haul connectivity — a real user
     // request: full player-to-player paved routes should get less certain
-    // over distance, not guaranteed. Every edge here already connects a
-    // player zone to its OWN immediate neutral neighbor (buildZoneGraph's
-    // ring never has a player-player or neutral-neutral edge), so a miss
-    // just leaves one local stretch unpaved — a route spanning several
+    // over distance, not guaranteed. Every edge here connects two
+    // neighbouring zones (built-in layouts never have a player-player
+    // edge), so a miss just leaves one local stretch unpaved — a route
+    // spanning several
     // edges to a distant player compounds this naturally, no separate
     // distance-aware logic needed. Roads are cosmetic (never gate
     // walkability), so skipping some is a style choice, not a
