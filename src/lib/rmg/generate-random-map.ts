@@ -378,22 +378,6 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
 
-  // Proximity guards (real user request) — a random chance of a guard at the
-  // entrance of a real mine/dwelling/resource/artifact `populateZones` just
-  // placed; objects whose guard `populateZones` already decided (neutral
-  // mines, guarded treasure — `decidedNodes`) are skipped. Deliberately a
-  // SEPARATE pass run right here, immediately after resources/artifacts
-  // exist to guard (the user's own explicit ordering), not folded into
-  // `populateZones` itself.
-  await reportProgress('Placing guards', 18)
-  const playerZoneIds = graph.zones.filter((z) => z.kind === 'player').map((z) => z.id)
-  const proximityGuards = scatterProximityGuards({
-    sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
-    catalogById, catalog, objectVariety, squadDensity, state, rng, symmetricZones: !gameTemplateJson,
-    difficulty: difficultyValues,
-    guardTuning: tuning.guards,
-    decidedNodes,
-  })
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
   }
@@ -1072,6 +1056,26 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // header comment for the full design.
   const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, zoneIdByNode, zoneBiome, catalogById, state, rng })
   if (beachResult.terrainChanges.length > 0) block2 = paintTerrainTiles(block2, beachResult.terrainChanges)
+
+  // Proximity guards — LAST of the object passes, so every guardable object
+  // exists: zone population's mines/dwellings/resources/artifacts AND the
+  // interactables pass's objects. Each one rolls its tuned chance (per sid,
+  // else category, else `squadDensity`) and the guard stands on the tile
+  // `tryPlaceAt` reserved in front of its entrance (kept free of water,
+  // cliffs, walls, rivers and solid objects since), blocking it. Objects
+  // `populateZones` already decided (neutral mines, guarded treasure, neutral
+  // cities — `decidedNodes`) are skipped. Runs before the reachability pass
+  // below so that pass sees the guards.
+  await reportProgress('Placing guards', 82)
+  const playerZoneIds = graph.zones.filter((z) => z.kind === 'player').map((z) => z.id)
+  const proximityGuards = scatterProximityGuards({
+    sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
+    catalogById, catalog, objectVariety, squadDensity, state, rng, symmetricZones: !gameTemplateJson,
+    difficulty: difficultyValues,
+    guardTuning: tuning.guards,
+    decidedNodes,
+    laterPlacements: interactablePlacements,
+  })
 
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain
   // carving" milestone item) — reuses the H3-import accessibility pass
