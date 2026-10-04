@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    BepInEx 6 (IL2CPP) plugin for the game's map editor. Compiles against the
+    BepInEx NuGet packages only — no game or interop DLLs (see GameApi.cs), so
+    it builds on CI. The output DLL goes into the game's BepInEx\plugins folder;
+    the Windows installer of the Scenario Editor does that (src-tauri/windows).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>GmeRmgMod</AssemblyName>
+    <RootNamespace>GmeRmgMod</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RestoreAdditionalProjectSources>https://nuget.bepinex.dev/v3/index.json</RestoreAdditionalProjectSources>
+    <!-- BepInEx, Harmony and Il2CppInterop are provided by BepInEx in the game. -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Must match the BepInEx build the installer bundles (BEPINEX_BUILD in scripts/prepare-gme-mod.ps1). -->
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.785" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

@@ -3,6 +3,14 @@ use tauri::{
     Emitter,
 };
 
+mod game_dir;
+
+/// The game's install folder (see game_dir.rs), or None when not found.
+#[tauri::command]
+fn detect_game_dir() -> Option<String> {
+    game_dir::detect().map(|d| d.to_string_lossy().into_owned())
+}
+
 // ─── Thumbnail extraction ────────────────────────────────────────────────────
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -153,6 +161,11 @@ async fn extract_thumbnails(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Installer helper: report the game folder and exit before any window starts.
+    if game_dir::handle_cli() {
+        return;
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new()
             .level(log::LevelFilter::Info)
@@ -164,7 +177,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .invoke_handler(tauri::generate_handler![extract_thumbnails])
+        .invoke_handler(tauri::generate_handler![extract_thumbnails, detect_game_dir])
         .setup(|app| {
             // ── Auto-update (desktop only) ───────────────────────────────────
             // The frontend drives the check and install via the JS API; this only

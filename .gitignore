@@ -65,3 +65,9 @@ Core/
 
 extract_thumbnails-x86_64-unknown-linux-gnu.spec
 src-tauri/sidecar/extract_thumbnails-x86_64-unknown-linux-gnu
+
+# Map editor mod: build outputs and the installer payload from scripts/prepare-gme-mod.ps1
+# (BepInEx is downloaded at build time, never committed)
+gme-mod/bin/
+gme-mod/obj/
+src-tauri/gme-mod/

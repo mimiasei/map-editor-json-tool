@@ -117,6 +117,11 @@ npm run tauri:build  # package the desktop app
 test suite; behavioural checks are done against the real game data in `Core/` and the `.map`
 files in `maps/` (neither is committed).
 
+On Windows, run `scripts\prepare-gme-mod.ps1` once before `npm run tauri:build`: the installer
+bundles the game map editor mod and BepInEx (see [gme-mod/README.md](gme-mod/README.md)), and
+the build fails without them. The installer also finds the game folder (Steam libraries) or asks
+for it, so the editor loads `Core.zip` on first start without manual setup.
+
 Desktop-only features are gated behind `isTauri()` (`src/lib/native-fs.ts`), and every Tauri
 API is reached through a dynamic import inside that guard — never imported at module top
 level, so the web build stays clean.
