@@ -10,6 +10,7 @@ import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { generateRandomMapBytes } from '@/lib/rmg/generate-map-file'
 import { buildClassicOptions } from '@/lib/rmg/classic-presets'
+import { loadClassicTuning } from '@/lib/rmg/load-tuning'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { parseHeadlessArgs, EXIT_OK, EXIT_FAILED, EXIT_BAD_ARGS, EXIT_NO_CATALOG } from '@/lib/rmg/headless-args'
 import { setHeadlessYield } from '@/lib/async-utils'
@@ -76,7 +77,7 @@ export default function HeadlessGenerate({ args }: Props) {
           sizeZ: parsed.sizeZ,
           playerCount: parsed.playerCount,
           playerSpawnerSid: 'city-spawner',
-          ...buildClassicOptions(parsed.classic, rng),
+          ...buildClassicOptions(parsed.classic, rng, await loadClassicTuning(useCatalogStore.getState().catalog)),
           rng,
         })
         if (!generated) throw new Error('Headless generation requires the desktop build')

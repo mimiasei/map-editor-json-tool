@@ -126,6 +126,8 @@ export interface GenerateTerrainOptions {
   /** The game's per-zone elevation layouts for hills (zone-elevation.ts
    *  `zoneLayouts`); undefined keeps the `hillChance` presence roll. */
   hillLayouts?: RmgZoneLayoutPick[]
+  /** Minimum hill/valley width (zone-elevation.ts `minSpan`); undefined = its default. */
+  elevationMinSpan?: number
   /** See this file's own header comment on `computeWater` — same reasoning
    *  applies to elevation: the real full-pipeline generator computes its
    *  own hills/valleys later (generate-random-map.ts, after object
@@ -260,7 +262,7 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
-    hillChance = 0, valleyChance = 0, hillLayouts, computeElevation = false,
+    hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, computeElevation = false,
     enabledBiomes, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
@@ -437,12 +439,12 @@ export function generateTerrain(
     const hillResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'hill', chance: hillChance,
-      reservedNodes: waterNodesAll, zoneLayouts: hillLayouts,
+      reservedNodes: waterNodesAll, zoneLayouts: hillLayouts, minSpan: elevationMinSpan,
     })
     const valleyResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'valley', chance: valleyChance,
-      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]),
+      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]), minSpan: elevationMinSpan,
     })
     levelChangesAll = [...levelChangesAll, ...hillResult.levelChanges, ...valleyResult.levelChanges]
     climbChangesAll = [...hillResult.climbChanges, ...valleyResult.climbChanges]

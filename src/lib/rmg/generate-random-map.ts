@@ -63,7 +63,8 @@ import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, s
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
-import { RICHNESS_LEVELS, difficultyIndex, type RmgDifficulty, type RmgRichness } from './classic-presets'
+import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
+import { EMPTY_TUNING, applySchemaTuning, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
@@ -270,6 +271,10 @@ export interface GenerateRandomMapOptions {
    *  (`catalog.rmgSchema.difficulties`), and guards neutral cities. Omitted
    *  = today's guard strengths unchanged. */
   difficulty?: RmgDifficulty
+  /** Overrides from the RMG tuning file (rmg-tuning.ts): elevation layouts
+   *  and minimum width, difficulty values, richness pools/tiers and guard
+   *  chances. Classic mode passes it (buildClassicOptions). */
+  tuning?: RmgTuning
   /** Optional staged-progress reporter — see `RmgProgressCallback`'s own doc
    *  comment. Purely observational: never changes what's generated, only
    *  when the caller finds out about it. */
@@ -292,7 +297,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
   const disabledInteractableSidSet = disabledInteractableSids && disabledInteractableSids.length > 0 ? new Set(disabledInteractableSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
@@ -306,8 +311,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   }
   const tileCount = sizeX * sizeZ
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
-  const hillLayouts = gameElevationLayouts ? (catalog.rmgSchema ?? BUILTIN_RMG_SCHEMA).zoneLayouts : undefined
-  const difficultyValues = difficulty ? (catalog.rmgSchema ?? BUILTIN_RMG_SCHEMA).difficulties[difficultyIndex(difficulty)] : undefined
+  const rmgSchema = applySchemaTuning(catalog.rmgSchema ?? BUILTIN_RMG_SCHEMA, tuning)
+  const hillLayouts = gameElevationLayouts ? rmgSchema.zoneLayouts : undefined
+  const difficultyValues = difficulty ? rmgSchema.difficulties[difficultyIndex(difficulty)] : undefined
+  const elevationMinSpan = tuning.elevation.minAreaSpan
 
   // Zone graph → Fruchterman-Reingold layout → Penrose-tiling zone shaping →
   // biome assignment (Milestone 4 — see generate-terrain.ts's own header
@@ -322,7 +329,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // compute water itself.
   await reportProgress('Laying out zones and terrain', 0)
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly, computeElevation: terrainOnly, organicTerrainBlending,
   })
@@ -363,8 +370,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
-    richness: richness ? RICHNESS_LEVELS.find((r) => r.id === richness) : undefined,
+    richness: richness ? resolveRichness(richness, tuning) : undefined,
     difficulty: difficultyValues,
+    guardTuning: tuning.guards,
     zoneAnchorNode, symmetricZones: !gameTemplateJson,
   })
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
@@ -381,6 +389,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds,
     catalogById, catalog, objectVariety, squadDensity, state, rng, symmetricZones: !gameTemplateJson,
     difficulty: difficultyValues,
+    guardTuning: tuning.guards,
   })
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
@@ -498,12 +507,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const hillResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'hill', chance: hillChance,
-      reservedNodes: waterNodesAll, elevationModes: catalog.rmgZoneLayout?.elevationModes, zoneLayouts: hillLayouts,
+      reservedNodes: waterNodesAll, elevationModes: catalog.rmgZoneLayout?.elevationModes, zoneLayouts: hillLayouts, minSpan: elevationMinSpan,
     })
     const valleyResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'valley', chance: valleyChance,
-      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]), elevationModes: catalog.rmgZoneLayout?.elevationModes,
+      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]), elevationModes: catalog.rmgZoneLayout?.elevationModes, minSpan: elevationMinSpan,
     })
     levelChangesAll = [...levelChangesAll, ...hillResult.levelChanges, ...valleyResult.levelChanges]
     climbChangesAll = [...hillResult.climbChanges, ...valleyResult.climbChanges]

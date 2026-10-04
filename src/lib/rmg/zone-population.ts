@@ -35,6 +35,7 @@ import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import type { ZoneSpec } from './zone-graph'
 import type { RmgDifficultyValues } from './rmg-schema'
+import type { RmgTuning } from './rmg-tuning'
 
 /** Dwelling sids use `necropolis`, not `undead`, as undead's faction token
  *  (CLAUDE.md's own documented sid/id mismatch: dwelling files are named
@@ -54,6 +55,15 @@ function dwellingFactionToken(biome: BiomeId): string {
  *  — cycled through neutral zones for variety. */
 /** A neutral city's guard is placed within this many tiles of the city. */
 const CITY_GUARD_RADIUS = 3
+
+/** Share of treasure slots that become guarded treasure: the game's
+ *  guarded/unguarded encounter density ratio (default_zone_layouts.json,
+ *  1.4/(1.4+1) ≈ 0.58), or 0.35 without it — see populateZones. */
+export function defaultTreasureGuardShare(catalog: GameCatalog | undefined): number {
+  const guarded = catalog?.rmgZoneLayout?.guardedEncounterDencity
+  const unguarded = catalog?.rmgZoneLayout?.unguardedEncounterDencity
+  return guarded !== undefined && unguarded !== undefined && guarded + unguarded > 0 ? guarded / (guarded + unguarded) : 0.35
+}
 
 const MINE_SIDS = ['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury']
 
@@ -337,6 +347,10 @@ export interface PopulateZonesOptions {
    *  level): scales every guard here, sets its weekly growth, and guards
    *  neutral cities. Omitted: guard values unchanged, cities unguarded. */
   difficulty?: RmgDifficultyValues
+  /** Tuning-file guard chances (rmg-tuning.ts): `treasure` replaces the
+   *  guarded-treasure share, `randomCity` (or chanceBySid["random-city"])
+   *  the neutral city guard chance. */
+  guardTuning?: RmgTuning['guards']
   /** zone id -> its anchor tile (a player zone's own city node). Lets every
    *  player's starting mines/dwelling/dust be placed at the SAME distance from
    *  their own city (issue #254). Omitted: placed anywhere in the zone, as before. */
@@ -431,7 +445,7 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
-    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, zoneAnchorNode, symmetricZones = false,
+    mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, guardTuning, zoneAnchorNode, symmetricZones = false,
   } = options
   // `rng` is the CONTENT stream (what gets rolled: pool picks, guard values,
   // counts); `posRng` is the positional one (which free tile). Splitting them
@@ -550,12 +564,9 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
    *  figures for exactly this guarded-vs-unguarded split — giving a real
    *  ratio of 1.4/(1.4+1) ≈ 0.58. Falls back to the old 0.35 guess only when
    *  `rmgZoneLayout` is unavailable (the static fallback catalog, or an
-   *  older Core.zip missing this file). */
-  const guardedDencity = catalog?.rmgZoneLayout?.guardedEncounterDencity
-  const unguardedDencity = catalog?.rmgZoneLayout?.unguardedEncounterDencity
-  const GUARDED_TREASURE_SHARE = guardedDencity !== undefined && unguardedDencity !== undefined && guardedDencity + unguardedDencity > 0
-    ? guardedDencity / (guardedDencity + unguardedDencity)
-    : 0.35
+   *  older Core.zip missing this file). The tuning file's
+   *  `guards.chance.treasure` replaces it. */
+  const GUARDED_TREASURE_SHARE = guardTuning?.chance.treasure ?? defaultTreasureGuardShare(catalog)
 
   /** issue #240 Phase 2 — the real `content_pool_general_resources_*`/
    *  `template_pool_random_t{0-5}_*` pool families are both explicitly
@@ -869,7 +880,8 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       // The game's BasicCity main object: a guard with difficulty-dependent
       // chance/value/growth (map_schemas/Default.mrmg.json), placed close to
       // the city it protects.
-      if (cityNode !== null && difficulty && rng() < difficulty.cityGuardChance) {
+      const cityGuardChance = guardTuning?.chanceBySid['random-city'] ?? guardTuning?.chance.randomCity ?? difficulty?.cityGuardChance ?? 0
+      if (cityNode !== null && difficulty && rng() < cityGuardChance) {
         const cx = cityNode % sizeX
         const cz = Math.floor(cityNode / sizeX)
         const near = tiles.filter((n) => Math.hypot((n % sizeX) - cx, Math.floor(n / sizeX) - cz) <= CITY_GUARD_RADIUS)

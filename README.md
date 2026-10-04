@@ -122,6 +122,18 @@ bundles the game map editor mod and BepInEx (see [gme-mod/README.md](gme-mod/REA
 the build fails without them. The installer also finds the game folder (Steam libraries) or asks
 for it, so the editor loads `Core.zip` on first start without manual setup.
 
+### Tuning the Classic random map generator
+
+Classic-mode values can be overridden without rebuilding, in an optional
+`rmg-tuning.json` in the app data folder (Windows: `%APPDATA%\com.oe.map-editor\`). It is read on
+every generation — in the editor and from the game map editor mod. Next to it,
+`rmg-tuning.defaults.json` is rewritten on each generation with every current value; copy the ones
+to change into `rmg-tuning.json` (all keys optional, `_`-keys are comments). It covers complexity
+scales, richness pools/tiers, water chances, elevation (valley chance, minimum hill width, zone
+layouts), the difficulty levels' guard values, and the chance of a guard per object category (mines,
+dwellings, resources, interactables by rarity, artifacts, treasure, random cities) or per object sid.
+Invalid entries are skipped and listed in the app log. Shape and rules: `src/lib/rmg/rmg-tuning.ts`.
+
 Desktop-only features are gated behind `isTauri()` (`src/lib/native-fs.ts`), and every Tauri
 API is reached through a dynamic import inside that guard — never imported at module top
 level, so the web build stays clean.

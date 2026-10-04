@@ -23,6 +23,7 @@ import { createSeededRng } from './seeded-rng'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import type { RmgDifficultyValues } from './rmg-schema'
+import type { GuardCategory, RmgTuning } from './rmg-tuning'
 import {
   STORAGE_SIDS,
   RESOURCE_SIDS,
@@ -42,20 +43,27 @@ import {
 
 const MINE_SIDS = new Set(['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury'])
 
-/** Every interactable sid `object-variety.ts`'s `pickInteractableSid` can
- *  place (issue #210 follow-up) — these were never guard candidates at all
- *  before, so most of them ended up unguarded regardless of `squadDensity`,
- *  same gap `RESOURCE_SIDS` had (real resource pickups, as opposed to
- *  `STORAGE_SIDS`'s storage piles, which were already covered). */
-const INTERACTABLE_SIDS = new Set([...INTERACTABLE_COMMON_SIDS, ...INTERACTABLE_UNCOMMON_SIDS, ...INTERACTABLE_RARE_SIDS])
-
 /** Whether `sid` is a real "worth guarding" candidate — mine, dwelling
  *  (`barracks_*`), resource pile/pickup, interactable building, or
  *  artifact. `random-item`/`random-squad` placeholders are deliberately
  *  excluded (nothing real to stand guard over yet at generation time). */
 export function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
-  return MINE_SIDS.has(sid) || sid.startsWith('barracks_') || STORAGE_SIDS.includes(sid) ||
-    (RESOURCE_SIDS as readonly string[]).includes(sid) || INTERACTABLE_SIDS.has(sid) || artifactSids.has(sid)
+  return guardCategoryOf(sid, artifactSids) !== null
+}
+
+/** The tuning category (rmg-tuning.ts `guards.chance`) of a guard candidate,
+ *  or null when `sid` isn't one. Every interactable `object-variety.ts`'s
+ *  `pickInteractableSid` can place is a candidate (issue #210 follow-up), as
+ *  are resource pickups besides storage piles. */
+export function guardCategoryOf(sid: string, artifactSids: Set<string>): GuardCategory | null {
+  if (MINE_SIDS.has(sid)) return 'mine'
+  if (sid.startsWith('barracks_')) return 'dwelling'
+  if (STORAGE_SIDS.includes(sid) || (RESOURCE_SIDS as readonly string[]).includes(sid)) return 'resource'
+  if ((INTERACTABLE_COMMON_SIDS as readonly string[]).includes(sid)) return 'interactableCommon'
+  if ((INTERACTABLE_UNCOMMON_SIDS as readonly string[]).includes(sid)) return 'interactableUncommon'
+  if ((INTERACTABLE_RARE_SIDS as readonly string[]).includes(sid)) return 'interactableRare'
+  if (artifactSids.has(sid)) return 'artifact'
+  return null
 }
 
 /** A free tile within a small radius of `node` — the candidate's own
@@ -127,6 +135,9 @@ export interface ScatterProximityGuardsOptions {
   /** Classic mode's difficulty (game RMG schema values): zone guard
    *  multiplier and weekly growth. Omitted: values unchanged. */
   difficulty?: RmgDifficultyValues
+  /** Tuning-file guard chances (rmg-tuning.ts): per object sid, else per
+   *  category; unset ones use `squadDensity`. */
+  guardTuning?: RmgTuning['guards']
 }
 
 export interface ScatterProximityGuardsResult {
@@ -137,9 +148,9 @@ export interface ScatterProximityGuardsResult {
 export function scatterProximityGuards(options: ScatterProximityGuardsOptions): ScatterProximityGuardsResult {
   const guardPlacements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
-  if (options.squadDensity <= 0) return { guardPlacements, concreteSquads }
-
-  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty } = options
+  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty, guardTuning } = options
+  const tunedChances = guardTuning ? [...Object.values(guardTuning.chance), ...Object.values(guardTuning.chanceBySid)] : []
+  if (squadDensity <= 0 && !tunedChances.some((c) => c !== undefined && c > 0)) return { guardPlacements, concreteSquads }
   const playerZoneSet = new Set(playerZoneIds)
   const kindSeed = { player: Math.floor(posRng() * 0x7fffffff), neutral: Math.floor(posRng() * 0x7fffffff) }
   const zoneRolls = new Map<number, () => number>()
@@ -163,12 +174,14 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
   }
 
   for (const candidate of placements) {
-    if (!isGuardCandidate(candidate.sid, artifactSids)) continue
+    const category = guardCategoryOf(candidate.sid, artifactSids)
+    if (category === null) continue
+    const guardChance = guardTuning?.chanceBySid[candidate.sid] ?? guardTuning?.chance[category] ?? squadDensity
     const zoneId = zoneIdByNode[candidate.node]
     const rng = rollsFor(zoneId)
     // Every roll happens BEFORE the (non-deterministic) position search, so a
     // failed position can never desync a zone's replayed roll sequence.
-    if (rng() >= squadDensity) continue
+    if (rng() >= guardChance) continue
     const depth = depthOf(zoneId)
     const labels = difficultyLabelsForDepth(depth)
     const range = pickSquadRange(labels, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
