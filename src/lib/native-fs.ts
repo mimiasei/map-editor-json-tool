@@ -374,9 +374,14 @@ export async function pickSavePath(
 
 // ─── Write binary data to a path (Tauri only) ────────────────────────────────
 
-/** Write raw bytes to an absolute path. Tauri only. */
+/** Write raw bytes to an absolute path. Tauri only. Creates the parent
+ *  directory first (recursive, no-op if it already exists) — the headless
+ *  CLI path (issue #258) writes into the game's own `my_maps` folder, which
+ *  doesn't exist until the game creates it on its own first native save. */
 export async function writeBinaryFile(path: string, data: Uint8Array): Promise<void> {
-  const { writeFile } = await import('@tauri-apps/plugin-fs')
+  const { writeFile, mkdir } = await import('@tauri-apps/plugin-fs')
+  const { dirname } = await import('@tauri-apps/api/path')
+  await mkdir(await dirname(path), { recursive: true })
   await writeFile(path, data)
   logInfo(`Wrote: ${path}`)
 }
