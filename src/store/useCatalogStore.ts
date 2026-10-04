@@ -3,11 +3,22 @@
 // On failure, store remains usable and all dropdowns fall back to hardcoded lists.
 
 import { create } from 'zustand'
-import { findCoreZip, loadZipFromFile, loadZipFromPath } from '@/lib/catalog/zip-loader'
+import { findCoreZip, loadZipFromFile, loadZipFromPath, STEAM_STREAMING_ASSETS_DIRS } from '@/lib/catalog/zip-loader'
 import { buildCatalog } from '@/lib/catalog/builder'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { loadRmgSchema } from '@/lib/rmg/rmg-schema'
 import { logInfo, logError } from '@/lib/logger'
 import { isTauri } from '@/lib/native-fs'
+
+/** Attach the game's RMG schema (map_schemas/Default.mrmg.json, next to
+ *  Core.zip) to a freshly built catalog. Never fails — falls back to the
+ *  built-in copy of the values. */
+async function withRmgSchema(catalog: GameCatalog, coreZipPath: string | null): Promise<GameCatalog> {
+  const { schema, path, fromFile } = await loadRmgSchema(coreZipPath, STEAM_STREAMING_ASSETS_DIRS)
+  if (path) logInfo(`RMG schema loaded from ${path} (${fromFile.length > 0 ? fromFile.join(', ') : 'no usable fields — built-in values'})`)
+  else logInfo('RMG schema: Default.mrmg.json not found — using built-in values')
+  return { ...catalog, rmgSchema: schema }
+}
 
 // ─── Manual-override path (Tauri) ─────────────────────────────────────────────
 // Persisted to localStorage so the user doesn't need to re-select on each launch.
@@ -66,7 +77,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
         try {
           const { loadZipFromPath: lp } = await import('@/lib/catalog/zip-loader')
           const { zip, sourceHint } = await lp(override)
-          const catalog = await buildCatalog(zip, sourceHint)
+          const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), override)
           logInfo(`Catalog loaded from override path: ${sourceHint} (${catalog.heroes.length} heroes, ${catalog.creatures.length} creatures)`)
           set({ catalog, loading: false })
           return
@@ -86,7 +97,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
         }
         return
       }
-      const catalog = await buildCatalog(result.zip, result.sourceHint)
+      const catalog = await withRmgSchema(await buildCatalog(result.zip, result.sourceHint), null)
       logInfo(`Catalog loaded (${catalog.heroes.length} heroes, ${catalog.spells.length} spells, ${catalog.dialogs.length} dialogs)`)
       set({ catalog, loading: false })
     } catch (e) {
@@ -100,7 +111,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const { zip, sourceHint } = await loadZipFromFile(file)
-      const catalog = await buildCatalog(zip, sourceHint)
+      const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), null)
       logInfo(`Catalog loaded from file (${catalog.heroes.length} heroes)`)
       set({ catalog, loading: false })
     } catch (e) {
@@ -115,7 +126,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
     saveOverridePath(filePath)
     try {
       const { zip, sourceHint } = await loadZipFromPath(filePath)
-      const catalog = await buildCatalog(zip, sourceHint)
+      const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), filePath)
       logInfo(`Catalog loaded from path: ${sourceHint}`)
       set({ catalog, loading: false })
     } catch (e) {

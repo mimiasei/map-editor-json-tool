@@ -1,8 +1,8 @@
 // ─── Headless CLI argument parsing (issue #258) ─────────────────────────────
 // No Tauri imports — only argument validation, no side effects.
 
-import { DEFAULT_CLASSIC_SETTINGS, COMPLEXITY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type ClassicSettings } from './classic-presets'
-import { MAP_SIZE_PRESETS } from '@/components/common/NewMapDialog'
+import { DEFAULT_CLASSIC_SETTINGS, COMPLEXITY_LEVELS, DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type ClassicSettings } from './classic-presets'
+import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 
 export interface HeadlessArgs {
   output: string
@@ -37,19 +37,19 @@ function pickIndex<T extends string>(raw: ArgValue, levels: { id: T }[], fallbac
   return hit.id
 }
 
-/** Only the first number is read, so `64` and `"64x64"` both mean 64x64
- *  (a square map). Must be one of the dialog's presets — generation was only
- *  ever tuned/verified at those sizes — which makes only the square presets
- *  reachable. */
+/** `XxZ` (e.g. `128x64`), or a single number `N` for a square N×N map. Must
+ *  be one of the dialog's presets — generation was only ever tuned/verified at
+ *  those sizes. */
 function parseSize(raw: ArgValue): { sizeX: number; sizeZ: number } {
   if (raw === undefined) return { sizeX: 64, sizeZ: 64 }
-  const m = /\d+/.exec(raw)
-  if (!m) throw new Error(`--size must contain a number, e.g. 64 or 64x64 (got "${raw}")`)
-  const size = Number(m[0])
-  if (!MAP_SIZE_PRESETS.some((p) => p.sizeX === size && p.sizeZ === size)) {
-    throw new Error(`--size ${size} is not supported; use one of: ${MAP_SIZE_PRESETS.filter((p) => p.sizeX === p.sizeZ).map((p) => p.sizeX).join(', ')}`)
+  const m = /^\s*(\d+)\s*(?:[xX]\s*(\d+))?\s*$/.exec(raw)
+  if (!m) throw new Error(`--size must be N or XxZ, e.g. 64 or 128x64 (got "${raw}")`)
+  const sizeX = Number(m[1])
+  const sizeZ = m[2] === undefined ? sizeX : Number(m[2])
+  if (!MAP_SIZE_PRESETS.some((p) => p.sizeX === sizeX && p.sizeZ === sizeZ)) {
+    throw new Error(`--size ${sizeX}x${sizeZ} is not supported; use one of: ${MAP_SIZE_PRESETS.map(presetKey).join(', ')}`)
   }
-  return { sizeX: size, sizeZ: size }
+  return { sizeX, sizeZ }
 }
 
 export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
@@ -78,6 +78,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
     classic: {
       richness: pickIndex(raw.richness, RICHNESS_LEVELS, DEFAULT_CLASSIC_SETTINGS.richness, 'richness'),
       complexity: pickIndex(raw.complexity, COMPLEXITY_LEVELS, DEFAULT_CLASSIC_SETTINGS.complexity, 'complexity'),
+      difficulty: pickIndex(raw.difficulty, DIFFICULTY_LEVELS, DEFAULT_CLASSIC_SETTINGS.difficulty, 'difficulty'),
       water: pickIndex(raw.water, WATER_LEVELS, DEFAULT_CLASSIC_SETTINGS.water, 'water'),
     },
   }

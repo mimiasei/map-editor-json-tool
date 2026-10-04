@@ -22,6 +22,7 @@ import {
 import { createSeededRng } from './seeded-rng'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
+import type { RmgDifficultyValues } from './rmg-schema'
 import {
   STORAGE_SIDS,
   RESOURCE_SIDS,
@@ -123,6 +124,9 @@ export interface ScatterProximityGuardsOptions {
    *  proximity guards at all and another's with 68k worth). Tile positions
    *  stay independent. */
   symmetricZones?: boolean
+  /** Classic mode's difficulty (game RMG schema values): zone guard
+   *  multiplier and weekly growth. Omitted: values unchanged. */
+  difficulty?: RmgDifficultyValues
 }
 
 export interface ScatterProximityGuardsResult {
@@ -135,7 +139,7 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
   const concreteSquads: ConcreteSquadPlacement[] = []
   if (options.squadDensity <= 0) return { guardPlacements, concreteSquads }
 
-  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false } = options
+  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty } = options
   const playerZoneSet = new Set(playerZoneIds)
   const kindSeed = { player: Math.floor(posRng() * 0x7fffffff), neutral: Math.floor(posRng() * 0x7fffffff) }
   const zoneRolls = new Map<number, () => number>()
@@ -168,7 +172,8 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
     const depth = depthOf(zoneId)
     const labels = difficultyLabelsForDepth(depth)
     const range = pickSquadRange(labels, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, rng)
-    const requestedValue = randomInRange(range.min, range.max, rng)
+    const baseValue = randomInRange(range.min, range.max, rng)
+    const requestedValue = difficulty ? Math.round(baseValue * difficulty.zoneGuardMultiplier) : baseValue
     const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
     const fraction = sampleFraction(biome, 0.7, rng)
     const wantsConcrete = !!catalog && objectVariety !== undefined && rng() < objectVariety * GUARD_CONCRETE_SQUAD_CHANCE_SCALE
@@ -186,7 +191,7 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
       }
     }
     if (tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
-      guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction } })
+      guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction, weeklyIncrementBonus: difficulty?.zoneGuardWeeklyIncrement } })
     }
   }
 
