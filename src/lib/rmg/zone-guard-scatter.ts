@@ -44,19 +44,27 @@ import {
 
 const MINE_SIDS = new Set(['mine_wood', 'mine_ore', 'mine_gold', 'mine_gemstones', 'mine_crystals', 'mine_mercury'])
 
+/** Placeholders the generator places that resolve to a dwelling / an
+ *  artifact in-game — guarded like those (guardCategoryOf), but not counted
+ *  as concrete "sites" by the map statistics and fairness score
+ *  (isGuardCandidate, map-stats.ts / player-balance.ts). */
+const PLACEHOLDER_CATEGORY: Record<string, GuardCategory> = { 'random-hire': 'dwelling', 'random-item': 'artifact' }
+
 /** Whether `sid` is a real "worth guarding" candidate — mine, dwelling
  *  (`barracks_*`), resource pile/pickup, interactable building, or
- *  artifact. `random-item`/`random-squad` placeholders are deliberately
- *  excluded (nothing real to stand guard over yet at generation time). */
+ *  artifact. `random-item`/`random-hire`/`random-squad` placeholders are
+ *  excluded here (used for map statistics and the fairness score). */
 export function isGuardCandidate(sid: string, artifactSids: Set<string>): boolean {
-  return guardCategoryOf(sid, artifactSids) !== null
+  return !(sid in PLACEHOLDER_CATEGORY) && guardCategoryOf(sid, artifactSids) !== null
 }
 
-/** The tuning category (rmg-tuning.ts `guards.chance`) of a guard candidate,
- *  or null when `sid` isn't one. Every interactable `object-variety.ts`'s
- *  `pickInteractableSid` can place is a candidate (issue #210 follow-up), as
- *  are resource pickups besides storage piles. */
+/** The tuning category (rmg-tuning.ts `guards.chance`) of an object the
+ *  guard pass may guard, or null when it isn't one. Every interactable
+ *  `object-variety.ts`'s `pickInteractableSid` can place is one (issue #210
+ *  follow-up), as are resource pickups besides storage piles, and the
+ *  `random-hire` (dwelling) / `random-item` (artifact) placeholders. */
 export function guardCategoryOf(sid: string, artifactSids: Set<string>): GuardCategory | null {
+  if (sid in PLACEHOLDER_CATEGORY) return PLACEHOLDER_CATEGORY[sid]
   if (MINE_SIDS.has(sid)) return 'mine'
   if (sid.startsWith('barracks_')) return 'dwelling'
   if (STORAGE_SIDS.includes(sid) || (RESOURCE_SIDS as readonly string[]).includes(sid)) return 'resource'
@@ -111,6 +119,11 @@ export interface ScatterProximityGuardsOptions {
   /** Tuning-file guard chances (rmg-tuning.ts): per object sid, else per
    *  category; unset ones use `squadDensity`. */
   guardTuning?: RmgTuning['guards']
+  /** Objects placed by passes after zone population (the interactables
+   *  pass, ...). Guarded like `placements`, but always with the positional
+   *  rng — their own placement is random per zone, so a replayed player-zone
+   *  roll sequence wouldn't line up with them anyway. */
+  laterPlacements?: ZonePlacement[]
 }
 
 export interface ScatterProximityGuardsResult {
@@ -121,7 +134,7 @@ export interface ScatterProximityGuardsResult {
 export function scatterProximityGuards(options: ScatterProximityGuardsOptions): ScatterProximityGuardsResult {
   const guardPlacements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
-  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty, guardTuning, decidedNodes } = options
+  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty, guardTuning, decidedNodes, laterPlacements = [] } = options
   const tunedChances = guardTuning ? [...Object.values(guardTuning.chance), ...Object.values(guardTuning.chanceBySid)] : []
   if (squadDensity <= 0 && !tunedChances.some((c) => c !== undefined && c > 0)) return { guardPlacements, concreteSquads }
   const playerZoneSet = new Set(playerZoneIds)
@@ -146,12 +159,16 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
     return cached
   }
 
-  for (const candidate of placements) {
+  const candidates = [
+    ...placements.map((p) => ({ p, replay: true })),
+    ...laterPlacements.map((p) => ({ p, replay: false })),
+  ]
+  for (const { p: candidate, replay } of candidates) {
     const category = guardCategoryOf(candidate.sid, artifactSids)
     if (category === null || decidedNodes?.has(candidate.node)) continue
     const guardChance = guardTuning?.chanceBySid[candidate.sid] ?? guardTuning?.chance[category] ?? squadDensity
     const zoneId = zoneIdByNode[candidate.node]
-    const rng = rollsFor(zoneId)
+    const rng = replay ? rollsFor(zoneId) : posRng
     // Every roll happens BEFORE the (non-deterministic) position search, so a
     // failed position can never desync a zone's replayed roll sequence.
     if (rng() >= guardChance) continue

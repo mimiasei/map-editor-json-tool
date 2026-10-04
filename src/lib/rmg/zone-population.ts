@@ -21,7 +21,7 @@
 import { createSeededRng } from './seeded-rng'
 import type { CatalogMapObject, CatalogObjectLogic, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import {computeFootprintTiles, protectedNeighborNodes} from '@/lib/map-grid/footprint'
+import { computeFootprintTiles, protectedNeighborNodes, type FootprintCell } from '@/lib/map-grid/footprint'
 import { NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import {
   BIOME_FACTION,
@@ -51,10 +51,6 @@ function dwellingFactionToken(biome: BiomeId): string {
   return faction ?? 'neutral'
 }
 
-/** All 6 real resource mine sids (Core/DB/map/objects/4_interactables.json)
- *  — cycled through neutral zones for variety. */
-/** A neutral city's guard is placed within this many tiles of the city. */
-const CITY_GUARD_RADIUS = 3
 
 /** Share of treasure slots that become guarded treasure: the game's
  *  guarded/unguarded encounter density ratio (default_zone_layouts.json,
@@ -230,10 +226,49 @@ export interface PlacementState {
   blocked: Set<number>
   usedAnchors: Set<number>
   nextTempId: number
+  /** Object anchor node → the tile reserved in front of its entrance for a
+   *  guard (see `tryPlaceAt`). The tile is also in `blocked`, and in
+   *  `reservedGuardTiles` so nothing but a guard squad can anchor on it. */
+  guardTileByNode: Map<number, number>
+  reservedGuardTiles: Set<number>
 }
 
 export function createPlacementState(seedBlocked: Set<number>, seedAnchors: Set<number>): PlacementState {
-  return { blocked: new Set(seedBlocked), usedAnchors: new Set(seedAnchors), nextTempId: 0 }
+  return { blocked: new Set(seedBlocked), usedAnchors: new Set(seedAnchors), nextTempId: 0, guardTileByNode: new Map(), reservedGuardTiles: new Set() }
+}
+
+/** Sids that never get a guard tile reserved: guard squads themselves (their
+ *  value-2 cells are a trigger ring, not an entrance) and player starts. */
+const NO_GUARD_TILE_SIDS = new Set(['random-squad', 'city-spawner', 'hero-spawner'])
+
+/** The tiles touching an object's entrance cells, outside its footprint,
+ *  grouped by preference: straight out from an entrance (the solid cell is
+ *  on the opposite side), the other edge neighbours, then diagonals. A
+ *  `random-squad` on any of them covers the entrance with its trigger ring. */
+function entranceApproachTiles(cells: FootprintCell[], sizeX: number, sizeZ: number): { front: number[]; sides: number[]; diagonals: number[] } {
+  const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+  const solid = new Set(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
+  const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
+  const front = new Set<number>()
+  const sides = new Set<number>()
+  const diagonals = new Set<number>()
+  for (const e of cells.filter((c) => c.value === 2)) {
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dz === 0) continue
+        const x = e.x + dx
+        const z = e.z + dz
+        if (!inBounds(x, z)) continue
+        const n = z * sizeX + x
+        if (footprint.has(n)) continue
+        if (dx !== 0 && dz !== 0) { diagonals.add(n); continue }
+        const behind = (e.z - dz) * sizeX + (e.x - dx)
+        if (inBounds(e.x - dx, e.z - dz) && solid.has(behind)) front.add(n)
+        else sides.add(n)
+      }
+    }
+  }
+  return { front: [...front], sides: [...sides].filter((n) => !front.has(n)), diagonals: [...diagonals].filter((n) => !front.has(n) && !sides.has(n)) }
 }
 
 /** Check `sid`'s footprint at this EXACT `node` and, if it fits (in bounds,
@@ -264,6 +299,8 @@ export function tryPlaceAt(
   state: PlacementState,
 ): boolean {
   if (state.usedAnchors.has(node)) return false
+  // A reserved guard tile (below) is only for the guard squad itself.
+  if (state.reservedGuardTiles.has(node) && sid !== 'random-squad') return false
   const template = catalogById.get(sid)
   const nonBlocking = NON_BLOCKING_SPAWNER_SIDS.has(sid)
   const x = node % sizeX
@@ -273,6 +310,21 @@ export function tryPlaceAt(
     if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) return false
     if (!nonBlocking && cell.value === 1 && state.blocked.has(cell.z * sizeX + cell.x)) return false
   }
+
+  // Every object with an entrance keeps one tile in front of it free for a
+  // guard — the guard pass runs last (generate-random-map.ts) and blocks the
+  // entrance there. No free tile → the object doesn't go here at all (callers
+  // try another spot), so every placed object stays guardable and reachable.
+  // Deterministic (no rng) so it never shifts any random stream.
+  let guardTile: number | null = null
+  if (!nonBlocking && !NO_GUARD_TILE_SIDS.has(sid) && cells.some((c) => c.value === 2)) {
+    const footprintNodes = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+    const { front, sides, diagonals } = entranceApproachTiles(cells, sizeX, sizeZ)
+    guardTile = [...front, ...sides, ...diagonals].find((n) =>
+      !state.blocked.has(n) && !state.usedAnchors.has(n) && !state.reservedGuardTiles.has(n) && !footprintNodes.has(n)) ?? null
+    if (guardTile === null) return false
+  }
+
   state.usedAnchors.add(node)
   if (!nonBlocking) {
     for (const cell of cells) {
@@ -283,6 +335,11 @@ export function tryPlaceAt(
     for (const pNode of protectedNodes) {
       state.blocked.add(pNode)
     }
+  }
+  if (guardTile !== null) {
+    state.blocked.add(guardTile)
+    state.reservedGuardTiles.add(guardTile)
+    state.guardTileByNode.set(node, guardTile)
   }
   return true
 }
@@ -340,39 +397,25 @@ export const NEARBY_GUARD_RADIUS = 4
  *  (away from the object's solid cells), then the other tiles touching an
  *  entrance outside the object's footprint, then the nearest free tile to an
  *  entrance (which may no longer cover it — the best that's left). Objects
- *  without an entrance cell fall back to the nearest free tile to `node`. */
+ *  without an entrance cell fall back to the nearest free tile to `node`.
+ *
+ *  The tile `tryPlaceAt` reserved for this object comes first — it was kept
+ *  free of everything placed since, so normally it's simply that tile. */
 export function entranceGuardTile(
   sid: string, node: number, sizeX: number, sizeZ: number,
   catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
 ): number | null {
+  const reserved = state.guardTileByNode.get(node)
+  if (reserved !== undefined && !state.usedAnchors.has(reserved)) return reserved
+
   const cells = computeFootprintTiles(catalogById.get(sid), node % sizeX, Math.floor(node / sizeX))
   const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
-  const solid = new Set(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
   const entrances = cells.filter((c) => c.value === 2)
   const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
   const free = (n: number): boolean => !state.blocked.has(n) && !state.usedAnchors.has(n) && !footprint.has(n)
 
   if (entrances.length > 0) {
-    const front: number[] = []
-    const sides: number[] = []
-    const diagonals: number[] = []
-    for (const e of entrances) {
-      for (let dz = -1; dz <= 1; dz++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dz === 0) continue
-          const x = e.x + dx
-          const z = e.z + dz
-          if (!inBounds(x, z)) continue
-          const n = z * sizeX + x
-          if (footprint.has(n)) continue
-          if (dx !== 0 && dz !== 0) { diagonals.push(n); continue }
-          // Straight out: the solid cell on the opposite side of the entrance.
-          const behind = (e.z - dz) * sizeX + (e.x - dx)
-          if (inBounds(e.x - dx, e.z - dz) && solid.has(behind)) front.push(n)
-          else sides.push(n)
-        }
-      }
-    }
+    const { front, sides, diagonals } = entranceApproachTiles(cells, sizeX, sizeZ)
     const shuffle = (list: number[]): number[] => {
       for (let i = list.length - 1; i > 0; i--) {
         const j = Math.floor(rng() * (i + 1))
@@ -1034,18 +1077,20 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       const spawnHero = false
       const cityNode = place('random-city', tiles, undefined, undefined, { factionSid, spawnHero })
       // The game's BasicCity main object: a guard with difficulty-dependent
-      // chance/value/growth (map_schemas/Default.mrmg.json), placed close to
-      // the city it protects.
+      // chance/value/growth (map_schemas/Default.mrmg.json), standing in
+      // front of the city's entrance (the tile tryPlaceAt reserved).
+      if (cityNode !== null) decidedNodes.add(cityNode)
       const cityGuardChance = guardTuning?.chanceBySid['random-city'] ?? guardTuning?.chance.randomCity ?? difficulty?.cityGuardChance ?? 0
       if (cityNode !== null && difficulty && rng() < cityGuardChance) {
-        const cx = cityNode % sizeX
-        const cz = Math.floor(cityNode / sizeX)
-        const near = tiles.filter((n) => Math.hypot((n % sizeX) - cx, Math.floor(n / sizeX) - cz) <= CITY_GUARD_RADIUS)
-        if (near.length > 0) {
-          place('random-squad', near, {
-            requestedValue: difficulty.cityGuardValue,
-            fraction: sampleFraction(zoneBiome.get(zone.id) ?? 1, 0.5, rng),
-            weeklyIncrementBonus: difficulty.cityGuardWeeklyIncrement,
+        const guardNode = entranceGuardTile('random-city', cityNode, sizeX, sizeZ, catalogById, state, posRng)
+        if (guardNode !== null && tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
+          placements.push({
+            tempId: state.nextTempId++, sid: 'random-squad', node: guardNode,
+            randomSquadOverrides: {
+              requestedValue: difficulty.cityGuardValue,
+              fraction: sampleFraction(zoneBiome.get(zone.id) ?? 1, 0.5, rng),
+              weeklyIncrementBonus: difficulty.cityGuardWeeklyIncrement,
+            },
           })
         }
       }
