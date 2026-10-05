@@ -12,7 +12,7 @@
 // the usual connectivity bitmask (river-shape.ts).
 
 import { MinHeap } from './zone-connections'
-import { DEFAULT_RIVER_CLIFF_CLEARANCE } from './rmg-tuning'
+import { DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MOUTH_WIDENING } from './rmg-tuning'
 
 export interface RiverTerrain {
   sizeX: number
@@ -44,6 +44,9 @@ export interface RiverRoute {
   path: number[]
   /** Index in `path` of the first tile below the hill, or null. */
   waterfallIndex: number | null
+  /** Extra side tiles that make the lower course wider (see `widenMouth`);
+   *  each touches exactly one tile of `path`. */
+  widening?: number[]
 }
 
 const DIRS: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]]
@@ -420,6 +423,49 @@ const shuffle = <T>(list: T[], rng: () => number): T[] => {
   return list
 }
 
+/** Makes the river wider toward its mouth: over the last `fraction` of the
+ *  path, every other tile gets one side tile (a short stub the shape code
+ *  turns into a T-join), more densely closer to the mouth. A stub only goes on
+ *  free level ground that touches no other river, road or path tile but its
+ *  own parent, and keeps the cliff clearance. Returns the stub tiles. */
+function widenMouth(t: RiverTerrain, route: RiverRoute, fraction: number, rng: () => number): number[] {
+  const { path } = route
+  const { sizeX, sizeZ } = t
+  const span = Math.max(4, Math.round(path.length * fraction))
+  if (fraction <= 0 || path.length < span + 4) return []
+  const clearance = t.cliffClearance ?? 0
+  const cliffDist = clearance > 0 ? cliffDistances(t, clearance) : null
+  const first = Math.max(path.length - span, (route.waterfallIndex ?? 0) + clearance + 2)
+  const onPath = new Set(path)
+  const extra: number[] = []
+  const occupied = (n: number): boolean => t.riverNodes.has(n) || onPath.has(n) || extra.includes(n)
+  for (let i = path.length - 2; i >= first; i -= 2) {
+    // Fuller toward the mouth: skip a stub now and then further upstream.
+    const closeness = (i - first) / Math.max(1, path.length - first)
+    if (rng() > 0.4 + 0.6 * closeness) continue
+    const x = path[i] % sizeX
+    const z = Math.floor(path[i] / sizeX)
+    for (const [dx, dz] of shuffle([...DIRS], rng)) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (occupied(n) || t.levels[n] !== 0 || t.water.has(n) || t.blocked.has(n) || t.climbs[n] > 0 ||
+        t.usedAnchors.has(n) || t.roadNodes.has(n) || isEdge(n, sizeX, sizeZ) || (cliffDist && cliffDist[n] < clearance)) continue
+      // Touches the river only through its parent tile.
+      const touching = DIRS.filter(([ex, ez]) => {
+        const mx = nx + ex
+        const mz = nz + ez
+        return mx >= 0 && mx < sizeX && mz >= 0 && mz < sizeZ && occupied(mz * sizeX + mx)
+      }).length
+      if (touching !== 1) continue
+      extra.push(n)
+      break
+    }
+  }
+  return extra
+}
+
 export const MIN_SOURCE_HILL_TILES = 60
 export const MIN_HILL_RIVER_LENGTH = 15
 /** Tiles on level ground after the waterfall, at least. */
@@ -436,7 +482,7 @@ const MAX_SOURCE_TRIES = 5
 export function carveRivers(
   t: RiverTerrain, count: number, rng: () => number, meander: number,
   onRoute: (route: RiverRoute) => void, preferNode: (n: number) => boolean = () => true,
-  cliffClearance = DEFAULT_RIVER_CLIFF_CLEARANCE,
+  cliffClearance = DEFAULT_RIVER_CLIFF_CLEARANCE, mouthWidening = DEFAULT_RIVER_MOUTH_WIDENING,
 ): void {
   const usedHills = new Set<number>()
   for (let i = 0; i < count; i++) {
@@ -452,7 +498,8 @@ export function carveRivers(
     route ??= carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', true)
       ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', false)
     if (!route) break
-    onRoute(route)
+    const widening = widenMouth({ ...t, cliffClearance }, route, mouthWidening, rng)
+    onRoute(widening.length > 0 ? { ...route, widening } : route)
   }
 }
 
