@@ -1,6 +1,7 @@
 // ─── RMG natural rivers ──────────────────────────────────────────────────────
 // A river starts at a mountain on a hill, runs off the hill once (a
-// waterfall), then follows level ground to a lake, the sea or the map edge.
+// waterfall), then follows level ground to a lake, the sea or the map edge —
+// preferably a real body of water (MIN_MOUTH_WATER_TILES), not a puddle.
 // It never climbs and never crosses another hill or a ramp. Without a hill
 // big enough to hold a source, a lowland river runs from a lake shore or
 // the map edge to another lake or edge.
@@ -366,6 +367,51 @@ function touchesWater(n: number, t: RiverTerrain): boolean {
   return false
 }
 
+/** A lake or sea must have at least this many tiles to count as a river's
+ *  mouth; a puddle isn't "the sea". Smaller ones are a last resort. */
+export const MIN_MOUTH_WATER_TILES = 12
+
+const waterSizeCache = new WeakMap<Set<number>, Map<number, number>>()
+
+/** Size (tiles) of the 4-connected water body each water tile belongs to. */
+function waterBodySizes(t: RiverTerrain): Map<number, number> {
+  const cached = waterSizeCache.get(t.water)
+  if (cached) return cached
+  const sizes = new Map<number, number>()
+  for (const start of t.water) {
+    if (sizes.has(start)) continue
+    const body = [start]
+    sizes.set(start, 0)
+    for (let i = 0; i < body.length; i++) {
+      const x = body[i] % t.sizeX
+      const z = Math.floor(body[i] / t.sizeX)
+      for (const [dx, dz] of DIRS) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= t.sizeX || nz < 0 || nz >= t.sizeZ) continue
+        const m = nz * t.sizeX + nx
+        if (t.water.has(m) && !sizes.has(m)) { sizes.set(m, 0); body.push(m) }
+      }
+    }
+    for (const m of body) sizes.set(m, body.length)
+  }
+  waterSizeCache.set(t.water, sizes)
+  return sizes
+}
+
+/** Like `touchesWater`, but only a water body of at least `minSize` tiles counts. */
+function touchesBigWater(n: number, t: RiverTerrain, minSize: number): boolean {
+  const sizes = waterBodySizes(t)
+  const x = n % t.sizeX
+  const z = Math.floor(n / t.sizeX)
+  for (const [dx, dz] of DIRS) {
+    const nx = x + dx
+    const nz = z + dz
+    if (nx >= 0 && nx < t.sizeX && nz >= 0 && nz < t.sizeZ && (sizes.get(nz * t.sizeX + nx) ?? 0) >= minSize) return true
+  }
+  return false
+}
+
 const shuffle = <T>(list: T[], rng: () => number): T[] => {
   for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1))
@@ -396,11 +442,15 @@ export function carveRivers(
   for (let i = 0; i < count; i++) {
     // Hill river with the full clearance from cliffs, else a smaller one,
     // else a lowland river; no river beats one along a wall of waterfalls.
+    // A river should end in a real lake, the sea or the map edge, not a
+    // puddle, so a big-water mouth is tried before any water at all.
     let route: RiverRoute | null = null
     for (let c = cliffClearance; c >= Math.min(1, cliffClearance) && !route; c--) {
-      route = carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill')
+      route = carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', true)
+        ?? carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', false)
     }
-    route ??= carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland')
+    route ??= carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', true)
+      ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', false)
     if (!route) break
     onRoute(route)
   }
@@ -408,7 +458,7 @@ export function carveRivers(
 
 function carveRiver(
   base: RiverTerrain, rng: () => number, meander: number, usedHills: Set<number>, preferNode: (n: number) => boolean,
-  cliffClearance: number, mode: 'hill' | 'lowland',
+  cliffClearance: number, mode: 'hill' | 'lowland', bigMouth: boolean,
 ): RiverRoute | null {
   const t: RiverTerrain = { ...base, cliffClearance }
   const { sizeX, sizeZ } = t
@@ -423,7 +473,8 @@ function carveRiver(
   const side = Math.min(sizeX, sizeZ)
   const minLength = Math.max(MIN_HILL_RIVER_LENGTH, Math.round(side / 3))
   const minLowLength = Math.max(MIN_RIVER_LOWLAND_TILES, Math.round(side / 5))
-  const goal = (n: number): boolean => t.levels[n] === 0 && (isEdge(n, sizeX, sizeZ) || touchesWater(n, t))
+  const mouthWater = (n: number): boolean => bigMouth ? touchesBigWater(n, t, MIN_MOUTH_WATER_TILES) : touchesWater(n, t)
+  const goal = (n: number): boolean => t.levels[n] === 0 && (isEdge(n, sizeX, sizeZ) || mouthWater(n))
 
   const hills = mode === 'lowland' ? [] : shuffle(hillComponents(t).filter((c) => c.length >= MIN_SOURCE_HILL_TILES && !usedHills.has(c[0])), rng)
     .map((c) => ({ c, preferred: c.filter(preferNode).length * 2 >= c.length }))
@@ -469,7 +520,7 @@ function carveRiver(
     const startSides = sides(start)
     const farGoal = (n: number): boolean => {
       if (Math.hypot((n % sizeX) - sx, Math.floor(n / sizeX) - sz) < MIN_LOWLAND_RIVER_DISTANCE) return false
-      return touchesWater(n, t) || (sides(n) !== 0 && (sides(n) & startSides) === 0)
+      return mouthWater(n) || (sides(n) !== 0 && (sides(n) & startSides) === 0)
     }
     const route = routeRiver(t, start, null, farGoal, minLength, rng, 0, meander)
     if (route) return meanderRoute(t, route, meander, rng)
