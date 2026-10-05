@@ -11,6 +11,7 @@
 // the usual connectivity bitmask (river-shape.ts).
 
 import { MinHeap } from './zone-connections'
+import { DEFAULT_RIVER_CLIFF_CLEARANCE } from './rmg-tuning'
 
 export interface RiverTerrain {
   sizeX: number
@@ -31,6 +32,11 @@ export interface RiverTerrain {
   /** Tiles already carrying a river — a new river never enters or touches
    *  them (touching rivers would merge their shape codes). */
   riverNodes: Set<number>
+  /** Level-0 tiles closer than this (4-neighbour steps) to a hill or elevation
+   *  wall are off limits — a river along a cliff foot gets a waterfall on
+   *  every wall tile. Only the first steps after the source hill's drop may
+   *  stay closer, and only while moving away. 0/unset: no rule. */
+  cliffClearance?: number
 }
 
 export interface RiverRoute {
@@ -46,6 +52,40 @@ const WALL_COST = 2
 /** Extra cost per hill tile, so the river leaves its hill soon and most of
  *  it runs on level ground. */
 const HILL_COST = 1.5
+
+const cliffDistCache = new WeakMap<number[], Map<number, Uint8Array>>()
+
+/** Per-tile 4-neighbour distance to the nearest hill (level ≥ 1) or elevation
+ *  wall tile, capped at `cap` (hill/wall tiles themselves are 0). */
+function cliffDistances(t: RiverTerrain, cap: number): Uint8Array {
+  let byCap = cliffDistCache.get(t.levels)
+  if (!byCap) { byCap = new Map(); cliffDistCache.set(t.levels, byCap) }
+  const cached = byCap.get(cap)
+  if (cached) return cached
+  const { sizeX, sizeZ, levels } = t
+  const dist = new Uint8Array(sizeX * sizeZ).fill(cap)
+  let frontier: number[] = []
+  for (let n = 0; n < levels.length; n++) {
+    if (levels[n] >= 1 || t.wallNodes.has(n)) { dist[n] = 0; frontier.push(n) }
+  }
+  for (let d = 1; d < cap && frontier.length > 0; d++) {
+    const next: number[] = []
+    for (const n of frontier) {
+      const x = n % sizeX
+      const z = Math.floor(n / sizeX)
+      for (const [dx, dz] of DIRS) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+        const m = nz * sizeX + nx
+        if (dist[m] > d) { dist[m] = d; next.push(m) }
+      }
+    }
+    frontier = next
+  }
+  byCap.set(cap, dist)
+  return dist
+}
 
 /** Smooth 2D value noise in 0..1: random values on a grid of `cell` tiles,
  *  smoothstep-interpolated between them. */
@@ -97,6 +137,8 @@ export function routeRiver(
 ): RiverRoute | null {
   const { sizeX, sizeZ, levels } = t
   const noise = meanderField(sizeX, sizeZ, meander, rng)
+  const clearance = t.cliffClearance ?? 0
+  const cliffDist = clearance > 0 ? cliffDistances(t, clearance) : null
   // A turn costs extra so the path doesn't zig-zag; less so when winding.
   const turnCost = leg?.turnCost ?? 0.4 - 0.3 * meander
   const nearRiver = (n: number): boolean => {
@@ -110,12 +152,17 @@ export function routeRiver(
     }
     return false
   }
-  const allowed = (from: number, to: number): boolean => {
+  const allowed = (from: number, to: number, lowSoFar: number): boolean => {
     if (t.water.has(to) || t.climbs[to] > 0 || t.usedAnchors.has(to) || nearRiver(to)) return false
     const level = levels[to]
     if (level < 0 || level > levels[from]) return false
     if (level >= 1 && !sourceHill?.has(to)) return false
     if (t.blocked.has(to) && !(sourceHill?.has(to) && t.wallNodes.has(to))) return false
+    if (cliffDist && level === 0 && cliffDist[to] < clearance) {
+      // Only the exit from the source hill may pass the cliff foot, and only
+      // straight away from it.
+      if (lowSoFar > clearance || cliffDist[to] <= cliffDist[from]) return false
+    }
     return true
   }
   // State = node * 5 + arrival direction (4 = the start).
@@ -146,7 +193,7 @@ export function routeRiver(
       const nz = z + DIRS[k][1]
       if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
       const n = nz * sizeX + nx
-      if (!allowed(node, n)) continue
+      if (!allowed(node, n, lowSteps.get(state) ?? 0)) continue
       const next = n * 5 + k
       if (done.has(next)) continue
       let cost = 1 + noise[n] + (leg ? leg.extraCost(n) : 0)
@@ -191,8 +238,10 @@ function meanderRoute(t: RiverTerrain, route: RiverRoute, meander: number, rng: 
   const low = route.path.slice(from)
   if (amplitude < 2 || low.length < MEANDER_SPACING * 2) return route
   const xy = (n: number): [number, number] => [n % sizeX, Math.floor(n / sizeX)]
+  const cliffDist = (t.cliffClearance ?? 0) > 0 ? cliffDistances(t, t.cliffClearance as number) : null
   const okTile = (n: number): boolean =>
-    t.levels[n] === 0 && !t.water.has(n) && t.climbs[n] === 0 && !t.blocked.has(n) && !t.usedAnchors.has(n)
+    t.levels[n] === 0 && !t.water.has(n) && t.climbs[n] === 0 && !t.blocked.has(n) && !t.usedAnchors.has(n) &&
+    (!cliffDist || cliffDist[n] >= (t.cliffClearance as number))
 
   // Waypoints: alternately left/right of the course, the end stays put.
   const waypoints: number[] = []
@@ -341,18 +390,27 @@ const MAX_SOURCE_TRIES = 5
 export function carveRivers(
   t: RiverTerrain, count: number, rng: () => number, meander: number,
   onRoute: (route: RiverRoute) => void, preferNode: (n: number) => boolean = () => true,
+  cliffClearance = DEFAULT_RIVER_CLIFF_CLEARANCE,
 ): void {
   const usedHills = new Set<number>()
   for (let i = 0; i < count; i++) {
-    const route = carveRiver(t, rng, meander, usedHills, preferNode)
+    // Hill river with the full clearance from cliffs, else a smaller one,
+    // else a lowland river; no river beats one along a wall of waterfalls.
+    let route: RiverRoute | null = null
+    for (let c = cliffClearance; c >= Math.min(1, cliffClearance) && !route; c--) {
+      route = carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill')
+    }
+    route ??= carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland')
     if (!route) break
     onRoute(route)
   }
 }
 
 function carveRiver(
-  t: RiverTerrain, rng: () => number, meander: number, usedHills: Set<number>, preferNode: (n: number) => boolean,
+  base: RiverTerrain, rng: () => number, meander: number, usedHills: Set<number>, preferNode: (n: number) => boolean,
+  cliffClearance: number, mode: 'hill' | 'lowland',
 ): RiverRoute | null {
+  const t: RiverTerrain = { ...base, cliffClearance }
   const { sizeX, sizeZ } = t
   // A new river never starts on or next to an existing one.
   const touchesRiver = (n: number): boolean => t.riverNodes.has(n) || DIRS.some(([dx, dz]) => {
@@ -367,7 +425,7 @@ function carveRiver(
   const minLowLength = Math.max(MIN_RIVER_LOWLAND_TILES, Math.round(side / 5))
   const goal = (n: number): boolean => t.levels[n] === 0 && (isEdge(n, sizeX, sizeZ) || touchesWater(n, t))
 
-  const hills = shuffle(hillComponents(t).filter((c) => c.length >= MIN_SOURCE_HILL_TILES && !usedHills.has(c[0])), rng)
+  const hills = mode === 'lowland' ? [] : shuffle(hillComponents(t).filter((c) => c.length >= MIN_SOURCE_HILL_TILES && !usedHills.has(c[0])), rng)
     .map((c) => ({ c, preferred: c.filter(preferNode).length * 2 >= c.length }))
     .sort((a, b) => Number(b.preferred) - Number(a.preferred))
   let tries = 0
@@ -393,6 +451,8 @@ function carveRiver(
     if (route && route.waterfallIndex !== null) { usedHills.add(c[0]); return meanderRoute(t, route, meander, rng) }
     if (++tries >= MAX_SOURCE_TRIES) break
   }
+
+  if (mode === 'hill') return null
 
   // Lowland river: lake shore or map edge → another lake or edge, far away.
   const sources = shuffle(t.levels.map((_, n) => n).filter((n) =>

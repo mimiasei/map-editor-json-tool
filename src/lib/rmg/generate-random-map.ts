@@ -65,7 +65,7 @@ import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
-import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_MEANDER, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
@@ -1006,6 +1006,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // How many: each land zone adds one river with the tuning's chance.
   const riverChance = tuning.rivers?.chancePerZone ?? DEFAULT_RIVER_CHANCE_PER_ZONE
   const riverMeander = tuning.rivers?.meander ?? DEFAULT_RIVER_MEANDER
+  const riverClearance = tuning.rivers?.cliffClearance ?? DEFAULT_RIVER_CLIFF_CLEARANCE
   const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
   carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
     riverPaths.push(route.path)
@@ -1014,7 +1015,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       const biome = zoneBiome.get(zoneIdByNode[route.path[0]])
       if (biome !== undefined) riverMountainSpots.push({ node: route.path[0], biome })
     }
-  }, (n) => graph.zones[zoneIdByNode[n]]?.kind === 'neutral')
+  }, (n) => graph.zones[zoneIdByNode[n]]?.kind === 'neutral', riverClearance)
 
   // Intra-island rivers — same size-scaled chance as intra-island roads
   // above, but no "needs a city" gate (a purely decorative water feature
@@ -1045,7 +1046,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const riverTo = farthestIslandTile(riverFrom, islandTiles)
     if (riverFrom === riverTo) continue
     // Level ground only, like the lowland main river.
-    const route = routeRiver(riverTerrain, riverFrom, null, (n) => n === riverTo, 2, rng, 0, riverMeander)
+    const route = routeRiver({ ...riverTerrain, cliffClearance: riverClearance }, riverFrom, null, (n) => n === riverTo, 2, rng, 0, riverMeander)
     if (route) paintRiver(route)
   }
 
