@@ -60,12 +60,13 @@ import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type Rive
 import { scatterZoneInteractables } from './zone-interactables'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
+import { scatterRiverBanks } from './zone-river-banks'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
-import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
@@ -1169,6 +1170,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, zoneIdByNode, zoneBiome, catalogById, state, rng })
   if (beachResult.terrainChanges.length > 0) block2 = paintTerrainTiles(block2, beachResult.terrainChanges)
 
+  // River banks — walkable stones, tufts and reeds in clumps along every river.
+  const bankPlacements = scatterRiverBanks({
+    sizeX, sizeZ, riverNodes, excludedNodes: new Set([...roadNodes, ...waterNodesAll]), zoneIdByNode, zoneBiome, catalogById, state, rng,
+    density: tuning.rivers?.bankDecoration ?? DEFAULT_RIVER_BANK_DENSITY,
+  })
+
   // Proximity guards — LAST of the object passes, so every guardable object
   // exists: zone population's mines/dwellings/resources/artifacts AND the
   // interactables pass's objects. Each one rolls its tuned chance (per sid,
@@ -1200,7 +1207,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
   const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads, ...proximityGuards.concreteSquads]
-  for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...beachResult.placements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
+  for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...beachResult.placements, ...bankPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)
     if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
@@ -1212,6 +1219,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   for (const placement of obstaclePlacements) decorativeIds.add(placement.tempId)
   for (const placement of faunaPlacements) decorativeIds.add(placement.tempId)
   for (const placement of beachResult.placements) decorativeIds.add(placement.tempId)
+  for (const placement of bankPlacements) decorativeIds.add(placement.tempId)
   // Wall obstacles are decorative too (deletable if one seals off a real
   // target) — gate GUARDS are deliberately NOT, matching every other real
   // guard this generator places (a dwelling/mine/treasure guard is never

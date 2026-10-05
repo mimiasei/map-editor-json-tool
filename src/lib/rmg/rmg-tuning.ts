@@ -19,7 +19,7 @@
 //                   "zoneGuardWeeklyIncrement": 0.1, "cityGuardChance": 0.4, "cityGuardValue": 3000, "cityGuardWeeklyIncrement": 0.05 } },
 //   "mines":      { "neutral": { "tilesPerMine": 250, "min": 2, "max": 8 }, "neutralTypeWeights": { "<mine sid>": 0-1000 },
 //                   "player": { "extraMineChance": 0-1 }, "playerExtraTypeWeights": { "<mine sid>": 0-1000 } },
-//   "rivers":     { "chancePerZone": 0-1, "meander": 0-1, "cliffClearance": 0-6, "mouthWidening": 0-1, "confluenceChance": 0-1 },
+//   "rivers":     { "chancePerZone": 0-1, "meander": 0-1, "cliffClearance": 0-6, "mouthWidening": 0-1, "confluenceChance": 0-1, "bankDecoration": 0-1 },
 //   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
 //   "guards": {
 //     "chance": { "mine": 0-1, "dwelling": 0-1, "resource": 0-1, "interactableCommon": 0-1, "interactableUncommon": 0-1,
@@ -65,7 +65,7 @@ export interface RmgTuning {
    *  (unset: DEFAULT_RIVER_CHANCE_PER_ZONE); meander: 0 straight-ish .. 1
    *  strongly winding (unset: DEFAULT_RIVER_MEANDER); cliffClearance: tiles
    *  a river keeps from hills and cliff walls (unset: DEFAULT_RIVER_CLIFF_CLEARANCE). */
-  rivers?: { chancePerZone?: number; meander?: number; cliffClearance?: number; mouthWidening?: number; confluenceChance?: number }
+  rivers?: { chancePerZone?: number; meander?: number; cliffClearance?: number; mouthWidening?: number; confluenceChance?: number; bankDecoration?: number }
   /** Relative weights of the built-in layout archetypes (zone-archetypes.ts); 0 disables one. */
   layout: { weights: Partial<Record<LayoutArchetype, number>> }
   /** Overrides of DEFAULT_MINE_DISTRIBUTION; unset parts keep the default. */
@@ -115,6 +115,8 @@ export const DEFAULT_RIVER_CLIFF_CLEARANCE = 3
 export const DEFAULT_RIVER_MOUTH_WIDENING = 0.25
 /** Chance that a new river flows into an earlier one instead of to the sea, 0-1. */
 export const DEFAULT_RIVER_CONFLUENCE_CHANCE = 0.5
+/** Average chance per river-bank tile of a stone, tuft or reed, 0-1 (clumped). */
+export const DEFAULT_RIVER_BANK_DENSITY = 0.25
 
 export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} }, mines: { neutral: {}, player: {} } }
 
@@ -270,9 +272,9 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
 
   const rivers = section('rivers')
   if (rivers) {
-    known('rivers', rivers, ['chancePerZone', 'meander', 'cliffClearance', 'mouthWidening', 'confluenceChance'])
+    known('rivers', rivers, ['chancePerZone', 'meander', 'cliffClearance', 'mouthWidening', 'confluenceChance', 'bankDecoration'])
     tuning.rivers = {}
-    for (const key of ['chancePerZone', 'meander', 'mouthWidening', 'confluenceChance'] as const) {
+    for (const key of ['chancePerZone', 'meander', 'mouthWidening', 'confluenceChance', 'bankDecoration'] as const) {
       if (rivers[key] === undefined || rivers[key] === null) continue
       const v = num(`rivers.${key}`, rivers[key], 0, 1)
       if (v !== undefined) tuning.rivers[key] = v
