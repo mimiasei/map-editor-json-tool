@@ -20,6 +20,7 @@ import {
   sampleFraction,
 } from '@/lib/map-grid/squad-pool'
 import { createSeededRng } from './seeded-rng'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { GUARD_CONCRETE_SQUAD_CHANCE_SCALE, GUARD_VALUE_CUTOFF, RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS } from './guard-value-bands'
 import type { RmgDifficultyValues } from './rmg-schema'
@@ -124,7 +125,14 @@ export interface ScatterProximityGuardsOptions {
    *  rng — their own placement is random per zone, so a replayed player-zone
    *  roll sequence wouldn't line up with them anyway. */
   laterPlacements?: ZonePlacement[]
+  /** Chance per neutral zone of one guard standing on its own, at least
+   *  LONE_GUARD_MIN_DISTANCE tiles from every object entrance. Omitted: 0. */
+  loneGuardChance?: number
 }
+
+/** A lone guard keeps at least this many tiles (Chebyshev) from every
+ *  object's entrance cells, so it never reads as guarding something. */
+export const LONE_GUARD_MIN_DISTANCE = 6
 
 export interface ScatterProximityGuardsResult {
   guardPlacements: ZonePlacement[]
@@ -134,9 +142,9 @@ export interface ScatterProximityGuardsResult {
 export function scatterProximityGuards(options: ScatterProximityGuardsOptions): ScatterProximityGuardsResult {
   const guardPlacements: ZonePlacement[] = []
   const concreteSquads: ConcreteSquadPlacement[] = []
-  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty, guardTuning, decidedNodes, laterPlacements = [] } = options
+  const { sizeX, sizeZ, placements, zoneIdByNode, zoneBiome, zoneDistances, playerZoneIds, catalogById, catalog, objectVariety, squadDensity, state, rng: posRng, symmetricZones = false, difficulty, guardTuning, decidedNodes, laterPlacements = [], loneGuardChance = 0 } = options
   const tunedChances = guardTuning ? [...Object.values(guardTuning.chance), ...Object.values(guardTuning.chanceBySid)] : []
-  if (squadDensity <= 0 && !tunedChances.some((c) => c !== undefined && c > 0)) return { guardPlacements, concreteSquads }
+  if (squadDensity <= 0 && loneGuardChance <= 0 && !tunedChances.some((c) => c !== undefined && c > 0)) return { guardPlacements, concreteSquads }
   const playerZoneSet = new Set(playerZoneIds)
   const kindSeed = { player: Math.floor(posRng() * 0x7fffffff), neutral: Math.floor(posRng() * 0x7fffffff) }
   const zoneRolls = new Map<number, () => number>()
@@ -195,6 +203,47 @@ export function scatterProximityGuards(options: ScatterProximityGuardsOptions): 
     }
     if (tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
       guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node: guardNode, randomSquadOverrides: { requestedValue, fraction, weeklyIncrementBonus: difficulty?.zoneGuardWeeklyIncrement } })
+    }
+  }
+
+  // Rare deliberate lone guards (everything else stands at an entrance).
+  // Last, on the positional stream, so they never shift any roll above.
+  if (loneGuardChance > 0) {
+    const nearEntrance = new Uint8Array(sizeX * sizeZ)
+    const r = LONE_GUARD_MIN_DISTANCE - 1
+    for (const p of [...placements, ...laterPlacements]) {
+      if (p.sid === 'random-squad') continue
+      for (const c of computeFootprintTiles(catalogById.get(p.sid), p.node % sizeX, Math.floor(p.node / sizeX))) {
+        if (c.value !== 2) continue
+        for (let z = Math.max(0, c.z - r); z <= Math.min(sizeZ - 1, c.z + r); z++) {
+          for (let x = Math.max(0, c.x - r); x <= Math.min(sizeX - 1, c.x + r); x++) nearEntrance[z * sizeX + x] = 1
+        }
+      }
+    }
+    const tilesByZone = new Map<number, number[]>()
+    for (let n = 0; n < zoneIdByNode.length; n++) {
+      const zoneId = zoneIdByNode[n]
+      if (zoneId < 0 || playerZoneSet.has(zoneId)) continue
+      let list = tilesByZone.get(zoneId)
+      if (!list) { list = []; tilesByZone.set(zoneId, list) }
+      list.push(n)
+    }
+    for (const [zoneId, tiles] of [...tilesByZone].sort((a, b) => a[0] - b[0])) {
+      if (posRng() >= loneGuardChance) continue
+      const free = tiles.filter((n) => !nearEntrance[n] && !state.blocked.has(n) && !state.usedAnchors.has(n) && !state.reservedGuardTiles.has(n))
+      if (free.length === 0) continue
+      const range = pickSquadRange(difficultyLabelsForDepth(depthOf(zoneId)), RMG_GUARD_DIFFICULTY_RANGES, RMG_GUARD_RANDOM_WEIGHTS, posRng)
+      const baseValue = randomInRange(range.min, range.max, posRng)
+      const requestedValue = difficulty ? Math.round(baseValue * difficulty.zoneGuardMultiplier) : baseValue
+      if (requestedValue < GUARD_VALUE_CUTOFF) continue
+      const fraction = sampleFraction(zoneBiome.get(zoneId) ?? ZONE_BIOMES[0], 0.7, posRng)
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const node = free[Math.floor(posRng() * free.length)]
+        if (tryPlaceAt('random-squad', node, sizeX, sizeZ, catalogById, state)) {
+          guardPlacements.push({ tempId: state.nextTempId++, sid: 'random-squad', node, randomSquadOverrides: { requestedValue, fraction, weeklyIncrementBonus: difficulty?.zoneGuardWeeklyIncrement } })
+          break
+        }
+      }
     }
   }
 

@@ -262,7 +262,7 @@ export function createRoadAvoidanceCost(distanceField: Int32Array, sizeX: number
 /** Binary min-heap keyed by a numeric priority — Dijkstra's own priority
  *  queue. Small, local, and only ever used here (no existing shared heap
  *  utility in this codebase to reuse). */
-class MinHeap {
+export class MinHeap {
   private items: [number, number][] = []
 
   push(priority: number, value: number): void {
