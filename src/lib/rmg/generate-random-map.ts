@@ -65,7 +65,7 @@ import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
-import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
@@ -997,7 +997,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const paintRiver = (route: RiverRoute): void => {
     for (const node of route.path) riverNodes.add(node)
     for (const node of route.widening ?? []) riverNodes.add(node)
-    const changes = [...route.path, ...(route.widening ?? [])].map((node, i) => {
+    const changes = [...route.path, ...(route.widening ?? []), ...(route.joinsAt !== undefined ? [route.joinsAt] : [])].map((node, i) => {
       if (i === route.waterfallIndex) return { node, s: waterfallShapeCode(node, route.path[i - 1], sizeX), isWaterfall: true }
       const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
       return { node, s: deriveRealShapeCode(dirs) }
@@ -1009,6 +1009,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverMeander = tuning.rivers?.meander ?? DEFAULT_RIVER_MEANDER
   const riverClearance = tuning.rivers?.cliffClearance ?? DEFAULT_RIVER_CLIFF_CLEARANCE
   const riverWidening = tuning.rivers?.mouthWidening ?? DEFAULT_RIVER_MOUTH_WIDENING
+  const riverConfluence = tuning.rivers?.confluenceChance ?? DEFAULT_RIVER_CONFLUENCE_CHANCE
   const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
   carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
     riverPaths.push(route.path)
@@ -1017,7 +1018,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       const biome = zoneBiome.get(zoneIdByNode[route.path[0]])
       if (biome !== undefined) riverMountainSpots.push({ node: route.path[0], biome })
     }
-  }, (n) => graph.zones[zoneIdByNode[n]]?.kind === 'neutral', riverClearance, riverWidening)
+  }, (n) => graph.zones[zoneIdByNode[n]]?.kind === 'neutral', riverClearance, riverWidening, riverConfluence)
 
   // Intra-island rivers — same size-scaled chance as intra-island roads
   // above, but no "needs a city" gate (a purely decorative water feature

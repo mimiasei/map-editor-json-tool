@@ -133,7 +133,7 @@ scales, richness pools/tiers, water chances, elevation (valley chance, minimum h
 layouts), how often each zone layout is picked (ring, ring with center, inner ring, double neutral,
 pockets, hub), how many mines of which types neutral and player zones get, the difficulty levels' guard values, and the chance of a guard per object category (mines,
 dwellings, resources, interactables by rarity, artifacts, treasure, random cities) or per object sid, how often a neutral zone gets a lone guard
-away from any object, how many rivers there are, how much they wind, and how far they keep from cliffs (`rivers.cliffClearance`, so no row of waterfalls under a cliff), and how wide they get toward the mouth (`rivers.mouthWidening`).
+away from any object, how many rivers there are, how much they wind, and how far they keep from cliffs (`rivers.cliffClearance`, so no row of waterfalls under a cliff), how wide they get toward the mouth (`rivers.mouthWidening`), and how often a river flows into another one (`rivers.confluenceChance`).
 Invalid entries are skipped and listed in the app log. Shape and rules: `src/lib/rmg/rmg-tuning.ts`.
 
 Desktop-only features are gated behind `isTauri()` (`src/lib/native-fs.ts`), and every Tauri

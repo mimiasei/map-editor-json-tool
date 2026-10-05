@@ -12,7 +12,7 @@
 // the usual connectivity bitmask (river-shape.ts).
 
 import { MinHeap } from './zone-connections'
-import { DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MOUTH_WIDENING } from './rmg-tuning'
+import { DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_MOUTH_WIDENING } from './rmg-tuning'
 
 export interface RiverTerrain {
   sizeX: number
@@ -38,6 +38,9 @@ export interface RiverTerrain {
    *  every wall tile. Only the first steps after the source hill's drop may
    *  stay closer, and only while moving away. 0/unset: no rule. */
   cliffClearance?: number
+  /** Set while routing a tributary: a tile that may touch an existing river
+   *  as this river's LAST tile (a confluence). Such a tile ends the river. */
+  joinTile?: (node: number) => boolean
 }
 
 export interface RiverRoute {
@@ -47,6 +50,9 @@ export interface RiverRoute {
   /** Extra side tiles that make the lower course wider (see `widenMouth`);
    *  each touches exactly one tile of `path`. */
   widening?: number[]
+  /** Tile of an existing river this one flows into (a confluence): it gains a
+   *  third neighbour, so the caller must repaint its shape code. */
+  joinsAt?: number
 }
 
 const DIRS: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]]
@@ -157,7 +163,7 @@ export function routeRiver(
     return false
   }
   const allowed = (from: number, to: number, lowSoFar: number): boolean => {
-    if (t.water.has(to) || t.climbs[to] > 0 || t.usedAnchors.has(to) || nearRiver(to)) return false
+    if (t.water.has(to) || t.climbs[to] > 0 || t.usedAnchors.has(to) || (nearRiver(to) && !t.joinTile?.(to))) return false
     const level = levels[to]
     if (level < 0 || level > levels[from]) return false
     if (level >= 1 && !sourceHill?.has(to)) return false
@@ -190,6 +196,8 @@ export function routeRiver(
     const dir = state % 5
     const len = steps.get(state) ?? 1
     if (node !== start && len >= minLength && (lowSteps.get(state) ?? 0) >= minLowLength && isGoal(node)) { goalState = state; break }
+    // A confluence tile ends its river; never route on through it.
+    if (t.joinTile?.(node)) continue
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
     for (let k = 0; k < 4; k++) {
@@ -483,14 +491,21 @@ export function carveRivers(
   t: RiverTerrain, count: number, rng: () => number, meander: number,
   onRoute: (route: RiverRoute) => void, preferNode: (n: number) => boolean = () => true,
   cliffClearance = DEFAULT_RIVER_CLIFF_CLEARANCE, mouthWidening = DEFAULT_RIVER_MOUTH_WIDENING,
+  confluenceChance = DEFAULT_RIVER_CONFLUENCE_CHANCE,
 ): void {
   const usedHills = new Set<number>()
+  // Tiles of finished rivers that a later river may flow into: well clear of
+  // the source, waterfall and mouth, and not a side-tile parent.
+  const joinable = new Set<number>()
   for (let i = 0; i < count; i++) {
     // Hill river with the full clearance from cliffs, else a smaller one,
     // else a lowland river; no river beats one along a wall of waterfalls.
     // A river should end in a real lake, the sea or the map edge, not a
     // puddle, so a big-water mouth is tried before any water at all.
-    let route: RiverRoute | null = null
+    // Sometimes the new river flows into an earlier one (a tributary).
+    let route: RiverRoute | null = joinable.size > 0 && rng() < confluenceChance
+      ? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'hill', false, joinable)
+      : null
     for (let c = cliffClearance; c >= Math.min(1, cliffClearance) && !route; c--) {
       route = carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', true)
         ?? carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', false)
@@ -499,16 +514,34 @@ export function carveRivers(
       ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', false)
     if (!route) break
     const widening = widenMouth({ ...t, cliffClearance }, route, mouthWidening, rng)
-    onRoute(widening.length > 0 ? { ...route, widening } : route)
+    const finished = widening.length > 0 ? { ...route, widening } : route
+    onRoute(finished)
+    const parents = new Set(widening.flatMap((w) => finished.path.filter((p) => DIRS.some(([dx, dz]) => p === w + dz * t.sizeX + dx))))
+    for (let k = (route.waterfallIndex ?? 0) + 3; k < route.path.length - 3; k++) {
+      if (!parents.has(route.path[k])) joinable.add(route.path[k])
+    }
   }
 }
 
 function carveRiver(
   base: RiverTerrain, rng: () => number, meander: number, usedHills: Set<number>, preferNode: (n: number) => boolean,
-  cliffClearance: number, mode: 'hill' | 'lowland', bigMouth: boolean,
+  cliffClearance: number, mode: 'hill' | 'lowland', bigMouth: boolean, join?: Set<number>,
 ): RiverRoute | null {
-  const t: RiverTerrain = { ...base, cliffClearance }
-  const { sizeX, sizeZ } = t
+  const { sizeX, sizeZ } = base
+  const riverNeighbours = (n: number): number[] => DIRS.flatMap(([dx, dz]) => {
+    const x = (n % sizeX) + dx
+    const z = Math.floor(n / sizeX) + dz
+    const m = z * sizeX + x
+    return x >= 0 && x < sizeX && z >= 0 && z < base.sizeZ && base.riverNodes.has(m) ? [m] : []
+  })
+  // A confluence tile touches exactly one river tile, a plain stretch of an
+  // earlier river (two neighbours, so it becomes a T-join, never a cross).
+  const joinTile = join ? (n: number): boolean => {
+    if (base.riverNodes.has(n)) return false
+    const near = riverNeighbours(n)
+    return near.length === 1 && join.has(near[0]) && riverNeighbours(near[0]).length === 2
+  } : undefined
+  const t: RiverTerrain = { ...base, cliffClearance, joinTile }
   // A new river never starts on or next to an existing one.
   const touchesRiver = (n: number): boolean => t.riverNodes.has(n) || DIRS.some(([dx, dz]) => {
     const x = (n % sizeX) + dx
@@ -521,7 +554,7 @@ function carveRiver(
   const minLength = Math.max(MIN_HILL_RIVER_LENGTH, Math.round(side / 3))
   const minLowLength = Math.max(MIN_RIVER_LOWLAND_TILES, Math.round(side / 5))
   const mouthWater = (n: number): boolean => bigMouth ? touchesBigWater(n, t, MIN_MOUTH_WATER_TILES) : touchesWater(n, t)
-  const goal = (n: number): boolean => t.levels[n] === 0 && (isEdge(n, sizeX, sizeZ) || mouthWater(n))
+  const goal = (n: number): boolean => joinTile ? t.levels[n] === 0 && joinTile(n) : t.levels[n] === 0 && (isEdge(n, sizeX, sizeZ) || mouthWater(n))
 
   const hills = mode === 'lowland' ? [] : shuffle(hillComponents(t).filter((c) => c.length >= MIN_SOURCE_HILL_TILES && !usedHills.has(c[0])), rng)
     .map((c) => ({ c, preferred: c.filter(preferNode).length * 2 >= c.length }))
@@ -546,11 +579,15 @@ function carveRiver(
     if (interior.length === 0) continue
     const start = interior[Math.floor(rng() * interior.length)]
     const route = routeRiver(t, start, hill, goal, minLength, rng, minLowLength, meander)
-    if (route && route.waterfallIndex !== null) { usedHills.add(c[0]); return meanderRoute(t, route, meander, rng) }
+    if (route && route.waterfallIndex !== null) {
+      usedHills.add(c[0])
+      const meandered = meanderRoute(t, route, meander, rng)
+      return join ? { ...meandered, joinsAt: riverNeighbours(meandered.path[meandered.path.length - 1])[0] } : meandered
+    }
     if (++tries >= MAX_SOURCE_TRIES) break
   }
 
-  if (mode === 'hill') return null
+  if (mode === 'hill' || join) return null
 
   // Lowland river: lake shore or map edge → another lake or edge, far away.
   const sources = shuffle(t.levels.map((_, n) => n).filter((n) =>
