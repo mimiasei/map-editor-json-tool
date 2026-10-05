@@ -138,7 +138,7 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       ...DEFAULT_MINE_DISTRIBUTION,
     },
     rivers: {
-      _about: 'chancePerZone (0-1): each land zone\'s chance of adding one river to the map (0 = no rivers). A river starts at a mountain on a hill, falls off it once (waterfall) and runs on level ground to a lake or the map edge; without a big enough hill it runs between lakes/map edges. meander (0-1): how strongly rivers wind (0 = nearly straight). cliffClearance (0-6): tiles a river keeps from hills and cliff walls, so it never runs along a cliff foot with a row of waterfalls (0 = no rule). mouthWidening (0-1): share of the river's length, counted from the mouth, that is made wider with side tiles (0 = always 1 tile wide).',
+      _about: 'chancePerZone (0-1): each land zone\'s chance of adding one river to the map (0 = no rivers). A river starts at a mountain on a hill, falls off it once (waterfall) and runs on level ground to a lake or the map edge; without a big enough hill it runs between lakes/map edges. meander (0-1): how strongly rivers wind (0 = nearly straight). cliffClearance (0-6): tiles a river keeps from hills and cliff walls, so it never runs along a cliff foot with a row of waterfalls (0 = no rule). mouthWidening (0-1): share of a river\'s length, counted from the mouth, that is made wider with side tiles (0 = always 1 tile wide).',
       chancePerZone: DEFAULT_RIVER_CHANCE_PER_ZONE,
       meander: DEFAULT_RIVER_MEANDER,
       cliffClearance: DEFAULT_RIVER_CLIFF_CLEARANCE,
