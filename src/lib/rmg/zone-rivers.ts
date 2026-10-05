@@ -234,7 +234,8 @@ export function routeRiver(
   return { path, waterfallIndex: drop > 0 ? drop : null }
 }
 
-/** Spacing (tiles along the river) of the meander waypoints. */
+/** Average spacing (tiles along the river) of the meander waypoints; each gap
+ *  is 0.6-1.5 times this. */
 const MEANDER_SPACING = 8
 
 /** Makes the level-ground part of `route` (after the waterfall, or all of a
@@ -258,21 +259,25 @@ function meanderRoute(t: RiverTerrain, route: RiverRoute, meander: number, rng: 
   // Waypoints: alternately left/right of the course, the end stays put.
   const waypoints: number[] = []
   let side = rng() < 0.5 ? 1 : -1
-  for (let i = MEANDER_SPACING; i < low.length - MEANDER_SPACING / 2; i += MEANDER_SPACING) {
+  // Irregular: the gap to the next waypoint, how far it swings and which side
+  // vary, so the bends aren't evenly spaced like a sine wave.
+  let i = Math.round(MEANDER_SPACING * (0.6 + 0.6 * rng()))
+  for (; i < low.length - MEANDER_SPACING / 2; i += Math.round(MEANDER_SPACING * (0.6 + 0.9 * rng()))) {
     const [ax, az] = xy(low[Math.max(0, i - 3)])
     const [bx, bz] = xy(low[Math.min(low.length - 1, i + 3)])
     const len = Math.max(1, Math.hypot(bx - ax, bz - az))
     const [px, pz] = [-(bz - az) / len, (bx - ax) / len]
     const [cx, cz] = xy(low[i])
     let wp = low[i]
-    for (let d = Math.round(amplitude * (0.6 + 0.4 * rng())); d >= 1; d--) {
+    for (let d = Math.round(amplitude * (0.5 + 0.7 * rng())); d >= 1; d--) {
       const x = Math.round(cx + px * d * side)
       const z = Math.round(cz + pz * d * side)
       if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
       if (okTile(z * sizeX + x)) { wp = z * sizeX + x; break }
     }
     waypoints.push(wp)
-    side = -side
+    // Mostly alternate, now and then swing the same way twice (a wide bend).
+    if (rng() < 0.85) side = -side
   }
   waypoints.push(low[low.length - 1])
 
