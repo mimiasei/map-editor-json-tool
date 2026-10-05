@@ -56,6 +56,7 @@ import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
+import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
@@ -64,7 +65,7 @@ import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
-import { EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
@@ -75,6 +76,8 @@ import { buildFlatPlaced, reclaimWaterCollisions, repairIsolatedPlayerStarts, re
 import { analyzeBalance, computeExitGuardsByZone, computeZoneWealth, type BalanceReport, type PlayerStartStats } from './balance-analyzer'
 import { extractGameRulesPatch, parseGameTemplateJson, deriveWaterOverrides, deriveObstacleOverrides } from './rmg-template-import'
 import { yieldToUI } from '@/lib/async-utils'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+import { createSeededRng } from './seeded-rng'
 
 /** Reports a short human-readable label for the stage about to run, plus a
  *  0-100 position on the WHOLE pipeline's own scale (including the
@@ -595,6 +598,20 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     else notableNodesByZone.set(zoneId, [p.node])
   }
   const zoneKindById = new Map(graph.zones.map((z) => [z.id, z.kind]))
+  // The tile in front of a city's gate (z − 1 of its front-most entrance
+  // cell) — where its road ends. The tiles around a city's entrance are
+  // reserved (blocked) for its approach, so a road routed to the anchor
+  // itself would come in from behind the city. Null when off the map.
+  const cityGateNode = (sid: string, node: number): number | null => {
+    const cells = computeFootprintTiles(catalogById.get(sid), node % sizeX, Math.floor(node / sizeX))
+    const own = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+    const gate = cells.filter((c) => c.value === 2).sort((p, q) => p.z - q.z)
+      .map((e) => ({ x: e.x, z: e.z - 1 }))
+      .find((g) => g.z >= 0 && g.x >= 0 && g.x < sizeX && !own.has(g.z * sizeX + g.x))
+    return gate ? gate.z * sizeX + gate.x : null
+  }
+  const randomCityNodes = new Set(placements.filter((p) => p.sid === 'random-city').map((p) => p.node))
+  const playerCityByZone = new Map(players.filter((p) => p.sid === 'city-spawner').map((p) => [zoneIdByNode[p.node], p.node]))
   const roadEndpointForZone = (zoneId: number): number => {
     // Player zones always target the player's own city (the anchor IS the
     // spawner's own node — generate-terrain.ts places it there) — the
@@ -602,9 +619,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // starting city" — never substituted for one of that zone's own mines.
     const notable = zoneKindById.get(zoneId) === 'neutral' ? notableNodesByZone.get(zoneId) : undefined
     if (notable && notable.length > 0 && rng() < roadPointOfInterestChance) {
-      return notable[Math.floor(rng() * notable.length)]
+      const poi = notable[Math.floor(rng() * notable.length)]
+      return (randomCityNodes.has(poi) ? cityGateNode('random-city', poi) : null) ?? poi
     }
-    return zoneAnchorNode.get(zoneId) as number
+    const city = playerCityByZone.get(zoneId)
+    const gate = city !== undefined ? cityGateNode('city-spawner', city) : null
+    return gate ?? zoneAnchorNode.get(zoneId) as number
   }
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_AVOIDANCE_STRENGTH = 1.5
@@ -622,7 +642,36 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // short zigzags the same way it always did.
   const roadSmoothWindow = Math.max(4, Math.round(roadWindingWavelength / 10))
   let unroutableEdges = 0
-  const ringEdgeSkipRoll = [rng(), rng()]
+  // Built-in layouts: one skip roll per KIND of edge — the two zones' kind/
+  // role (player, between, inner, center, pocket) plus, for two different
+  // kinds, which way round the map the edge turns — so equivalent edges of
+  // every player share a roll in every layout (issue #254), and a player's
+  // two ring sides can still differ.
+  const edgeSkipSeed = Math.floor(rng() * 0x7fffffff)
+  const edgeSkipRolls = new Map<string, number>()
+  const edgeKindOf = (id: number): string => {
+    const z = graph.zones[id]
+    return z.kind === 'player' ? 'player' : (z.role ?? 'between')
+  }
+  const edgeSkipRoll = (a: number, b: number): number => {
+    let [p, q] = [a, b]
+    if (edgeKindOf(p) > edgeKindOf(q)) [p, q] = [q, p]
+    let key = `${edgeKindOf(p)}-${edgeKindOf(q)}`
+    if (edgeKindOf(p) !== edgeKindOf(q) && centers[p] && centers[q]) {
+      const cx = sizeX / 2
+      const cz = sizeZ / 2
+      const cross = (centers[p].x - cx) * (centers[q].z - cz) - (centers[p].z - cz) * (centers[q].x - cx)
+      key += cross >= 0 ? '-cw' : '-ccw'
+    }
+    let roll = edgeSkipRolls.get(key)
+    if (roll === undefined) {
+      let hash = edgeSkipSeed
+      for (let i = 0; i < key.length; i++) hash = (Math.imul(hash, 31) + key.charCodeAt(i)) >>> 0
+      roll = createSeededRng(hash % 0x7fffffff || 1)()
+      edgeSkipRolls.set(key, roll)
+    }
+    return roll
+  }
   // Islands: a real, hard rule (zone-islands.ts's own header comment has
   // the full story) — an island is reachable ONLY by portal, never a road,
   // regardless of the separate `usePortals` bonus-shortcut toggle. Every
@@ -723,11 +772,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // exist as real edges at all (a Proximity/GladiatorArena connection
     // was never added as one), so every edge that survives here is one the
     // template author actually wanted painted.
-    // Ring layout: the skip roll is shared by every edge of the same kind
-    // (player-to-own-neutral vs neutral-to-next-player), so no player ends up
-    // with a road/gate where another has none (issue #254).
-    const edgeSide = Math.min(a, b) % 2 === 0 && Math.abs(a - b) === 1 ? 0 : 1
-    if (!gameTemplateJson && ringEdgeSkipRoll[edgeSide] >= roadFullConnectivityChance) continue
+    // The skip roll is shared by every edge of the same kind (edgeSkipRoll),
+    // so no player ends up with a road/gate where another has none (issue #254).
+    if (!gameTemplateJson && edgeSkipRoll(a, b) >= roadFullConnectivityChance) continue
     const from = roadEndpointForZone(a)
     const to = roadEndpointForZone(b)
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
@@ -864,44 +911,111 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
   }
 
+  // Every city gets a road to its gate: a city-spawner / random-city with no
+  // road tile next to an entrance cell gets a connector from the tile in
+  // front of its entrance to the nearest road — or, with no road reachable,
+  // to the nearest point of interest or neighbouring zone anchor.
+  {
+    const cities = [
+      ...players.filter((p) => p.sid === 'city-spawner').map((p) => ({ sid: p.sid as string, node: p.node })),
+      ...placements.filter((p) => p.sid === 'random-city').map((p) => ({ sid: p.sid, node: p.node })),
+    ]
+    // Only what a hero can't walk through: water, elevation walls and
+    // objects' solid cells. Reserved approach tiles and entrance cells are
+    // in state.blocked but walkable — a gate is often ringed by them —
+    // so they're allowed, at a higher cost.
+    const impassable = new Set<number>([...waterNodesAll, ...elevationWallNodesAll])
+    for (const p of [...players, ...placements, ...portalPlacements]) {
+      for (const c of computeFootprintTiles(catalogById.get(p.sid), p.node % sizeX, Math.floor(p.node / sizeX))) {
+        if (c.value === 1 && c.x >= 0 && c.x < sizeX && c.z >= 0 && c.z < sizeZ) impassable.add(c.z * sizeX + c.x)
+      }
+    }
+    const near = (n: number, x: number, z: number): boolean => Math.max(Math.abs((n % sizeX) - x), Math.abs(Math.floor(n / sizeX) - z)) <= 1
+    const dist2 = (a: number, b: number): number => ((a % sizeX) - (b % sizeX)) ** 2 + (Math.floor(a / sizeX) - Math.floor(b / sizeX)) ** 2
+    let unconnectedCities = 0
+    for (const city of cities) {
+      const cells = computeFootprintTiles(catalogById.get(city.sid), city.node % sizeX, Math.floor(city.node / sizeX))
+      const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+      const entrances = cells.filter((c) => c.value === 2)
+      if (entrances.length === 0) continue
+      const hasRoad = entrances.some((e) => {
+        for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (roadNodes.has((e.z + dz) * sizeX + e.x + dx)) return true
+        return false
+      })
+      if (hasRoad) continue
+      // Start in front of the gate (it's reserved, so blocked — shortestPath
+      // never checks its start), else on the entrance itself.
+      const start = cityGateNode(city.sid, city.node) ?? entrances[0].z * sizeX + entrances[0].x
+      const zoneId = zoneIdByNode[city.node]
+      const neighbourAnchors = graph.edges
+        .filter(([a, b]) => a === zoneId || b === zoneId)
+        .map(([a, b]) => zoneAnchorNode.get(a === zoneId ? b : a))
+        .filter((n): n is number => n !== undefined && !islandZoneIds.has(zoneIdByNode[n]))
+      const goals = [
+        ...[...roadNodes].filter((n) => !near(n, city.node % sizeX, Math.floor(city.node / sizeX)) && !footprint.has(n)).sort((p, q) => dist2(start, p) - dist2(start, q)).slice(0, 3),
+        ...roadPoiNodes.filter((n) => !footprint.has(n)).sort((p, q) => dist2(start, p) - dist2(start, q)).slice(0, 2),
+        ...neighbourAnchors.sort((p, q) => dist2(start, p) - dist2(start, q)),
+      ]
+      let path: number[] | null = null
+      for (const goal of goals) {
+        const windingCost = createWindingCost(sizeX, start, goal, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+        const cost = (x: number, z: number): number => windingCost(x, z) + (state.blocked.has(z * sizeX + x) ? 3 : 0)
+        path = shortestPath(sizeX, sizeZ, start, goal, impassable, cost)
+        if (path && path.length > 1) break
+        path = null
+      }
+      if (!path) { unconnectedCities += 1; continue }
+      // Stop at the first existing road tile — the rest is already paved.
+      const firstRoad = path.findIndex((n, i) => i > 0 && roadNodes.has(n))
+      const trimmed = firstRoad > 0 ? path.slice(0, firstRoad + 1) : path
+      const smoothed = smoothPath(trimmed, sizeX, impassable, roadSmoothWindow)
+      const joined = roadIdByNode.get(smoothed[smoothed.length - 1])
+      const roadId = joined ?? (rng() < stoneRoadChance ? 2 : 1)
+      for (const node of smoothed) { if (!roadNodes.has(node)) { roadNodes.add(node); roadIdByNode.set(node, roadId) } }
+    }
+    if (unconnectedCities > 0) logWarn(`Random map generation: ${unconnectedCities} city/cities could not get a road to their entrance`)
+  }
+
   if (roadClimbChanges.length > 0) block2 = paintClimbTiles(block2, roadClimbChanges)
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
   }
 
-  // One river across the map's most graph-distant zone pair — same
-  // winding pathfinding as roads (so it also can't cross water, and winds
-  // organically instead of a dead-straight line), then the real per-node
-  // connectivity-bitmask shape codes river-shape.ts derives from actual
-  // sample-map data, not a guessed texture id.
+  // One natural river (zone-rivers.ts): from a mountain on a hill, over
+  // one waterfall, downhill to a lake, the sea or the map edge — never
+  // uphill, never across another hill or a ramp. Shape codes are the real
+  // per-node connectivity bitmask river-shape.ts derives from sample maps;
+  // the waterfall tile uses the game's own waterfall encoding.
   await reportProgress('Carving rivers', 62)
   let riverNodes = new Set<number>()
-  let riverPath: number[] | null = null
-  let bestDistance = -1
-  let riverEndpoints: [number, number] | null = null
-  for (let a = 0; a < graph.zones.length; a++) {
-    if (islandZoneIds.has(a)) continue // an island has no land route in at all — never a useful river endpoint
-    for (let b = a + 1; b < graph.zones.length; b++) {
-      if (islandZoneIds.has(b)) continue
-      if (zoneDistances[a][b] > bestDistance) { bestDistance = zoneDistances[a][b]; riverEndpoints = [a, b] }
-    }
+  const riverPaths: number[][] = []
+  const riverMountainSpots: { node: number; biome: BiomeId }[] = []
+  const riverTerrain: RiverTerrain = {
+    sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: state.blocked,
+    usedAnchors: state.usedAnchors, wallNodes: elevationWallNodesAll, roadNodes, riverNodes,
   }
-  if (riverEndpoints) {
-    const [a, b] = riverEndpoints
-    const riverFrom = zoneAnchorNode.get(a) as number
-    const riverTo = zoneAnchorNode.get(b) as number
-    const rawPath = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng, roadWindingAmplitude, 0.5, roadWindingWavelength))
-    const path = rawPath && rawPath.length > 1 ? smoothPath(rawPath, sizeX, state.blocked, roadSmoothWindow) : rawPath
-    if (path && path.length > 1) {
-      riverNodes = new Set(path)
-      riverPath = path
-      const changes = path.map((node) => {
-        const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
-        return { node, s: deriveRealShapeCode(dirs) }
-      })
-      block2 = paintRiverTiles(block2, changes)
-    }
+  const paintRiver = (route: RiverRoute): void => {
+    for (const node of route.path) riverNodes.add(node)
+    const changes = route.path.map((node, i) => {
+      if (i === route.waterfallIndex) return { node, s: waterfallShapeCode(node, route.path[i - 1], sizeX), isWaterfall: true }
+      const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
+      return { node, s: deriveRealShapeCode(dirs) }
+    })
+    block2 = paintRiverTiles(block2, changes)
   }
+  // How many: each land zone adds one river with the tuning's chance.
+  const riverChance = tuning.rivers?.chancePerZone ?? DEFAULT_RIVER_CHANCE_PER_ZONE
+  const riverMeander = tuning.rivers?.meander ?? DEFAULT_RIVER_MEANDER
+  const riverClearance = tuning.rivers?.cliffClearance ?? DEFAULT_RIVER_CLIFF_CLEARANCE
+  const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
+  carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
+    riverPaths.push(route.path)
+    paintRiver(route)
+    if (route.waterfallIndex !== null) {
+      const biome = zoneBiome.get(zoneIdByNode[route.path[0]])
+      if (biome !== undefined) riverMountainSpots.push({ node: route.path[0], biome })
+    }
+  }, (n) => graph.zones[zoneIdByNode[n]]?.kind === 'neutral', riverClearance)
 
   // Intra-island rivers — same size-scaled chance as intra-island roads
   // above, but no "needs a city" gate (a purely decorative water feature
@@ -926,20 +1040,14 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const islandTiles = islandLandmassByZone.get(islandZoneId) ?? []
     if (islandTiles.length < MIN_ISLAND_RIVER_TILES) continue
     const chance = avgIslandSize > 0 ? Math.max(0, Math.min(1, islandTiles.length / (avgIslandSize * 2))) : 0
-    if (rng() >= chance) continue
+    if (riverChance <= 0 || rng() >= chance) continue
     const seed = islandTiles[Math.floor(rng() * islandTiles.length)]
     const riverFrom = farthestIslandTile(seed, islandTiles)
     const riverTo = farthestIslandTile(riverFrom, islandTiles)
     if (riverFrom === riverTo) continue
-    const rawPath = shortestPath(sizeX, sizeZ, riverFrom, riverTo, state.blocked, createWindingCost(sizeX, riverFrom, riverTo, rng, roadWindingAmplitude, 0.5, roadWindingWavelength))
-    const path = rawPath && rawPath.length > 1 ? smoothPath(rawPath, sizeX, state.blocked, roadSmoothWindow) : rawPath
-    if (!path || path.length <= 1) continue
-    for (const node of path) riverNodes.add(node)
-    const changes = path.map((node) => {
-      const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
-      return { node, s: deriveRealShapeCode(dirs) }
-    })
-    block2 = paintRiverTiles(block2, changes)
+    // Level ground only, like the lowland main river.
+    const route = routeRiver({ ...riverTerrain, cliffClearance: riverClearance }, riverFrom, null, (n) => n === riverTo, 2, rng, 0, riverMeander)
+    if (route) paintRiver(route)
   }
 
   // Road/river tiles join `state.blocked` here (water already did, right
@@ -1000,7 +1108,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   await reportProgress('Fortifying zone boundaries', 68)
   const boundaryResult = fortifyZoneBoundaries({
     sizeX, sizeZ, zones: graph.zones, zoneIdByNode, zoneBiome,
-    roadPaths: riverPath ? [...roadPathsByEdge.values(), riverPath] : [...roadPathsByEdge.values()],
+    roadPaths: [...roadPathsByEdge.values(), ...riverPaths],
     zoneDistances, catalogById, mapObjects: catalog.mapObjects,
     catalog, objectVariety, mountainDensity, strength: boundaryGuardStrength, state, rng,
     islandZoneIds, waterNodes: waterNodesAll, symmetricZones: !gameTemplateJson,
@@ -1026,6 +1134,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     roadDistanceField, roadDecayStrength: decorationRoadDecayStrength, coOccurrenceStrength: decorationCoOccurrenceStrength,
     levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, elevationDecayStrength: decorationElevationDecayStrength,
     rmgEnvironmentAssets: catalog.rmgEnvironmentAssets,
+    forcedMountainSpots: riverMountainSpots, walkableNodes: new Set([...roadNodes, ...riverNodes]),
   })
 
   // Dedicated interactable scatter (issue #237 parts 1/2) — runs after
@@ -1075,6 +1184,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     guardTuning: tuning.guards,
     decidedNodes,
     laterPlacements: interactablePlacements,
+    loneGuardChance: gameTemplateJson ? 0 : tuning.guards.loneGuardChancePerZone ?? DEFAULT_LONE_GUARD_CHANCE,
   })
 
   // Reachability guarantee (issue #210's "connectivity-guaranteeing terrain

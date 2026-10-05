@@ -55,6 +55,7 @@ import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/ty
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, buildTreePools, pickWeighted, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
 import { randomInRange } from '@/lib/map-grid/squad-pool'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type ZonePlacement } from './zone-population'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import type { ZoneSpec } from './zone-graph'
@@ -161,9 +162,7 @@ function categoryOf(sid: string, pool: FuzzyObstaclePool): DecorationCategory {
 const CLUSTER_SEED_SPACING = 45
 const CLUSTER_MIN_SIZE = 3
 const CLUSTER_MAX_SIZE = 10
-/** Tight enough that a cluster reads as one clump on screen — deliberately
- *  smaller than zone-population.ts's own `NEARBY_GUARD_RADIUS` (4),
- *  which is placing a single object near another, not building a clump. */
+/** Tight enough that a cluster reads as one clump on screen. */
 const CLUSTER_RADIUS = 3
 /** Of a mountain-capable zone's own clusters, the fraction that lean
  *  mountain-heavy rather than obstacle-heavy — real maps show both
@@ -573,6 +572,95 @@ export interface ScatterObstaclesOptions {
    *  fallback catalog, or an older Core.zip with no `Core/generator/`
    *  files). */
   rmgEnvironmentAssets?: CatalogEnvironmentBiome[]
+  /** Spots that get a biome mountain right next to them before anything
+   *  else is scattered — a river's source (zone-rivers.ts). */
+  forcedMountainSpots?: { node: number; biome: BiomeId }[]
+  /** Blocked tiles that are still walkable (roads, rivers) — for the forced
+   *  mountains' "doesn't cut anything off" check. */
+  walkableNodes?: Set<number>
+}
+
+/** Whether placing `footprint` would split the walkable ground around it:
+ *  the free tiles within SPLIT_CHECK_RADIUS form more connected pieces with
+ *  the footprint than without. Conservative (the window edge can count a
+ *  split that reconnects further out) — a rejected spot just tries the next. */
+const SPLIT_CHECK_RADIUS = 8
+function splitsWalkableGround(
+  footprint: Set<number>, centerX: number, centerZ: number, sizeX: number, sizeZ: number,
+  isBlocked: (n: number) => boolean,
+): boolean {
+  const x0 = Math.max(0, centerX - SPLIT_CHECK_RADIUS), x1 = Math.min(sizeX - 1, centerX + SPLIT_CHECK_RADIUS)
+  const z0 = Math.max(0, centerZ - SPLIT_CHECK_RADIUS), z1 = Math.min(sizeZ - 1, centerZ + SPLIT_CHECK_RADIUS)
+  const pieces = (extra: Set<number> | null): number => {
+    const seen = new Set<number>()
+    let count = 0
+    for (let z = z0; z <= z1; z++) {
+      for (let x = x0; x <= x1; x++) {
+        const n = z * sizeX + x
+        if (seen.has(n) || isBlocked(n) || extra?.has(n)) continue
+        count++
+        const stack = [n]
+        seen.add(n)
+        while (stack.length > 0) {
+          const cur = stack.pop() as number
+          const cx = cur % sizeX, cz = Math.floor(cur / sizeX)
+          for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = cx + dx, nz = cz + dz
+            if (nx < x0 || nx > x1 || nz < z0 || nz > z1) continue
+            const m = nz * sizeX + nx
+            if (seen.has(m) || isBlocked(m) || extra?.has(m)) continue
+            seen.add(m)
+            stack.push(m)
+          }
+        }
+      }
+    }
+    return count
+  }
+  return pieces(footprint) > pieces(null)
+}
+
+/** Places one of the biome's mountains with a footprint cell touching
+ *  `spot` (never on it — the spot is a river tile, already blocked). Bigger
+ *  mountains first. Returns the placement, or null when none fits. */
+function placeMountainAt(
+  spot: number, pool: FuzzyObstaclePool | undefined, sizeX: number, sizeZ: number,
+  catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
+  walkableNodes: Set<number>,
+): ZonePlacement | null {
+  const isBlocked = (n: number): boolean => state.blocked.has(n) && !walkableNodes.has(n)
+  if (!pool || pool.mountains.length === 0) return null
+  const { big, small, other } = splitMountainsBySize(pool.mountains)
+  const shuffled = (list: string[]): string[] => {
+    const out = [...list]
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1))
+      ;[out[i], out[j]] = [out[j], out[i]]
+    }
+    return out
+  }
+  const sx = spot % sizeX
+  const sz = Math.floor(spot / sizeX)
+  for (const sid of [...shuffled(big), ...shuffled(other), ...shuffled(small)].slice(0, 8)) {
+    for (let r = 1; r <= 4; r++) {
+      for (let dz = -r; dz <= r; dz++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue
+          const ax = sx + dx
+          const az = sz + dz
+          if (ax < 0 || ax >= sizeX || az < 0 || az >= sizeZ) continue
+          const cells = computeFootprintTiles(catalogById.get(sid), ax, az).filter((c) => c.value !== 0)
+          if (!cells.some((c) => Math.max(Math.abs(c.x - sx), Math.abs(c.z - sz)) === 1)) continue
+          const solid = new Set(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
+          if (splitsWalkableGround(solid, sx, sz, sizeX, sizeZ, isBlocked)) continue
+          const node = az * sizeX + ax
+          if (!tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) continue
+          return { tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) }
+        }
+      }
+    }
+  }
+  return null
 }
 
 /** Whether any of `node`'s own tile or its 4/8-neighbors within `radius` is
@@ -614,12 +702,16 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
   const {
     sizeX, sizeZ, zones, centers, tilesByZone, zoneBiome, catalogById, mapObjects, excludedNodes, state, rng,
     density = 0.35, densityByZone, ambientPickupByZone, roadDistanceField, roadDecayStrength = 0, coOccurrenceStrength = 0,
-    levelsMap, climbsMap, elevationDecayStrength = 0, rmgEnvironmentAssets,
+    levelsMap, climbsMap, elevationDecayStrength = 0, rmgEnvironmentAssets, forcedMountainSpots = [], walkableNodes = new Set<number>(),
   } = options
   const pools = buildFuzzyObstaclePools(mapObjects)
   const treePools = buildTreePools(mapObjects)
   const environmentWeights = rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined
   const placements: ZonePlacement[] = []
+  for (const { node, biome } of forcedMountainSpots) {
+    const mountain = placeMountainAt(node, pools[biome], sizeX, sizeZ, catalogById, state, rng, walkableNodes)
+    if (mountain) placements.push(mountain)
+  }
   // Shared across every zone (in generation order) — co-occurrence bias
   // looks at whatever's already been placed nearby, regardless of which
   // zone it came from, matching how a real cross-zone treeline/pond doesn't

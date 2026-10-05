@@ -19,11 +19,13 @@
 //                   "zoneGuardWeeklyIncrement": 0.1, "cityGuardChance": 0.4, "cityGuardValue": 3000, "cityGuardWeeklyIncrement": 0.05 } },
 //   "mines":      { "neutral": { "tilesPerMine": 250, "min": 2, "max": 8 }, "neutralTypeWeights": { "<mine sid>": 0-1000 },
 //                   "player": { "extraMineChance": 0-1 }, "playerExtraTypeWeights": { "<mine sid>": 0-1000 } },
+//   "rivers":     { "chancePerZone": 0-1, "meander": 0-1, "cliffClearance": 0-6 },
 //   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
 //   "guards": {
 //     "chance": { "mine": 0-1, "dwelling": 0-1, "resource": 0-1, "interactableCommon": 0-1, "interactableUncommon": 0-1,
 //                 "interactableRare": 0-1, "artifact": 0-1, "treasure": 0-1, "randomCity": 0-1 },
-//     "chanceBySid": { "<object sid>": 0-1 }
+//     "chanceBySid": { "<object sid>": 0-1 },
+//     "loneGuardChancePerZone": 0-1
 //   }
 // }
 
@@ -56,7 +58,14 @@ export interface RmgTuning {
   water: Partial<Record<(typeof WATER_IDS)[number], { waterChance?: number }>>
   elevation: { valleyChanceMax?: number; minAreaSpan?: number; zoneLayouts?: RmgZoneLayoutPick[] }
   difficulty: Partial<Record<(typeof DIFFICULTY_IDS)[number], Partial<RmgDifficultyValues>>>
-  guards: { chance: Partial<Record<GuardCategory, number>>; chanceBySid: Record<string, number> }
+  /** loneGuardChancePerZone: chance per neutral zone of one guard standing
+   *  away from every object (unset: DEFAULT_LONE_GUARD_CHANCE). */
+  guards: { chance: Partial<Record<GuardCategory, number>>; chanceBySid: Record<string, number>; loneGuardChancePerZone?: number }
+  /** chancePerZone: each land zone's chance of adding one river to the map
+   *  (unset: DEFAULT_RIVER_CHANCE_PER_ZONE); meander: 0 straight-ish .. 1
+   *  strongly winding (unset: DEFAULT_RIVER_MEANDER); cliffClearance: tiles
+   *  a river keeps from hills and cliff walls (unset: DEFAULT_RIVER_CLIFF_CLEARANCE). */
+  rivers?: { chancePerZone?: number; meander?: number; cliffClearance?: number }
   /** Relative weights of the built-in layout archetypes (zone-archetypes.ts); 0 disables one. */
   layout: { weights: Partial<Record<LayoutArchetype, number>> }
   /** Overrides of DEFAULT_MINE_DISTRIBUTION; unset parts keep the default. */
@@ -90,6 +99,18 @@ export const DEFAULT_MINE_DISTRIBUTION: MineDistribution = {
   playerExtraTypeWeights: { mine_gold: 10, mine_gemstones: 9, mine_crystals: 9, mine_mercury: 9 },
 }
 
+
+/** Chance per neutral zone of one deliberate guard standing on its own, away
+ *  from every object — the only guards not at an object's entrance besides
+ *  the zone-border gate guards. Kept rare on purpose. */
+export const DEFAULT_LONE_GUARD_CHANCE = 0.1
+
+/** Each land zone's chance of adding one river (so ~a third of the zones). */
+export const DEFAULT_RIVER_CHANCE_PER_ZONE = 0.3
+/** How strongly rivers wind, 0-1. */
+export const DEFAULT_RIVER_MEANDER = 0.6
+/** Tiles a river keeps from hills and cliff walls (no waterfall rows under a cliff). */
+export const DEFAULT_RIVER_CLIFF_CLEARANCE = 3
 
 export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} }, mines: { neutral: {}, player: {} } }
 
@@ -138,7 +159,7 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
 
   for (const k of Object.keys(json)) {
     if (k.startsWith('_')) continue
-    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout', 'mines'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
+    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout', 'mines', 'rivers'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
   }
 
   for (const [id, v] of levels('complexity', section('complexity'), COMPLEXITY_IDS)) {
@@ -243,9 +264,28 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
     } else if (layout.weights !== undefined && layout.weights !== null) warnings.push('layout.weights: not an object — ignored')
   }
 
+  const rivers = section('rivers')
+  if (rivers) {
+    known('rivers', rivers, ['chancePerZone', 'meander', 'cliffClearance'])
+    tuning.rivers = {}
+    for (const key of ['chancePerZone', 'meander'] as const) {
+      if (rivers[key] === undefined || rivers[key] === null) continue
+      const v = num(`rivers.${key}`, rivers[key], 0, 1)
+      if (v !== undefined) tuning.rivers[key] = v
+    }
+    if (rivers.cliffClearance !== undefined && rivers.cliffClearance !== null) {
+      const v = num('rivers.cliffClearance', rivers.cliffClearance, 0, 6)
+      if (v !== undefined) tuning.rivers.cliffClearance = Math.round(v)
+    }
+  }
+
   const guards = section('guards')
   if (guards) {
-    known('guards', guards, ['chance', 'chanceBySid'])
+    known('guards', guards, ['chance', 'chanceBySid', 'loneGuardChancePerZone'])
+    if (guards.loneGuardChancePerZone !== undefined && guards.loneGuardChancePerZone !== null) {
+      const chance = num('guards.loneGuardChancePerZone', guards.loneGuardChancePerZone, 0, 1)
+      if (chance !== undefined) tuning.guards.loneGuardChancePerZone = chance
+    }
     if (isObject(guards.chance)) {
       for (const [k, v] of Object.entries(guards.chance)) {
         if (k.startsWith('_')) continue

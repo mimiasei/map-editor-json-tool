@@ -6,7 +6,7 @@
 // which mode was used.
 
 import { DEFAULT_TEMPLATE_OVERRIDES } from './template'
-import { DEFAULT_MINE_DISTRIBUTION, EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_MINE_DISTRIBUTION, EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
 import { MIN_ELEVATION_SPAN } from './zone-elevation'
 import type { RmgSchema } from './rmg-schema'
 import { LAYOUT_ARCHETYPES } from './zone-archetypes'
@@ -137,18 +137,25 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       _about: 'Mines per neutral zone = round(zone tiles / tilesPerMine), clamped to min..max; types drawn by these relative weights without repeats until every type was used. Player zones always get wood + ore, plus one extra mine with extraMineChance (the same for every player), its type by playerExtraTypeWeights. Defaults come from the game\'s own maps (6-13 mines per player, ~40% gemstones/crystals/mercury).',
       ...DEFAULT_MINE_DISTRIBUTION,
     },
+    rivers: {
+      _about: 'chancePerZone (0-1): each land zone\'s chance of adding one river to the map (0 = no rivers). A river starts at a mountain on a hill, falls off it once (waterfall) and runs on level ground to a lake or the map edge; without a big enough hill it runs between lakes/map edges. meander (0-1): how strongly rivers wind (0 = nearly straight). cliffClearance (0-6): tiles a river keeps from hills and cliff walls, so it never runs along a cliff foot with a row of waterfalls (0 = no rule).',
+      chancePerZone: DEFAULT_RIVER_CHANCE_PER_ZONE,
+      meander: DEFAULT_RIVER_MEANDER,
+      cliffClearance: DEFAULT_RIVER_CLIFF_CLEARANCE,
+    },
     layout: {
       _about:'Relative chance of each zone layout per map (0 disables one). ring: players and neutral zones alternate on one ring; ringCenter: ring plus a richer treasure zone in the middle; innerRing: players outside, neutral zones in an inner ring; doubleNeutral: two neutral zones between neighbours; pockets: ring plus a dead-end treasure pocket per player; hub: every player has a spoke to a shared center. Some layouts are only used up to a player count (doubleNeutral, pockets, hub: 4; innerRing: 7) or on maps big enough for their zones; otherwise ring is used.',
       weights: Object.fromEntries(LAYOUT_ARCHETYPES.map((a) => [a, 1])),
     },
     guards: {
-      _about: 'Chance (0-1) that a guard is placed in front of the object\'s entrance, blocking it. Every object with an entrance keeps a free tile in front of it for this, and guards are decided after all objects are placed, so this covers every interactable (also those from the interactables scatter). dwelling includes random dwellings (random-hire), artifact includes random items (random-item). null = built-in behavior: mines in neutral zones are always guarded; mines in player zones and dwelling..artifact follow complexity (the guard squad density: sparse 0.18, light 0.32, medium 0.45, dense 0.63, very_dense 0.81); randomCity follows difficulty.cityGuardChance. chanceBySid overrides a category for one object sid (e.g. "windmill").',
+      _about: 'Chance (0-1) that a guard is placed on the object\'s entrance tile (preferably the one straight in front of it), blocking it. Every object with an entrance keeps one entrance tile free for this, and guards are decided after all objects are placed, so this covers every interactable (also those from the interactables scatter). dwelling includes random dwellings (random-hire), artifact includes random items (random-item). null = built-in behavior: mines in neutral zones are always guarded; mines in player zones and dwelling..artifact follow complexity (the guard squad density: sparse 0.18, light 0.32, medium 0.45, dense 0.63, very_dense 0.81); randomCity follows difficulty.cityGuardChance. chanceBySid overrides a category for one object sid (e.g. "windmill"). loneGuardChancePerZone: chance per neutral zone of one guard standing on its own, at least 6 tiles from any object entrance.',
       chance: {
         mine: null, dwelling: null, resource: null,
         interactableCommon: null, interactableUncommon: null, interactableRare: null,
         artifact: null, treasure: Math.round(treasureGuardShare * 1000) / 1000, randomCity: null,
       },
       chanceBySid: {},
+      loneGuardChancePerZone: DEFAULT_LONE_GUARD_CHANCE,
     },
   }
 }

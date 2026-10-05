@@ -132,7 +132,8 @@ to change into `rmg-tuning.json` (all keys optional, `_`-keys are comments). It 
 scales, richness pools/tiers, water chances, elevation (valley chance, minimum hill width, zone
 layouts), how often each zone layout is picked (ring, ring with center, inner ring, double neutral,
 pockets, hub), how many mines of which types neutral and player zones get, the difficulty levels' guard values, and the chance of a guard per object category (mines,
-dwellings, resources, interactables by rarity, artifacts, treasure, random cities) or per object sid.
+dwellings, resources, interactables by rarity, artifacts, treasure, random cities) or per object sid, how often a neutral zone gets a lone guard
+away from any object, how many rivers there are, how much they wind, and how far they keep from cliffs (`rivers.cliffClearance`, so no row of waterfalls under a cliff).
 Invalid entries are skipped and listed in the app log. Shape and rules: `src/lib/rmg/rmg-tuning.ts`.
 
 Desktop-only features are gated behind `isTauri()` (`src/lib/native-fs.ts`), and every Tauri
