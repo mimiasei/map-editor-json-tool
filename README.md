@@ -73,6 +73,8 @@ It is a companion to the map editor, not a replacement for it.
 
 **Game map editor mod** (Windows) — adds Players, Richness, Complexity, Difficulty and Water options to the *Generate map* dialog of the game's own map editor and generates with this generator (`app.exe --generate`, no extra window; progress shows in the dialog, the game stays in front). The installer offers it, including BepInEx. See [gme-mod/README.md](gme-mod/README.md).
 
+**Import Heroes III maps** (desktop) — turn a HoMM3 `.h3m` into an Olden Era map from *More → Import H3 Map*: terrain and scenery, towns (as player starts), heroes, monsters (strength-calibrated), mines, resources, dwellings, artifacts, portals, global events, and the "defeat all enemies" victory as a real quest. Open it in the Map Grid and polish it from there.
+
 **Map Grid** (desktop) — a live 2D view of your actual map, not just the script, with two modes:
 - **Browse** — click any tile to inspect everything placed on it.
 - **Paint** — edits apply immediately (Ctrl+Z/Cmd+Z undoes, with its own history separate from the scenario editor's):
