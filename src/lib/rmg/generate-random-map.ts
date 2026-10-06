@@ -1173,7 +1173,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const taggedObjectBiome = new Map<number, number>()
   for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...portalPlacements, ...boundaryResult.wallPlacements]) {
     const biome = sidBiome(placement.sid, catalogById)
-    if (biome !== null) taggedObjectBiome.set(placement.node, biome)
+    if (biome === null) continue
+    // Every cell of the footprint, not just the anchor: a beach must not turn
+    // the ground under part of a mountain or hill into Sand.
+    for (const cell of computeFootprintTiles(catalogById.get(placement.sid), placement.node % sizeX, Math.floor(placement.node / sizeX))) {
+      if (cell.x >= 0 && cell.x < sizeX && cell.z >= 0 && cell.z < sizeZ) taggedObjectBiome.set(cell.z * sizeX + cell.x, biome)
+    }
   }
   const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, zoneIdByNode, zoneBiome, tileBiome, taggedObjectBiome, catalogById, state, rng })
   if (beachResult.terrainChanges.length > 0) block2 = paintTerrainTiles(block2, beachResult.terrainChanges)

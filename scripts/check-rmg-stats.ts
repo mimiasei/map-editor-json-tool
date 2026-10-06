@@ -19,6 +19,7 @@ import { buildClassicOptions, DEFAULT_CLASSIC_SETTINGS } from '@/lib/rmg/classic
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { INTERACTABLE_RARE_SIDS } from '@/lib/rmg/object-variety'
 import type { CatalogMapObject } from '@/lib/catalog/types'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { extractMapContext } from '@/lib/map-extract'
 import { computePlayerBalance } from '@/lib/map-grid/player-balance'
@@ -69,6 +70,8 @@ async function main() {
   let objects = 0
   let interactables = 0
   let maps = 0
+  let cellViolations = 0
+  const cellExamples = new Set<string>()
   let fairnessSum = 0
   let fairnessN = 0
   let unreachable = 0
@@ -99,6 +102,14 @@ async function main() {
           interactableCount.set(obj.sid, (interactableCount.get(obj.sid) ?? 0) + 1)
         }
         if (rare.has(obj.sid)) rareCount.set(obj.sid, (rareCount.get(obj.sid) ?? 0) + 1)
+        // Every footprint cell must also respect isolation, not just the anchor.
+        if (sidBiome) {
+          for (const cell of computeFootprintTiles(info, node % cfg.size, Math.floor(node / cfg.size))) {
+            if (cell.x < 0 || cell.z < 0 || cell.x >= cfg.size || cell.z >= cfg.size) continue
+            const cellBiome = BIOME_NAME[block2.tilesMap[cell.z * cfg.size + cell.x]]
+            if (cellBiome && cellBiome !== sidBiome && (RESTRICTED.has(sidBiome) || RESTRICTED.has(cellBiome))) { cellViolations++; cellExamples.add(`${obj.sid} (${sidBiome} on ${cellBiome})`); break }
+          }
+        }
         const tileBiome = BIOME_NAME[block2.tilesMap[node]]
         if (sidBiome && tileBiome && sidBiome !== tileBiome && (RESTRICTED.has(sidBiome) || RESTRICTED.has(tileBiome))) {
           const kind = `${sidBiome} object on ${tileBiome}`
@@ -126,7 +137,7 @@ async function main() {
   console.log(`maps ${maps}, objects ${objects}, interactables ${interactables} (${interactableCount.size} distinct sids)`)
   console.log(`fairness (mean score): ${fairnessN ? (fairnessSum / fairnessN).toFixed(1) : 'n/a'}, unreachable placements: ${unreachable}`)
   console.log(`rare / zero-weight interactables placed: ${sum(rareCount)}`, Object.fromEntries(rareCount))
-  console.log(`biome-isolation violations: ${sum(violations)}`)
+  console.log(`biome-isolation violations: ${sum(violations)} (objects with any footprint cell off-biome: ${cellViolations}) ${[...cellExamples].slice(0, 6).join(", ")}`)
   console.log('distance of a violating object to its own biome:', distHist)
   console.log('top violating sids:', [...sidHist].sort((a, b) => b[1] - a[1]).slice(0, 15))
   for (const [kind, n] of [...violations].sort((a, b) => b[1] - a[1])) console.log(`  ${n}  ${kind}  e.g. ${violationExamples.get(kind)}`)
