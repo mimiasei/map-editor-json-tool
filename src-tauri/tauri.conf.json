@@ -63,6 +63,11 @@
           "takesValue": true
         },
         {
+          "name": "progress",
+          "description": "Optional. Absolute path of a JSON file the generator keeps updated with {pct, label}. With it no window is shown, so a fullscreen game keeps the focus; the caller shows the progress itself",
+          "takesValue": true
+        },
+        {
           "name": "size",
           "description": "Optional. Map size XxZ, or N for a square NxN map, e.g. 64 or 128x64. One of 16x16, 32x32, 48x32, 48x48, 64x32, 64x48, 64x64, 80x80, 96x64, 96x96, 128x64, 128x128, 256x128, 256x256. Default 64x64",
           "takesValue": true

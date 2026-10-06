@@ -195,11 +195,21 @@ pub fn run() {
                 use tauri::Manager;
                 use tauri_plugin_cli::CliExt;
                 app.handle().plugin(tauri_plugin_cli::init())?;
-                let generate = app
-                    .cli()
-                    .matches()
-                    .map(|m| m.args.get("generate").map_or(false, |a| a.occurrences > 0))
-                    .unwrap_or(false);
+                let matches = app.cli().matches().ok();
+                let generate = matches
+                    .as_ref()
+                    .map_or(false, |m| m.args.get("generate").map_or(false, |a| a.occurrences > 0));
+                // --progress <file>: the caller (the GME mod) shows the progress
+                // itself, so no window is shown at all. A second top-level window
+                // takes the focus from a fullscreen game, and over exclusive
+                // fullscreen it can't be drawn on top either.
+                let windowless = generate
+                    && matches.as_ref().map_or(false, |m| {
+                        m.args
+                            .get("progress")
+                            .and_then(|a| a.value.as_str())
+                            .map_or(false, |path| !path.trim().is_empty())
+                    });
                 if let Some(window) = app.get_webview_window("main") {
                     if generate {
                         let _ = window.set_min_size(None::<tauri::LogicalSize<f64>>);
@@ -207,7 +217,18 @@ pub fn run() {
                         let _ = window.set_title("Generating map…");
                         let _ = window.center();
                     }
-                    let _ = window.show();
+                    if !windowless {
+                        // A visible generate window (manual run, or the mod
+                        // without --progress): topmost and focused so it at
+                        // least covers a borderless game.
+                        if generate {
+                            let _ = window.set_always_on_top(true);
+                        }
+                        let _ = window.show();
+                        if generate {
+                            let _ = window.set_focus();
+                        }
+                    }
                 }
             }
 
