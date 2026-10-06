@@ -21,6 +21,7 @@
 //                   "player": { "extraMineChance": 0-1 }, "playerExtraTypeWeights": { "<mine sid>": 0-1000 } },
 //   "rivers":     { "chancePerZone": 0-1, "meander": 0-1, "cliffClearance": 0-6, "mouthWidening": 0-1, "confluenceChance": 0-1, "bankDecoration": 0-1 },
 //   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
+//   "interactables": { "weightBySid": { "<interactable sid>": 0-1000 } },
 //   "guards": {
 //     "chance": { "mine": 0-1, "dwelling": 0-1, "resource": 0-1, "interactableCommon": 0-1, "interactableUncommon": 0-1,
 //                 "interactableRare": 0-1, "artifact": 0-1, "treasure": 0-1, "randomCity": 0-1 },
@@ -66,6 +67,10 @@ export interface RmgTuning {
    *  strongly winding (unset: DEFAULT_RIVER_MEANDER); cliffClearance: tiles
    *  a river keeps from hills and cliff walls (unset: DEFAULT_RIVER_CLIFF_CLEARANCE). */
   rivers?: { chancePerZone?: number; meander?: number; cliffClearance?: number; mouthWidening?: number; confluenceChance?: number; bankDecoration?: number }
+  /** weightBySid: pick weight of one interactable in the interactables scatter
+   *  (0 = never, above 0 = weight; default: the game's content-list weight, and
+   *  0 for never-rolled and rare ones — so a value here re-enables one). */
+  interactables?: { weightBySid: Record<string, number> }
   /** Relative weights of the built-in layout archetypes (zone-archetypes.ts); 0 disables one. */
   layout: { weights: Partial<Record<LayoutArchetype, number>> }
   /** Overrides of DEFAULT_MINE_DISTRIBUTION; unset parts keep the default. */
@@ -307,6 +312,19 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
         if (chance !== undefined) tuning.guards.chanceBySid[sid] = chance
       }
     } else if (guards.chanceBySid !== undefined && guards.chanceBySid !== null) warnings.push('guards.chanceBySid: not an object — ignored')
+  }
+
+  const interactables = section('interactables')
+  if (interactables) {
+    known('interactables', interactables, ['weightBySid'])
+    tuning.interactables = { weightBySid: {} }
+    if (isObject(interactables.weightBySid)) {
+      for (const [sid, v] of Object.entries(interactables.weightBySid)) {
+        if (sid.startsWith('_')) continue
+        const weight = num(`interactables.weightBySid.${sid}`, v, 0, 1000)
+        if (weight !== undefined) tuning.interactables.weightBySid[sid] = weight
+      }
+    } else if (interactables.weightBySid !== undefined && interactables.weightBySid !== null) warnings.push('interactables.weightBySid: not an object — ignored')
   }
 
   return { tuning, warnings }

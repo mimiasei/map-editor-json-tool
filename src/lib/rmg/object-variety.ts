@@ -346,8 +346,9 @@ export const INTERACTABLE_RARE_SIDS = [
  *  already at its `contentCountLimits` cap — falling back through the
  *  other tiers (starting with the more common ones) if the rolled tier is
  *  fully capped or empty, so a capped tier never silently skips this
- *  placement outright. Returns `null` only if every tier is fully capped. */
-export function pickInteractableSid(rng: () => number, isAtCap: (sid: string) => boolean): string | null {
+ *  placement outright. Inside a tier a sid is picked by `weightFor` (its rarity
+ *  weight, interactable-rarity.ts). Returns `null` only if every tier is fully capped. */
+export function pickInteractableSid(rng: () => number, isAtCap: (sid: string) => boolean, weightFor: (sid: string) => number = () => 1): string | null {
   const tiers = [INTERACTABLE_COMMON_SIDS, INTERACTABLE_UNCOMMON_SIDS, INTERACTABLE_RARE_SIDS]
   const weights = [6, 3, 1]
   let roll = rng() * weights.reduce((sum, w) => sum + w, 0)
@@ -358,7 +359,16 @@ export function pickInteractableSid(rng: () => number, isAtCap: (sid: string) =>
   }
   for (const i of [chosen, 0, 1, 2]) {
     const available = tiers[i].filter((sid) => !isAtCap(sid))
-    if (available.length > 0) return available[Math.floor(rng() * available.length)]
+    if (available.length === 0) continue
+    // Weighted by the sid's rarity weight (all 1 without one = uniform).
+    const total = available.reduce((sum, sid) => sum + weightFor(sid), 0)
+    if (!(total > 0)) return available[Math.floor(rng() * available.length)]
+    let pick = rng() * total
+    for (const sid of available) {
+      pick -= weightFor(sid)
+      if (pick < 0) return sid
+    }
+    return available[available.length - 1]
   }
   return null
 }

@@ -58,6 +58,7 @@ import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone
 import { scatterZoneObstacles } from './zone-decoration'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
+import { buildInteractableRarity } from './interactable-rarity'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
@@ -1150,6 +1151,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
     excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet, symmetricZones: !gameTemplateJson,
+    rarity: buildInteractableRarity(catalog, tuning.interactables?.weightBySid),
   })
 
   // Ambient animal/fx decoration (issue #210 follow-up) — real-map-
