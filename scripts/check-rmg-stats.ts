@@ -65,6 +65,8 @@ async function main() {
   let objects = 0
   let interactables = 0
   let maps = 0
+  const distHist: Record<string, number> = {}
+  const sidHist = new Map<string, number>()
 
   for (let i = 0; i < MAPS; i++) {
     const cfg = CONFIGS[i % CONFIGS.length]
@@ -91,6 +93,19 @@ async function main() {
           const kind = `${sidBiome} object on ${tileBiome}`
           violations.set(kind, (violations.get(kind) ?? 0) + 1)
           if (!violationExamples.has(kind)) violationExamples.set(kind, obj.sid)
+          // Distance (tiles) to the nearest tile of the object's own biome.
+          const want = Object.entries(BIOME_NAME).find(([, n]) => n === sidBiome)?.[0]
+          const ax = node % cfg.size, az = Math.floor(node / cfg.size)
+          let best = 99
+          for (let r = 0; r <= 12 && best === 99; r++) for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue
+            const x = ax + dx, z = az + dz
+            if (x < 0 || z < 0 || x >= cfg.size || z >= cfg.size) continue
+            if (String(block2.tilesMap[z * cfg.size + x]) === want) best = r
+          }
+          const bucket = best === 99 ? '>12' : best <= 1 ? String(best) : best <= 3 ? '2-3' : best <= 6 ? '4-6' : '7-12'
+          distHist[bucket] = (distHist[bucket] ?? 0) + 1
+          sidHist.set(obj.sid, (sidHist.get(obj.sid) ?? 0) + 1)
         }
       }
     }
@@ -100,6 +115,8 @@ async function main() {
   console.log(`maps ${maps}, objects ${objects}, interactables ${interactables} (${interactableCount.size} distinct sids)`)
   console.log(`rare / zero-weight interactables placed: ${sum(rareCount)}`, Object.fromEntries(rareCount))
   console.log(`biome-isolation violations: ${sum(violations)}`)
+  console.log('distance of a violating object to its own biome:', distHist)
+  console.log('top violating sids:', [...sidHist].sort((a, b) => b[1] - a[1]).slice(0, 15))
   for (const [kind, n] of [...violations].sort((a, b) => b[1] - a[1])) console.log(`  ${n}  ${kind}  e.g. ${violationExamples.get(kind)}`)
 }
 

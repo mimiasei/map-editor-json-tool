@@ -70,7 +70,9 @@ const ALL_BIOME_IDS: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
  *  "compatible" with itself when high-contrast mixing is disallowed. See
  *  src/lib/rmg/terrain-adjacency-stats.ts for the full real adjacency
  *  matrix this cross-check is based on. */
-const COMPATIBLE_BIOME_CLUSTERS: BiomeId[][] = [[1, 2, 5, 7]]
+/** Sand (2) left this cluster: like Snow and Lava it does not mix with other
+ *  biomes (rmg/biome-isolation.ts), so its decorations stay on Sand. */
+const COMPATIBLE_BIOME_CLUSTERS: BiomeId[][] = [[1, 5, 7]]
 
 export function areBiomesCompatible(a: BiomeId, b: BiomeId): boolean {
   if (a === b) return true
