@@ -6,6 +6,7 @@
 // Objects with no biome tag (mines, shrines, resources, ...) are universal and
 // may stand anywhere. So are the Grass pine trees `pinetree_1..4`: they are
 // multi-purpose (user decision), unlike `pinetree_snow_*` / `pinetree_withered_*`.
+// `fish` is placed by water, not by biome (zone-fauna.ts), so it is universal too.
 
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -15,8 +16,8 @@ export const RESTRICTED_BIOMES: ReadonlySet<number> = new Set([2, 4, 6])
 
 export const isRestrictedBiome = (biome: number | null | undefined): boolean => biome !== null && biome !== undefined && RESTRICTED_BIOMES.has(biome)
 
-/** The Grass pines — allowed on every biome. */
-const UNIVERSAL_SID = /^pinetree_\d+$/
+/** The Grass pines and fish — allowed on every biome. */
+const UNIVERSAL_SID = /^(pinetree_\d+|fish)$/
 
 /** Catalog biome string → tile biome id (the catalog says "Desert" for Sand). */
 const CATALOG_BIOME_TO_ID: Record<string, BiomeId> = {

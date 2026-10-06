@@ -18,6 +18,7 @@
 // (value-model.ts) rather than a flat difficulty pick — the "treasure zone"
 // VCMI's own template format calls this same role.
 
+import { sidBiome, violatesIsolation } from './biome-isolation'
 import { createSeededRng } from './seeded-rng'
 import type { CatalogMapObject, CatalogObjectLogic, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -231,6 +232,10 @@ export interface PlacementState {
    *  `reservedGuardTiles` so nothing but a guard squad can anchor on it. */
   guardTileByNode: Map<number, number>
   reservedGuardTiles: Set<number>
+  /** The painted biome of every tile. When set, `tryPlaceAt` refuses a spot
+   *  where one of the object's cells would break biome isolation (a Snow
+   *  object off Snow, anything on Sand/Snow/Lava ground, see biome-isolation.ts). */
+  tileBiome?: number[]
 }
 
 export function createPlacementState(seedBlocked: Set<number>, seedAnchors: Set<number>): PlacementState {
@@ -326,8 +331,10 @@ export function tryPlaceAt(
   const x = node % sizeX
   const z = Math.floor(node / sizeX)
   const cells = computeFootprintTiles(template, x, z)
+  const objectBiome = state.tileBiome ? sidBiome(sid, catalogById) : null
   for (const cell of cells) {
     if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) return false
+    if (objectBiome !== null && violatesIsolation(objectBiome, state.tileBiome?.[cell.z * sizeX + cell.x])) return false
     if (!nonBlocking && cell.value === 1 && state.blocked.has(cell.z * sizeX + cell.x)) return false
   }
 

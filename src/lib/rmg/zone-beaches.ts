@@ -31,7 +31,11 @@ const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
  *  that read as "normal ground" next to water — Grass, Dirt, Deathland,
  *  Autumn. Excluded: Sand itself (already sand, nothing to fringe), and
  *  Snow/Lava (a beach reads wrong next to ice or molten rock). */
-const BEACH_ELIGIBLE_BIOMES = new Set<BiomeId>([1, 3, 5, 7])
+const BEACH_ELIGIBLE_BIOMES = new Set<BiomeId>([1, 5, 7])
+/** A water body only gets a beach when its whole shore is one of these (Sand
+ *  included): water that touches Snow, Lava or Deathland gets none, since a
+ *  sand fringe would mix those biomes with Sand. */
+const BEACH_SHORE_BIOMES = new Set<number>([1, 2, 5, 7])
 
 /** No real "dry grass" sid exists in the game catalog (confirmed this
  *  session) — these are the closest real stand-in: `grass_desert_1`/
@@ -91,6 +95,11 @@ export interface ScatterBeachesOptions {
    *  is in `BEACH_ELIGIBLE_BIOMES`. */
   zoneIdByNode: number[]
   zoneBiome: Map<number, BiomeId>
+  /** The painted biome of every tile; beaches and their shore check use it. */
+  tileBiome: number[]
+  /** Anchor tiles of objects that belong to one biome (biome-isolation.ts),
+   *  so a beach never turns the ground under such an object into Sand. */
+  taggedObjectBiome: Map<number, number>
   catalogById: Map<string, CatalogMapObject>
   state: PlacementState
   rng: () => number
@@ -104,7 +113,7 @@ export interface ScatterBeachesResult {
 }
 
 export function scatterBeaches(options: ScatterBeachesOptions): ScatterBeachesResult {
-  const { sizeX, sizeZ, waterNodes, zoneIdByNode, zoneBiome, catalogById, state, rng } = options
+  const { sizeX, sizeZ, waterNodes, tileBiome, taggedObjectBiome, catalogById, state, rng } = options
   const terrainChanges: { node: number; biomeId: number }[] = []
   const placements: ZonePlacement[] = []
   if (waterNodes.size === 0) return { terrainChanges, placements }
@@ -114,11 +123,19 @@ export function scatterBeaches(options: ScatterBeachesOptions): ScatterBeachesRe
     if (rng() >= BEACH_CHANCE) continue
     const width = MIN_BEACH_WIDTH + Math.floor(rng() * (MAX_BEACH_WIDTH - MIN_BEACH_WIDTH + 1))
     const dist = computeRoadDistanceField(new Set(body), sizeX, sizeZ, width)
+    // The whole shore must be Grass, Dirt, Autumn or Sand — else no beach here.
+    let shoreOk = true
+    for (let node = 0; node < dist.length && shoreOk; node++) {
+      if (dist[node] === 1 && !waterNodes.has(node) && !BEACH_SHORE_BIOMES.has(tileBiome[node])) shoreOk = false
+    }
+    if (!shoreOk) continue
     for (let node = 0; node < dist.length; node++) {
       if (waterNodes.has(node) || beachNodes.has(node)) continue
       if (dist[node] >= 1 && dist[node] <= width) {
-        const nodeBiome = zoneBiome.get(zoneIdByNode[node])
+        const nodeBiome = tileBiome[node] as BiomeId | undefined
         if (nodeBiome === undefined || !BEACH_ELIGIBLE_BIOMES.has(nodeBiome)) continue
+        const tagged = taggedObjectBiome.get(node)
+        if (tagged !== undefined && tagged !== SAND_BIOME_ID) continue
         beachNodes.add(node)
         terrainChanges.push({ node, biomeId: SAND_BIOME_ID })
       }

@@ -62,6 +62,7 @@ import { buildInteractableRarity } from './interactable-rarity'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
+import { sidBiome, violatesIsolation } from './biome-isolation'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
@@ -345,7 +346,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
 
   const objectLogicsById = buildObjectLogicsIndex(catalog)
   const {
-    graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
+    graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome, tileBiome, zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     portalEdges: templatePortalEdges, unpaintedEdges: templateUnpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
@@ -1169,8 +1170,15 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // is in its final, fully-repaired state by this point (the road-partition
   // water-reclaim repair above has already run) — see zone-beaches.ts's own
   // header comment for the full design.
-  const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, zoneIdByNode, zoneBiome, catalogById, state, rng })
+  const taggedObjectBiome = new Map<number, number>()
+  for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...portalPlacements, ...boundaryResult.wallPlacements]) {
+    const biome = sidBiome(placement.sid, catalogById)
+    if (biome !== null) taggedObjectBiome.set(placement.node, biome)
+  }
+  const beachResult = scatterBeaches({ sizeX, sizeZ, waterNodes: waterNodesAll, zoneIdByNode, zoneBiome, tileBiome, taggedObjectBiome, catalogById, state, rng })
   if (beachResult.terrainChanges.length > 0) block2 = paintTerrainTiles(block2, beachResult.terrainChanges)
+  // Later placements (river banks, guards) must see the beach sand.
+  if (state.tileBiome) for (const change of beachResult.terrainChanges) state.tileBiome[change.node] = change.biomeId
 
   // River banks — walkable stones, tufts and reeds in clumps along every river.
   const bankPlacements = scatterRiverBanks({
@@ -1209,6 +1217,19 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const tempIdToPlacement = new Map<number, ZonePlacement>()
   const decorativeIds = new Set<number>()
   const allConcreteSquads = [...concreteSquads, ...boundaryResult.concreteSquads, ...proximityGuards.concreteSquads]
+  // Backstop for biome isolation (biome-isolation.ts): every placement path
+  // already refuses a violating spot in `tryPlaceAt`, so this should drop
+  // nothing; it keeps a future path (or a late terrain repaint) from leaking.
+  if (state.tileBiome) {
+    const tileBiomeFinal = state.tileBiome
+    let dropped = 0
+    for (const list of [obstaclePlacements, faunaPlacements, bankPlacements, beachResult.placements]) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (violatesIsolation(sidBiome(list[i].sid, catalogById), tileBiomeFinal[list[i].node])) { list.splice(i, 1); dropped++ }
+      }
+    }
+    if (dropped > 0) logWarn(`Random map generation: dropped ${dropped} decoration(s) that broke biome isolation`)
+  }
   for (const placement of [...placements, ...obstaclePlacements, ...interactablePlacements, ...faunaPlacements, ...beachResult.placements, ...bankPlacements, ...portalPlacements, ...boundaryResult.wallPlacements, ...boundaryResult.guardPlacements, ...proximityGuards.guardPlacements]) {
     tempIdToPlacement.set(placement.tempId, placement)
     let group = objectGroups.get(placement.sid)

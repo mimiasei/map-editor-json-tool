@@ -202,6 +202,8 @@ export interface TerrainResult {
   /** Shrunk to each island's own landmass for `waterContent: 'islands'`. */
   tilesByZone: Map<number, number[]>
   zoneBiome: Map<number, BiomeId>
+  /** The painted biome of every tile (zone biome, except in blended seams). */
+  tileBiome: number[]
   zoneAnchorNode: Map<number, number>
   /** Only populated for `waterContent: 'islands'` — each island zone's own
    *  shrunk landmass tile list, needed by the real generator's own
@@ -400,6 +402,7 @@ export function generateTerrain(
     }
   }
   const state = createPlacementState(seedBlocked, seedAnchors)
+  state.tileBiome = terrainChanges.map((c) => c.biomeId)
 
   let waterNodesAll = new Set<number>()
   let waterChangesAll: { node: number; waterId: number }[] = []
@@ -496,6 +499,7 @@ export function generateTerrain(
 
   return {
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
+    tileBiome: terrainChanges.map((c) => c.biomeId),
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
     waterNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,

@@ -16,6 +16,7 @@ import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
+import { sidBiome, violatesIsolation } from './biome-isolation'
 
 /** Walkable stones per biome (the game's own `*_stones_1` ground clutter). */
 const STONE_SIDS: Partial<Record<BiomeId, string[]>> = {
@@ -84,6 +85,8 @@ export function scatterRiverBanks(options: ScatterRiverBanksOptions): ZonePlacem
         : reeds.length > 0 ? reeds : stones.length > 0 ? stones : tufts
     if (list.length === 0) continue
     const sid = pick(list)
+    // A reed (Grass-tagged) never goes to Sand, Snow or Lava ground.
+    if (violatesIsolation(sidBiome(sid, catalogById), biome)) continue
     if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
       const rotation = isRotationallySymmetricFootprint(sid, catalogById) ? randomDecorRotation(rng) : undefined
       placements.push({ tempId: state.nextTempId++, sid, node, rotation })

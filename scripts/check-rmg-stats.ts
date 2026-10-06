@@ -19,6 +19,10 @@ import { buildClassicOptions, DEFAULT_CLASSIC_SETTINGS } from '@/lib/rmg/classic
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { INTERACTABLE_RARE_SIDS } from '@/lib/rmg/object-variety'
 import type { CatalogMapObject } from '@/lib/catalog/types'
+import { containerToRawBlocks } from '@/store/useMapDocumentStore'
+import { extractMapContext } from '@/lib/map-extract'
+import { computePlayerBalance } from '@/lib/map-grid/player-balance'
+import { findUnreachablePlacements } from '@/lib/map-grid/reachability-validation'
 
 const CORE_ZIP = process.env.CORE_ZIP ?? 'C:/Program Files (x86)/Steam/steamapps/common/Heroes of Might and Magic Olden Era/HeroesOldenEra_Data/StreamingAssets/Core.zip'
 const TEMPLATE = 'src-tauri/resources/template.map'
@@ -30,8 +34,8 @@ const CONFIGS = [
 /** Tile biome ids (terrain-colors.ts) and the catalog's biome strings. */
 const BIOME_NAME: Record<number, string> = { 1: 'Grass', 2: 'Desert', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt' }
 const RESTRICTED = new Set(['Desert', 'Snow', 'Lava'])
-/** The grass pines are multi-purpose (user decision): allowed on every biome. */
-const UNIVERSAL_SID = /^pinetree_\d+$/
+/** The grass pines are multi-purpose (user decision) and fish follow water, not biome: allowed anywhere. */
+const UNIVERSAL_SID = /^(pinetree_\d+|fish)$/
 
 interface Block2 {
   tilesMap: number[]
@@ -65,6 +69,9 @@ async function main() {
   let objects = 0
   let interactables = 0
   let maps = 0
+  let fairnessSum = 0
+  let fairnessN = 0
+  let unreachable = 0
   const distHist: Record<string, number> = {}
   const sidHist = new Map<string, number>()
 
@@ -78,6 +85,10 @@ async function main() {
     const { container } = await generateRandomMap(template, catalog, options)
     const block2 = JSON.parse(new TextDecoder().decode(container.chunks[1])) as Block2
     maps++
+    const context = extractMapContext(containerToRawBlocks(container))
+    const balance = computePlayerBalance(context, catalog)
+    if (balance) { fairnessSum += balance.score; fairnessN++ }
+    unreachable += findUnreachablePlacements(context, catalog).length
     for (const obj of block2.objects ?? []) {
       const info = catalogById.get(obj.sid)
       const sidBiome = UNIVERSAL_SID.test(obj.sid) ? undefined : info?.biome
@@ -113,6 +124,7 @@ async function main() {
 
   const sum = (m: Map<string, number>): number => [...m.values()].reduce((a, b) => a + b, 0)
   console.log(`maps ${maps}, objects ${objects}, interactables ${interactables} (${interactableCount.size} distinct sids)`)
+  console.log(`fairness (mean score): ${fairnessN ? (fairnessSum / fairnessN).toFixed(1) : 'n/a'}, unreachable placements: ${unreachable}`)
   console.log(`rare / zero-weight interactables placed: ${sum(rareCount)}`, Object.fromEntries(rareCount))
   console.log(`biome-isolation violations: ${sum(violations)}`)
   console.log('distance of a violating object to its own biome:', distHist)

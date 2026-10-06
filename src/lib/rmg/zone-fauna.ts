@@ -29,6 +29,7 @@
 //   ambient set. Quest-mark/editor-marker fx sids are never placed here —
 //   they're UI/quest-linked, not decoration.
 
+import { isRestrictedBiome } from './biome-isolation'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildAnimalPools } from '@/lib/map-grid/fuzzy-obstacle'
@@ -99,7 +100,11 @@ function pickWeightedFxSid(rng: () => number): string {
 
 function pickWeightedAnimalSid(byBiome: Record<BiomeId, string[]>, biome: BiomeId, rng: () => number): string | null {
   const home = byBiome[biome] ?? []
-  const others = ALL_BIOME_IDS.filter((b) => b !== biome).flatMap((b) => byBiome[b] ?? [])
+  // Sand, Snow and Lava animals stay on their own biome, and a zone of those
+  // biomes only gets its own animals (biome-isolation.ts).
+  const others = isRestrictedBiome(biome)
+    ? []
+    : ALL_BIOME_IDS.filter((b) => b !== biome && !isRestrictedBiome(b)).flatMap((b) => byBiome[b] ?? [])
   const totalWeight = home.length * HOME_BIOME_WEIGHT + others.length
   if (totalWeight === 0) return null
   let roll = rng() * totalWeight
