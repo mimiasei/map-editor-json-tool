@@ -41,9 +41,14 @@ namespace GmeRmgMod
         public static Type Dropdown;       // TMPro.TMP_Dropdown
         public static Type OptionData;     // TMPro.TMP_Dropdown+OptionData
         public static Type Il2CppList;     // Il2CppSystem.Collections.Generic.List`1
+        // Optional (not needed for the mod to work):
+        public static Type Screen;         // UnityEngine.Screen, only to log the display mode
+        public static Type EventSystem;    // UnityEngine.EventSystems.EventSystem, its Update runs every frame
 
         public static MethodInfo NewGenMapStart;
         public static MethodInfo NewGenMapOnBtn;
+        /// <summary>A method that runs once per frame while the game's UI is up; null if not found.</summary>
+        public static MethodInfo PerFrameMethod;
 
         private static ManualLogSource log;
         private static readonly List<string> missing = new List<string>();
@@ -67,6 +72,11 @@ namespace GmeRmgMod
             OptionData = FindType("Unity.TextMeshPro", "TMPro.TMP_Dropdown+OptionData");
             Il2CppList = FindType("Il2Cppmscorlib", "Il2CppSystem.Collections.Generic.List`1");
 
+            Screen = FindType("UnityEngine.CoreModule", "UnityEngine.Screen", required: false);
+            EventSystem = FindType("UnityEngine.UI", "UnityEngine.EventSystems.EventSystem", required: false);
+            PerFrameMethod = EventSystem?.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .FirstOrDefault(m => m.Name == "Update" && m.GetParameters().Length == 0);
+
             NewGenMapStart = RequireMethod(NewGenMap, "Start");
             NewGenMapOnBtn = RequireMethod(NewGenMap, "OnBtn");
             RequireProperty(NewGenMap, "dropdown");
@@ -86,7 +96,7 @@ namespace GmeRmgMod
 
         // ── Lookups ─────────────────────────────────────────────────────────
 
-        private static Type FindType(string assemblyName, string fullName)
+        private static Type FindType(string assemblyName, string fullName, bool required = true)
         {
             Assembly assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == assemblyName);
             if (assembly == null)
@@ -99,7 +109,7 @@ namespace GmeRmgMod
                 }
             }
             Type type = assembly?.GetType(fullName);
-            if (type == null) missing.Add($"type {fullName} ({assemblyName})");
+            if (type == null && required) missing.Add($"type {fullName} ({assemblyName})");
             return type;
         }
 
@@ -166,6 +176,13 @@ namespace GmeRmgMod
             dynamic list = Activator.CreateInstance(Il2CppList.MakeGenericType(OptionData));
             foreach (string choice in choices) list.Add((dynamic)Activator.CreateInstance(OptionData, choice));
             return list;
+        }
+
+        /// <summary>UnityEngine.Screen.fullScreenMode as text (ExclusiveFullScreen, FullScreenWindow, ...), for the log.</summary>
+        public static string FullScreenMode()
+        {
+            try { return Screen?.GetProperty("fullScreenMode", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)?.ToString() ?? "unknown"; }
+            catch { return "unknown"; }
         }
 
         public static string PersistentDataPath => (string)GetStatic(Application, "persistentDataPath");

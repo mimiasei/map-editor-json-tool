@@ -46,6 +46,16 @@ namespace GmeRmgMod
             var harmony = new Harmony(PluginGuid);
             harmony.Patch(GameApi.NewGenMapStart, postfix: new HarmonyMethod(typeof(Plugin), nameof(StartPostfix)));
             harmony.Patch(GameApi.NewGenMapOnBtn, prefix: new HarmonyMethod(typeof(Plugin), nameof(OnBtnPrefix)));
+            if (GameApi.PerFrameMethod != null)
+            {
+                try
+                {
+                    harmony.Patch(GameApi.PerFrameMethod, postfix: new HarmonyMethod(typeof(Plugin), nameof(TickPostfix)));
+                    backgroundGeneration = true;
+                }
+                catch (Exception ex) { Log.LogWarning($"Per-frame hook failed ({ex.Message})."); }
+            }
+            if (!backgroundGeneration) Log.LogWarning("No per-frame hook: generating blocks the game and the Scenario Editor shows its own window (it may take the focus from a fullscreen game).");
             Log.LogInfo($"Map editor RMG mod active (Scenario Editor: {FindTse() ?? "not found"})");
         }
 
@@ -133,18 +143,50 @@ namespace GmeRmgMod
         private static int Selected(object dropdown, int fallback) => dropdown != null ? (int)((dynamic)dropdown).value : fallback;
 
         // ── Generate button: run tse, open the result ───────────────────────
+        // tse runs without a window of its own (--progress): a second top-level
+        // window takes the focus from the fullscreen game, and over exclusive
+        // fullscreen it can't be drawn on top either. The game keeps running,
+        // the dialog shows the percentage, and once tse has exited the map is
+        // opened and the game is put back in front if anything took the focus.
+        // Without a per-frame hook (GameApi.PerFrameMethod) the old behaviour
+        // remains: wait for tse on the game thread, with tse's window shown.
+
+        /// <summary>A generation running in the background, null when idle.</summary>
+        private static Process runningTse;
+        private static object runningDialog;
+        private static string runningOutputPath, runningProgressFile, savedLabelText;
+        private static DateTime nextPoll;
+        private static IntPtr gameWindow;
+        private static bool backgroundGeneration;
 
         public static bool OnBtnPrefix(object __instance)
         {
             try { Generate(__instance); }
-            catch (Exception ex) { Logger.LogError($"Map generation failed: {ex}"); }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Map generation failed: {ex}");
+                runningTse = null;
+            }
             return false; // never run the game's own generator
+        }
+
+        /// <summary>Runs once per frame (a Harmony postfix on GameApi.PerFrameMethod).</summary>
+        public static void TickPostfix()
+        {
+            if (runningTse == null) return;
+            try { Tick(); }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Map generation failed: {ex}");
+                runningTse = null;
+            }
         }
 
         private static void Generate(object newGenMap)
         {
+            if (runningTse != null) return; // already generating
+
             dynamic dialog = GameApi.Cast(newGenMap, GameApi.NewGenMap);
-            dialog.Hide();
 
             string templateName = dialog.template != null ? (string)dialog.template.text : "jebusCross";
             int sizeIndex = dialog.dropdown != null ? (int)dialog.dropdown.value : 3;
@@ -183,22 +225,102 @@ namespace GmeRmgMod
                 return;
             }
 
+            string progressFile = backgroundGeneration ? Path.Combine(Path.GetTempPath(), "tse-rmg-progress.json") : null;
+            if (progressFile != null) { try { File.Delete(progressFile); } catch { } }
+            if (File.Exists(outputPath)) { try { File.Delete(outputPath); } catch { } }
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = tse,
                 Arguments = $"--generate --template \"{templateName}\" --size {mapSize} --seed {seed} --players {players}"
                     + $" --richness {Selected(richnessDropdown, 2)} --complexity {Selected(complexityDropdown, 2)}"
-                    + $" --difficulty {Selected(difficultyDropdown, 1)} --water {Selected(waterDropdown, 2)} --output \"{outputPath}\"",
+                    + $" --difficulty {Selected(difficultyDropdown, 1)} --water {Selected(waterDropdown, 2)} --output \"{outputPath}\""
+                    + (progressFile != null ? $" --progress \"{progressFile}\"" : ""),
                 CreateNoWindow = true,
                 UseShellExecute = false,
             };
+
+            gameWindow = NativeWindow.GameWindow();
+            Logger.LogInfo($"Display mode: {GameApi.FullScreenMode()}; game window in front: {NativeWindow.IsForeground(gameWindow)}");
             Logger.LogInfo($"Running RMG: {startInfo.FileName} {startInfo.Arguments}");
-            using (Process process = Process.Start(startInfo))
+            Process process = Process.Start(startInfo);
+            if (process == null)
             {
-                process?.WaitForExit();
-                if (process != null) Logger.LogInfo($"RMG exited with code {process.ExitCode}");
+                Logger.LogError("Could not start the Scenario Editor");
+                return;
+            }
+            // Only a visible tse window needs the right to take the foreground.
+            if (progressFile == null) NativeWindow.AllowForeground(process.Id);
+
+            runningTse = process;
+            runningDialog = dialog;
+            runningOutputPath = outputPath;
+            runningProgressFile = progressFile;
+            nextPoll = DateTime.UtcNow;
+            savedLabelText = null;
+
+            if (progressFile != null)
+            {
+                // Leave the dialog up, with the percentage where the template name is.
+                try { if (dialog.template != null) { savedLabelText = (string)dialog.template.text; dialog.template.text = "Generating map… 0 %"; } }
+                catch (Exception ex) { Logger.LogWarning($"Could not show progress in the dialog: {ex.Message}"); }
+                return; // Tick() finishes it
             }
 
+            dialog.Hide();
+            process.WaitForExit();
+            Complete();
+        }
+
+        private static void Tick()
+        {
+            DateTime now = DateTime.UtcNow;
+            bool exited = runningTse.HasExited;
+            if (!exited && now < nextPoll) return;
+            nextPoll = now.AddMilliseconds(250);
+            if (exited) { Complete(); return; }
+            ShowProgress();
+        }
+
+        private static void ShowProgress()
+        {
+            if (runningProgressFile == null || savedLabelText == null) return;
+            try
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(File.ReadAllText(runningProgressFile), "\"pct\"\\s*:\\s*(\\d+(?:\\.\\d+)?)");
+                if (!match.Success) return;
+                int pct = (int)Math.Round(double.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture));
+                ((dynamic)runningDialog).template.text = $"Generating map… {Math.Clamp(pct, 0, 100)} %";
+            }
+            catch { /* the file may be mid-write, or not there yet — try again next time */ }
+        }
+
+        /// <summary>tse has exited: tidy up, open the map, make sure the game is in front.</summary>
+        private static void Complete()
+        {
+            Process process = runningTse;
+            object dialog = runningDialog;
+            string outputPath = runningOutputPath, progressFile = runningProgressFile, savedLabel = savedLabelText;
+            runningTse = null;
+            runningDialog = null;
+            using (process) Logger.LogInfo($"RMG exited with code {process.ExitCode}");
+            if (progressFile != null) { try { File.Delete(progressFile); } catch { } }
+
+            bool front = NativeWindow.BringToFront(gameWindow);
+            try
+            {
+                if (savedLabel != null) ((dynamic)dialog).template.text = savedLabel;
+                ((dynamic)dialog).Hide();
+            }
+            catch (Exception ex) { Logger.LogWarning($"Could not close the generate dialog: {ex.Message}"); }
+
+            OpenGeneratedMap(outputPath);
+            if (!NativeWindow.IsForeground(gameWindow)) front = NativeWindow.BringToFront(gameWindow);
+            Logger.LogInfo($"Game window in front after generating: {front}");
+        }
+
+        private static void OpenGeneratedMap(string outputPath)
+        {
             if (!File.Exists(outputPath))
             {
                 Logger.LogError($"RMG output not found: {outputPath}");

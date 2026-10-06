@@ -20,7 +20,8 @@
         "minHeight": 600,
         "resizable": true,
         "fullscreen": false,
-        "visible": false
+        "visible": false,
+        "focus": false
       }
     ],
     "security": {
@@ -60,6 +61,11 @@
         {
           "name": "result",
           "description": "Absolute path of a JSON file describing the outcome",
+          "takesValue": true
+        },
+        {
+          "name": "progress",
+          "description": "Optional. Absolute path of a JSON file the generator keeps updated with {pct, label}. With it no window is shown, so a fullscreen game keeps the focus; the caller shows the progress itself",
           "takesValue": true
         },
         {

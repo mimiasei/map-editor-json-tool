@@ -7,6 +7,8 @@ import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 export interface HeadlessArgs {
   output: string
   result: string | null
+  /** Progress file the mod polls (`{pct, label}`); also keeps the window hidden. */
+  progress: string | null
   sizeX: number
   sizeZ: number
   playerCount: number
@@ -71,6 +73,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
   return {
     output,
     result: raw.result?.trim() || null,
+    progress: raw.progress?.trim() || null,
     ...parseSize(raw.size),
     playerCount,
     seed,

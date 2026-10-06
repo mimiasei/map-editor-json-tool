@@ -21,6 +21,38 @@ interface Props {
   args: Record<string, string | undefined>
 }
 
+/** Writes `{pct, label}` to the `--progress` file the GME mod polls, at most a
+ *  few times a second and never two writes at once (a write that lands while
+ *  another is running is merged into the next one). The mod ignores a file it
+ *  catches half-written. No path: does nothing. */
+function makeProgressWriter(path: string | null): (progress: { pct: number; label: string }) => void {
+  if (!path) return () => {}
+  let latest: { pct: number; label: string } | null = null
+  let writing = false
+  let last = 0
+  const flush = async (): Promise<void> => {
+    if (writing || !latest) return
+    writing = true
+    try {
+      const { writeTextFile } = await import('@tauri-apps/plugin-fs')
+      while (latest) {
+        const next = latest
+        latest = null
+        await writeTextFile(path, JSON.stringify(next))
+        last = Date.now()
+      }
+    } catch (e) {
+      logError(`Headless: could not write progress file "${path}": ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      writing = false
+    }
+  }
+  return (progress) => {
+    latest = progress
+    if (Date.now() - last >= 150 || progress.pct >= 100) void flush()
+  }
+}
+
 async function finish(code: number, resultPath: string | null, result: Record<string, unknown>): Promise<void> {
   if (resultPath) {
     try {
@@ -43,6 +75,8 @@ export default function HeadlessGenerate({ args }: Props) {
     if (started.current) return
     started.current = true
     const resultPath = args.result?.trim() || null
+    const writeProgress = makeProgressWriter(args.progress?.trim() || null)
+    const report = (p: { pct: number; label: string }): void => { setProgress(p); writeProgress(p) }
 
     void (async () => {
       let parsed: ReturnType<typeof parseHeadlessArgs>
@@ -57,7 +91,7 @@ export default function HeadlessGenerate({ args }: Props) {
 
       try {
         setHeadlessYield(true)
-        setProgress({ pct: 0, label: 'Loading game data…' })
+        report({ pct: 0, label: 'Loading game data…' })
         await useCatalogStore.getState().load()
         if (!useCatalogStore.getState().catalog) {
           const message = 'Game data (Core.zip) could not be loaded. Open TSE normally once and set it under More → Game Data.'
@@ -72,7 +106,7 @@ export default function HeadlessGenerate({ args }: Props) {
 
         const generated = await generateRandomMapBytes({
           mapName: parsed.mapName,
-          onProgress: (label, pct) => setProgress({ label, pct }),
+          onProgress: (label, pct) => report({ label, pct }),
           sizeX: parsed.sizeX,
           sizeZ: parsed.sizeZ,
           playerCount: parsed.playerCount,

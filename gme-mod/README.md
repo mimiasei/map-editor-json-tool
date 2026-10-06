@@ -6,6 +6,19 @@ to the editor's *Generate map* dialog and generates the map with the Scenario
 Editor's random map generator (`app.exe --generate …`, see
 `src/lib/rmg/headless-args.ts`), then opens the result in the map editor.
 
+## Staying in the game while generating
+
+A second window in front of a fullscreen game makes Windows drop the game to the
+desktop, and over exclusive fullscreen nothing can be drawn on top at all. So the
+mod runs `app.exe --generate … --progress <file>`, which shows **no window**: the
+game keeps running, the dialog's template label shows `Generating map… NN %`
+(read from the progress file), and when the Scenario Editor exits the map opens
+and the game window is brought back to the front if anything took the focus.
+The BepInEx log records the display mode (`Screen.fullScreenMode`) and whether the
+game was in front before and after. If the per-frame hook (`EventSystem.Update`)
+can't be patched, the mod falls back to the old behaviour: wait on the game
+thread, with the Scenario Editor's own window (topmost, focused) shown.
+
 ## Installing
 
 The Windows installer (`…-setup.exe`) offers the mod during setup. On **Yes** it:
