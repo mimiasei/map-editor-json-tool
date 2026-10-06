@@ -22,6 +22,7 @@
 // it falls back to that cell's own zone biome rather than throwing.
 
 import { TILE_ADJACENCY_WEIGHTS } from './terrain-adjacency-stats'
+import { RESTRICTED_BIOMES } from './biome-isolation'
 
 export interface TerrainBorderBlendOptions {
   sizeX: number
@@ -134,7 +135,11 @@ export function blendZoneBordersWFC(options: TerrainBorderBlendOptions): number[
     const zones = relevantZones.get(node) ?? new Set<number>([zoneIdByNode[node]])
     const biomes = new Set<number>()
     for (const zid of zones) biomes.add(zoneBiome.get(zid) ?? 1)
-    domain.set(node, [...biomes])
+    // Sand, Snow and Lava never mix with another biome (biome-isolation.ts):
+    // a tile of such a zone keeps its biome, and no other zone's tile may
+    // turn into one — the seam stays a hard edge.
+    const own = zoneBiome.get(zoneIdByNode[node]) ?? 1
+    domain.set(node, RESTRICTED_BIOMES.has(own) ? [own] : [...biomes].filter((b) => !RESTRICTED_BIOMES.has(b)))
   }
 
   const uncollapsed = new Set(borderBand)

@@ -160,6 +160,10 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       chanceBySid: {},
       loneGuardChancePerZone: DEFAULT_LONE_GUARD_CHANCE,
     },
+    interactables: {
+      _about: "weightBySid: how likely one interactable is to be scattered, as a pick weight inside its tier (0 = never, typical game values 12-175; no entry = the game's own content-list weight, else 50). Interactables the game never rolls (weight 0 in its content lists, e.g. mirage, insaras_eye, flattering_mirror) and the rare tier are not scattered by default; a weight above 0 here turns one back on, e.g. {\"mirage\": 20}.",
+      weightBySid: {},
+    },
   }
 }
 

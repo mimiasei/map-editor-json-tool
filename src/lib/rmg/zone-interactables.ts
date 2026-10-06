@@ -21,6 +21,7 @@
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { ZoneSpec } from './zone-graph'
 import { isRmgIneligibleInteractableSid, pickInteractableSid } from './object-variety'
+import type { InteractableRarity } from './interactable-rarity'
 import { tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
 
 export interface ScatterInteractablesOptions {
@@ -53,12 +54,16 @@ export interface ScatterInteractablesOptions {
    *  gets the same fixed number of interactables — the kind's mean tile count
    *  times the density — at random free tiles. */
   symmetricZones?: boolean
+  /** Rarity of each sid (game content-list weights + tuning): blocked sids
+   *  (weight 0 or rare tier) are never picked, the rest by weight. */
+  rarity?: InteractableRarity
 }
 
 export function scatterZoneInteractables(options: ScatterInteractablesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids, symmetricZones = false } = options
+  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids, symmetricZones = false, rarity } = options
   const placements: ZonePlacement[] = []
-  const isDisabled = (candidate: string): boolean => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false)
+  const isDisabled = (candidate: string): boolean => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false) || (rarity?.isBlocked(candidate) ?? false)
+  const weightFor = (sid: string): number => rarity?.weight(sid) ?? 1
   if (symmetricZones) {
     const meanTiles = (kind: 'player' | 'neutral'): number => {
       const counts = zones.filter((z) => z.kind === kind).map((z) => tilesByZone.get(z.id)?.length ?? 0)
@@ -73,7 +78,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
       // map's interactable density well above what the slider has always meant.
       for (let roll = 0; roll < target[zone.kind]; roll++) {
         const node = free[Math.floor(rng() * free.length)]
-        const sid = pickInteractableSid(rng, isDisabled)
+        const sid = pickInteractableSid(rng, isDisabled, weightFor)
         if (!sid) continue
         if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) placements.push({ tempId: state.nextTempId++, sid, node })
       }
@@ -87,7 +92,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
     for (const node of tiles) {
       if (excludedNodes.has(node)) continue
       if (rng() >= zoneDensity) continue
-      const sid = pickInteractableSid(rng, isDisabled)
+      const sid = pickInteractableSid(rng, isDisabled, weightFor)
       if (!sid) continue
       if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
         placements.push({ tempId: state.nextTempId++, sid, node })

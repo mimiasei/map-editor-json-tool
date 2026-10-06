@@ -808,6 +808,8 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
       ? (node: number) => biasedChance(INDEPENDENT_PHASE_POOL_BASE_CHANCE, 0, node, sizeX, sizeZ, placedCategoryByNode, 'pools', coOccurrenceStrength, CLUSTER_RADIUS)
       : undefined
     sampleFuzzyObstacles(nodeDistances, () => biome, pools, {
+      // Cross-biome picks only among compatible biomes: Sand, Snow, Lava and Deathland never mix.
+      allowHighContrastBiomes: false,
       mountainChance: 0.05, rng, mountainChanceFor, poolChanceFor, weights: environmentWeights,
       onDecided: (node, addition) => {
         if (!addition) return
