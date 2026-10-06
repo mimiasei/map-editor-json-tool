@@ -225,9 +225,10 @@ pub fn run() {
                             let _ = window.set_always_on_top(true);
                         }
                         let _ = window.show();
-                        if generate {
-                            let _ = window.set_focus();
-                        }
+                        // The window is created unfocused (tauri.conf.json), so
+                        // that a hidden --generate --progress run never takes the
+                        // foreground from a fullscreen game; focus it when shown.
+                        let _ = window.set_focus();
                     }
                 }
             }

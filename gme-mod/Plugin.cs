@@ -249,7 +249,8 @@ namespace GmeRmgMod
                 Logger.LogError("Could not start the Scenario Editor");
                 return;
             }
-            NativeWindow.AllowForeground(process.Id); // only matters if tse shows a window
+            // Only a visible tse window needs the right to take the foreground.
+            if (progressFile == null) NativeWindow.AllowForeground(process.Id);
 
             runningTse = process;
             runningDialog = dialog;
