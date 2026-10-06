@@ -24,8 +24,9 @@ A visual editor for the scenario scripting JSON files used in **Heroes of Might 
 
 The in-game map editor does not expose scenario scripting. Quest flow, win/lose conditions, story dialogs, hero buffs, difficulty scaling, and all other event-driven behaviour are controlled through a `.json` file that map creators currently hand-edit through trial and error.
 
-This tool gives that file a visual interface:
+This tool gives that file a visual interface, and a lot more:
 
+- **Generate** a complete random map in one click — zones, elevation, rivers, roads, mines, guards and treasure — from the editor or straight from the game's own map editor
 - **Import** an existing scenario JSON and browse its structure in a tree
 - **Edit** counters, interruptions, quests, sub-quests, triggers, conditions, and actions — as structured forms, or as plain-language cards with clickable links to the objects/heroes/nodes they reference
 - **Author dialog flows** — build branching NPC conversations with player choices, speaker titles, and map actions per slide
@@ -62,6 +63,15 @@ It is a companion to the map editor, not a replacement for it.
 ---
 
 ## Features
+
+**Random map generator** — builds a playable, fair map from a few choices (size, players, richness, complexity, difficulty, water) or a seed. Classic mode is tuned to look like the game's own maps:
+- **Layouts** — rings, hubs, pockets and more, with hills following the game's own elevation layouts.
+- **Rivers** — start at a mountain on a hill, drop off it over a single waterfall, wind across level ground, widen toward the mouth, flow into lakes, the sea or each other, and keep clear of cliffs so no row of waterfalls forms.
+- **Roads and guards** — every city gets a road; guards stand on object entrances; zone borders are walled with guarded gates.
+- **Economy** — game-like mine distribution per player and neutral zone, richness-based treasure, guard strength by difficulty.
+- **Fair by design** — a generation scoring low on player balance is re-rolled; a seed reproduces the same map. Generator values can be tuned without rebuilding (see below).
+
+**Game map editor mod** (Windows) — adds Players, Richness, Complexity, Difficulty and Water options to the *Generate map* dialog of the game's own map editor and generates with this generator (`app.exe --generate`, no extra window; progress shows in the dialog, the game stays in front). The installer offers it, including BepInEx. See [gme-mod/README.md](gme-mod/README.md).
 
 **Map Grid** (desktop) — a live 2D view of your actual map, not just the script, with two modes:
 - **Browse** — click any tile to inspect everything placed on it.
@@ -183,6 +193,7 @@ src/
 │   ├── map-extract.ts         — Derives MapContext (entities, spawns, placements) from blocks
 │   ├── map-write.ts / map-save.ts — Span-patch-and-splice .map edits, verified before write
 │   ├── map-grid/               — Footprint, passability and cell-visual helpers for the Map Grid
+│   ├── rmg/                   — Random map generator: zones, terrain, rivers, roads, population, tuning, headless CLI args
 │   ├── map-file.ts            — Opens a .map plus its sidecar scenario JSON
 │   ├── timeline.ts / quest-flow.ts — Derived views for the timeline and DAG
 │   ├── native-fs.ts           — The only place Tauri file APIs are touched; isTauri() guard
@@ -203,8 +214,10 @@ src/
     └── common/                — JsonPreview, DraggableDialogContent, Publish/Update/Setup/
                                  Theme/Thumbnail dialogs, CommandPalette, Timeline, QuestFlow, Stats
 
+gme-mod/                       — BepInEx plugin for the game's map editor (see gme-mod/README.md)
+
 src-tauri/
-├── src/lib.rs                 — Tauri setup: menu bar, updater, extract_thumbnails command
+├── src/lib.rs                 — Tauri setup: menu bar, updater, extract_thumbnails command, headless --generate mode
 └── sidecar/                   — Python + UnityPy icon extractor (built by scripts/build-sidecar.sh)
 ```
 
