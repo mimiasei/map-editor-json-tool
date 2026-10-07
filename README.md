@@ -64,37 +64,37 @@ It is a companion to the map editor, not a replacement for it.
 
 ## Features
 
-**Random map generator** — builds a playable, fair map from a few choices (size, players, richness, complexity, difficulty, water) or a seed. Classic mode is tuned to look like the game's own maps:
+🗺️**Random map generator** — builds a playable, fair map from a few choices (size, players, richness, complexity, difficulty, water) or a seed. Classic mode is tuned to look like the game's own maps:
 - **Layouts** — rings, hubs, pockets and more, with hills following the game's own elevation layouts.
 - **Rivers** — start at a mountain on a hill, drop off it over a single waterfall, wind across level ground, widen toward the mouth, flow into lakes, the sea or each other, and keep clear of cliffs so no row of waterfalls forms.
 - **Roads and guards** — every city gets a road; guards stand on object entrances; zone borders are walled with guarded gates.
 - **Economy** — game-like mine distribution per player and neutral zone, richness-based treasure, guard strength by difficulty.
 - **Fair by design** — a generation scoring low on player balance is re-rolled; a seed reproduces the same map. Generator values can be tuned without rebuilding (see below).
 
-**Game map editor mod** (Windows) — adds Seed (random by default), Players, Richness, Complexity, Difficulty and Water options to the *Generate map* dialog of the game's own map editor and generates with this generator (`app.exe --generate`, no extra window; progress shows in the dialog, the game stays in front). The installer offers it, including BepInEx. See [gme-mod/README.md](gme-mod/README.md).
+⚙️**Game map editor mod** (Windows) — adds Players, Richness, Complexity, Difficulty and Water options to the *Generate map* dialog of the game's own map editor and generates with this generator (`app.exe --generate`, no extra window; progress shows in the dialog, the game stays in front). The installer offers it, including BepInEx. See [gme-mod/README.md](gme-mod/README.md).
 
-**Import Heroes III maps** (desktop) — turn a HoMM3 `.h3m` into an Olden Era map from *More → Import H3 Map*: terrain and scenery, towns (as player starts), heroes, monsters (strength-calibrated), mines, resources, dwellings, artifacts, portals, global events, and the "defeat all enemies" victory as a real quest. Open it in the Map Grid and polish it from there.
+↔️**Import Heroes III maps** (desktop) — turn a HoMM3 `.h3m` into an Olden Era map from *More → Import H3 Map*: terrain and scenery, towns (as player starts), heroes, monsters (strength-calibrated), mines, resources, dwellings, artifacts, portals, global events, and the "defeat all enemies" victory as a real quest. Open it in the Map Grid and polish it from there.
 
-**Map Grid** (desktop) — a live 2D view of your actual map, not just the script, with two modes:
+✏️**Map Grid** (desktop) — a live 2D view of your actual map, not just the script, with two modes:
 - **Browse** — click any tile to inspect everything placed on it.
 - **Paint** — edits apply immediately (Ctrl+Z/Cmd+Z undoes, with its own history separate from the scenario editor's):
   - **Objects** — move, add, delete, and rotate; place real creature squads with hover tooltips for stats; assign which player starts where — city or hero.
   - **Terrain & water** — drag-paint terrain, roads, rivers, and ramps; flood-fill water into lowered terrain; a blocked-tile overlay shows exactly what's walkable; erase anything with the Eraser tool.
   - **Scatter brushes** — **Obstacles**, **Trees**, and **Landmarks** drop biome-appropriate scenery as you drag, with per-brush settings for mountain/pool chance and cross-biome mixing.
 
-**Trigger builder (Card view)** — conditions and actions render as plain-language sentences instead of raw forms. Hero, object, dialog, and node references are clickable — heroes and objects jump to their Game Database entry, nodes open the Map Grid centered on that tile; dialog actions show a tooltip preview of the localized text on hover.
+◾**Trigger builder (Card view)** — conditions and actions render as plain-language sentences instead of raw forms. Hero, object, dialog, and node references are clickable — heroes and objects jump to their Game Database entry, nodes open the Map Grid centered on that tile; dialog actions show a tooltip preview of the localized text on hover.
 
-**Dialog & localization** — a visual slide editor for branching NPC conversations: portraits, animations, voice lines, player choices, and per-slide map actions. Translate every dialog and quest name into any of the game's 16 languages side by side, with English as a safety-net fallback.
+◾**Dialog & localization** — a visual slide editor for branching NPC conversations: portraits, animations, voice lines, player choices, and per-slide map actions. Translate every dialog and quest name into any of the game's 16 languages side by side, with English as a safety-net fallback.
 
-**Scenario scripting** — full CRUD across counters → interruptions → quests → sub-quests → triggers → conditions/actions, with 55 condition types and 114 action types, labelled fields and inline tooltips, plus a forward-compatible fallback for anything the registry doesn't know yet.
+◾**Scenario scripting** — full CRUD across counters → interruptions → quests → sub-quests → triggers → conditions/actions, with 55 condition types and 114 action types, labelled fields and inline tooltips, plus a forward-compatible fallback for anything the registry doesn't know yet.
 
-**Custom content** — build your own heroes, map objects, artifacts, and buffs, either from scratch or by cloning something that already exists.
+◾**Custom content** — build your own heroes, map objects, artifacts, and buffs, either from scratch or by cloning something that already exists.
 
-**Game Data Catalog** — load your game's `Core.zip` to populate every dropdown with real names and artwork, and browse the full Hero / Creature / Artifact / Object database and every one of the game's ~769 shipped dialogs.
+◾**Game Data Catalog** — load your game's `Core.zip` to populate every dropdown with real names and artwork, and browse the full Hero / Creature / Artifact / Object database and every one of the game's ~769 shipped dialogs.
 
-**Quality of life** — undo/redo, a command palette (Ctrl+K), SID autocomplete, live JSON preview, an event timeline and quest-flow diagram, resizable/movable/undockable panels, and built-in guides with annotated starter templates.
+◾**Quality of life** — undo/redo, a command palette (Ctrl+K), SID autocomplete, live JSON preview, an event timeline and quest-flow diagram, resizable/movable/undockable panels, and built-in guides with annotated starter templates.
 
-**Ship it** — export a distributable map ZIP, or (desktop) **Publish** straight into your game install in one click. Auto-update keeps the desktop app itself current.
+◾**Ship it** — export a distributable map ZIP, or (desktop) **Publish** straight into your game install in one click. Auto-update keeps the desktop app itself current.
 
 ---
 
