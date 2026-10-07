@@ -29,7 +29,7 @@ namespace GmeRmgMod
         private static ConfigEntry<string> tseExecutable;
 
         // The added dropdowns (TMP_Dropdown), set by StartPostfix.
-        private static object playersDropdown, richnessDropdown, complexityDropdown, difficultyDropdown, waterDropdown;
+        private static object seedDropdown, playersDropdown, richnessDropdown, complexityDropdown, difficultyDropdown, waterDropdown;
 
         public override void Load()
         {
@@ -99,16 +99,19 @@ namespace GmeRmgMod
             dynamic templateRect = GameApi.GetComponent(dialog.template, GameApi.RectTransform);
             float leftX = (float)templateRect.anchoredPosition.x + 35f;
 
-            playersDropdown = AddDropdown(sizeDropdown, parent, "Players_Dropdown", leftX, baseY - 35f,
+            // First: whether tse rolls its own seed (default) or uses the game's seed field.
+            seedDropdown = AddDropdown(sizeDropdown, parent, "Seed_Dropdown", leftX, baseY - 35f,
+                new[] { "Random Seed", "Use Seed Field" }, 0);
+            playersDropdown = AddDropdown(sizeDropdown, parent, "Players_Dropdown", leftX, baseY - 70f,
                 new[] { "2 Players", "3 Players", "4 Players", "5 Players", "6 Players", "7 Players", "8 Players" }, 2);
-            richnessDropdown = AddDropdown(sizeDropdown, parent, "Richness_Dropdown", leftX, baseY - 70f,
+            richnessDropdown = AddDropdown(sizeDropdown, parent, "Richness_Dropdown", leftX, baseY - 105f,
                 new[] { "Poor Economy", "Modest Loot", "Medium Richness", "Rich Map", "Very Rich Map" }, 2);
-            complexityDropdown = AddDropdown(sizeDropdown, parent, "Complexity_Dropdown", leftX, baseY - 105f,
+            complexityDropdown = AddDropdown(sizeDropdown, parent, "Complexity_Dropdown", leftX, baseY - 140f,
                 new[] { "Sparse Layout", "Light Objects", "Medium Complexity", "Dense Map", "Very Dense Map" }, 2);
             // The game's six lobby difficulty levels (tse --difficulty 0-5), default Normal
-            difficultyDropdown = AddDropdown(sizeDropdown, parent, "Difficulty_Dropdown", leftX, baseY - 140f,
+            difficultyDropdown = AddDropdown(sizeDropdown, parent, "Difficulty_Dropdown", leftX, baseY - 175f,
                 new[] { "Easy Guards", "Normal Guards", "Hard Guards", "Impossible Guards", "Deadly Guards", "Hell Guards" }, 1);
-            waterDropdown = AddDropdown(sizeDropdown, parent, "Water_Dropdown", leftX, baseY - 175f,
+            waterDropdown = AddDropdown(sizeDropdown, parent, "Water_Dropdown", leftX, baseY - 210f,
                 new[] { "No Water", "Few Lakes", "Some Lakes", "Many Lakes", "Islands Map" }, 2);
 
             // Grow the dialog's background frame by one 35px row per added dropdown.
@@ -118,8 +121,8 @@ namespace GmeRmgMod
                 string name = ((string)rect.gameObject.name).ToLowerInvariant();
                 if (name.Contains("bg") || name.Contains("background") || name.Contains("panel"))
                 {
-                    rect.sizeDelta = GameApi.NewVector2((float)rect.sizeDelta.x, (float)rect.sizeDelta.y + 235f);
-                    rect.anchoredPosition = GameApi.NewVector2((float)rect.anchoredPosition.x, (float)rect.anchoredPosition.y - 117.5f);
+                    rect.sizeDelta = GameApi.NewVector2((float)rect.sizeDelta.x, (float)rect.sizeDelta.y + 270f);
+                    rect.anchoredPosition = GameApi.NewVector2((float)rect.anchoredPosition.x, (float)rect.anchoredPosition.y - 135f);
                 }
             }
         }
@@ -199,9 +202,16 @@ namespace GmeRmgMod
             }
             string mapSize = $"{sizes[sizeIndex].x}x{sizes[sizeIndex].z}";
 
-            int seed = 0;
-            string seedText = dialog.seed != null ? (string)dialog.seed.text : null;
-            if (!string.IsNullOrEmpty(seedText)) int.TryParse(seedText, out seed);
+            // "Random Seed" (default): no --seed, so tse rolls its own. Otherwise the
+            // game's seed field (a number; anything else is 0).
+            string seedArg = "";
+            if (Selected(seedDropdown, 0) == 1)
+            {
+                int seed = 0;
+                string seedText = dialog.seed != null ? (string)dialog.seed.text : null;
+                if (!string.IsNullOrEmpty(seedText)) int.TryParse(seedText, out seed);
+                seedArg = $" --seed {seed}";
+            }
 
             int[] playerCounts = { 2, 3, 4, 5, 6, 7, 8 };
             int players = playerCounts[Math.Clamp(Selected(playersDropdown, 0), 0, playerCounts.Length - 1)];
@@ -232,7 +242,7 @@ namespace GmeRmgMod
             var startInfo = new ProcessStartInfo
             {
                 FileName = tse,
-                Arguments = $"--generate --template \"{templateName}\" --size {mapSize} --seed {seed} --players {players}"
+                Arguments = $"--generate --template \"{templateName}\" --size {mapSize}{seedArg} --players {players}"
                     + $" --richness {Selected(richnessDropdown, 2)} --complexity {Selected(complexityDropdown, 2)}"
                     + $" --difficulty {Selected(difficultyDropdown, 1)} --water {Selected(waterDropdown, 2)} --output \"{outputPath}\""
                     + (progressFile != null ? $" --progress \"{progressFile}\"" : ""),
