@@ -64,7 +64,7 @@ It is a companion to the map editor, not a replacement for it.
 
 ## Features
 
-🗺️**Random map generator** — builds a playable, fair map from a few choices (size, players, richness, complexity, difficulty, water) or a seed. Classic mode is tuned to look like the game's own maps:
+🗺️**Random map generator** — builds a playable, fair map from a few choices (size, players, richness, complexity, difficulty, water) or a seed. Advanced mode unlocks far more options (water and islands, hills, zone shape, object and guard density, roads, portals). Classic mode is tuned to look like the game's own maps:
 - **Layouts** — rings, hubs, pockets and more, with hills following the game's own elevation layouts.
 - **Rivers** — start at a mountain on a hill, drop off it over a single waterfall, wind across level ground, widen toward the mouth, flow into lakes, the sea or each other, and keep clear of cliffs so no row of waterfalls forms.
 - **Roads and guards** — every city gets a road; guards stand on object entrances; zone borders are walled with guarded gates.
