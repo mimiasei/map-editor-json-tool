@@ -1,7 +1,7 @@
 # Map editor (GME) mod
 
 A BepInEx 6 (IL2CPP) plugin for Heroes of Might and Magic: Olden Era's own map
-editor. It adds **Players, Richness, Complexity, Difficulty and Water** options
+editor. It adds **Seed (random or the seed field), Players, Richness, Complexity, Difficulty and Water** options
 to the editor's *Generate map* dialog and generates the map with the Scenario
 Editor's random map generator (`app.exe --generate …`, see
 `src/lib/rmg/headless-args.ts`), then opens the result in the map editor.

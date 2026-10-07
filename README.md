@@ -71,7 +71,7 @@ It is a companion to the map editor, not a replacement for it.
 - **Economy** — game-like mine distribution per player and neutral zone, richness-based treasure, guard strength by difficulty.
 - **Fair by design** — a generation scoring low on player balance is re-rolled; a seed reproduces the same map. Generator values can be tuned without rebuilding (see below).
 
-**Game map editor mod** (Windows) — adds Players, Richness, Complexity, Difficulty and Water options to the *Generate map* dialog of the game's own map editor and generates with this generator (`app.exe --generate`, no extra window; progress shows in the dialog, the game stays in front). The installer offers it, including BepInEx. See [gme-mod/README.md](gme-mod/README.md).
+**Game map editor mod** (Windows) — adds Seed (random by default), Players, Richness, Complexity, Difficulty and Water options to the *Generate map* dialog of the game's own map editor and generates with this generator (`app.exe --generate`, no extra window; progress shows in the dialog, the game stays in front). The installer offers it, including BepInEx. See [gme-mod/README.md](gme-mod/README.md).
 
 **Import Heroes III maps** (desktop) — turn a HoMM3 `.h3m` into an Olden Era map from *More → Import H3 Map*: terrain and scenery, towns (as player starts), heroes, monsters (strength-calibrated), mines, resources, dwellings, artifacts, portals, global events, and the "defeat all enemies" victory as a real quest. Open it in the Map Grid and polish it from there.
 
