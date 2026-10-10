@@ -281,6 +281,8 @@ export interface GenerateRandomMapOptions {
    *  and minimum width, difficulty values, richness pools/tiers and guard
    *  chances. Classic mode passes it (buildClassicOptions). */
   tuning?: RmgTuning
+  /** Spell sids (e.g. `neutral_magic_town_portal`) banned for the whole map. */
+  bannedMagics?: string[]
   /** Optional staged-progress reporter — see `RmgProgressCallback`'s own doc
    *  comment. Purely observational: never changes what's generated, only
    *  when the caller finds out about it. */
@@ -1514,6 +1516,16 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const rawTemplate = parseGameTemplateJson(gameTemplateJson)
     const gameRulesPatch = extractGameRulesPatch(rawTemplate)
     const patched = patchGameRules(finalBlock1, finalBlock2, gameRulesPatch)
+    finalBlock1 = patched.block1Chunk
+    finalBlock2 = patched.block2Chunk
+  }
+
+  // Spells the user banned (both blocks' `banInfoData.bannedMagics`), added
+  // to whatever an imported template already bans.
+  if (options.bannedMagics && options.bannedMagics.length > 0) {
+    const templateBans = gameTemplateJson ? extractGameRulesPatch(parseGameTemplateJson(gameTemplateJson)).globalBans?.magics ?? [] : []
+    const magics = [...new Set([...templateBans, ...options.bannedMagics])]
+    const patched = patchGameRules(finalBlock1, finalBlock2, { globalBans: { magics } })
     finalBlock1 = patched.block1Chunk
     finalBlock2 = patched.block2Chunk
   }

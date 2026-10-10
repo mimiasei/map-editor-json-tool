@@ -71,6 +71,9 @@ export interface ClassicSettings {
   complexity: RmgComplexity
   difficulty: RmgDifficulty
   water: RmgWaterLevel
+  /** Total neutral cities on the map (not the players' own); unset = the
+   *  tuning file's `cities.maxRandom`, else the default. */
+  maxRandomCities?: number
 }
 
 export const DEFAULT_CLASSIC_SETTINGS: ClassicSettings = { richness: 'medium', complexity: 'medium', difficulty: 'normal', water: 'some' }
@@ -146,6 +149,14 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       confluenceChance: DEFAULT_RIVER_CONFLUENCE_CHANCE,
       bankDecoration: DEFAULT_RIVER_BANK_DENSITY,
     },
+    cities: {
+      _about: 'maxRandom (0-16): total neutral cities on the map, not counting the players\' own cities. At most one per neutral zone, so a map with fewer neutral zones gets fewer. The GME dialog and --max-cities override it.',
+      maxRandom: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+    },
+    spells: {
+      _about: 'banned: spell sids banned on the generated map, e.g. ["neutral_magic_town_portal", "neutral_magic_dimension_door"] (sids as in the Game Database dialog). Players cannot learn or cast them.',
+      banned: [],
+    },
     layout: {
       _about:'Relative chance of each zone layout per map (0 disables one). ring: players and neutral zones alternate on one ring; ringCenter: ring plus a richer treasure zone in the middle; innerRing: players outside, neutral zones in an inner ring; doubleNeutral: two neutral zones between neighbours; pockets: ring plus a dead-end treasure pocket per player; hub: every player has a spoke to a shared center. Some layouts are only used up to a player count (doubleNeutral, pockets, hub: 4; innerRing: 7) or on maps big enough for their zones; otherwise ring is used.',
       weights: Object.fromEntries(LAYOUT_ARCHETYPES.map((a) => [a, 1])),
@@ -187,6 +198,8 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
   return {
     ...DEFAULT_TEMPLATE_OVERRIDES,
     ...resolveClassicSettings(settings, tuning),
+    randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+    bannedMagics: tuning.spells?.banned ?? [],
     tuning,
     zoneJaggedness: randomInSliderBand(0, 1, 0, 0.70, rng),
     zoneSpread: randomInSliderBand(0.5, 1.8, 0.10, 1.0, rng),

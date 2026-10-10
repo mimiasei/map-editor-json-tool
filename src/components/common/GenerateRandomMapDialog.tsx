@@ -56,6 +56,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
+import SpellBanDialog from '@/components/common/SpellBanDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { loadClassicTuning } from '@/lib/rmg/load-tuning'
@@ -231,6 +232,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // own string[] shape at the template/generation boundary.
   const [disabledInteractableSids, setDisabledInteractableSids] = useState<Set<string>>(() => new Set(DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids))
   const [interactablePickerOpen, setInteractablePickerOpen] = useState(false)
+  // Spell sids banned on the generated map (added to the tuning file's spells.banned).
+  const [bannedSpellSids, setBannedSpellSids] = useState<Set<string>>(() => new Set())
+  const [spellPickerOpen, setSpellPickerOpen] = useState(false)
   // Which of the 7 real biomes generation may use at all — a real user
   // request ("how many terrain types the RMG will use"). All on by
   // default; at least one must always stay checked (see the checkbox's
@@ -438,6 +442,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         difficulty: opts.difficulty,
         gameElevationLayouts: opts.gameElevationLayouts,
         tuning: opts.tuning,
+        bannedMagics: [...new Set([...(opts.tuning?.spells?.banned ?? []), ...bannedSpellSids])],
         terrainOnly,
         enabledBiomes: opts.enabledBiomes,
         gameTemplateJson: gameTemplate?.json,
@@ -782,6 +787,18 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                       ))}
                     </>
                   )}
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs">Banned spells</Label>
+                        <FieldInfo text="Spells nobody can learn or cast on the generated map, picked per magic school. Added to any spells.banned in the RMG tuning file." />
+                      </div>
+                      <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSpellPickerOpen(true)} disabled={terrainLocked}>
+                        {bannedSpellSids.size > 0 ? `${bannedSpellSids.size} banned` : 'None banned'}
+                      </Button>
+                    </div>
+                  </div>
 
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
@@ -1195,6 +1212,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         onOpenChange={setInteractablePickerOpen}
         disabledSids={disabledInteractableSids}
         onChange={setDisabledInteractableSids}
+      />
+      <SpellBanDialog
+        open={spellPickerOpen}
+        onOpenChange={setSpellPickerOpen}
+        bannedSids={bannedSpellSids}
+        onChange={setBannedSpellSids}
       />
     </>
   )

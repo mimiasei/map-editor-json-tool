@@ -22,6 +22,8 @@
 //   "rivers":     { "chancePerZone": 0-1, "meander": 0-1, "cliffClearance": 0-6, "mouthWidening": 0-1, "confluenceChance": 0-1, "bankDecoration": 0-1 },
 //   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
 //   "interactables": { "weightBySid": { "<interactable sid>": 0-1000 } },
+//   "cities":     { "maxRandom": 0-16 },
+//   "spells":     { "banned": ["<spell sid>", ...] },
 //   "guards": {
 //     "chance": { "mine": 0-1, "dwelling": 0-1, "resource": 0-1, "interactableCommon": 0-1, "interactableUncommon": 0-1,
 //                 "interactableRare": 0-1, "artifact": 0-1, "treasure": 0-1, "randomCity": 0-1 },
@@ -71,6 +73,12 @@ export interface RmgTuning {
    *  (0 = never, above 0 = weight; default: the game's content-list weight, and
    *  0 for never-rolled and rare ones — so a value here re-enables one). */
   interactables?: { weightBySid: Record<string, number> }
+  /** maxRandom: total neutral `random-city` placements on the map, not counting
+   *  the players' own city spawners (unset: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount).
+   *  At most one per neutral zone, so a map with fewer neutral zones gets fewer. */
+  cities?: { maxRandom: number }
+  /** banned: spell sids banned on the generated map (`banInfoData.bannedMagics`). */
+  spells?: { banned: string[] }
   /** Relative weights of the built-in layout archetypes (zone-archetypes.ts); 0 disables one. */
   layout: { weights: Partial<Record<LayoutArchetype, number>> }
   /** Overrides of DEFAULT_MINE_DISTRIBUTION; unset parts keep the default. */
@@ -123,6 +131,9 @@ export const DEFAULT_RIVER_CONFLUENCE_CHANCE = 0.5
 /** Average chance per river-bank tile of a stone, tuft or reed, 0-1 (clumped). */
 export const DEFAULT_RIVER_BANK_DENSITY = 0.25
 
+/** Upper bound for the neutral city count (tuning file and `--max-cities`). */
+export const MAX_RANDOM_CITIES = 16
+
 export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} }, mines: { neutral: {}, player: {} } }
 
 type Json = Record<string, unknown>
@@ -170,7 +181,7 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
 
   for (const k of Object.keys(json)) {
     if (k.startsWith('_')) continue
-    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout', 'mines', 'rivers'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
+    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout', 'mines', 'rivers', 'interactables', 'cities', 'spells'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
   }
 
   for (const [id, v] of levels('complexity', section('complexity'), COMPLEXITY_IDS)) {
@@ -325,6 +336,26 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
         if (weight !== undefined) tuning.interactables.weightBySid[sid] = weight
       }
     } else if (interactables.weightBySid !== undefined && interactables.weightBySid !== null) warnings.push('interactables.weightBySid: not an object — ignored')
+  }
+
+  const spells = section('spells')
+  if (spells) {
+    known('spells', spells, ['banned'])
+    if (Array.isArray(spells.banned)) {
+      const banned = spells.banned.filter((s): s is string => typeof s === 'string' && s.trim() !== '').map((s) => s.trim())
+      if (banned.length !== spells.banned.length) warnings.push('spells.banned: entries that are not spell sids (strings) were ignored')
+      tuning.spells = { banned: [...new Set(banned)] }
+    } else if (spells.banned !== undefined && spells.banned !== null) warnings.push('spells.banned: not an array — ignored')
+  }
+
+  const cities = section('cities')
+  if (cities) {
+    known('cities', cities, ['maxRandom'])
+    const maxRandom = num('cities.maxRandom', cities.maxRandom, 0, MAX_RANDOM_CITIES)
+    if (maxRandom !== undefined) {
+      if (Number.isInteger(maxRandom)) tuning.cities = { maxRandom }
+      else warnings.push(`cities.maxRandom: must be a whole number 0-${MAX_RANDOM_CITIES} — ignored`)
+    }
   }
 
   return { tuning, warnings }
