@@ -150,7 +150,7 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
       bankDecoration: DEFAULT_RIVER_BANK_DENSITY,
     },
     cities: {
-      _about: 'maxRandom (0-16): total neutral cities on the map, not counting the players\' own cities. At most one per neutral zone, so a map with fewer neutral zones gets fewer. The GME dialog and --max-cities override it.',
+      _about: 'maxRandom (0-27): total neutral cities on the map, not counting the players\' own cities. At most 3 per neutral zone, so a map with fewer neutral zones gets fewer. The GME dialog and --max-cities override it.',
       maxRandom: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     },
     spells: {

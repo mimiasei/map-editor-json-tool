@@ -22,7 +22,7 @@
 //   "rivers":     { "chancePerZone": 0-1, "meander": 0-1, "cliffClearance": 0-6, "mouthWidening": 0-1, "confluenceChance": 0-1, "bankDecoration": 0-1 },
 //   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
 //   "interactables": { "weightBySid": { "<interactable sid>": 0-1000 } },
-//   "cities":     { "maxRandom": 0-16 },
+//   "cities":     { "maxRandom": 0-27 },
 //   "spells":     { "banned": ["<spell sid>", ...] },
 //   "guards": {
 //     "chance": { "mine": 0-1, "dwelling": 0-1, "resource": 0-1, "interactableCommon": 0-1, "interactableUncommon": 0-1,
@@ -75,7 +75,7 @@ export interface RmgTuning {
   interactables?: { weightBySid: Record<string, number> }
   /** maxRandom: total neutral `random-city` placements on the map, not counting
    *  the players' own city spawners (unset: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount).
-   *  At most one per neutral zone, so a map with fewer neutral zones gets fewer. */
+   *  At most MAX_CITIES_PER_ZONE per neutral zone, so a map with fewer neutral zones gets fewer. */
   cities?: { maxRandom: number }
   /** banned: spell sids banned on the generated map (`banInfoData.bannedMagics`). */
   spells?: { banned: string[] }
@@ -131,8 +131,12 @@ export const DEFAULT_RIVER_CONFLUENCE_CHANCE = 0.5
 /** Average chance per river-bank tile of a stone, tuft or reed, 0-1 (clumped). */
 export const DEFAULT_RIVER_BANK_DENSITY = 0.25
 
-/** Upper bound for the neutral city count (tuning file and `--max-cities`). */
-export const MAX_RANDOM_CITIES = 16
+/** Most neutral cities one neutral zone gets. */
+export const MAX_CITIES_PER_ZONE = 3
+/** Most neutral zones any built-in layout has (8 players, ringCenter: 8 + 1). */
+const MOST_NEUTRAL_ZONES = 9
+/** Upper bound for the neutral city count (tuning file, `--max-cities`, dialog). */
+export const MAX_RANDOM_CITIES = MAX_CITIES_PER_ZONE * MOST_NEUTRAL_ZONES
 
 export const EMPTY_TUNING: RmgTuning = { complexity: {}, richness: {}, water: {}, elevation: {}, difficulty: {}, guards: { chance: {}, chanceBySid: {} }, layout: { weights: {} }, mines: { neutral: {}, player: {} } }
 
