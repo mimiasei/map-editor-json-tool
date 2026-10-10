@@ -61,16 +61,11 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
   )
 }
 
-function ChipRow({ label, children, onReset, canReset }: { label: string; children: React.ReactNode; onReset: () => void; canReset: boolean }) {
+function ChipRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="flex items-center gap-1.5">
       <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
       {children}
-      {canReset && (
-        <button type="button" onClick={onReset} className="text-[11px] px-1 text-muted-foreground hover:text-foreground underline">
-          Show all
-        </button>
-      )}
     </div>
   )
 }
@@ -118,6 +113,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
     for (const s of list) { if (banned) next.add(s.sid); else next.delete(s.sid) }
     onChange(next)
   }
+  const filtersActive = hiddenSchools.size > 0 || hiddenTypes.size > 0 || hiddenTiers.size > 0
   const allVisibleBanned = visible.length > 0 && visible.every((s) => bannedSids.has(s.sid))
   const tabClass = (active: boolean) =>
     `flex items-center gap-1.5 px-3 py-1.5 text-xs border-b-2 -mb-px whitespace-nowrap transition-colors ${
@@ -176,22 +172,30 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
           {spansSchools && (
-            <ChipRow label="School" canReset={hiddenSchools.size > 0} onReset={() => setHiddenSchools(new Set())}>
+            <ChipRow label="School">
               {SCHOOLS.map((school) => (
                 <Chip key={school} on={!hiddenSchools.has(school)} onClick={() => setHiddenSchools((p) => toggled(p, school))}>{school}</Chip>
               ))}
             </ChipRow>
           )}
-          <ChipRow label="Type" canReset={hiddenTypes.size > 0} onReset={() => setHiddenTypes(new Set())}>
+          <ChipRow label="Type">
             {TYPES.map((t) => (
               <Chip key={t.id} on={!hiddenTypes.has(t.id)} onClick={() => setHiddenTypes((p) => toggled(p, t.id))}>{t.label}</Chip>
             ))}
           </ChipRow>
-          <ChipRow label="Tier" canReset={hiddenTiers.size > 0} onReset={() => setHiddenTiers(new Set())}>
+          <ChipRow label="Tier">
             {TIERS.map((tier) => (
               <Chip key={tier} on={!hiddenTiers.has(tier)} onClick={() => setHiddenTiers((p) => toggled(p, tier))}>{tier}</Chip>
             ))}
           </ChipRow>
+          {/* Always rendered (just invisible) so hiding a chip never changes the line's width. */}
+          <button
+            type="button"
+            onClick={() => { setHiddenSchools(new Set()); setHiddenTypes(new Set()); setHiddenTiers(new Set()) }}
+            className={`text-[11px] px-1 text-muted-foreground hover:text-foreground underline ${filtersActive ? '' : 'invisible'}`}
+          >
+            Reset
+          </button>
         </div>
 
         <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
