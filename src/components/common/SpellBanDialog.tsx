@@ -13,11 +13,9 @@ import { useMemo, useState } from 'react'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import spellIndex from '@/data/spell-index.json'
@@ -44,6 +42,15 @@ function toggled<T>(set: Set<T>, value: T): Set<T> {
   if (next.has(value)) next.delete(value)
   else next.add(value)
   return next
+}
+
+/** The ban box: empty, or a muted red X when banned (a ban reads better as an X than a checkmark). */
+function BanMark({ banned }: { banned: boolean }) {
+  return (
+    <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border ${banned ? 'border-destructive/60 bg-destructive/10' : 'border-input'}`}>
+      {banned && <X className="h-3 w-3 text-destructive/70" strokeWidth={3} />}
+    </span>
+  )
 }
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -199,11 +206,18 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
         </div>
 
         <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
-          <Checkbox id="ban-visible-spells" checked={allVisibleBanned} onCheckedChange={(v) => setMany(visible, Boolean(v))} disabled={visible.length === 0} />
-          <Label htmlFor="ban-visible-spells" className="text-xs cursor-pointer">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={allVisibleBanned}
+            disabled={visible.length === 0}
+            onClick={() => setMany(visible, !allVisibleBanned)}
+            className="flex items-center gap-1.5 text-xs disabled:opacity-50"
+          >
+            <BanMark banned={allVisibleBanned} />
             {searching ? 'Ban all matches' : activeSchool === ALL_SCHOOLS ? 'Ban all shown spells' : `Ban all shown ${activeSchool} spells`}
-          </Label>
-          <span className="text-[10px] text-muted-foreground tabular-nums">({visible.length})</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">({visible.length})</span>
+          </button>
         </div>
 
         <ScrollArea className="flex-1 min-h-0">
@@ -223,14 +237,18 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
                   {items.map((s) => {
                     const banned = bannedSids.has(s.sid)
                     return (
-                      <label
+                      <button
                         key={s.sid}
+                        type="button"
+                        role="checkbox"
+                        aria-checked={banned}
                         title={s.sid}
-                        className={`flex items-center gap-2 rounded border p-2 cursor-pointer transition-colors ${
+                        onClick={() => onChange(toggled(bannedSids, s.sid))}
+                        className={`flex items-center gap-2 rounded border p-2 text-left cursor-pointer transition-colors ${
                           banned ? 'border-destructive/50 bg-destructive/10 hover:bg-destructive/15' : 'border-border bg-card hover:bg-accent/50'
                         }`}
                       >
-                        <Checkbox checked={banned} onCheckedChange={() => onChange(toggled(bannedSids, s.sid))} />
+                        <BanMark banned={banned} />
                         <CatalogIcon iconId={iconBySid.get(s.sid) ?? s.sid} name={s.name} size={28} />
                         <div className="flex-1 min-w-0">
                           <p className="text-[9px] font-medium">{s.name}</p>
@@ -238,7 +256,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
                             {s.type === 'world' ? 'World' : 'Battle'}{spansSchools ? ` · Tier ${s.tier}` : ''}
                           </p>
                         </div>
-                      </label>
+                      </button>
                     )
                   })}
                 </div>
