@@ -64,7 +64,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 function ChipRow({ label, children, onReset, canReset }: { label: string; children: React.ReactNode; onReset: () => void; canReset: boolean }) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <span className="w-12 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
       {children}
       {canReset && (
         <button type="button" onClick={onReset} className="text-[11px] px-1 text-muted-foreground hover:text-foreground underline">
@@ -174,7 +174,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
           })}
         </div>
 
-        <div className="flex flex-col gap-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
           {spansSchools && (
             <ChipRow label="School" canReset={hiddenSchools.size > 0} onReset={() => setHiddenSchools(new Set())}>
               {SCHOOLS.map((school) => (
