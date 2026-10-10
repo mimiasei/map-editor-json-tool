@@ -25,8 +25,18 @@ const OTHER_SCHOOL = 'Other'
 /** The tab that lists every school at once. */
 const ALL_SCHOOLS = 'All'
 
-function schoolOf(raw: string | undefined): string {
-  const s = (raw ?? '').trim().toLowerCase()
+/** Leading sid segment -> school (`day_17_magic_clear_view` is Daylight,
+ *  `space_` is the Arcane school). Bonus/kara/change spells are Neutral. */
+const SCHOOL_BY_SID_PREFIX: Record<string, string> = {
+  day: 'Daylight', night: 'Nightshade', space: 'Arcane', primal: 'Primal',
+  neutral: 'Neutral', bonus: 'Neutral', kara: 'Neutral', change: 'Neutral',
+}
+
+/** The spell's school from its sid; the catalog's own school field only for sids with an unknown prefix. */
+function schoolOf(spell: CatalogSpell): string {
+  const fromSid = SCHOOL_BY_SID_PREFIX[spell.id.split('_')[0].toLowerCase()]
+  if (fromSid) return fromSid
+  const s = (spell.school ?? '').trim().toLowerCase()
   return SCHOOL_ORDER.find((o) => o.toLowerCase() === s) ?? OTHER_SCHOOL
 }
 
@@ -52,7 +62,7 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
   const bySchool = useMemo(() => {
     const map = new Map<string, CatalogSpell[]>()
     for (const s of spells) {
-      const school = schoolOf(s.school)
+      const school = schoolOf(s)
       if (!map.has(school)) map.set(school, [])
       map.get(school)!.push(s)
     }
@@ -66,12 +76,12 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
   // A school tab shows just that school by rank; the All tab (and any search)
   // spans every school, narrowed by the school filter chips.
   const spansSchools = searching || current === ALL_SCHOOLS
-  const visible = (spansSchools ? spells.filter((s) => !hiddenSchools.has(schoolOf(s.school))) : bySchool.get(current) ?? []).filter(
+  const visible = (spansSchools ? spells.filter((s) => !hiddenSchools.has(schoolOf(s))) : bySchool.get(current) ?? []).filter(
     (s) => !searching || s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q),
   )
   const byHeading = new Map<string, CatalogSpell[]>()
   for (const s of visible) {
-    const key = spansSchools ? schoolOf(s.school) : s.rank !== undefined ? `Rank ${s.rank}` : 'Other'
+    const key = spansSchools ? schoolOf(s) : s.rank !== undefined ? `Rank ${s.rank}` : 'Other'
     if (!byHeading.has(key)) byHeading.set(key, [])
     byHeading.get(key)!.push(s)
   }
