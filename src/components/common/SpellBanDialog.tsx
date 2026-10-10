@@ -22,6 +22,8 @@ import type { CatalogSpell } from '@/lib/catalog/types'
 /** Display order of the schools; anything else lands in "Other" at the end. */
 const SCHOOL_ORDER = ['Daylight', 'Nightshade', 'Primal', 'Arcane', 'Neutral']
 const OTHER_SCHOOL = 'Other'
+/** The tab that lists every school at once. */
+const ALL_SCHOOLS = 'All'
 
 function schoolOf(raw: string | undefined): string {
   const s = (raw ?? '').trim().toLowerCase()
@@ -40,6 +42,8 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
   const catalog = useCatalogStore((s) => s.catalog)
   const [search, setSearch] = useState('')
   const [activeSchool, setActiveSchool] = useState<string | null>(null)
+  /** Schools switched off by the filter chips (All tab and search only). */
+  const [hiddenSchools, setHiddenSchools] = useState<Set<string>>(() => new Set())
 
   const spells = useMemo(
     () => [...(catalog?.spells ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0) || a.name.localeCompare(b.name)),
@@ -55,17 +59,19 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
     return map
   }, [spells])
   const schools = [...SCHOOL_ORDER, OTHER_SCHOOL].filter((s) => bySchool.has(s))
-  const current = activeSchool && bySchool.has(activeSchool) ? activeSchool : schools[0]
+  const current = activeSchool && bySchool.has(activeSchool) ? activeSchool : ALL_SCHOOLS
 
   const q = search.trim().toLowerCase()
   const searching = q !== ''
-  // Searching spans every school; otherwise only the active tab is shown.
-  const visible = (searching ? spells : bySchool.get(current) ?? []).filter(
+  // A school tab shows just that school by rank; the All tab (and any search)
+  // spans every school, narrowed by the school filter chips.
+  const spansSchools = searching || current === ALL_SCHOOLS
+  const visible = (spansSchools ? spells.filter((s) => !hiddenSchools.has(schoolOf(s.school))) : bySchool.get(current) ?? []).filter(
     (s) => !searching || s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q),
   )
   const byHeading = new Map<string, CatalogSpell[]>()
   for (const s of visible) {
-    const key = searching ? schoolOf(s.school) : s.rank !== undefined ? `Rank ${s.rank}` : 'Other'
+    const key = spansSchools ? schoolOf(s.school) : s.rank !== undefined ? `Rank ${s.rank}` : 'Other'
     if (!byHeading.has(key)) byHeading.set(key, [])
     byHeading.get(key)!.push(s)
   }
@@ -107,6 +113,20 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
         </DraggableDialogDragHandle>
 
         <div role="tablist" className="flex items-end gap-0.5 px-4 pt-2 border-b border-border shrink-0 overflow-x-auto" data-nodrag>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!searching && current === ALL_SCHOOLS}
+            onClick={() => { setActiveSchool(ALL_SCHOOLS); setSearch('') }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border-b-2 -mb-px whitespace-nowrap transition-colors ${
+              !searching && current === ALL_SCHOOLS ? 'border-primary text-foreground font-medium' : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/40'
+            }`}
+          >
+            All
+            <span className={`rounded px-1 text-[10px] tabular-nums ${bannedSids.size > 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+              {bannedSids.size}/{spells.length}
+            </span>
+          </button>
           {schools.map((school) => {
             const list = bySchool.get(school)!
             const bannedHere = list.filter((s) => bannedSids.has(s.id)).length
@@ -131,10 +151,42 @@ export default function SpellBanDialog({ open, onOpenChange, bannedSids, onChang
           })}
         </div>
 
+        {spansSchools && (
+          <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border shrink-0 flex-wrap" data-nodrag>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Schools</span>
+            {schools.map((school) => {
+              const on = !hiddenSchools.has(school)
+              return (
+                <button
+                  key={school}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setHiddenSchools((prev) => {
+                    const next = new Set(prev)
+                    if (next.has(school)) next.delete(school)
+                    else next.add(school)
+                    return next
+                  })}
+                  className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                    on ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground line-through hover:bg-accent/50'
+                  }`}
+                >
+                  {school}
+                </button>
+              )
+            })}
+            {hiddenSchools.size > 0 && (
+              <button type="button" onClick={() => setHiddenSchools(new Set())} className="text-[11px] px-1 text-muted-foreground hover:text-foreground underline">
+                Show all
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border shrink-0" data-nodrag>
           <Checkbox id="ban-visible-spells" checked={allVisibleBanned} onCheckedChange={(v) => setMany(visible, Boolean(v))} disabled={visible.length === 0} />
           <Label htmlFor="ban-visible-spells" className="text-xs cursor-pointer">
-            {searching ? 'Ban all matches' : `Ban all ${current ?? ''} spells`}
+            {searching ? 'Ban all matches' : current === ALL_SCHOOLS ? 'Ban all shown spells' : `Ban all ${current} spells`}
           </Label>
         </div>
 
