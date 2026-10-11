@@ -36,7 +36,7 @@ import { scaleMultiplier } from './decoration-calibration'
 import { mineGuardValue } from './value-model'
 import { NEUTRAL_ROLES, type NeutralZoneRole, type ZoneSpec } from './zone-graph'
 import type { RmgDifficultyValues } from './rmg-schema'
-import { DEFAULT_MINE_DISTRIBUTION, MINE_TYPES, type MineDistribution, type MineType, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_MINE_DISTRIBUTION, MAX_CITIES_PER_ZONE, MINE_TYPES, type MineDistribution, type MineType, type RmgTuning } from './rmg-tuning'
 
 /** Dwelling sids use `necropolis`, not `undead`, as undead's faction token
  *  (CLAUDE.md's own documented sid/id mismatch: dwelling files are named
@@ -1060,8 +1060,16 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     )
     const allFactions = ZONE_BIOMES.map((b) => BIOME_FACTION[b]).filter((f): f is string => !!f)
     contentRng = posRng
-    const remainingZones = [...neutralZones]
-    for (let i = 0; i < randomCityCount && remainingZones.length > 0; i++) {
+    // One city per neutral zone first (random order), then a second and a
+    // third round, so extra cities spread out before any zone gets crowded.
+    let remainingZones: typeof neutralZones = []
+    let round = 0
+    for (let i = 0; i < randomCityCount; i++) {
+      if (remainingZones.length === 0) {
+        if (round >= MAX_CITIES_PER_ZONE || neutralZones.length === 0) break
+        remainingZones = [...neutralZones]
+        round++
+      }
       const zoneIndex = Math.floor(rng() * remainingZones.length)
       const [zone] = remainingZones.splice(zoneIndex, 1)
       const tiles = tilesByZone.get(zone.id) ?? []

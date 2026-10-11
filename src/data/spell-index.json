@@ -1,0 +1,919 @@
+[
+  {
+    "sid": "day_2_magic_sharp_edge",
+    "name": "Blessing",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "day_3_magic_haste",
+    "name": "Haste",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "day_1_magic_healing_water",
+    "name": "Healing Water",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "day_2_magic_sharp_edge_special",
+    "name": "Masterful Blessing",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "day_3_magic_haste_special",
+    "name": "Masterful Haste",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "day_1_magic_healing_water_special",
+    "name": "Masterful Healing Water",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "day_5_magic_shorten_shadow",
+    "name": "Shorten Shadow",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "day_4_magic_favorable_wind",
+    "name": "Favorable Wind",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "day_7_magic_inner_light",
+    "name": "Inner Light",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "day_6_magic_cleansing_ray",
+    "name": "Weakening Ray",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "day_9_magic_arinas_hymn",
+    "name": "Arina’s Touch",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "day_9_magic_arinas_hymn_special",
+    "name": "Masterful Arina’s Touch",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "day_11_magic_masterful_parry",
+    "name": "Riposte",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "day_10_magic_second_song",
+    "name": "Song of Power",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "day_8_magic_taunt",
+    "name": "Taunt",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "day_13_magic_holy_arms",
+    "name": "Heavenly Blades",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "day_12_magic_radiant_armor",
+    "name": "Radiant Armor",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "day_14_magic_vengeance",
+    "name": "Vengeance",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "day_16_magic_arinas_chosen",
+    "name": "Arina’s Chosen",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "day_15_magic_judgement",
+    "name": "Judgement",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "day_16_magic_arinas_chosen_special",
+    "name": "Masterful Arina’s Chosen",
+    "school": "Daylight",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "day_17_magic_clear_view",
+    "name": "From a Bird’s Eye",
+    "school": "Daylight",
+    "type": "world",
+    "tier": 2
+  },
+  {
+    "sid": "day_18_magic_farsight",
+    "name": "Clear Fog",
+    "school": "Daylight",
+    "type": "world",
+    "tier": 4
+  },
+  {
+    "sid": "night_4_magic_despair",
+    "name": "Despair",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "night_3_magic_enlarge_shadow",
+    "name": "Enlarge Shadow",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "night_7_magic_fatal_decay",
+    "name": "Fatal Decay",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "night_4_magic_despair_special",
+    "name": "Masterful Despair",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "night_1_magic_unnatural_calm_special",
+    "name": "Masterful Unnatural Calm",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "night_1_magic_unnatural_calm",
+    "name": "Unnatural Calm",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "night_6_magic_deaths_grip_special",
+    "name": "Masterful Umbral Grip",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "night_2_magic_web_special",
+    "name": "Masterful Web",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "night_5_magic_shade_cloak",
+    "name": "Shade Cloak",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "night_6_magic_deaths_grip",
+    "name": "Umbral Grip",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "night_2_magic_web",
+    "name": "Web",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "night_10_magic_silence",
+    "name": "Silence",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "night_8_magic_sleep",
+    "name": "Sleep",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "night_9_magic_twilight",
+    "name": "Twilight",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "night_13_magic_berserker",
+    "name": "Berserk",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "night_13_magic_berserker_special",
+    "name": "Masterful Berserk",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "night_11_magic_vulnerability_special",
+    "name": "Masterful Vulnerability",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "night_12_magic_summon_starchild",
+    "name": "Summon Starchild",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "night_11_magic_vulnerability",
+    "name": "Vulnerability",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "night_15_magic_deaths_call",
+    "name": "Coup de Grâce",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "night_14_magic_nairas_kiss",
+    "name": "Naira’s Kiss",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "night_16_magic_shadow_army",
+    "name": "Shadow Army",
+    "school": "Nightshade",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "night_17_magic_read_minds",
+    "name": "Read Minds",
+    "school": "Nightshade",
+    "type": "world",
+    "tier": 2
+  },
+  {
+    "sid": "night_18_magic_nairas_veil",
+    "name": "Naira’s Veil",
+    "school": "Nightshade",
+    "type": "world",
+    "tier": 3
+  },
+  {
+    "sid": "primal_1_magic_thunderbolt",
+    "name": "Lightning Bolt",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "primal_2_magic_thick_hide",
+    "name": "Thick Hide",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "primal_5_magic_crystal_crown",
+    "name": "Crystal Crown",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "primal_4_magic_fire_globe",
+    "name": "Fireball",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "primal_6_magic_ice_bolt",
+    "name": "Ice Bolt",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "primal_4_magic_fire_globe_special",
+    "name": "Masterful Fireball",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "primal_6_magic_ice_bolt_special",
+    "name": "Masterful Ice Bolt",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "primal_3_magic_wean",
+    "name": "Wean",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "primal_8_magic_cave_in",
+    "name": "Cave In",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "primal_9_magic_earths_rage",
+    "name": "Earth’s Rage",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "primal_7_magic_wall_of_flame",
+    "name": "Firewall",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "primal_8_magic_cave_in_special",
+    "name": "Masterful Cave In",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "primal_7_magic_wall_of_flame_special",
+    "name": "Masterful Firewall",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "primal_16_magic_stone_fangs",
+    "name": "Stone Fangs",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "primal_10_magic_primordial_purity",
+    "name": "Anti‑Magic",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "primal_12_magic_chain_lightning",
+    "name": "Chain Lightning",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "primal_13_magic_avalanche",
+    "name": "Circle of Winter",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "primal_12_magic_chain_lightning_special",
+    "name": "Masterful Chain Lightning",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "primal_11_magic_armageddon",
+    "name": "Armageddon",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "primal_14_magic_hksmillas_rampage",
+    "name": "Hksmilla’s Rampage",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "primal_15_magic_summon_primal_remnant",
+    "name": "Summon Primal Remnant",
+    "school": "Primal",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "primal_17_magic_groundsight",
+    "name": "Groundsight",
+    "school": "Primal",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "primal_18_magic_primordial_chaos",
+    "name": "Primordial Chaos",
+    "school": "Primal",
+    "type": "world",
+    "tier": 4
+  },
+  {
+    "sid": "space_1_magic_early_start",
+    "name": "Early Start",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "space_3_magic_energyze",
+    "name": "Energize",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "space_11_magic_decimate",
+    "name": "Guillotine",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "space_1_magic_early_start_special",
+    "name": "Masterful Early Start",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "space_11_magic_decimate_special",
+    "name": "Masterful Guillotine",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "space_4_magic_optical_illusion",
+    "name": "Optical Illusion",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "space_6_magic_blink",
+    "name": "Blink",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "space_8_magic_carapace",
+    "name": "Carapace",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "space_2_magic_energy_explosion",
+    "name": "Energy Explosion",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "space_6_magic_blink_special",
+    "name": "Masterful Blink",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "space_8_magic_carapace_special",
+    "name": "Masterful Carapace",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 2
+  },
+  {
+    "sid": "space_9_magic_impending_fate",
+    "name": "Impending Fate",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "space_10_magic_mirror_copy_special",
+    "name": "Masterful Mirror Copy",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "space_7_magic_shackles",
+    "name": "Shackles",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "space_5_magic_trap_jaws",
+    "name": "Temporal Spheres",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 3
+  },
+  {
+    "sid": "space_12_magic_rewind_special",
+    "name": "Masterful Rewind Life",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "space_10_magic_mirror_copy",
+    "name": "Mirror Copy",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "space_12_magic_rewind",
+    "name": "Rewind Life",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "space_15_magic_trap_snare",
+    "name": "Spatial Snare",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "space_13_magic_black_hole",
+    "name": "Black Hole",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "space_14_magic_doreaths_tide",
+    "name": "Doreath’s Tide",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "space_16_magic_reality_distortion",
+    "name": "Reality Distortion",
+    "school": "Arcane",
+    "type": "battle",
+    "tier": 5
+  },
+  {
+    "sid": "space_17_magic_reinforcements",
+    "name": "Reinforcements",
+    "school": "Arcane",
+    "type": "world",
+    "tier": 2
+  },
+  {
+    "sid": "space_18_magic_assemble",
+    "name": "Assemble!",
+    "school": "Arcane",
+    "type": "world",
+    "tier": 3
+  },
+  {
+    "sid": "bonus_magic_kill_summon",
+    "name": "Dispel Summon",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "night_bonus_magic_1_magic",
+    "name": "Dusk Dampening",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "bonus_magic_pure_bolt",
+    "name": "Magic Arrow",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "primal_bonus_magic_1_magic",
+    "name": "Spell Eruption",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 1
+  },
+  {
+    "sid": "bonus_magic_astral_summon_2",
+    "name": "Advanced Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_2",
+    "name": "Advanced Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_2",
+    "name": "Advanced Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_1",
+    "name": "Basic Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_1",
+    "name": "Basic Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_1",
+    "name": "Basic Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_3",
+    "name": "Expert Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_3",
+    "name": "Expert Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_3",
+    "name": "Expert Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_5",
+    "name": "Grandmaster Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_5",
+    "name": "Grandmaster Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_5",
+    "name": "Grandmaster Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_4",
+    "name": "Master Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_unfrozen_4",
+    "name": "Master Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "bonus_magic_astral_summon_nature_4",
+    "name": "Master Summon Avatar",
+    "school": "Neutral",
+    "type": "battle",
+    "tier": 4
+  },
+  {
+    "sid": "neutral_1_magic_back_to_garrison",
+    "name": "Back to Foothold!",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "neutral_1_magic_back_to_city",
+    "name": "Back to Town!",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "kara_darkness",
+    "name": "Kara Darkness",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "kara_death",
+    "name": "Kara Death",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "kara_mana",
+    "name": "Kara Mana",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "kara_silence",
+    "name": "Kara Silence",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "kara_speed",
+    "name": "Kara Speed",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "kara_weakness",
+    "name": "Kara Weakness",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "neutral_1_magic_mana_restore",
+    "name": "Mana Rite",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "neutral_1_magic_mana_transfer",
+    "name": "Mana Transfusion",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "change_use_necromancy",
+    "name": "Necromancer Will",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "neutral_1_magic_units_replace",
+    "name": "Relocation",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 1
+  },
+  {
+    "sid": "neutral_magic_pocket_dimension",
+    "name": "Pocket Dimension",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 2
+  },
+  {
+    "sid": "neutral_magic_second_sight",
+    "name": "Second Wind",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 2
+  },
+  {
+    "sid": "neutral_magic_shadow_form",
+    "name": "Shadowflight",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 3
+  },
+  {
+    "sid": "neutral_magic_town_portal",
+    "name": "Town Portal",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 3
+  },
+  {
+    "sid": "neutral_magic_dimension_door",
+    "name": "Dimension Door",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 4
+  },
+  {
+    "sid": "neutral_magic_light_gate",
+    "name": "Gate of Light",
+    "school": "Neutral",
+    "type": "world",
+    "tier": 4
+  }
+]

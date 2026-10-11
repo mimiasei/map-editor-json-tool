@@ -118,6 +118,16 @@ function zoneCount(def: ArchetypeDef, playerCount: number): number {
   return def.unit.length * playerCount + (def.center ? 1 : 0)
 }
 
+/** Fewest and most neutral zones a built-in layout gives `playerCount`
+ *  players (what the dialog tells the user). Ignores the map-size rule, which
+ *  can drop the larger layouts on a small map; `ring` always remains. */
+export function neutralZoneRange(playerCount: number): { min: number; max: number } {
+  const counts = LAYOUT_ARCHETYPES
+    .filter((name) => playerCount <= (DEFS[name].maxPlayers ?? Infinity))
+    .map((name) => DEFS[name].unit.filter((u) => u.kind === 'neutral').length * playerCount + (DEFS[name].center ? 1 : 0))
+  return { min: Math.min(...counts), max: Math.max(...counts) }
+}
+
 /** Pick an archetype (weighted; `weights` from the tuning file, default 1
  *  each) and lay it out. `radiusScale` scales every radius (the generator's
  *  zone-spread option, same as the old ring). Archetypes too crowded for the

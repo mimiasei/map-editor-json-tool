@@ -45,6 +45,8 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dices, X } from 'lucide-react'
 import FieldInfo from '@/components/common/FieldInfo'
+import { neutralZoneRange } from '@/lib/rmg/zone-archetypes'
+import { MAX_CITIES_PER_ZONE } from '@/lib/rmg/rmg-tuning'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
 import { previewRoads } from '@/lib/rmg/preview-roads'
@@ -56,6 +58,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
+import SpellBanDialog from '@/components/common/SpellBanDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { loadClassicTuning } from '@/lib/rmg/load-tuning'
@@ -196,6 +199,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [mapName, setMapName] = useState('Random Map')
   const [sizeKey, setSizeKey] = useState(DEFAULT_SIZE_KEY)
   const [playerCount, setPlayerCount] = useState(2)
+  // Total neutral cities: off = the default (tuning file or 1), on = `cityTotal`.
+  const [limitCities, setLimitCities] = useState(false)
+  const [cityTotal, setCityTotal] = useState(1)
+  const neutralZones = neutralZoneRange(playerCount)
+  const maxCities = MAX_CITIES_PER_ZONE * neutralZones.max
+  const cityTotalShown = Math.min(cityTotal, maxCities)
   const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
   const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
   // No longer a user-editable toggle (issue #232 — a player's own start
@@ -231,6 +240,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // own string[] shape at the template/generation boundary.
   const [disabledInteractableSids, setDisabledInteractableSids] = useState<Set<string>>(() => new Set(DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids))
   const [interactablePickerOpen, setInteractablePickerOpen] = useState(false)
+  // Spell sids banned on the generated map (added to the tuning file's spells.banned).
+  const [bannedSpellSids, setBannedSpellSids] = useState<Set<string>>(() => new Set())
+  const [spellPickerOpen, setSpellPickerOpen] = useState(false)
   // Which of the 7 real biomes generation may use at all — a real user
   // request ("how many terrain types the RMG will use"). All on by
   // default; at least one must always stay checked (see the checkbox's
@@ -402,7 +414,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       // Classic mode reads the RMG tuning file on every generation (rmg-tuning.ts).
       const opts = classicMode
         ? buildClassicOptions(classic, rng, await loadClassicTuning(useCatalogStore.getState().catalog))
-        : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, richness: undefined, difficulty: undefined, gameElevationLayouts: false, tuning: undefined }
+        : { waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, usePortals, zoneJaggedness, zoneSpread, boundaryGuardStrength, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, disabledInteractableSids: [...disabledInteractableSids], enabledBiomes: enabledBiomesList, randomCityCount: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount, richness: undefined, difficulty: undefined, gameElevationLayouts: false, tuning: undefined }
       const result = await generateRandomMapFile({
         mapName,
         onProgress: (label, pct) => setGenProgress({ label, pct }),
@@ -434,10 +446,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         decorationElevationDecayStrength: opts.decorationElevationDecayStrength,
         mineGoldBiomeBiasStrength: opts.mineGoldBiomeBiasStrength,
         disabledInteractableSids: opts.disabledInteractableSids,
+        randomCityCount: limitCities ? cityTotalShown : opts.randomCityCount,
         richness: opts.richness,
         difficulty: opts.difficulty,
         gameElevationLayouts: opts.gameElevationLayouts,
         tuning: opts.tuning,
+        bannedMagics: [...new Set([...(opts.tuning?.spells?.banned ?? []), ...bannedSpellSids])],
         terrainOnly,
         enabledBiomes: opts.enabledBiomes,
         gameTemplateJson: gameTemplate?.json,
@@ -523,9 +537,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       mineGoldBiomeBiasStrength,
       disabledInteractableSids: [...disabledInteractableSids],
       enabledBiomes: enabledBiomesList,
+      randomCityCount: limitCities ? cityTotalShown : DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
       // No dedicated UI control yet for these (Phase 1's own "start small"
       // scope) — saved/loaded at their template defaults.
-      randomCityCount: DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
       contentCountLimits: DEFAULT_TEMPLATE_OVERRIDES.contentCountLimits,
       stoneRoadChance: DEFAULT_TEMPLATE_OVERRIDES.stoneRoadChance,
       roadPointOfInterestChance: DEFAULT_TEMPLATE_OVERRIDES.roadPointOfInterestChance,
@@ -548,6 +562,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
       setSizeKey(presetKey(size))
       setMode('advanced') // a loaded template's values live in the Advanced sliders
       setPlayerCount(template.playerCount)
+      setLimitCities(template.randomCityCount !== DEFAULT_TEMPLATE_OVERRIDES.randomCityCount)
+      setCityTotal(template.randomCityCount)
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
       setIslandLandRatio(template.islandLandRatio)
@@ -588,6 +604,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const footerAction = previewPhase === 'terrain' ? handleConfirmTerrain : previewPhase === 'roads' ? handleConfirmRoads : () => void handleGenerate()
 
   const handleResetAll= () => {
+      setLimitCities(false)
+      setCityTotal(DEFAULT_TEMPLATE_OVERRIDES.randomCityCount)
       setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
       setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
       setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
@@ -716,28 +734,54 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Size</Label>
-                    <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
-                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {MAP_SIZE_PRESETS.map((p) => (
-                          <SelectItem key={presetKey(p)} value={presetKey(p)}>{p.sizeX} × {p.sizeZ}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Size</Label>
+                        <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
+                          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {MAP_SIZE_PRESETS.map((p) => (
+                              <SelectItem key={presetKey(p)} value={presetKey(p)}>{p.sizeX} × {p.sizeZ}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Players</Label>
+                        <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
+                          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {PLAYER_COUNT_OPTIONS.map((n) => (
+                              <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    {gameTemplate && <p className="text-xs text-muted-foreground">Players ignored — the game template below sets its own player count.</p>}
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Players</Label>
-                    <Select value={String(playerCount)} onValueChange={(v) => setPlayerCount(Number(v))} disabled={terrainLocked || !!gameTemplate}>
-                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {PLAYER_COUNT_OPTIONS.map((n) => (
-                          <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {gameTemplate && <p className="text-xs text-muted-foreground">Ignored — the game template below sets its own player count.</p>}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Label htmlFor="rmg-limit-cities" className="text-xs">Set number of random cities</Label>
+                        <FieldInfo text={`Random cities are neutral cities anyone can capture. They only appear in neutral zones, never in a player's own zone (every player already starts with a city). Off: the map gets the default of 1. On: you choose the total for the whole map, from 0 up to ${MAX_CITIES_PER_ZONE} per neutral zone. They are spread over different zones first, and a zone only gets a second or third city once every neutral zone has one. The number of neutral zones depends on the player count and the zone layout the generator picks: with ${playerCount} players the map has ${neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones, so up to ${maxCities} cities fit. If the layout it picks has fewer zones, the extra cities are simply not placed. A game template uses its own zones.`} />
+                      </div>
+                      <Switch id="rmg-limit-cities" checked={limitCities} onCheckedChange={setLimitCities} disabled={terrainLocked} />
+                    </div>
+                    {limitCities && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">
+                            {neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones with {playerCount} players
+                          </span>
+                          <span className="text-xs font-medium tabular-nums">{cityTotalShown} {cityTotalShown === 1 ? 'city' : 'cities'}</span>
+                        </div>
+                        <Slider min={0} max={maxCities} step={1} value={[cityTotalShown]} onValueChange={([v]) => setCityTotal(v)} disabled={terrainLocked} />
+                        <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums"><span>0</span><span>{maxCities}</span></div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -782,6 +826,18 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                       ))}
                     </>
                   )}
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs">Banned spells</Label>
+                        <FieldInfo text="Spells nobody can learn or cast on the generated map, picked per magic school. Added to any spells.banned in the RMG tuning file." />
+                      </div>
+                      <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSpellPickerOpen(true)} disabled={terrainLocked}>
+                        {bannedSpellSids.size > 0 ? `${bannedSpellSids.size} banned` : 'None banned'}
+                      </Button>
+                    </div>
+                  </div>
 
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1">
@@ -1195,6 +1251,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         onOpenChange={setInteractablePickerOpen}
         disabledSids={disabledInteractableSids}
         onChange={setDisabledInteractableSids}
+      />
+      <SpellBanDialog
+        open={spellPickerOpen}
+        onOpenChange={setSpellPickerOpen}
+        bannedSids={bannedSpellSids}
+        onChange={setBannedSpellSids}
       />
     </>
   )
