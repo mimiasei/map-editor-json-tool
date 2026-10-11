@@ -109,7 +109,16 @@ const MINE_COLOR: Record<string, string> = {
     mine_mercury: RESOURCE_COLOR.resource_mercury,
 }
 
-export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog | null, squadDifficultyRanges?: DifficultyRange[]): GridCellVisual {
+export function resolveGridCellVisual(
+  item: PlacedObject,
+  catalog: GameCatalog | null,
+  squadDifficultyRanges?: DifficultyRange[],
+  // false = the Map Grid's "Icon images" setting is off: never resolve to a real
+  // thumbnail, so the generic Lucide icons below are used instead of the letter
+  // badge CatalogIcon shows when it is told not to load an image.
+  useImages = true,
+): GridCellVisual {
+  const hasThumbnail = (iconId: string | undefined): iconId is string => useImages && !!iconId && !!thumbnailPath(iconId)
   // Zones (markers) — an invisible scripting area, never has a real texture.
   if (item.type === 1) return { kind: 'icon', Icon: SquareDashed }
 
@@ -117,7 +126,7 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
   // squad's own (non-creature) sid, when one resolves.
   if (item.type === 2 && item.firstUnitSid) {
     const creature = catalog?.creatures.find((c) => c.id === item.firstUnitSid)
-    if (creature?.icon && thumbnailPath(creature.icon)) {
+    if (hasThumbnail(creature?.icon)) {
       return { kind: 'catalogOverride', iconId: creature.icon, name: creature.name }
     }
   }
@@ -129,7 +138,7 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
   if (item.type === 2 && !item.firstUnitSid) {
     const template = catalog?.squadTemplates.find((t) => t.id === item.sid && t.unitSids.length === 1)
     const creature = template && catalog?.creatures.find((c) => c.id === template.unitSids[0])
-    if (creature?.icon && thumbnailPath(creature.icon)) {
+    if (hasThumbnail(creature?.icon)) {
       return { kind: 'catalogOverride', iconId: creature.icon, name: creature.name }
     }
   }
@@ -159,19 +168,19 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
   // generic icon when it didn't — never mask a real icon that does exist.
   if (item.sid.startsWith('portal_')) {
     const catalogIcon = catalog?.mapObjects.find((o) => o.id === item.sid)?.icon
-    if (catalogIcon && thumbnailPath(catalogIcon)) return { kind: 'catalog' }
+    if (hasThumbnail(catalogIcon)) return { kind: 'catalog' }
     return { kind: 'icon', Icon: DoorOpen }
   }
 
   if (item.sid.startsWith('barracks_')) {
     const catalogIcon = catalog?.mapObjects.find((o) => o.id === item.sid)?.icon
-    if (catalogIcon && thumbnailPath(catalogIcon)) return { kind: 'catalog' }
+    if (hasThumbnail(catalogIcon)) return { kind: 'catalog' }
     return { kind: 'icon', Icon: Tent }
   }
 
   if (item.sid.startsWith('mine_')) {
     const catalogIcon = catalog?.mapObjects.find((o) => o.id === item.sid)?.icon
-    if (catalogIcon && thumbnailPath(catalogIcon)) return { kind: 'catalog' }
+    if (hasThumbnail(catalogIcon)) return { kind: 'catalog' }
     return { kind: 'icon', Icon: Pickaxe, colorClassName: MINE_COLOR[item.sid] }
   }
 
@@ -189,11 +198,11 @@ export function resolveGridCellVisual(item: PlacedObject, catalog: GameCatalog |
   // it differs from the item's own sid fixes this in general, not just for
   // custom_* specifically.
   const catalogEntry = catalog?.mapObjects.find((o) => o.id === item.sid)
-  if (catalogEntry?.icon && catalogEntry.icon !== item.sid && thumbnailPath(catalogEntry.icon)) {
+  if (catalogEntry?.icon && catalogEntry.icon !== item.sid && hasThumbnail(catalogEntry.icon)) {
     return { kind: 'catalogOverride', iconId: catalogEntry.icon, name: catalogEntry.name }
   }
 
-  if (catalogEntry?.icon && thumbnailPath(catalogEntry.icon)) return { kind: 'catalog' }
+  if (hasThumbnail(catalogEntry?.icon)) return { kind: 'catalog' }
 
   if (catalogEntry?.category === 'environments' || catalogEntry?.category === 'animals' || catalogEntry?.category === 'fxs') {
     const subIcon = SUBCATEGORY_ICON_FALLBACK[resolveDecorationSubcategory(item.sid, catalogEntry.category)]

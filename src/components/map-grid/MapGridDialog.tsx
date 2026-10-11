@@ -4874,7 +4874,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     fully covered the other regardless of actual position. */}
                 {showIcons && sortedIconEntries.map((entry) => {
                   const name = entry.pick.primary.displayName || entry.pick.primary.entitySid || entry.pick.primary.sid
-                  const visual = resolveGridCellVisual(entry.pick.primary, catalog, settings.squadDifficultyRanges)
+                  const visual = resolveGridCellVisual(entry.pick.primary, catalog, settings.squadDifficultyRanges, settings.iconImagesEnabled)
                   const isSingleCell = entry.width === BASE_CELL_PX && entry.height === BASE_CELL_PX
                   const thisIconSize = isSingleCell
                     ? iconSize
@@ -4989,6 +4989,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   const visual = resolveGridCellVisual(
                     { key: icon.key, type: 0, id: -1, sid: icon.sid, x: 0, z: 0, node: 0 },
                     catalog,
+                    undefined,
+                    settings.iconImagesEnabled,
                   )
                   return (
                     <div
