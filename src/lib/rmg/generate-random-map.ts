@@ -283,6 +283,8 @@ export interface GenerateRandomMapOptions {
   tuning?: RmgTuning
   /** Spell sids (e.g. `neutral_magic_town_portal`) banned for the whole map. */
   bannedMagics?: string[]
+  /** Artifact sids (e.g. `ancient_idol_artifact`) banned for the whole map. */
+  bannedItems?: string[]
   /** Optional staged-progress reporter — see `RmgProgressCallback`'s own doc
    *  comment. Purely observational: never changes what's generated, only
    *  when the caller finds out about it. */
@@ -1520,12 +1522,14 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     finalBlock2 = patched.block2Chunk
   }
 
-  // Spells the user banned (both blocks' `banInfoData.bannedMagics`), added
-  // to whatever an imported template already bans.
-  if (options.bannedMagics && options.bannedMagics.length > 0) {
-    const templateBans = gameTemplateJson ? extractGameRulesPatch(parseGameTemplateJson(gameTemplateJson)).globalBans?.magics ?? [] : []
-    const magics = [...new Set([...templateBans, ...options.bannedMagics])]
-    const patched = patchGameRules(finalBlock1, finalBlock2, { globalBans: { magics } })
+  // Spells and artifacts the user banned (both blocks' `banInfoData.bannedMagics`
+  // / `bannedItems`), added to whatever an imported template already bans.
+  if ((options.bannedMagics?.length ?? 0) > 0 || (options.bannedItems?.length ?? 0) > 0) {
+    const templateBans = gameTemplateJson ? extractGameRulesPatch(parseGameTemplateJson(gameTemplateJson)).globalBans : undefined
+    const globalBans: { magics?: string[]; items?: string[] } = {}
+    if (options.bannedMagics?.length) globalBans.magics = [...new Set([...(templateBans?.magics ?? []), ...options.bannedMagics])]
+    if (options.bannedItems?.length) globalBans.items = [...new Set([...(templateBans?.items ?? []), ...options.bannedItems])]
+    const patched = patchGameRules(finalBlock1, finalBlock2, { globalBans })
     finalBlock1 = patched.block1Chunk
     finalBlock2 = patched.block2Chunk
   }

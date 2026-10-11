@@ -59,6 +59,7 @@ import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
 import SpellBanDialog from '@/components/common/SpellBanDialog'
+import ArtifactBanDialog from '@/components/common/ArtifactBanDialog'
 import { ProgressStatus } from '@/components/common/ProgressStatus'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { loadClassicTuning } from '@/lib/rmg/load-tuning'
@@ -243,6 +244,9 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // Spell sids banned on the generated map (added to the tuning file's spells.banned).
   const [bannedSpellSids, setBannedSpellSids] = useState<Set<string>>(() => new Set())
   const [spellPickerOpen, setSpellPickerOpen] = useState(false)
+  // Artifact sids banned on the generated map (banInfoData.bannedItems).
+  const [bannedArtifactSids, setBannedArtifactSids] = useState<Set<string>>(() => new Set())
+  const [artifactPickerOpen, setArtifactPickerOpen] = useState(false)
   // Which of the 7 real biomes generation may use at all — a real user
   // request ("how many terrain types the RMG will use"). All on by
   // default; at least one must always stay checked (see the checkbox's
@@ -452,6 +456,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         gameElevationLayouts: opts.gameElevationLayouts,
         tuning: opts.tuning,
         bannedMagics: [...new Set([...(opts.tuning?.spells?.banned ?? []), ...bannedSpellSids])],
+        bannedItems: [...bannedArtifactSids],
         terrainOnly,
         enabledBiomes: opts.enabledBiomes,
         gameTemplateJson: gameTemplate?.json,
@@ -835,6 +840,18 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                       </div>
                       <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSpellPickerOpen(true)} disabled={terrainLocked}>
                         {bannedSpellSids.size > 0 ? `${bannedSpellSids.size} banned` : 'None banned'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs">Banned artifacts</Label>
+                        <FieldInfo text="Artifacts that will not appear on the generated map, picked by kind and slot. Written to the map's banned items." />
+                      </div>
+                      <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setArtifactPickerOpen(true)} disabled={terrainLocked}>
+                        {bannedArtifactSids.size > 0 ? `${bannedArtifactSids.size} banned` : 'None banned'}
                       </Button>
                     </div>
                   </div>
@@ -1257,6 +1274,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         onOpenChange={setSpellPickerOpen}
         bannedSids={bannedSpellSids}
         onChange={setBannedSpellSids}
+      />
+      <ArtifactBanDialog
+        open={artifactPickerOpen}
+        onOpenChange={setArtifactPickerOpen}
+        bannedSids={bannedArtifactSids}
+        onChange={setBannedArtifactSids}
       />
     </>
   )
