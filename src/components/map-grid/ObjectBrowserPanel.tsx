@@ -22,6 +22,7 @@
 // master toggle.
 
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, Settings, X, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -235,6 +236,40 @@ function unitTypeLabel(aiType: string | undefined): string | null {
   if (aiType.startsWith('melee')) return 'Melee'
   if (aiType.startsWith('range') || aiType === 'reach_type') return 'Ranged'
   return null
+}
+
+/** Icon that shows the full-size image in a floating popover while hovered. */
+function HoverZoomIcon({ iconId, name, size = 24 }: { iconId?: string; name: string; size?: number }) {
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  const src = iconId ? thumbnailPath(iconId) : null
+
+  return (
+    <span
+      onMouseEnter={(e) => setRect(e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={() => setRect(null)}
+      className="shrink-0"
+    >
+      <CatalogIcon iconId={iconId} name={name} size={size} />
+      {src && rect && createPortal(
+        <img
+          src={src}
+          alt=""
+          draggable={false}
+          className="pointer-events-none fixed z-[100] rounded border border-border bg-popover p-1 shadow-lg"
+          style={{
+            // Natural size (100%), capped so it can't leave the screen.
+            maxWidth: '10vw',
+            maxHeight: '20vh',
+            // Open to the left of the icon (the panel is on the right edge of the grid).
+            right: window.innerWidth - rect.right - 64,
+            top: Math.max(8, Math.min(rect.top - 16, window.innerHeight)),
+            filter: 'brightness(1.1)'
+          }}
+        />,
+        document.body,
+      )}
+    </span>
+  )
 }
 
 export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placingCreatureId, onPickCreature, onClose }: Props) {
@@ -697,7 +732,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
                   }`}
                 >
-                  <CatalogIcon iconId={o.icon} name={o.name} size={24} />
+                  <HoverZoomIcon iconId={o.icon} name={o.name} size={24} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{o.name}</p>
                     <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
@@ -737,7 +772,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     !placeable ? 'opacity-40 cursor-not-allowed' : c.id === placingCreatureId ? 'bg-accent' : 'hover:bg-accent/50'
                   }`}
                 >
-                  <CatalogIcon iconId={c.icon} name={c.name} size={24} />
+                  <HoverZoomIcon iconId={c.icon} name={c.name} size={24} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{c.name}</p>
                     <p className="text-xs text-muted-foreground truncate font-mono">{c.id}</p>
