@@ -1541,9 +1541,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         } else {
           const itemsHere = tileIndex.get(node) ?? []
           if (pendingPick.kind === 'mapEntity') {
-            const withSid = itemsHere.find((it) => it.entitySid)
-            if (withSid?.entitySid) resolvePick(withSid.entitySid)
-            else setPickHint('This object has no entity SID yet.')
+            // An object with no entity SID yet gets one assigned on the spot
+            // (same naming as 'Create a rule for this'), so any placed object
+            // can be picked. Zone markers (type 1) are not pickable objects.
+            const target = itemsHere.find((it) => it.entitySid) ?? itemsHere.find((it) => it.type !== 1)
+            if (!target) setPickHint('Click an object on the grid.')
+            else if (target.entitySid) resolvePick(target.entitySid)
+            else if (!canEditEntities) setPickHint('This object has no entity SID yet, and entities cannot be edited here.')
+            else resolvePick(ensureEntitySid(target))
           } else {
             const spawner = itemsHere.find((it) => it.spawnerInfo?.spawnPointType === 1 && it.spawnerInfo.heroSid)
             if (spawner?.spawnerInfo?.heroSid) resolvePick(spawner.spawnerInfo.heroSid)
@@ -2961,6 +2966,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
+  // The object's entity SID, assigning a fresh one (`<template sid>_<n>`, with
+  // the faction in the name for city spawners) if it has none yet. Shared by
+  // "Create a rule for this" and by picking an object for a form field.
+  const ensureEntitySid = (item: PlacedObject): string => {
+    if (item.entitySid) return item.entitySid
+    const factionSid = item.spawnerInfo?.factionSid
+    const factionName = factionSid ? catalog?.factions.find((f) => f.id === factionSid)?.name : undefined
+    const factionToken = factionName ? factionName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') : undefined
+    const base = factionToken ? `${item.sid}_${factionToken}` : item.sid
+    let n = 1
+    let candidate = `${base}_${n}`
+    while (existingSids.includes(candidate)) { n += 1; candidate = `${base}_${n}` }
+    applyEdit({ kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid: candidate }, 'assign entity SID')
+    return candidate
+  }
+
   // Subject-first trigger creation (MapGridCellContent's "Create a rule for
   // this") — resolves which SUBJECT_DEFS bucket applies from data already on
   // PlacedObject (no new capability system), auto-assigns an entity SID if
@@ -2971,17 +2992,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const handleCreateRule = (item: PlacedObject) => {
     const factionSid = item.spawnerInfo?.factionSid
     const factionName = factionSid ? catalog?.factions.find((f) => f.id === factionSid)?.name : undefined
-    const factionToken = factionName ? factionName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') : undefined
 
-    let entitySid = item.entitySid
-    if (!entitySid) {
-      const base = factionToken ? `${item.sid}_${factionToken}` : item.sid
-      let n = 1
-      let candidate = `${base}_${n}`
-      while (existingSids.includes(candidate)) { n += 1; candidate = `${base}_${n}` }
-      entitySid = candidate
-      applyEdit({ kind: 'assignEntitySid', entityType: item.type, entityId: item.id, sid: entitySid }, 'assign entity SID')
-    }
+    const entitySid = ensureEntitySid(item)
     const subjectKey: SubjectKey =
       item.type === 2 ? 'squad' : item.isCity ? 'castle' : item.portalInfo ? 'portal' : 'object'
 

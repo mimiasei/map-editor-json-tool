@@ -16,7 +16,7 @@ import { uniqueSid } from '@/store/useScenarioStore'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
-import MapEntityCombobox from '@/components/common/MapEntityCombobox'
+import MapEntityPickField from '@/components/common/MapEntityPickField'
 import {
   Field,
   EnumSelect,
@@ -102,10 +102,12 @@ function renderFields(props: ScriptTemplateFieldsProps) {
   return (
     <Fragment>
       <Field label="Quest giver object">
-        <MapEntityCombobox
+        <MapEntityPickField
           value={field(input, 'giverSid')}
           onChange={(v) => setField(setInput, 'giverSid', v)}
           placeholder="Search placed objects…"
+          label="Quest giver object"
+          requestMapPick={props.requestMapPick}
         />
       </Field>
       <Field label="Quest giver name (used in the text)">

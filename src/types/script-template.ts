@@ -85,6 +85,10 @@ export interface ScriptTemplateFieldsProps {
   input: ScriptTemplateInput
   setInput: (updater: (prev: ScriptTemplateInput) => ScriptTemplateInput) => void
   mapContext: MapContext | null
+  /** Closes the wizard, lets the user click an object in the Map Grid (assigning it an
+   *  entity SID if it has none), then reopens the wizard and passes the SID to `onPicked`.
+   *  Absent when no map is loaded. */
+  requestMapPick?: (label: string, onPicked: (sid: string) => void) => void
 }
 
 export interface ScriptTemplateDef {
