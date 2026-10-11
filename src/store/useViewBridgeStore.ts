@@ -26,7 +26,10 @@ export interface PendingPick {
   /** Writes the picked SID back into the right condition/action param. */
   onResolve: (value: string) => void
   /** Which inspector row to reopen once we're back in the Scenario Editor. */
-  resumeSelection: SelectedNode
+  resumeSelection?: SelectedNode
+  /** Runs after the pick is resolved OR cancelled (e.g. to reopen a dialog that
+   *  was closed while the user picked on the grid). */
+  onFinish?: () => void
   /** 'node' picks only: the param's value before picking, as a string (e.g.
    *  "1458") — clicking that exact same tile again is a no-op rather than
    *  popping the change-confirmation dialog (nothing would actually change). */
@@ -129,12 +132,14 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
     const pick = get().pendingPick
     if (!pick) return
     pick.onResolve(value)
-    set({ pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection })
+    set({ pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection ?? null })
+    pick.onFinish?.()
   },
   cancelPick: () => {
     const pick = get().pendingPick
     if (!pick) return
-    set({ pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection })
+    set({ pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection ?? null })
+    pick.onFinish?.()
   },
 
   pendingSubjectSeed: null,

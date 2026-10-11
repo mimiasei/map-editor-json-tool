@@ -73,6 +73,8 @@ export interface ScriptTemplateGenerateResult {
   /** New DialogFlow to merge in, for templates that need one (e.g. sphinx.tsx's
    *  multiple-choice riddle) — merged via setDialogFlow, same as any other dialog. */
   dialogFlow?: DialogFlow
+  /** Additional DialogFlows, for templates that need several (e.g. quest-giver.tsx: intro + success). */
+  dialogFlows?: DialogFlow[]
   /** sid -> text, merged via setLocalizationBatch. For any new loc tokens the
    *  generated content references (e.g. riddle/answer text) that don't already
    *  exist elsewhere in the project. */
@@ -83,6 +85,10 @@ export interface ScriptTemplateFieldsProps {
   input: ScriptTemplateInput
   setInput: (updater: (prev: ScriptTemplateInput) => ScriptTemplateInput) => void
   mapContext: MapContext | null
+  /** Closes the wizard, lets the user click an object in the Map Grid (assigning it an
+   *  entity SID if it has none), then reopens the wizard and passes the SID to `onPicked`.
+   *  Absent when no map is loaded. */
+  requestMapPick?: (label: string, onPicked: (sid: string) => void) => void
 }
 
 export interface ScriptTemplateDef {

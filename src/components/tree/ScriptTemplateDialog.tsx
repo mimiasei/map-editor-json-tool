@@ -26,6 +26,7 @@ import { SCRIPT_TEMPLATE_LIST } from '@/schema/script-templates'
 import type { ScriptTemplateDef, ScriptTemplateInput } from '@/types/script-template'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import EntityPickerList from '@/components/common/EntityPickerList'
 
 interface Props {
@@ -54,6 +55,20 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
   const setLocalizationBatch = useScenarioStore((s) => s.setLocalizationBatch)
 
   const selectedTemplate = SCRIPT_TEMPLATE_LIST.find((t) => t.id === selectedId) ?? null
+
+  // Picking on the Map Grid: hide this dialog (its state lives here, so it
+  // survives being closed — onOpenChange, not handleClose, which resets it),
+  // then reopen it once the pick is resolved or cancelled.
+  const requestPick = useViewBridgeStore((s) => s.requestPick)
+  const requestMapPick = (label: string, onPicked: (sid: string) => void) => {
+    onOpenChange(false)
+    requestPick({
+      kind: 'mapEntity',
+      label,
+      onResolve: onPicked,
+      onFinish: () => onOpenChange(true),
+    })
+  }
 
   const handlePickTemplate = (template: ScriptTemplateDef) => {
     setSelectedId(template.id)
@@ -119,6 +134,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
     if (previewResult.dialogFlow) {
       setDialogFlow(previewResult.dialogFlow.id, previewResult.dialogFlow)
     }
+    for (const flow of previewResult.dialogFlows ?? []) setDialogFlow(flow.id, flow)
     appendGeneratedContent(previewResult.quest, previewResult.counters ?? [])
     handleClose(false)
   }
@@ -162,7 +178,12 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
             <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
 
             {selectedTemplate.renderFields ? (
-              selectedTemplate.renderFields({ input, setInput, mapContext })
+              selectedTemplate.renderFields({
+                input,
+                setInput,
+                mapContext,
+                requestMapPick: mapContext ? requestMapPick : undefined,
+              })
             ) : (
               <>
                 {selectedTemplate.slots.map((slot) => (
@@ -230,7 +251,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
             {previewResult && (
               <p className="text-xs text-muted-foreground border-t border-border pt-3">
-                This will add 1 hidden quest with {triggerCount} trigger{triggerCount === 1 ? '' : 's'}{' '}
+                This will add 1 {previewResult.quest.hidden ? 'hidden ' : ''}quest with {triggerCount} trigger{triggerCount === 1 ? '' : 's'}{' '}
                 and {actionCount} action{actionCount === 1 ? '' : 's'} to your project.
               </p>
             )}

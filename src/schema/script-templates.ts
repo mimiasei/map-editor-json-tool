@@ -9,12 +9,14 @@ import { hutOfTheMagiTemplate } from '@/lib/script-templates/hut-of-the-magi'
 import { seersHutTemplate } from '@/lib/script-templates/seers-hut'
 import { keyLockTemplate } from '@/lib/script-templates/key-lock'
 import { sphinxTemplate } from '@/lib/script-templates/sphinx'
+import { questGiverTemplate } from '@/lib/script-templates/quest-giver'
 
 export const SCRIPT_TEMPLATE_REGISTRY: Record<string, ScriptTemplateDef> = {
   [hutOfTheMagiTemplate.id]: hutOfTheMagiTemplate,
   [seersHutTemplate.id]: seersHutTemplate,
   [keyLockTemplate.id]: keyLockTemplate,
   [sphinxTemplate.id]: sphinxTemplate,
+  [questGiverTemplate.id]: questGiverTemplate,
 }
 
 export const SCRIPT_TEMPLATE_LIST: ScriptTemplateDef[] = Object.values(SCRIPT_TEMPLATE_REGISTRY)
