@@ -64,10 +64,20 @@ const PRIMARY_SKILLS = [
   { id: 'intelligence', label: 'Knowledge' },
 ]
 
-type RequirementType = 'resources' | 'artifact' | 'defeatMonster' | 'defeatHero' | 'skill'
-type RewardType = 'resources' | 'artifact' | 'skill'
+export type RequirementType = 'resources' | 'artifact' | 'defeatMonster' | 'defeatHero' | 'skill'
+export type RewardType = 'resources' | 'artifact' | 'skill'
 
-const REQUIREMENT_OPTIONS: { id: RequirementType; label: string }[] = [
+/** Display labels for PRIMARY_SKILLS ids, e.g. offence -> Attack. */
+export const PRIMARY_SKILL_LABELS: Record<string, string> = Object.fromEntries(
+  [
+    ['offence', 'Attack'],
+    ['defence', 'Defense'],
+    ['spellPower', 'Spell Power'],
+    ['intelligence', 'Knowledge'],
+  ],
+)
+
+export const REQUIREMENT_OPTIONS: { id: RequirementType; label: string }[] = [
   { id: 'resources', label: 'Bring Resources' },
   { id: 'artifact', label: 'Bring Artifact' },
   { id: 'defeatMonster', label: 'Defeat a Monster' },
@@ -75,17 +85,17 @@ const REQUIREMENT_OPTIONS: { id: RequirementType; label: string }[] = [
   { id: 'skill', label: 'Reach a Primary Skill Level' },
 ]
 
-const REWARD_OPTIONS: { id: RewardType; label: string }[] = [
+export const REWARD_OPTIONS: { id: RewardType; label: string }[] = [
   { id: 'resources', label: 'Give Resources' },
   { id: 'artifact', label: 'Give Artifact' },
   { id: 'skill', label: 'Boost a Primary Skill' },
 ]
 
-function field(input: ScriptTemplateInput, key: string): string {
+export function field(input: ScriptTemplateInput, key: string): string {
   return input.fields[key] ?? ''
 }
 
-function setField(setInput: ScriptTemplateFieldsProps['setInput'], key: string, value: string) {
+export function setField(setInput: ScriptTemplateFieldsProps['setInput'], key: string, value: string) {
   setInput((s) => ({ ...s, fields: { ...s.fields, [key]: value } }))
 }
 
@@ -96,7 +106,7 @@ interface EnumOption {
   label: string
 }
 
-function EnumSelect({
+export function EnumSelect({
   value,
   onChange,
   options,
@@ -121,7 +131,7 @@ function EnumSelect({
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
@@ -130,7 +140,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function RequirementFields({ input, setInput }: ScriptTemplateFieldsProps) {
+export function RequirementFields({ input, setInput }: ScriptTemplateFieldsProps) {
   const requirementType = (field(input, 'requirementType') || 'resources') as RequirementType
 
   switch (requirementType) {
@@ -209,7 +219,7 @@ function RequirementFields({ input, setInput }: ScriptTemplateFieldsProps) {
   }
 }
 
-function RewardFields({ input, setInput }: ScriptTemplateFieldsProps) {
+export function RewardFields({ input, setInput }: ScriptTemplateFieldsProps) {
   const rewardType = (field(input, 'rewardType') || 'resources') as RewardType
 
   switch (rewardType) {
@@ -320,13 +330,11 @@ function renderFields(props: ScriptTemplateFieldsProps) {
 
 // ─── Validate ───────────────────────────────────────────────────────────────
 
-function validate(input: ScriptTemplateInput): string[] {
+/** Errors for the requirement + reward fields (shared with the quest-giver template). */
+export function validateRequirementAndReward(input: ScriptTemplateInput): string[] {
   const errors: string[] = []
-  const hutSid = field(input, 'hutSid').trim()
   const requirementType = (field(input, 'requirementType') || 'resources') as RequirementType
   const rewardType = (field(input, 'rewardType') || 'resources') as RewardType
-
-  if (!hutSid) errors.push("Pick the object acting as the Seer's Hut.")
 
   switch (requirementType) {
     case 'resources':
@@ -361,13 +369,17 @@ function validate(input: ScriptTemplateInput): string[] {
   return errors
 }
 
+function validate(input: ScriptTemplateInput): string[] {
+  const errors: string[] = []
+  if (!field(input, 'hutSid').trim()) errors.push("Pick the object acting as the Seer's Hut.")
+  return [...errors, ...validateRequirementAndReward(input)]
+}
+
 // ─── Generate ───────────────────────────────────────────────────────────────
 
-function generate(input: ScriptTemplateInput, existingSids: { quests: string[] }) {
-  const hutSid = field(input, 'hutSid').trim()
+/** Trigger condition (plus any consumed-payment actions) for the chosen requirement. */
+export function buildRequirement(input: ScriptTemplateInput): { condition: Condition; consume: Action[] } {
   const requirementType = (field(input, 'requirementType') || 'resources') as RequirementType
-  const rewardType = (field(input, 'rewardType') || 'resources') as RewardType
-
   let requirementCondition: Condition
   const consumeActions: Action[] = []
 
@@ -401,6 +413,12 @@ function generate(input: ScriptTemplateInput, existingSids: { quests: string[] }
     }
   }
 
+  return { condition: requirementCondition, consume: consumeActions }
+}
+
+/** Reward action for the chosen reward type. */
+export function buildReward(input: ScriptTemplateInput): Action {
+  const rewardType = (field(input, 'rewardType') || 'resources') as RewardType
   let rewardAction: Action
   switch (rewardType) {
     case 'resources': {
@@ -419,6 +437,13 @@ function generate(input: ScriptTemplateInput, existingSids: { quests: string[] }
       break
     }
   }
+  return rewardAction
+}
+
+function generate(input: ScriptTemplateInput, existingSids: { quests: string[] }) {
+  const hutSid = field(input, 'hutSid').trim()
+  const { condition: requirementCondition, consume: consumeActions } = buildRequirement(input)
+  const rewardAction = buildReward(input)
 
   const triggers: Trigger[] = []
 

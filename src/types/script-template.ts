@@ -73,6 +73,8 @@ export interface ScriptTemplateGenerateResult {
   /** New DialogFlow to merge in, for templates that need one (e.g. sphinx.tsx's
    *  multiple-choice riddle) — merged via setDialogFlow, same as any other dialog. */
   dialogFlow?: DialogFlow
+  /** Additional DialogFlows, for templates that need several (e.g. quest-giver.tsx: intro + success). */
+  dialogFlows?: DialogFlow[]
   /** sid -> text, merged via setLocalizationBatch. For any new loc tokens the
    *  generated content references (e.g. riddle/answer text) that don't already
    *  exist elsewhere in the project. */

@@ -119,6 +119,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
     if (previewResult.dialogFlow) {
       setDialogFlow(previewResult.dialogFlow.id, previewResult.dialogFlow)
     }
+    for (const flow of previewResult.dialogFlows ?? []) setDialogFlow(flow.id, flow)
     appendGeneratedContent(previewResult.quest, previewResult.counters ?? [])
     handleClose(false)
   }
@@ -230,7 +231,7 @@ export default function ScriptTemplateDialog({ open, onOpenChange }: Props) {
 
             {previewResult && (
               <p className="text-xs text-muted-foreground border-t border-border pt-3">
-                This will add 1 hidden quest with {triggerCount} trigger{triggerCount === 1 ? '' : 's'}{' '}
+                This will add 1 {previewResult.quest.hidden ? 'hidden ' : ''}quest with {triggerCount} trigger{triggerCount === 1 ? '' : 's'}{' '}
                 and {actionCount} action{actionCount === 1 ? '' : 's'} to your project.
               </p>
             )}
