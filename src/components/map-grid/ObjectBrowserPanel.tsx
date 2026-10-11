@@ -53,9 +53,9 @@ import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catal
 // "Animals" maps to the `animals` category (roaming wildlife decorations,
 // e.g. camel/scorpion/chicken) — real creature squads are a separate
 // browsing mode below (`mode === 'creatures'`), not part of this filter row.
-// Artifacts/test/blocks have no dedicated button — they still show up
-// whenever no type filter is active.
-type TypeFilterKey = 'environments' | 'interactables' | 'animals' | 'fxs' | 'spawns' | 'resources'
+// Test/blocks have no dedicated button — they still show up whenever no
+// type filter is active.
+type TypeFilterKey = 'environments' | 'interactables' | 'animals' | 'fxs' | 'spawns' | 'resources' | 'artifacts'
 
 const TYPE_FILTER_LABELS: Record<TypeFilterKey, string> = {
   environments: 'Decorations',
@@ -64,12 +64,13 @@ const TYPE_FILTER_LABELS: Record<TypeFilterKey, string> = {
   fxs: 'F/X',
   spawns: 'Spawners',
   resources: 'Resources',
+  artifacts: 'Artifacts',
 }
 
 // Decorations/Interactables get the split-button (pill + chevron dropdown);
 // these four have no sub-category breakdown of their own, so they stay
 // plain single-click pills like every filter used to be.
-const PLAIN_TYPE_FILTER_ORDER: TypeFilterKey[] = ['animals', 'fxs', 'spawns', 'resources']
+const PLAIN_TYPE_FILTER_ORDER: TypeFilterKey[] = ['animals', 'fxs', 'spawns', 'resources', 'artifacts']
 
 // The Decorations dropdown reuses decoration-subcategories.ts verbatim (same
 // list Browse mode's own "Decorations" chevron shows) minus its 'animals'/
