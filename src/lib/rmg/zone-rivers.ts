@@ -56,7 +56,11 @@ export interface RiverRoute {
 }
 
 const DIRS: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+/** Entering a road tile from a non-road one: a crossing, cheap. */
 const ROAD_COST = 4
+/** Stepping from one road tile to the next: running ALONG a road, so a river
+ *  crosses a road at a right angle instead (VCMI charges the same, +1000). */
+const ROAD_ALONG_COST = 40
 const EDGE_COST = 2
 const WALL_COST = 2
 /** Extra cost per hill tile, so the river leaves its hill soon and most of
@@ -210,7 +214,7 @@ export function routeRiver(
       if (done.has(next)) continue
       let cost = 1 + noise[n] + (leg ? leg.extraCost(n) : 0)
       if (dir !== 4 && dir !== k) cost += turnCost
-      if (t.roadNodes.has(n)) cost += ROAD_COST
+      if (t.roadNodes.has(n)) cost += t.roadNodes.has(node) ? ROAD_ALONG_COST : ROAD_COST
       if (t.wallNodes.has(n)) cost += WALL_COST
       if (levels[n] >= 1) cost += HILL_COST
       if (nx === 0 || nz === 0 || nx === sizeX - 1 || nz === sizeZ - 1) cost += EDGE_COST

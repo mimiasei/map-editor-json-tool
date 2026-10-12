@@ -1087,7 +1087,11 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // Treasure and its guards, now that the roads are laid: road tiles count as
   // blocked, so no pile or guard lands on a road or is placed over it.
   await reportProgress('Placing treasure', 55)
-  for (const node of roadNodes) state.blocked.add(node)
+  // Remembered so rivers, which may cross a road, don't see these as blocked.
+  const roadOnlyBlocked = new Set<number>()
+  for (const node of roadNodes) {
+    if (!state.blocked.has(node)) { state.blocked.add(node); roadOnlyBlocked.add(node) }
+  }
   zonePopulator.populateTreasure()
   // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
   const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length
@@ -1108,7 +1112,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverPaths: number[][] = []
   const riverMountainSpots: { node: number; biome: BiomeId }[] = []
   const riverTerrain: RiverTerrain = {
-    sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: state.blocked,
+    sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: { has: (n: number) => state.blocked.has(n) && !roadOnlyBlocked.has(n) },
     usedAnchors: state.usedAnchors, wallNodes: elevationWallNodesAll, roadNodes, riverNodes,
   }
   const paintRiver = (route: RiverRoute): void => {
