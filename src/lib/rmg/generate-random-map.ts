@@ -63,7 +63,7 @@ import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
 import { sidBiome, violatesIsolation } from './biome-isolation'
-import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
+import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, computeZoneBorderDistance, createZoneConfinementCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
 import { orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
@@ -637,6 +637,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     return gate ?? zoneAnchorNode.get(zoneId) as number
   }
   const ROAD_AVOIDANCE_RADIUS = 4
+  const ROAD_BORDER_RADIUS = 4
+  const ROAD_BORDER_PENALTY = 2
+  const ROAD_FOREIGN_ZONE_PENALTY = 6
   const ROAD_AVOIDANCE_STRENGTH = 1.5
   // `smoothPath`'s own window was a flat 12 tiles — real ASCII-rendered
   // comparison (a follow-up user report: "roads end up fairly straight and
@@ -857,6 +860,11 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (rng() < stoneRoadChance ? 2 : 1)
     for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
   }
+  // Keep each road inside the two zones it connects and off their borders:
+  // a soft cost, so a road still crosses where it must (VCMI idea 3).
+  const zoneBorderDistance = computeZoneBorderDistance(zoneIdByNode, sizeX, sizeZ, ROAD_BORDER_RADIUS)
+  const confinementCost = (a: number, b: number): ((x: number, z: number) => number) =>
+    createZoneConfinementCost(zoneIdByNode, zoneBorderDistance, sizeX, new Set([a, b]), ROAD_BORDER_RADIUS, ROAD_BORDER_PENALTY, ROAD_FOREIGN_ZONE_PENALTY)
   const networkZones = new Set<number>()
   // Tree edges, breadth-first: the first edge of a component runs between its
   // two endpoints; every later one starts at the new zone's endpoint and ends
@@ -868,12 +876,14 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       const from = endpointOf(v)
       const aim = nearestNode(roadNodes, from, sizeX) as number
       const windingCost = createWindingCost(sizeX, from, aim, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-      path = routeRoad(from, roadNodes, windingCost)
+      const confined = confinementCost(u, v)
+      path = routeRoad(from, roadNodes, (x, z) => windingCost(x, z) + confined(x, z))
     } else {
       const from = endpointOf(u)
       const to = endpointOf(v)
       const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-      path = routeRoad(from, to, windingCost)
+      const confined = confinementCost(u, v)
+      path = routeRoad(from, to, (x, z) => windingCost(x, z) + confined(x, z))
     }
     if (path) { paintEdgeRoad(u, v, path); networkZones.add(u); networkZones.add(v) } else unroutableEdges += 1
   }
@@ -885,7 +895,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
     const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
     const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-    const path = routeRoad(from, to, (x, z) => windingCost(x, z) + avoidanceCost(x, z))
+    const confined = confinementCost(a, b)
+    const path = routeRoad(from, to, (x, z) => windingCost(x, z) + avoidanceCost(x, z) + confined(x, z))
     if (path) paintEdgeRoad(a, b, path)
     else unroutableEdges += 1
   }

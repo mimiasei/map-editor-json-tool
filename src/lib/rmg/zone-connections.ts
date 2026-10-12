@@ -392,3 +392,63 @@ export function nearestNode(nodes: Iterable<number>, from: number, sizeX: number
   }
   return best
 }
+
+/** Tiles from each tile to the nearest tile of a DIFFERENT zone (0 = on a
+ *  zone border), capped at `maxDist` — multi-source BFS. */
+export function computeZoneBorderDistance(zoneIdByNode: readonly number[], sizeX: number, sizeZ: number, maxDist: number): Int32Array {
+  const dist = new Int32Array(sizeX * sizeZ).fill(maxDist + 1)
+  const queue: number[] = []
+  for (let node = 0; node < dist.length; node++) {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      if (zoneIdByNode[nz * sizeX + nx] !== zoneIdByNode[node]) { dist[node] = 0; queue.push(node); break }
+    }
+  }
+  let head = 0
+  while (head < queue.length) {
+    const node = queue[head++]
+    const d = dist[node]
+    if (d >= maxDist) continue
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (dist[n] > d + 1) { dist[n] = d + 1; queue.push(n) }
+    }
+  }
+  return dist
+}
+
+/**
+ * A SOFT cost that keeps a road inside the zones it connects and off their
+ * borders (VCMI's RoadPlacer only searches the zone's own free area and
+ * divides the step cost by the squared distance to the zone border). Added
+ * to the winding cost: `foreignPenalty` for a tile in any zone outside
+ * `allowedZones`, plus up to `borderPenalty` for a tile within `radius`
+ * tiles of a zone border — so a road crosses a border only where it must,
+ * and never clips a third zone's corner unless nothing else is reachable.
+ */
+export function createZoneConfinementCost(
+  zoneIdByNode: readonly number[],
+  borderDistance: Int32Array,
+  sizeX: number,
+  allowedZones: ReadonlySet<number>,
+  radius: number,
+  borderPenalty: number,
+  foreignPenalty: number,
+): (x: number, z: number) => number {
+  return (x: number, z: number): number => {
+    const node = z * sizeX + x
+    let cost = allowedZones.has(zoneIdByNode[node]) ? 0 : foreignPenalty
+    const d = borderDistance[node]
+    if (d < radius) cost += (borderPenalty * (radius - d)) / radius
+    return cost
+  }
+}
