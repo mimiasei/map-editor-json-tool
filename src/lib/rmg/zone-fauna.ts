@@ -65,19 +65,19 @@ const ALL_BIOME_IDS: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 /** Real relative frequency of each approved fx sid across this session's
  *  22-map survey — used as sampling weights so the generated mix matches
  *  what real maps actually favor (fog dominant, fireflies split most of
- *  the rest, smoke/light-sky/map-light real but minor). */
+ *  the rest, smoke/map-light real but minor; light-sky is never used). */
 const FX_WEIGHTS: Record<string, number> = {
-  fx_fog: 674,
+  fx_fog: 374,
   fx_fireflies_blue: 274,
   fx_fireflies_yellow: 204,
   fx_fireflies_red: 97,
   fx_fireflies_purple: 83,
   fx_map_smoke: 51,
-  fx_light_sky: 36,
-  fx_map_light: 13,
+  fx_map_light: 4,
 }
+/** fx_map_light never lights Lava (6) or Deathland (3) zones. */
+const NO_MAP_LIGHT_BIOMES = new Set<BiomeId>([3, 6])
 const FX_SIDS = Object.keys(FX_WEIGHTS)
-const FX_TOTAL_WEIGHT = Object.values(FX_WEIGHTS).reduce((a, b) => a + b, 0)
 
 /** Every sid this module can legitimately place ON a water tile — `fish`
  *  plus every approved fx sid (fog/fireflies/etc. render fine over water in
@@ -88,14 +88,16 @@ const FX_TOTAL_WEIGHT = Object.values(FX_WEIGHTS).reduce((a, b) => a + b, 0)
  *  every fish/fx this module places. */
 export const WATER_COMPATIBLE_FAUNA_SIDS = new Set<string>(['fish', ...FX_SIDS])
 
-function pickWeightedFxSid(rng: () => number): string {
-  let roll = rng() * FX_TOTAL_WEIGHT
-  for (const sid of FX_SIDS) {
+function pickWeightedFxSid(rng: () => number, biome: BiomeId): string {
+  const sids = NO_MAP_LIGHT_BIOMES.has(biome) ? FX_SIDS.filter((sid) => sid !== 'fx_map_light') : FX_SIDS
+  const total = sids.reduce((sum, sid) => sum + FX_WEIGHTS[sid], 0)
+  let roll = rng() * total
+  for (const sid of sids) {
     const weight = FX_WEIGHTS[sid]
     if (roll < weight) return sid
     roll -= weight
   }
-  return FX_SIDS[0]
+  return sids[0]
 }
 
 function pickWeightedAnimalSid(byBiome: Record<BiomeId, string[]>, biome: BiomeId, rng: () => number): string | null {
@@ -192,7 +194,7 @@ export function scatterZoneFauna(options: ScatterZoneFaunaOptions): ZonePlacemen
       }
 
       if (rng() < FX_PER_1000_TOTAL_TILES / 1000) {
-        placeOverlay(fxNodes, pickWeightedFxSid(rng), node)
+        placeOverlay(fxNodes, pickWeightedFxSid(rng, biome), node)
       }
     }
   }

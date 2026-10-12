@@ -6,7 +6,7 @@
 // which mode was used.
 
 import { DEFAULT_TEMPLATE_OVERRIDES } from './template'
-import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, DEFAULT_MINE_DISTRIBUTION, EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, DEFAULT_CLI_USE_SEED, DEFAULT_MINE_DISTRIBUTION, EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
 import { MIN_ELEVATION_SPAN } from './zone-elevation'
 import type { RmgSchema } from './rmg-schema'
 import { LAYOUT_ARCHETYPES } from './zone-archetypes'
@@ -143,6 +143,10 @@ export function buildTuningDefaults(schema: RmgSchema, treasureGuardShare: numbe
     edges: {
       _about: 'frame (0-1): how densely trees and mountains fence in the map edge, like the game maps do (0 = bare edge, 1 = as dense as the game maps: about 90% of the outermost row blocked, thinning out over four tiles).',
       frame: DEFAULT_EDGE_FRAME,
+    },
+    cli: {
+      _about: 'useSeed (true/false): whether the command-line generator used by the GME mod honours the seed it is given. false (the default) ignores it and rolls a random seed every time; true uses the given seed, so the same seed gives the same map.',
+      useSeed: DEFAULT_CLI_USE_SEED,
     },
     rivers: {
       _about: 'chancePerZone (0-1): each land zone\'s chance of adding one river to the map (0 = no rivers). A river starts at a mountain on a hill, falls off it once (waterfall) and runs on level ground to a lake or the map edge; without a big enough hill it runs between lakes/map edges. meander (0-1): how strongly rivers wind (0 = nearly straight). cliffClearance (0-6): tiles a river keeps from hills and cliff walls, so it never runs along a cliff foot with a row of waterfalls (0 = no rule). mouthWidening (0-1): share of a river\'s length, counted from the mouth, that is made wider with side tiles (0 = always 1 tile wide). confluenceChance (0-1): chance that a new river flows into an earlier river as a tributary instead of running on to a lake or the map edge (0 = rivers never join). bankDecoration (0-1): average chance per tile next to a river of a walkable stone, tuft or reed; it comes in clumps (0 = bare banks).',

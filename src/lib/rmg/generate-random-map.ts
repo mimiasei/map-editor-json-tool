@@ -427,7 +427,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   if (waterContent === 'normal') {
     const { chanceByZone, minSizeByZone } = deriveWaterOverrides(zoneLayoutByZoneId)
     const waterResult = scatterZoneWater({
-      sizeX, sizeZ, zones: graph.zones, tilesByZone,
+      sizeX, sizeZ, zones: graph.zones, tilesByZone, tileBiome,
       excludedNodes: new Set(zoneAnchorNode.values()), connectNodes: roadPoiNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
       chanceByZone, minSizeByZone,
