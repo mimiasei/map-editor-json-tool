@@ -63,7 +63,8 @@ import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
 import { sidBiome, violatesIsolation } from './biome-isolation'
-import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
+import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
+import { orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
@@ -230,7 +231,9 @@ export interface GenerateRandomMapOptions {
   /** Chance a neutral-zone road endpoint targets a real mine/interactable/
    *  random-city node instead of the zone's own anchor. Defaults to 0.8. */
   roadPointOfInterestChance?: number
-  /** Independent per-edge chance a road is painted at all. Defaults to 0.8. */
+  /** Chance an edge OUTSIDE the road spanning tree (one that would close a
+   *  loop) is paved too; the tree itself is always paved. Evaluated as
+   *  `roll < 1 - value`, so 1 = strict tree. Defaults to 0.8. */
   roadFullConnectivityChance?: number
   /** Raw JSON text of a real game RMG template (issue #210, Stage 1) — see
    *  `GenerateTerrainOptions.gameTemplateJson`'s own doc comment (this
@@ -739,6 +742,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // placed (confirmed: an early version of this loop placed 2 redundant
   // portal pairs for Crossroads.rmg.json's own single Portal connection).
   const seenEdgeKeys = new Set<string>()
+  const roadCandidates: [number, number][] = []
   for (const [a, b] of graph.edges) {
     const dedupeKey = `${Math.min(a, b)}:${Math.max(a, b)}`
     if (seenEdgeKeys.has(dedupeKey)) continue
@@ -765,30 +769,30 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       if (selectedPortalEdges.has(`${a}:${b}`)) placeIslandPortal(a, b)
       continue
     }
-    // Progressively-uncertain long-haul connectivity — a real user
-    // request: full player-to-player paved routes should get less certain
-    // over distance, not guaranteed. Every edge here connects two
-    // neighbouring zones (built-in layouts never have a player-player
-    // edge), so a miss just leaves one local stretch unpaved — a route
-    // spanning several
-    // edges to a distant player compounds this naturally, no separate
-    // distance-aware logic needed. Roads are cosmetic (never gate
-    // walkability), so skipping some is a style choice, not a
-    // connectivity risk. Skipped entirely for a Stage 1 template-driven
-    // generation — the template already curated exactly which connections
-    // exist as real edges at all (a Proximity/GladiatorArena connection
-    // was never added as one), so every edge that survives here is one the
-    // template author actually wanted painted.
-    // The skip roll is shared by every edge of the same kind (edgeSkipRoll),
-    // so no player ends up with a road/gate where another has none (issue #254).
-    if (!gameTemplateJson && edgeSkipRoll(a, b) >= roadFullConnectivityChance) continue
-    const from = roadEndpointForZone(a)
-    const to = roadEndpointForZone(b)
-    const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
-    const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
-    const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-    const combinedCost = (x: number, z: number): number => windingCost(x, z) + avoidanceCost(x, z)
-    let path = shortestPath(sizeX, sizeZ, from, to, state.blocked, combinedCost)
+    // Which of these edges get a road is decided after the loop (spanning tree).
+    roadCandidates.push([a, b])
+  }
+
+  // Which zone connections get a road: a spanning tree over the zones that
+  // hold a town (VCMI's CRoadRandomizer, road-edges.ts) — every town zone
+  // is connected, no loops, no dead-end roads into empty zones. Edges
+  // outside the tree are loops: kept only for a game template (it curated
+  // its edges) or with chance `1 - roadFullConnectivityChance`, and only
+  // between zones the tree already paved. The tie-break roll is shared by
+  // every edge of the same kind (issue #254).
+  const townZones = new Set<number>(playerCityByZone.keys())
+  for (const node of randomCityNodes) townZones.add(zoneIdByNode[node])
+  const roadSelection = selectRoadEdges(graph.zones.length, roadCandidates, townZones, edgeSkipRoll)
+  const endpointByZone = new Map<number, number>()
+  const endpointOf = (zoneId: number): number => {
+    let node = endpointByZone.get(zoneId)
+    if (node === undefined) { node = roadEndpointForZone(zoneId); endpointByZone.set(zoneId, node) }
+    return node
+  }
+  // The cheapest route from `from` to `goal` (a tile, or a set of road tiles
+  // to join), repairing a blocked case through elevation walls.
+  const routeRoad = (from: number, goal: number | ReadonlySet<number>, costFn: (x: number, z: number) => number): number[] | null => {
+    let path = shortestPath(sizeX, sizeZ, from, goal, state.blocked, costFn)
 
     // Water-partition repair: a real, user-reported "impossible case" —
     // large organic lakes (zone-water.ts, up to 60% of a zone's own tiles)
@@ -817,7 +821,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // the first place (scatterZoneWater), so a road never needs to.
     if (!path && elevationWallNodesAll.size > 0) {
       const blockedWithoutWalls = new Set([...state.blocked].filter((n) => !elevationWallNodesAll.has(n)))
-      const repairPath = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWalls, combinedCost)
+      const repairPath = shortestPath(sizeX, sizeZ, from, goal, blockedWithoutWalls, costFn)
       if (repairPath) {
         for (const node of repairPath) {
           if (elevationWallNodesAll.has(node)) {
@@ -839,21 +843,51 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
         path = repairPath
       }
     }
-
-    if (path) {
-      const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
-      roadPathsByEdge.set(`${a}:${b}`, smoothed)
-      // A real template's own road material for this exact connection
-      // (issue #210 second follow-up milestone — see rmg-template-
-      // import.ts's own roadMaterialByEdgeKey doc comment) takes priority
-      // over the generic stoneRoadChance roll; empty map (no template, or
-      // this specific edge has no resolvable road entry) falls through.
-      const templateMaterial = roadMaterialByEdgeKey.get(`${Math.min(a, b)}:${Math.max(a, b)}`)
-      const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (rng() < stoneRoadChance ? 2 : 1)
-      for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
+    return path
+  }
+  const paintEdgeRoad = (a: number, b: number, path: number[]): void => {
+    const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
+    roadPathsByEdge.set(`${a}:${b}`, smoothed)
+    // A real template's own road material for this exact connection (issue
+    // #210 second follow-up milestone — see rmg-template-import.ts's own
+    // roadMaterialByEdgeKey doc comment) takes priority over the generic
+    // stoneRoadChance roll; empty map (no template, or this specific edge
+    // has no resolvable road entry) falls through.
+    const templateMaterial = roadMaterialByEdgeKey.get(`${Math.min(a, b)}:${Math.max(a, b)}`)
+    const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (rng() < stoneRoadChance ? 2 : 1)
+    for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
+  }
+  const networkZones = new Set<number>()
+  // Tree edges, breadth-first: the first edge of a component runs between its
+  // two endpoints; every later one starts at the new zone's endpoint and ends
+  // at the NEAREST tile of the road laid so far, so roads branch and share
+  // stretches instead of running side by side.
+  for (const [u, v] of orderTreeEdges(roadSelection.tree, townZones)) {
+    let path: number[] | null
+    if (networkZones.has(u) && roadNodes.size > 0) {
+      const from = endpointOf(v)
+      const aim = nearestNode(roadNodes, from, sizeX) as number
+      const windingCost = createWindingCost(sizeX, from, aim, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+      path = routeRoad(from, roadNodes, windingCost)
     } else {
-      unroutableEdges += 1
+      const from = endpointOf(u)
+      const to = endpointOf(v)
+      const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+      path = routeRoad(from, to, windingCost)
     }
+    if (path) { paintEdgeRoad(u, v, path); networkZones.add(u); networkZones.add(v) } else unroutableEdges += 1
+  }
+  // Loop edges: point to point, steering away from the roads already drawn.
+  for (const [a, b] of roadSelection.extra) {
+    if (!gameTemplateJson && !(networkZones.has(a) && networkZones.has(b) && edgeSkipRoll(a, b) < 1 - roadFullConnectivityChance)) continue
+    const from = endpointOf(a)
+    const to = endpointOf(b)
+    const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
+    const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
+    const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+    const path = routeRoad(from, to, (x, z) => windingCost(x, z) + avoidanceCost(x, z))
+    if (path) paintEdgeRoad(a, b, path)
+    else unroutableEdges += 1
   }
   if (unroutableEdges > 0) {
     logWarn(`Random map generation: ${unroutableEdges} zone connection(s) could not be routed at all — those two zones have no road between them (a genuine blocked-tile partition even after the water-repair pass; extremely crowded/watery map)`)

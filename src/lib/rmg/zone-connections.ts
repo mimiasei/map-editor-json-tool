@@ -325,23 +325,29 @@ export function shortestPath(
   sizeX: number,
   sizeZ: number,
   start: number,
-  goal: number,
+  goal: number | ReadonlySet<number>,
   blocked: Set<number>,
   costFn: (x: number, z: number) => number = () => 1,
 ): number[] | null {
-  if (start === goal) return [start]
+  // A goal SET stops at the first tile of it the search reaches — a road
+  // joining the nearest tile of an existing road network (VCMI's
+  // RoadPlacer does the same). Each member is exempted from `blocked` like
+  // a single goal is.
+  const isGoal = typeof goal === 'number' ? (n: number): boolean => n === goal : (n: number): boolean => goal.has(n)
+  if (isGoal(start)) return [start]
 
   const dist = new Map<number, number>([[start, 0]])
   const prev = new Map<number, number>()
   const visited = new Set<number>()
   const heap = new MinHeap()
   heap.push(0, start)
+  let reached: number | null = null
 
   while (heap.size > 0) {
     const [d, node] = heap.pop() as [number, number]
     if (visited.has(node)) continue
     visited.add(node)
-    if (node === goal) break
+    if (isGoal(node)) { reached = node; break }
 
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
@@ -350,7 +356,7 @@ export function shortestPath(
       const nz = z + dz
       if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
       const n = nz * sizeX + nx
-      if (visited.has(n) || (blocked.has(n) && n !== goal)) continue
+      if (visited.has(n) || (blocked.has(n) && !isGoal(n))) continue
       const newDist = d + costFn(nx, nz)
       if (newDist < (dist.get(n) ?? Infinity)) {
         dist.set(n, newDist)
@@ -360,9 +366,9 @@ export function shortestPath(
     }
   }
 
-  if (!dist.has(goal)) return null
-  const path = [goal]
-  let cur = goal
+  if (reached === null) return null
+  const path = [reached]
+  let cur = reached
   while (cur !== start) {
     const p = prev.get(cur)
     if (p === undefined) break
@@ -371,4 +377,18 @@ export function shortestPath(
   }
   path.reverse()
   return path
+}
+
+/** The member of `nodes` nearest `from` (straight-line) — the aim point for
+ *  a winding cost when the real goal is a whole set. Null for an empty set. */
+export function nearestNode(nodes: Iterable<number>, from: number, sizeX: number): number | null {
+  const fx = from % sizeX
+  const fz = Math.floor(from / sizeX)
+  let best: number | null = null
+  let bestD = Infinity
+  for (const n of nodes) {
+    const d = (n % sizeX - fx) ** 2 + (Math.floor(n / sizeX) - fz) ** 2
+    if (d < bestD) { bestD = d; best = n }
+  }
+  return best
 }
