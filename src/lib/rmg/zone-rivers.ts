@@ -9,6 +9,10 @@
 // be a source): it runs to the map edge or a big lake like a hill river, minus
 // the waterfall.
 //
+// As in hand-drawn maps, a river rises from UNDER its mountain (the first mountain
+// covers the source tile) and ends IN its mouth: on a water tile (one tile, or a
+// three-tile delta along a straight shore) or on a cell of a decorative 3×3 pool.
+//
 // Waterfall format, from the game's official maps: `isWaterfall` sits on the
 // LOWER tile right after the drop, and its `s` is the direction toward the
 // higher (upstream) tile — z+1 → 2, z−1 → 1, x−1 → 3, x+1 → 4 — instead of
@@ -44,6 +48,14 @@ export interface RiverTerrain {
   /** Set while routing a tributary: a tile that may touch an existing river
    *  as this river's LAST tile (a confluence). Such a tile ends the river. */
   joinTile?: (node: number) => boolean
+  /** Whether a decorative pool of this size (2 = 2×2, anchored at its top-left
+   *  cell; 3 = 3×3, anchored at its centre) may be placed with this anchor: the
+   *  zone's biome has one and the ground around allows it. Unset: rivers never
+   *  end in a pool. */
+  poolMouth?: (anchor: number, size: 2 | 3) => boolean
+  /** Whether a river may start on this tile: its source mountain can stand on
+   *  the ground around it (biome isolation). Unset: any free tile. */
+  sourceOk?: (node: number) => boolean
 }
 
 export interface RiverRoute {
@@ -59,6 +71,14 @@ export interface RiverRoute {
   /** The river starts at a free spot on level ground: the caller places a
    *  cluster of mountains there. */
   mountainSource?: boolean
+  /** Water tiles the river runs into after its last land tile, each with the
+   *  tile it flows in from. They are painted like a waterfall tile pointing
+   *  upstream — the way the map editor draws a river entering water. */
+  mouthWater?: { node: number; upstream: number }[]
+  /** Anchor and size (2 or 3) of the pool the river ends in: its last tile is a
+   *  cell of that pool, the caller places the pool. */
+  poolAnchor?: number
+  poolSize?: 2 | 3
 }
 
 const DIRS: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]]
@@ -151,7 +171,7 @@ function meanderField(sizeX: number, sizeZ: number, meander: number, rng: () => 
  *  hill's own walls). A turn costs extra, so the path doesn't zig-zag. */
 export function routeRiver(
   t: RiverTerrain, start: number, sourceHill: Set<number> | null,
-  isGoal: (node: number) => boolean, minLength: number, rng: () => number, minLowLength = 0, meander = 0.6,
+  isGoal: (node: number, arrivalDir?: number) => boolean, minLength: number, rng: () => number, minLowLength = 0, meander = 0.6,
   /** Overrides for a meander leg: its own turn cost, and an extra per-tile cost. */
   leg?: { turnCost: number; extraCost: (node: number) => number },
 ): RiverRoute | null {
@@ -205,7 +225,7 @@ export function routeRiver(
     const node = Math.floor(state / 5)
     const dir = state % 5
     const len = steps.get(state) ?? 1
-    if (node !== start && len >= minLength && (lowSteps.get(state) ?? 0) >= minLowLength && isGoal(node)) { goalState = state; break }
+    if (node !== start && len >= minLength && (lowSteps.get(state) ?? 0) >= minLowLength && isGoal(node, dir)) { goalState = state; break }
     // A confluence tile ends its river; never route on through it.
     if (t.joinTile?.(node)) continue
     const x = node % sizeX
@@ -495,10 +515,107 @@ export const MIN_HILL_RIVER_LENGTH = 15
 export const MIN_RIVER_LOWLAND_TILES = 10
 export const MIN_LOWLAND_RIVER_DISTANCE = 30
 const MAX_SOURCE_TRIES = 5
+/** Chance that a river with a hill or plain source ends in a pool instead. */
+const POOL_END_CHANCE = 0.25
+/** Chance that such a pool is a small 2×2 one rather than a 3×3 one. */
+const POOL_SMALL_CHANCE = 0.4
+
+/** Cells of a pool: 3×3 around its anchor, or 2×2 with the anchor at its
+ *  minimum-x, maximum-z corner (the footprint extends toward lower z). */
+export function poolCells(size: 2 | 3, anchor: number, sizeX: number): number[] {
+  const ax = anchor % sizeX
+  const az = Math.floor(anchor / sizeX)
+  const cells: number[] = []
+  for (let k = 0; k < size; k++) {
+    for (let j = 0; j < size; j++) {
+      cells.push((size === 3 ? az - 1 + k : az - k) * sizeX + (size === 3 ? ax - 1 + j : ax + j))
+    }
+  }
+  return cells
+}
+/** Chance that a river aims for a straight shore, to fan out in a three-tile delta. */
+const DELTA_CHANCE = 0.5
 /** A mountain-cluster source keeps this far (tiles) from the map edge. */
 const PLAIN_SOURCE_EDGE_MARGIN = 8
 /** Chance that a river tries a plain-ground source before a hill. */
 const PLAIN_FIRST_CHANCE = 0.5
+
+/** Land and water tests for a river mouth at `m`; land tiles are free, level,
+ *  away from the edge and cliffs, and touch no river tile but `m`. */
+function mouthTests(t: RiverTerrain, m: number, onPath: ReadonlySet<number>) {
+  const { sizeX, sizeZ } = t
+  const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
+  const at = (x: number, z: number): number => z * sizeX + x
+  const clearance = t.cliffClearance ?? 0
+  const cliffDist = clearance > 0 ? cliffDistances(t, clearance) : null
+  const waterTile = (x: number, z: number): boolean => inBounds(x, z) && t.water.has(at(x, z)) && !t.riverNodes.has(at(x, z))
+  const landTile = (x: number, z: number): boolean => {
+    if (!inBounds(x, z) || x === 0 || z === 0 || x === sizeX - 1 || z === sizeZ - 1) return false
+    const n = at(x, z)
+    if (t.levels[n] !== 0 || t.water.has(n) || t.blocked.has(n) || t.usedAnchors.has(n) || t.climbs[n] > 0 || t.riverNodes.has(n) || t.roadNodes.has(n) || onPath.has(n)) return false
+    if (cliffDist && cliffDist[n] < clearance) return false
+    return DIRS.every(([ex, ez]) => {
+      const q = at(x + ex, z + ez)
+      return !inBounds(x + ex, z + ez) || q === m || !(t.riverNodes.has(q) || onPath.has(q))
+    })
+  }
+  return { inBounds, at, waterTile, landTile }
+}
+
+/** The tiles of a delta at `m` for a river arriving with step (dx, dz): a side
+ *  tile each way across the flow, and the three water tiles in front of
+ *  m and the side tiles. Null unless the shore is straight there. */
+function deltaTiles(t: RiverTerrain, m: number, dx: number, dz: number, onPath: ReadonlySet<number>): { sides: [number, number]; water: [number, number, number] } | null {
+  const { sizeX } = t
+  const { at, waterTile, landTile } = mouthTests(t, m, onPath)
+  const mx = m % sizeX
+  const mz = Math.floor(m / sizeX)
+  const px = -dz
+  const pz = dx
+  const sides: [number, number][] = [[mx + px, mz + pz], [mx - px, mz - pz]]
+  if (!waterTile(mx + dx, mz + dz) || !sides.every(([sx, sz]) => landTile(sx, sz) && waterTile(sx + dx, sz + dz))) return null
+  return {
+    sides: [at(sides[0][0], sides[0][1]), at(sides[1][0], sides[1][1])],
+    water: [at(mx + dx, mz + dz), at(sides[0][0] + dx, sides[0][1] + dz), at(sides[1][0] + dx, sides[1][1] + dz)],
+  }
+}
+
+/** Lets a river end IN the water instead of next to it: one water tile after its
+ *  last land tile or, along a straight shore, a three-tile delta (the last land
+ *  tile becomes a four-way junction with a side tile each way, and the three
+ *  tiles in front of them are water). Water tiles are painted as waterfall
+ *  tiles pointing upstream. A river that doesn't end beside water is unchanged. */
+function finishMouth(t: RiverTerrain, route: RiverRoute): RiverRoute {
+  const { sizeX } = t
+  const { path } = route
+  if (path.length < 2 || route.joinsAt !== undefined || route.poolAnchor !== undefined) return route
+  const m = path[path.length - 1]
+  const prev = path[path.length - 2]
+  if (!touchesWater(m, t)) return route
+  const onPath = new Set(path)
+  const { at, waterTile } = mouthTests(t, m, onPath)
+  const mx = m % sizeX
+  const mz = Math.floor(m / sizeX)
+  const dx = mx - (prev % sizeX)
+  const dz = mz - Math.floor(prev / sizeX)
+  const delta = deltaTiles(t, m, dx, dz, onPath)
+  if (delta) {
+    return {
+      ...route,
+      widening: [...(route.widening ?? []), ...delta.sides],
+      mouthWater: [
+        { node: delta.water[0], upstream: m },
+        { node: delta.water[1], upstream: delta.sides[0] },
+        { node: delta.water[2], upstream: delta.sides[1] },
+      ],
+    }
+  }
+  // One water tile: straight ahead if it is water, else any neighbouring water.
+  const around: [number, number][] = [[mx + dx, mz + dz], ...DIRS.map(([ex, ez]): [number, number] => [mx + ex, mz + ez])]
+  const water = around.find(([x, z]) => waterTile(x, z) && at(x, z) !== prev)
+  if (!water) return route
+  return { ...route, mouthWater: [{ node: at(water[0], water[1]), upstream: m }] }
+}
 
 /** Up to `count` rivers, each from a mountain on a hill down to water or
  *  the map edge, else a lowland river. Every river uses its own hill and
@@ -527,19 +644,37 @@ export function carveRivers(
       : null
     // Plain-ground source (mountain cluster) or hill source first, 50/50.
     const plainFirst = rng() < PLAIN_FIRST_CHANCE
+    // Sometimes aim for a straight shore, arriving straight on, for a delta.
+    if (!route && rng() < DELTA_CHANCE) {
+      const modes: ('plain' | 'hill')[] = plainFirst ? ['plain', 'hill'] : ['hill', 'plain']
+      for (const mode of modes) {
+        route = carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, mode, 'only', undefined, 0, true)
+        if (route) break
+      }
+    }
+    // Now and then the river ends in a decorative pool instead of water.
+    if (!route && t.poolMouth && rng() < POOL_END_CHANCE) {
+      const modes: ('plain' | 'hill')[] = plainFirst ? ['plain', 'hill'] : ['hill', 'plain']
+      for (const mode of modes) {
+        route = carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, mode, false, undefined, rng() < POOL_SMALL_CHANCE ? 2 : 3)
+        if (route) break
+      }
+    }
     const carvePlain = (): RiverRoute | null =>
-      carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'plain', true) ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'plain', false)
+      carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'plain', 'only') ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'plain', true) ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'plain', false)
     if (!route && plainFirst) route = carvePlain()
     for (let c = cliffClearance; c >= Math.min(1, cliffClearance) && !route; c--) {
-      route = carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', true)
+      route = carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', 'only')
+        ?? carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', true)
         ?? carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', false)
     }
     if (!route && !plainFirst) route = carvePlain()
     route ??= carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', true)
       ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', false)
     if (!route) break
-    const widening = widenMouth({ ...t, cliffClearance }, route, mouthWidening, rng)
-    const finished = widening.length > 0 ? { ...route, widening } : route
+    const widening = route.poolAnchor === undefined ? widenMouth({ ...t, cliffClearance }, route, mouthWidening, rng) : []
+    const widened = widening.length > 0 ? { ...route, widening } : route
+    const finished = finishMouth({ ...t, cliffClearance }, widened)
     onRoute(finished)
     const parents = new Set(widening.flatMap((w) => finished.path.filter((p) => DIRS.some(([dx, dz]) => p === w + dz * t.sizeX + dx))))
     for (let k = (route.waterfallIndex ?? 0) + 3; k < route.path.length - 3; k++) {
@@ -550,7 +685,11 @@ export function carveRivers(
 
 function carveRiver(
   base: RiverTerrain, rng: () => number, meander: number, usedHills: Set<number>, preferNode: (n: number) => boolean,
-  cliffClearance: number, mode: 'hill' | 'plain' | 'lowland', bigMouth: boolean, join?: Set<number>,
+  cliffClearance: number, mode: 'hill' | 'plain' | 'lowland', bigMouth: boolean | 'only', join?: Set<number>,
+  /** End in a decorative pool of this size (see `RiverRoute.poolAnchor`) rather than at water or the map edge. */
+  poolEnd: 0 | 2 | 3 = 0,
+  /** End at a straight shore the river arrives at head-on (see `deltaTiles`). */
+  deltaEnd = false,
 ): RiverRoute | null {
   const { sizeX, sizeZ } = base
   const riverNeighbours = (n: number): number[] => DIRS.flatMap(([dx, dz]) => {
@@ -579,7 +718,66 @@ function carveRiver(
   const minLength = Math.max(MIN_HILL_RIVER_LENGTH, Math.round(side / 3))
   const minLowLength = Math.max(MIN_RIVER_LOWLAND_TILES, Math.round(side / 5))
   const mouthWater = (n: number): boolean => bigMouth ? touchesBigWater(n, t, MIN_MOUTH_WATER_TILES) : touchesWater(n, t)
-  const goal = (n: number): boolean => joinTile ? t.levels[n] === 0 && joinTile(n) : t.levels[n] === 0 && (isEdge(n, sizeX, sizeZ) || mouthWater(n))
+  // A pool needs a free block whose first cell is the tile right after the river's
+  // last land tile (a 3×3 pool is centred two tiles on; a 2×2 one has four
+  // possible positions around that cell).
+  const poolCliffDist = cliffClearance > 0 ? cliffDistances(t, cliffClearance) : null
+  const poolBlockFree = (cells: number[]): boolean => {
+    for (const q of cells) {
+      const qx = q % sizeX
+      const qz = Math.floor(q / sizeX)
+      if (qx < 1 || qz < 1 || qx > sizeX - 2 || qz > sizeZ - 2) return false
+      if (t.levels[q] !== 0 || t.water.has(q) || t.blocked.has(q) || t.usedAnchors.has(q) || t.climbs[q] > 0 || t.roadNodes.has(q) || touchesRiver(q)) return false
+      if (poolCliffDist && poolCliffDist[q] < cliffClearance) return false
+    }
+    return true
+  }
+  /** Every way to end in a pool of `size` from land tile `n`: direction of the
+   *  step into the pool and the pool's anchor. */
+  const poolOptions = (n: number, size: 2 | 3): { dir: [number, number]; anchor: number }[] => {
+    const nx = n % sizeX
+    const nz = Math.floor(n / sizeX)
+    const options: { dir: [number, number]; anchor: number }[] = []
+    for (const [dx, dz] of DIRS) {
+      const cx = nx + dx
+      const cz = nz + dz
+      const anchors = size === 3
+        ? [(nz + 2 * dz) * sizeX + nx + 2 * dx]
+        : [cx - 1, cx].flatMap((ax) => [cz, cz + 1].map((az) => az * sizeX + ax))
+      for (const anchor of anchors) {
+        const ax = anchor % sizeX
+        const az = Math.floor(anchor / sizeX)
+        if (ax < 0 || az < 0 || ax >= sizeX || az >= sizeZ) continue
+        const cells = poolCells(size, anchor, sizeX)
+        if (cells.includes(n) || !cells.includes(cz * sizeX + cx)) continue
+        if (poolBlockFree(cells) && t.poolMouth?.(anchor, size)) options.push({ dir: [dx, dz], anchor })
+      }
+    }
+    return options
+  }
+  const goal = poolEnd
+    ? (n: number): boolean => t.levels[n] === 0 && poolOptions(n, poolEnd).length > 0
+    : deltaEnd
+      ? (n: number, arrival = 4): boolean => arrival < 4 && t.levels[n] === 0 && mouthWater(n) && deltaTiles(t, n, DIRS[arrival][0], DIRS[arrival][1], new Set()) !== null
+      : (n: number): boolean => joinTile ? t.levels[n] === 0 && joinTile(n) : t.levels[n] === 0 && ((bigMouth !== 'only' && isEdge(n, sizeX, sizeZ)) || mouthWater(n))
+  /** Adds the pool's first cell to a finished route (null: it doesn't fit). */
+  const withPool = (route: RiverRoute): RiverRoute | null => {
+    if (!poolEnd) return null
+    const last = route.path[route.path.length - 1]
+    const prev = route.path[route.path.length - 2]
+    const options = poolOptions(last, poolEnd)
+    if (options.length === 0) return null
+    const lx = last % sizeX
+    const lz = Math.floor(last / sizeX)
+    const lastStep: [number, number] = [lx - (prev % sizeX), lz - Math.floor(prev / sizeX)]
+    // Head-on if possible, else any option.
+    const straight = options.filter((o) => o.dir[0] === lastStep[0] && o.dir[1] === lastStep[1])
+    const pool = straight.length > 0 ? straight : options
+    const { dir, anchor } = pool[Math.floor(rng() * pool.length)]
+    const footprint = new Set(poolCells(poolEnd, anchor, sizeX))
+    if (route.path.some((p) => footprint.has(p))) return null
+    return { ...route, path: [...route.path, (lz + dir[1]) * sizeX + lx + dir[0]], poolAnchor: anchor, poolSize: poolEnd }
+  }
 
   const hills = mode !== 'hill' ? [] : shuffle(hillComponents(t).filter((c) => c.length >= MIN_SOURCE_HILL_TILES && !usedHills.has(c[0])), rng)
     .map((c) => ({ c, preferred: c.filter(preferNode).length * 2 >= c.length }))
@@ -589,7 +787,7 @@ function carveRiver(
     const hill = new Set(c)
     // A source at least 2 tiles inside the hill, on free ground.
     const interior = c.filter((n) => {
-      if (t.blocked.has(n) || t.usedAnchors.has(n) || t.climbs[n] > 0 || touchesRiver(n)) return false
+      if (t.blocked.has(n) || t.usedAnchors.has(n) || t.climbs[n] > 0 || touchesRiver(n) || (t.sourceOk && !t.sourceOk(n))) return false
       const x = n % sizeX
       const z = Math.floor(n / sizeX)
       for (let dz = -2; dz <= 2; dz++) {
@@ -605,9 +803,12 @@ function carveRiver(
     const start = interior[Math.floor(rng() * interior.length)]
     const route = routeRiver(t, start, hill, goal, minLength, rng, minLowLength, meander)
     if (route && route.waterfallIndex !== null) {
-      usedHills.add(c[0])
       const meandered = meanderRoute(t, route, meander, rng)
-      return join ? { ...meandered, joinsAt: riverNeighbours(meandered.path[meandered.path.length - 1])[0] } : meandered
+      const done = poolEnd ? withPool(meandered) : meandered
+      if (done) {
+        usedHills.add(c[0])
+        return join ? { ...done, joinsAt: riverNeighbours(done.path[done.path.length - 1])[0] } : done
+      }
     }
     if (++tries >= MAX_SOURCE_TRIES) break
   }
@@ -633,11 +834,14 @@ function carveRiver(
       const x = n % sizeX
       const z = Math.floor(n / sizeX)
       if (x < PLAIN_SOURCE_EDGE_MARGIN || z < PLAIN_SOURCE_EDGE_MARGIN || x >= sizeX - PLAIN_SOURCE_EDGE_MARGIN || z >= sizeZ - PLAIN_SOURCE_EDGE_MARGIN) return false
-      return t.levels[n] === 0 && t.climbs[n] === 0 && !touchesRiver(n) && roomAround(n) && (!cliffDist || cliffDist[n] >= cliffClearance + 2)
+      return t.levels[n] === 0 && t.climbs[n] === 0 && !touchesRiver(n) && roomAround(n) && (!t.sourceOk || t.sourceOk(n)) && (!cliffDist || cliffDist[n] >= cliffClearance + 2)
     }), rng).sort((a, b) => Number(preferNode(b)) - Number(preferNode(a)))
     for (const start of spots.slice(0, MAX_SOURCE_TRIES)) {
       const route = routeRiver(t, start, null, goal, minLength, rng, 0, meander)
-      if (route) return { ...meanderRoute(t, route, meander, rng), mountainSource: true }
+      if (!route) continue
+      const meandered = meanderRoute(t, route, meander, rng)
+      const done = poolEnd ? withPool(meandered) : meandered
+      if (done) return { ...done, mountainSource: true }
     }
     return null
   }

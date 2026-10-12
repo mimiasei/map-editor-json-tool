@@ -237,6 +237,64 @@ const ROCK_HILL_TREE_HALO_MIN = 0.3
 const ROCK_HILL_TREE_HALO_MAX = 0.7
 const ROCK_OR_HILL_PATTERN = /(^|_)(rocks?|hill)(_|$)/i
 
+/** Measured on the 14 handcrafted multiplayer maps (426 pools): every pool is
+ *  surrounded by decoration — on the 5×5 ring around a 3×3 pool 57% of the land
+ *  tiles carry a decoration object and none of 397 pools has a bare surround
+ *  (random empty land: 22%). The mix over the ring is trees ~30%, grass and
+ *  flowers ~28%, mountains and rocks ~25%, other solid decoration ~12%, stones
+ *  ~5%. Per free tile: the chance in the first ring, then the second. */
+const POOL_SURROUND_CHANCE = [0.6, 0.5]
+const POOL_SURROUND_MIX = { tree: 0.3, grass: 0.58, rock: 0.83, solid: 0.95 }
+const POOL_PATTERN = /^pool_/
+
+/** Fills the two rings of tiles around a just-placed pool (`sid` at `node`)
+ *  with the mixed decoration the game's maps put there. Skips tiles in
+ *  `keepFree` (a river's own tiles) and anything already taken. */
+export function addPoolSurround(
+  sid: string, node: number, sizeX: number, sizeZ: number, pool: FuzzyObstaclePool, treePool: string[],
+  catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number, placements: ZonePlacement[],
+  keepFree: ReadonlySet<number> = new Set(),
+): void {
+  const footprint = new Set(computeFootprintTiles(catalogById.get(sid), node % sizeX, Math.floor(node / sizeX))
+    .filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+  if (footprint.size === 0) return
+  const trees = new Set(treePool)
+  const cellCount = (s: string): number => (catalogById.get(s)?.nodes ?? [1]).length
+  const grass = pool.clutter.filter((s) => /grass|flower|mushroom/i.test(s))
+  const stones = pool.clutter.filter((s) => /stone/i.test(s))
+  const rocks = [...pool.obstacles.filter((s) => ROCK_OR_HILL_PATTERN.test(s)), ...pool.mountains.filter((s) => cellCount(s) <= 4)]
+  const solid = pool.obstacles.filter((s) => !trees.has(s) && !ROCK_OR_HILL_PATTERN.test(s) && !POOL_PATTERN.test(s))
+  const pick = (list: string[]): string => list[Math.floor(rng() * list.length)]
+  const ring = new Map<number, number>()
+  for (const cell of footprint) {
+    for (let dz = -2; dz <= 2; dz++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const x = (cell % sizeX) + dx
+        const z = Math.floor(cell / sizeX) + dz
+        if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
+        const n = z * sizeX + x
+        if (footprint.has(n)) continue
+        const d = Math.max(Math.abs(dx), Math.abs(dz))
+        if (d < (ring.get(n) ?? 3)) ring.set(n, d)
+      }
+    }
+  }
+  for (const [n, d] of ring) {
+    if (keepFree.has(n) || state.blocked.has(n) || state.usedAnchors.has(n) || rng() >= POOL_SURROUND_CHANCE[d - 1]) continue
+    const roll = rng()
+    const list = roll < POOL_SURROUND_MIX.tree ? treePool
+      : roll < POOL_SURROUND_MIX.grass ? grass
+        : roll < POOL_SURROUND_MIX.rock ? rocks
+          : roll < POOL_SURROUND_MIX.solid ? solid : stones
+    const chosen = list.length > 0 ? list : treePool
+    if (chosen.length === 0) continue
+    const decor = pick(chosen)
+    if (tryPlaceAt(decor, n, sizeX, sizeZ, catalogById, state)) {
+      placements.push({ tempId: state.nextTempId++, sid: decor, node: n, rotation: pickRotation(decor, catalogById, rng) })
+    }
+  }
+}
+
 /** Splits a biome's own `mountain_*` sids by real naming convention —
  *  confirmed this session (every mountain sid across all 7 biomes):
  *  `_big_`/`_small_` is a consistent split for Grass/Dirt/Autumn/Snow/
@@ -487,6 +545,7 @@ function scatterCluster(
     if (ROCK_OR_HILL_PATTERN.test(picked.sid)) {
       addRockHillTreeHalo(node, sizeX, sizeZ, treePool, catalogById, state, rng, placements)
     }
+    if (POOL_PATTERN.test(picked.sid)) addPoolSurround(picked.sid, node, sizeX, sizeZ, pool, treePool, catalogById, state, rng, placements)
     placed++
   }
   if (forestHeavy && placements.length > 0) {
@@ -627,6 +686,9 @@ function placeMountainAt(
   spot: number, pool: FuzzyObstaclePool | undefined, sizeX: number, sizeZ: number,
   catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
   walkableNodes: Set<number>, smallFirst = false,
+  /** The mountain stands ON `spot` (one of its solid cells covers the river's
+   *  first tile) instead of beside it — a river rises from under a mountain. */
+  cover = false,
 ): ZonePlacement | null {
   const isBlocked = (n: number): boolean => state.blocked.has(n) && !walkableNodes.has(n)
   if (!pool || pool.mountains.length === 0) return null
@@ -641,6 +703,34 @@ function placeMountainAt(
   }
   const sx = spot % sizeX
   const sz = Math.floor(spot / sizeX)
+  if (cover) {
+    // A few at random, but always the smallest ones too (a big mountain rarely fits over the source).
+    const everyone = shuffled([...big, ...other, ...small])
+    const cellCount = (sid: string): number => (catalogById.get(sid)?.nodes ?? [1]).length
+    const smallest = [...everyone].sort((p, q) => cellCount(p) - cellCount(q)).slice(0, 3)
+    for (const sid of [...new Set([...everyone.slice(0, 4), ...smallest])]) {
+      for (let r = 0; r <= 2; r++) {
+        for (let dz = -r; dz <= r; dz++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue
+            const ax = sx + dx
+            const az = sz + dz
+            if (ax < 0 || ax >= sizeX || az < 0 || az >= sizeZ) continue
+            const solid = new Set(computeFootprintTiles(catalogById.get(sid), ax, az).filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
+            // A single-cell mountain on the source tile blocks nothing the river does not already.
+            if (!solid.has(spot) || (solid.size > 1 && splitsWalkableGround(solid, sx, sz, sizeX, sizeZ, isBlocked))) continue
+            // The river tile is blocked; the mountain may take it.
+            const wasBlocked = state.blocked.delete(spot)
+            const node = az * sizeX + ax
+            if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
+              return { tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) }
+            }
+            if (wasBlocked) state.blocked.add(spot)
+          }
+        }
+      }
+    }
+  }
   for (const sid of (smallFirst ? [...shuffled(small), ...shuffled(other), ...shuffled(big)] : [...shuffled(big), ...shuffled(other), ...shuffled(small)]).slice(0, 8)) {
     for (let r = 1; r <= 4; r++) {
       for (let dz = -r; dz <= r; dz++) {
@@ -710,7 +800,8 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
   const placements: ZonePlacement[] = []
   for (const { node, biome, cluster = 1 } of forcedMountainSpots) {
     for (let k = 0; k < cluster; k++) {
-      const mountain = placeMountainAt(node, pools[biome], sizeX, sizeZ, catalogById, state, rng, walkableNodes, k > 0)
+      // The first one covers the river's source tile; if none fits there, it goes beside it.
+      const mountain = placeMountainAt(node, pools[biome], sizeX, sizeZ, catalogById, state, rng, walkableNodes, k > 0, k === 0)
       if (mountain) placements.push(mountain)
     }
   }
@@ -821,6 +912,7 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
         if (ROCK_OR_HILL_PATTERN.test(addition.sid)) {
           addRockHillTreeHalo(node, sizeX, sizeZ, treePool, catalogById, state, rng, placements)
         }
+        if (POOL_PATTERN.test(addition.sid)) addPoolSurround(addition.sid, node, sizeX, sizeZ, pool, treePool, catalogById, state, rng, placements)
       },
     })
   }
