@@ -11,6 +11,7 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { generateRandomMapBytes } from '@/lib/rmg/generate-map-file'
 import { buildClassicOptions } from '@/lib/rmg/classic-presets'
 import { loadClassicTuning } from '@/lib/rmg/load-tuning'
+import { DEFAULT_CLI_USE_SEED } from '@/lib/rmg/rmg-tuning'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
 import { parseHeadlessArgs, EXIT_OK, EXIT_FAILED, EXIT_BAD_ARGS, EXIT_NO_CATALOG } from '@/lib/rmg/headless-args'
 import { setHeadlessYield } from '@/lib/async-utils'
@@ -100,7 +101,10 @@ export default function HeadlessGenerate({ args }: Props) {
           return finish(EXIT_NO_CATALOG, resultPath, { ok: false, error: message })
         }
 
-        const seed = parsed.seed ?? Math.floor(Math.random() * 1_000_000_000)
+        const tuning = await loadClassicTuning(useCatalogStore.getState().catalog)
+        const useSeed = tuning.cli?.useSeed ?? DEFAULT_CLI_USE_SEED
+        if (parsed.seed !== undefined && !useSeed) logInfo(`Headless: ignoring --seed ${parsed.seed} (cli.useSeed is off in the tuning file)`)
+        const seed = useSeed && parsed.seed !== undefined ? parsed.seed : Math.floor(Math.random() * 1_000_000_000)
         const rng = createSeededRng(seed)
         logInfo(`Headless: generating ${parsed.sizeX}x${parsed.sizeZ}, ${parsed.playerCount} players, seed ${seed} → ${parsed.output}`)
 
@@ -111,7 +115,7 @@ export default function HeadlessGenerate({ args }: Props) {
           sizeZ: parsed.sizeZ,
           playerCount: parsed.playerCount,
           playerSpawnerSid: 'city-spawner',
-          ...buildClassicOptions(parsed.classic, rng, await loadClassicTuning(useCatalogStore.getState().catalog)),
+          ...buildClassicOptions(parsed.classic, rng, tuning),
           rng,
         })
         if (!generated) throw new Error('Headless generation requires the desktop build')

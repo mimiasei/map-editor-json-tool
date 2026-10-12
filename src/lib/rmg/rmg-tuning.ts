@@ -20,6 +20,7 @@
 //   "mines":      { "neutral": { "tilesPerMine": 250, "min": 2, "max": 8 }, "neutralTypeWeights": { "<mine sid>": 0-1000 },
 //                   "player": { "extraMineChance": 0-1 }, "playerExtraTypeWeights": { "<mine sid>": 0-1000 } },
 //   "edges":      { "frame": 0-1 },
+//   "cli":        { "useSeed": false },
 //   "rivers":     { "chancePerZone": 0-1, "meander": 0-1, "cliffClearance": 0-6, "mouthWidening": 0-1, "confluenceChance": 0-1, "bankDecoration": 0-1 },
 //   "layout":     { "weights": { "<ring|ringCenter|innerRing|doubleNeutral|pockets|hub>": 0-1000 } },
 //   "interactables": { "weightBySid": { "<interactable sid>": 0-1000 } },
@@ -72,6 +73,9 @@ export interface RmgTuning {
   /** frame: how densely trees and mountains fence in the map edge, 0 (bare edge)
    *  to 1 (as dense as the game's own maps; unset: DEFAULT_EDGE_FRAME). */
   edges?: { frame?: number }
+  /** useSeed: whether the command-line generator (used by the GME mod) honours
+   *  the --seed argument (unset: DEFAULT_CLI_USE_SEED, i.e. it rolls a random seed). */
+  cli?: { useSeed?: boolean }
   rivers?: { chancePerZone?: number; meander?: number; cliffClearance?: number; mouthWidening?: number; confluenceChance?: number; bankDecoration?: number }
   /** weightBySid: pick weight of one interactable in the interactables scatter
    *  (0 = never, above 0 = weight; default: the game's content-list weight, and
@@ -136,6 +140,7 @@ export const DEFAULT_RIVER_CONFLUENCE_CHANCE = 0.5
 export const DEFAULT_RIVER_BANK_DENSITY = 0.25
 /** Density of the tree and mountain frame along the map edge, 0-1. */
 export const DEFAULT_EDGE_FRAME = 1
+export const DEFAULT_CLI_USE_SEED = false
 
 /** Most neutral cities one neutral zone gets. */
 export const MAX_CITIES_PER_ZONE = 3
@@ -191,7 +196,7 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
 
   for (const k of Object.keys(json)) {
     if (k.startsWith('_')) continue
-    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout', 'mines', 'rivers', 'edges', 'interactables', 'cities', 'spells'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
+    if (!['complexity', 'richness', 'water', 'elevation', 'difficulty', 'guards', 'layout', 'mines', 'rivers', 'edges', 'cli', 'interactables', 'cities', 'spells'].includes(k)) warnings.push(`${k}: unknown section — ignored`)
   }
 
   for (const [id, v] of levels('complexity', section('complexity'), COMPLEXITY_IDS)) {
@@ -303,6 +308,16 @@ export function parseRmgTuning(json: unknown): { tuning: RmgTuning; warnings: st
     if (edges.frame !== undefined && edges.frame !== null) {
       const v = num('edges.frame', edges.frame, 0, 1)
       if (v !== undefined) tuning.edges.frame = v
+    }
+  }
+
+  const cli = section('cli')
+  if (cli) {
+    known('cli', cli, ['useSeed'])
+    tuning.cli = {}
+    if (cli.useSeed !== undefined && cli.useSeed !== null) {
+      if (typeof cli.useSeed === 'boolean') tuning.cli.useSeed = cli.useSeed
+      else warnings.push(`cli.useSeed: ${JSON.stringify(cli.useSeed)} is not true or false — ignored`)
     }
   }
 
