@@ -411,7 +411,7 @@ export function generateTerrain(
     if (waterContent === 'normal') {
       const { chanceByZone, minSizeByZone } = deriveWaterOverrides(zoneLayoutByZoneId)
       const waterResult = scatterZoneWater({
-        sizeX, sizeZ, zones: graph.zones, tilesByZone,
+        sizeX, sizeZ, zones: graph.zones, tilesByZone, tileBiome: state.tileBiome,
         excludedNodes: new Set(zoneAnchorNode.values()),
         blocked: state.blocked, usedAnchors: state.usedAnchors, rng, chance: waterChance,
         chanceByZone, minSizeByZone,

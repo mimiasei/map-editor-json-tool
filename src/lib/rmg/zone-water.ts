@@ -22,6 +22,34 @@ const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
  *  reads as one consistent texture in every real sample checked. */
 const WATER_IDS = [1, 2, 3, 4, 5, 6, 7]
 
+/** Water id 6 is molten lava, not water. It only belongs in a lake ringed by
+ *  Lava biome ground. */
+const LAVA_WATER_ID = 6
+const LAVA_BIOME_ID = 6
+/** Tiles of Lava biome ground a lava lake needs on every side. */
+const LAVA_MARGIN = 4
+
+/** Whether every tile within `LAVA_MARGIN` of `blob` (Chebyshev) that is not
+ *  part of it is Lava biome ground and not other water. Off-map tiles are
+ *  skipped. */
+function ringedByLava(blob: Set<number>, sizeX: number, sizeZ: number, tileBiome: number[], waterNodes: Set<number>): boolean {
+  for (const n of blob) {
+    const x = n % sizeX
+    const z = Math.floor(n / sizeX)
+    for (let dz = -LAVA_MARGIN; dz <= LAVA_MARGIN; dz++) {
+      for (let dx = -LAVA_MARGIN; dx <= LAVA_MARGIN; dx++) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+        const m = nz * sizeX + nx
+        if (blob.has(m)) continue
+        if (waterNodes.has(m) || tileBiome[m] !== LAVA_BIOME_ID) return false
+      }
+    }
+  }
+  return true
+}
+
 /** Whether flooding `n` would leave a `protectedTiles` neighbor (an
  *  already-placed object's own tile) with zero remaining non-water land
  *  neighbors — i.e. fully water-locked on a 1-tile island. `protectedTiles`
@@ -139,6 +167,8 @@ function anchorsStayConnected(anchors: number[], barrier: Set<number>, sizeX: nu
 export interface ScatterZoneWaterOptions {
   sizeX: number
   sizeZ: number
+  /** Biome id per tile. Without it no lake is ever lava. */
+  tileBiome?: number[]
   zones: { id: number; kind: 'player' | 'neutral' }[]
   tilesByZone: Map<number, number[]>
   /** Tiles ineligible for water — every zone's own anchor (generate-
@@ -204,7 +234,7 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
   const {
     sizeX, sizeZ, zones, tilesByZone, excludedNodes, blocked, usedAnchors, rng,
     chance = 0.4, minSize = 8, minSizeFraction = 0.08, maxSizeFraction = 0.6, maxSize = 400,
-    chanceByZone, minSizeByZone, connectNodes = [],
+    chanceByZone, minSizeByZone, connectNodes = [], tileBiome,
   } = options
   const waterNodes = new Set<number>()
   const waterChanges: { node: number; waterId: number }[] = []
@@ -244,7 +274,10 @@ export function scatterZoneWater(options: ScatterZoneWaterOptions): ZoneWaterRes
       if (anchorsStayConnected(anchors, new Set([...blocked, ...waterNodes, ...candidate]), sizeX, sizeZ)) { blob = candidate; break }
     }
     if (blob.size === 0) continue
-    const waterId = WATER_IDS[Math.floor(rng() * WATER_IDS.length)]
+    // Lava water (id 6) only when the lake is ringed by 4+ tiles of Lava biome.
+    const lavaOk = tileBiome !== undefined && ringedByLava(blob, sizeX, sizeZ, tileBiome, waterNodes)
+    const ids = lavaOk ? WATER_IDS : WATER_IDS.filter((id) => id !== LAVA_WATER_ID)
+    const waterId = ids[Math.floor(rng() * ids.length)]
 
     for (const node of blob) {
       waterNodes.add(node)
