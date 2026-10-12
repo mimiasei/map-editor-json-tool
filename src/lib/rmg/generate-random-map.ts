@@ -226,7 +226,8 @@ export interface GenerateRandomMapOptions {
   /** Map-wide per-sid placement caps (template.ts's own doc comment).
    *  Defaults to capping `university` at 1. */
   contentCountLimits?: { sid: string; maxCount: number }[]
-  /** Chance a road segment is painted Stone instead of Dirt. Defaults to 0.35. */
+  /** Chance a SIDE road (a loop) is painted Stone instead of Dirt;
+   *  the main town-to-town road is always Stone, mine spurs always Dirt. Defaults to 0.35. */
   stoneRoadChance?: number
   /** Chance a neutral-zone road endpoint targets a real mine/interactable/
    *  random-city node instead of the zone's own anchor. Defaults to 0.8. */
@@ -628,6 +629,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // user's own "roads should certainly start from the player's own
     // starting city" — never substituted for one of that zone's own mines.
     const notable = zoneKindById.get(zoneId) === 'neutral' ? notableNodesByZone.get(zoneId) : undefined
+    // A neutral zone with a city is a town zone: its road ends at the city's gate.
+    const zoneCity = notable?.find((n) => randomCityNodes.has(n))
+    const zoneCityGate = zoneCity !== undefined ? cityGateNode('random-city', zoneCity) : null
+    if (zoneCityGate !== null) return zoneCityGate
     if (notable && notable.length > 0 && rng() < roadPointOfInterestChance) {
       const poi = notable[Math.floor(rng() * notable.length)]
       return (randomCityNodes.has(poi) ? cityGateNode('random-city', poi) : null) ?? poi
@@ -884,7 +889,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const whole = routeLeg(endpointOf(v), target, new Set([u, v]), extra)
     return whole ? [whole] : null
   }
-  const paintEdgeRoad = (a: number, b: number, legs: number[][]): void => {
+  // Material means something: the main road (the town-to-town spanning tree)
+  // is stone; side roads (loops, mine spurs) are dirt, or stone with
+  // `stoneRoadChance`.
+  const paintEdgeRoad = (a: number, b: number, legs: number[][], main: boolean): void => {
     // Each leg is smoothed on its own so smoothing can't move the crossing.
     const smoothed = legs.flatMap((leg) => smoothPath(leg, sizeX, state.blocked, roadSmoothWindow))
     roadPathsByEdge.set(`${a}:${b}`, smoothed)
@@ -894,7 +902,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // stoneRoadChance roll; empty map (no template, or this specific edge
     // has no resolvable road entry) falls through.
     const templateMaterial = roadMaterialByEdgeKey.get(`${Math.min(a, b)}:${Math.max(a, b)}`)
-    const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (rng() < stoneRoadChance ? 2 : 1)
+    const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (main || rng() < stoneRoadChance ? 2 : 1)
     for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
   }
   const networkZones = new Set<number>()
@@ -904,7 +912,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // stretches instead of running side by side.
   for (const [u, v] of orderTreeEdges(roadSelection.tree, townZones)) {
     const legs = routeConnection(u, v, networkZones.has(u) && roadNodes.size > 0)
-    if (legs) { paintEdgeRoad(u, v, legs); networkZones.add(u); networkZones.add(v) } else unroutableEdges += 1
+    if (legs) { paintEdgeRoad(u, v, legs, true); networkZones.add(u); networkZones.add(v) } else unroutableEdges += 1
   }
   // Loop edges: point to point, steering away from the roads already drawn.
   for (const [a, b] of roadSelection.extra) {
@@ -912,8 +920,23 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
     const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
     const legs = routeConnection(a, b, false, avoidanceCost)
-    if (legs) paintEdgeRoad(a, b, legs)
+    if (legs) paintEdgeRoad(a, b, legs, false)
     else unroutableEdges += 1
+  }
+  // Zones with no town and no road through them (VCMI's mines-only fallback):
+  // their mines become road nodes on a local dirt network, each joining the
+  // nearest road laid so far in the zone.
+  for (const zone of graph.zones) {
+    if (zone.kind !== 'neutral' || islandZoneIds.has(zone.id) || networkZones.has(zone.id) || townZones.has(zone.id)) continue
+    const mineNodes = placements.filter((p) => MINE_SIDS_LOCAL.has(p.sid) && zoneIdByNode[p.node] === zone.id).map((p) => p.node)
+    if (mineNodes.length < 2) continue
+    const zoneRoad = new Set<number>([mineNodes[0]])
+    for (const mine of mineNodes.slice(1)) {
+      const path = routeLeg(mine, zoneRoad, new Set([zone.id]))
+      if (!path) continue
+      const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
+      for (const node of smoothed) { zoneRoad.add(node); roadNodes.add(node); roadIdByNode.set(node, 1) }
+    }
   }
   if (unroutableEdges > 0) {
     logWarn(`Random map generation: ${unroutableEdges} zone connection(s) could not be routed at all — those two zones have no road between them (a genuine blocked-tile partition even after the water-repair pass; extremely crowded/watery map)`)
