@@ -1110,6 +1110,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   await reportProgress('Carving rivers', 62)
   let riverNodes = new Set<number>()
   const riverPaths: number[][] = []
+  const riverMouths: number[] = []
   const riverMountainSpots: { node: number; biome: BiomeId }[] = []
   const riverTerrain: RiverTerrain = {
     sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: { has: (n: number) => state.blocked.has(n) && !roadOnlyBlocked.has(n) },
@@ -1134,6 +1135,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
   carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
     riverPaths.push(route.path)
+    // A river ending at a tributary join has no mouth.
+    if (route.joinsAt === undefined) riverMouths.push(route.path[route.path.length - 1])
     paintRiver(route)
     if (route.waterfallIndex !== null) {
       const biome = zoneBiome.get(zoneIdByNode[route.path[0]])
@@ -1268,7 +1271,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // share.
   const interactablePlacements = scatterZoneInteractables({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
-    excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
+    excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng, riverNodes,
     density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet, symmetricZones: !gameTemplateJson,
     rarity: buildInteractableRarity(catalog, tuning.interactables?.weightBySid),
   })
@@ -1307,6 +1310,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const bankPlacements = scatterRiverBanks({
     sizeX, sizeZ, riverNodes, excludedNodes: new Set([...roadNodes, ...waterNodesAll]), zoneIdByNode, zoneBiome, catalogById, state, rng,
     density: tuning.rivers?.bankDecoration ?? DEFAULT_RIVER_BANK_DENSITY,
+    mouthNodes: riverMouths, waterNodes: waterNodesAll,
   })
 
   // Proximity guards — LAST of the object passes, so every guardable object
