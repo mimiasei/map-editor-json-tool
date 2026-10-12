@@ -54,7 +54,7 @@ import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
-import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
+import { createZonePopulator, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
@@ -378,8 +378,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     spawnerGroup.levels.push(0)
   })
 
-  await reportProgress('Populating zones with mines, dwellings and treasure', 10)
-  const { placements, concreteSquads, decidedNodes } = populateZones({
+  await reportProgress('Populating zones with mines, dwellings and cities', 10)
+  // Two phases: key objects (mines, dwellings, cities and their guards) now,
+  // treasure and its guards only after the roads exist, so roads aren't
+  // detoured around piles and treasure keeps off the road. The three result
+  // collections are shared with the second phase, which appends to them.
+  const zonePopulator = createZonePopulator({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
@@ -389,11 +393,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     mines: resolveMineDistribution(tuning),
     zoneAnchorNode, symmetricZones: !gameTemplateJson,
   })
-  const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
-
-  if (skippedScatter > 0) {
-    logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
-  }
+  const { placements, concreteSquads, decidedNodes } = zonePopulator.populateKeyObjects()
 
   // Water. Deliberately computed BEFORE roads/rivers (see this file's own
   // header comment) so their own BFS pathfinding already treats it as
@@ -1044,6 +1044,16 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   }
 
   if (roadClimbChanges.length > 0) block2 = paintClimbTiles(block2, roadClimbChanges)
+  // Treasure and its guards, now that the roads are laid: road tiles count as
+  // blocked, so no pile or guard lands on a road or is placed over it.
+  await reportProgress('Placing treasure', 55)
+  for (const node of roadNodes) state.blocked.add(node)
+  zonePopulator.populateTreasure()
+  // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
+  const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length
+  if (skippedScatter > 0) {
+    logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
+  }
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
   }

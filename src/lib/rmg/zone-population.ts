@@ -599,7 +599,13 @@ export interface PopulateZonesResult {
   decidedNodes: Set<number>
 }
 
-export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
+/** A populator split in two so roads can be routed between the phases. */
+export interface ZonePopulator {
+  populateKeyObjects: () => PopulateZonesResult
+  populateTreasure: () => PopulateZonesResult
+}
+
+export function createZonePopulator(options: PopulateZonesOptions): ZonePopulator {
   const {
     sizeX, sizeZ, zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng: posRng, treasureDensity = 1, catalog, objectVariety = 0.4, randomCityCount = 1, contentCountLimits = [],
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
@@ -896,57 +902,182 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
     const counts = zones.filter((z) => z.kind === 'neutral' && roleOf(z) === role).map((z) => tilesByZone.get(z.id)?.length ?? 0)
     if (counts.length > 0) meanNeutralTilesByRole.set(role, Math.round(counts.reduce((a, b) => a + b, 0) / counts.length))
   }
-  for (const zone of zones) {
-    const tiles = tilesByZone.get(zone.id) ?? []
-    if (tiles.length === 0) continue
-    contentRng = symmetricZones ? createSeededRng(zone.kind === 'neutral' ? roleSeed(roleOf(zone)) : playerContentSeed) : posRng
-    const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
+  const zoneContentRng = new Map<number, () => number>()
+  const result = (): PopulateZonesResult => ({ placements, concreteSquads, decidedNodes })
 
-    if (zone.kind === 'player') {
-      const cityNode = zoneAnchorNode?.get(zone.id)
-      const dwellingSid = `barracks_${dwellingFactionToken(biome)}_1`
-      const dwellingNode = placeAtDistance(dwellingSid, tiles, cityNode, startKit.dwelling)
+  /** Phase 1 — the objects roads are built around: player start kits (dwelling,
+   *  mines, dust, start guard), neutral mines with their guards, neutral cities. */
+  const populateKeyObjects = (): PopulateZonesResult => {
+    for (const zone of zones) {
+      const tiles = tilesByZone.get(zone.id) ?? []
+      if (tiles.length === 0) continue
+      contentRng = symmetricZones ? createSeededRng(zone.kind === 'neutral' ? roleSeed(roleOf(zone)) : playerContentSeed) : posRng
+      zoneContentRng.set(zone.id, contentRng)
+      const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
 
-      // Every player start needs its own wood + ore mine (this game's real
-      // "wood + ore" building-cost pair — there is no `mine_stone`) and a
-      // dust source (required to upgrade troops) — confirmed by measuring
-      // real spawn-to-nearest-mine distance across all three analyzed maps:
-      // EVERY player spawn in Broken_Alliance.map, Prisoners.map, and
-      // The_Mysterious_Island.map has a wood mine and an ore mine within
-      // 3-17 tiles, and a dust source within 2-10 tiles (`resource_dust`, or
-      // `storage_dust` on the largest map). Gold is NOT guaranteed: across
-      // the game's 9 official maps with mines only 10% of starts have gold
-      // within 12 tiles (it mostly sits 12-25 tiles out, in neighbouring
-      // zones) — so a start gets one optional extra mine instead
-      // (`startKit.extraMine`: gold or gemstones/crystals/mercury, at 9-17
-      // tiles). Deliberately still just ONE shared light guard for
-      // the whole player zone (unchanged from before this fix) rather than
-      // one per resource — a real regeneration/stats pass found that
-      // guarding each of the 4 resources separately (at Easy strength)
-      // diluted the map-wide guard-value median on small maps just from
-      // sheer guard-count volume, and the user's own request was about
-      // resource PRESENCE at player start, not guard density there.
-      for (const mineSid of ['mine_wood', 'mine_ore'] as const) placeAtDistance(mineSid, tiles, cityNode, startKit[mineSid])
-      if (startKit.extraMine) placeAtDistance(startKit.extraMine, tiles, cityNode, startKit.extraMineDistance)
-      placeAtDistance('resource_dust', tiles, cityNode, startKit.resource_dust)
-      const range = startKit.guardRange
-      // PLAYER_ZONE_GUARD_MULTIPLIER: real RMG templates' own spawn-zone
-      // guardMultiplier (0.5-0.84) softens guards in the player's own start
-      // zone specifically — guard-value-bands.ts's own doc comment has the
-      // full rationale. The guard stands at the start dwelling's entrance (a
-      // guard alone in the open guards nothing), and the proximity pass then
-      // skips the dwelling. No dwelling → no start guard.
-      if (dwellingNode !== null) {
-        decidedNodes.add(dwellingNode)
-        placeGuard(
-          tiles,
-          Math.round((range.min + startKit.guardRoll * (range.max - range.min)) * PLAYER_ZONE_GUARD_MULTIPLIER),
-          sampleFraction(biome, 0.8, rng),
-          guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF,
-          { sid: dwellingSid, node: dwellingNode },
-        )
+      if (zone.kind === 'player') {
+        const cityNode = zoneAnchorNode?.get(zone.id)
+        const dwellingSid = `barracks_${dwellingFactionToken(biome)}_1`
+        const dwellingNode = placeAtDistance(dwellingSid, tiles, cityNode, startKit.dwelling)
+
+        // Every player start needs its own wood + ore mine (this game's real
+        // "wood + ore" building-cost pair — there is no `mine_stone`) and a
+        // dust source (required to upgrade troops) — confirmed by measuring
+        // real spawn-to-nearest-mine distance across all three analyzed maps:
+        // EVERY player spawn in Broken_Alliance.map, Prisoners.map, and
+        // The_Mysterious_Island.map has a wood mine and an ore mine within
+        // 3-17 tiles, and a dust source within 2-10 tiles (`resource_dust`, or
+        // `storage_dust` on the largest map). Gold is NOT guaranteed: across
+        // the game's 9 official maps with mines only 10% of starts have gold
+        // within 12 tiles (it mostly sits 12-25 tiles out, in neighbouring
+        // zones) — so a start gets one optional extra mine instead
+        // (`startKit.extraMine`: gold or gemstones/crystals/mercury, at 9-17
+        // tiles). Deliberately still just ONE shared light guard for
+        // the whole player zone (unchanged from before this fix) rather than
+        // one per resource — a real regeneration/stats pass found that
+        // guarding each of the 4 resources separately (at Easy strength)
+        // diluted the map-wide guard-value median on small maps just from
+        // sheer guard-count volume, and the user's own request was about
+        // resource PRESENCE at player start, not guard density there.
+        for (const mineSid of ['mine_wood', 'mine_ore'] as const) placeAtDistance(mineSid, tiles, cityNode, startKit[mineSid])
+        if (startKit.extraMine) placeAtDistance(startKit.extraMine, tiles, cityNode, startKit.extraMineDistance)
+        placeAtDistance('resource_dust', tiles, cityNode, startKit.resource_dust)
+        const range = startKit.guardRange
+        // PLAYER_ZONE_GUARD_MULTIPLIER: real RMG templates' own spawn-zone
+        // guardMultiplier (0.5-0.84) softens guards in the player's own start
+        // zone specifically — guard-value-bands.ts's own doc comment has the
+        // full rationale. The guard stands at the start dwelling's entrance (a
+        // guard alone in the open guards nothing), and the proximity pass then
+        // skips the dwelling. No dwelling → no start guard.
+        if (dwellingNode !== null) {
+          decidedNodes.add(dwellingNode)
+          placeGuard(
+            tiles,
+            Math.round((range.min + startKit.guardRoll * (range.max - range.min)) * PLAYER_ZONE_GUARD_MULTIPLIER),
+            sampleFraction(biome, 0.8, rng),
+            guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF,
+            { sid: dwellingSid, node: dwellingNode },
+          )
+        }
+      } else {
+        // Mines, like the game's own maps (6-13 per player, ~40% gemstones/
+        // crystals/mercury — see rmg-tuning.ts DEFAULT_MINE_DISTRIBUTION): one
+        // per `tilesPerMine` zone tiles, clamped to min..max, types drawn by
+        // weight without repeats until every type was used. In symmetric
+        // layouts the count comes from the role's mean zone size and the draw
+        // from the role's content stream, so same-role zones get the same set.
+        const mineZoneTiles = symmetricZones ? meanNeutralTilesByRole.get(roleOf(zone)) ?? tiles.length : tiles.length
+        const mineCount = Math.min(mines.neutral.max, Math.max(mines.neutral.min, Math.round(mineZoneTiles / mines.neutral.tilesPerMine)))
+        const placedMineNodes: number[] = []
+        for (const drawnSid of drawMineTypes(mineCount, mines.neutralTypeWeights, rng)) {
+          // Sand-biome gold-mine enrichment (issue #230) — an extra override
+          // roll per mine, only consumed when biome is Sand AND the strength
+          // option is active, so every other zone takes the same rng() path.
+          const goldChance = clamp01((1 / MINE_TYPES.length) * scaleMultiplier(SAND_GOLD_MINE_ENRICHMENT, mineGoldBiomeBiasStrength))
+          const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance ? 'mine_gold' : drawnSid
+          // Spread the zone's mines out: prefer tiles MINE_SPACING away from
+          // the ones already placed; any tile when the zone has no such room.
+          const spaced = placedMineNodes.length === 0
+            ? tiles
+            : tiles.filter((n) => placedMineNodes.every((m) => Math.max(Math.abs((n % sizeX) - (m % sizeX)), Math.abs(Math.floor(n / sizeX) - Math.floor(m / sizeX))) >= MINE_SPACING))
+          const mineNode = (spaced.length > 0 ? place(mineSid, spaced) : null) ?? place(mineSid, tiles)
+          if (mineNode === null) continue
+          placedMineNodes.push(mineNode)
+          placeMineGuard(zone.id, tiles, biome, mineSid, mineNode)
+        }
+
       }
-    } else {
+    }
+
+    // Neutral random-city placement (a real, reported gap — this generator
+    // never placed one before). Real-game-template survey (`maps/templates/
+    // *.rmg.json`'s own `mainObjects: [{type:"City", faction:{type:"FromList",
+    // args:["differentFrom: 0 Spawn-A", ...]}}]`) confirms a neutral city's
+    // faction should differ from every player's own — never just re-derived
+    // from the zone's own biome, and never left blank (CLAUDE.md's own
+    // documented "unconfigured random-city never verified in-game" trap,
+    // confirmed again this session: a real GME-added sample in `maps/
+    // Stormlight_saved_by_gme.map` is exactly `isDefined:false,factionSid:""`).
+    // Runner-up milestone: a zone with real `differentFrom` data
+    // (`neutralCityExclusionsByZoneId`) uses THAT specific, narrower
+    // constraint instead of "differ from every player" — confirmed narrower
+    // in every real sample checked (`Pyramid.rmg.json`: a Treasure zone
+    // between two spawns only excludes those two factions, not every player
+    // in the game).
+    if (randomCityCount > 0) {
+      const neutralZones = zones.filter((z) => z.kind === 'neutral')
+      const playerFactions = new Set(
+        zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),
+      )
+      const allFactions = ZONE_BIOMES.map((b) => BIOME_FACTION[b]).filter((f): f is string => !!f)
+      contentRng = posRng
+      // One city per neutral zone first (random order), then a second and a
+      // third round, so extra cities spread out before any zone gets crowded.
+      let remainingZones: typeof neutralZones = []
+      let round = 0
+      for (let i = 0; i < randomCityCount; i++) {
+        if (remainingZones.length === 0) {
+          if (round >= MAX_CITIES_PER_ZONE || neutralZones.length === 0) break
+          remainingZones = [...neutralZones]
+          round++
+        }
+        const zoneIndex = Math.floor(rng() * remainingZones.length)
+        const [zone] = remainingZones.splice(zoneIndex, 1)
+        const tiles = tilesByZone.get(zone.id) ?? []
+        if (tiles.length === 0) continue
+        const exclusions = neutralCityExclusionsByZoneId?.get(zone.id)
+        const excludedFactions = exclusions && exclusions.size > 0
+          ? new Set([...exclusions].map((pid) => BIOME_FACTION[zoneBiome.get(pid) ?? 1]).filter((f): f is string => !!f))
+          : playerFactions
+        const availableFactions = allFactions.filter((f) => !excludedFactions.has(f))
+        const factionPool = availableFactions.length > 0 ? availableFactions : allFactions
+        const factionSid = factionPool[Math.floor(rng() * factionPool.length)]
+        // Always false, not a coin flip: RANDOM_CITY_DEFAULT_TABLES writes
+        // spawnHero straight onto propCities with no mechanism to add the
+        // matching propHeroes row spawnHero:true requires (unlike
+        // setCitySpawnHero(), which keeps that pairing in sync) — confirmed via
+        // real player.log testing that a spawnHero:true city with no propHeroes
+        // entry freezes the game at 100% load. Giving some neutral cities a
+        // real garrison hero is a legitimate future feature, but needs its own
+        // setCitySpawnHero()-based wiring (using the ids addObjectInstances
+        // returns) to stay invariant-safe — not a bare boolean here.
+        const spawnHero = false
+        const cityNode = place('random-city', tiles, undefined, undefined, { factionSid, spawnHero })
+        // The game's BasicCity main object: a guard with difficulty-dependent
+        // chance/value/growth (map_schemas/Default.mrmg.json), standing in
+        // front of the city's entrance (the tile tryPlaceAt reserved).
+        if (cityNode !== null) decidedNodes.add(cityNode)
+        const cityGuardChance = guardTuning?.chanceBySid['random-city'] ?? guardTuning?.chance.randomCity ?? difficulty?.cityGuardChance ?? 0
+        if (cityNode !== null && difficulty && rng() < cityGuardChance) {
+          const guardNode = entranceGuardTile('random-city', cityNode, sizeX, sizeZ, catalogById, state, posRng)
+          if (guardNode !== null && tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
+            placements.push({
+              tempId: state.nextTempId++, sid: 'random-squad', node: guardNode,
+              randomSquadOverrides: {
+                requestedValue: difficulty.cityGuardValue,
+                fraction: sampleFraction(zoneBiome.get(zone.id) ?? 1, 0.5, rng),
+                weeklyIncrementBonus: difficulty.cityGuardWeeklyIncrement,
+              },
+            })
+          }
+        }
+      }
+    }
+
+    return result()
+  }
+
+  /** Phase 2 — treasure piles and their guards, placed once the roads exist
+   *  (the caller blocks road tiles first, so treasure keeps off them). A
+   *  neutral zone continues the content stream its mines drew from, so
+   *  symmetric zones still replay identical content. */
+  const populateTreasure = (): PopulateZonesResult => {
+    for (const zone of zones) {
+      if (zone.kind !== 'neutral') continue
+      const tiles = tilesByZone.get(zone.id) ?? []
+      if (tiles.length === 0) continue
+      contentRng = zoneContentRng.get(zone.id) ?? posRng
+      const biome = zoneBiome.get(zone.id) ?? ZONE_BIOMES[0]
       // Runner-up milestone: this zone's own real per-sid caps (if any),
       // layered on top of the map-wide `contentCountLimitBySid` above —
       // reset fresh per zone since a cap here is scoped to just this zone.
@@ -954,32 +1085,6 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
       currentZoneContentSoFar = new Map()
       const mandatorySids = mandatoryContentSidsByZoneId?.get(zone.id)
       const preferredTreasureSids = mandatorySids && mandatorySids.length > 0 ? new Set(mandatorySids) : undefined
-
-      // Mines, like the game's own maps (6-13 per player, ~40% gemstones/
-      // crystals/mercury — see rmg-tuning.ts DEFAULT_MINE_DISTRIBUTION): one
-      // per `tilesPerMine` zone tiles, clamped to min..max, types drawn by
-      // weight without repeats until every type was used. In symmetric
-      // layouts the count comes from the role's mean zone size and the draw
-      // from the role's content stream, so same-role zones get the same set.
-      const mineZoneTiles = symmetricZones ? meanNeutralTilesByRole.get(roleOf(zone)) ?? tiles.length : tiles.length
-      const mineCount = Math.min(mines.neutral.max, Math.max(mines.neutral.min, Math.round(mineZoneTiles / mines.neutral.tilesPerMine)))
-      const placedMineNodes: number[] = []
-      for (const drawnSid of drawMineTypes(mineCount, mines.neutralTypeWeights, rng)) {
-        // Sand-biome gold-mine enrichment (issue #230) — an extra override
-        // roll per mine, only consumed when biome is Sand AND the strength
-        // option is active, so every other zone takes the same rng() path.
-        const goldChance = clamp01((1 / MINE_TYPES.length) * scaleMultiplier(SAND_GOLD_MINE_ENRICHMENT, mineGoldBiomeBiasStrength))
-        const mineSid = mineGoldBiomeBiasStrength > 0 && biome === SAND_BIOME_ID && rng() < goldChance ? 'mine_gold' : drawnSid
-        // Spread the zone's mines out: prefer tiles MINE_SPACING away from
-        // the ones already placed; any tile when the zone has no such room.
-        const spaced = placedMineNodes.length === 0
-          ? tiles
-          : tiles.filter((n) => placedMineNodes.every((m) => Math.max(Math.abs((n % sizeX) - (m % sizeX)), Math.abs(Math.floor(n / sizeX) - Math.floor(m / sizeX))) >= MINE_SPACING))
-        const mineNode = (spaced.length > 0 ? place(mineSid, spaced) : null) ?? place(mineSid, tiles)
-        if (mineNode === null) continue
-        placedMineNodes.push(mineNode)
-        placeMineGuard(zone.id, tiles, biome, mineSid, mineNode)
-      }
 
       // Per-zone treasure density: bigger Voronoi regions (more tiles) get
       // proportionally more treasure piles, scaled again by the template's
@@ -1036,82 +1141,15 @@ export function populateZones(options: PopulateZonesOptions): PopulateZonesResul
         placeTreasure(tiles, usedArtifactSids, biome, guardCutoffValueByZoneId?.get(zone.id) ?? GUARD_VALUE_CUTOFF, preferredTreasureSids)
       }
     }
+    return result()
   }
 
-  // Neutral random-city placement (a real, reported gap — this generator
-  // never placed one before). Real-game-template survey (`maps/templates/
-  // *.rmg.json`'s own `mainObjects: [{type:"City", faction:{type:"FromList",
-  // args:["differentFrom: 0 Spawn-A", ...]}}]`) confirms a neutral city's
-  // faction should differ from every player's own — never just re-derived
-  // from the zone's own biome, and never left blank (CLAUDE.md's own
-  // documented "unconfigured random-city never verified in-game" trap,
-  // confirmed again this session: a real GME-added sample in `maps/
-  // Stormlight_saved_by_gme.map` is exactly `isDefined:false,factionSid:""`).
-  // Runner-up milestone: a zone with real `differentFrom` data
-  // (`neutralCityExclusionsByZoneId`) uses THAT specific, narrower
-  // constraint instead of "differ from every player" — confirmed narrower
-  // in every real sample checked (`Pyramid.rmg.json`: a Treasure zone
-  // between two spawns only excludes those two factions, not every player
-  // in the game).
-  if (randomCityCount > 0) {
-    const neutralZones = zones.filter((z) => z.kind === 'neutral')
-    const playerFactions = new Set(
-      zones.filter((z) => z.kind === 'player').map((z) => BIOME_FACTION[zoneBiome.get(z.id) ?? 1]).filter((f): f is string => !!f),
-    )
-    const allFactions = ZONE_BIOMES.map((b) => BIOME_FACTION[b]).filter((f): f is string => !!f)
-    contentRng = posRng
-    // One city per neutral zone first (random order), then a second and a
-    // third round, so extra cities spread out before any zone gets crowded.
-    let remainingZones: typeof neutralZones = []
-    let round = 0
-    for (let i = 0; i < randomCityCount; i++) {
-      if (remainingZones.length === 0) {
-        if (round >= MAX_CITIES_PER_ZONE || neutralZones.length === 0) break
-        remainingZones = [...neutralZones]
-        round++
-      }
-      const zoneIndex = Math.floor(rng() * remainingZones.length)
-      const [zone] = remainingZones.splice(zoneIndex, 1)
-      const tiles = tilesByZone.get(zone.id) ?? []
-      if (tiles.length === 0) continue
-      const exclusions = neutralCityExclusionsByZoneId?.get(zone.id)
-      const excludedFactions = exclusions && exclusions.size > 0
-        ? new Set([...exclusions].map((pid) => BIOME_FACTION[zoneBiome.get(pid) ?? 1]).filter((f): f is string => !!f))
-        : playerFactions
-      const availableFactions = allFactions.filter((f) => !excludedFactions.has(f))
-      const factionPool = availableFactions.length > 0 ? availableFactions : allFactions
-      const factionSid = factionPool[Math.floor(rng() * factionPool.length)]
-      // Always false, not a coin flip: RANDOM_CITY_DEFAULT_TABLES writes
-      // spawnHero straight onto propCities with no mechanism to add the
-      // matching propHeroes row spawnHero:true requires (unlike
-      // setCitySpawnHero(), which keeps that pairing in sync) — confirmed via
-      // real player.log testing that a spawnHero:true city with no propHeroes
-      // entry freezes the game at 100% load. Giving some neutral cities a
-      // real garrison hero is a legitimate future feature, but needs its own
-      // setCitySpawnHero()-based wiring (using the ids addObjectInstances
-      // returns) to stay invariant-safe — not a bare boolean here.
-      const spawnHero = false
-      const cityNode = place('random-city', tiles, undefined, undefined, { factionSid, spawnHero })
-      // The game's BasicCity main object: a guard with difficulty-dependent
-      // chance/value/growth (map_schemas/Default.mrmg.json), standing in
-      // front of the city's entrance (the tile tryPlaceAt reserved).
-      if (cityNode !== null) decidedNodes.add(cityNode)
-      const cityGuardChance = guardTuning?.chanceBySid['random-city'] ?? guardTuning?.chance.randomCity ?? difficulty?.cityGuardChance ?? 0
-      if (cityNode !== null && difficulty && rng() < cityGuardChance) {
-        const guardNode = entranceGuardTile('random-city', cityNode, sizeX, sizeZ, catalogById, state, posRng)
-        if (guardNode !== null && tryPlaceAt('random-squad', guardNode, sizeX, sizeZ, catalogById, state)) {
-          placements.push({
-            tempId: state.nextTempId++, sid: 'random-squad', node: guardNode,
-            randomSquadOverrides: {
-              requestedValue: difficulty.cityGuardValue,
-              fraction: sampleFraction(zoneBiome.get(zone.id) ?? 1, 0.5, rng),
-              weeklyIncrementBonus: difficulty.cityGuardWeeklyIncrement,
-            },
-          })
-        }
-      }
-    }
-  }
+  return { populateKeyObjects, populateTreasure }
+}
 
-  return { placements, concreteSquads, decidedNodes }
+/** Both phases back to back — the original single-pass behavior. */
+export function populateZones(options: PopulateZonesOptions): PopulateZonesResult {
+  const populator = createZonePopulator(options)
+  populator.populateKeyObjects()
+  return populator.populateTreasure()
 }
