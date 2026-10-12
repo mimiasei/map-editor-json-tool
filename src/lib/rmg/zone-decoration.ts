@@ -574,7 +574,7 @@ export interface ScatterObstaclesOptions {
   rmgEnvironmentAssets?: CatalogEnvironmentBiome[]
   /** Spots that get a biome mountain right next to them before anything
    *  else is scattered — a river's source (zone-rivers.ts). */
-  forcedMountainSpots?: { node: number; biome: BiomeId }[]
+  forcedMountainSpots?: { node: number; biome: BiomeId; /** Mountains to place there (default 1): the first big, the rest small. */ cluster?: number }[]
   /** Blocked tiles that are still walkable (roads, rivers) — for the forced
    *  mountains' "doesn't cut anything off" check. */
   walkableNodes?: Set<number>
@@ -626,7 +626,7 @@ function splitsWalkableGround(
 function placeMountainAt(
   spot: number, pool: FuzzyObstaclePool | undefined, sizeX: number, sizeZ: number,
   catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
-  walkableNodes: Set<number>,
+  walkableNodes: Set<number>, smallFirst = false,
 ): ZonePlacement | null {
   const isBlocked = (n: number): boolean => state.blocked.has(n) && !walkableNodes.has(n)
   if (!pool || pool.mountains.length === 0) return null
@@ -641,7 +641,7 @@ function placeMountainAt(
   }
   const sx = spot % sizeX
   const sz = Math.floor(spot / sizeX)
-  for (const sid of [...shuffled(big), ...shuffled(other), ...shuffled(small)].slice(0, 8)) {
+  for (const sid of (smallFirst ? [...shuffled(small), ...shuffled(other), ...shuffled(big)] : [...shuffled(big), ...shuffled(other), ...shuffled(small)]).slice(0, 8)) {
     for (let r = 1; r <= 4; r++) {
       for (let dz = -r; dz <= r; dz++) {
         for (let dx = -r; dx <= r; dx++) {
@@ -708,9 +708,11 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
   const treePools = buildTreePools(mapObjects)
   const environmentWeights = rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined
   const placements: ZonePlacement[] = []
-  for (const { node, biome } of forcedMountainSpots) {
-    const mountain = placeMountainAt(node, pools[biome], sizeX, sizeZ, catalogById, state, rng, walkableNodes)
-    if (mountain) placements.push(mountain)
+  for (const { node, biome, cluster = 1 } of forcedMountainSpots) {
+    for (let k = 0; k < cluster; k++) {
+      const mountain = placeMountainAt(node, pools[biome], sizeX, sizeZ, catalogById, state, rng, walkableNodes, k > 0)
+      if (mountain) placements.push(mountain)
+    }
   }
   // Shared across every zone (in generation order) — co-occurrence bias
   // looks at whatever's already been placed nearby, regardless of which

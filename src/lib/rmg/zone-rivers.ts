@@ -4,7 +4,10 @@
 // preferably a real body of water (MIN_MOUTH_WATER_TILES), not a puddle.
 // It never climbs and never crosses another hill or a ramp. Without a hill
 // big enough to hold a source, a lowland river runs from a lake shore or
-// the map edge to another lake or edge.
+// the map edge to another lake or edge. A third kind starts on level ground at
+// a spot where a cluster of mountains is placed (VCMI lets any mountain obstacle
+// be a source): it runs to the map edge or a big lake like a hill river, minus
+// the waterfall.
 //
 // Waterfall format, from the game's official maps: `isWaterfall` sits on the
 // LOWER tile right after the drop, and its `s` is the direction toward the
@@ -53,6 +56,9 @@ export interface RiverRoute {
   /** Tile of an existing river this one flows into (a confluence): it gains a
    *  third neighbour, so the caller must repaint its shape code. */
   joinsAt?: number
+  /** The river starts at a free spot on level ground: the caller places a
+   *  cluster of mountains there. */
+  mountainSource?: boolean
 }
 
 const DIRS: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]]
@@ -489,6 +495,10 @@ export const MIN_HILL_RIVER_LENGTH = 15
 export const MIN_RIVER_LOWLAND_TILES = 10
 export const MIN_LOWLAND_RIVER_DISTANCE = 30
 const MAX_SOURCE_TRIES = 5
+/** A mountain-cluster source keeps this far (tiles) from the map edge. */
+const PLAIN_SOURCE_EDGE_MARGIN = 8
+/** Chance that a river tries a plain-ground source before a hill. */
+const PLAIN_FIRST_CHANCE = 0.5
 
 /** Up to `count` rivers, each from a mountain on a hill down to water or
  *  the map edge, else a lowland river. Every river uses its own hill and
@@ -515,10 +525,16 @@ export function carveRivers(
     let route: RiverRoute | null = joinable.size > 0 && rng() < confluenceChance
       ? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'hill', false, joinable)
       : null
+    // Plain-ground source (mountain cluster) or hill source first, 50/50.
+    const plainFirst = rng() < PLAIN_FIRST_CHANCE
+    const carvePlain = (): RiverRoute | null =>
+      carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'plain', true) ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'plain', false)
+    if (!route && plainFirst) route = carvePlain()
     for (let c = cliffClearance; c >= Math.min(1, cliffClearance) && !route; c--) {
       route = carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', true)
         ?? carveRiver(t, rng, meander, usedHills, preferNode, c, 'hill', false)
     }
+    if (!route && !plainFirst) route = carvePlain()
     route ??= carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', true)
       ?? carveRiver(t, rng, meander, usedHills, preferNode, cliffClearance, 'lowland', false)
     if (!route) break
@@ -534,7 +550,7 @@ export function carveRivers(
 
 function carveRiver(
   base: RiverTerrain, rng: () => number, meander: number, usedHills: Set<number>, preferNode: (n: number) => boolean,
-  cliffClearance: number, mode: 'hill' | 'lowland', bigMouth: boolean, join?: Set<number>,
+  cliffClearance: number, mode: 'hill' | 'plain' | 'lowland', bigMouth: boolean, join?: Set<number>,
 ): RiverRoute | null {
   const { sizeX, sizeZ } = base
   const riverNeighbours = (n: number): number[] => DIRS.flatMap(([dx, dz]) => {
@@ -565,7 +581,7 @@ function carveRiver(
   const mouthWater = (n: number): boolean => bigMouth ? touchesBigWater(n, t, MIN_MOUTH_WATER_TILES) : touchesWater(n, t)
   const goal = (n: number): boolean => joinTile ? t.levels[n] === 0 && joinTile(n) : t.levels[n] === 0 && (isEdge(n, sizeX, sizeZ) || mouthWater(n))
 
-  const hills = mode === 'lowland' ? [] : shuffle(hillComponents(t).filter((c) => c.length >= MIN_SOURCE_HILL_TILES && !usedHills.has(c[0])), rng)
+  const hills = mode !== 'hill' ? [] : shuffle(hillComponents(t).filter((c) => c.length >= MIN_SOURCE_HILL_TILES && !usedHills.has(c[0])), rng)
     .map((c) => ({ c, preferred: c.filter(preferNode).length * 2 >= c.length }))
     .sort((a, b) => Number(b.preferred) - Number(a.preferred))
   let tries = 0
@@ -597,6 +613,34 @@ function carveRiver(
   }
 
   if (mode === 'hill' || join) return null
+
+  if (mode === 'plain') {
+    // Level ground away from the edge, cliffs and water, with free room
+    // around it for the mountains. Neutral-zone spots first.
+    const cliffDist = cliffClearance > 0 ? cliffDistances(t, cliffClearance + 2) : null
+    const roomAround = (n: number): boolean => {
+      const x = n % sizeX
+      const z = Math.floor(n / sizeX)
+      for (let dz = -1; dz <= 1; dz++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const m = (z + dz) * sizeX + x + dx
+          if (t.blocked.has(m) || t.water.has(m) || t.usedAnchors.has(m) || t.levels[m] !== 0) return false
+        }
+      }
+      return true
+    }
+    const spots = shuffle(t.levels.map((_, n) => n).filter((n) => {
+      const x = n % sizeX
+      const z = Math.floor(n / sizeX)
+      if (x < PLAIN_SOURCE_EDGE_MARGIN || z < PLAIN_SOURCE_EDGE_MARGIN || x >= sizeX - PLAIN_SOURCE_EDGE_MARGIN || z >= sizeZ - PLAIN_SOURCE_EDGE_MARGIN) return false
+      return t.levels[n] === 0 && t.climbs[n] === 0 && !touchesRiver(n) && roomAround(n) && (!cliffDist || cliffDist[n] >= cliffClearance + 2)
+    }), rng).sort((a, b) => Number(preferNode(b)) - Number(preferNode(a)))
+    for (const start of spots.slice(0, MAX_SOURCE_TRIES)) {
+      const route = routeRiver(t, start, null, goal, minLength, rng, 0, meander)
+      if (route) return { ...meanderRoute(t, route, meander, rng), mountainSource: true }
+    }
+    return null
+  }
 
   // Lowland river: lake shore or map edge → another lake or edge, far away.
   const sources = shuffle(t.levels.map((_, n) => n).filter((n) =>

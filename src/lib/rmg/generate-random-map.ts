@@ -1111,7 +1111,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   let riverNodes = new Set<number>()
   const riverPaths: number[][] = []
   const riverMouths: number[] = []
-  const riverMountainSpots: { node: number; biome: BiomeId }[] = []
+  const riverMountainSpots: { node: number; biome: BiomeId; cluster?: number }[] = []
   const riverTerrain: RiverTerrain = {
     sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: { has: (n: number) => state.blocked.has(n) && !roadOnlyBlocked.has(n) },
     usedAnchors: state.usedAnchors, wallNodes: elevationWallNodesAll, roadNodes, riverNodes,
@@ -1138,9 +1138,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // A river ending at a tributary join has no mouth.
     if (route.joinsAt === undefined) riverMouths.push(route.path[route.path.length - 1])
     paintRiver(route)
-    if (route.waterfallIndex !== null) {
+    if (route.waterfallIndex !== null || route.mountainSource) {
       const biome = zoneBiome.get(zoneIdByNode[route.path[0]])
-      if (biome !== undefined) riverMountainSpots.push({ node: route.path[0], biome })
+      // A river on level ground starts at a cluster of 2-3 mountains, a hill river at one.
+      if (biome !== undefined) riverMountainSpots.push({ node: route.path[0], biome, cluster: route.mountainSource ? 2 + Math.floor(rng() * 2) : 1 })
     }
   }, (n) => graph.zones[zoneIdByNode[n]]?.kind === 'neutral', riverClearance, riverWidening, riverConfluence)
 
