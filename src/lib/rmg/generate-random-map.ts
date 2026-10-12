@@ -54,11 +54,12 @@ import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
-import { createZonePopulator, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
+import { createZonePopulator, tryPlace, tryPlaceAt, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
 import { scatterEdgeFrame } from './zone-edge-frame'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
+import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractableRarity } from './interactable-rarity'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
@@ -1099,6 +1100,30 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   if (skippedScatter > 0) {
     logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
   }
+  // A road runs INTO the building it serves, as in hand-drawn maps: from the
+  // road tile in front of an entrance it goes onto the entrance cell and one
+  // solid cell behind it, instead of stopping at the door.
+  for (const obj of [...players.filter((p) => p.sid === 'city-spawner'), ...placements.filter((p) => isNotableSid(p.sid))]) {
+    const cells = computeFootprintTiles(catalogById.get(obj.sid), obj.node % sizeX, Math.floor(obj.node / sizeX))
+      .filter((c) => c.value !== 0 && c.x >= 0 && c.x < sizeX && c.z >= 0 && c.z < sizeZ)
+    const nodeOf = (c: { x: number; z: number }): number => c.z * sizeX + c.x
+    const footprint = new Set(cells.map(nodeOf))
+    const solid = new Set(cells.filter((c) => c.value === 1).map(nodeOf))
+    if ([...solid].some((n) => roadNodes.has(n))) continue
+    for (const entrance of cells.filter((c) => c.value === 2)) {
+      const feeder = ([[1, 0], [-1, 0], [0, 1], [0, -1]] as [number, number][])
+        .map(([dx, dz]): [number, number, number] => [dx, dz, (entrance.z - dz) * sizeX + entrance.x - dx])
+        .find(([dx, dz, n]) => entrance.x - dx >= 0 && entrance.x - dx < sizeX && entrance.z - dz >= 0 && entrance.z - dz < sizeZ && !footprint.has(n) && roadNodes.has(n))
+      if (!feeder) continue
+      const [dx, dz, from] = feeder
+      const straight = (entrance.z + dz) * sizeX + entrance.x + dx
+      const inside = solid.has(straight) ? straight : [...solid].find((n) => Math.abs((n % sizeX) - entrance.x) + Math.abs(Math.floor(n / sizeX) - entrance.z) === 1)
+      if (inside === undefined) continue
+      const roadId = roadIdByNode.get(from) ?? 1
+      for (const n of [nodeOf(entrance), inside]) { roadNodes.add(n); roadIdByNode.set(n, roadId) }
+      break
+    }
+  }
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
   }
@@ -1113,18 +1138,54 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverPaths: number[][] = []
   const riverMouths: number[] = []
   const riverMountainSpots: { node: number; biome: BiomeId; cluster?: number }[] = []
+  // A river can end in a decorative 3×3 pool of its zone's biome.
+  const bigPoolsByBiome = new Map<BiomeId, string[]>()
+  const fuzzyPools = buildFuzzyObstaclePools(catalog.mapObjects)
+  for (const [biome, pool] of Object.entries(fuzzyPools)) {
+    bigPoolsByBiome.set(Number(biome) as BiomeId, pool.pools.filter((sid) => catalogById.get(sid)?.sizeX === 3 && catalogById.get(sid)?.sizeZ === 3))
+  }
+  const riverPoolPlacements: ZonePlacement[] = []
   const riverTerrain: RiverTerrain = {
     sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: { has: (n: number) => state.blocked.has(n) && !roadOnlyBlocked.has(n) },
     usedAnchors: state.usedAnchors, wallNodes: elevationWallNodesAll, roadNodes, riverNodes,
+    sourceOk: (node: number) => {
+      const biome = zoneBiome.get(zoneIdByNode[node])
+      const sid = biome === undefined ? undefined : fuzzyPools[biome].mountains[0]
+      if (!sid) return false
+      const objectBiome = sidBiome(sid, catalogById)
+      for (let oz = -1; oz <= 1; oz++) {
+        for (let ox = -1; ox <= 1; ox++) {
+          if (violatesIsolation(objectBiome, state.tileBiome?.[node + oz * sizeX + ox])) return false
+        }
+      }
+      return true
+    },
+    poolMouth: (anchor: number) => {
+      const biome = zoneBiome.get(zoneIdByNode[anchor])
+      const sid = biome === undefined ? undefined : bigPoolsByBiome.get(biome)?.[0]
+      if (!sid) return false
+      // The pool must not stand on ground its biome is isolated from (Snow, Sand, Lava).
+      const objectBiome = sidBiome(sid, catalogById)
+      for (let oz = -1; oz <= 1; oz++) {
+        for (let ox = -1; ox <= 1; ox++) {
+          if (violatesIsolation(objectBiome, state.tileBiome?.[anchor + oz * sizeX + ox])) return false
+        }
+      }
+      return true
+    },
   }
   const paintRiver = (route: RiverRoute): void => {
     for (const node of route.path) riverNodes.add(node)
     for (const node of route.widening ?? []) riverNodes.add(node)
+    // The river runs on into the water: those tiles count as river for the
+    // land tiles' shape codes.
+    for (const { node } of route.mouthWater ?? []) riverNodes.add(node)
     const changes = [...route.path, ...(route.widening ?? []), ...(route.joinsAt !== undefined ? [route.joinsAt] : [])].map((node, i) => {
       if (i === route.waterfallIndex) return { node, s: waterfallShapeCode(node, route.path[i - 1], sizeX), isWaterfall: true }
       const { dirs } = classifyRiverNode(node, riverNodes, sizeX, sizeZ)
       return { node, s: deriveRealShapeCode(dirs) }
     })
+    for (const { node, upstream } of route.mouthWater ?? []) changes.push({ node, s: waterfallShapeCode(node, upstream, sizeX), isWaterfall: true })
     block2 = paintRiverTiles(block2, changes)
   }
   // How many: each land zone adds one river with the tuning's chance.
@@ -1136,6 +1197,13 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
   carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
     riverPaths.push(route.path)
+    if (route.poolAnchor !== undefined) {
+      const sids = bigPoolsByBiome.get(zoneBiome.get(zoneIdByNode[route.poolAnchor]) as BiomeId) ?? []
+      const sid = sids[Math.floor(rng() * sids.length)]
+      if (sid && tryPlaceAt(sid, route.poolAnchor, sizeX, sizeZ, catalogById, state)) {
+        riverPoolPlacements.push({ tempId: state.nextTempId++, sid, node: route.poolAnchor })
+      }
+    }
     // A river ending at a tributary join has no mouth.
     if (route.joinsAt === undefined) riverMouths.push(route.path[route.path.length - 1])
     paintRiver(route)
@@ -1262,7 +1330,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     waterNodes: waterNodesAll, walkableNodes: new Set([...roadNodes, ...riverNodes]), rng,
     strength: tuning.edges?.frame ?? DEFAULT_EDGE_FRAME, rmgEnvironmentAssets: catalog.rmgEnvironmentAssets,
   })
-  const obstaclePlacements = edgeFramePlacements.concat(scatterZoneObstacles({
+  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity, densityByZone, ambientPickupByZone,

@@ -627,6 +627,9 @@ function placeMountainAt(
   spot: number, pool: FuzzyObstaclePool | undefined, sizeX: number, sizeZ: number,
   catalogById: Map<string, CatalogMapObject>, state: PlacementState, rng: () => number,
   walkableNodes: Set<number>, smallFirst = false,
+  /** The mountain stands ON `spot` (one of its solid cells covers the river's
+   *  first tile) instead of beside it — a river rises from under a mountain. */
+  cover = false,
 ): ZonePlacement | null {
   const isBlocked = (n: number): boolean => state.blocked.has(n) && !walkableNodes.has(n)
   if (!pool || pool.mountains.length === 0) return null
@@ -641,6 +644,34 @@ function placeMountainAt(
   }
   const sx = spot % sizeX
   const sz = Math.floor(spot / sizeX)
+  if (cover) {
+    // A few at random, but always the smallest ones too (a big mountain rarely fits over the source).
+    const everyone = shuffled([...big, ...other, ...small])
+    const cellCount = (sid: string): number => (catalogById.get(sid)?.nodes ?? [1]).length
+    const smallest = [...everyone].sort((p, q) => cellCount(p) - cellCount(q)).slice(0, 3)
+    for (const sid of [...new Set([...everyone.slice(0, 4), ...smallest])]) {
+      for (let r = 0; r <= 2; r++) {
+        for (let dz = -r; dz <= r; dz++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue
+            const ax = sx + dx
+            const az = sz + dz
+            if (ax < 0 || ax >= sizeX || az < 0 || az >= sizeZ) continue
+            const solid = new Set(computeFootprintTiles(catalogById.get(sid), ax, az).filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
+            // A single-cell mountain on the source tile blocks nothing the river does not already.
+            if (!solid.has(spot) || (solid.size > 1 && splitsWalkableGround(solid, sx, sz, sizeX, sizeZ, isBlocked))) continue
+            // The river tile is blocked; the mountain may take it.
+            const wasBlocked = state.blocked.delete(spot)
+            const node = az * sizeX + ax
+            if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
+              return { tempId: state.nextTempId++, sid, node, rotation: pickRotation(sid, catalogById, rng) }
+            }
+            if (wasBlocked) state.blocked.add(spot)
+          }
+        }
+      }
+    }
+  }
   for (const sid of (smallFirst ? [...shuffled(small), ...shuffled(other), ...shuffled(big)] : [...shuffled(big), ...shuffled(other), ...shuffled(small)]).slice(0, 8)) {
     for (let r = 1; r <= 4; r++) {
       for (let dz = -r; dz <= r; dz++) {
@@ -710,7 +741,8 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
   const placements: ZonePlacement[] = []
   for (const { node, biome, cluster = 1 } of forcedMountainSpots) {
     for (let k = 0; k < cluster; k++) {
-      const mountain = placeMountainAt(node, pools[biome], sizeX, sizeZ, catalogById, state, rng, walkableNodes, k > 0)
+      // The first one covers the river's source tile; if none fits there, it goes beside it.
+      const mountain = placeMountainAt(node, pools[biome], sizeX, sizeZ, catalogById, state, rng, walkableNodes, k > 0, k === 0)
       if (mountain) placements.push(mountain)
     }
   }
