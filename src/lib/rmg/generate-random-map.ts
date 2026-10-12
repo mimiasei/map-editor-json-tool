@@ -54,7 +54,7 @@ import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
 import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
-import { populateZones, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
+import { createZonePopulator, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
@@ -63,7 +63,8 @@ import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
 import { sidBiome, violatesIsolation } from './biome-isolation'
-import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, shortestPath, smoothPath } from './zone-connections'
+import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, computeZoneBorderDistance, createZoneConfinementCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
+import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
@@ -225,12 +226,15 @@ export interface GenerateRandomMapOptions {
   /** Map-wide per-sid placement caps (template.ts's own doc comment).
    *  Defaults to capping `university` at 1. */
   contentCountLimits?: { sid: string; maxCount: number }[]
-  /** Chance a road segment is painted Stone instead of Dirt. Defaults to 0.35. */
+  /** Chance a SIDE road (a loop) is painted Stone instead of Dirt;
+   *  the main town-to-town road is always Stone, mine spurs always Dirt. Defaults to 0.35. */
   stoneRoadChance?: number
   /** Chance a neutral-zone road endpoint targets a real mine/interactable/
    *  random-city node instead of the zone's own anchor. Defaults to 0.8. */
   roadPointOfInterestChance?: number
-  /** Independent per-edge chance a road is painted at all. Defaults to 0.8. */
+  /** Chance an edge OUTSIDE the road spanning tree (one that would close a
+   *  loop) is paved too; the tree itself is always paved. Evaluated as
+   *  `roll < 1 - value`, so 1 = strict tree. Defaults to 0.8. */
   roadFullConnectivityChance?: number
   /** Raw JSON text of a real game RMG template (issue #210, Stage 1) — see
    *  `GenerateTerrainOptions.gameTemplateJson`'s own doc comment (this
@@ -375,8 +379,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     spawnerGroup.levels.push(0)
   })
 
-  await reportProgress('Populating zones with mines, dwellings and treasure', 10)
-  const { placements, concreteSquads, decidedNodes } = populateZones({
+  await reportProgress('Populating zones with mines, dwellings and cities', 10)
+  // Two phases: key objects (mines, dwellings, cities and their guards) now,
+  // treasure and its guards only after the roads exist, so roads aren't
+  // detoured around piles and treasure keeps off the road. The three result
+  // collections are shared with the second phase, which appends to them.
+  const zonePopulator = createZonePopulator({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
@@ -386,11 +394,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     mines: resolveMineDistribution(tuning),
     zoneAnchorNode, symmetricZones: !gameTemplateJson,
   })
-  const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
-
-  if (skippedScatter > 0) {
-    logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
-  }
+  const { placements, concreteSquads, decidedNodes } = zonePopulator.populateKeyObjects()
 
   // Water. Deliberately computed BEFORE roads/rivers (see this file's own
   // header comment) so their own BFS pathfinding already treats it as
@@ -625,6 +629,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // user's own "roads should certainly start from the player's own
     // starting city" — never substituted for one of that zone's own mines.
     const notable = zoneKindById.get(zoneId) === 'neutral' ? notableNodesByZone.get(zoneId) : undefined
+    // A neutral zone with a city is a town zone: its road ends at the city's gate.
+    const zoneCity = notable?.find((n) => randomCityNodes.has(n))
+    const zoneCityGate = zoneCity !== undefined ? cityGateNode('random-city', zoneCity) : null
+    if (zoneCityGate !== null) return zoneCityGate
     if (notable && notable.length > 0 && rng() < roadPointOfInterestChance) {
       const poi = notable[Math.floor(rng() * notable.length)]
       return (randomCityNodes.has(poi) ? cityGateNode('random-city', poi) : null) ?? poi
@@ -634,6 +642,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     return gate ?? zoneAnchorNode.get(zoneId) as number
   }
   const ROAD_AVOIDANCE_RADIUS = 4
+  const ROAD_BORDER_RADIUS = 4
+  const ROAD_ISOLATED_PENALTY = 25
+  const ROAD_BORDER_PENALTY = 2
+  const ROAD_FOREIGN_ZONE_PENALTY = 6
   const ROAD_AVOIDANCE_STRENGTH = 1.5
   // `smoothPath`'s own window was a flat 12 tiles — real ASCII-rendered
   // comparison (a follow-up user report: "roads end up fairly straight and
@@ -739,6 +751,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // placed (confirmed: an early version of this loop placed 2 redundant
   // portal pairs for Crossroads.rmg.json's own single Portal connection).
   const seenEdgeKeys = new Set<string>()
+  const roadCandidates: [number, number][] = []
   for (const [a, b] of graph.edges) {
     const dedupeKey = `${Math.min(a, b)}:${Math.max(a, b)}`
     if (seenEdgeKeys.has(dedupeKey)) continue
@@ -765,30 +778,30 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       if (selectedPortalEdges.has(`${a}:${b}`)) placeIslandPortal(a, b)
       continue
     }
-    // Progressively-uncertain long-haul connectivity — a real user
-    // request: full player-to-player paved routes should get less certain
-    // over distance, not guaranteed. Every edge here connects two
-    // neighbouring zones (built-in layouts never have a player-player
-    // edge), so a miss just leaves one local stretch unpaved — a route
-    // spanning several
-    // edges to a distant player compounds this naturally, no separate
-    // distance-aware logic needed. Roads are cosmetic (never gate
-    // walkability), so skipping some is a style choice, not a
-    // connectivity risk. Skipped entirely for a Stage 1 template-driven
-    // generation — the template already curated exactly which connections
-    // exist as real edges at all (a Proximity/GladiatorArena connection
-    // was never added as one), so every edge that survives here is one the
-    // template author actually wanted painted.
-    // The skip roll is shared by every edge of the same kind (edgeSkipRoll),
-    // so no player ends up with a road/gate where another has none (issue #254).
-    if (!gameTemplateJson && edgeSkipRoll(a, b) >= roadFullConnectivityChance) continue
-    const from = roadEndpointForZone(a)
-    const to = roadEndpointForZone(b)
-    const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
-    const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
-    const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-    const combinedCost = (x: number, z: number): number => windingCost(x, z) + avoidanceCost(x, z)
-    let path = shortestPath(sizeX, sizeZ, from, to, state.blocked, combinedCost)
+    // Which of these edges get a road is decided after the loop (spanning tree).
+    roadCandidates.push([a, b])
+  }
+
+  // Which zone connections get a road: a spanning tree over the zones that
+  // hold a town (VCMI's CRoadRandomizer, road-edges.ts) — every town zone
+  // is connected, no loops, no dead-end roads into empty zones. Edges
+  // outside the tree are loops: kept only for a game template (it curated
+  // its edges) or with chance `1 - roadFullConnectivityChance`, and only
+  // between zones the tree already paved. The tie-break roll is shared by
+  // every edge of the same kind (issue #254).
+  const townZones = new Set<number>(playerCityByZone.keys())
+  for (const node of randomCityNodes) townZones.add(zoneIdByNode[node])
+  const roadSelection = selectRoadEdges(graph.zones.length, roadCandidates, townZones, edgeSkipRoll)
+  const endpointByZone = new Map<number, number>()
+  const endpointOf = (zoneId: number): number => {
+    let node = endpointByZone.get(zoneId)
+    if (node === undefined) { node = roadEndpointForZone(zoneId); endpointByZone.set(zoneId, node) }
+    return node
+  }
+  // The cheapest route from `from` to `goal` (a tile, or a set of road tiles
+  // to join), repairing a blocked case through elevation walls.
+  const routeRoad = (from: number, goal: number | ReadonlySet<number>, costFn: (x: number, z: number) => number): number[] | null => {
+    let path = shortestPath(sizeX, sizeZ, from, goal, state.blocked, costFn)
 
     // Water-partition repair: a real, user-reported "impossible case" —
     // large organic lakes (zone-water.ts, up to 60% of a zone's own tiles)
@@ -817,7 +830,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     // the first place (scatterZoneWater), so a road never needs to.
     if (!path && elevationWallNodesAll.size > 0) {
       const blockedWithoutWalls = new Set([...state.blocked].filter((n) => !elevationWallNodesAll.has(n)))
-      const repairPath = shortestPath(sizeX, sizeZ, from, to, blockedWithoutWalls, combinedCost)
+      const repairPath = shortestPath(sizeX, sizeZ, from, goal, blockedWithoutWalls, costFn)
       if (repairPath) {
         for (const node of repairPath) {
           if (elevationWallNodesAll.has(node)) {
@@ -839,20 +852,107 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
         path = repairPath
       }
     }
-
-    if (path) {
+    return path
+  }
+  // Keep each road inside the zones it runs through and off their borders:
+  // a soft cost, so a road still crosses where it must (VCMI idea 3).
+  const zoneBorderDistance = computeZoneBorderDistance(zoneIdByNode, sizeX, sizeZ, ROAD_BORDER_RADIUS)
+  const confinementCost = (zones: ReadonlySet<number>): ((x: number, z: number) => number) =>
+    createZoneConfinementCost(zoneIdByNode, zoneBorderDistance, sizeX, zones, ROAD_BORDER_RADIUS, ROAD_BORDER_PENALTY, ROAD_FOREIGN_ZONE_PENALTY)
+  // Tiles behind a visitable object (the side away from its entrance — the
+  // entrance faces lower z): a road running there passes the object without
+  // being able to enter it, so routing avoids them (VCMI's areaIsolated).
+  // Soft, so a road still goes through when nothing else is reachable.
+  const isolatedNodes = new Set<number>()
+  for (const obj of [...players, ...placements, ...portalPlacements]) {
+    const cells = computeFootprintTiles(catalogById.get(obj.sid), obj.node % sizeX, Math.floor(obj.node / sizeX))
+    if (!cells.some((c) => c.value === 2)) continue
+    const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+    for (const c of cells) {
+      if (c.value !== 1 || c.x < 0 || c.x >= sizeX || c.z + 1 >= sizeZ) continue
+      const behind = (c.z + 1) * sizeX + c.x
+      if (!footprint.has(behind)) isolatedNodes.add(behind)
+    }
+  }
+  const isolatedCost = (x: number, z: number): number => (isolatedNodes.has(z * sizeX + x) ? ROAD_ISOLATED_PENALTY : 0)
+  // One leg of a road: winding + confinement (+ any extra) cost from `from`
+  // to a tile or to the nearest tile of a set.
+  const routeLeg = (from: number, goal: number | ReadonlySet<number>, zones: ReadonlySet<number>, extra?: (x: number, z: number) => number): number[] | null => {
+    const aim = typeof goal === 'number' ? goal : nearestNode(goal, from, sizeX)
+    if (aim === null) return null
+    const windingCost = createWindingCost(sizeX, from, aim, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+    const confined = confinementCost(zones)
+    return routeRoad(from, goal, (x, z) => windingCost(x, z) + confined(x, z) + isolatedCost(x, z) + (extra ? extra(x, z) : 0))
+  }
+  // The road for connection u—v as consecutive legs. The crossing is chosen
+  // FIRST (choosePassage): one leg runs inside v from its endpoint to the
+  // passage, the other inside u from the passage to `target` (u's endpoint, or
+  // — joining — the nearest road laid so far), so the road crosses the
+  // border exactly there and the gate lands where the connection puts it.
+  // Tries the best three passages; with none usable (zones not adjacent, or legs blocked) the road
+  // runs in one piece from v's endpoint to the target as before.
+  const routeConnection = (u: number, v: number, join: boolean, extra?: (x: number, z: number) => number): number[][] | null => {
+    // Joining stays in u: the nearest road tile of u itself (any road tile
+    // only if u somehow has none), so the road doesn't detour through a third zone.
+    const roadInU = join ? new Set([...roadNodes].filter((n) => zoneIdByNode[n] === u)) : null
+    const target: number | ReadonlySet<number> = roadInU ? (roadInU.size > 0 ? roadInU : roadNodes) : endpointOf(u)
+    const passages = choosePassages(zoneIdByNode, sizeX, sizeZ, tilesByZone.get(u) ?? [], u, v,
+      zoneAnchorNode.get(u) as number, zoneAnchorNode.get(v) as number, (n) => !state.blocked.has(n), 3)
+    for (const passage of passages) {
+      const legV = routeLeg(endpointOf(v), passage[1], new Set([v]), extra)
+      const legU = legV ? routeLeg(passage[0], target, new Set([u]), extra) : null
+      if (legV && legU) return [legV, legU]
+    }
+    const whole = routeLeg(endpointOf(v), target, new Set([u, v]), extra)
+    return whole ? [whole] : null
+  }
+  // Material means something: the main road (the town-to-town spanning tree)
+  // is stone; side roads (loops, mine spurs) are dirt, or stone with
+  // `stoneRoadChance`.
+  const paintEdgeRoad = (a: number, b: number, legs: number[][], main: boolean): void => {
+    // Each leg is smoothed on its own so smoothing can't move the crossing.
+    const smoothed = legs.flatMap((leg) => smoothPath(leg, sizeX, state.blocked, roadSmoothWindow))
+    roadPathsByEdge.set(`${a}:${b}`, smoothed)
+    // A real template's own road material for this exact connection (issue
+    // #210 second follow-up milestone — see rmg-template-import.ts's own
+    // roadMaterialByEdgeKey doc comment) takes priority over the generic
+    // stoneRoadChance roll; empty map (no template, or this specific edge
+    // has no resolvable road entry) falls through.
+    const templateMaterial = roadMaterialByEdgeKey.get(`${Math.min(a, b)}:${Math.max(a, b)}`)
+    const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (main || rng() < stoneRoadChance ? 2 : 1)
+    for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
+  }
+  const networkZones = new Set<number>()
+  // Tree edges, breadth-first: the first edge of a component runs between its
+  // two endpoints; every later one starts at the new zone's endpoint and ends
+  // at the NEAREST tile of the road laid so far, so roads branch and share
+  // stretches instead of running side by side.
+  for (const [u, v] of orderTreeEdges(roadSelection.tree, townZones)) {
+    const legs = routeConnection(u, v, networkZones.has(u) && roadNodes.size > 0)
+    if (legs) { paintEdgeRoad(u, v, legs, true); networkZones.add(u); networkZones.add(v) } else unroutableEdges += 1
+  }
+  // Loop edges: point to point, steering away from the roads already drawn.
+  for (const [a, b] of roadSelection.extra) {
+    if (!gameTemplateJson && !(networkZones.has(a) && networkZones.has(b) && edgeSkipRoll(a, b) < 1 - roadFullConnectivityChance)) continue
+    const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
+    const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
+    const legs = routeConnection(a, b, false, avoidanceCost)
+    if (legs) paintEdgeRoad(a, b, legs, false)
+    else unroutableEdges += 1
+  }
+  // Zones with no town and no road through them (VCMI's mines-only fallback):
+  // their mines become road nodes on a local dirt network, each joining the
+  // nearest road laid so far in the zone.
+  for (const zone of graph.zones) {
+    if (zone.kind !== 'neutral' || islandZoneIds.has(zone.id) || networkZones.has(zone.id) || townZones.has(zone.id)) continue
+    const mineNodes = placements.filter((p) => MINE_SIDS_LOCAL.has(p.sid) && zoneIdByNode[p.node] === zone.id).map((p) => p.node)
+    if (mineNodes.length < 2) continue
+    const zoneRoad = new Set<number>([mineNodes[0]])
+    for (const mine of mineNodes.slice(1)) {
+      const path = routeLeg(mine, zoneRoad, new Set([zone.id]))
+      if (!path) continue
       const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
-      roadPathsByEdge.set(`${a}:${b}`, smoothed)
-      // A real template's own road material for this exact connection
-      // (issue #210 second follow-up milestone — see rmg-template-
-      // import.ts's own roadMaterialByEdgeKey doc comment) takes priority
-      // over the generic stoneRoadChance roll; empty map (no template, or
-      // this specific edge has no resolvable road entry) falls through.
-      const templateMaterial = roadMaterialByEdgeKey.get(`${Math.min(a, b)}:${Math.max(a, b)}`)
-      const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (rng() < stoneRoadChance ? 2 : 1)
-      for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
-    } else {
-      unroutableEdges += 1
+      for (const node of smoothed) { zoneRoad.add(node); roadNodes.add(node); roadIdByNode.set(node, 1) }
     }
   }
   if (unroutableEdges > 0) {
@@ -984,6 +1084,20 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   }
 
   if (roadClimbChanges.length > 0) block2 = paintClimbTiles(block2, roadClimbChanges)
+  // Treasure and its guards, now that the roads are laid: road tiles count as
+  // blocked, so no pile or guard lands on a road or is placed over it.
+  await reportProgress('Placing treasure', 55)
+  // Remembered so rivers, which may cross a road, don't see these as blocked.
+  const roadOnlyBlocked = new Set<number>()
+  for (const node of roadNodes) {
+    if (!state.blocked.has(node)) { state.blocked.add(node); roadOnlyBlocked.add(node) }
+  }
+  zonePopulator.populateTreasure()
+  // populateZones' own minimum per-zone attempt count (player zones attempt exactly 3; neutral zones attempt 3 + extra treasure piles, which count as bonus, not a shortfall); concrete-squad guard slots count as filled, not skipped
+  const skippedScatter = graph.zones.length * 3 - placements.length - concreteSquads.length
+  if (skippedScatter > 0) {
+    logWarn(`Random map generation: ${skippedScatter} scatter object(s) skipped — no free tile found in a crowded zone`)
+  }
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
   }
@@ -996,9 +1110,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   await reportProgress('Carving rivers', 62)
   let riverNodes = new Set<number>()
   const riverPaths: number[][] = []
+  const riverMouths: number[] = []
   const riverMountainSpots: { node: number; biome: BiomeId }[] = []
   const riverTerrain: RiverTerrain = {
-    sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: state.blocked,
+    sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: { has: (n: number) => state.blocked.has(n) && !roadOnlyBlocked.has(n) },
     usedAnchors: state.usedAnchors, wallNodes: elevationWallNodesAll, roadNodes, riverNodes,
   }
   const paintRiver = (route: RiverRoute): void => {
@@ -1020,6 +1135,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
   carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
     riverPaths.push(route.path)
+    // A river ending at a tributary join has no mouth.
+    if (route.joinsAt === undefined) riverMouths.push(route.path[route.path.length - 1])
     paintRiver(route)
     if (route.waterfallIndex !== null) {
       const biome = zoneBiome.get(zoneIdByNode[route.path[0]])
@@ -1154,7 +1271,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // share.
   const interactablePlacements = scatterZoneInteractables({
     sizeX, sizeZ, zones: graph.zones, tilesByZone, catalogById,
-    excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
+    excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng, riverNodes,
     density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet, symmetricZones: !gameTemplateJson,
     rarity: buildInteractableRarity(catalog, tuning.interactables?.weightBySid),
   })
@@ -1193,6 +1310,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const bankPlacements = scatterRiverBanks({
     sizeX, sizeZ, riverNodes, excludedNodes: new Set([...roadNodes, ...waterNodesAll]), zoneIdByNode, zoneBiome, catalogById, state, rng,
     density: tuning.rivers?.bankDecoration ?? DEFAULT_RIVER_BANK_DENSITY,
+    mouthNodes: riverMouths, waterNodes: waterNodesAll,
   })
 
   // Proximity guards — LAST of the object passes, so every guardable object

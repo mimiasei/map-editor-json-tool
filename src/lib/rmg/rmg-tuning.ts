@@ -124,8 +124,8 @@ export const DEFAULT_RIVER_CHANCE_PER_ZONE = 0.3
 export const DEFAULT_RIVER_MEANDER = 0.6
 /** Tiles a river keeps from hills and cliff walls (no waterfall rows under a cliff). */
 export const DEFAULT_RIVER_CLIFF_CLEARANCE = 3
-/** Share of a river's length (from the mouth) that is made wider, 0-1. */
-export const DEFAULT_RIVER_MOUTH_WIDENING = 0.25
+/** Share of a river's length (from the mouth) that is made wider, 0-1. Off by default: the one-tile side stubs it adds read as stray spurs, not a wider river. */
+export const DEFAULT_RIVER_MOUTH_WIDENING = 0
 /** Chance that a new river flows into an earlier one instead of to the sea, 0-1. */
 export const DEFAULT_RIVER_CONFLUENCE_CHANCE = 0.5
 /** Average chance per river-bank tile of a stone, tuft or reed, 0-1 (clumped). */

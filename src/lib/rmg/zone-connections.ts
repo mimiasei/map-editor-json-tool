@@ -325,23 +325,29 @@ export function shortestPath(
   sizeX: number,
   sizeZ: number,
   start: number,
-  goal: number,
+  goal: number | ReadonlySet<number>,
   blocked: Set<number>,
   costFn: (x: number, z: number) => number = () => 1,
 ): number[] | null {
-  if (start === goal) return [start]
+  // A goal SET stops at the first tile of it the search reaches — a road
+  // joining the nearest tile of an existing road network (VCMI's
+  // RoadPlacer does the same). Each member is exempted from `blocked` like
+  // a single goal is.
+  const isGoal = typeof goal === 'number' ? (n: number): boolean => n === goal : (n: number): boolean => goal.has(n)
+  if (isGoal(start)) return [start]
 
   const dist = new Map<number, number>([[start, 0]])
   const prev = new Map<number, number>()
   const visited = new Set<number>()
   const heap = new MinHeap()
   heap.push(0, start)
+  let reached: number | null = null
 
   while (heap.size > 0) {
     const [d, node] = heap.pop() as [number, number]
     if (visited.has(node)) continue
     visited.add(node)
-    if (node === goal) break
+    if (isGoal(node)) { reached = node; break }
 
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
@@ -350,7 +356,7 @@ export function shortestPath(
       const nz = z + dz
       if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
       const n = nz * sizeX + nx
-      if (visited.has(n) || (blocked.has(n) && n !== goal)) continue
+      if (visited.has(n) || (blocked.has(n) && !isGoal(n))) continue
       const newDist = d + costFn(nx, nz)
       if (newDist < (dist.get(n) ?? Infinity)) {
         dist.set(n, newDist)
@@ -360,9 +366,9 @@ export function shortestPath(
     }
   }
 
-  if (!dist.has(goal)) return null
-  const path = [goal]
-  let cur = goal
+  if (reached === null) return null
+  const path = [reached]
+  let cur = reached
   while (cur !== start) {
     const p = prev.get(cur)
     if (p === undefined) break
@@ -371,4 +377,78 @@ export function shortestPath(
   }
   path.reverse()
   return path
+}
+
+/** The member of `nodes` nearest `from` (straight-line) — the aim point for
+ *  a winding cost when the real goal is a whole set. Null for an empty set. */
+export function nearestNode(nodes: Iterable<number>, from: number, sizeX: number): number | null {
+  const fx = from % sizeX
+  const fz = Math.floor(from / sizeX)
+  let best: number | null = null
+  let bestD = Infinity
+  for (const n of nodes) {
+    const d = (n % sizeX - fx) ** 2 + (Math.floor(n / sizeX) - fz) ** 2
+    if (d < bestD) { bestD = d; best = n }
+  }
+  return best
+}
+
+/** Tiles from each tile to the nearest tile of a DIFFERENT zone (0 = on a
+ *  zone border), capped at `maxDist` — multi-source BFS. */
+export function computeZoneBorderDistance(zoneIdByNode: readonly number[], sizeX: number, sizeZ: number, maxDist: number): Int32Array {
+  const dist = new Int32Array(sizeX * sizeZ).fill(maxDist + 1)
+  const queue: number[] = []
+  for (let node = 0; node < dist.length; node++) {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      if (zoneIdByNode[nz * sizeX + nx] !== zoneIdByNode[node]) { dist[node] = 0; queue.push(node); break }
+    }
+  }
+  let head = 0
+  while (head < queue.length) {
+    const node = queue[head++]
+    const d = dist[node]
+    if (d >= maxDist) continue
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const n = nz * sizeX + nx
+      if (dist[n] > d + 1) { dist[n] = d + 1; queue.push(n) }
+    }
+  }
+  return dist
+}
+
+/**
+ * A SOFT cost that keeps a road inside the zones it connects and off their
+ * borders (VCMI's RoadPlacer only searches the zone's own free area and
+ * divides the step cost by the squared distance to the zone border). Added
+ * to the winding cost: `foreignPenalty` for a tile in any zone outside
+ * `allowedZones`, plus up to `borderPenalty` for a tile within `radius`
+ * tiles of a zone border — so a road crosses a border only where it must,
+ * and never clips a third zone's corner unless nothing else is reachable.
+ */
+export function createZoneConfinementCost(
+  zoneIdByNode: readonly number[],
+  borderDistance: Int32Array,
+  sizeX: number,
+  allowedZones: ReadonlySet<number>,
+  radius: number,
+  borderPenalty: number,
+  foreignPenalty: number,
+): (x: number, z: number) => number {
+  return (x: number, z: number): number => {
+    const node = z * sizeX + x
+    let cost = allowedZones.has(zoneIdByNode[node]) ? 0 : foreignPenalty
+    const d = borderDistance[node]
+    if (d < radius) cost += (borderPenalty * (radius - d)) / radius
+    return cost
+  }
 }

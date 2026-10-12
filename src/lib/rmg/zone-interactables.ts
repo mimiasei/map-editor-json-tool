@@ -24,6 +24,13 @@ import { isRmgIneligibleInteractableSid, pickInteractableSid } from './object-va
 import type { InteractableRarity } from './interactable-rarity'
 import { tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
 
+/** Interactables that belong by a river: VCMI makes its Water Wheel a node every
+ *  river must pass. The game has no water wheel; the windmill is its stand-in,
+ *  and sits on a river's bank whenever its zone has a river. */
+const RIVERSIDE_SIDS = new Set(['windmill'])
+/** How far (tiles, each axis) from a river tile a riverside object may stand. */
+const RIVERSIDE_REACH = 2
+
 export interface ScatterInteractablesOptions {
   sizeX: number
   sizeZ: number
@@ -57,13 +64,53 @@ export interface ScatterInteractablesOptions {
   /** Rarity of each sid (game content-list weights + tuning): blocked sids
    *  (weight 0 or rare tier) are never picked, the rest by weight. */
   rarity?: InteractableRarity
+  /** Tiles carrying a river: riverside objects (see RIVERSIDE_SIDS) go next to them. */
+  riverNodes?: ReadonlySet<number>
 }
 
 export function scatterZoneInteractables(options: ScatterInteractablesOptions): ZonePlacement[] {
-  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids, symmetricZones = false, rarity } = options
+  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids, symmetricZones = false, rarity, riverNodes } = options
   const placements: ZonePlacement[] = []
   const isDisabled = (candidate: string): boolean => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false) || (rarity?.isBlocked(candidate) ?? false)
   const weightFor = (sid: string): number => rarity?.weight(sid) ?? 1
+
+  // Free land within reach of a river, per zone (built on first use).
+  let bankTiles: Set<number> | null = null
+  const bankByZone = new Map<number, number[]>()
+  const bankOf = (zoneId: number): number[] => {
+    const cached = bankByZone.get(zoneId)
+    if (cached) return cached
+    if (!bankTiles) {
+      bankTiles = new Set<number>()
+      for (const river of riverNodes ?? []) {
+        const rx = river % sizeX
+        const rz = Math.floor(river / sizeX)
+        for (let dz = -RIVERSIDE_REACH; dz <= RIVERSIDE_REACH; dz++) {
+          for (let dx = -RIVERSIDE_REACH; dx <= RIVERSIDE_REACH; dx++) {
+            const x = rx + dx
+            const z = rz + dz
+            if (x >= 0 && x < sizeX && z >= 0 && z < sizeZ) bankTiles.add(z * sizeX + x)
+          }
+        }
+      }
+    }
+    const tiles = (tilesByZone.get(zoneId) ?? []).filter((n) => bankTiles?.has(n) && !excludedNodes.has(n))
+    bankByZone.set(zoneId, tiles)
+    return tiles
+  }
+  /** Places `sid` at `node` — one attempt, like every other roll here, so the
+   *  slider's density is unchanged. A riverside object takes a random tile of
+   *  its zone's river bank instead when the zone has a river. */
+  const place = (zoneId: number, sid: string, node: number): boolean => {
+    let spot = node
+    if (RIVERSIDE_SIDS.has(sid)) {
+      const bank = bankOf(zoneId)
+      if (bank.length > 0) spot = bank[Math.floor(rng() * bank.length)]
+    }
+    if (!tryPlaceAt(sid, spot, sizeX, sizeZ, catalogById, state)) return false
+    placements.push({ tempId: state.nextTempId++, sid, node: spot })
+    return true
+  }
   if (symmetricZones) {
     const meanTiles = (kind: 'player' | 'neutral'): number => {
       const counts = zones.filter((z) => z.kind === kind).map((z) => tilesByZone.get(z.id)?.length ?? 0)
@@ -80,7 +127,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
         const node = free[Math.floor(rng() * free.length)]
         const sid = pickInteractableSid(rng, isDisabled, weightFor)
         if (!sid) continue
-        if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) placements.push({ tempId: state.nextTempId++, sid, node })
+        place(zone.id, sid, node)
       }
     }
     return placements
@@ -94,9 +141,7 @@ export function scatterZoneInteractables(options: ScatterInteractablesOptions): 
       if (rng() >= zoneDensity) continue
       const sid = pickInteractableSid(rng, isDisabled, weightFor)
       if (!sid) continue
-      if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
-        placements.push({ tempId: state.nextTempId++, sid, node })
-      }
+      place(zone.id, sid, node)
     }
   }
   return placements
