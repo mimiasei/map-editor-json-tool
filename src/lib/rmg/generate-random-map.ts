@@ -643,6 +643,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   }
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_BORDER_RADIUS = 4
+  const ROAD_ISOLATED_PENALTY = 25
   const ROAD_BORDER_PENALTY = 2
   const ROAD_FOREIGN_ZONE_PENALTY = 6
   const ROAD_AVOIDANCE_STRENGTH = 1.5
@@ -858,6 +859,22 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const zoneBorderDistance = computeZoneBorderDistance(zoneIdByNode, sizeX, sizeZ, ROAD_BORDER_RADIUS)
   const confinementCost = (zones: ReadonlySet<number>): ((x: number, z: number) => number) =>
     createZoneConfinementCost(zoneIdByNode, zoneBorderDistance, sizeX, zones, ROAD_BORDER_RADIUS, ROAD_BORDER_PENALTY, ROAD_FOREIGN_ZONE_PENALTY)
+  // Tiles behind a visitable object (the side away from its entrance — the
+  // entrance faces lower z): a road running there passes the object without
+  // being able to enter it, so routing avoids them (VCMI's areaIsolated).
+  // Soft, so a road still goes through when nothing else is reachable.
+  const isolatedNodes = new Set<number>()
+  for (const obj of [...players, ...placements, ...portalPlacements]) {
+    const cells = computeFootprintTiles(catalogById.get(obj.sid), obj.node % sizeX, Math.floor(obj.node / sizeX))
+    if (!cells.some((c) => c.value === 2)) continue
+    const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
+    for (const c of cells) {
+      if (c.value !== 1 || c.x < 0 || c.x >= sizeX || c.z + 1 >= sizeZ) continue
+      const behind = (c.z + 1) * sizeX + c.x
+      if (!footprint.has(behind)) isolatedNodes.add(behind)
+    }
+  }
+  const isolatedCost = (x: number, z: number): number => (isolatedNodes.has(z * sizeX + x) ? ROAD_ISOLATED_PENALTY : 0)
   // One leg of a road: winding + confinement (+ any extra) cost from `from`
   // to a tile or to the nearest tile of a set.
   const routeLeg = (from: number, goal: number | ReadonlySet<number>, zones: ReadonlySet<number>, extra?: (x: number, z: number) => number): number[] | null => {
@@ -865,7 +882,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     if (aim === null) return null
     const windingCost = createWindingCost(sizeX, from, aim, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
     const confined = confinementCost(zones)
-    return routeRoad(from, goal, (x, z) => windingCost(x, z) + confined(x, z) + (extra ? extra(x, z) : 0))
+    return routeRoad(from, goal, (x, z) => windingCost(x, z) + confined(x, z) + isolatedCost(x, z) + (extra ? extra(x, z) : 0))
   }
   // The road for connection u—v as consecutive legs. The crossing is chosen
   // FIRST (choosePassage): one leg runs inside v from its endpoint to the
