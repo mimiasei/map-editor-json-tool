@@ -107,3 +107,64 @@ export function orderTreeEdges(
   }
   return out
 }
+
+/**
+ * The passage(s) for the connection between zones `a` and `b`: one pair of
+ * 4-adjacent tiles, `[inA, inB]`, on their shared border (VCMI's
+ * ConnectionsPlacer picks the crossing first and roads are routed to it, so
+ * a gate sits exactly where the connection puts it). It's the free pair
+ * minimising the squared distance from `inA` to `anchorA` plus `inB` to
+ * `anchorB` — deterministic, so every player's equivalent connection gets
+ * the same shape (issue #254). Tiles touching a third zone are skipped (a
+ * passage at a triple junction would open two borders at once). Returns up to `limit` of them, best first (empty when the zones
+ * aren't adjacent or no free pair exists).
+ */
+export function choosePassages(
+  zoneIdByNode: readonly number[],
+  sizeX: number,
+  sizeZ: number,
+  tilesOfA: readonly number[],
+  a: number,
+  b: number,
+  anchorA: number,
+  anchorB: number,
+  isFree: (node: number) => boolean,
+  limit = 1,
+): [number, number][] {
+  const d2 = (p: number, q: number): number => ((p % sizeX) - (q % sizeX)) ** 2 + (Math.floor(p / sizeX) - Math.floor(q / sizeX)) ** 2
+  const touchesThirdZone = (node: number): boolean => {
+    const x = node % sizeX
+    const z = Math.floor(node / sizeX)
+    for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const zone = zoneIdByNode[nz * sizeX + nx]
+      if (zone !== a && zone !== b) return true
+    }
+    return false
+  }
+  const found: { pair: [number, number]; cost: number }[] = []
+  for (const inA of tilesOfA) {
+    if (zoneIdByNode[inA] !== a || !isFree(inA) || touchesThirdZone(inA)) continue
+    const x = inA % sizeX
+    const z = Math.floor(inA / sizeX)
+    for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nx = x + dx
+      const nz = z + dz
+      if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
+      const inB = nz * sizeX + nx
+      if (zoneIdByNode[inB] !== b || !isFree(inB) || touchesThirdZone(inB)) continue
+      const cost = d2(inA, anchorA) + d2(inB, anchorB)
+      found.push({ pair: [inA, inB], cost })
+    }
+  }
+  found.sort((p, q) => p.cost - q.cost || p.pair[0] - q.pair[0])
+  // Passages next to each other are the same opening: keep ones >= 6 tiles apart.
+  const out: [number, number][] = []
+  for (const { pair } of found) {
+    if (out.every((o) => Math.abs((o[0] % sizeX) - (pair[0] % sizeX)) + Math.abs(Math.floor(o[0] / sizeX) - Math.floor(pair[0] / sizeX)) >= 6)) out.push(pair)
+    if (out.length >= limit) break
+  }
+  return out
+}

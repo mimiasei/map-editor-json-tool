@@ -64,7 +64,7 @@ import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
 import { sidBiome, violatesIsolation } from './biome-isolation'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, computeZoneBorderDistance, createZoneConfinementCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
-import { orderTreeEdges, selectRoadEdges } from './road-edges'
+import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
@@ -848,8 +848,45 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     }
     return path
   }
-  const paintEdgeRoad = (a: number, b: number, path: number[]): void => {
-    const smoothed = smoothPath(path, sizeX, state.blocked, roadSmoothWindow)
+  // Keep each road inside the zones it runs through and off their borders:
+  // a soft cost, so a road still crosses where it must (VCMI idea 3).
+  const zoneBorderDistance = computeZoneBorderDistance(zoneIdByNode, sizeX, sizeZ, ROAD_BORDER_RADIUS)
+  const confinementCost = (zones: ReadonlySet<number>): ((x: number, z: number) => number) =>
+    createZoneConfinementCost(zoneIdByNode, zoneBorderDistance, sizeX, zones, ROAD_BORDER_RADIUS, ROAD_BORDER_PENALTY, ROAD_FOREIGN_ZONE_PENALTY)
+  // One leg of a road: winding + confinement (+ any extra) cost from `from`
+  // to a tile or to the nearest tile of a set.
+  const routeLeg = (from: number, goal: number | ReadonlySet<number>, zones: ReadonlySet<number>, extra?: (x: number, z: number) => number): number[] | null => {
+    const aim = typeof goal === 'number' ? goal : nearestNode(goal, from, sizeX)
+    if (aim === null) return null
+    const windingCost = createWindingCost(sizeX, from, aim, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
+    const confined = confinementCost(zones)
+    return routeRoad(from, goal, (x, z) => windingCost(x, z) + confined(x, z) + (extra ? extra(x, z) : 0))
+  }
+  // The road for connection u—v as consecutive legs. The crossing is chosen
+  // FIRST (choosePassage): one leg runs inside v from its endpoint to the
+  // passage, the other inside u from the passage to `target` (u's endpoint, or
+  // — joining — the nearest road laid so far), so the road crosses the
+  // border exactly there and the gate lands where the connection puts it.
+  // Tries the best three passages; with none usable (zones not adjacent, or legs blocked) the road
+  // runs in one piece from v's endpoint to the target as before.
+  const routeConnection = (u: number, v: number, join: boolean, extra?: (x: number, z: number) => number): number[][] | null => {
+    // Joining stays in u: the nearest road tile of u itself (any road tile
+    // only if u somehow has none), so the road doesn't detour through a third zone.
+    const roadInU = join ? new Set([...roadNodes].filter((n) => zoneIdByNode[n] === u)) : null
+    const target: number | ReadonlySet<number> = roadInU ? (roadInU.size > 0 ? roadInU : roadNodes) : endpointOf(u)
+    const passages = choosePassages(zoneIdByNode, sizeX, sizeZ, tilesByZone.get(u) ?? [], u, v,
+      zoneAnchorNode.get(u) as number, zoneAnchorNode.get(v) as number, (n) => !state.blocked.has(n), 3)
+    for (const passage of passages) {
+      const legV = routeLeg(endpointOf(v), passage[1], new Set([v]), extra)
+      const legU = legV ? routeLeg(passage[0], target, new Set([u]), extra) : null
+      if (legV && legU) return [legV, legU]
+    }
+    const whole = routeLeg(endpointOf(v), target, new Set([u, v]), extra)
+    return whole ? [whole] : null
+  }
+  const paintEdgeRoad = (a: number, b: number, legs: number[][]): void => {
+    // Each leg is smoothed on its own so smoothing can't move the crossing.
+    const smoothed = legs.flatMap((leg) => smoothPath(leg, sizeX, state.blocked, roadSmoothWindow))
     roadPathsByEdge.set(`${a}:${b}`, smoothed)
     // A real template's own road material for this exact connection (issue
     // #210 second follow-up milestone — see rmg-template-import.ts's own
@@ -860,44 +897,22 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const roadId = templateMaterial ? (templateMaterial === 'Stone' ? 2 : 1) : (rng() < stoneRoadChance ? 2 : 1)
     for (const node of smoothed) { roadNodes.add(node); roadIdByNode.set(node, roadId) }
   }
-  // Keep each road inside the two zones it connects and off their borders:
-  // a soft cost, so a road still crosses where it must (VCMI idea 3).
-  const zoneBorderDistance = computeZoneBorderDistance(zoneIdByNode, sizeX, sizeZ, ROAD_BORDER_RADIUS)
-  const confinementCost = (a: number, b: number): ((x: number, z: number) => number) =>
-    createZoneConfinementCost(zoneIdByNode, zoneBorderDistance, sizeX, new Set([a, b]), ROAD_BORDER_RADIUS, ROAD_BORDER_PENALTY, ROAD_FOREIGN_ZONE_PENALTY)
   const networkZones = new Set<number>()
   // Tree edges, breadth-first: the first edge of a component runs between its
   // two endpoints; every later one starts at the new zone's endpoint and ends
   // at the NEAREST tile of the road laid so far, so roads branch and share
   // stretches instead of running side by side.
   for (const [u, v] of orderTreeEdges(roadSelection.tree, townZones)) {
-    let path: number[] | null
-    if (networkZones.has(u) && roadNodes.size > 0) {
-      const from = endpointOf(v)
-      const aim = nearestNode(roadNodes, from, sizeX) as number
-      const windingCost = createWindingCost(sizeX, from, aim, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-      const confined = confinementCost(u, v)
-      path = routeRoad(from, roadNodes, (x, z) => windingCost(x, z) + confined(x, z))
-    } else {
-      const from = endpointOf(u)
-      const to = endpointOf(v)
-      const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-      const confined = confinementCost(u, v)
-      path = routeRoad(from, to, (x, z) => windingCost(x, z) + confined(x, z))
-    }
-    if (path) { paintEdgeRoad(u, v, path); networkZones.add(u); networkZones.add(v) } else unroutableEdges += 1
+    const legs = routeConnection(u, v, networkZones.has(u) && roadNodes.size > 0)
+    if (legs) { paintEdgeRoad(u, v, legs); networkZones.add(u); networkZones.add(v) } else unroutableEdges += 1
   }
   // Loop edges: point to point, steering away from the roads already drawn.
   for (const [a, b] of roadSelection.extra) {
     if (!gameTemplateJson && !(networkZones.has(a) && networkZones.has(b) && edgeSkipRoll(a, b) < 1 - roadFullConnectivityChance)) continue
-    const from = endpointOf(a)
-    const to = endpointOf(b)
     const distanceField = computeRoadDistanceField(roadNodes, sizeX, sizeZ, ROAD_AVOIDANCE_RADIUS)
     const avoidanceCost = createRoadAvoidanceCost(distanceField, sizeX, ROAD_AVOIDANCE_RADIUS, ROAD_AVOIDANCE_STRENGTH)
-    const windingCost = createWindingCost(sizeX, from, to, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
-    const confined = confinementCost(a, b)
-    const path = routeRoad(from, to, (x, z) => windingCost(x, z) + avoidanceCost(x, z) + confined(x, z))
-    if (path) paintEdgeRoad(a, b, path)
+    const legs = routeConnection(a, b, false, avoidanceCost)
+    if (legs) paintEdgeRoad(a, b, legs)
     else unroutableEdges += 1
   }
   if (unroutableEdges > 0) {
