@@ -585,7 +585,7 @@ export interface ScatterObstaclesOptions {
  *  the footprint than without. Conservative (the window edge can count a
  *  split that reconnects further out) — a rejected spot just tries the next. */
 const SPLIT_CHECK_RADIUS = 8
-function splitsWalkableGround(
+export function splitsWalkableGround(
   footprint: Set<number>, centerX: number, centerZ: number, sizeX: number, sizeZ: number,
   isBlocked: (n: number) => boolean,
 ): boolean {

@@ -56,6 +56,7 @@ import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { createZonePopulator, tryPlace, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { scatterZoneObstacles } from './zone-decoration'
+import { scatterEdgeFrame } from './zone-edge-frame'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
 import { buildInteractableRarity } from './interactable-rarity'
@@ -69,7 +70,7 @@ import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
-import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
+import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation, findAdjacentLevelZeroNode } from './zone-elevation'
 import { BUILTIN_RMG_SCHEMA } from './rmg-schema'
@@ -1255,7 +1256,13 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const roadDistanceField = decorationRoadDecayStrength > 0 && roadNodes.size > 0
     ? computeRoadDistanceField(roadNodes, sizeX, sizeZ, 30)
     : undefined
-  const obstaclePlacements = scatterZoneObstacles({
+  // Trees and mountains fence in the map edge, like the game's own maps.
+  const edgeFramePlacements = scatterEdgeFrame({
+    sizeX, sizeZ, zoneIdByNode, zoneBiome, catalogById, mapObjects: catalog.mapObjects, state,
+    waterNodes: waterNodesAll, walkableNodes: new Set([...roadNodes, ...riverNodes]), rng,
+    strength: tuning.edges?.frame ?? DEFAULT_EDGE_FRAME, rmgEnvironmentAssets: catalog.rmgEnvironmentAssets,
+  })
+  const obstaclePlacements = edgeFramePlacements.concat(scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity, densityByZone, ambientPickupByZone,
@@ -1263,7 +1270,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, elevationDecayStrength: decorationElevationDecayStrength,
     rmgEnvironmentAssets: catalog.rmgEnvironmentAssets,
     forcedMountainSpots: riverMountainSpots, walkableNodes: new Set([...roadNodes, ...riverNodes]),
-  })
+  }))
 
   // Dedicated interactable scatter (issue #237 parts 1/2) — runs after
   // obstacles so it only fills tiles obstacles left free, same collision
