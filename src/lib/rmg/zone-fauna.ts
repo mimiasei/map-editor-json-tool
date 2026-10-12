@@ -67,7 +67,7 @@ const ALL_BIOME_IDS: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
  *  what real maps actually favor (fog dominant, fireflies split most of
  *  the rest, smoke/map-light real but minor; light-sky is never used). */
 const FX_WEIGHTS: Record<string, number> = {
-  fx_fog: 674,
+  fx_fog: 374,
   fx_fireflies_blue: 274,
   fx_fireflies_yellow: 204,
   fx_fireflies_red: 97,
