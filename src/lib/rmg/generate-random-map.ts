@@ -55,11 +55,11 @@ import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-impo
 import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { createZonePopulator, tryPlace, tryPlaceAt, ZONE_BIOMES, type ZonePlacement } from './zone-population'
-import { scatterZoneObstacles } from './zone-decoration'
+import { addPoolSurround, scatterZoneObstacles } from './zone-decoration'
 import { scatterEdgeFrame } from './zone-edge-frame'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
-import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, buildTreePools } from '@/lib/map-grid/fuzzy-obstacle'
 import { buildInteractableRarity } from './interactable-rarity'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
@@ -1141,6 +1141,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // A river can end in a decorative 3×3 pool of its zone's biome.
   const bigPoolsByBiome = new Map<BiomeId, string[]>()
   const fuzzyPools = buildFuzzyObstaclePools(catalog.mapObjects)
+  const fuzzyTrees = buildTreePools(catalog.mapObjects)
   for (const [biome, pool] of Object.entries(fuzzyPools)) {
     bigPoolsByBiome.set(Number(biome) as BiomeId, pool.pools.filter((sid) => catalogById.get(sid)?.sizeX === 3 && catalogById.get(sid)?.sizeZ === 3))
   }
@@ -1202,6 +1203,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       const sid = sids[Math.floor(rng() * sids.length)]
       if (sid && tryPlaceAt(sid, route.poolAnchor, sizeX, sizeZ, catalogById, state)) {
         riverPoolPlacements.push({ tempId: state.nextTempId++, sid, node: route.poolAnchor })
+        // Pools in the game's maps are always ringed by trees, grass, rocks...; the river's own tiles stay free.
+        const biome = zoneBiome.get(zoneIdByNode[route.poolAnchor]) as BiomeId
+        addPoolSurround(sid, route.poolAnchor, sizeX, sizeZ, fuzzyPools[biome], fuzzyTrees[biome].obstacles, catalogById, state, rng, riverPoolPlacements,
+          new Set([...route.path, ...(route.widening ?? []), ...(route.mouthWater ?? []).map((w) => w.node)]))
       }
     }
     // A river ending at a tributary join has no mouth.
