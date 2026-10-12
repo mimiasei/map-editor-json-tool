@@ -1138,14 +1138,72 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverPaths: number[][] = []
   const riverMouths: number[] = []
   const riverMountainSpots: { node: number; biome: BiomeId; cluster?: number }[] = []
-  // A river can end in a decorative 3×3 pool of its zone's biome.
-  const bigPoolsByBiome = new Map<BiomeId, string[]>()
+  // A river can end in a decorative pool of its zone's biome: 2×2 or 3×3, alone or in a cluster.
+  const poolsByBiome = new Map<BiomeId, Record<2 | 3, string[]>>()
   const fuzzyPools = buildFuzzyObstaclePools(catalog.mapObjects)
   const fuzzyTrees = buildTreePools(catalog.mapObjects)
   for (const [biome, pool] of Object.entries(fuzzyPools)) {
-    bigPoolsByBiome.set(Number(biome) as BiomeId, pool.pools.filter((sid) => catalogById.get(sid)?.sizeX === 3 && catalogById.get(sid)?.sizeZ === 3))
+    const bySize = (size: number): string[] => pool.pools.filter((sid) => catalogById.get(sid)?.sizeX === size && catalogById.get(sid)?.sizeZ === size)
+    poolsByBiome.set(Number(biome) as BiomeId, { 2: bySize(2), 3: bySize(3) })
   }
   const riverPoolPlacements: ZonePlacement[] = []
+  // Pools in the game's maps come in groups: of 426, a third have a neighbour touching them and a
+  // small pool next to a big one is the commonest pair. A river-end pool gets 1-2 neighbours with
+  // this chance, each at a gap of 0 (touching), 1, 2 or 3 tiles.
+  const POOL_CLUSTER_CHANCE = 0.4
+  const POOL_GAP_WEIGHTS = [0.55, 0.2, 0.15, 0.1]
+  const placePoolNeighbours = (mainSid: string, mainAnchor: number, biome: BiomeId, riverTiles: ReadonlySet<number>): { sid: string; anchor: number }[] => {
+    const placed: { sid: string; anchor: number }[] = []
+    if (rng() >= POOL_CLUSTER_CHANCE) return placed
+    const cellsOf = (sid: string, anchor: number): number[] =>
+      computeFootprintTiles(catalogById.get(sid), anchor % sizeX, Math.floor(anchor / sizeX)).filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x)
+    const taken = new Set<number>(cellsOf(mainSid, mainAnchor))
+    const mainSize = catalogById.get(mainSid)?.sizeX === 2 ? 2 : 3
+    const wanted = rng() < 0.25 ? 2 : 1
+    const bySize = poolsByBiome.get(biome)
+    if (!bySize) return placed
+    for (let k = 0; k < wanted; k++) {
+      // A small pool next to a big one is the commonest pair.
+      const size: 2 | 3 = rng() < 0.55 ? (mainSize === 2 ? 3 : 2) : mainSize
+      const sids = bySize[size]
+      if (sids.length === 0) continue
+      const roll = rng()
+      let gap = 0
+      for (let acc = 0, g = 0; g < POOL_GAP_WEIGHTS.length; g++) { acc += POOL_GAP_WEIGHTS[g]; if (roll < acc) { gap = g; break } }
+      const sid = sids[Math.floor(rng() * sids.length)]
+      const gapOf = (cells: number[]): number => {
+        let best = 99
+        for (const c of cells) for (const t of taken) best = Math.min(best, Math.max(Math.abs((c % sizeX) - (t % sizeX)), Math.abs(Math.floor(c / sizeX) - Math.floor(t / sizeX))) - 1)
+        return best
+      }
+      const mx = mainAnchor % sizeX
+      const mz = Math.floor(mainAnchor / sizeX)
+      const candidates: number[] = []
+      for (let az = mz - 7; az <= mz + 7; az++) {
+        for (let ax = mx - 7; ax <= mx + 7; ax++) {
+          if (ax < 1 || az < 1 || ax >= sizeX - 1 || az >= sizeZ - 1) continue
+          const anchor = az * sizeX + ax
+          const cells = cellsOf(sid, anchor)
+          const ok = cells.every((q) => {
+            const qx = q % sizeX
+            const qz = Math.floor(q / sizeX)
+            return qx >= 1 && qz >= 1 && qx <= sizeX - 2 && qz <= sizeZ - 2 && !riverTiles.has(q) && levelsMapFinal[q] === 0 && climbsMapFinal[q] === 0 &&
+              !waterNodesAll.has(q) && !elevationWallNodesAll.has(q) && !roadNodes.has(q) && !state.blocked.has(q)
+          })
+          if (ok && gapOf(cells) === gap) candidates.push(anchor)
+        }
+      }
+      while (candidates.length > 0) {
+        const anchor = candidates.splice(Math.floor(rng() * candidates.length), 1)[0]
+        if (tryPlaceAt(sid, anchor, sizeX, sizeZ, catalogById, state)) {
+          placed.push({ sid, anchor })
+          for (const c of cellsOf(sid, anchor)) taken.add(c)
+          break
+        }
+      }
+    }
+    return placed
+  }
   const riverTerrain: RiverTerrain = {
     sizeX, sizeZ, levels: levelsMapFinal, climbs: climbsMapFinal, water: waterNodesAll, blocked: { has: (n: number) => state.blocked.has(n) && !roadOnlyBlocked.has(n) },
     usedAnchors: state.usedAnchors, wallNodes: elevationWallNodesAll, roadNodes, riverNodes,
@@ -1161,9 +1219,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       }
       return true
     },
-    poolMouth: (anchor: number) => {
+    poolMouth: (anchor: number, size: 2 | 3) => {
       const biome = zoneBiome.get(zoneIdByNode[anchor])
-      const sid = biome === undefined ? undefined : bigPoolsByBiome.get(biome)?.[0]
+      const sid = biome === undefined ? undefined : poolsByBiome.get(biome)?.[size][0]
       if (!sid) return false
       // The pool must not stand on ground its biome is isolated from (Snow, Sand, Lava).
       const objectBiome = sidBiome(sid, catalogById)
@@ -1198,15 +1256,18 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
   carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
     riverPaths.push(route.path)
-    if (route.poolAnchor !== undefined) {
-      const sids = bigPoolsByBiome.get(zoneBiome.get(zoneIdByNode[route.poolAnchor]) as BiomeId) ?? []
+    if (route.poolAnchor !== undefined && route.poolSize !== undefined) {
+      const biome = zoneBiome.get(zoneIdByNode[route.poolAnchor]) as BiomeId
+      const sids = poolsByBiome.get(biome)?.[route.poolSize] ?? []
       const sid = sids[Math.floor(rng() * sids.length)]
       if (sid && tryPlaceAt(sid, route.poolAnchor, sizeX, sizeZ, catalogById, state)) {
-        riverPoolPlacements.push({ tempId: state.nextTempId++, sid, node: route.poolAnchor })
+        const riverTiles = new Set([...route.path, ...(route.widening ?? []), ...(route.mouthWater ?? []).map((w) => w.node)])
+        const pools = [{ sid, anchor: route.poolAnchor }, ...placePoolNeighbours(sid, route.poolAnchor, biome, riverTiles)]
+        for (const p of pools) riverPoolPlacements.push({ tempId: state.nextTempId++, sid: p.sid, node: p.anchor })
         // Pools in the game's maps are always ringed by trees, grass, rocks...; the river's own tiles stay free.
-        const biome = zoneBiome.get(zoneIdByNode[route.poolAnchor]) as BiomeId
-        addPoolSurround(sid, route.poolAnchor, sizeX, sizeZ, fuzzyPools[biome], fuzzyTrees[biome].obstacles, catalogById, state, rng, riverPoolPlacements,
-          new Set([...route.path, ...(route.widening ?? []), ...(route.mouthWater ?? []).map((w) => w.node)]))
+        for (const p of pools) {
+          addPoolSurround(p.sid, p.anchor, sizeX, sizeZ, fuzzyPools[biome], fuzzyTrees[biome].obstacles, catalogById, state, rng, riverPoolPlacements, riverTiles)
+        }
       }
     }
     // A river ending at a tributary join has no mouth.
