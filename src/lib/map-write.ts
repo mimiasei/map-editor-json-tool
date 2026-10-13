@@ -2132,6 +2132,34 @@ export function patchGameRules(
   return { block1Chunk: new TextEncoder().encode(text1), block2Chunk: new TextEncoder().encode(text2) }
 }
 
+// ─── Win conditions (generated maps) ─────────────────────────────────────────
+// `settings.mapWinConditions`: one entry per active condition. A fresh map
+// ships `0,2,1` (Classic, Hero Lighting, Desertion); this keeps those entries
+// as they are, drops Classic when it isn't wanted, and appends the extra
+// conditions given as `{ type, fields }` (fields override the entry defaults).
+export function patchWinConditions(
+  block2Chunk: Uint8Array,
+  options: { classic: boolean; extras: { type: number; fields?: Record<string, unknown> }[] },
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'mapWinConditions')
+  const entries = JSON.parse(span) as Record<string, unknown>[]
+  const template = entries[0] ?? {}
+  let next = entries.filter((e) => options.classic || e.typeWinCondition !== 0)
+  next = next.filter((e) => !options.extras.some((x) => x.type === e.typeWinCondition))
+  for (const extra of options.extras) next.push({ ...template, typeWinCondition: extra.type, ...extra.fields })
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(next) + text.slice(arrayClose + 1))
+}
+
+/** Marks an object as the City Hold city (`objectsProperties.propCitiesHold`). */
+export function markCityHold(block2Chunk: Uint8Array, objectId: number): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propCitiesHold')
+  const entries = JSON.parse(span) as { type: number; id: number; isCityHold: boolean }[]
+  if (!entries.some((e) => e.type === 0 && e.id === objectId)) entries.push({ type: 0, id: objectId, isCityHold: true })
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
 // ─── Map Settings dialog (issue #210 follow-up — Map Grid header) ──────────
 // Block 1's `title`/`desc` are the map's real in-game name/description (NOT
 // the same as `mapName`, a Block 2 field this app's own sidebar already

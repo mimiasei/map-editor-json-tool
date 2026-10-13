@@ -55,6 +55,7 @@ import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
+import { WIN_CONDITIONS } from '@/lib/rmg/win-conditions'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
@@ -444,6 +445,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         zoneJaggedness: opts.zoneJaggedness,
         zoneSpread: opts.zoneSpread,
         layoutArchetype: classicMode && !gameTemplate ? classic.layout : undefined,
+        winConditions: classicMode && !gameTemplate ? classic.winConditions : undefined,
         boundaryGuardStrength: opts.boundaryGuardStrength,
         squadDensity: opts.squadDensity,
         roadWindingAmplitude: opts.roadWindingAmplitude,
@@ -852,6 +854,33 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                               ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                      )}
+                      {!gameTemplate && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1">
+                            <Label className="text-xs">Win conditions</Label>
+                            <FieldInfo text="Which conditions the generated map uses. Several can be on at once; at least one stays on. Default is Classic only." />
+                          </div>
+                          {WIN_CONDITIONS.map((wc) => {
+                            const active = classic.winConditions ?? ['classic']
+                            const on = active.includes(wc.id)
+                            return (
+                              <div key={wc.id} className="flex items-center gap-2" title={wc.description}>
+                                <Checkbox
+                                  id={`rmg-win-${wc.id}`}
+                                  checked={on}
+                                  disabled={terrainLocked || (on && active.length === 1)}
+                                  onCheckedChange={(checked) => setClassic((prev) => {
+                                    const cur = prev.winConditions ?? ['classic']
+                                    const next = checked ? [...cur, wc.id] : cur.filter((id) => id !== wc.id)
+                                    return { ...prev, winConditions: next.length === 1 && next[0] === 'classic' ? undefined : next }
+                                  })}
+                                />
+                                <Label htmlFor={`rmg-win-${wc.id}`} className="text-sm font-normal">{wc.label}</Label>
+                              </div>
+                            )
+                          })}
                         </div>
                       )}
                     </>

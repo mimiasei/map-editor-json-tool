@@ -3,6 +3,7 @@
 
 import { LAYOUT_ARCHETYPES, type LayoutArchetype } from './zone-archetypes'
 import { DEFAULT_CLASSIC_SETTINGS, COMPLEXITY_LEVELS, DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type ClassicSettings } from './classic-presets'
+import { parseWinConditionList } from './win-conditions'
 import { MAX_RANDOM_CITIES } from './rmg-tuning'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 
@@ -104,6 +105,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
       water: pickIndex(raw.water, WATER_LEVELS, DEFAULT_CLASSIC_SETTINGS.water, 'water'),
       maxRandomCities,
       layout: parseLayout(raw.layout),
+      winConditions: parseWinConditionList(raw.win),
     },
   }
 }
