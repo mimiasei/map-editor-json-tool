@@ -12,11 +12,22 @@
 // from the archetype pick, a random global rotation and one random jitter of
 // the unit's radii/angles (the same jitter in every sector).
 
+import { logWarn } from '@/lib/logger'
 import type { NeutralZoneRole, ZoneGraph, ZoneSpec } from './zone-graph'
 import type { ZoneCenter } from './zone-layout'
 
 export const LAYOUT_ARCHETYPES = ['ring', 'ringCenter', 'innerRing', 'doubleNeutral', 'pockets', 'hub'] as const
 export type LayoutArchetype = (typeof LAYOUT_ARCHETYPES)[number]
+
+/** Name and one-line description of each layout, for the generator dialog. */
+export const LAYOUT_LABELS: Record<LayoutArchetype, { label: string; description: string }> = {
+  ring: { label: 'Ring', description: 'Player and neutral zones alternate on one ring.' },
+  ringCenter: { label: 'Ring with center', description: 'The ring plus a treasure zone in the middle, reachable from every neutral zone.' },
+  innerRing: { label: 'Inner ring', description: 'Players on the outside; the neutral zones form an inner ring of their own.' },
+  doubleNeutral: { label: 'Double neutral', description: 'Two neutral zones between neighbouring players.' },
+  pockets: { label: 'Pockets', description: 'An inner ring, plus a dead-end treasure pocket behind each neutral zone.' },
+  hub: { label: 'Hub', description: 'A spoke from every player to a shared center; no direct ring between players.' },
+}
 
 interface UnitZone {
   /** Name inside the unit; edges refer to it, `+`/`-` suffix = next/previous sector's zone. */
@@ -128,6 +139,18 @@ export function neutralZoneRange(playerCount: number): { min: number; max: numbe
   return { min: Math.min(...counts), max: Math.max(...counts) }
 }
 
+/** Whether `name` can be used for this map size and player count: not too
+ *  crowded and not over its player limit (`ring` always fits). */
+function archetypeFits(name: LayoutArchetype, sizeX: number, sizeZ: number, playerCount: number): boolean {
+  return name === 'ring' || (
+    (sizeX * sizeZ) / zoneCount(DEFS[name], playerCount) >= MIN_TILES_PER_ZONE && playerCount <= (DEFS[name].maxPlayers ?? Infinity))
+}
+
+/** The layouts a user can pick for this map size and player count. */
+export function availableArchetypes(sizeX: number, sizeZ: number, playerCount: number): LayoutArchetype[] {
+  return LAYOUT_ARCHETYPES.filter((name) => archetypeFits(name, sizeX, sizeZ, playerCount))
+}
+
 /** Pick an archetype (weighted; `weights` from the tuning file, default 1
  *  each) and lay it out. `radiusScale` scales every radius (the generator's
  *  zone-spread option, same as the old ring). Archetypes too crowded for the
@@ -135,8 +158,12 @@ export function neutralZoneRange(playerCount: number): { min: number; max: numbe
  *  always possible. */
 export function buildBuiltInLayout(
   sizeX: number, sizeZ: number, playerCount: number, rng: () => number,
-  radiusScale = 1, weights: Partial<Record<LayoutArchetype, number>> = {},
+  radiusScale = 1, weights: Partial<Record<LayoutArchetype, number>> = {}, forced?: LayoutArchetype,
 ): BuiltInLayout {
+  if (forced) {
+    if (archetypeFits(forced, sizeX, sizeZ, playerCount)) return layoutArchetype(forced, sizeX, sizeZ, playerCount, rng, radiusScale)
+    logWarn(`RMG layout: ${forced} does not fit ${playerCount} players on ${sizeX}x${sizeZ} — picking a random layout instead`)
+  }
   const tiles = sizeX * sizeZ
   const options = LAYOUT_ARCHETYPES
     .map((name) => ({ name, weight: Math.max(0, weights[name] ?? 1) }))

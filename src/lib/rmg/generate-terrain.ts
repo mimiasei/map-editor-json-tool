@@ -133,6 +133,8 @@ export interface GenerateTerrainOptions {
   /** Relative weights of the built-in layout archetypes (zone-archetypes.ts,
    *  tuning file `layout.weights`); unset = 1 each. Ignored with a game template. */
   layoutWeights?: Partial<Record<LayoutArchetype, number>>
+  /** Use this layout instead of a random pick (ignored with a game template, or when it doesn't fit the map). */
+  layoutArchetype?: LayoutArchetype
   /** See this file's own header comment on `computeWater` — same reasoning
    *  applies to elevation: the real full-pipeline generator computes its
    *  own hills/valleys later (generate-random-map.ts, after object
@@ -276,7 +278,7 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
-    hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, layoutWeights, computeElevation = false, elevationModes,
+    hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, layoutWeights, layoutArchetype: forcedLayout, computeElevation = false, elevationModes,
     enabledBiomes, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
@@ -287,7 +289,7 @@ export function generateTerrain(
   // holds: every archetype repeats one sector unit per player).
   const builtInLayout = importedTopology
     ? null
-    : buildBuiltInLayout(sizeX, sizeZ, playerCount, rng, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25, layoutWeights)
+    : buildBuiltInLayout(sizeX, sizeZ, playerCount, rng, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25, layoutWeights, forcedLayout)
   if (builtInLayout) logInfo(`RMG layout: ${builtInLayout.archetype} (${builtInLayout.graph.zones.length} zones)`)
   const graph = importedTopology ? importedTopology.graph : (builtInLayout as BuiltInLayout).graph
   const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
