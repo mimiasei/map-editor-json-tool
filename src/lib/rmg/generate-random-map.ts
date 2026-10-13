@@ -337,17 +337,19 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // comment for why this is a shared, extracted function: byte-identical
   // terrain for the same seed whether called standalone for a preview/
   // terrain-only map or as this real pipeline's own first phase).
-  // `computeWater: terrainOnly` — a real full generation computes its own
-  // water itself, below, AFTER object population (so lakes still avoid
-  // overlapping a real object, exactly as before this extraction); a
-  // terrain-only run has no objects to avoid, so it's fine (and necessary,
-  // since it returns immediately after this) to have generateTerrain
-  // compute water itself.
+  // `computeWater`/`computeElevation` are on for terrain-only runs and (see
+  // `terrainFirst` below) for every mode except islands, which still floods
+  // its own water after object population.
   await reportProgress('Laying out zones and terrain', 0)
+  // Terrain first: lakes and hills/valleys are cut before any object exists, and
+  // every object is then placed knowing them. Islands mode keeps the old order
+  // (its flood and portals are built around objects existing first).
+  const terrainFirst = !terrainOnly && waterContent !== 'islands'
   const terrain = generateTerrain(template, catalogById, {
     sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
-    computeWater: terrainOnly, computeElevation: terrainOnly, organicTerrainBlending,
+    computeWater: terrainOnly || terrainFirst, computeElevation: terrainOnly || terrainFirst, organicTerrainBlending,
+    elevationModes: catalog.rmgZoneLayout?.elevationModes,
   })
   if (terrainOnly) {
     await reportProgress('Terrain generated', 100)
@@ -386,8 +388,33 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // treasure and its guards only after the roads exist, so roads aren't
   // detoured around piles and treasure keeps off the road. The three result
   // collections are shared with the second phase, which appends to them.
+  // With the terrain already cut, key objects and their per-zone counts use land
+  // tiles only and keep off water, cliff walls and ramps.
+  const preWaterNodes = terrainFirst ? terrain.waterNodesAll : new Set<number>()
+  const populateTilesByZone = terrainFirst
+    ? new Map([...tilesByZone].map(([zoneId, tiles]) => [zoneId, tiles.filter((n) => !preWaterNodes.has(n))] as [number, number[]]))
+    : tilesByZone
+  if (terrainFirst) {
+    const reserved = new Set<number>(preWaterNodes)
+    for (let node = 0; node < tileCount; node++) {
+      if (terrain.levelsMapFinal[node] !== 0 || terrain.climbsMapFinal[node] === 1) reserved.add(node)
+    }
+    // Ramps and the tiles next to them stay clear; hills and valleys themselves
+    // stay free of key objects too (they were placed on level-0 ground before).
+    for (let node = 0; node < tileCount; node++) {
+      if (terrain.climbsMapFinal[node] !== 1) continue
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx >= 0 && nx < sizeX && nz >= 0 && nz < sizeZ) reserved.add(nz * sizeX + nx)
+      }
+    }
+    state.terrainReserved = reserved
+  }
   const zonePopulator = createZonePopulator({
-    sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
+    sizeX, sizeZ, zones: graph.zones, tilesByZone: populateTilesByZone, zoneBiome, catalogById, objectLogicsById, state, rng, treasureDensity, catalog, objectVariety, randomCityCount, contentCountLimits,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId, mandatoryContentSidsByZoneId,
     mineGoldBiomeBiasStrength, disabledInteractableSids: disabledInteractableSidSet,
     richness: richness ? resolveRichness(richness, tuning) : undefined,
@@ -397,6 +424,23 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     zoneAnchorNode, symmetricZones: !gameTemplateJson,
   })
   const { placements, concreteSquads, decidedNodes } = zonePopulator.populateKeyObjects()
+  if (terrainFirst) {
+    // Later passes may use hill and valley ground again; water, walls and ramps stay off limits.
+    const reserved = new Set<number>(preWaterNodes)
+    for (let node = 0; node < tileCount; node++) {
+      if (terrain.climbsMapFinal[node] !== 1) continue
+      reserved.add(node)
+      const x = node % sizeX
+      const z = Math.floor(node / sizeX)
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx >= 0 && nx < sizeX && nz >= 0 && nz < sizeZ) reserved.add(nz * sizeX + nx)
+      }
+    }
+    for (const node of terrain.elevationNodesAll) if (isElevationWallTile(node, sizeX, sizeZ, terrain.levelsMapFinal, terrain.climbsMapFinal)) reserved.add(node)
+    state.terrainReserved = reserved
+  }
 
   // Water. Deliberately computed BEFORE roads/rivers (see this file's own
   // header comment) so their own BFS pathfinding already treats it as
@@ -410,9 +454,16 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // a portal, not a boat, and why this is per-edge). `'none'` does
   // nothing. Whichever ran, everything downstream
   // shares the same collision state so nothing else can ever land on it.
-  let waterNodesAll = new Set<number>()
+  let waterNodesAll = new Set<number>(preWaterNodes)
   let waterChangesAll: { node: number; waterId: number }[] = []
   let levelChangesAll: { node: number; level: number }[] = []
+  if (terrainFirst) {
+    // Already painted into the container by generateTerrain; rebuilt as change lists for the shared code below.
+    for (let node = 0; node < tileCount; node++) {
+      if (terrain.waterMapFinal[node] !== 0) waterChangesAll.push({ node, waterId: terrain.waterMapFinal[node] })
+      if (terrain.levelsMapFinal[node] !== 0) levelChangesAll.push({ node, level: terrain.levelsMapFinal[node] })
+    }
+  }
   const portalPlacements: ZonePlacement[] = []
   const portalAdjacency = new Map<number, number>()
 
@@ -424,7 +475,9 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const roadPoiNodes = [...placements, ...concreteSquads].filter((p) => isNotableSid(p.sid)).map((p) => p.node)
 
   await reportProgress('Adding water', 25)
-  if (waterContent === 'normal') {
+  if (terrainFirst) {
+    // Lakes were cut by generateTerrain, before any object.
+  } else if (waterContent === 'normal') {
     const { chanceByZone, minSizeByZone } = deriveWaterOverrides(zoneLayoutByZoneId)
     const waterResult = scatterZoneWater({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, tileBiome,
@@ -504,8 +557,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // comment. Unlike water, both player AND neutral zones are eligible.
   await reportProgress('Shaping elevation', 32)
   let climbChangesAll: { node: number; climb: 1 }[] = []
-  let elevationNodesAll = new Set<number>()
-  {
+  let elevationNodesAll = new Set<number>(terrainFirst ? terrain.elevationNodesAll : [])
+  if (terrainFirst) {
+    for (let node = 0; node < tileCount; node++) if (terrain.climbsMapFinal[node] === 1) climbChangesAll.push({ node, climb: 1 })
+  } else {
     const excludedNodes = new Set(zoneAnchorNode.values())
     const hillResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,

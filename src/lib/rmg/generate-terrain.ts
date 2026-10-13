@@ -140,6 +140,9 @@ export interface GenerateTerrainOptions {
    *  passes false here; the terrain-only final mode and live-preview flow
    *  have no objects at this point anyway, so they pass true. */
   computeElevation?: boolean
+  /** The game's bimodal elevated-fraction bands (`catalog.rmgZoneLayout?.elevationModes`);
+   *  unset keeps the continuous interpolation. */
+  elevationModes?: { weight: number; minElevatedFraction: number; maxElevatedFraction: number }[]
   /** false for the "terrain only" final mode (no spawners at all — the map
    *  maker places everything themselves) and for the real generator's own
    *  initial phase when its own `terrainOnly` option is set; true for the
@@ -219,6 +222,8 @@ export interface TerrainResult {
    *  `computeWater`, water tiles too. */
   state: PlacementState
   waterNodesAll: Set<number>
+  /** Tiles raised or lowered by hills/valleys (empty unless `computeElevation`). */
+  elevationNodesAll: Set<number>
   waterMapFinal: number[]
   levelsMapFinal: number[]
   climbsMapFinal: number[]
@@ -271,7 +276,7 @@ export function generateTerrain(
     sizeX, sizeZ, playerCount, waterContent = 'normal', waterChance = 0.4,
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
-    hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, layoutWeights, computeElevation = false,
+    hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, layoutWeights, computeElevation = false, elevationModes,
     enabledBiomes, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
@@ -456,20 +461,22 @@ export function generateTerrain(
   // both later itself — see this file's own `computeWater` doc comment,
   // same reasoning applies here).
   let climbChangesAll: { node: number; climb: 1 }[] = []
+  let elevationNodesAll = new Set<number>()
   if (computeElevation) {
     const excludedNodes = new Set(zoneAnchorNode.values())
     const hillResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'hill', chance: hillChance,
-      reservedNodes: waterNodesAll, zoneLayouts: hillLayouts, minSpan: elevationMinSpan,
+      reservedNodes: waterNodesAll, elevationModes, zoneLayouts: hillLayouts, minSpan: elevationMinSpan,
     })
     const valleyResult = scatterZoneElevation({
       sizeX, sizeZ, zones: graph.zones, tilesByZone, zoneAnchorNode, excludedNodes,
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'valley', chance: valleyChance,
-      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]), minSpan: elevationMinSpan,
+      reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]), elevationModes, minSpan: elevationMinSpan,
     })
     levelChangesAll = [...levelChangesAll, ...hillResult.levelChanges, ...valleyResult.levelChanges]
     climbChangesAll = [...hillResult.climbChanges, ...valleyResult.climbChanges]
+    elevationNodesAll = new Set([...hillResult.elevatedNodes, ...valleyResult.elevatedNodes])
   }
 
   if (waterChangesAll.length > 0) block2 = paintWaterTiles(block2, waterChangesAll)
@@ -501,7 +508,7 @@ export function generateTerrain(
     sizeX, sizeZ, container, graph, zoneDistances, centers, zoneIdByNode, tilesByZone, zoneBiome,
     tileBiome: terrainChanges.map((c) => c.biomeId),
     zoneAnchorNode, islandLandmassByZone, islandFloodNodes, players, state,
-    waterNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
+    waterNodesAll, elevationNodesAll, waterMapFinal, levelsMapFinal, climbsMapFinal, portalEdges, unpaintedEdges, zoneLayoutByZoneId,
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
     layoutArchetype: builtInLayout?.archetype ?? null,
