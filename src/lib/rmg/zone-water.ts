@@ -99,7 +99,7 @@ function wouldIsolateProtectedNeighbor(
  *  would fully surround one of those tiles with blob on every side —
  *  confirmed real bug: `scatterZoneWater`'s lake growth had no such check,
  *  so a `random-squad`/mine/etc. already placed on ordinary land (object
- *  placement runs BEFORE water carving in `generate-random-map.ts`) could
+ *  placement runs BEFORE water carving in islands mode in `generate-random-map.ts`) could
  *  end up alone on a 1-tile island, completely unreachable — the game's own
  *  accessibility repair pass can't bridge across water or nudge across a
  *  lake wider than its own search radius, so the object shipped exactly

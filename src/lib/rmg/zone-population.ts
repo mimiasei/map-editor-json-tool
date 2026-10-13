@@ -236,6 +236,10 @@ export interface PlacementState {
    *  where one of the object's cells would break biome isolation (a Snow
    *  object off Snow, anything on Sand/Snow/Lava ground, see biome-isolation.ts). */
   tileBiome?: number[]
+  /** Tiles no object cell (solid or entrance) or guard tile may use: lake water,
+   *  elevation walls, ramps and the tiles next to a ramp. Set by the generator
+   *  once the terrain exists; unset means no such rule. */
+  terrainReserved?: Set<number>
 }
 
 export function createPlacementState(seedBlocked: Set<number>, seedAnchors: Set<number>): PlacementState {
@@ -335,6 +339,7 @@ export function tryPlaceAt(
   for (const cell of cells) {
     if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) return false
     if (objectBiome !== null && violatesIsolation(objectBiome, state.tileBiome?.[cell.z * sizeX + cell.x])) return false
+    if (!nonBlocking && cell.value !== 0 && state.terrainReserved?.has(cell.z * sizeX + cell.x)) return false
     if (!nonBlocking && cell.value === 1 && state.blocked.has(cell.z * sizeX + cell.x)) return false
   }
 
@@ -349,7 +354,7 @@ export function tryPlaceAt(
   if (!nonBlocking && !NO_GUARD_TILE_SIDS.has(sid) && cells.some((c) => c.value === 2)) {
     guardTile = entranceGuardCandidates(cells, sizeX).find((n) =>
       !state.blocked.has(n) && !state.usedAnchors.has(n) && !state.reservedGuardTiles.has(n)) ?? null
-    if (guardTile === null) return false
+    if (guardTile === null || state.terrainReserved?.has(guardTile)) return false
   }
 
   state.usedAnchors.add(node)
