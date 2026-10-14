@@ -19,6 +19,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- A valid blank map: the placeholder the mod leaves in my_maps so the game indexes the output file at startup. -->
+    <EmbeddedResource Include="..src-tauriesources	emplate.map" LogicalName="placeholder.map" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Must match the BepInEx build the installer bundles (BEPINEX_BUILD in scripts/prepare-gme-mod.ps1). -->
     <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.785" PrivateAssets="all" />
   </ItemGroup>

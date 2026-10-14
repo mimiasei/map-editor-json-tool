@@ -84,14 +84,18 @@ namespace GmeRmgMod
         }
 
         /// <summary>The game indexes the my_maps folder once, at startup, so a map generated later can only be opened if a
-        /// file of that name already existed then. An empty placeholder (replaced by the first generated map) makes sure it does.</summary>
+        /// file of that name already existed then. A blank map as placeholder (replaced by the first generated map) makes sure it does.</summary>
         private static void EnsureOutputFileExists()
         {
             try
             {
                 string path = Path.Combine(MapsDirectory(), OutputFileName);
-                if (File.Exists(path)) return;
-                File.WriteAllBytes(path, new byte[0]);
+                if (File.Exists(path) && new FileInfo(path).Length > 0) return;
+                using (var resource = typeof(Plugin).Assembly.GetManifestResourceStream("placeholder.map"))
+                {
+                    if (resource == null) { Logger.LogWarning("The placeholder map is missing from the mod"); return; }
+                    using (var file = File.Create(path)) resource.CopyTo(file);
+                }
                 Logger.LogInfo($"Created a placeholder {OutputFileName} so the game indexes it at startup");
             }
             catch (Exception ex) { Logger.LogWarning($"Could not create the placeholder map: {ex.Message}"); }
