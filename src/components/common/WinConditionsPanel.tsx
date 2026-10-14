@@ -1,9 +1,9 @@
 import { Plus, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import FieldInfo from '@/components/common/FieldInfo'
+import DurationField from '@/components/common/DurationField'
 import type { ClassicSettings } from '@/lib/rmg/classic-presets'
 import { DEFAULT_WIN_OPTIONS, WIN_CONDITIONS, addTournamentFights, removeTournamentFights, type WinConditionId, type WinOptions } from '@/lib/rmg/win-conditions'
 
@@ -11,17 +11,6 @@ interface Props {
   settings: ClassicSettings
   onChange: (update: (prev: ClassicSettings) => ClassicSettings) => void
   disabled?: boolean
-}
-
-const toDays = (raw: string): number => Math.max(0, Math.floor(Number(raw) || 0))
-
-function NumberField({ label, value, onChange, disabled }: { label: string; value: number; onChange: (v: number) => void; disabled?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Input type="number" min={0} value={value} disabled={disabled} onChange={(e) => onChange(toDays(e.target.value))} className="h-7 w-20 text-sm" />
-    </div>
-  )
 }
 
 function SwitchField({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
@@ -66,12 +55,12 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
             </div>
             {on && wc.id === 'capital-hold' && (
               <div className="pl-3 space-y-1.5">
-                <NumberField label="Days to retake" value={options.capitalHoldDays} onChange={(v) => setOptions({ capitalHoldDays: v })} disabled={disabled} />
+                <DurationField label="Time to retake" value={options.capitalHoldDays} onChange={(v) => setOptions({ capitalHoldDays: v })} disabled={disabled} />
               </div>
             )}
             {on && wc.id === 'city-hold' && (
               <div className="pl-3 space-y-1.5">
-                <NumberField label="Days to hold" value={options.cityHoldDays} onChange={(v) => setOptions({ cityHoldDays: v })} disabled={disabled} />
+                <DurationField label="Time to hold" value={options.cityHoldDays} onChange={(v) => setOptions({ cityHoldDays: v })} disabled={disabled} />
                 <SwitchField label="Reset cooldown" checked={options.cityHoldResetCooldown} onChange={(v) => setOptions({ cityHoldResetCooldown: v })} disabled={disabled} />
               </div>
             )}
@@ -79,25 +68,20 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
               <div className="pl-3 space-y-1.5">
                 <SwitchField label="Registration start work" checked={fb.registrationStartWork} onChange={(v) => setOptions({ finalBattle: { ...fb, registrationStartWork: v } })} disabled={disabled} />
                 <SwitchField label="Registration start fight" checked={fb.registrationStartFight} onChange={(v) => setOptions({ finalBattle: { ...fb, registrationStartFight: v } })} disabled={disabled} />
-                <NumberField label="Start delay (days)" value={fb.daysDelayStart} onChange={(v) => setOptions({ finalBattle: { ...fb, daysDelayStart: v } })} disabled={disabled} />
-                <NumberField label="Count day" value={fb.countDay} onChange={(v) => setOptions({ finalBattle: { ...fb, countDay: v } })} disabled={disabled} />
+                <DurationField label="Start delay" value={fb.daysDelayStart} onChange={(v) => setOptions({ finalBattle: { ...fb, daysDelayStart: v } })} disabled={disabled} />
+                <DurationField label="Count day" value={fb.countDay} onChange={(v) => setOptions({ finalBattle: { ...fb, countDay: v } })} disabled={disabled} />
               </div>
             )}
             {on && wc.id === 'tournament' && (
               <div className="pl-3 space-y-1.5">
                 <SwitchField label="Save army" checked={options.tournamentSaveArmy} onChange={(v) => setOptions({ tournamentSaveArmy: v })} disabled={disabled} />
-                <div className="grid grid-cols-[3.5rem_1fr_1fr] items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
-                  <span />
-                  <span>Announce day</span>
-                  <span>Days</span>
-                  {fights.map((fight, i) => (
-                    <div key={i} className="contents">
-                      <span>Fight {i + 1}</span>
-                      <Input type="number" min={0} value={fight.announceDay} disabled={disabled} className="h-7 text-sm" onChange={(e) => setFight(i, { announceDay: toDays(e.target.value) })} />
-                      <Input type="number" min={0} value={fight.days} disabled={disabled} className="h-7 text-sm" onChange={(e) => setFight(i, { days: toDays(e.target.value) })} />
-                    </div>
-                  ))}
-                </div>
+                {fights.map((fight, i) => (
+                  <div key={i} className="space-y-1.5 rounded-md border border-border p-2">
+                    <span className="text-xs font-medium">Fight {i + 1}</span>
+                    <DurationField label="Announce day" value={fight.announceDay} onChange={(v) => setFight(i, { announceDay: v })} disabled={disabled} />
+                    <DurationField label="Length" value={fight.days} onChange={(v) => setFight(i, { days: v })} disabled={disabled} />
+                  </div>
+                ))}
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" size="sm" className="h-7 text-xs" disabled={disabled} onClick={() => setOptions({ tournamentFights: addTournamentFights(fights) })}>
                     <Plus className="h-3 w-3 mr-1" />Add 2 fights
