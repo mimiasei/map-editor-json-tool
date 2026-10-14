@@ -42,6 +42,8 @@ namespace GmeRmgMod
         public static Type OptionData;     // TMPro.TMP_Dropdown+OptionData
         public static Type Il2CppList;     // Il2CppSystem.Collections.Generic.List`1
         // Optional (not needed for the mod to work):
+        public static Type TextComponent;  // TMPro.TMP_Text, for the layout description
+        public static Type TextAlignment;  // TMPro.TextAlignmentOptions
         public static Type Screen;         // UnityEngine.Screen, only to log the display mode
         public static Type EventSystem;    // UnityEngine.EventSystems.EventSystem, its Update runs every frame
 
@@ -72,6 +74,8 @@ namespace GmeRmgMod
             OptionData = FindType("Unity.TextMeshPro", "TMPro.TMP_Dropdown+OptionData");
             Il2CppList = FindType("Il2Cppmscorlib", "Il2CppSystem.Collections.Generic.List`1");
 
+            TextComponent = FindType("Unity.TextMeshPro", "TMPro.TMP_Text", required: false);
+            TextAlignment = FindType("Unity.TextMeshPro", "TMPro.TextAlignmentOptions", required: false);
             Screen = FindType("UnityEngine.CoreModule", "UnityEngine.Screen", required: false);
             EventSystem = FindType("UnityEngine.UI", "UnityEngine.EventSystems.EventSystem", required: false);
             PerFrameMethod = EventSystem?.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
@@ -166,6 +170,14 @@ namespace GmeRmgMod
             return Cast(method.Invoke(null, new[] { Cast(original, UnityObject), parent }), GameObject);
         }
 
+        /// <summary>UnityEngine.Object.Destroy(obj)</summary>
+        public static void Destroy(object obj)
+        {
+            MethodInfo method = UnityObject.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .First(m => m.Name == "Destroy" && m.GetParameters().Length == 1);
+            method.Invoke(null, new[] { Cast(obj, UnityObject) });
+        }
+
         /// <summary>A UnityEngine.Vector2. Returned as dynamic so assigning it to a
         /// Vector2 property through `dynamic` binds (an `object` value doesn't).</summary>
         public static dynamic NewVector2(float x, float y) => Activator.CreateInstance(Vector2, x, y);
@@ -183,6 +195,18 @@ namespace GmeRmgMod
         {
             try { return Screen?.GetProperty("fullScreenMode", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)?.ToString() ?? "unknown"; }
             catch { return "unknown"; }
+        }
+
+        /// <summary>target.name = value, ignored when the property doesn't exist (names differ between TextMeshPro versions).</summary>
+        public static void TrySet(object target, string name, object value)
+        {
+            try { target.GetType().GetProperty(name)?.SetValue(target, value); } catch { }
+        }
+
+        /// <summary>target.name = the enum member `member` of `enumType`, ignored on any failure.</summary>
+        public static void TrySetEnum(object target, string name, Type enumType, string member)
+        {
+            try { if (enumType != null) target.GetType().GetProperty(name)?.SetValue(target, Enum.Parse(enumType, member)); } catch { }
         }
 
         public static string PersistentDataPath => (string)GetStatic(Application, "persistentDataPath");

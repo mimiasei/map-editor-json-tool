@@ -43,9 +43,9 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dices, X } from 'lucide-react'
+import { Dices, LayoutGrid, X } from 'lucide-react'
 import FieldInfo from '@/components/common/FieldInfo'
-import { neutralZoneRange } from '@/lib/rmg/zone-archetypes'
+import { neutralZoneRange, availableArchetypes, LAYOUT_LABELS, type LayoutArchetype } from '@/lib/rmg/zone-archetypes'
 import { MAX_CITIES_PER_ZONE } from '@/lib/rmg/rmg-tuning'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 import { generateRandomMapFile, previewTerrain } from '@/lib/rmg/generate-map-file'
@@ -55,6 +55,7 @@ import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
+import WinConditionsPanel from '@/components/common/WinConditionsPanel'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
@@ -88,6 +89,7 @@ interface Props {
 const DEFAULT_SIZE_KEY = presetKey({ sizeX: 64, sizeZ: 64 })
 const PLAYER_COUNT_OPTIONS = [2, 3, 4, 5, 6, 7, 8]
 const PREVIEW_DEBOUNCE_MS = 250
+const RANDOM_LAYOUT = 'random'
 /** The live-preview canvas is always this many CSS pixels square,
  *  regardless of the chosen map size — a real user request, so the preview
  *  never changes footprint as sliders/size change. Every map size preset
@@ -286,6 +288,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
   const enabledBiomesList = ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b])
   const selectedSize = MAP_SIZE_PRESETS.find((p) => presetKey(p) === sizeKey) ?? MAP_SIZE_PRESETS[6]
+const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.sizeZ, playerCount)
   const previewActive = previewPhase !== 'off'
   // Terrain-defining controls (Size/Players/water/zone/seed) are only ever
   // editable during the 'terrain' stage itself — once confirmed (moving to
@@ -364,6 +367,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
             const result = await previewTerrain({
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
               waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread,
+              layoutArchetype: classicMode && !gameTemplate ? classic.layout : undefined,
+              randomPlayerFaction: classicMode ? classic.randomPlayerFaction : undefined,
               enabledBiomes: enabledBiomesList, gameTemplateJson: gameTemplate?.json, organicTerrainBlending,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true, computeElevation: true,
             })
@@ -388,7 +393,7 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed, organicTerrainBlending])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, classicMode, classic.layout, classic.randomPlayerFaction, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed, organicTerrainBlending])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -440,6 +445,10 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
         usePortals: opts.usePortals,
         zoneJaggedness: opts.zoneJaggedness,
         zoneSpread: opts.zoneSpread,
+        layoutArchetype: classicMode && !gameTemplate ? classic.layout : undefined,
+        winConditions: classicMode && !gameTemplate ? classic.winConditions : undefined,
+        winOptions: classicMode && !gameTemplate ? classic.winOptions : undefined,
+        randomPlayerFaction: classicMode ? classic.randomPlayerFaction : undefined,
         boundaryGuardStrength: opts.boundaryGuardStrength,
         squadDensity: opts.squadDensity,
         roadWindingAmplitude: opts.roadWindingAmplitude,
@@ -712,7 +721,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
 
           <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-6 bg-[var(--column-center)] dark:bg-background">
               {showCore && (
-                <div className={classicMode ? 'space-y-6 w-1/2 min-w-80 mx-auto' : 'space-y-6'}>
+                <div className={classicMode ? 'flex px-64 gap-16 items-start justify-center' : undefined}>
+                <div className={classicMode ? 'space-y-6 w-2/3 min-w-0' : 'space-y-6'}>
                   <div className="space-y-1.5">
                     <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
                     <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
@@ -767,6 +777,19 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     {gameTemplate && <p className="text-xs text-muted-foreground">Players ignored — the game template below sets its own player count.</p>}
                   </div>
 
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-random-faction" className="text-xs">Random starting towns</Label>
+                      <FieldInfo text="Every player starts with a random faction, picked when the game starts, instead of one that matches the land around their start. The land is chosen freely too, so any player can start on any terrain." />
+                    </div>
+                    <Switch
+                      id="rmg-random-faction"
+                      checked={!!classic.randomPlayerFaction}
+                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, randomPlayerFaction: v || undefined }))}
+                      disabled={terrainLocked}
+                    />
+                  </div>
+                  
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
@@ -829,6 +852,30 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                           </Select>
                         </div>
                       ))}
+                      {!gameTemplate && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1">
+                            <Label className="text-xs">Layout</Label>
+                            <FieldInfo text="How the zones are arranged. Random picks one of the layouts for you. Layouts too crowded for this map size or with too many players are not offered." />
+                            {classic.layout && availableLayouts.includes(classic.layout) && (
+                              <FieldInfo icon={LayoutGrid} text={`${LAYOUT_LABELS[classic.layout].label}: ${LAYOUT_LABELS[classic.layout].details}`} />
+                            )}
+                          </div>
+                          <Select
+                            value={classic.layout && availableLayouts.includes(classic.layout) ? classic.layout : RANDOM_LAYOUT}
+                            onValueChange={(v) => setClassic((prev) => ({ ...prev, layout: v === RANDOM_LAYOUT ? undefined : (v as LayoutArchetype) }))}
+                            disabled={terrainLocked}
+                          >
+                            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={RANDOM_LAYOUT}>Random</SelectItem>
+                              {availableLayouts.map((name) => (
+                                <SelectItem key={name} value={name} title={LAYOUT_LABELS[name].description}>{LAYOUT_LABELS[name].label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </>
                   )}
 
@@ -882,6 +929,12 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
                     </div>
                     <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
                   </div>}
+                </div>
+                {classicMode && !gameTemplate && (
+                  <div className="w-1/3 min-w-0 pt-1.5">
+                    <WinConditionsPanel settings={classic} onChange={setClassic} disabled={terrainLocked} />
+                  </div>
+                )}
                 </div>
               )}
 

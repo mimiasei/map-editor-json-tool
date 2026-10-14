@@ -43,6 +43,8 @@ import {
   upsertPropHero,
   upsertPropPortals,
   patchGameRules,
+  patchWinConditions,
+  markCityHold,
   BLANK_MAP_BIOME_NAMES,
   type MapContainer,
 } from '@/lib/map-write'
@@ -56,6 +58,7 @@ import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { createZonePopulator, tryPlace, tryPlaceAt, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { addPoolSurround, scatterZoneObstacles } from './zone-decoration'
+import { scatterMineSurroundings } from './zone-mine-surround'
 import { scatterEdgeFrame } from './zone-edge-frame'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
@@ -70,6 +73,8 @@ import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
+import type { LayoutArchetype } from './zone-archetypes'
+import { DEFAULT_WIN_OPTIONS, winConditionById, winEntryFields, type WinConditionId, type WinOptions } from './win-conditions'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
 import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
@@ -177,6 +182,13 @@ export interface GenerateRandomMapOptions {
    *  — see this generator's own Milestone 5 fix for why crowding matters
    *  there). User-requested control over "the shape of the landscape". */
   zoneSpread?: number
+  /** Zone layout to use instead of a random pick (unset = random; ignored with a game template). */
+  layoutArchetype?: LayoutArchetype
+  /** Win conditions to write (unset = leave the template map's defaults). */
+  winConditions?: WinConditionId[]
+  winOptions?: WinOptions
+  /** Players start with a random faction and any terrain (unset = a faction matching each start's land). */
+  randomPlayerFaction?: boolean
   /** VCMI-style zone-to-zone guarded chokepoints (issue #210 Milestone 6,
    *  researched directly from VCMI's own `ConnectionsPlacer.cpp`/
    *  `ObjectManager.cpp::chooseGuard`) — `'none'` (the default) skips this
@@ -313,7 +325,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
   const disabledInteractableSidSet = disabledInteractableSids && disabledInteractableSids.length > 0 ? new Set(disabledInteractableSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
@@ -346,7 +358,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // (its flood and portals are built around objects existing first).
   const terrainFirst = !terrainOnly && waterContent !== 'islands'
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, layoutArchetype, zoneJaggedness, zoneSpread, rng, enabledBiomes, randomPlayerFaction, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly || terrainFirst, computeElevation: terrainOnly || terrainFirst, organicTerrainBlending,
     elevationModes: catalog.rmgZoneLayout?.elevationModes,
@@ -1451,7 +1463,13 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     waterNodes: waterNodesAll, walkableNodes: new Set([...roadNodes, ...riverNodes]), rng,
     strength: tuning.edges?.frame ?? DEFAULT_EDGE_FRAME, rmgEnvironmentAssets: catalog.rmgEnvironmentAssets,
   })
-  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, scatterZoneObstacles({
+  // Trees beside wood mines, rock beside ore (and half the gold) mines, placed
+  // before the random scenery so they get the tiles next to each mine first.
+  const mineSurroundPlacements = scatterMineSurroundings({
+    sizeX, sizeZ, mines: placements.filter((p) => MINE_SIDS_LOCAL.has(p.sid)), zoneBiome, zoneIdByNode, catalogById,
+    mapObjects: catalog.mapObjects, state, rng,
+  })
+  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, mineSurroundPlacements, scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity, densityByZone, ambientPickupByZone,
@@ -1735,11 +1753,19 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const usedHeroSids = new Set<string>()
     for (const [zoneId, playerId] of playerZoneIndex) {
       const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
-      const faction = BIOME_FACTION[biome]
-      if (!faction) continue
+      // Random faction: the city (and its starting hero) stay "random" for the game to pick.
+      const faction = randomPlayerFaction ? '' : BIOME_FACTION[biome]
+      if (faction === undefined) continue
       const result = setCityFaction(finalBlock1, finalBlock2, 0, playerId, faction)
       finalBlock1 = result.block1Chunk
       finalBlock2 = result.block2Chunk
+      if (faction === '') {
+        // A random-faction start keeps a hero slot (a real propHeroes row, "random") so the game still picks one.
+        const randomHero = setCitySpawnHero(finalBlock1, finalBlock2, 0, playerId, true)
+        finalBlock1 = randomHero.block1Chunk
+        finalBlock2 = randomHero.block2Chunk
+        continue
+      }
 
       // A plain /^[a-z]+_hero_\d+$/ shape isn't enough — Core/DB/heroes/campaign_tutorial
       // ships e.g. "tutorial_hero_2" and Core/DB/heroes/campaign ships e.g.
@@ -1847,6 +1873,26 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const patched = patchGameRules(finalBlock1, finalBlock2, { globalBans })
     finalBlock1 = patched.block1Chunk
     finalBlock2 = patched.block2Chunk
+  }
+
+  // Win conditions chosen by the user. City Hold needs a marked neutral city
+  // (the one nearest the map centre); without a neutral city it is dropped.
+  if (options.winConditions && options.winConditions.length > 0) {
+    // random-city only ever lands in neutral zones; pick the one nearest the centre.
+    let cityHoldId: number | undefined
+    let bestDist = Infinity
+    additions.forEach((add, i) => {
+      if (add.sid !== 'random-city') return
+      const dist = Math.hypot((add.node % sizeX) - sizeX / 2, Math.floor(add.node / sizeX) - sizeZ / 2)
+      if (dist < bestDist) { bestDist = dist; cityHoldId = newIds[i] }
+    })
+    const chosen = options.winConditions.filter((id) => id !== 'city-hold' || cityHoldId !== undefined)
+    if (chosen.length < options.winConditions.length) logWarn('Random map generation: City Hold dropped, the map has no neutral city to mark')
+    if (cityHoldId !== undefined && chosen.includes('city-hold')) finalBlock2 = markCityHold(finalBlock2, cityHoldId)
+    finalBlock2 = patchWinConditions(finalBlock2, {
+      classic: chosen.includes('classic'),
+      extras: chosen.filter((id) => id !== 'classic').map((id) => ({ type: winConditionById(id).type, fields: winEntryFields(id, options.winOptions ?? DEFAULT_WIN_OPTIONS) })),
+    })
   }
 
   // Classic difficulty also becomes the map's lobby default for neutral

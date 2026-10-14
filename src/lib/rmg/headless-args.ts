@@ -1,7 +1,9 @@
 // ─── Headless CLI argument parsing (issue #258) ─────────────────────────────
 // No Tauri imports — only argument validation, no side effects.
 
+import { LAYOUT_ARCHETYPES, type LayoutArchetype } from './zone-archetypes'
 import { DEFAULT_CLASSIC_SETTINGS, COMPLEXITY_LEVELS, DIFFICULTY_LEVELS, RICHNESS_LEVELS, WATER_LEVELS, type ClassicSettings } from './classic-presets'
+import { parseWinConditionList } from './win-conditions'
 import { MAX_RANDOM_CITIES } from './rmg-tuning'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
 
@@ -55,6 +57,23 @@ function parseSize(raw: ArgValue): { sizeX: number; sizeZ: number } {
   return { sizeX, sizeZ }
 }
 
+/** `--layout`: one of the layout names (case-insensitive), or empty / "random" for a random layout. */
+function parseLayout(raw: ArgValue): LayoutArchetype | undefined {
+  const text = raw?.trim().toLowerCase()
+  if (!text || text === 'random') return undefined
+  const hit = LAYOUT_ARCHETYPES.find((name) => name.toLowerCase() === text)
+  if (!hit) throw new Error(`--layout must be random or one of: ${LAYOUT_ARCHETYPES.join(', ')} (got "${raw}")`)
+  return hit
+}
+
+/** `--faction`: "random" gives every player a random starting faction on any terrain; empty / "matching" (the default) matches each start's land. */
+function parseFaction(raw: ArgValue): boolean | undefined {
+  const text = raw?.trim().toLowerCase()
+  if (!text || text === 'matching') return undefined
+  if (text === 'random') return true
+  throw new Error(`--faction must be matching or random (got "${raw}")`)
+}
+
 export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
   const output = raw.output?.trim()
   if (!output) throw new Error('--output is required')
@@ -93,6 +112,9 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
       difficulty: pickIndex(raw.difficulty, DIFFICULTY_LEVELS, DEFAULT_CLASSIC_SETTINGS.difficulty, 'difficulty'),
       water: pickIndex(raw.water, WATER_LEVELS, DEFAULT_CLASSIC_SETTINGS.water, 'water'),
       maxRandomCities,
+      layout: parseLayout(raw.layout),
+      winConditions: parseWinConditionList(raw.win),
+      randomPlayerFaction: parseFaction(raw.faction),
     },
   }
 }

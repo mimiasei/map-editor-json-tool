@@ -12,11 +12,28 @@
 // from the archetype pick, a random global rotation and one random jitter of
 // the unit's radii/angles (the same jitter in every sector).
 
+import { logWarn } from '@/lib/logger'
 import type { NeutralZoneRole, ZoneGraph, ZoneSpec } from './zone-graph'
 import type { ZoneCenter } from './zone-layout'
 
 export const LAYOUT_ARCHETYPES = ['ring', 'ringCenter', 'innerRing', 'doubleNeutral', 'pockets', 'hub'] as const
 export type LayoutArchetype = (typeof LAYOUT_ARCHETYPES)[number]
+
+/** Name, one-line description and a fuller explanation (how the map looks and the zone rules) of each layout, for the generator dialog. */
+export const LAYOUT_LABELS: Record<LayoutArchetype, { label: string; description: string; details: string }> = {
+  ring: { label: 'Ring', description: 'Player and neutral zones alternate on one ring.',
+    details: 'One ring around the map: a player zone, a neutral zone, the next player zone, and so on, so there are as many neutral zones as players. Every zone touches only the two zones beside it. Each player has one neutral zone on either side, and a rival can only be reached by going through neutral zones around the ring.' },
+  ringCenter: { label: 'Ring with center', description: 'The ring plus a treasure zone in the middle, reachable from every neutral zone.',
+    details: 'The same ring of player and neutral zones as Ring, plus one large treasure zone in the middle of the map. Every neutral zone on the ring connects to the middle zone, which holds extra treasure, so there are shortcuts across the map. Player zones do not connect to the middle directly.' },
+  innerRing: { label: 'Inner ring', description: 'Players on the outside; the neutral zones form an inner ring of their own.',
+    details: 'Players sit at the edge of the map and the neutral zones form a smaller ring in the middle. Each player zone connects to the two inner zones nearest to it, and the inner zones connect to each other around the ring. Player zones never touch each other, so every route between players runs through the middle. Offered for up to 7 players.' },
+  doubleNeutral: { label: 'Double neutral', description: 'Two neutral zones between neighbouring players.',
+    details: 'A ring where each pair of neighbouring player zones has two neutral zones in a row between them (player, neutral, neutral, player, ...). Rivals are further apart and the map has twice as many neutral zones as players. Every zone touches only the two beside it. Offered for up to 4 players.' },
+  pockets: { label: 'Pockets', description: 'An inner ring, plus a dead-end treasure pocket behind each neutral zone.',
+    details: 'A tighter ring of player and neutral zones in the middle of the map, as in Ring. Behind each neutral zone, towards the map edge, lies a small dead-end treasure pocket with richer treasure that is reached only through that neutral zone. Offered for up to 4 players.' },
+  hub: { label: 'Hub', description: 'A spoke from every player to a shared center; no direct ring between players.',
+    details: 'Like the hub of a wheel: each player has a single neutral zone towards the middle, and all of these connect to one large central zone with extra treasure. There is no ring between players, so the only way to a rival is through your neutral zone and the centre. Offered for up to 4 players.' },
+}
 
 interface UnitZone {
   /** Name inside the unit; edges refer to it, `+`/`-` suffix = next/previous sector's zone. */
@@ -128,6 +145,18 @@ export function neutralZoneRange(playerCount: number): { min: number; max: numbe
   return { min: Math.min(...counts), max: Math.max(...counts) }
 }
 
+/** Whether `name` can be used for this map size and player count: not too
+ *  crowded and not over its player limit (`ring` always fits). */
+function archetypeFits(name: LayoutArchetype, sizeX: number, sizeZ: number, playerCount: number): boolean {
+  return name === 'ring' || (
+    (sizeX * sizeZ) / zoneCount(DEFS[name], playerCount) >= MIN_TILES_PER_ZONE && playerCount <= (DEFS[name].maxPlayers ?? Infinity))
+}
+
+/** The layouts a user can pick for this map size and player count. */
+export function availableArchetypes(sizeX: number, sizeZ: number, playerCount: number): LayoutArchetype[] {
+  return LAYOUT_ARCHETYPES.filter((name) => archetypeFits(name, sizeX, sizeZ, playerCount))
+}
+
 /** Pick an archetype (weighted; `weights` from the tuning file, default 1
  *  each) and lay it out. `radiusScale` scales every radius (the generator's
  *  zone-spread option, same as the old ring). Archetypes too crowded for the
@@ -135,8 +164,12 @@ export function neutralZoneRange(playerCount: number): { min: number; max: numbe
  *  always possible. */
 export function buildBuiltInLayout(
   sizeX: number, sizeZ: number, playerCount: number, rng: () => number,
-  radiusScale = 1, weights: Partial<Record<LayoutArchetype, number>> = {},
+  radiusScale = 1, weights: Partial<Record<LayoutArchetype, number>> = {}, forced?: LayoutArchetype,
 ): BuiltInLayout {
+  if (forced) {
+    if (archetypeFits(forced, sizeX, sizeZ, playerCount)) return layoutArchetype(forced, sizeX, sizeZ, playerCount, rng, radiusScale)
+    logWarn(`RMG layout: ${forced} does not fit ${playerCount} players on ${sizeX}x${sizeZ} — picking a random layout instead`)
+  }
   const tiles = sizeX * sizeZ
   const options = LAYOUT_ARCHETYPES
     .map((name) => ({ name, weight: Math.max(0, weights[name] ?? 1) }))

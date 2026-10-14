@@ -9,7 +9,8 @@ import { DEFAULT_TEMPLATE_OVERRIDES } from './template'
 import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, DEFAULT_CLI_USE_SEED, DEFAULT_MINE_DISTRIBUTION, EMPTY_TUNING, type RmgTuning } from './rmg-tuning'
 import { MIN_ELEVATION_SPAN } from './zone-elevation'
 import type { RmgSchema } from './rmg-schema'
-import { LAYOUT_ARCHETYPES } from './zone-archetypes'
+import { LAYOUT_ARCHETYPES, type LayoutArchetype } from './zone-archetypes'
+import type { WinConditionId, WinOptions } from './win-conditions'
 
 export type RmgRichness = 'poor' | 'modest' | 'medium' | 'rich' | 'very_rich'
 export type RmgComplexity = 'sparse' | 'light' | 'medium' | 'dense' | 'very_dense'
@@ -74,6 +75,14 @@ export interface ClassicSettings {
   /** Total neutral cities on the map (not the players' own); unset = the
    *  tuning file's `cities.maxRandom`, else the default. */
   maxRandomCities?: number
+  /** Zone layout; unset = a random one. */
+  layout?: LayoutArchetype
+  /** Win conditions to enable; unset = the template map's defaults (Classic). */
+  winConditions?: WinConditionId[]
+  /** Values for the win conditions; unset fields use the defaults. */
+  winOptions?: WinOptions
+  /** Players start with a random faction and any terrain instead of a faction matching their land. */
+  randomPlayerFaction?: boolean
 }
 
 export const DEFAULT_CLASSIC_SETTINGS: ClassicSettings = { richness: 'medium', complexity: 'medium', difficulty: 'normal', water: 'some' }
@@ -206,6 +215,10 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
   return {
     ...DEFAULT_TEMPLATE_OVERRIDES,
     ...resolveClassicSettings(settings, tuning),
+    layoutArchetype: settings.layout,
+    winConditions: settings.winConditions,
+    winOptions: settings.winOptions,
+    randomPlayerFaction: settings.randomPlayerFaction,
     randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     bannedMagics: tuning.spells?.banned ?? [],
     tuning,

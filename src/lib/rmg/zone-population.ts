@@ -159,7 +159,7 @@ const NEUTRAL_ZONE_BIOMES: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
  *   achieves) — so a player zone's own `playerIndex` cycling is never
  *   skipped/disturbed by this override.
  */
-export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number, enabledBiomes?: BiomeId[], templateBiomeByZoneId?: Map<number, BiomeId>): Map<number, BiomeId> {
+export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number, enabledBiomes?: BiomeId[], templateBiomeByZoneId?: Map<number, BiomeId>, freePlayerBiomes = false): Map<number, BiomeId> {
   const enabledSet = enabledBiomes && enabledBiomes.length > 0 ? new Set(enabledBiomes) : null
   const playerBiomes = enabledSet ? ZONE_BIOMES.filter((b) => enabledSet.has(b)) : ZONE_BIOMES
   const neutralBiomes = enabledSet ? NEUTRAL_ZONE_BIOMES.filter((b) => enabledSet.has(b)) : NEUTRAL_ZONE_BIOMES
@@ -175,7 +175,10 @@ export function assignZoneBiomes(zones: ZoneSpec[], rng: () => number, enabledBi
       // overridden player zone still lands on the pool's own next color —
       // deliberately NOT `templateBiome ?? playerPool[playerIndex++ ...]`,
       // which would skip the increment whenever a template DID provide one.
-      const cycled = playerPool[playerIndex++ % playerPool.length]
+      // With a random starting faction the land is not tied to a faction, so a
+      // player zone may take any enabled biome (repeats allowed).
+      const freePool = [...new Set([...playerPool, ...neutralPool])]
+      const cycled = freePlayerBiomes ? freePool[Math.floor(rng() * freePool.length)] : playerPool[playerIndex++ % playerPool.length]
       biomeByZone.set(zone.id, templateBiome ?? cycled)
     } else {
       biomeByZone.set(zone.id, templateBiome ?? neutralPool[Math.floor(rng() * neutralPool.length)])
@@ -274,7 +277,7 @@ function entranceGuardCandidates(cells: FootprintCell[], sizeX: number): number[
  *  on the opposite side), the other edge neighbours, then diagonals. A
  *  `random-squad` on any of them covers the entrance with its trigger ring —
  *  the guard's fallback when no entrance cell itself is free. */
-function entranceApproachTiles(cells: FootprintCell[], sizeX: number, sizeZ: number): { front: number[]; sides: number[]; diagonals: number[] } {
+export function entranceApproachTiles(cells: FootprintCell[], sizeX: number, sizeZ: number): { front: number[]; sides: number[]; diagonals: number[] } {
   const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
   const solid = new Set(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
   const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
