@@ -123,7 +123,6 @@ export default function AppShell() {
   const rmgOpen = useViewBridgeStore((s) => s.rmgOpen)
   const openRmg = useViewBridgeStore((s) => s.openRmg)
   const closeRmg = useViewBridgeStore((s) => s.closeRmg)
-  const reportGeneratedWarnings = useViewBridgeStore((s) => s.reportGeneratedWarnings)
   const pendingDatabaseFocus = useViewBridgeStore((s) => s.pendingDatabaseFocus)
   const clearDatabaseFocus = useViewBridgeStore((s) => s.clearDatabaseFocus)
   useEffect(() => {
