@@ -410,6 +410,7 @@ export function generateTerrain(
   // Rotation of each player's spawner: right-hand players of a mirrored map carry the mirrored flag.
   const playerZonesSorted = graph.zones.filter((z) => z.kind === 'player').sort((a, b) => (a.playerIndex ?? 0) - (b.playerIndex ?? 0))
   const playerRotation = playerZonesSorted.map((zone) => (mirror?.side.get(zone.id) === 'right' ? 10 : 0))
+  players.forEach((p, index) => { p.rotation = playerRotation[index] })
 
   let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
 

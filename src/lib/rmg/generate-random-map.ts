@@ -49,7 +49,7 @@ import {
   type MapContainer,
 } from '@/lib/map-write'
 import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
-import { buildBlockedTileSet, isElevationWallTile } from '@/lib/map-grid/passability'
+import { buildBlockedTileSet, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
@@ -75,7 +75,7 @@ import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import type { LayoutArchetype } from './zone-archetypes'
 import { isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, mirrorObjects } from './zone-mirror'
-import { closeAxisBorder } from './zone-mirror-border'
+import { closeMirroredBorders } from './zone-mirror-border'
 import { DEFAULT_WIN_OPTIONS, winConditionById, winEntryFields, type WinConditionId, type WinOptions } from './win-conditions'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
 import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
@@ -1614,7 +1614,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // target) — gate GUARDS are deliberately NOT, matching every other real
   // guard this generator places (a dwelling/mine/treasure guard is never
   // decorative either).
-  for (const placement of boundaryResult.wallPlacements) decorativeIds.add(placement.tempId)
+  // (On a mirrored map the zone walls stay: the reachability pass moves a cut-off pickup instead of opening the border.)
+  if (!mirrored) for (const placement of boundaryResult.wallPlacements) decorativeIds.add(placement.tempId)
 
   // Mirrored map: from here on the right half is a copy of the left, so the repair passes below see the final objects.
   const mirrorAllObjects = (): void => {
@@ -1623,7 +1624,28 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       spawnerSid: playerSpawnerSid, nextTempId: () => state.nextTempId++,
     })
   }
-  if (mirrored) mirrorAllObjects()
+  // Copy the left half's tile layers onto the right half (also repainted into the container).
+  const mirrorLayers = (): void => {
+    const rightNodes: number[] = []
+    for (let node = 0; node < tileCount; node++) if (!isLeftNode(node, sizeX)) rightNodes.push(node)
+    for (const node of rightNodes) {
+      const other = mirrorNode(node, sizeX)
+      waterMapFinal[node] = waterMapFinal[other]
+      levelsMapFinal[node] = levelsMapFinal[other]
+      climbsMapFinal[node] = climbsMapFinal[other]
+    }
+    block2 = paintWaterTiles(block2, rightNodes.map((node) => ({ node, waterId: waterMapFinal[node] })))
+    block2 = paintLevelTiles(block2, rightNodes.map((node) => ({ node, level: levelsMapFinal[node] })))
+    block2 = paintClimbTiles(block2, rightNodes.map((node) => ({ node, climb: climbsMapFinal[node] as 0 | 1 })))
+    if (state.tileBiome) {
+      const biomes = state.tileBiome
+      block2 = paintTerrainTiles(block2, rightNodes.map((node) => ({ node, biomeId: biomes[mirrorNode(node, sizeX)] })))
+    }
+  }
+  if (mirrored) {
+    mirrorAllObjects()
+    mirrorLayers()
+  }
 
   await reportProgress('Checking reachability and repairing zones', 84)
   const report = applyAccessibilityPass(
@@ -1705,46 +1727,49 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     }
   }
 
+  // The repair passes above moved things on either half (a ramp, water, a pickup): the left half is the truth, so copy it
+  // over again, then seal the borders on the finished map. (The sealing is last, so nothing but the final auto-fix can undo it.)
   if (mirrored) {
-    // The repair passes above may have changed either half: the left half is the truth, so copy it over again.
     mirrorAllObjects()
-    const rightNodes: number[] = []
-    for (let node = 0; node < tileCount; node++) if (!isLeftNode(node, sizeX)) rightNodes.push(node)
-    for (const node of rightNodes) {
-      const other = mirrorNode(node, sizeX)
-      waterMapFinal[node] = waterMapFinal[other]
-      levelsMapFinal[node] = levelsMapFinal[other]
-      climbsMapFinal[node] = climbsMapFinal[other]
-    }
-    block2 = paintWaterTiles(block2, rightNodes.map((node) => ({ node, waterId: waterMapFinal[node] })))
-    block2 = paintLevelTiles(block2, rightNodes.map((node) => ({ node, level: levelsMapFinal[node] })))
-    block2 = paintClimbTiles(block2, rightNodes.map((node) => ({ node, climb: climbsMapFinal[node] as 0 | 1 })))
-    if (state.tileBiome) {
-      const biomes = state.tileBiome
-      block2 = paintTerrainTiles(block2, rightNodes.map((node) => ({ node, biomeId: biomes[mirrorNode(node, sizeX)] })))
-    }
+    mirrorLayers()
 
-    // Walls that straddled the middle line were dropped by the copy: close the zone border there again
-    // (one wall, on one side or the other, so both players face the same closed line).
+    // The gates the boundary pass cut leave a gap beside each guard, and the walls that straddled the middle
+    // line were dropped by the copy: seal the zone borders up to the guarded roads (zone-mirror-border.ts).
     const flat: { sid: string; node: number; rotation: number }[] = []
     for (const [sid, group] of objectGroups) group.nodes.forEach((node, i) => flat.push({ sid, node, rotation: group.rotations[i] ?? 0 }))
-    const border = closeAxisBorder({
+    const border = closeMirroredBorders({
       sizeX, sizeZ, zoneIdByNode, zoneBiome, catalogById, mapObjects: catalog.mapObjects, objects: flat,
       guardNodes: [...allConcreteSquads.map((s) => s.node), ...(objectGroups.get('random-squad')?.nodes ?? [])],
       roadNodes, waterMap: waterMapFinal, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal,
       tileBiome: state.tileBiome, mountainDensity, rng, nextTempId: () => state.nextTempId++,
       guardOverrides: boundaryResult.guardPlacements.find((g) => g.randomSquadOverrides)?.randomSquadOverrides,
     })
+    // Pickups and guards a wall sealed into a pocket are given up (the auto-fix would otherwise take the wall down again).
+    if (border.removeNodes.length > 0) {
+      const gone = new Set(border.removeNodes)
+      for (const [sid, group] of objectGroups) {
+        if (!NON_BLOCKING_SPAWNER_SIDS.has(sid)) continue
+        for (let i = group.ids.length - 1; i >= 0; i--) {
+          if (!gone.has(group.nodes[i])) continue
+          tempIdToPlacement.delete(group.ids[i])
+          group.ids.splice(i, 1)
+          group.nodes.splice(i, 1)
+          group.rotations.splice(i, 1)
+          group.levels.splice(i, 1)
+        }
+      }
+      for (let i = allConcreteSquads.length - 1; i >= 0; i--) if (gone.has(allConcreteSquads[i].node)) allConcreteSquads.splice(i, 1)
+    }
     for (const placement of [...border.walls, ...border.guards]) {
       tempIdToPlacement.set(placement.tempId, placement)
       let group = objectGroups.get(placement.sid)
       if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
       group.ids.push(placement.tempId)
       group.nodes.push(placement.node)
-      group.rotations.push(0)
+      group.rotations.push(placement.rotation ?? 0)
       group.levels.push(0)
     }
-    logInfo(`Mirrored map: closed the middle border with ${border.walls.length} wall object(s) and ${border.guards.length} gate guard(s), ${border.gateRows} row(s) left open for roads`)
+    logInfo(`Mirrored map: sealed the zone borders with ${border.walls.length} wall object(s) and ${border.guards.length} gate guard(s), ${border.gateRows} row(s) on the middle line left open for roads, ${border.gaps} border tile(s) no wall fitted on, ${border.removeNodes.length} pickup(s) or guard(s) given up`)
   }
 
   await reportProgress('Writing placements', 90)

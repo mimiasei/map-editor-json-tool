@@ -2335,6 +2335,8 @@ export interface BlankMapPlayer {
    *  spawns.spawns[] entries are ever backed by (see backfillPlayerStartSpawner). */
   sid: 'city-spawner' | 'hero-spawner'
   node: number
+  /** The start's rotation (10 = mirrored, the right-hand starts of a mirrored map); defaults to 0. */
+  rotation?: number
 }
 
 export interface BlankMapOptions {
