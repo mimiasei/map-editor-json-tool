@@ -31,7 +31,6 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
     const next = on ? [...cur, id] : cur.filter((c) => c !== id)
     return { ...prev, winConditions: next.length === 1 && next[0] === 'classic' ? undefined : next }
   })
-  const fb = options.finalBattle
   const fights = options.tournamentFights
   const setFight = (i: number, patch: Partial<(typeof fights)[number]>) =>
     setOptions({ tournamentFights: fights.map((f, j) => (j === i ? { ...f, ...patch } : f)) })
@@ -66,10 +65,7 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
             )}
             {on && wc.id === 'final-battle' && (
               <div className="pl-3 space-y-1.5">
-                <SwitchField label="Registration start work" checked={fb.registrationStartWork} onChange={(v) => setOptions({ finalBattle: { ...fb, registrationStartWork: v } })} disabled={disabled} />
-                <SwitchField label="Registration start fight" checked={fb.registrationStartFight} onChange={(v) => setOptions({ finalBattle: { ...fb, registrationStartFight: v } })} disabled={disabled} />
-                <DurationField label="Start delay" value={fb.daysDelayStart} onChange={(v) => setOptions({ finalBattle: { ...fb, daysDelayStart: v } })} disabled={disabled} />
-                <DurationField label="Count day" value={fb.countDay} onChange={(v) => setOptions({ finalBattle: { ...fb, countDay: v } })} disabled={disabled} />
+                <DurationField label="Battle date" value={options.finalBattleDay} onChange={(v) => setOptions({ finalBattleDay: v })} disabled={disabled} />
               </div>
             )}
             {on && wc.id === 'tournament' && (

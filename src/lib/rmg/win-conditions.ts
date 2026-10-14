@@ -28,7 +28,7 @@ export const WIN_CONDITIONS: readonly WinConditionInfo[] = [
   { id: 'guardians-demise', label: "Guardian's Demise", type: 4, description: "Defeat or cast away the opponent's main hero to win.",
     details: "Defeat or cast away the opponent's main hero to win. It has no settings." },
   { id: 'final-battle', label: "Final Battle", type: 5, description: "Face the opponent's hero in a final battle. The winner claims victory in the game.",
-    details: "Face the opponent's hero in a final battle. The winner claims victory in the game. The two Registration switches, the start delay and the count day are the map's gladiator arena settings; the game does not label the two day values, so check the result in the game." },
+    details: "Face the opponent's hero in a final battle. The winner claims victory in the game. Set the battle date below." },
   { id: 'tournament', label: "Tournament", type: 9, description: "Face the opponent's hero in a series of battles. The winner of the set claims victory.",
     details: "Face the opponent's hero in a series of battles. The winner of the set claims victory. The number of battles is always odd (best-of-1, 3, 5, ...), added two at a time.." },
 ]
@@ -40,7 +40,8 @@ export interface WinOptions {
   capitalHoldDays: number
   cityHoldDays: number
   cityHoldResetCooldown: boolean
-  finalBattle: { registrationStartWork: boolean; registrationStartFight: boolean; daysDelayStart: number; countDay: number }
+  /** Day the final battle starts (`daysDelayStart`). */
+  finalBattleDay: number
   tournamentFights: TournamentFight[]
   tournamentSaveArmy: boolean
 }
@@ -49,7 +50,7 @@ export const DEFAULT_WIN_OPTIONS: WinOptions = {
   capitalHoldDays: 3,
   cityHoldDays: 3,
   cityHoldResetCooldown: true,
-  finalBattle: { registrationStartWork: false, registrationStartFight: true, daysDelayStart: 21, countDay: 3 },
+  finalBattleDay: 21,
   tournamentFights: [{ announceDay: 7 }, { announceDay: 14 }, { announceDay: 21 }],
   tournamentSaveArmy: true,
 }
@@ -69,10 +70,7 @@ export function winEntryFields(id: WinConditionId, options: WinOptions): Record<
   switch (id) {
     case 'capital-hold': return { countDayLostStartCity: options.capitalHoldDays }
     case 'city-hold': return { countDayCityHold: options.cityHoldDays, isResetColdownCityHold: options.cityHoldResetCooldown }
-    case 'final-battle': {
-      const f = options.finalBattle
-      return { isRegistrationStartWork: f.registrationStartWork, isRegistrationStartFight: f.registrationStartFight, daysDelayStart: f.daysDelayStart, countDayGladiatorArena: f.countDay }
-    }
+    case 'final-battle': return { daysDelayStart: options.finalBattleDay }
     case 'tournament': {
       const fights = options.tournamentFights
       return {
