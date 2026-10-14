@@ -21,6 +21,7 @@ import { generateTerrain, type GenerateTerrainOptions, type TerrainResult } from
 import { runPlacementAutoFix } from '@/lib/map-grid/auto-fix-pass'
 import { extractMapContext } from '@/lib/map-extract'
 import { findUnreachablePlacements, findIsolatedPlayerStarts, type UnreachablePlacement, type IsolatedPlayerStart } from '@/lib/map-grid/reachability-validation'
+import { closeGuardFreeRoutesInContainer } from './zone-mirror-routes'
 import { yieldToUI } from '@/lib/async-utils'
 import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
 
@@ -119,7 +120,10 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
   await yieldToUI()
   // On a mirrored map the auto-fix may nudge an object on one side only; the two sides stay alike enough
   // (every footprint it reads honours the mirrored flag, see computeFootprintTiles).
-  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog, { guaranteeReachability: true })
+  const autoFixed = runPlacementAutoFix(container, catalog, { guaranteeReachability: true })
+  const autoFixWarnings = autoFixed.warnings
+  // The auto-fix may have taken a wall or guard away: a mirrored map gets its guard-free routes between starts closed again.
+  const fixed = options.mirrored ? closeGuardFreeRoutesInContainer(autoFixed.fixed, catalog) : autoFixed.fixed
 
   // Whole-map reachability validation (reachability-validation.ts) —
   // runPlacementAutoFix above already ran its own reachability auto-fix

@@ -76,6 +76,7 @@ import { scatterZoneWater } from './zone-water'
 import type { LayoutArchetype } from './zone-archetypes'
 import { isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, mirrorObjects } from './zone-mirror'
 import { closeMirroredBorders } from './zone-mirror-border'
+import { closeGuardFreeRoutes } from './zone-mirror-routes'
 import { DEFAULT_WIN_OPTIONS, winConditionById, winEntryFields, type WinConditionId, type WinOptions } from './win-conditions'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
 import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
@@ -1769,6 +1770,25 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       group.rotations.push(placement.rotation ?? 0)
       group.levels.push(0)
     }
+    // Last: any route between two starts that is still free of guards gets one (and its mirror image) on its narrowest stretch.
+    const sealed: { sid: string; node: number; rotation: number }[] = []
+    for (const [sid, group] of objectGroups) group.nodes.forEach((node, i) => sealed.push({ sid, node, rotation: group.rotations[i] ?? 0 }))
+    const routes = closeGuardFreeRoutes({
+      sizeX, sizeZ, catalogById, objects: sealed, startSid: playerSpawnerSid,
+      guardNodes: [...allConcreteSquads.map((s) => s.node), ...(objectGroups.get('random-squad')?.nodes ?? [])],
+      waterMap: waterMapFinal, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, nextTempId: () => state.nextTempId++,
+      guardOverrides: boundaryResult.guardPlacements.find((g) => g.randomSquadOverrides)?.randomSquadOverrides,
+    })
+    for (const placement of routes.guards) {
+      tempIdToPlacement.set(placement.tempId, placement)
+      let group = objectGroups.get(placement.sid)
+      if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
+      group.ids.push(placement.tempId)
+      group.nodes.push(placement.node)
+      group.rotations.push(0)
+      group.levels.push(0)
+    }
+    logInfo(`Mirrored map: ${routes.guards.length} guard(s) added on routes between starts that had none, ${routes.remaining} route(s) left unguarded`)
     logInfo(`Mirrored map: sealed the zone borders with ${border.walls.length} wall object(s) and ${border.guards.length} gate guard(s), ${border.gateRows} row(s) on the middle line left open for roads, ${border.gaps} border tile(s) no wall fitted on, ${border.removeNodes.length} pickup(s) or guard(s) given up`)
   }
 
