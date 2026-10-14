@@ -10,6 +10,7 @@ export default defineConfig({
   server: {
     watch: {
       ignored: ['**/src-tauri/target/**'],
+      usePolling: true,
     },
   },
   // Stamped at build time so the About dialog can report when this binary was

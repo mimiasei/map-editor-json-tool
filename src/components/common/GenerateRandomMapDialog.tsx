@@ -721,8 +721,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
           <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-6 bg-[var(--column-center)] dark:bg-background">
               {showCore && (
-                <div className={classicMode ? 'flex gap-8 items-start justify-center' : undefined}>
-                <div className={classicMode ? 'space-y-6 w-1/2 min-w-80 max-w-md' : 'space-y-6'}>
+                <div className={classicMode ? 'flex px-64 gap-16 items-start justify-center' : undefined}>
+                <div className={classicMode ? 'space-y-6 w-2/3 min-w-0' : 'space-y-6'}>
                   <div className="space-y-1.5">
                     <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
                     <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
@@ -777,6 +777,19 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     {gameTemplate && <p className="text-xs text-muted-foreground">Players ignored — the game template below sets its own player count.</p>}
                   </div>
 
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-random-faction" className="text-xs">Random starting towns</Label>
+                      <FieldInfo text="Every player starts with a random faction, picked when the game starts, instead of one that matches the land around their start. The land is chosen freely too, so any player can start on any terrain." />
+                    </div>
+                    <Switch
+                      id="rmg-random-faction"
+                      checked={!!classic.randomPlayerFaction}
+                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, randomPlayerFaction: v || undefined }))}
+                      disabled={terrainLocked}
+                    />
+                  </div>
+                  
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
@@ -915,7 +928,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   </div>}
                 </div>
                 {classicMode && !gameTemplate && (
-                  <div className="w-1/2 min-w-80 max-w-md">
+                  <div className="w-1/3 min-w-0 pt-1.5">
                     <WinConditionsPanel settings={classic} onChange={setClassic} disabled={terrainLocked} />
                   </div>
                 )}

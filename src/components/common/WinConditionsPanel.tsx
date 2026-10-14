@@ -80,13 +80,6 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
           </div>
         )
       })}
-      <div className="flex items-center justify-between border-t border-border pt-4">
-        <div className="flex items-center gap-1">
-          <Label htmlFor="rmg-random-faction" className="text-xs">Random starting towns</Label>
-          <FieldInfo text="Every player starts with a random faction, picked when the game starts, instead of one that matches the land around their start. The land is chosen freely too, so any player can start on any terrain." />
-        </div>
-        <Switch id="rmg-random-faction" checked={!!settings.randomPlayerFaction} onCheckedChange={(v) => onChange((prev) => ({ ...prev, randomPlayerFaction: v || undefined }))} disabled={disabled} />
-      </div>
     </div>
   )
 }
