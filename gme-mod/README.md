@@ -2,9 +2,9 @@
 
 A BepInEx 6 (IL2CPP) plugin for Heroes of Might and Magic: Olden Era's own map
 editor. It adds **Seed (random or the seed field; the seed field only counts when `cli.useSeed` is true in the tse tuning file), Players, Richness, Complexity, Difficulty and Water** options
-to the editor's *Generate map* dialog, plus **Layout** (`--layout`), an Off/On dropdown for each extra **win condition**
+to the editor's *Generate map* dialog, plus **Layout** (`--layout`) below them, and a second column with **Starting towns** (Matching or Random, `--faction`) and an Off/On dropdown for each extra **win condition**
 (Capital Hold, City Hold, Guardian's Demise, Final Battle, Tournament; sent as `--win classic,…`, with the default days
-and battle dates) and **Starting towns** (Matching or Random, `--faction`), and generates the map with the Scenario
+and battle dates), and generates the map with the Scenario
 Editor's random map generator (`app.exe --generate …`, see
 `src/lib/rmg/headless-args.ts`), then opens the result in the map editor.
 

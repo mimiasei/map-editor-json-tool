@@ -47,8 +47,11 @@ namespace GmeRmgMod
         };
         private static readonly object[] winDropdowns = new object[WinChoices.Length];
 
-        /// <summary>Height added to the dialog frame: 13 added rows of 35px (seed to the last win condition) plus margin.</summary>
-        private const float ExtraHeight = 13 * 35f + 60f;
+        /// <summary>Height added to the dialog frame: the left column's 7 added rows of 35px (seed to layout) plus margin.</summary>
+        private const float ExtraHeight = 7 * 35f + 60f;
+
+        /// <summary>Width of the second column of dropdowns (300px wide plus a 20px gap), also added to the frame.</summary>
+        private const float ColumnWidth = 320f;
 
         public override void Load()
         {
@@ -134,21 +137,23 @@ namespace GmeRmgMod
                 new[] { "No Water", "Few Lakes", "Some Lakes", "Many Lakes", "Islands Map" }, 2);
             layoutDropdown = AddDropdown(sizeDropdown, parent, "Layout_Dropdown", leftX, baseY - 245f,
                 new[] { "Random Layout", "Ring Layout", "Ring with Center", "Inner Ring", "Double Neutral", "Pockets Layout", "Hub Layout" }, 0);
-            townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", leftX, baseY - 280f,
+            // Second column, level with the seed row: starting towns first, then the win conditions.
+            float rightX = leftX + ColumnWidth;
+            townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", rightX, baseY - 35f,
                 new[] { "Matching Starting Towns", "Random Starting Towns" }, 0);
             for (int i = 0; i < WinChoices.Length; i++)
-                winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", leftX, baseY - 315f - 35f * i,
+                winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 70f - 35f * i,
                     new[] { WinChoices[i].label + ": Off", WinChoices[i].label + ": On" }, 0);
 
-            // Grow the dialog's background frame by one 35px row per added dropdown (+60px of margin).
+            // Grow the dialog's background frame down by the left column's added rows and right by the second column.
             foreach (object rectObj in GameApi.GetComponentsInChildren(dialog, GameApi.RectTransform, true))
             {
                 dynamic rect = rectObj;
                 string name = ((string)rect.gameObject.name).ToLowerInvariant();
                 if (name.Contains("bg") || name.Contains("background") || name.Contains("panel"))
                 {
-                    rect.sizeDelta = GameApi.NewVector2((float)rect.sizeDelta.x, (float)rect.sizeDelta.y + ExtraHeight);
-                    rect.anchoredPosition = GameApi.NewVector2((float)rect.anchoredPosition.x, (float)rect.anchoredPosition.y - ExtraHeight / 2f);
+                    rect.sizeDelta = GameApi.NewVector2((float)rect.sizeDelta.x + ColumnWidth, (float)rect.sizeDelta.y + ExtraHeight);
+                    rect.anchoredPosition = GameApi.NewVector2((float)rect.anchoredPosition.x + ColumnWidth / 2f, (float)rect.anchoredPosition.y - ExtraHeight / 2f);
                 }
             }
         }
