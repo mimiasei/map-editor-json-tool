@@ -109,6 +109,31 @@
           "takesValue": true
         },
         {
+          "name": "layout",
+          "description": "Optional. Zone layout: random (default) or one of ring, ringCenter, innerRing, doubleNeutral, pockets, hub",
+          "takesValue": true
+        },
+        {
+          "name": "win",
+          "description": "Optional. Comma-separated win conditions, e.g. classic,<id>,<id>",
+          "takesValue": true
+        },
+        {
+          "name": "faction",
+          "description": "Optional. Starting towns: matching or random",
+          "takesValue": true
+        },
+        {
+          "name": "mirror",
+          "description": "Optional. true makes the right half a mirror image of the left (even player counts only)",
+          "takesValue": true
+        },
+        {
+          "name": "max-cities",
+          "description": "Optional. Maximum random neutral cities per neutral zone, 0-3",
+          "takesValue": true
+        },
+        {
           "name": "template",
           "description": "Accepted for forward compatibility; ignored (Classic mode only)",
           "takesValue": true
