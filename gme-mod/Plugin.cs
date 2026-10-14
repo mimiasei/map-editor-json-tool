@@ -156,7 +156,7 @@ namespace GmeRmgMod
             float rightX = leftX + ColumnWidth;
             townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", rightX, baseY - 35f,
                 new[] { "Matching Starting Towns", "Random Starting Towns" }, 0);
-            AddLayoutText(sizeDropdown, sizeRect, parent, leftX, baseY - 280f);
+            AddLayoutText(sizeDropdown, sizeRect, parent, leftX, baseY - 288f);
             for (int i = 0; i < WinChoices.Length; i++)
                 winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 70f - 35f * i,
                     new[] { WinChoices[i].label + ": Off", WinChoices[i].label + ": On" }, 0);
@@ -204,7 +204,7 @@ namespace GmeRmgMod
 
                 dynamic text = GameApi.GetComponent(go, GameApi.TextComponent);
                 text.text = "";
-                text.fontSize = 15f;
+                text.fontSize = 8f;
                 GameApi.TrySet(text, "enableWordWrapping", true);
                 GameApi.TrySetEnum(text, "alignment", GameApi.TextAlignment, "TopLeft");
                 go.SetActive(false);
