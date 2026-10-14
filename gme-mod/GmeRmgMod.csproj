@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <!-- A valid blank map: the placeholder the mod leaves in my_maps so the game indexes the output file at startup. -->
-    <EmbeddedResource Include="..src-tauriesources	emplate.map" LogicalName="placeholder.map" />
+    <EmbeddedResource Include="../src-tauri/resources/template.map" LogicalName="placeholder.map" />
   </ItemGroup>
 
   <ItemGroup>
