@@ -283,6 +283,7 @@ namespace GmeRmgMod
         public static void TickPostfix()
         {
             UpdateLayoutText();
+            if (pendingOpenPath != null) { try { RetryOpen(); } catch (Exception ex) { Logger.LogError($"Opening the generated map failed: {ex}"); pendingOpenPath = null; } }
             if (runningTse == null) return;
             try { Tick(); }
             catch (Exception ex)
@@ -475,16 +476,37 @@ namespace GmeRmgMod
                 return;
             }
 
-            // Files in the user's my_maps folder are indexed under "maps/user/".
-            string key = "maps/user/" + OutputFileName;
-            object fileHandle = GameApi.FindIndexedFile(key);
-            if (fileHandle == null)
-            {
-                Logger.LogError($"\"{key}\" not in the game's file index");
-                return;
-            }
+            // The game indexes the files of the user's my_maps folder as "maps/user/..." but may notice a new file a
+            // moment after it is written: keep looking for a few seconds before giving up.
+            if (TryOpen(editor)) return;
+            pendingOpenPath = outputPath;
+            pendingOpenUntil = DateTime.UtcNow.AddSeconds(15);
+            nextOpenTry = DateTime.UtcNow;
+            Logger.LogInfo($"\"{IndexKey}\" is not in the game's file index yet, waiting for it");
+        }
+
+        private const string IndexKey = "maps/user/" + OutputFileName;
+        private static string pendingOpenPath;
+        private static DateTime pendingOpenUntil, nextOpenTry;
+
+        private static bool TryOpen(object editor)
+        {
+            object fileHandle = GameApi.FindIndexedFile(IndexKey);
+            if (fileHandle == null) return false;
             ((dynamic)GameApi.Cast(editor, GameApi.MapEditor)).Load((dynamic)fileHandle);
             Logger.LogInfo("Generated map opened in the map editor");
+            return true;
+        }
+
+        private static void RetryOpen()
+        {
+            if (DateTime.UtcNow < nextOpenTry) return;
+            nextOpenTry = DateTime.UtcNow.AddSeconds(0.5);
+            object editor = GameApi.GetStatic(GameApi.MapEditor, "me");
+            if (editor != null && TryOpen(editor)) { pendingOpenPath = null; return; }
+            if (DateTime.UtcNow < pendingOpenUntil) return;
+            Logger.LogError($"\"{IndexKey}\" never appeared in the game's file index; the map is saved as {pendingOpenPath}. Index keys under maps/: {GameApi.DescribeIndexKeys("maps/")}");
+            pendingOpenPath = null;
         }
     }
 }
