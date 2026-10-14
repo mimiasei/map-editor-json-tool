@@ -1,5 +1,6 @@
 // ─── GME random map generator mod ────────────────────────────────────────────
-// Adds Players / Richness / Complexity / Difficulty / Water dropdowns to the
+// Adds Players / Richness / Complexity / Difficulty / Water / Layout / Win
+// condition / Starting towns dropdowns to the
 // game map editor's (GME) "Generate map" dialog and replaces its generator with
 // the Scenario Editor's (tse) headless RMG: the dialog runs
 // `app.exe --generate …`, then opens the generated map in GME.
@@ -30,6 +31,24 @@ namespace GmeRmgMod
 
         // The added dropdowns (TMP_Dropdown), set by StartPostfix.
         private static object seedDropdown, playersDropdown, richnessDropdown, complexityDropdown, difficultyDropdown, waterDropdown;
+        private static object layoutDropdown, townsDropdown;
+
+        // Layout names as tse's --layout takes them; index 0 (Random) sends no flag.
+        private static readonly string[] LayoutArgs = { "", "ring", "ringCenter", "innerRing", "doubleNeutral", "pockets", "hub" };
+
+        // The win conditions on top of Classic, each its own Off/On dropdown: (tse --win id, label).
+        private static readonly (string id, string label)[] WinChoices =
+        {
+            ("capital-hold", "Capital Hold"),
+            ("city-hold", "City Hold"),
+            ("guardians-demise", "Guardian's Demise"),
+            ("final-battle", "Final Battle"),
+            ("tournament", "Tournament"),
+        };
+        private static readonly object[] winDropdowns = new object[WinChoices.Length];
+
+        /// <summary>Height added to the dialog frame: 13 added rows of 35px (seed to the last win condition) plus margin.</summary>
+        private const float ExtraHeight = 13 * 35f + 60f;
 
         public override void Load()
         {
@@ -113,16 +132,23 @@ namespace GmeRmgMod
                 new[] { "Easy Guards", "Normal Guards", "Hard Guards", "Impossible Guards", "Deadly Guards", "Hell Guards" }, 1);
             waterDropdown = AddDropdown(sizeDropdown, parent, "Water_Dropdown", leftX, baseY - 210f,
                 new[] { "No Water", "Few Lakes", "Some Lakes", "Many Lakes", "Islands Map" }, 2);
+            layoutDropdown = AddDropdown(sizeDropdown, parent, "Layout_Dropdown", leftX, baseY - 245f,
+                new[] { "Random Layout", "Ring Layout", "Ring with Center", "Inner Ring", "Double Neutral", "Pockets Layout", "Hub Layout" }, 0);
+            townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", leftX, baseY - 280f,
+                new[] { "Matching Starting Towns", "Random Starting Towns" }, 0);
+            for (int i = 0; i < WinChoices.Length; i++)
+                winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", leftX, baseY - 315f - 35f * i,
+                    new[] { WinChoices[i].label + ": Off", WinChoices[i].label + ": On" }, 0);
 
-            // Grow the dialog's background frame by one 35px row per added dropdown.
+            // Grow the dialog's background frame by one 35px row per added dropdown (+60px of margin).
             foreach (object rectObj in GameApi.GetComponentsInChildren(dialog, GameApi.RectTransform, true))
             {
                 dynamic rect = rectObj;
                 string name = ((string)rect.gameObject.name).ToLowerInvariant();
                 if (name.Contains("bg") || name.Contains("background") || name.Contains("panel"))
                 {
-                    rect.sizeDelta = GameApi.NewVector2((float)rect.sizeDelta.x, (float)rect.sizeDelta.y + 270f);
-                    rect.anchoredPosition = GameApi.NewVector2((float)rect.anchoredPosition.x, (float)rect.anchoredPosition.y - 135f);
+                    rect.sizeDelta = GameApi.NewVector2((float)rect.sizeDelta.x, (float)rect.sizeDelta.y + ExtraHeight);
+                    rect.anchoredPosition = GameApi.NewVector2((float)rect.anchoredPosition.x, (float)rect.anchoredPosition.y - ExtraHeight / 2f);
                 }
             }
         }
@@ -216,6 +242,11 @@ namespace GmeRmgMod
             int[] playerCounts = { 2, 3, 4, 5, 6, 7, 8 };
             int players = playerCounts[Math.Clamp(Selected(playersDropdown, 0), 0, playerCounts.Length - 1)];
 
+            string layoutArg = LayoutArgs[Math.Clamp(Selected(layoutDropdown, 0), 0, LayoutArgs.Length - 1)];
+            var wins = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < WinChoices.Length; i++)
+                if (Selected(winDropdowns[i], 0) == 1) wins.Add(WinChoices[i].id);
+
             // The game reads maps from users/<last_user>/my_maps.
             string dataPath = GameApi.PersistentDataPath;
             string mapsDir = Path.Combine(dataPath, "my_maps");
@@ -245,6 +276,9 @@ namespace GmeRmgMod
                 Arguments = $"--generate --template \"{templateName}\" --size {mapSize}{seedArg} --players {players}"
                     + $" --richness {Selected(richnessDropdown, 2)} --complexity {Selected(complexityDropdown, 2)}"
                     + $" --difficulty {Selected(difficultyDropdown, 1)} --water {Selected(waterDropdown, 2)} --output \"{outputPath}\""
+                    + (layoutArg.Length > 0 ? $" --layout {layoutArg}" : "")
+                    + (wins.Count > 0 ? $" --win classic,{string.Join(",", wins)}" : "")
+                    + (Selected(townsDropdown, 0) == 1 ? " --faction random" : "")
                     + (progressFile != null ? $" --progress \"{progressFile}\"" : ""),
                 CreateNoWindow = true,
                 UseShellExecute = false,
