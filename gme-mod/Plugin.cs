@@ -155,7 +155,7 @@ namespace GmeRmgMod
             // Second column, level with the seed row: starting towns first, then the win conditions.
             float rightX = leftX + ColumnWidth;
             townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", rightX, baseY - 35f,
-                new[] { "Matching Starting Towns", "Random Starting Towns" }, 0);
+                new[] { "Starting Towns: Fit the Terrain", "Starting Towns: Random" }, 0);
             AddLayoutText(sizeDropdown, sizeRect, parent, leftX, baseY - 288f);
             for (int i = 0; i < WinChoices.Length; i++)
                 winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 70f - 35f * i,
