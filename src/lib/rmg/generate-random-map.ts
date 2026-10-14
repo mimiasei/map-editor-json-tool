@@ -49,12 +49,12 @@ import {
   type MapContainer,
 } from '@/lib/map-write'
 import { classifyRiverNode, deriveRealShapeCode } from '@/lib/map-grid/river-shape'
-import { buildBlockedTileSet, isElevationWallTile } from '@/lib/map-grid/passability'
+import { buildBlockedTileSet, isElevationWallTile, NON_BLOCKING_SPAWNER_SIDS } from '@/lib/map-grid/passability'
 import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
-import { logWarn } from '@/lib/logger'
+import { logInfo, logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { createZonePopulator, tryPlace, tryPlaceAt, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { addPoolSurround, scatterZoneObstacles } from './zone-decoration'
@@ -74,6 +74,9 @@ import { buildObjectLogicsIndex } from './value-model'
 import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import type { LayoutArchetype } from './zone-archetypes'
+import { isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, mirrorObjects } from './zone-mirror'
+import { closeMirroredBorders } from './zone-mirror-border'
+import { closeGuardFreeRoutes } from './zone-mirror-routes'
 import { DEFAULT_WIN_OPTIONS, winConditionById, winEntryFields, type WinConditionId, type WinOptions } from './win-conditions'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
 import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
@@ -189,6 +192,8 @@ export interface GenerateRandomMapOptions {
   winOptions?: WinOptions
   /** Players start with a random faction and any terrain (unset = a faction matching each start's land). */
   randomPlayerFaction?: boolean
+  /** A left-right mirror image map for an even player count (zone-mirror.ts): the right half copies the left. Not with a game template, islands or portals. */
+  mirrored?: boolean
   /** VCMI-style zone-to-zone guarded chokepoints (issue #210 Milestone 6,
    *  researched directly from VCMI's own `ConnectionsPlacer.cpp`/
    *  `ObjectManager.cpp::chooseGuard`) — `'none'` (the default) skips this
@@ -325,7 +330,12 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent: requestedWater = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals: requestedPortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, mirrored = false, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
+  if (mirrored && gameTemplateJson) throw new Error('A mirrored map cannot use a game template')
+  // Islands and portals link zones across water in ways that are not mirrored, so a mirrored map has neither.
+  const waterContent = mirrored && requestedWater === 'islands' ? 'normal' : requestedWater
+  const usePortals = mirrored ? false : requestedPortals
+  if (mirrored && (requestedWater === 'islands' || requestedPortals)) logWarn('Random map generation: a mirrored map has no islands or portals — using normal water and no portals')
   const disabledInteractableSidSet = disabledInteractableSids && disabledInteractableSids.length > 0 ? new Set(disabledInteractableSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
@@ -358,7 +368,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // (its flood and portals are built around objects existing first).
   const terrainFirst = !terrainOnly && waterContent !== 'islands'
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, layoutArchetype, zoneJaggedness, zoneSpread, rng, enabledBiomes, randomPlayerFaction, gameTemplateJson,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, layoutArchetype, zoneJaggedness, zoneSpread, rng, enabledBiomes, randomPlayerFaction, mirrored, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly || terrainFirst, computeElevation: terrainOnly || terrainFirst, organicTerrainBlending,
     elevationModes: catalog.rmgZoneLayout?.elevationModes,
@@ -391,7 +401,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   players.forEach((p, i) => {
     spawnerGroup.ids.push(i)
     spawnerGroup.nodes.push(p.node)
-    spawnerGroup.rotations.push(0)
+    spawnerGroup.rotations.push(terrain.playerRotation[i] ?? 0)
     spawnerGroup.levels.push(0)
   })
 
@@ -1152,6 +1162,20 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     if (unconnectedCities > 0) logWarn(`Random map generation: ${unconnectedCities} city/cities could not get a road to their entrance`)
   }
 
+  // Mirrored map: the roads (and the ramps they needed) of the left half, plus their mirror images.
+  const mirrorRoads = (): void => {
+    if (!mirrored) return
+    const kept = [...roadNodes].filter((node) => isLeftNode(node, sizeX)).map((node) => [node, roadIdByNode.get(node) ?? 1] as const)
+    roadNodes.clear()
+    roadIdByNode.clear()
+    for (const [node, roadId] of kept) {
+      for (const n of [node, mirrorNode(node, sizeX)]) { roadNodes.add(n); roadIdByNode.set(n, roadId) }
+    }
+    const climbs = mirrorChanges(roadClimbChanges, sizeX)
+    roadClimbChanges.length = 0
+    roadClimbChanges.push(...climbs)
+  }
+  mirrorRoads()
   if (roadClimbChanges.length > 0) block2 = paintClimbTiles(block2, roadClimbChanges)
   // Treasure and its guards, now that the roads are laid: road tiles count as
   // blocked, so no pile or guard lands on a road or is placed over it.
@@ -1191,6 +1215,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       break
     }
   }
+  mirrorRoads() // the connectors above may have added road tiles on the right
   if (roadNodes.size > 0) {
     block2 = paintRoadTiles(block2, [...roadNodes].map((node) => ({ node, roadId: roadIdByNode.get(node) ?? 1 })))
   }
@@ -1320,7 +1345,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const riverClearance = tuning.rivers?.cliffClearance ?? DEFAULT_RIVER_CLIFF_CLEARANCE
   const riverWidening = tuning.rivers?.mouthWidening ?? DEFAULT_RIVER_MOUTH_WIDENING
   const riverConfluence = tuning.rivers?.confluenceChance ?? DEFAULT_RIVER_CONFLUENCE_CHANCE
-  const riverCount = graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
+  // (A mirrored map has no rivers yet: their shape codes are not mirrored.)
+  const riverCount = mirrored ? 0 : graph.zones.filter((z) => !islandZoneIds.has(z.id) && rng() < riverChance).length
   carveRivers(riverTerrain, riverCount, rng, riverMeander, (route) => {
     riverPaths.push(route.path)
     if (route.poolAnchor !== undefined && route.poolSize !== undefined) {
@@ -1589,7 +1615,38 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // target) — gate GUARDS are deliberately NOT, matching every other real
   // guard this generator places (a dwelling/mine/treasure guard is never
   // decorative either).
-  for (const placement of boundaryResult.wallPlacements) decorativeIds.add(placement.tempId)
+  // (On a mirrored map the zone walls stay: the reachability pass moves a cut-off pickup instead of opening the border.)
+  if (!mirrored) for (const placement of boundaryResult.wallPlacements) decorativeIds.add(placement.tempId)
+
+  // Mirrored map: from here on the right half is a copy of the left, so the repair passes below see the final objects.
+  const mirrorAllObjects = (): void => {
+    mirrorObjects({
+      sizeX, sizeZ, objectGroups, tempIdToPlacement, squads: allConcreteSquads, decorativeIds, catalogById,
+      spawnerSid: playerSpawnerSid, nextTempId: () => state.nextTempId++,
+    })
+  }
+  // Copy the left half's tile layers onto the right half (also repainted into the container).
+  const mirrorLayers = (): void => {
+    const rightNodes: number[] = []
+    for (let node = 0; node < tileCount; node++) if (!isLeftNode(node, sizeX)) rightNodes.push(node)
+    for (const node of rightNodes) {
+      const other = mirrorNode(node, sizeX)
+      waterMapFinal[node] = waterMapFinal[other]
+      levelsMapFinal[node] = levelsMapFinal[other]
+      climbsMapFinal[node] = climbsMapFinal[other]
+    }
+    block2 = paintWaterTiles(block2, rightNodes.map((node) => ({ node, waterId: waterMapFinal[node] })))
+    block2 = paintLevelTiles(block2, rightNodes.map((node) => ({ node, level: levelsMapFinal[node] })))
+    block2 = paintClimbTiles(block2, rightNodes.map((node) => ({ node, climb: climbsMapFinal[node] as 0 | 1 })))
+    if (state.tileBiome) {
+      const biomes = state.tileBiome
+      block2 = paintTerrainTiles(block2, rightNodes.map((node) => ({ node, biomeId: biomes[mirrorNode(node, sizeX)] })))
+    }
+  }
+  if (mirrored) {
+    mirrorAllObjects()
+    mirrorLayers()
+  }
 
   await reportProgress('Checking reachability and repairing zones', 84)
   const report = applyAccessibilityPass(
@@ -1671,6 +1728,70 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     }
   }
 
+  // The repair passes above moved things on either half (a ramp, water, a pickup): the left half is the truth, so copy it
+  // over again, then seal the borders on the finished map. (The sealing is last, so nothing but the final auto-fix can undo it.)
+  if (mirrored) {
+    mirrorAllObjects()
+    mirrorLayers()
+
+    // The gates the boundary pass cut leave a gap beside each guard, and the walls that straddled the middle
+    // line were dropped by the copy: seal the zone borders up to the guarded roads (zone-mirror-border.ts).
+    const flat: { sid: string; node: number; rotation: number }[] = []
+    for (const [sid, group] of objectGroups) group.nodes.forEach((node, i) => flat.push({ sid, node, rotation: group.rotations[i] ?? 0 }))
+    const border = closeMirroredBorders({
+      sizeX, sizeZ, zoneIdByNode, zoneBiome, catalogById, mapObjects: catalog.mapObjects, objects: flat,
+      guardNodes: [...allConcreteSquads.map((s) => s.node), ...(objectGroups.get('random-squad')?.nodes ?? [])],
+      roadNodes, waterMap: waterMapFinal, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal,
+      tileBiome: state.tileBiome, mountainDensity, rng, nextTempId: () => state.nextTempId++,
+      guardOverrides: boundaryResult.guardPlacements.find((g) => g.randomSquadOverrides)?.randomSquadOverrides,
+    })
+    // Pickups and guards a wall sealed into a pocket are given up (the auto-fix would otherwise take the wall down again).
+    if (border.removeNodes.length > 0) {
+      const gone = new Set(border.removeNodes)
+      for (const [sid, group] of objectGroups) {
+        if (!NON_BLOCKING_SPAWNER_SIDS.has(sid)) continue
+        for (let i = group.ids.length - 1; i >= 0; i--) {
+          if (!gone.has(group.nodes[i])) continue
+          tempIdToPlacement.delete(group.ids[i])
+          group.ids.splice(i, 1)
+          group.nodes.splice(i, 1)
+          group.rotations.splice(i, 1)
+          group.levels.splice(i, 1)
+        }
+      }
+      for (let i = allConcreteSquads.length - 1; i >= 0; i--) if (gone.has(allConcreteSquads[i].node)) allConcreteSquads.splice(i, 1)
+    }
+    for (const placement of [...border.walls, ...border.guards]) {
+      tempIdToPlacement.set(placement.tempId, placement)
+      let group = objectGroups.get(placement.sid)
+      if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
+      group.ids.push(placement.tempId)
+      group.nodes.push(placement.node)
+      group.rotations.push(placement.rotation ?? 0)
+      group.levels.push(0)
+    }
+    // Last: any route between two starts that is still free of guards gets one (and its mirror image) on its narrowest stretch.
+    const sealed: { sid: string; node: number; rotation: number }[] = []
+    for (const [sid, group] of objectGroups) group.nodes.forEach((node, i) => sealed.push({ sid, node, rotation: group.rotations[i] ?? 0 }))
+    const routes = closeGuardFreeRoutes({
+      sizeX, sizeZ, catalogById, objects: sealed, startSid: playerSpawnerSid,
+      guardNodes: [...allConcreteSquads.map((s) => s.node), ...(objectGroups.get('random-squad')?.nodes ?? [])],
+      waterMap: waterMapFinal, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, nextTempId: () => state.nextTempId++,
+      guardOverrides: boundaryResult.guardPlacements.find((g) => g.randomSquadOverrides)?.randomSquadOverrides,
+    })
+    for (const placement of routes.guards) {
+      tempIdToPlacement.set(placement.tempId, placement)
+      let group = objectGroups.get(placement.sid)
+      if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
+      group.ids.push(placement.tempId)
+      group.nodes.push(placement.node)
+      group.rotations.push(0)
+      group.levels.push(0)
+    }
+    logInfo(`Mirrored map: ${routes.guards.length} guard(s) added on routes between starts that had none, ${routes.remaining} route(s) left unguarded`)
+    logInfo(`Mirrored map: sealed the zone borders with ${border.walls.length} wall object(s) and ${border.guards.length} gate guard(s), ${border.gateRows} row(s) on the middle line left open for roads, ${border.gaps} border tile(s) no wall fitted on, ${border.removeNodes.length} pickup(s) or guard(s) given up`)
+  }
+
   await reportProgress('Writing placements', 90)
   const additions: { sid: string; node: number; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string; weeklyIncrementBonus?: number }; randomItemOverrides?: { rarity: number }; randomCityOverrides?: { factionSid: string; spawnHero: boolean }; randomHireOverrides?: { tier: number } }[] = []
   const additionTempIds: number[] = [] // parallel to additions — needed to remap portal temp ids to real ids below
@@ -1728,15 +1849,12 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // has no equivalent here; CLAUDE.md documents "random" as GME's own real
   // default for an unconfigured hero-spawner, unlike city-spawner's own
   // unconfigured state.
+  // Player slot = rank by playerIndex (a mirrored layout numbers its sectors in another order).
   const playerZoneIndex = new Map<number, number>()
-  {
-    let index = 0
-    for (const zone of graph.zones) {
-      if (zone.kind !== 'player') continue
-      playerZoneIndex.set(zone.id, index)
-      index += 1
-    }
-  }
+  graph.zones
+    .filter((zone) => zone.kind === 'player')
+    .sort((a, b) => (a.playerIndex ?? 0) - (b.playerIndex ?? 0))
+    .forEach((zone, index) => playerZoneIndex.set(zone.id, index))
   if (playerSpawnerSid === 'city-spawner') {
     // Every real player city on every known-working sample map (Broken_Alliance,
     // Stormlight) ships with a real, named starting hero (propHeroes isDefined:true)
@@ -1795,7 +1913,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // bytes agree with them, same two-call pattern the road generator's own
   // water-partition repair already uses).
   if (waterCollisionResult.reclaimedNodes.size > 0) {
-    const reclaimed = [...waterCollisionResult.reclaimedNodes]
+    const reclaimed = [...(mirrored ? mirrorNodeSet(waterCollisionResult.reclaimedNodes, sizeX) : waterCollisionResult.reclaimedNodes)]
     finalBlock2 = paintWaterTiles(finalBlock2, reclaimed.map((node) => ({ node, waterId: 0 })))
     finalBlock2 = paintLevelTiles(finalBlock2, reclaimed.map((node) => ({ node, level: 0 })))
   }
@@ -1886,8 +2004,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       const dist = Math.hypot((add.node % sizeX) - sizeX / 2, Math.floor(add.node / sizeX) - sizeZ / 2)
       if (dist < bestDist) { bestDist = dist; cityHoldId = newIds[i] }
     })
-    const chosen = options.winConditions.filter((id) => id !== 'city-hold' || cityHoldId !== undefined)
-    if (chosen.length < options.winConditions.length) logWarn('Random map generation: City Hold dropped, the map has no neutral city to mark')
+    const chosen = options.winConditions.filter((id) => id !== 'city-hold' || (cityHoldId !== undefined && !mirrored))
+    if (chosen.length < options.winConditions.length) logWarn(mirrored ? 'Random map generation: City Hold dropped, a mirrored map has no single city in the middle to hold' : 'Random map generation: City Hold dropped, the map has no neutral city to mark')
     if (cityHoldId !== undefined && chosen.includes('city-hold')) finalBlock2 = markCityHold(finalBlock2, cityHoldId)
     finalBlock2 = patchWinConditions(finalBlock2, {
       classic: chosen.includes('classic'),

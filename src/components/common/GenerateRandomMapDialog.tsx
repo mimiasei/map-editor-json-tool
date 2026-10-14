@@ -309,6 +309,9 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
   // object/guard/decoration categories, not a "one more pass" reopening of
   // the earlier stages' own controls.
   const classicMode = mode === 'classic'
+  // A mirrored map needs an even player count and map width, and the built-in zone layout (no game template).
+  const mirrorPossible = classicMode && !gameTemplate && playerCount % 2 === 0 && selectedSize.sizeX % 2 === 0
+  const mirroredMap = mirrorPossible && !!classic.mirrored
   const shownCategory: Category = classicMode ? 'core' : activeCategory
   const showCore = shownCategory === 'core'
   const showTerrainSliders = shownCategory === 'terrain' && (previewPhase === 'off' || previewPhase === 'terrain')
@@ -369,6 +372,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread,
               layoutArchetype: classicMode && !gameTemplate ? classic.layout : undefined,
               randomPlayerFaction: classicMode ? classic.randomPlayerFaction : undefined,
+              mirrored: mirroredMap,
               enabledBiomes: enabledBiomesList, gameTemplateJson: gameTemplate?.json, organicTerrainBlending,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true, computeElevation: true,
             })
@@ -393,7 +397,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, classicMode, classic.layout, classic.randomPlayerFaction, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed, organicTerrainBlending])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, classicMode, classic.layout, classic.randomPlayerFaction, mirroredMap, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed, organicTerrainBlending])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -449,6 +453,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         winConditions: classicMode && !gameTemplate ? classic.winConditions : undefined,
         winOptions: classicMode && !gameTemplate ? classic.winOptions : undefined,
         randomPlayerFaction: classicMode ? classic.randomPlayerFaction : undefined,
+        mirrored: mirroredMap,
         boundaryGuardStrength: opts.boundaryGuardStrength,
         squadDensity: opts.squadDensity,
         roadWindingAmplitude: opts.roadWindingAmplitude,
@@ -790,6 +795,19 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     />
                   </div>
                   
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-mirrored" className="text-xs">Mirrored map</Label>
+                      <FieldInfo text={`The right half of the map is an exact mirror image of the left half, so every player has precisely the same surroundings: the same zones, land, roads, mines, dwellings, guards and treasure. Players take turns on the two sides (player 1 on the left, player 2 on the right, player 3 on the left, ...), so two human players in the first two slots face each other and the AI players are split evenly. Needs an even number of players and an even map width. What differs: the starting heroes (each is unique), and everything is generated for the left half only, so mirrored maps have no rivers, islands or portals and no City Hold (there is no single city in the middle). Objects that straddle the middle line are left out. With random starting towns each player is still dealt their own random town.`} />
+                    </div>
+                    <Switch
+                      id="rmg-mirrored"
+                      checked={mirroredMap}
+                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, mirrored: v || undefined, water: v && prev.water === 'islands' ? 'some' : prev.water }))}
+                      disabled={terrainLocked || !mirrorPossible}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
@@ -847,7 +865,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                           <Select value={value} onValueChange={(v) => setClassic((prev) => ({ ...prev, [key]: v }))} disabled={terrainLocked}>
                             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {options.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                              {/* A mirrored map has no islands (they are joined by portals that are not mirrored). */}
+                              {(options as readonly { id: string; label: string }[]).filter((o) => !(mirroredMap && o.id === 'islands')).map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>

@@ -31,7 +31,7 @@ namespace GmeRmgMod
 
         // The added dropdowns (TMP_Dropdown), set by StartPostfix.
         private static object seedDropdown, playersDropdown, richnessDropdown, complexityDropdown, difficultyDropdown, waterDropdown;
-        private static object layoutDropdown, townsDropdown;
+        private static object layoutDropdown, townsDropdown, mirrorDropdown;
 
         // Layout names as tse's --layout takes them; index 0 (Random) sends no flag.
         private static readonly string[] LayoutArgs = { "", "ring", "ringCenter", "innerRing", "doubleNeutral", "pockets", "hub" };
@@ -160,6 +160,9 @@ namespace GmeRmgMod
             for (int i = 0; i < WinChoices.Length; i++)
                 winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 70f - 35f * i,
                     new[] { WinChoices[i].label + ": Off", WinChoices[i].label + ": On" }, 0);
+            // Last in the right column: a left-right mirror image map (needs an even player count).
+            mirrorDropdown = AddDropdown(sizeDropdown, parent, "Mirror_Dropdown", rightX, baseY - 70f - 35f * WinChoices.Length,
+                new[] { "Mirrored Map: Off", "Mirrored Map: On" }, 0);
 
             // Grow the dialog's background frame down by the left column's added rows and right by the second column.
             foreach (object rectObj in GameApi.GetComponentsInChildren(dialog, GameApi.RectTransform, true))
@@ -325,6 +328,20 @@ namespace GmeRmgMod
             for (int i = 0; i < WinChoices.Length; i++)
                 if (Selected(winDropdowns[i], 0) == 1) wins.Add(WinChoices[i].id);
 
+            bool mirror = Selected(mirrorDropdown, 0) == 1;
+            if (mirror && players % 2 != 0)
+            {
+                Logger.LogWarning($"Mirrored Map needs an even player count — ignored with {players} players");
+                mirror = false;
+            }
+            // A mirrored map has no islands (their portals are not mirrored): Some Lakes instead.
+            int water = Selected(waterDropdown, 2);
+            if (mirror && water == 4)
+            {
+                Logger.LogInfo("Mirrored Map has no islands — using Some Lakes instead");
+                water = 2;
+            }
+
             // The game reads maps from users/<last_user>/my_maps.
             string dataPath = GameApi.PersistentDataPath;
             string mapsDir = Path.Combine(dataPath, "my_maps");
@@ -353,10 +370,11 @@ namespace GmeRmgMod
                 FileName = tse,
                 Arguments = $"--generate --template \"{templateName}\" --size {mapSize}{seedArg} --players {players}"
                     + $" --richness {Selected(richnessDropdown, 2)} --complexity {Selected(complexityDropdown, 2)}"
-                    + $" --difficulty {Selected(difficultyDropdown, 1)} --water {Selected(waterDropdown, 2)} --output \"{outputPath}\""
+                    + $" --difficulty {Selected(difficultyDropdown, 1)} --water {water} --output \"{outputPath}\""
                     + (layoutArg.Length > 0 ? $" --layout {layoutArg}" : "")
                     + (wins.Count > 0 ? $" --win classic,{string.Join(",", wins)}" : "")
                     + (Selected(townsDropdown, 0) == 1 ? " --faction random" : "")
+                    + (mirror ? " --mirror true" : "")
                     + (progressFile != null ? $" --progress \"{progressFile}\"" : ""),
                 CreateNoWindow = true,
                 UseShellExecute = false,

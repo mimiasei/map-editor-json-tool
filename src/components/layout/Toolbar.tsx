@@ -834,6 +834,20 @@ export default function Toolbar({
             <TooltipContent>{mapGridOpen ? 'Map' : 'Scenario'} Statistics</TooltipContent>
           </Tooltip>
 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleGenerateMapClick}
+              >
+                <Dices className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Generate Random Map</TooltipContent>
+          </Tooltip>
+
           {/* Needs a loaded .map for anything to show (issue #122) */}
           {mapLoaded && (
             <Tooltip>
@@ -932,10 +946,6 @@ export default function Toolbar({
                   <DropdownMenuItem onClick={() => setTimeout(handleImportH3mClick, 0)}>
                     <FileInput className="h-4 w-4 mr-2" />
                     Import H3 Map…
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTimeout(handleGenerateMapClick, 0)}>
-                    <Dices className="h-4 w-4 mr-2" />
-                    Generate Random Map…
                   </DropdownMenuItem>
                 </>
               )}

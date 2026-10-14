@@ -43,16 +43,18 @@ import {
   paintLevelTiles,
   paintTerrainTiles,
   paintWaterTiles,
+  rotateObjectInstance,
   BLANK_MAP_BIOME_NAMES,
   type BlankMapPlayer,
   type MapContainer,
 } from '@/lib/map-write'
-import {computeFootprintTiles, clampAnchorToFootprintBounds, protectedNeighborNodes} from '@/lib/map-grid/footprint'
+import {clampAnchorToFootprintBounds, protectedNeighborNodes} from '@/lib/map-grid/footprint'
 import { isElevationWallTile } from '@/lib/map-grid/passability'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
-import { buildBuiltInLayout, ROLE_TREASURE_SCALE, type BuiltInLayout, type LayoutArchetype } from './zone-archetypes'
+import { buildBuiltInLayout, ROLE_TREASURE_SCALE, type BuiltInLayout, type LayoutArchetype, type MirrorInfo } from './zone-archetypes'
+import { footprintForRotation, isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, symmetrizeOwnership } from './zone-mirror'
 import { logInfo } from '@/lib/logger'
 import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides } from './rmg-template-import'
 import { blendZoneBordersWFC } from './terrain-wfc'
@@ -162,6 +164,8 @@ export interface GenerateTerrainOptions {
   enabledBiomes?: BiomeId[]
   /** Player zones take any biome instead of cycling through the faction biomes. */
   randomPlayerFaction?: boolean
+  /** A left-right mirror image map (zone-mirror.ts): the right half copies the left. Built-in layouts only. */
+  mirrored?: boolean
   /** Raw JSON text of a real game RMG template (`maps/templates/*.rmg.json`
    *  shape — issue #210, Stage 1) — when set, its own zone/connection
    *  topology REPLACES `buildZoneGraph`'s fixed ring entirely (`playerCount`
@@ -262,6 +266,10 @@ export interface TerrainResult {
   roadMaterialByEdgeKey: Map<string, 'Stone' | 'Dirt'>
   /** The built-in layout archetype picked for this map; null with a game template. */
   layoutArchetype: LayoutArchetype | null
+  /** Partner zones and sides of a mirrored map; undefined otherwise. */
+  mirror?: MirrorInfo
+  /** Rotation of each player's start (by slot): 10 (mirrored) for the right-hand players of a mirrored map, else 0. */
+  playerRotation: number[]
 }
 
 /**
@@ -281,17 +289,18 @@ export function generateTerrain(
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
     hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, layoutWeights, layoutArchetype: forcedLayout, computeElevation = false, elevationModes,
-    enabledBiomes, randomPlayerFaction = false, gameTemplateJson, organicTerrainBlending = 0,
+    enabledBiomes, randomPlayerFaction = false, mirrored = false, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
 
+  if (mirrored && gameTemplateJson) throw new Error('A mirrored map cannot use a game template')
   const importedTopology = gameTemplateJson ? importGameTemplateTopology(gameTemplateJson, rng) : null
   // Built-in maps pick one of several symmetric layout archetypes
   // (zone-archetypes.ts) instead of always the same ring (issue #254 fairness
   // holds: every archetype repeats one sector unit per player).
   const builtInLayout = importedTopology
     ? null
-    : buildBuiltInLayout(sizeX, sizeZ, playerCount, rng, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25, layoutWeights, forcedLayout)
+    : buildBuiltInLayout(sizeX, sizeZ, playerCount, rng, zoneSpread <= 1 ? 0.5 + 0.5 * zoneSpread : 1 + (zoneSpread - 1) * 0.25, layoutWeights, forcedLayout, mirrored)
   if (builtInLayout) logInfo(`RMG layout: ${builtInLayout.archetype} (${builtInLayout.graph.zones.length} zones)`)
   const graph = importedTopology ? importedTopology.graph : (builtInLayout as BuiltInLayout).graph
   const portalEdges = importedTopology?.portalEdges ?? new Set<string>()
@@ -325,8 +334,14 @@ export function generateTerrain(
   const centers = importedTopology
     ? relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
     : (builtInLayout as BuiltInLayout).centers
-  const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
+  const mirror = builtInLayout?.mirror
+  const penrose = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
+  // Mirrored map: make the ownership symmetric, and give each right-side zone its partner's biome.
+  const { zoneIdByNode, tilesByZone } = mirror ? symmetrizeOwnership(sizeX, sizeZ, penrose.zoneIdByNode, centers, mirror) : penrose
   const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes, biomeIdByZoneId, randomPlayerFaction)
+  if (mirror) {
+    for (const [id, other] of mirror.partner) if (mirror.side.get(id) === 'right') zoneBiome.set(id, zoneBiome.get(other) as BiomeId)
+  }
 
   let islandFloodNodes = new Set<number>()
   const islandLandmassByZone = new Map<number, number[]>()
@@ -362,11 +377,21 @@ export function generateTerrain(
     const tiles = tilesByZone.get(zone.id) ?? []
     const center = centers[zone.id]
     const rawNode = tiles.length > 0 ? nearestTile(tiles, sizeX, center) : center.z * sizeX + center.x
+    if (mirror?.side.get(zone.id) === 'right') {
+      // A copy of the partner's anchor (the partner comes later in the loop when its id is higher).
+      continue
+    }
     if (zone.kind === 'player' && includeSpawners) {
       const { x, z } = clampAnchorToFootprintBounds(spawnerTemplate, rawNode % sizeX, Math.floor(rawNode / sizeX), sizeX, sizeZ)
       zoneAnchorNode.set(zone.id, z * sizeX + x)
     } else {
       zoneAnchorNode.set(zone.id, rawNode)
+    }
+  }
+
+  if (mirror) {
+    for (const zone of graph.zones) {
+      if (mirror.side.get(zone.id) === 'right') zoneAnchorNode.set(zone.id, mirrorNode(zoneAnchorNode.get(mirror.partner.get(zone.id) as number) as number, sizeX))
     }
   }
 
@@ -382,11 +407,19 @@ export function generateTerrain(
         .map((zone) => ({ sid: playerSpawnerSid as 'city-spawner' | 'hero-spawner', node: zoneAnchorNode.get(zone.id) as number }))
     : []
 
+  // Rotation of each player's spawner: right-hand players of a mirrored map carry the mirrored flag.
+  const playerZonesSorted = graph.zones.filter((z) => z.kind === 'player').sort((a, b) => (a.playerIndex ?? 0) - (b.playerIndex ?? 0))
+  const playerRotation = playerZonesSorted.map((zone) => (mirror?.side.get(zone.id) === 'right' ? 10 : 0))
+  players.forEach((p, index) => { p.rotation = playerRotation[index] })
+
   let container = buildBlankMap(template, { sizeX, sizeZ, biomeId: ZONE_BIOMES[0], players })
 
   const perNodeBiome = organicTerrainBlending > 0
     ? blendZoneBordersWFC({ sizeX, sizeZ, zoneIdByNode, zoneBiome, rng, ...organicBlendParams(organicTerrainBlending) })
     : null
+  if (mirror && perNodeBiome) {
+    for (let node = 0; node < tileCount; node++) if (!isLeftNode(node, sizeX)) perNodeBiome[node] = perNodeBiome[mirrorNode(node, sizeX)]
+  }
   const terrainChanges: { node: number; biomeId: number }[] = new Array(tileCount)
   for (let node = 0; node < tileCount; node++) {
     terrainChanges[node] = { node, biomeId: perNodeBiome?.[node] ?? zoneBiome.get(zoneIdByNode[node]) ?? ZONE_BIOMES[0] }
@@ -397,9 +430,9 @@ export function generateTerrain(
   const seedAnchors = new Set<number>()
   if (includeSpawners && playerSpawnerSid) {
     const spawnerTemplate = catalogById.get(playerSpawnerSid)
-    for (const p of players) {
+    players.forEach((p, index) => {
       seedAnchors.add(p.node)
-      const cells = computeFootprintTiles(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX))
+      const cells = footprintForRotation(spawnerTemplate, p.node % sizeX, Math.floor(p.node / sizeX), playerRotation[index])
       for (const cell of cells) {
         if (cell.value === 1 || cell.value === 2) seedBlocked.add(cell.z * sizeX + cell.x)
       }
@@ -408,7 +441,7 @@ export function generateTerrain(
       for (const pNode of protectedNodes) {
           seedBlocked.add(pNode)
       }
-    }
+    })
   }
   const state = createPlacementState(seedBlocked, seedAnchors)
   state.tileBiome = terrainChanges.map((c) => c.biomeId)
@@ -428,6 +461,11 @@ export function generateTerrain(
       waterNodesAll = waterResult.waterNodes
       waterChangesAll = waterResult.waterChanges
       levelChangesAll = waterResult.levelChanges
+      if (mirror) {
+        waterNodesAll = mirrorNodeSet(waterNodesAll, sizeX)
+        waterChangesAll = mirrorChanges(waterChangesAll, sizeX)
+        levelChangesAll = mirrorChanges(levelChangesAll, sizeX)
+      }
     } else if (waterContent === 'islands') {
       for (const node of islandFloodNodes) {
         waterNodesAll.add(node)
@@ -478,9 +516,12 @@ export function generateTerrain(
       blocked: state.blocked, usedAnchors: state.usedAnchors, rng, kind: 'valley', chance: valleyChance,
       reservedNodes: new Set([...waterNodesAll, ...hillResult.elevatedNodes]), elevationModes, minSpan: elevationMinSpan,
     })
-    levelChangesAll = [...levelChangesAll, ...hillResult.levelChanges, ...valleyResult.levelChanges]
-    climbChangesAll = [...hillResult.climbChanges, ...valleyResult.climbChanges]
+    levelChangesAll = [...levelChangesAll, ...(mirror ? mirrorChanges(hillResult.levelChanges, sizeX) : hillResult.levelChanges), ...(mirror ? mirrorChanges(valleyResult.levelChanges, sizeX) : valleyResult.levelChanges)]
+    climbChangesAll = mirror
+      ? mirrorChanges([...hillResult.climbChanges, ...valleyResult.climbChanges], sizeX)
+      : [...hillResult.climbChanges, ...valleyResult.climbChanges]
     elevationNodesAll = new Set([...hillResult.elevatedNodes, ...valleyResult.elevatedNodes])
+    if (mirror) elevationNodesAll = mirrorNodeSet(elevationNodesAll, sizeX)
   }
 
   if (waterChangesAll.length > 0) block2 = paintWaterTiles(block2, waterChangesAll)
@@ -504,6 +545,13 @@ export function generateTerrain(
     }
   }
 
+  // Mirrored map: the right-hand player starts are mirrored copies of the left-hand ones.
+  if (mirror && includeSpawners) {
+    playerRotation.forEach((rotation, index) => {
+      if (rotation !== 0) block2 = rotateObjectInstance(block2, index, rotation)
+    })
+  }
+
   const finalChunks = container.chunks.slice()
   finalChunks[1] = block2
   container = { ...container, chunks: finalChunks }
@@ -516,5 +564,7 @@ export function generateTerrain(
     guardCutoffValueByZoneId, zoneContentValueByZoneId, contentCountLimitsByZoneId, neutralCityExclusionsByZoneId,
     biomeIdByZoneId, mandatoryContentSidsByZoneId, roadMaterialByEdgeKey,
     layoutArchetype: builtInLayout?.archetype ?? null,
+    mirror,
+    playerRotation,
   }
 }

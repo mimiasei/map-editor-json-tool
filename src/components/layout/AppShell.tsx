@@ -758,8 +758,8 @@ export default function AppShell() {
           <GenerateRandomMapDialog
             open={rmgOpen}
             onOpenChange={(o) => (o ? openRmg() : closeRmg())}
-            onGenerated={({ warnings }) => {
-              if (warnings.length > 0) reportGeneratedWarnings(warnings)
+            onGenerated={() => {
+              openMapGrid()
             }}
           />
         </div>

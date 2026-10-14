@@ -91,7 +91,7 @@ export function buildFlatPlaced(objectGroups: Map<string, ObjectPlacementGroup>,
       const node = group.nodes[i]
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
-      flat.push({ key: `0:${id}`, type: 0, id, sid, x, z, node } as PlacedObject)
+      flat.push({ key: `0:${id}`, type: 0, id, sid, x, z, node, rotation: group.rotations[i] ?? 0 } as PlacedObject)
     }
   }
   return flat
@@ -247,10 +247,10 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
     const spawnerTemplate = catalogById.get(spawnerSid)
     const seeds: number[] = []
     if (spawnerGroup) {
-      for (const node of spawnerGroup.nodes) {
+      for (const [spawnerIndex, node] of spawnerGroup.nodes.entries()) {
         const x = node % sizeX
         const z = Math.floor(node / sizeX)
-        const cells = computeFootprintTiles(spawnerTemplate, x, z)
+        const cells = computeFootprintTiles(spawnerTemplate, x, z, spawnerGroup.rotations[spawnerIndex] ?? 0)
         const accessCells = cells.filter((c) => c.value === 2)
         for (const cell of accessCells.length > 0 ? accessCells : [{ x, z }]) {
           if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
@@ -370,11 +370,11 @@ export function repairIsolatedPlayerStarts(options: IsolatedStartRepairOptions):
 
   const portalNodeAdjacency = resolvePortalNodeAdjacency(portalAdjacency, objectGroups, catalogById, sizeX, sizeZ)
 
-  const accessNodeForPlayer = (p: { sid: string; node: number }): number => {
+  const accessNodeForPlayer = (p: { sid: string; node: number; rotation?: number }): number => {
     const template = catalogById.get(p.sid)
     const x = p.node % sizeX
     const z = Math.floor(p.node / sizeX)
-    const cells = computeFootprintTiles(template, x, z)
+    const cells = computeFootprintTiles(template, x, z, p.rotation)
     const access = cells.find((c) => c.value === 2)
     if (!access || access.x < 0 || access.x >= sizeX || access.z < 0 || access.z >= sizeZ) return p.node
     return access.z * sizeX + access.x

@@ -168,7 +168,7 @@ export function accessNodesFor(item: PlacedObject, catalogById: Map<string, Cata
   if (item.type !== 0) return []
   const template = catalogById.get(item.sid)
   if (!template) return []
-  return computeFootprintTiles(template, item.x, item.z)
+  return computeFootprintTiles(template, item.x, item.z, item.rotation)
     .filter((c) => c.value === 2)
     .map((c) => c.z * sizeX + c.x)
 }
@@ -252,7 +252,7 @@ export function buildNodeOwners(placedObjects: PlacedObject[], catalogById: Map<
   for (const obj of placedObjects) {
     if (obj.type !== 0) continue
     const template = catalogById.get(obj.sid)
-    for (const cell of computeFootprintTiles(template, obj.x, obj.z)) {
+    for (const cell of computeFootprintTiles(template, obj.x, obj.z, obj.rotation)) {
       if (cell.value !== 1) continue
       const node = cell.z * sizeX + cell.x
       const owners = nodeOwners.get(node)
@@ -539,7 +539,7 @@ function findFreeTileForBlocker(
     catalog,
   )
   const isValid = (x: number, z: number): boolean => {
-    const cells = computeFootprintTiles(template, x, z)
+    const cells = computeFootprintTiles(template, x, z, obj.rotation)
     if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
     const anchorNode = z * sizeX + x
     if (occupiedAnchors.has(anchorNode) && anchorNode !== obj.node) return false
@@ -563,10 +563,10 @@ function findFreeTileForBlocker(
 /** Marks a relocation destination's own SOLID cells as claimed, so a later
  *  fix decided in the same pass won't pick the same tile — see
  *  entrance-autofix.ts's own `claimNode` for the same rationale. */
-function claimSolidCells(node: number, template: CatalogMapObject | undefined, sizeX: number, avoid: Set<number>): void {
+function claimSolidCells(node: number, template: CatalogMapObject | undefined, sizeX: number, avoid: Set<number>, rotation?: number): void {
   const x = node % sizeX
   const z = Math.floor(node / sizeX)
-  for (const cell of computeFootprintTiles(template, x, z)) {
+  for (const cell of computeFootprintTiles(template, x, z, rotation)) {
     if (cell.value === 1) avoid.add(cell.z * sizeX + cell.x)
   }
 }
@@ -631,7 +631,7 @@ export function computeReachabilityAutoFix(context: ReachabilityContext, catalog
       if (group === 'artifacts' || group === 'resources') {
         const target = findFreeTileForBlocker(obj, context, catalog, analysis.catalogById, claimedDestinations, occupiedAnchors)
         if (target !== null) {
-          claimSolidCells(target, analysis.catalogById.get(obj.sid), sizeX, claimedDestinations)
+          claimSolidCells(target, analysis.catalogById.get(obj.sid), sizeX, claimedDestinations, obj.rotation)
           occupiedAnchors.delete(obj.node)
           occupiedAnchors.add(target)
           relocations.push({ entityType: 0, id: obj.id, sid: obj.sid, fromNode: obj.node, toNode: target })
@@ -754,7 +754,7 @@ export function computeReachabilityGuarantee(context: ReachabilityContext, catal
     const ringNodes = new Set<number>()
     for (const o of others) {
       if (o.type !== 0) continue
-      for (const g of entranceGroups(computeFootprintTiles(catalogById.get(o.sid), o.x, o.z), sizeX, sizeZ)) {
+      for (const g of entranceGroups(computeFootprintTiles(catalogById.get(o.sid), o.x, o.z, o.rotation), sizeX, sizeZ)) {
         for (const n of g.protectedNodes) ringNodes.add(n)
       }
     }
@@ -767,7 +767,7 @@ export function computeReachabilityGuarantee(context: ReachabilityContext, catal
       if (occupiedNodes.has(node) || claimed.has(node)) return false
       const reach = reachFor(node)
       if (mover.type !== 0) return reach.has(node) && !blocked.has(node)
-      const cells = computeFootprintTiles(template, x, z)
+      const cells = computeFootprintTiles(template, x, z, mover.rotation)
       if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
       const solid: number[] = []
       for (const c of cells) {
@@ -817,7 +817,7 @@ export function computeReachabilityGuarantee(context: ReachabilityContext, catal
     if (toNode === mover.node) continue
     result.relocations.push({ entityType: target.entityType, id: mover.id, sid: mover.sid, fromNode: mover.node, toNode })
     working[idx] = { ...mover, x: found.x, z: found.z, node: toNode }
-    for (const c of computeFootprintTiles(template, found.x, found.z)) claimed.add(c.z * sizeX + c.x)
+    for (const c of computeFootprintTiles(template, found.x, found.z, mover.rotation)) claimed.add(c.z * sizeX + c.x)
     claimed.add(toNode)
   }
   return result

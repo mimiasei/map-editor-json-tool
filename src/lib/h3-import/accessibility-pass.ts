@@ -78,11 +78,11 @@ function nodeAt(x: number, z: number, atlasWidth: number, atlasHeight: number): 
  *  Returns an empty array for anything that isn't a "must be reachable"
  *  target (pure scenery, unresolvable sid). */
 function accessNodesFor(
-  sid: string, x: number, z: number, catalogById: Map<string, CatalogMapObject>, atlasWidth: number, atlasHeight: number,
+  sid: string, x: number, z: number, catalogById: Map<string, CatalogMapObject>, atlasWidth: number, atlasHeight: number, rotation = 0,
 ): number[] {
   const template = catalogById.get(sid)
   if (!template) return []
-  const cells = computeFootprintTiles(template, x, z)
+  const cells = computeFootprintTiles(template, x, z, rotation)
   const wanted = NON_BLOCKING_SPAWNER_SIDS.has(sid) ? cells : cells.filter((c) => c.value === 2)
   const nodes: number[] = []
   for (const cell of wanted) {
@@ -160,10 +160,12 @@ export function applyAccessibilityPass(
 ): AccessibilityReport {
   const idToNode = new Map<number, number>()
   const idToSid = new Map<number, string>()
+  const idToRotation = new Map<number, number>()
   for (const [sid, group] of objectGroups) {
     for (let i = 0; i < group.ids.length; i++) {
       idToNode.set(group.ids[i], group.nodes[i])
       idToSid.set(group.ids[i], sid)
+      idToRotation.set(group.ids[i], group.rotations[i] ?? 0)
     }
   }
 
@@ -173,7 +175,7 @@ export function applyAccessibilityPass(
       for (let i = 0; i < group.ids.length; i++) {
         const id = group.ids[i]
         const node = group.nodes[i]
-        flat.push({ key: `0:${id}`, type: 0, id, sid, x: node % atlasWidth, z: Math.floor(node / atlasWidth), node })
+        flat.push({ key: `0:${id}`, type: 0, id, sid, x: node % atlasWidth, z: Math.floor(node / atlasWidth), node, rotation: group.rotations[i] ?? 0 })
       }
     }
     return flat
@@ -197,7 +199,7 @@ export function applyAccessibilityPass(
     const node = idToNode.get(id)
     if (node === undefined) return undefined
     const template = catalogById.get(idToSid.get(id) ?? '')
-    const cells = computeFootprintTiles(template, node % atlasWidth, Math.floor(node / atlasWidth))
+    const cells = computeFootprintTiles(template, node % atlasWidth, Math.floor(node / atlasWidth), idToRotation.get(id))
     const access = cells.find((c) => c.value === 2)
     if (!access) return node
     return nodeAt(access.x, access.z, atlasWidth, atlasHeight) ?? node
@@ -221,7 +223,7 @@ export function applyAccessibilityPass(
       const node = group.nodes[i]
       const x = node % atlasWidth
       const z = Math.floor(node / atlasWidth)
-      const accessNodes = accessNodesFor(sid, x, z, catalogById, atlasWidth, atlasHeight)
+      const accessNodes = accessNodesFor(sid, x, z, catalogById, atlasWidth, atlasHeight, group.rotations[i] ?? 0)
       if (accessNodes.length === 0) continue
       if (PLAYER_START_SIDS.has(sid)) seeds.push(...accessNodes)
       targets.push({ id, sid, accessNodes })
@@ -256,7 +258,7 @@ export function applyAccessibilityPass(
       const node = group.nodes[i]
       const x = node % atlasWidth
       const z = Math.floor(node / atlasWidth)
-      for (const cell of computeFootprintTiles(template, x, z)) {
+      for (const cell of computeFootprintTiles(template, x, z, group.rotations[i] ?? 0)) {
         if (cell.value !== 1) continue
         const cellNode = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
         if (cellNode === null) continue
@@ -401,7 +403,8 @@ export function applyAccessibilityPass(
     if (anchorNode === undefined) { report.stillUnreachable += 1; continue }
     const anchorX = anchorNode % atlasWidth
     const anchorZ = Math.floor(anchorNode / atlasWidth)
-    const ownCells = computeFootprintTiles(template, anchorX, anchorZ)
+    const targetRotation = idToRotation.get(target.id) ?? 0
+    const ownCells = computeFootprintTiles(template, anchorX, anchorZ, targetRotation)
     // Only the OLD position's SOLID (value===1) cells ever contributed to
     // `blocked`/`nudgeBlocked` in the first place (buildBlockedTileSet's
     // own rule) — excluding the target's non-solid cells too was a real
@@ -423,7 +426,7 @@ export function applyAccessibilityPass(
         if (cx < 0 || cx >= atlasWidth || cz < 0 || cz >= atlasHeight) continue
         const candidateAnchorNode = cz * atlasWidth + cx
         if (occupiedAnchors.has(candidateAnchorNode) && candidateAnchorNode !== anchorNode) continue
-        const candidateCells = computeFootprintTiles(template, cx, cz)
+        const candidateCells = computeFootprintTiles(template, cx, cz, targetRotation)
         let valid = true
         for (const cell of candidateCells) {
           const n = nodeAt(cell.x, cell.z, atlasWidth, atlasHeight)
