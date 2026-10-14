@@ -83,6 +83,8 @@ export interface ClassicSettings {
   winOptions?: WinOptions
   /** Players start with a random faction and any terrain instead of a faction matching their land. */
   randomPlayerFaction?: boolean
+  /** A left-right mirror image map for an even player count: both halves are identical (zone-mirror.ts). */
+  mirrored?: boolean
 }
 
 export const DEFAULT_CLASSIC_SETTINGS: ClassicSettings = { richness: 'medium', complexity: 'medium', difficulty: 'normal', water: 'some' }
@@ -219,6 +221,7 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
     winConditions: settings.winConditions,
     winOptions: settings.winOptions,
     randomPlayerFaction: settings.randomPlayerFaction,
+    mirrored: settings.mirrored,
     randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     bannedMagics: tuning.spells?.banned ?? [],
     tuning,

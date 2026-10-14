@@ -125,10 +125,20 @@ export const ROLE_TREASURE_SCALE: Record<NeutralZoneRole, number> = { between: 1
 /** Below this many map tiles per zone an archetype is too crowded and isn't picked. */
 const MIN_TILES_PER_ZONE = 350
 
+/** Left-right mirror structure of a mirrored layout (see `layoutArchetype`'s `mirrored`). */
+export interface MirrorInfo {
+  /** The zone on the other side of the vertical axis; a zone on the axis maps to itself. */
+  partner: Map<number, number>
+  /** Left zones and axis zones carry the generated content, right zones are copies. */
+  side: Map<number, 'left' | 'right' | 'axis'>
+}
+
 export interface BuiltInLayout {
   archetype: LayoutArchetype
   graph: ZoneGraph
   centers: ZoneCenter[]
+  /** Only for a mirrored layout. */
+  mirror?: MirrorInfo
 }
 
 function zoneCount(def: ArchetypeDef, playerCount: number): number {
@@ -164,10 +174,11 @@ export function availableArchetypes(sizeX: number, sizeZ: number, playerCount: n
  *  always possible. */
 export function buildBuiltInLayout(
   sizeX: number, sizeZ: number, playerCount: number, rng: () => number,
-  radiusScale = 1, weights: Partial<Record<LayoutArchetype, number>> = {}, forced?: LayoutArchetype,
+  radiusScale = 1, weights: Partial<Record<LayoutArchetype, number>> = {}, forced?: LayoutArchetype, mirrored = false,
 ): BuiltInLayout {
+  if (mirrored && (playerCount % 2 !== 0 || sizeX % 2 !== 0)) throw new Error('A mirrored map needs an even player count and an even map width')
   if (forced) {
-    if (archetypeFits(forced, sizeX, sizeZ, playerCount)) return layoutArchetype(forced, sizeX, sizeZ, playerCount, rng, radiusScale)
+    if (archetypeFits(forced, sizeX, sizeZ, playerCount)) return layoutArchetype(forced, sizeX, sizeZ, playerCount, rng, radiusScale, mirrored)
     logWarn(`RMG layout: ${forced} does not fit ${playerCount} players on ${sizeX}x${sizeZ} — picking a random layout instead`)
   }
   const tiles = sizeX * sizeZ
@@ -184,12 +195,21 @@ export function buildBuiltInLayout(
       roll -= o.weight
     }
   }
-  return layoutArchetype(archetype, sizeX, sizeZ, playerCount, rng, radiusScale)
+  return layoutArchetype(archetype, sizeX, sizeZ, playerCount, rng, radiusScale, mirrored)
 }
 
-/** Lay out one archetype: build its graph and the zone centers. */
+/** Lay out one archetype: build its graph and the zone centers.
+ *
+ *  `mirrored`: the layout is a left-right mirror image across the map's vertical
+ *  middle line (even player counts only). Sector 0's middle (`a` = 0.5) points
+ *  straight up, so the line passes through the zones at `a` = 0.5 (and, for a
+ *  unit with none, between sectors); zone (sector s, `a`) mirrors to (-s, 1 - a), or
+ *  (1 - s, 0) when `a` = 0. Random rotation and angle jitter are off (they would break
+ *  the symmetry), the radius jitter is shared by mirrored unit zones, and the player
+ *  slots alternate sides (1 left, 2 right, 3 left, ...) so two humans in slots 1 and 2
+ *  face each other and the AI players split evenly. */
 export function layoutArchetype(
-  archetype: LayoutArchetype, sizeX: number, sizeZ: number, playerCount: number, rng: () => number, radiusScale = 1,
+  archetype: LayoutArchetype, sizeX: number, sizeZ: number, playerCount: number, rng: () => number, radiusScale = 1, mirrored = false,
 ): BuiltInLayout {
   const def = DEFS[archetype]
   const zones: ZoneSpec[] = []
@@ -205,16 +225,35 @@ export function layoutArchetype(
   const clampX = (x: number): number => Math.min(sizeX - 1 - insetX / 2, Math.max(insetX / 2, x))
   const clampZ = (z: number): number => Math.min(sizeZ - 1 - insetZ / 2, Math.max(insetZ / 2, z))
 
-  const rotation = rng() * 2 * Math.PI
-  // One jitter per unit zone, shared by every sector (keeps the layout symmetric).
-  const jitter = def.unit.map(() => ({ r: 1 - rng() * 0.12, a: (rng() - 0.5) * 0.16 }))
   const sector = (2 * Math.PI) / playerCount
+  const rotation = mirrored ? -sector / 2 : rng() * 2 * Math.PI
+  // One jitter per unit zone, shared by every sector (keeps the layout symmetric).
+  const jitter = def.unit.map(() => ({ r: 1 - rng() * 0.12, a: mirrored ? 0 : (rng() - 0.5) * 0.16 }))
+
+  // Unit zone that mirrors unit zone i (a -> 1 - a, same kind/role/radius); a = 0 maps to itself.
+  const mirrorUnit = (i: number): number => {
+    const u = def.unit[i]
+    if (u.a === 0) return i
+    const j = def.unit.findIndex((v) => v.kind === u.kind && v.role === u.role && Math.abs(v.r - u.r) < 1e-9 && Math.abs(v.a - (1 - u.a)) < 1e-9)
+    if (j < 0) throw new Error(`Layout ${archetype} cannot be mirrored`)
+    return j
+  }
+  if (mirrored) {
+    // Mirrored unit zones share their radius jitter.
+    def.unit.forEach((_, i) => { const j = mirrorUnit(i); if (j < i) jitter[i] = jitter[j] })
+  }
+  const playerSlot = (s: number): number => {
+    // Pair p holds sector 1 + p on the right and sector (N - p) % N on the left.
+    const right = s >= 1 && s <= playerCount / 2
+    const p = right ? s - 1 : (playerCount - s) % playerCount
+    return 2 * p + (right ? 2 : 1)
+  }
 
   for (let s = 0; s < playerCount; s++) {
     def.unit.forEach((u, i) => {
       const id = zones.length
       zones.push(u.kind === 'player'
-        ? { id, kind: 'player', playerIndex: s + 1, size: u.size }
+        ? { id, kind: 'player', playerIndex: mirrored ? playerSlot(s) : s + 1, size: u.size }
         : { id, kind: 'neutral', size: u.size, role: u.role })
       const angle = rotation - Math.PI / 2 + sector * (s + u.a + (u.a === 0 ? 0 : jitter[i].a))
       const r = u.r * jitter[i].r
@@ -250,5 +289,34 @@ export function layoutArchetype(
     }
   }
 
-  return { archetype, graph: { zones, edges }, centers }
+  if (!mirrored) return { archetype, graph: { zones, edges }, centers }
+
+  // Mirror structure: partner zone ids, with the partner's center forced to the exact reflection.
+  const partner = new Map<number, number>()
+  const side = new Map<number, 'left' | 'right' | 'axis'>()
+  const mod = (n: number): number => ((n % playerCount) + playerCount) % playerCount
+  for (let s = 0; s < playerCount; s++) {
+    def.unit.forEach((u, i) => {
+      const id = idByKey.get(`${s}:${u.key}`) as number
+      const j = mirrorUnit(i)
+      const other = idByKey.get(`${u.a === 0 ? mod(1 - s) : mod(-s)}:${def.unit[j].key}`) as number
+      partner.set(id, other)
+    })
+  }
+  if (def.center) partner.set(zones.length - 1, zones.length - 1)
+  for (const zone of zones) {
+    const other = partner.get(zone.id) as number
+    if (other === zone.id) {
+      side.set(zone.id, 'axis')
+      centers[zone.id] = { ...centers[zone.id], x: Math.floor((sizeX - 1) / 2) }
+    } else if (other > zone.id) {
+      // The earlier id keeps its computed center; the later one is its exact reflection.
+      const c = centers[zone.id]
+      const leftOne = c.x <= (sizeX - 1) / 2
+      side.set(zone.id, leftOne ? 'left' : 'right')
+      side.set(other, leftOne ? 'right' : 'left')
+      centers[other] = { ...centers[other], x: sizeX - 1 - c.x, z: c.z }
+    }
+  }
+  return { archetype, graph: { zones, edges }, centers, mirror: { partner, side } }
 }

@@ -74,6 +74,15 @@ function parseFaction(raw: ArgValue): boolean | undefined {
   throw new Error(`--faction must be matching or random (got "${raw}")`)
 }
 
+/** `--mirror`: true / 1 / on / yes (or no value at all) turns it on; false / 0 / off / no or leaving it out keeps it off. */
+function parseMirror(raw: ArgValue): boolean | undefined {
+  if (raw === undefined) return undefined
+  const text = raw.trim().toLowerCase()
+  if (text === '' || ['true', '1', 'on', 'yes'].includes(text)) return true
+  if (['false', '0', 'off', 'no'].includes(text)) return undefined
+  throw new Error(`--mirror must be true or false (got "${raw}")`)
+}
+
 export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
   const output = raw.output?.trim()
   if (!output) throw new Error('--output is required')
@@ -83,6 +92,9 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
   if (!Number.isInteger(playerCount) || playerCount < MIN_PLAYERS || playerCount > MAX_PLAYERS) {
     throw new Error(`--players must be an integer ${MIN_PLAYERS}-${MAX_PLAYERS} (got "${raw.players}")`)
   }
+
+  const mirrored = parseMirror(raw.mirror)
+  if (mirrored && playerCount % 2 !== 0) throw new Error(`--mirror needs an even number of players (got ${playerCount})`)
 
   let seed: number | undefined
   if (raw.seed !== undefined) {
@@ -115,6 +127,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
       layout: parseLayout(raw.layout),
       winConditions: parseWinConditionList(raw.win),
       randomPlayerFaction: parseFaction(raw.faction),
+      mirrored,
     },
   }
 }

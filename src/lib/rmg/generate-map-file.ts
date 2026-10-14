@@ -117,7 +117,11 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
 
   options.onProgress?.('Auto-fixing overlaps and elevation', 92)
   await yieldToUI()
-  const { fixed, warnings: autoFixWarnings } = runPlacementAutoFix(container, catalog, { guaranteeReachability: true })
+  // A mirrored map skips the auto-fix: it moves and deletes objects one at a time, which would break the
+  // symmetry, and it reads every footprint unmirrored, so it would "fix" the right half's flipped entrances.
+  const { fixed, warnings: autoFixWarnings } = options.mirrored
+    ? { fixed: container, warnings: [] as string[] }
+    : runPlacementAutoFix(container, catalog, { guaranteeReachability: true })
 
   // Whole-map reachability validation (reachability-validation.ts) —
   // runPlacementAutoFix above already ran its own reachability auto-fix
@@ -128,7 +132,10 @@ export async function generateRandomMapBytes(options: GenerateRandomMapFileOptio
   options.onProgress?.('Validating final reachability', 96)
   await yieldToUI()
   const finalContext = extractMapContext(containerToRawBlocks(fixed))
+  // The reachability check reads footprints unmirrored, so on a mirrored map only the left half
+  // (the half that was generated) is checked; the right half is its mirror image.
   const unreachablePlacements = findUnreachablePlacements(finalContext, catalog)
+    .filter((p) => !options.mirrored || p.x < options.sizeX / 2)
   // Merged-reachability's own blind spot (see reachability-validation.ts's
   // header comment): two player starts can each have a fully populated,
   // internally-reachable zone yet be mutually disconnected from each other,
