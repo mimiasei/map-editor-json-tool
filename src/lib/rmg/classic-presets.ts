@@ -81,6 +81,8 @@ export interface ClassicSettings {
   winConditions?: WinConditionId[]
   /** Values for the win conditions; unset fields use the defaults. */
   winOptions?: WinOptions
+  /** Players start with a random faction and any terrain instead of a faction matching their land. */
+  randomPlayerFaction?: boolean
 }
 
 export const DEFAULT_CLASSIC_SETTINGS: ClassicSettings = { richness: 'medium', complexity: 'medium', difficulty: 'normal', water: 'some' }
@@ -216,6 +218,7 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
     layoutArchetype: settings.layout,
     winConditions: settings.winConditions,
     winOptions: settings.winOptions,
+    randomPlayerFaction: settings.randomPlayerFaction,
     randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     bannedMagics: tuning.spells?.banned ?? [],
     tuning,

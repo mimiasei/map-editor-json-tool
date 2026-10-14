@@ -187,6 +187,8 @@ export interface GenerateRandomMapOptions {
   /** Win conditions to write (unset = leave the template map's defaults). */
   winConditions?: WinConditionId[]
   winOptions?: WinOptions
+  /** Players start with a random faction and any terrain (unset = a faction matching each start's land). */
+  randomPlayerFaction?: boolean
   /** VCMI-style zone-to-zone guarded chokepoints (issue #210 Milestone 6,
    *  researched directly from VCMI's own `ConnectionsPlacer.cpp`/
    *  `ObjectManager.cpp::chooseGuard`) — `'none'` (the default) skips this
@@ -323,7 +325,7 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
   const disabledInteractableSidSet = disabledInteractableSids && disabledInteractableSids.length > 0 ? new Set(disabledInteractableSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
@@ -356,7 +358,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // (its flood and portals are built around objects existing first).
   const terrainFirst = !terrainOnly && waterContent !== 'islands'
   const terrain = generateTerrain(template, catalogById, {
-    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, layoutArchetype, zoneJaggedness, zoneSpread, rng, enabledBiomes, gameTemplateJson,
+    sizeX, sizeZ, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, hillLayouts, elevationMinSpan, layoutWeights: tuning.layout.weights, layoutArchetype, zoneJaggedness, zoneSpread, rng, enabledBiomes, randomPlayerFaction, gameTemplateJson,
     includeSpawners: !terrainOnly, playerSpawnerSid: terrainOnly ? undefined : playerSpawnerSid,
     computeWater: terrainOnly || terrainFirst, computeElevation: terrainOnly || terrainFirst, organicTerrainBlending,
     elevationModes: catalog.rmgZoneLayout?.elevationModes,
@@ -1751,11 +1753,19 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const usedHeroSids = new Set<string>()
     for (const [zoneId, playerId] of playerZoneIndex) {
       const biome = zoneBiome.get(zoneId) ?? ZONE_BIOMES[0]
-      const faction = BIOME_FACTION[biome]
-      if (!faction) continue
+      // Random faction: the city (and its starting hero) stay "random" for the game to pick.
+      const faction = randomPlayerFaction ? '' : BIOME_FACTION[biome]
+      if (faction === undefined) continue
       const result = setCityFaction(finalBlock1, finalBlock2, 0, playerId, faction)
       finalBlock1 = result.block1Chunk
       finalBlock2 = result.block2Chunk
+      if (faction === '') {
+        // A random-faction start keeps a hero slot (a real propHeroes row, "random") so the game still picks one.
+        const randomHero = setCitySpawnHero(finalBlock1, finalBlock2, 0, playerId, true)
+        finalBlock1 = randomHero.block1Chunk
+        finalBlock2 = randomHero.block2Chunk
+        continue
+      }
 
       // A plain /^[a-z]+_hero_\d+$/ shape isn't enough — Core/DB/heroes/campaign_tutorial
       // ships e.g. "tutorial_hero_2" and Core/DB/heroes/campaign ships e.g.

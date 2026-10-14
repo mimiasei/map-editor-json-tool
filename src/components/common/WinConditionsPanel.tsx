@@ -13,15 +13,6 @@ interface Props {
   disabled?: boolean
 }
 
-function SwitchField({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
-    </div>
-  )
-}
-
 export default function WinConditionsPanel({ settings, onChange, disabled }: Props) {
   const active = settings.winConditions ?? ['classic']
   const options = settings.winOptions ?? DEFAULT_WIN_OPTIONS
@@ -60,7 +51,6 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
             {on && wc.id === 'city-hold' && (
               <div className="pl-3 space-y-1.5">
                 <DurationField label="Time to hold" value={options.cityHoldDays} onChange={(v) => setOptions({ cityHoldDays: v })} disabled={disabled} />
-                <SwitchField label="Reset cooldown" checked={options.cityHoldResetCooldown} onChange={(v) => setOptions({ cityHoldResetCooldown: v })} disabled={disabled} />
               </div>
             )}
             {on && wc.id === 'final-battle' && (
@@ -90,6 +80,13 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
           </div>
         )
       })}
+      <div className="flex items-center justify-between border-t border-border pt-4">
+        <div className="flex items-center gap-1">
+          <Label htmlFor="rmg-random-faction" className="text-xs">Random starting towns</Label>
+          <FieldInfo text="Every player starts with a random faction, picked when the game starts, instead of one that matches the land around their start. The land is chosen freely too, so any player can start on any terrain." />
+        </div>
+        <Switch id="rmg-random-faction" checked={!!settings.randomPlayerFaction} onCheckedChange={(v) => onChange((prev) => ({ ...prev, randomPlayerFaction: v || undefined }))} disabled={disabled} />
+      </div>
     </div>
   )
 }

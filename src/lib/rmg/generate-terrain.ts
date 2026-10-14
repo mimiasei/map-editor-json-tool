@@ -160,6 +160,8 @@ export interface GenerateTerrainOptions {
   /** Which of the 7 real biomes generation may use at all (template.ts's
    *  own doc comment has the full rationale). Defaults to all 7. */
   enabledBiomes?: BiomeId[]
+  /** Player zones take any biome instead of cycling through the faction biomes. */
+  randomPlayerFaction?: boolean
   /** Raw JSON text of a real game RMG template (`maps/templates/*.rmg.json`
    *  shape — issue #210, Stage 1) — when set, its own zone/connection
    *  topology REPLACES `buildZoneGraph`'s fixed ring entirely (`playerCount`
@@ -279,7 +281,7 @@ export function generateTerrain(
     zoneJaggedness = 0.5, zoneSpread = 1, rng = Math.random,
     islandsIncludePlayerZones = false, islandLandRatio = 0.4, includeSpawners, playerSpawnerSid, computeWater = false,
     hillChance = 0, valleyChance = 0, hillLayouts, elevationMinSpan, layoutWeights, layoutArchetype: forcedLayout, computeElevation = false, elevationModes,
-    enabledBiomes, gameTemplateJson, organicTerrainBlending = 0,
+    enabledBiomes, randomPlayerFaction = false, gameTemplateJson, organicTerrainBlending = 0,
   } = options
   const tileCount = sizeX * sizeZ
 
@@ -324,7 +326,7 @@ export function generateTerrain(
     ? relaxZoneCenters(sizeX, sizeZ, graph, layoutZoneCenters(sizeX, sizeZ, graph), rng, 300, zoneSpread)
     : (builtInLayout as BuiltInLayout).centers
   const { zoneIdByNode, tilesByZone } = assignTilesToZonesPenrose(sizeX, sizeZ, centers, graph.zones, rng, jaggednessToPenroseScale(zoneJaggedness))
-  const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes, biomeIdByZoneId)
+  const zoneBiome = assignZoneBiomes(graph.zones, rng, enabledBiomes, biomeIdByZoneId, randomPlayerFaction)
 
   let islandFloodNodes = new Set<number>()
   const islandLandmassByZone = new Map<number, number[]>()

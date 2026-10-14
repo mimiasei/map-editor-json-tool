@@ -66,6 +66,14 @@ function parseLayout(raw: ArgValue): LayoutArchetype | undefined {
   return hit
 }
 
+/** `--faction`: "random" gives every player a random starting faction on any terrain; empty / "matching" (the default) matches each start's land. */
+function parseFaction(raw: ArgValue): boolean | undefined {
+  const text = raw?.trim().toLowerCase()
+  if (!text || text === 'matching') return undefined
+  if (text === 'random') return true
+  throw new Error(`--faction must be matching or random (got "${raw}")`)
+}
+
 export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
   const output = raw.output?.trim()
   if (!output) throw new Error('--output is required')
@@ -106,6 +114,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
       maxRandomCities,
       layout: parseLayout(raw.layout),
       winConditions: parseWinConditionList(raw.win),
+      randomPlayerFaction: parseFaction(raw.faction),
     },
   }
 }

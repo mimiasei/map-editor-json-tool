@@ -368,6 +368,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
               sizeX: selectedSize.sizeX, sizeZ: selectedSize.sizeZ, playerCount,
               waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread,
               layoutArchetype: classicMode && !gameTemplate ? classic.layout : undefined,
+              randomPlayerFaction: classicMode ? classic.randomPlayerFaction : undefined,
               enabledBiomes: enabledBiomesList, gameTemplateJson: gameTemplate?.json, organicTerrainBlending,
               rng: createSeededRng(seed), includeSpawners: true, playerSpawnerSid: 'city-spawner', computeWater: true, computeElevation: true,
             })
@@ -392,7 +393,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
     }, PREVIEW_DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, classicMode, classic.layout, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed, organicTerrainBlending])
+  }, [previewPhase, sizeKey, playerCount, waterContent, waterChance, islandsIncludePlayerZones, islandLandRatio, hillChance, valleyChance, zoneJaggedness, zoneSpread, classicMode, classic.layout, classic.randomPlayerFaction, enabledBiomesList.join(','), gameTemplate?.json, seedText, roadWindingAmplitude, roadWindingWavelength, roadSeed, organicTerrainBlending])
 
   const handleTogglePreview = (checked: boolean) => {
     if (checked) {
@@ -447,6 +448,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         layoutArchetype: classicMode && !gameTemplate ? classic.layout : undefined,
         winConditions: classicMode && !gameTemplate ? classic.winConditions : undefined,
         winOptions: classicMode && !gameTemplate ? classic.winOptions : undefined,
+        randomPlayerFaction: classicMode ? classic.randomPlayerFaction : undefined,
         boundaryGuardStrength: opts.boundaryGuardStrength,
         squadDensity: opts.squadDensity,
         roadWindingAmplitude: opts.roadWindingAmplitude,

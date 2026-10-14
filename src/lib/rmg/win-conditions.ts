@@ -24,9 +24,9 @@ export const WIN_CONDITIONS: readonly WinConditionInfo[] = [
   { id: 'capital-hold', label: "Capital Hold", type: 3, description: "Capture the opponent's starting city and hold it for a set number of in-game days to win.",
     details: "Capture the opponent's starting city and hold it for a set number of in-game days to win. Set the number of days below." },
   { id: 'city-hold', label: "City Hold", type: 8, description: "Capture the marked neutral city and hold it for a set number of in-game days to win.",
-    details: "Capture the marked neutral city and hold it for a set number of in-game days to win. The generator marks one neutral city near the middle of the map. \"Reset cooldown\" decides whether the countdown starts over when the city changes hands. With no neutral city on the map this condition is dropped (turn on random cities)." },
+    details: "Capture the marked neutral city and hold it for a set number of in-game days to win. The generator marks one neutral city near the middle of the map. With no neutral city on the map this condition is dropped (turn on random cities)." },
   { id: 'guardians-demise', label: "Guardian's Demise", type: 4, description: "Defeat or cast away the opponent's main hero to win.",
-    details: "Defeat or cast away the opponent's main hero to win. It has no settings." },
+    details: "Defeat or cast away the opponent's main hero to win. The game does not tell the player which opponent or hero this is, so it appears to be picked at random. It has no settings." },
   { id: 'final-battle', label: "Final Battle", type: 5, description: "Face the opponent's hero in a final battle. The winner claims victory in the game.",
     details: "Face the opponent's hero in a final battle. The winner claims victory in the game. Set the battle date below." },
   { id: 'tournament', label: "Tournament", type: 9, description: "Face the opponent's hero in a series of battles. The winner of the set claims victory.",
@@ -39,7 +39,6 @@ export interface TournamentFight { announceDay: number }
 export interface WinOptions {
   capitalHoldDays: number
   cityHoldDays: number
-  cityHoldResetCooldown: boolean
   /** Day the final battle starts (`daysDelayStart`). */
   finalBattleDay: number
   tournamentFights: TournamentFight[]
@@ -49,7 +48,6 @@ export interface WinOptions {
 export const DEFAULT_WIN_OPTIONS: WinOptions = {
   capitalHoldDays: 3,
   cityHoldDays: 3,
-  cityHoldResetCooldown: true,
   finalBattleDay: 21,
   tournamentFights: [{ announceDay: 7 }, { announceDay: 14 }, { announceDay: 21 }],
   tournamentSaveArmy: true,
@@ -69,7 +67,7 @@ export function removeTournamentFights(fights: TournamentFight[]): TournamentFig
 export function winEntryFields(id: WinConditionId, options: WinOptions): Record<string, unknown> {
   switch (id) {
     case 'capital-hold': return { countDayLostStartCity: options.capitalHoldDays }
-    case 'city-hold': return { countDayCityHold: options.cityHoldDays, isResetColdownCityHold: options.cityHoldResetCooldown }
+    case 'city-hold': return { countDayCityHold: options.cityHoldDays }
     case 'final-battle': return { daysDelayStart: options.finalBattleDay }
     case 'tournament': {
       const fights = options.tournamentFights
