@@ -79,7 +79,6 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
                   <div key={i} className="space-y-1.5 rounded-md border border-border p-2">
                     <span className="text-xs font-medium">Battle {i + 1}</span>
                     <DurationField label="Battle date" value={fight.announceDay} onChange={(v) => setFight(i, { announceDay: v })} disabled={disabled} />
-                    <DurationField label="Length" value={fight.days} onChange={(v) => setFight(i, { days: v })} disabled={disabled} />
                   </div>
                 ))}
                 <div className="flex gap-2">

@@ -30,10 +30,10 @@ export const WIN_CONDITIONS: readonly WinConditionInfo[] = [
   { id: 'final-battle', label: "Final Battle", type: 5, description: "Face the opponent's hero in a final battle. The winner claims victory in the game.",
     details: "Face the opponent's hero in a final battle. The winner claims victory in the game. The two Registration switches, the start delay and the count day are the map's gladiator arena settings; the game does not label the two day values, so check the result in the game." },
   { id: 'tournament', label: "Tournament", type: 9, description: "Face the opponent's hero in a series of battles. The winner of the set claims victory.",
-    details: "Face the opponent's hero in a series of battles. The winner of the set claims victory. The number of battles is always odd (best-of-1, 3, 5, ...), added two at a time. Each battle has a date; the length is how long it runs." },
+    details: "Face the opponent's hero in a series of battles. The winner of the set claims victory. The number of battles is always odd (best-of-1, 3, 5, ...), added two at a time.." },
 ]
 
-export interface TournamentFight { announceDay: number; days: number }
+export interface TournamentFight { announceDay: number }
 
 /** The adjustable values behind the win conditions above. */
 export interface WinOptions {
@@ -50,14 +50,14 @@ export const DEFAULT_WIN_OPTIONS: WinOptions = {
   cityHoldDays: 3,
   cityHoldResetCooldown: true,
   finalBattle: { registrationStartWork: false, registrationStartFight: true, daysDelayStart: 21, countDay: 3 },
-  tournamentFights: [{ announceDay: 7, days: 3 }, { announceDay: 14, days: 3 }, { announceDay: 21, days: 3 }],
+  tournamentFights: [{ announceDay: 7 }, { announceDay: 14 }, { announceDay: 21 }],
   tournamentSaveArmy: true,
 }
 
 /** Fights are added and removed two at a time so the count stays odd. */
 export function addTournamentFights(fights: TournamentFight[]): TournamentFight[] {
-  const last = fights[fights.length - 1] ?? { announceDay: 0, days: 3 }
-  return [...fights, { announceDay: last.announceDay + 7, days: last.days }, { announceDay: last.announceDay + 14, days: last.days }]
+  const last = fights[fights.length - 1] ?? { announceDay: 0 }
+  return [...fights, { announceDay: last.announceDay + 7 }, { announceDay: last.announceDay + 14 }]
 }
 
 export function removeTournamentFights(fights: TournamentFight[]): TournamentFight[] {
@@ -77,7 +77,8 @@ export function winEntryFields(id: WinConditionId, options: WinOptions): Record<
       const fights = options.tournamentFights
       return {
         daysAnounceTournament: fights.map((f) => f.announceDay),
-        daysDelayStartFightTournament: fights.map((f) => f.days),
+        // The game has no per-battle length; keep the templates' usual 3 days per battle.
+        daysDelayStartFightTournament: fights.map(() => 3),
         countPointsTournament: Math.floor(fights.length / 2) + 1,
         isSaveArmyTournament: options.tournamentSaveArmy,
       }
