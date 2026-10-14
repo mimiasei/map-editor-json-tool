@@ -55,7 +55,7 @@ import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { ALL_TEMPLATE_BIOMES, DEFAULT_TEMPLATE_OVERRIDES, RMG_TEMPLATE_VERSION, parseRandomMapTemplate, stringifyRandomMapTemplate, type RandomMapTemplate } from '@/lib/rmg/template'
 import { Checkbox } from '@/components/ui/checkbox'
-import { WIN_CONDITIONS } from '@/lib/rmg/win-conditions'
+import WinConditionsPanel from '@/components/common/WinConditionsPanel'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import SelectGameTemplateDialog from '@/components/common/SelectGameTemplateDialog'
 import InteractableSelectorDialog from '@/components/common/InteractableSelectorDialog'
@@ -446,6 +446,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         zoneSpread: opts.zoneSpread,
         layoutArchetype: classicMode && !gameTemplate ? classic.layout : undefined,
         winConditions: classicMode && !gameTemplate ? classic.winConditions : undefined,
+        winOptions: classicMode && !gameTemplate ? classic.winOptions : undefined,
         boundaryGuardStrength: opts.boundaryGuardStrength,
         squadDensity: opts.squadDensity,
         roadWindingAmplitude: opts.roadWindingAmplitude,
@@ -718,7 +719,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
 
           <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-6 bg-[var(--column-center)] dark:bg-background">
               {showCore && (
-                <div className={classicMode ? 'space-y-6 w-1/2 min-w-80 mx-auto' : 'space-y-6'}>
+                <div className={classicMode ? 'flex gap-8 items-start justify-center' : undefined}>
+                <div className={classicMode ? 'space-y-6 w-1/2 min-w-80 max-w-md' : 'space-y-6'}>
                   <div className="space-y-1.5">
                     <Label htmlFor="rmg-map-name" className="text-xs">Map name</Label>
                     <Input id="rmg-map-name" value={mapName} onChange={(e) => setMapName(e.target.value)} className="h-8 text-sm" />
@@ -856,33 +858,6 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                           </Select>
                         </div>
                       )}
-                      {!gameTemplate && (
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-1">
-                            <Label className="text-xs">Win conditions</Label>
-                            <FieldInfo text="Which conditions the generated map uses. Several can be on at once; at least one stays on. Default is Classic only." />
-                          </div>
-                          {WIN_CONDITIONS.map((wc) => {
-                            const active = classic.winConditions ?? ['classic']
-                            const on = active.includes(wc.id)
-                            return (
-                              <div key={wc.id} className="flex items-center gap-2" title={wc.description}>
-                                <Checkbox
-                                  id={`rmg-win-${wc.id}`}
-                                  checked={on}
-                                  disabled={terrainLocked || (on && active.length === 1)}
-                                  onCheckedChange={(checked) => setClassic((prev) => {
-                                    const cur = prev.winConditions ?? ['classic']
-                                    const next = checked ? [...cur, wc.id] : cur.filter((id) => id !== wc.id)
-                                    return { ...prev, winConditions: next.length === 1 && next[0] === 'classic' ? undefined : next }
-                                  })}
-                                />
-                                <Label htmlFor={`rmg-win-${wc.id}`} className="text-sm font-normal">{wc.label}</Label>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
                     </>
                   )}
 
@@ -936,6 +911,12 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     </div>
                     <Switch id="rmg-live-preview" checked={previewActive} onCheckedChange={handleTogglePreview} />
                   </div>}
+                </div>
+                {classicMode && !gameTemplate && (
+                  <div className="w-1/2 min-w-80 max-w-md">
+                    <WinConditionsPanel settings={classic} onChange={setClassic} disabled={terrainLocked} />
+                  </div>
+                )}
                 </div>
               )}
 

@@ -10,7 +10,7 @@ import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER
 import { MIN_ELEVATION_SPAN } from './zone-elevation'
 import type { RmgSchema } from './rmg-schema'
 import { LAYOUT_ARCHETYPES, type LayoutArchetype } from './zone-archetypes'
-import type { WinConditionId } from './win-conditions'
+import type { WinConditionId, WinOptions } from './win-conditions'
 
 export type RmgRichness = 'poor' | 'modest' | 'medium' | 'rich' | 'very_rich'
 export type RmgComplexity = 'sparse' | 'light' | 'medium' | 'dense' | 'very_dense'
@@ -79,6 +79,8 @@ export interface ClassicSettings {
   layout?: LayoutArchetype
   /** Win conditions to enable; unset = the template map's defaults (Classic). */
   winConditions?: WinConditionId[]
+  /** Values for the win conditions; unset fields use the defaults. */
+  winOptions?: WinOptions
 }
 
 export const DEFAULT_CLASSIC_SETTINGS: ClassicSettings = { richness: 'medium', complexity: 'medium', difficulty: 'normal', water: 'some' }
@@ -213,6 +215,7 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
     ...resolveClassicSettings(settings, tuning),
     layoutArchetype: settings.layout,
     winConditions: settings.winConditions,
+    winOptions: settings.winOptions,
     randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     bannedMagics: tuning.spells?.banned ?? [],
     tuning,
