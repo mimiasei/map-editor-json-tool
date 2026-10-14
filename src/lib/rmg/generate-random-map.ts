@@ -54,7 +54,7 @@ import { BIOME_FACTION } from '@/lib/map-grid/squad-pool'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { applyAccessibilityPass, type ObjectPlacementGroup } from '@/lib/h3-import/accessibility-pass'
-import { logWarn } from '@/lib/logger'
+import { logInfo, logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { createZonePopulator, tryPlace, tryPlaceAt, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { addPoolSurround, scatterZoneObstacles } from './zone-decoration'
@@ -75,6 +75,7 @@ import { computeZoneAreas } from './zone-areas'
 import { scatterZoneWater } from './zone-water'
 import type { LayoutArchetype } from './zone-archetypes'
 import { isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, mirrorObjects } from './zone-mirror'
+import { closeAxisBorder } from './zone-mirror-border'
 import { DEFAULT_WIN_OPTIONS, winConditionById, winEntryFields, type WinConditionId, type WinOptions } from './win-conditions'
 import { difficultyIndex, resolveRichness, type RmgDifficulty, type RmgRichness } from './classic-presets'
 import { DEFAULT_LONE_GUARD_CHANCE, DEFAULT_RIVER_CHANCE_PER_ZONE, DEFAULT_RIVER_CLIFF_CLEARANCE, DEFAULT_RIVER_MEANDER, DEFAULT_RIVER_MOUTH_WIDENING, DEFAULT_RIVER_CONFLUENCE_CHANCE, DEFAULT_RIVER_BANK_DENSITY, DEFAULT_EDGE_FRAME, EMPTY_TUNING, applySchemaTuning, resolveMineDistribution, type RmgTuning } from './rmg-tuning'
@@ -1722,6 +1723,28 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       const biomes = state.tileBiome
       block2 = paintTerrainTiles(block2, rightNodes.map((node) => ({ node, biomeId: biomes[mirrorNode(node, sizeX)] })))
     }
+
+    // Walls that straddled the middle line were dropped by the copy: close the zone border there again
+    // (one wall, on one side or the other, so both players face the same closed line).
+    const flat: { sid: string; node: number; rotation: number }[] = []
+    for (const [sid, group] of objectGroups) group.nodes.forEach((node, i) => flat.push({ sid, node, rotation: group.rotations[i] ?? 0 }))
+    const border = closeAxisBorder({
+      sizeX, sizeZ, zoneIdByNode, zoneBiome, catalogById, mapObjects: catalog.mapObjects, objects: flat,
+      guardNodes: [...allConcreteSquads.map((s) => s.node), ...(objectGroups.get('random-squad')?.nodes ?? [])],
+      roadNodes, waterMap: waterMapFinal, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal,
+      tileBiome: state.tileBiome, mountainDensity, rng, nextTempId: () => state.nextTempId++,
+      guardOverrides: boundaryResult.guardPlacements.find((g) => g.randomSquadOverrides)?.randomSquadOverrides,
+    })
+    for (const placement of [...border.walls, ...border.guards]) {
+      tempIdToPlacement.set(placement.tempId, placement)
+      let group = objectGroups.get(placement.sid)
+      if (!group) { group = { ids: [], nodes: [], rotations: [], levels: [] }; objectGroups.set(placement.sid, group) }
+      group.ids.push(placement.tempId)
+      group.nodes.push(placement.node)
+      group.rotations.push(0)
+      group.levels.push(0)
+    }
+    logInfo(`Mirrored map: closed the middle border with ${border.walls.length} wall object(s) and ${border.guards.length} gate guard(s), ${border.gateRows} row(s) left open for roads`)
   }
 
   await reportProgress('Writing placements', 90)
