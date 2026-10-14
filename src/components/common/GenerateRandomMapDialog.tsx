@@ -803,7 +803,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     <Switch
                       id="rmg-mirrored"
                       checked={mirroredMap}
-                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, mirrored: v || undefined }))}
+                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, mirrored: v || undefined, water: v && prev.water === 'islands' ? 'some' : prev.water }))}
                       disabled={terrainLocked || !mirrorPossible}
                     />
                   </div>
@@ -865,7 +865,8 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                           <Select value={value} onValueChange={(v) => setClassic((prev) => ({ ...prev, [key]: v }))} disabled={terrainLocked}>
                             <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {options.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                              {/* A mirrored map has no islands (they are joined by portals that are not mirrored). */}
+                              {(options as readonly { id: string; label: string }[]).filter((o) => !(mirroredMap && o.id === 'islands')).map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>

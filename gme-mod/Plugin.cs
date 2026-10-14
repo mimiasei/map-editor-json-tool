@@ -334,6 +334,13 @@ namespace GmeRmgMod
                 Logger.LogWarning($"Mirrored Map needs an even player count — ignored with {players} players");
                 mirror = false;
             }
+            // A mirrored map has no islands (their portals are not mirrored): Some Lakes instead.
+            int water = Selected(waterDropdown, 2);
+            if (mirror && water == 4)
+            {
+                Logger.LogInfo("Mirrored Map has no islands — using Some Lakes instead");
+                water = 2;
+            }
 
             // The game reads maps from users/<last_user>/my_maps.
             string dataPath = GameApi.PersistentDataPath;
@@ -363,7 +370,7 @@ namespace GmeRmgMod
                 FileName = tse,
                 Arguments = $"--generate --template \"{templateName}\" --size {mapSize}{seedArg} --players {players}"
                     + $" --richness {Selected(richnessDropdown, 2)} --complexity {Selected(complexityDropdown, 2)}"
-                    + $" --difficulty {Selected(difficultyDropdown, 1)} --water {Selected(waterDropdown, 2)} --output \"{outputPath}\""
+                    + $" --difficulty {Selected(difficultyDropdown, 1)} --water {water} --output \"{outputPath}\""
                     + (layoutArg.Length > 0 ? $" --layout {layoutArg}" : "")
                     + (wins.Count > 0 ? $" --win classic,{string.Join(",", wins)}" : "")
                     + (Selected(townsDropdown, 0) == 1 ? " --faction random" : "")
