@@ -58,6 +58,7 @@ import { logWarn } from '@/lib/logger'
 import { generateTerrain } from './generate-terrain'
 import { createZonePopulator, tryPlace, tryPlaceAt, ZONE_BIOMES, type ZonePlacement } from './zone-population'
 import { addPoolSurround, scatterZoneObstacles } from './zone-decoration'
+import { scatterMineSurroundings } from './zone-mine-surround'
 import { scatterEdgeFrame } from './zone-edge-frame'
 import { carveRivers, routeRiver, waterfallShapeCode, type RiverRoute, type RiverTerrain } from './zone-rivers'
 import { scatterZoneInteractables } from './zone-interactables'
@@ -1460,7 +1461,13 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     waterNodes: waterNodesAll, walkableNodes: new Set([...roadNodes, ...riverNodes]), rng,
     strength: tuning.edges?.frame ?? DEFAULT_EDGE_FRAME, rmgEnvironmentAssets: catalog.rmgEnvironmentAssets,
   })
-  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, scatterZoneObstacles({
+  // Trees beside wood mines, rock beside ore (and half the gold) mines, placed
+  // before the random scenery so they get the tiles next to each mine first.
+  const mineSurroundPlacements = scatterMineSurroundings({
+    sizeX, sizeZ, mines: placements.filter((p) => MINE_SIDS_LOCAL.has(p.sid)), zoneBiome, zoneIdByNode, catalogById,
+    mapObjects: catalog.mapObjects, state, rng,
+  })
+  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, mineSurroundPlacements, scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity, densityByZone, ambientPickupByZone,

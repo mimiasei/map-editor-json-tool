@@ -274,7 +274,7 @@ function entranceGuardCandidates(cells: FootprintCell[], sizeX: number): number[
  *  on the opposite side), the other edge neighbours, then diagonals. A
  *  `random-squad` on any of them covers the entrance with its trigger ring —
  *  the guard's fallback when no entrance cell itself is free. */
-function entranceApproachTiles(cells: FootprintCell[], sizeX: number, sizeZ: number): { front: number[]; sides: number[]; diagonals: number[] } {
+export function entranceApproachTiles(cells: FootprintCell[], sizeX: number, sizeZ: number): { front: number[]; sides: number[]; diagonals: number[] } {
   const footprint = new Set(cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x))
   const solid = new Set(cells.filter((c) => c.value === 1).map((c) => c.z * sizeX + c.x))
   const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
