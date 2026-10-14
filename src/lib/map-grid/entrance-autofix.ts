@@ -108,7 +108,7 @@ export function computeEntranceAutoFix(
     if (obj.type !== 0) continue
     const template = catalogById.get(obj.sid)
 
-    for (const cell of computeFootprintTiles(template, obj.x, obj.z)) {
+    for (const cell of computeFootprintTiles(template, obj.x, obj.z, obj.rotation)) {
       if (cell.value !== 1) continue
       const node = cell.z * sizeX + cell.x
       const owners = solidOwnersByNode.get(node)
@@ -136,7 +136,7 @@ export function computeEntranceAutoFix(
 
   for (const violation of violations) {
     const template = catalogById.get(violation.sid)
-    const allCells = computeFootprintTiles(template, violation.x, violation.z)
+    const allCells = computeFootprintTiles(template, violation.x, violation.z, violation.rotation)
     const groups = entranceGroups(allCells, sizeX, sizeZ)
 
     // Pick whichever entrance group can be opened with the FEWEST blockers —
@@ -180,7 +180,7 @@ export function computeEntranceAutoFix(
           const blockerTemplate = catalogById.get(blocker.sid)
           const target = findNearbyFreeTile(blocker, blockerTemplate, context, catalog, claimedDestinations)
           if (target !== null) {
-            claimNode(target, blockerTemplate, sizeX, claimedDestinations)
+            claimNode(target, blockerTemplate, sizeX, claimedDestinations, blocker.rotation)
             relocations.push({ id: blocker.id, sid: blocker.sid, fromNode: blocker.node, toNode: target })
             continue
           }
@@ -199,7 +199,7 @@ export function computeEntranceAutoFix(
 
     const relocated = findRelocationTarget(violation, template, context, catalog, claimedDestinations)
     if (relocated) {
-      claimNode(relocated, template, sizeX, claimedDestinations)
+      claimNode(relocated, template, sizeX, claimedDestinations, violation.rotation)
       relocations.push({ id: violation.id, sid: violation.sid, fromNode: violation.node, toNode: relocated })
     } else {
       unresolved.push(violation)
@@ -217,10 +217,11 @@ function claimNode(
   template: ReturnType<Map<string, import('@/lib/catalog/types').CatalogMapObject>['get']>,
   sizeX: number,
   claimedDestinations: Set<number>,
+  rotation?: number,
 ): void {
   const x = node % sizeX
   const z = Math.floor(node / sizeX)
-  for (const cell of computeFootprintTiles(template, x, z)) {
+  for (const cell of computeFootprintTiles(template, x, z, rotation)) {
     if (cell.value === 1) claimedDestinations.add(cell.z * sizeX + cell.x)
   }
 }
@@ -260,7 +261,7 @@ function findNearbyFreeTile(
   )
 
   const isValidCandidate = (x: number, z: number): boolean => {
-    const cells = computeFootprintTiles(template, x, z)
+    const cells = computeFootprintTiles(template, x, z, obj.rotation)
     if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
     return cells.every((cell) => cell.value !== 1 || (!blocked.has(cell.z * sizeX + cell.x) && !claimedDestinations.has(cell.z * sizeX + cell.x)))
   }
@@ -308,7 +309,7 @@ function findRelocationTarget(
   const isBlocked = (n: number) => blocked.has(n) || claimedDestinations.has(n)
 
   const isValidCandidate = (x: number, z: number): boolean => {
-    const cells = computeFootprintTiles(template, x, z)
+    const cells = computeFootprintTiles(template, x, z, violation.rotation)
     if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
     for (const cell of cells) {
       if (cell.value === 1 && isBlocked(cell.z * sizeX + cell.x)) return false

@@ -72,7 +72,7 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
   for (const obj of placedObjects as PlacedObject[]) {
     if (obj.type !== 0 || !PLAYER_START_SIDS.has(obj.sid)) continue
     const startTemplate = catalogById.get(obj.sid)
-    const accessCells = computeFootprintTiles(startTemplate, obj.x, obj.z).filter((c) => c.value === 2)
+    const accessCells = computeFootprintTiles(startTemplate, obj.x, obj.z, obj.rotation).filter((c) => c.value === 2)
     if (accessCells.length > 0) {
       for (const c of accessCells) seeds.push(c.z * sizeX + c.x)
     } else {
@@ -112,7 +112,7 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
         if (moverBlocked.has(node)) return false
         return !reachable || reachable.has(node)
       }
-      const cells = computeFootprintTiles(template, x, z)
+      const cells = computeFootprintTiles(template, x, z, mover.rotation)
       if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
       let anyReachable = !reachable
       for (const cell of cells) {
@@ -134,7 +134,7 @@ export function computeOverlapAutoFix(context: OverlapAutoFixContext, catalog: G
     alreadyMoved.add(mover.key)
 
     const newCells = mover.type === 0
-      ? computeFootprintTiles(template, found.x, found.z).filter((c) => c.value === 1)
+      ? computeFootprintTiles(template, found.x, found.z, mover.rotation).filter((c) => c.value === 1)
       : [{ x: found.x, z: found.z, value: 1 }]
     for (const cell of newCells) claimedDestinations.add(cell.z * sizeX + cell.x)
   }

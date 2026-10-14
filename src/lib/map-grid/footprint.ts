@@ -47,7 +47,8 @@
 // fully in-bounds) that then crashed the actual game on load — the real
 // footprint's back row fell one tile off the map.
 //
-// Rotation is a known, deliberately out-of-scope gap: the mapmaking guide
+// Rotation is a known, deliberately out-of-scope gap (apart from the mirrored flag, rotation >= 10, which
+// flips x about the pivot — an assumption the mirrored maps of rmg/zone-mirror.ts rely on): the mapmaking guide
 // confirms rotation 0/1/2/3 = 0/90/180/270°, and a 90°/270° rotation should
 // swap sizeX/sizeZ for a fully accurate footprint — but this only affects the
 // 11 of 858 real templates that are non-square (everything else is
@@ -91,6 +92,7 @@ export function computeFootprintTiles(
   template: FootprintTemplate | undefined,
   anchorX: number,
   anchorZ: number,
+  rotation = 0,
 ): FootprintCell[] {
   if (!template) {
     return [{ x: anchorX, z: anchorZ, value: 1 }]
@@ -106,7 +108,9 @@ export function computeFootprintTiles(
     const lx = i % sizeX
     const lz = Math.floor(i / sizeX)
     cells.push({
-      x: anchorX + lx - pivotX,
+      // The game's mirrored variant (rotation 10-13) runs the local x axis the other way round
+      // the pivot (an assumption, see rmg/zone-mirror.ts); quarter turns are still not modelled.
+      x: rotation >= 10 ? anchorX - lx + pivotX : anchorX + lx - pivotX,
       z: anchorZ - lz + pivotZ,
       value: template.nodes[i],
     })

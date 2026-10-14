@@ -36,6 +36,8 @@ export interface BlockedEntrancePlacement {
   x: number
   z: number
   node: number
+  /** The placed object's rotation (10-13 = mirrored), for its footprint. */
+  rotation?: number
 }
 
 type EntranceValidationContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
@@ -62,12 +64,12 @@ export function findBlockedEntrancePlacements(
   for (const placed of context.placedObjects as PlacedObject[]) {
     if (placed.type !== 0) continue
     const template = catalogById.get(placed.sid)
-    const allCells = computeFootprintTiles(template, placed.x, placed.z)
+    const allCells = computeFootprintTiles(template, placed.x, placed.z, placed.rotation)
     const groups = entranceGroups(allCells, sizeX, sizeZ)
     if (groups.length === 0) continue
     const allBlocked = groups.every((g) => blocked.has(g.entranceNode) || [...g.protectedNodes].some((n) => blocked.has(n)))
     if (allBlocked) {
-      violations.push({ sid: placed.sid, id: placed.id, x: placed.x, z: placed.z, node: placed.node })
+      violations.push({ sid: placed.sid, id: placed.id, x: placed.x, z: placed.z, node: placed.node, rotation: placed.rotation })
     }
   }
 

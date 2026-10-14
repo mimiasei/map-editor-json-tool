@@ -78,7 +78,7 @@ export function computeWaterSpeckGuarantee(context: SpeckContext, catalog: GameC
   const decorationsAt = new Map<number, PlacedObject[]>()
   for (const obj of context.placedObjects as PlacedObject[]) {
     const isDecoration = obj.type === 0 && groupOf(obj, catalog) === 'decorations'
-    const cells = obj.type === 0 ? computeFootprintTiles(catalogById.get(obj.sid), obj.x, obj.z) : []
+    const cells = obj.type === 0 ? computeFootprintTiles(catalogById.get(obj.sid), obj.x, obj.z, obj.rotation) : []
     const nodes = [obj.node, ...cells.filter((c) => c.value !== 0).map((c) => c.z * sizeX + c.x)]
     for (const n of nodes) {
       if (isDecoration) {

@@ -14,7 +14,7 @@
 // stepRotation). The footprint model for a mirrored object is: the local x axis
 // is flipped about the object's pivot (cells at `anchorX - lx + pivotX` instead
 // of `anchorX + lx - pivotX`), which makes the reflected anchor exactly
-// `sizeX - 1 - anchorX`. That is an assumption — see mirroredFootprintTiles.
+// `sizeX - 1 - anchorX`. That is an assumption, see computeFootprintTiles.
 
 import { computeFootprintTiles, type FootprintCell, type FootprintTemplate } from '@/lib/map-grid/footprint'
 import type { CatalogMapObject } from '@/lib/catalog/types'
@@ -41,24 +41,10 @@ export function mirrorRotation(r: number): number {
   return ((4 - quadrant) % 4) + (mirrored ? 0 : 10)
 }
 
-/** An object's footprint cells when it carries the mirrored rotation flag
- *  (rotation >= 10): the local x axis runs the other way round the pivot. Quadrant
- *  turns of non-square footprints are not modelled, as in computeFootprintTiles. */
-export function mirroredFootprintTiles(template: FootprintTemplate | undefined, anchorX: number, anchorZ: number): FootprintCell[] {
-  if (!template?.nodes?.length) return computeFootprintTiles(template, anchorX, anchorZ)
-  const sizeX = template.sizeX ?? 1
-  const pivotX = template.pivotX ?? 0
-  const pivotZ = template.pivotZ ?? 0
-  return template.nodes.map((value, i) => ({
-    x: anchorX - (i % sizeX) + pivotX,
-    z: anchorZ - Math.floor(i / sizeX) + pivotZ,
-    value,
-  }))
-}
-
-/** The footprint of an object with `rotation`, honouring the mirrored flag. */
+/** The footprint of an object with `rotation`; the mirrored flag (rotation >= 10) runs the local x axis
+ *  the other way round the pivot (computeFootprintTiles). */
 export function footprintForRotation(template: FootprintTemplate | undefined, anchorX: number, anchorZ: number, rotation = 0): FootprintCell[] {
-  return rotation >= 10 ? mirroredFootprintTiles(template, anchorX, anchorZ) : computeFootprintTiles(template, anchorX, anchorZ)
+  return computeFootprintTiles(template, anchorX, anchorZ, rotation)
 }
 
 /** `layer` with every right-half tile replaced by the mirror of its left-half tile. */

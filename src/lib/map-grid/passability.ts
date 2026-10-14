@@ -90,11 +90,11 @@ type EntranceContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects'>
  *  (`value === 2`) instead of its solid cells — used to check whether an
  *  object's own entrance is blocked, or to display entrance cells on the
  *  map (see `buildEntranceTileSet` below). */
-export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null, entranceCells?: boolean): { x: number; z: number }[] {
+export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null, entranceCells?: boolean, rotation?: number): { x: number; z: number }[] {
   if (NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
   const valueToFind = entranceCells ? 2 : 1
   const template = catalog?.mapObjects.find((o) => o.id === sid)
-  return computeFootprintTiles(template, x, z).filter((cell) => cell.value === valueToFind)
+  return computeFootprintTiles(template, x, z, rotation).filter((cell) => cell.value === valueToFind)
 }
 
 /** Every blocked tile (node index) on the current map, per the three-source
@@ -108,7 +108,7 @@ export function buildBlockedTileSet(context: PassabilityContext, catalog: GameCa
   // aren't physical terrain and have no footprint template in the catalog.
   for (const obj of placedObjects) {
     if (obj.type !== 0) continue
-    for (const cell of objectBlockedCells(obj.sid, obj.x, obj.z, catalog)) {
+    for (const cell of objectBlockedCells(obj.sid, obj.x, obj.z, catalog, false, obj.rotation)) {
       if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
       blocked.add(cell.z * sizeX + cell.x)
     }
@@ -144,7 +144,7 @@ export function buildEntranceTileSet(context: EntranceContext, catalog: GameCata
     // aren't physical terrain and have no footprint template in the catalog.
     for (const object of placedObjects) {
         if (object.type !== 0) continue
-        for (const cell of objectBlockedCells(object.sid, object.x, object.z, catalog, true)) {
+        for (const cell of objectBlockedCells(object.sid, object.x, object.z, catalog, true, object.rotation)) {
             if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
             entrances.add(cell.z * sizeX + cell.x)
         }

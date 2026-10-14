@@ -104,7 +104,7 @@ export function computeBoundsAutoFix(
   // block its own (clamped) seed either.
   for (const violation of violations) {
     const template = catalogById.get(violation.sid)
-    for (const cell of computeFootprintTiles(template, violation.x, violation.z)) {
+    for (const cell of computeFootprintTiles(template, violation.x, violation.z, violation.rotation)) {
       if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
       blocked.delete(cell.z * sizeX + cell.x)
     }
@@ -130,7 +130,7 @@ export function computeBoundsAutoFix(
     if (obj.type !== 0 || !obj.spawnerInfo || (obj.spawnerInfo.spawnPointType !== 0 && obj.spawnerInfo.spawnPointType !== 1)) continue
     const template = catalogById.get(obj.sid)
     const clamp = clampAnchorToFootprintBounds(template, obj.x, obj.z, sizeX, sizeZ)
-    const cells = computeFootprintTiles(template, clamp.x, clamp.z).filter((c) => c.value === 2)
+    const cells = computeFootprintTiles(template, clamp.x, clamp.z, obj.rotation).filter((c) => c.value === 2)
     if (cells.length > 0) {
       for (const c of cells) seeds.push(c.z * sizeX + c.x)
     } else {
@@ -139,8 +139,8 @@ export function computeBoundsAutoFix(
   }
   const reachable = floodFillReachable(seeds, blocked, sizeX, sizeZ)
 
-  const isValidCandidate = (template: ReturnType<typeof catalogById.get>, x: number, z: number): boolean => {
-    const cells = computeFootprintTiles(template, x, z)
+  const isValidCandidate = (template: ReturnType<typeof catalogById.get>, x: number, z: number, rotation?: number): boolean => {
+    const cells = computeFootprintTiles(template, x, z, rotation)
     if (!isFootprintInBounds(cells, sizeX, sizeZ)) return false
     let anyReachable = false
     for (const cell of cells) {
@@ -157,19 +157,19 @@ export function computeBoundsAutoFix(
     const template = catalogById.get(violation.sid)
     const clamp = clampAnchorToFootprintBounds(template, violation.x, violation.z, sizeX, sizeZ)
 
-    let found: { x: number; z: number } | null = isValidCandidate(template, clamp.x, clamp.z) ? clamp : null
+    let found: { x: number; z: number } | null = isValidCandidate(template, clamp.x, clamp.z, violation.rotation) ? clamp : null
     const maxRadius = Math.max(sizeX, sizeZ)
     for (let radius = 1; !found && radius <= maxRadius; radius++) {
       for (const [x, z] of ringOffsets(clamp.x, clamp.z, radius)) {
         if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
-        if (isValidCandidate(template, x, z)) { found = { x, z }; break }
+        if (isValidCandidate(template, x, z, violation.rotation)) { found = { x, z }; break }
       }
     }
 
     if (!found) { unresolved.push(violation); continue }
     const toNode = found.z * sizeX + found.x
     fixes.push({ id: violation.id, sid: violation.sid, fromNode: violation.node, toNode })
-    for (const cell of computeFootprintTiles(template, found.x, found.z)) {
+    for (const cell of computeFootprintTiles(template, found.x, found.z, violation.rotation)) {
       if (cell.value === 1) blocked.add(cell.z * sizeX + cell.x)
     }
   }
