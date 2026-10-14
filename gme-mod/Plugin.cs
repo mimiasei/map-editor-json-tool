@@ -36,6 +36,21 @@ namespace GmeRmgMod
         // Layout names as tse's --layout takes them; index 0 (Random) sends no flag.
         private static readonly string[] LayoutArgs = { "", "ring", "ringCenter", "innerRing", "doubleNeutral", "pockets", "hub" };
 
+        // What each layout looks like, shown under the Layout dropdown (index as LayoutArgs; Random has none).
+        // Keep in step with LAYOUT_LABELS in src/lib/rmg/zone-archetypes.ts.
+        private static readonly string[] LayoutTexts =
+        {
+            "",
+            "One ring: player and neutral zones alternate, and each zone touches only its two neighbours.",
+            "Like Ring, plus a rich treasure zone in the middle that every neutral zone connects to, for shortcuts across the map.",
+            "Players on the outside, neutral zones in their own ring in the middle. Each player connects to the two nearest inner zones, never to other players. Up to 7 players.",
+            "A ring with two neutral zones between each pair of neighbouring players, so rivals are further apart. Up to 4 players.",
+            "A tight ring of players and neutral zones, with a dead-end treasure pocket behind each neutral zone. Up to 4 players.",
+            "Each player has one neutral zone leading to a rich central zone. No ring between players. Up to 4 players.",
+        };
+        private static object layoutText;
+        private static int shownLayout = -1;
+
         // The win conditions on top of Classic, each its own Off/On dropdown: (tse --win id, label).
         private static readonly (string id, string label)[] WinChoices =
         {
@@ -47,8 +62,8 @@ namespace GmeRmgMod
         };
         private static readonly object[] winDropdowns = new object[WinChoices.Length];
 
-        /// <summary>Height added to the dialog frame: the left column's 7 added rows of 35px (seed to layout) plus margin.</summary>
-        private const float ExtraHeight = 7 * 35f + 60f;
+        /// <summary>Height added to the dialog frame: the left column's 7 added rows of 35px (seed to layout), the 50px layout description and margin.</summary>
+        private const float ExtraHeight = 7 * 35f + 60f + 50f;
 
         /// <summary>Width of the second column of dropdowns (300px wide plus a 20px gap), also added to the frame.</summary>
         private const float ColumnWidth = 320f;
@@ -141,6 +156,7 @@ namespace GmeRmgMod
             float rightX = leftX + ColumnWidth;
             townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", rightX, baseY - 35f,
                 new[] { "Matching Starting Towns", "Random Starting Towns" }, 0);
+            AddLayoutText(dialog, sizeRect, parent, leftX, baseY - 280f);
             for (int i = 0; i < WinChoices.Length; i++)
                 winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 70f - 35f * i,
                     new[] { WinChoices[i].label + ": Off", WinChoices[i].label + ": On" }, 0);
@@ -156,6 +172,54 @@ namespace GmeRmgMod
                     rect.anchoredPosition = GameApi.NewVector2((float)rect.anchoredPosition.x + ColumnWidth / 2f, (float)rect.anchoredPosition.y - ExtraHeight / 2f);
                 }
             }
+        }
+
+        /// <summary>A copy of the dialog's template label under the Layout dropdown, as wide as both
+        /// columns, for the layout description. Hidden until a layout other than Random is picked.</summary>
+        private static void AddLayoutText(dynamic dialog, dynamic sizeRect, object parent, float leftX, float y)
+        {
+            layoutText = null;
+            shownLayout = -1;
+            try
+            {
+                if (GameApi.TextComponent == null || dialog.template == null) return;
+                dynamic go = GameApi.Instantiate(dialog.template.gameObject, parent);
+                go.name = "Layout_Description";
+                dynamic rect = GameApi.GetComponent(go, GameApi.RectTransform);
+                // Same anchors and pivot as the dropdowns, so x/y mean the same thing.
+                rect.anchorMin = sizeRect.anchorMin;
+                rect.anchorMax = sizeRect.anchorMax;
+                rect.pivot = sizeRect.pivot;
+                float pivotX = (float)sizeRect.pivot.x;
+                rect.sizeDelta = GameApi.NewVector2(300f + ColumnWidth, 50f);
+                rect.anchoredPosition = GameApi.NewVector2(leftX + pivotX * ColumnWidth, y);
+
+                dynamic text = GameApi.GetComponent(go, GameApi.TextComponent);
+                text.text = "";
+                text.fontSize = 15f;
+                GameApi.TrySet(text, "enableWordWrapping", true);
+                GameApi.TrySetEnum(text, "alignment", GameApi.TextAlignment, "TopLeft");
+                go.SetActive(false);
+                layoutText = go;
+            }
+            catch (Exception ex) { Logger.LogWarning($"Could not add the layout description: {ex.Message}"); layoutText = null; }
+        }
+
+        /// <summary>Shows the description of the picked layout (once per change); runs every frame.</summary>
+        private static void UpdateLayoutText()
+        {
+            if (layoutText == null || layoutDropdown == null) return;
+            try
+            {
+                int index = Math.Clamp(Selected(layoutDropdown, 0), 0, LayoutTexts.Length - 1);
+                if (index == shownLayout) return;
+                shownLayout = index;
+                dynamic go = layoutText;
+                if (index == 0) { go.SetActive(false); return; }
+                ((dynamic)GameApi.GetComponent(go, GameApi.TextComponent)).text = LayoutTexts[index];
+                go.SetActive(true);
+            }
+            catch { layoutText = null; } // the dialog was destroyed; the next one adds its own
         }
 
         /// <summary>A copy of `source` (the size dropdown) at (x, y), 300px wide, with `choices`.</summary>
@@ -207,6 +271,7 @@ namespace GmeRmgMod
         /// <summary>Runs once per frame (a Harmony postfix on GameApi.PerFrameMethod).</summary>
         public static void TickPostfix()
         {
+            UpdateLayoutText();
             if (runningTse == null) return;
             try { Tick(); }
             catch (Exception ex)

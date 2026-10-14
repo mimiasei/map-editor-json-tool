@@ -43,7 +43,7 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dices, X } from 'lucide-react'
+import { Dices, LayoutGrid, X } from 'lucide-react'
 import FieldInfo from '@/components/common/FieldInfo'
 import { neutralZoneRange, availableArchetypes, LAYOUT_LABELS, type LayoutArchetype } from '@/lib/rmg/zone-archetypes'
 import { MAX_CITIES_PER_ZONE } from '@/lib/rmg/rmg-tuning'
@@ -857,6 +857,9 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                           <div className="flex items-center gap-1">
                             <Label className="text-xs">Layout</Label>
                             <FieldInfo text="How the zones are arranged. Random picks one of the layouts for you. Layouts too crowded for this map size or with too many players are not offered." />
+                            {classic.layout && availableLayouts.includes(classic.layout) && (
+                              <FieldInfo icon={LayoutGrid} text={`${LAYOUT_LABELS[classic.layout].label}: ${LAYOUT_LABELS[classic.layout].details}`} />
+                            )}
                           </div>
                           <Select
                             value={classic.layout && availableLayouts.includes(classic.layout) ? classic.layout : RANDOM_LAYOUT}
