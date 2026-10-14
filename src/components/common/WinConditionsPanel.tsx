@@ -74,17 +74,17 @@ export default function WinConditionsPanel({ settings, onChange, disabled }: Pro
             )}
             {on && wc.id === 'tournament' && (
               <div className="pl-3 space-y-1.5">
-                <SwitchField label="Save army" checked={options.tournamentSaveArmy} onChange={(v) => setOptions({ tournamentSaveArmy: v })} disabled={disabled} />
+                <p className="text-xs font-medium text-center">Best-of-{fights.length}</p>
                 {fights.map((fight, i) => (
                   <div key={i} className="space-y-1.5 rounded-md border border-border p-2">
-                    <span className="text-xs font-medium">Fight {i + 1}</span>
-                    <DurationField label="Announce day" value={fight.announceDay} onChange={(v) => setFight(i, { announceDay: v })} disabled={disabled} />
+                    <span className="text-xs font-medium">Battle {i + 1}</span>
+                    <DurationField label="Battle date" value={fight.announceDay} onChange={(v) => setFight(i, { announceDay: v })} disabled={disabled} />
                     <DurationField label="Length" value={fight.days} onChange={(v) => setFight(i, { days: v })} disabled={disabled} />
                   </div>
                 ))}
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" size="sm" className="h-7 text-xs" disabled={disabled} onClick={() => setOptions({ tournamentFights: addTournamentFights(fights) })}>
-                    <Plus className="h-3 w-3 mr-1" />Add 2 fights
+                    <Plus className="h-3 w-3 mr-1" />Add 2 more battles
                   </Button>
                   <Button type="button" variant="outline" size="sm" className="h-7 text-xs" disabled={disabled || fights.length < 3} onClick={() => setOptions({ tournamentFights: removeTournamentFights(fights) })}>
                     <Minus className="h-3 w-3 mr-1" />Remove 2

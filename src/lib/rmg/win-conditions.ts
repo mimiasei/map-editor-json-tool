@@ -21,16 +21,16 @@ export interface WinConditionInfo {
 export const WIN_CONDITIONS: readonly WinConditionInfo[] = [
   { id: 'classic', label: 'Classic', type: 0, description: 'Defeat every enemy.',
     details: 'The normal rule: a player wins by eliminating every enemy player. It stays available alongside the others, so you can combine it with extra ways to win.' },
-  { id: 'capital-hold', label: 'Capital Hold', type: 3, description: 'Lose your starting city and you are out after a number of days.',
-    details: 'A player who loses their starting city is eliminated unless they retake it within the set number of days. Set the days below. This makes the capital the thing to protect.' },
-  { id: 'city-hold', label: 'City Hold', type: 8, description: 'Hold one marked neutral city for a number of days to win.',
-    details: 'The generator marks one neutral city near the middle of the map. A player who owns it for the set number of days wins. "Reset cooldown" decides whether the countdown starts over when the city changes hands. With no neutral city on the map this condition is dropped (turn on random cities).' },
-  { id: 'guardians-demise', label: "Guardian's Demise", type: 4, description: 'Lose your starting hero and you are out.',
-    details: 'A player whose starting hero dies or is lost is eliminated. It has no settings.' },
-  { id: 'final-battle', label: 'Final Battle', type: 5, description: 'A gladiator arena showdown after a delay.',
-    details: 'The game opens a gladiator arena (called "Mode gladiator arena" in the game). "Registration start work" and "Registration start fight" are the two game switches for when players register and when fights begin. "Start delay" is how many days pass before it starts and "Count day" is the arena day count. The game does not label the two numbers, so check the result in the game.' },
-  { id: 'tournament', label: 'Tournament', type: 9, description: 'A series of fights between players.',
-    details: 'A series of scheduled fights. Each fight has an announce day (when it is announced) and a number of days (how long it runs). The number of fights is always odd (1, 3, 5, ...) so there is a clear winner: first to more than half of them wins. "Save army" keeps armies after fights.' },
+  { id: 'capital-hold', label: "Capital Hold", type: 3, description: "Capture the opponent's starting city and hold it for a set number of in-game days to win.",
+    details: "Capture the opponent's starting city and hold it for a set number of in-game days to win. Set the number of days below." },
+  { id: 'city-hold', label: "City Hold", type: 8, description: "Capture the marked neutral city and hold it for a set number of in-game days to win.",
+    details: "Capture the marked neutral city and hold it for a set number of in-game days to win. The generator marks one neutral city near the middle of the map. \"Reset cooldown\" decides whether the countdown starts over when the city changes hands. With no neutral city on the map this condition is dropped (turn on random cities)." },
+  { id: 'guardians-demise', label: "Guardian's Demise", type: 4, description: "Defeat or cast away the opponent's main hero to win.",
+    details: "Defeat or cast away the opponent's main hero to win. It has no settings." },
+  { id: 'final-battle', label: "Final Battle", type: 5, description: "Face the opponent's hero in a final battle. The winner claims victory in the game.",
+    details: "Face the opponent's hero in a final battle. The winner claims victory in the game. The two Registration switches, the start delay and the count day are the map's gladiator arena settings; the game does not label the two day values, so check the result in the game." },
+  { id: 'tournament', label: "Tournament", type: 9, description: "Face the opponent's hero in a series of battles. The winner of the set claims victory.",
+    details: "Face the opponent's hero in a series of battles. The winner of the set claims victory. The number of battles is always odd (best-of-1, 3, 5, ...), added two at a time. Each battle has a date; the length is how long it runs." },
 ]
 
 export interface TournamentFight { announceDay: number; days: number }
