@@ -225,25 +225,16 @@ namespace GmeRmgMod
             return sizes;
         }
 
-        /// <summary>A few of the indexed virtual paths starting with the prefix, for the log when a lookup fails.</summary>
-        public static string DescribeIndexKeys(string prefix)
+        /// <summary>How many files the game's file index holds, for the log when a lookup fails.</summary>
+        public static string DescribeIndex()
         {
             try
             {
                 object fileManager = GetStatic(FileManager, FileManagerInstance);
                 dynamic index = FileManager.GetProperty(FileIndex).GetValue(fileManager);
-                var hits = new List<string>();
-                int total = 0;
-                foreach (var pair in index)
-                {
-                    string key = (string)pair.Key;
-                    if (!key.StartsWith(prefix, StringComparison.Ordinal)) continue;
-                    total++;
-                    if (hits.Count < 6 && key.Contains("user")) hits.Add(key);
-                }
-                return $"{total} key(s), e.g. {string.Join(", ", hits)}";
+                return $"{(int)index.Count} file(s) indexed";
             }
-            catch (Exception ex) { return "(could not list: " + ex.Message + ")"; }
+            catch (Exception ex) { return "(could not read: " + ex.Message + ")"; }
         }
 
         /// <summary>The FileManager's file handle for a virtual path (e.g. "maps/user/x.map"), or null.</summary>

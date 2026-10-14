@@ -68,6 +68,35 @@ namespace GmeRmgMod
         /// <summary>Width of the second column of dropdowns (300px wide plus a 20px gap), also added to the frame.</summary>
         private const float ColumnWidth = 320f;
 
+        /// <summary>The game reads maps from users/&lt;last_user&gt;/my_maps (created if missing).</summary>
+        private static string MapsDirectory()
+        {
+            string dataPath = GameApi.PersistentDataPath;
+            string mapsDir = Path.Combine(dataPath, "my_maps");
+            string lastUserFile = Path.Combine(dataPath, "last_user.txt");
+            if (File.Exists(lastUserFile))
+            {
+                string userFolder = File.ReadAllText(lastUserFile).Trim();
+                if (!string.IsNullOrEmpty(userFolder)) mapsDir = Path.Combine(dataPath, "users", userFolder, "my_maps");
+            }
+            Directory.CreateDirectory(mapsDir);
+            return mapsDir;
+        }
+
+        /// <summary>The game indexes the my_maps folder once, at startup, so a map generated later can only be opened if a
+        /// file of that name already existed then. An empty placeholder (replaced by the first generated map) makes sure it does.</summary>
+        private static void EnsureOutputFileExists()
+        {
+            try
+            {
+                string path = Path.Combine(MapsDirectory(), OutputFileName);
+                if (File.Exists(path)) return;
+                File.WriteAllBytes(path, new byte[0]);
+                Logger.LogInfo($"Created a placeholder {OutputFileName} so the game indexes it at startup");
+            }
+            catch (Exception ex) { Logger.LogWarning($"Could not create the placeholder map: {ex.Message}"); }
+        }
+
         public override void Load()
         {
             Logger = Log;
@@ -79,6 +108,8 @@ namespace GmeRmgMod
                 Log.LogError("The game changed in a way this mod doesn't know yet — mod disabled. Update the Scenario Editor, or the names in GameApi.cs.");
                 return;
             }
+
+            EnsureOutputFileExists();
 
             var harmony = new Harmony(PluginGuid);
             harmony.Patch(GameApi.NewGenMapStart, postfix: new HarmonyMethod(typeof(Plugin), nameof(StartPostfix)));
@@ -343,17 +374,7 @@ namespace GmeRmgMod
                 water = 2;
             }
 
-            // The game reads maps from users/<last_user>/my_maps.
-            string dataPath = GameApi.PersistentDataPath;
-            string mapsDir = Path.Combine(dataPath, "my_maps");
-            string lastUserFile = Path.Combine(dataPath, "last_user.txt");
-            if (File.Exists(lastUserFile))
-            {
-                string userFolder = File.ReadAllText(lastUserFile).Trim();
-                if (!string.IsNullOrEmpty(userFolder)) mapsDir = Path.Combine(dataPath, "users", userFolder, "my_maps");
-            }
-            Directory.CreateDirectory(mapsDir);
-            string outputPath = Path.Combine(mapsDir, OutputFileName);
+            string outputPath = Path.Combine(MapsDirectory(), OutputFileName);
 
             string tse = FindTse();
             if (tse == null)
@@ -505,7 +526,7 @@ namespace GmeRmgMod
             object editor = GameApi.GetStatic(GameApi.MapEditor, "me");
             if (editor != null && TryOpen(editor)) { pendingOpenPath = null; return; }
             if (DateTime.UtcNow < pendingOpenUntil) return;
-            Logger.LogError($"\"{IndexKey}\" never appeared in the game's file index; the map is saved as {pendingOpenPath}. Index keys under maps/: {GameApi.DescribeIndexKeys("maps/")}");
+            Logger.LogError($"\"{IndexKey}\" never appeared in the game's file index; the map is saved as {pendingOpenPath}. The game's file index: {GameApi.DescribeIndex()}. Restart the game once so it indexes the file.");
             pendingOpenPath = null;
         }
     }
