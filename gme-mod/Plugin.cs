@@ -156,7 +156,7 @@ namespace GmeRmgMod
             float rightX = leftX + ColumnWidth;
             townsDropdown = AddDropdown(sizeDropdown, parent, "Towns_Dropdown", rightX, baseY - 35f,
                 new[] { "Matching Starting Towns", "Random Starting Towns" }, 0);
-            AddLayoutText(dialog, sizeRect, parent, leftX, baseY - 280f);
+            AddLayoutText(sizeDropdown, sizeRect, parent, leftX, baseY - 280f);
             for (int i = 0; i < WinChoices.Length; i++)
                 winDropdowns[i] = AddDropdown(sizeDropdown, parent, "Win_" + WinChoices[i].id + "_Dropdown", rightX, baseY - 70f - 35f * i,
                     new[] { WinChoices[i].label + ": Off", WinChoices[i].label + ": On" }, 0);
@@ -174,16 +174,24 @@ namespace GmeRmgMod
             }
         }
 
-        /// <summary>A copy of the dialog's template label under the Layout dropdown, as wide as both
+        /// <summary>A copy of the size dropdown's caption label (a lone text object, unlike the dialog's
+        /// template field, whose copy brought every dropdown and field with it) under the Layout dropdown, as wide as both
         /// columns, for the layout description. Hidden until a layout other than Random is picked.</summary>
-        private static void AddLayoutText(dynamic dialog, dynamic sizeRect, object parent, float leftX, float y)
+        private static void AddLayoutText(dynamic sizeDropdown, dynamic sizeRect, object parent, float leftX, float y)
         {
             layoutText = null;
             shownLayout = -1;
             try
             {
-                if (GameApi.TextComponent == null || dialog.template == null) return;
-                dynamic go = GameApi.Instantiate(dialog.template.gameObject, parent);
+                if (GameApi.TextComponent == null || sizeDropdown.captionText == null) return;
+                dynamic go = GameApi.Instantiate(sizeDropdown.captionText.gameObject, parent);
+                if ((int)go.transform.childCount > 0)
+                {
+                    // Not a lone label: copying it would copy other UI too.
+                    GameApi.Destroy(go);
+                    Logger.LogWarning("The layout description could not be added: the label has child objects.");
+                    return;
+                }
                 go.name = "Layout_Description";
                 dynamic rect = GameApi.GetComponent(go, GameApi.RectTransform);
                 // Same anchors and pivot as the dropdowns, so x/y mean the same thing.

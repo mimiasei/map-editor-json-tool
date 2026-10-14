@@ -170,6 +170,14 @@ namespace GmeRmgMod
             return Cast(method.Invoke(null, new[] { Cast(original, UnityObject), parent }), GameObject);
         }
 
+        /// <summary>UnityEngine.Object.Destroy(obj)</summary>
+        public static void Destroy(object obj)
+        {
+            MethodInfo method = UnityObject.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .First(m => m.Name == "Destroy" && m.GetParameters().Length == 1);
+            method.Invoke(null, new[] { Cast(obj, UnityObject) });
+        }
+
         /// <summary>A UnityEngine.Vector2. Returned as dynamic so assigning it to a
         /// Vector2 property through `dynamic` binds (an `object` value doesn't).</summary>
         public static dynamic NewVector2(float x, float y) => Activator.CreateInstance(Vector2, x, y);
