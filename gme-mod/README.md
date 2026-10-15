@@ -52,7 +52,7 @@ The BepInEx version is pinned in two places that must match: the
 The game's code is obfuscated and some names the mod uses change with game updates
 (last known: `qu`, `bvns`, `bvod`/`bvoe`, `bzyv`, `bzyx`, `bzyy`). The mod no longer depends on them:
 if a name is gone it finds the member by its shape instead and says so in
-`BepInExogoutput.log`.
+`BepInEx\LogOutput.log`.
 
 - Map size list: the `List<T>` property of `BhNewGenMap` where `T` has two int properties.
 - File index: a `Dictionary<string, T>` on a class with a static property of its own type, where `T`
@@ -60,4 +60,4 @@ if a name is gone it finds the member by its shape instead and says so in
 
 If the game changes in a way those rules don't cover, the mod disables itself and the log lists each
 name it couldn't find (`Game API not found: …`). Then update the constants at the top of `GameApi.cs`;
-the generated interop assemblies in `<game>BepInExinterop` (e.g. inspected with dnSpy) show the new names.
+the generated interop assemblies in `<game>\BepInEx\interop` (e.g. inspected with dnSpy) show the new names.
