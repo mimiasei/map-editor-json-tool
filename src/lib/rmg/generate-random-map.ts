@@ -730,8 +730,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_BORDER_RADIUS = 4
   const ROAD_ISOLATED_PENALTY = 25
-  /** Road cost 1, 2 and 3 tiles from an elevation wall tile (a Fibonacci step down). */
-  const ROAD_WALL_COSTS = [89, 34, 13] as const
+  /** Road cost 1, 2 and 3 tiles from an elevation wall tile (144, 55, 13). */
+  const ROAD_WALL_COSTS = [144, 55, 13] as const
   const ROAD_BORDER_PENALTY = 2
   const ROAD_FOREIGN_ZONE_PENALTY = 6
   const ROAD_AVOIDANCE_STRENGTH = 1.5
