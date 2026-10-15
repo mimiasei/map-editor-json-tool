@@ -3777,7 +3777,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6"
                   title="Clear search"
                   type="button"
-                  onMouseDown={(e) => e.preventDefault()}
+                  // Clears on press, not on release: after selecting an object on the grid the release was lost.
+                  onPointerDown={(e) => { e.preventDefault(); setSearchQuery(''); searchInputRef.current?.focus() }}
                   onClick={() => { setSearchQuery(''); searchInputRef.current?.focus() }}
                 >
                   <X className="h-3 w-3" />
