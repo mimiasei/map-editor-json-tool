@@ -53,7 +53,8 @@
 
 import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, buildTreePools, pickWeighted, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
+import { applyBiomeDecorationMix } from '@/lib/rmg/biome-decoration-mix'
+import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, pickWeighted, sampleFuzzyObstacles, type FuzzyObstaclePool } from '@/lib/map-grid/fuzzy-obstacle'
 import { randomInRange } from '@/lib/map-grid/squad-pool'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type ZonePlacement } from './zone-population'
@@ -794,9 +795,12 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
     density = 0.35, densityByZone, ambientPickupByZone, roadDistanceField, roadDecayStrength = 0, coOccurrenceStrength = 0,
     levelsMap, climbsMap, elevationDecayStrength = 0, rmgEnvironmentAssets, forcedMountainSpots = [], walkableNodes = new Set<number>(),
   } = options
-  const pools = buildFuzzyObstaclePools(mapObjects)
-  const treePools = buildTreePools(mapObjects)
-  const environmentWeights = rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined
+  // Cross-biome borrowing and per-biome exclusions (biome-decoration-mix.ts) are baked into
+  // the lists and weights, so single decorations and cluster members pick them alike.
+  const { pools, treePools, weights: environmentWeights } = applyBiomeDecorationMix(
+    buildFuzzyObstaclePools(mapObjects),
+    rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined,
+  )
   const placements: ZonePlacement[] = []
   for (const { node, biome, cluster = 1 } of forcedMountainSpots) {
     for (let k = 0; k < cluster; k++) {
@@ -901,8 +905,8 @@ export function scatterZoneObstacles(options: ScatterObstaclesOptions): ZonePlac
       ? (node: number) => biasedChance(INDEPENDENT_PHASE_POOL_BASE_CHANCE, 0, node, sizeX, sizeZ, placedCategoryByNode, 'pools', coOccurrenceStrength, CLUSTER_RADIUS)
       : undefined
     sampleFuzzyObstacles(nodeDistances, () => biome, pools, {
-      // Cross-biome picks only among compatible biomes: Sand, Snow, Lava and Deathland never mix.
-      allowHighContrastBiomes: false,
+      // Cross-biome mixing is done by the lists themselves (biome-decoration-mix.ts), not per node.
+      crossBiomeChance: 0,
       mountainChance: 0.05, rng, mountainChanceFor, poolChanceFor, weights: environmentWeights,
       onDecided: (node, addition) => {
         if (!addition) return
