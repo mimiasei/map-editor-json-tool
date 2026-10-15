@@ -18,7 +18,7 @@
 // (value-model.ts) rather than a flat difficulty pick — the "treasure zone"
 // VCMI's own template format calls this same role.
 
-import { sidBiome, violatesIsolation } from './biome-isolation'
+import { sidBiome, violatesIsolationFor, type IsolationExceptions } from './biome-isolation'
 import { createSeededRng } from './seeded-rng'
 import type { CatalogMapObject, CatalogObjectLogic, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
@@ -239,6 +239,8 @@ export interface PlacementState {
    *  where one of the object's cells would break biome isolation (a Snow
    *  object off Snow, anything on Sand/Snow/Lava ground, see biome-isolation.ts). */
   tileBiome?: number[]
+  /** Objects the decoration mix rules allow on a biome that isolation would refuse them on. */
+  isolationExceptions?: IsolationExceptions
   /** Tiles no object cell (solid or entrance) or guard tile may use: lake water,
    *  elevation walls, ramps and the tiles next to a ramp. Set by the generator
    *  once the terrain exists; unset means no such rule. */
@@ -341,7 +343,7 @@ export function tryPlaceAt(
   const objectBiome = state.tileBiome ? sidBiome(sid, catalogById) : null
   for (const cell of cells) {
     if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) return false
-    if (objectBiome !== null && violatesIsolation(objectBiome, state.tileBiome?.[cell.z * sizeX + cell.x])) return false
+    if (objectBiome !== null && violatesIsolationFor(sid, objectBiome, state.tileBiome?.[cell.z * sizeX + cell.x], state.isolationExceptions)) return false
     if (!nonBlocking && cell.value !== 0 && state.terrainReserved?.has(cell.z * sizeX + cell.x)) return false
     if (!nonBlocking && cell.value === 1 && state.blocked.has(cell.z * sizeX + cell.x)) return false
   }

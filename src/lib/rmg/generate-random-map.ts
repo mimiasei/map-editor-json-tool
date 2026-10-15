@@ -67,7 +67,7 @@ import { buildInteractableRarity } from './interactable-rarity'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
-import { sidBiome, violatesIsolation } from './biome-isolation'
+import { sidBiome, violatesIsolation, violatesIsolationFor } from './biome-isolation'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, computeZoneBorderDistance, createZoneConfinementCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
 import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
@@ -1593,7 +1593,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     let dropped = 0
     for (const list of [obstaclePlacements, faunaPlacements, bankPlacements, beachResult.placements]) {
       for (let i = list.length - 1; i >= 0; i--) {
-        if (violatesIsolation(sidBiome(list[i].sid, catalogById), tileBiomeFinal[list[i].node])) { list.splice(i, 1); dropped++ }
+        if (violatesIsolationFor(list[i].sid, sidBiome(list[i].sid, catalogById), tileBiomeFinal[list[i].node], state.isolationExceptions)) { list.splice(i, 1); dropped++ }
       }
     }
     if (dropped > 0) logWarn(`Random map generation: dropped ${dropped} decoration(s) that broke biome isolation`)

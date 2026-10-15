@@ -7,7 +7,7 @@
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
-import { applyBiomeDecorationMix, shuffledByWeight } from './biome-decoration-mix'
+import { applyBiomeDecorationMix, mineForestTrees, shuffledByWeight } from './biome-decoration-mix'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import { entranceApproachTiles, isRotationallySymmetricFootprint, tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
@@ -45,7 +45,8 @@ export function scatterMineSurroundings(options: ScatterMineSurroundingsOptions)
   const { sizeX, sizeZ, mines, zoneBiome, zoneIdByNode, catalogById, mapObjects, state, rng } = options
   // Own objects are tried in uniform random order; the decoration mix rules (biome-decoration-mix.ts)
   // only bring the borrowed ones in earlier or later by their chance.
-  const { pools: mountainPools, treePools, weights: mixWeights } = applyBiomeDecorationMix(buildFuzzyObstaclePools(mapObjects), undefined)
+  const basePools = buildFuzzyObstaclePools(mapObjects)
+  const { pools: mountainPools, treePools, weights: mixWeights } = applyBiomeDecorationMix(basePools, undefined)
   const placements: ZonePlacement[] = []
   const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
 
@@ -94,7 +95,9 @@ export function scatterMineSurroundings(options: ScatterMineSurroundingsOptions)
     }
 
     if (wanted === 'forest') {
-      const trees = treePools[biome]?.obstacles ?? []
+      // A biome with a MINE_FOREST_RULES entry uses those trees instead of its own.
+      const mineTrees = mineForestTrees(biome, basePools)
+      const trees = mineTrees?.trees ?? treePools[biome]?.obstacles ?? []
       if (trees.length === 0) continue
       const glue = new Set(footprint)
       const target = FOREST_MIN + Math.floor(rng() * (FOREST_MAX - FOREST_MIN + 1))
@@ -113,7 +116,7 @@ export function scatterMineSurroundings(options: ScatterMineSurroundingsOptions)
         }
         let done = false
         for (const node of shuffled([...candidates], rng)) {
-          for (const sid of shuffledByWeight(trees, rng, mixWeights?.[biome]).slice(0, 3)) {
+          for (const sid of shuffledByWeight(trees, rng, mineTrees?.weights ?? mixWeights?.[biome]).slice(0, 3)) {
             if (!fits(sid, node, glue) || !place(sid, node)) continue
             for (const n of solidNodes(sid, node)) glue.add(n)
             done = true

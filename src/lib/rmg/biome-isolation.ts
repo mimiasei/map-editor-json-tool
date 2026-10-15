@@ -31,6 +31,16 @@ export function sidBiome(sid: string, catalogById: Map<string, CatalogMapObject>
   return biome ? CATALOG_BIOME_TO_ID[biome] ?? null : null
 }
 
+/** Objects a biome may use although they belong to another one (the decoration mix rules,
+ *  biome-decoration-mix.ts): tile biome id -> sids allowed on it. */
+export type IsolationExceptions = ReadonlyMap<number, ReadonlySet<string>>
+
+/** `violatesIsolation`, except for the sids `exceptions` allow on that tile biome. */
+export function violatesIsolationFor(sid: string, objectBiome: number | null, tileBiome: number | undefined, exceptions?: IsolationExceptions): boolean {
+  if (!violatesIsolation(objectBiome, tileBiome)) return false
+  return !(tileBiome !== undefined && exceptions?.get(tileBiome)?.has(sid))
+}
+
 /** True when an object of `objectBiome` must not stand on `tileBiome`: they
  *  differ and at least one of the two is Sand, Snow or Lava. */
 export function violatesIsolation(objectBiome: number | null, tileBiome: number | undefined): boolean {

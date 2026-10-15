@@ -66,6 +66,8 @@ import { scatterZoneWater } from './zone-water'
 import { findEmptyLandSpecks } from '@/lib/map-grid/water-specks'
 import { scatterZoneElevation } from './zone-elevation'
 import type { RmgZoneLayoutPick } from './rmg-schema'
+import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
+import { decorationIsolationExceptions } from './biome-decoration-mix'
 
 export { BLANK_MAP_BIOME_NAMES }
 
@@ -445,6 +447,7 @@ export function generateTerrain(
   }
   const state = createPlacementState(seedBlocked, seedAnchors)
   state.tileBiome = terrainChanges.map((c) => c.biomeId)
+  state.isolationExceptions = decorationIsolationExceptions(buildFuzzyObstaclePools([...catalogById.values()]))
 
   let waterNodesAll = new Set<number>()
   let waterChangesAll: { node: number; waterId: number }[] = []

@@ -45,10 +45,46 @@ export const BIOME_DECORATION_RULES: DecorationRule[] = [
   { into: 'Autumn', from: 'Dirt', chance: 0.05 },
   { into: 'Dirt', from: 'Grass', chance: 0.05 },
   { into: 'Dirt', from: 'Autumn', chance: 0.05 },
-  // Examples:
+  // Lava also gets some Deathland scenery: mountains, mushroom trees and withered pines.
+  // (The two tree rules add up: 20 % of Lava's tree picks.)
+  { into: 'Lava', from: 'Deathland', type: 'mountain', chance: 0.15 },
+  { into: 'Lava', from: 'Deathland', type: 'tree', variant: 'mushroom', chance: 0.1 },
+  { into: 'Lava', from: 'Deathland', type: 'tree', variant: 'pine_withered', chance: 0.1 },
+  // More examples:
   // { into: 'Lava', from: 'Deathland', type: 'tree', variant: 'dead', num: { max: 4 }, chance: 0.06 },
   // { deny: 'Deathland', type: 'tree', variant: 'dead', num: { min: 7 } },
 ]
+
+/** The trees around a wood mine on `biome`: these objects of `from` INSTEAD of the biome's own trees
+ *  (the mix rules above are not used for them). `weight` (default 1) is how much more often an
+ *  object is tried first. A biome without a rule keeps its own trees. */
+export interface MineForestRule extends DecorationMatcher {
+  biome: BiomeName
+  from: BiomeName
+  weight?: number
+}
+
+export const MINE_FOREST_RULES: MineForestRule[] = [
+  // Lava's own trees do not suit a wood mine: Deathland's withered pines, and its dead trees less often.
+  { biome: 'Lava', from: 'Deathland', type: 'tree', variant: 'pine_withered', weight: 2 },
+  { biome: 'Lava', from: 'Deathland', type: 'tree', variant: 'dead', weight: 1 },
+]
+
+/** The tree objects (and their pick weights) for a wood mine on `biome`, or undefined when no
+ *  MINE_FOREST_RULES entry covers it. `basePools` are the unmixed per-biome lists. */
+export function mineForestTrees(
+  biome: BiomeId, basePools: Record<BiomeId, FuzzyObstaclePool>, rules: MineForestRule[] = MINE_FOREST_RULES,
+): { trees: string[]; weights: Record<string, number> } | undefined {
+  const weights: Record<string, number> = {}
+  for (const rule of rules) {
+    if (BIOME_ID_BY_NAME[rule.biome] !== biome) continue
+    for (const sid of basePools[BIOME_ID_BY_NAME[rule.from]].obstacles) {
+      if (isTreeDecoration(sid) && matchesDecoration(rule, parseDecorationSid(sid), 'obstacles')) weights[sid] = (weights[sid] ?? 0) + (rule.weight ?? 1)
+    }
+  }
+  const trees = Object.keys(weights)
+  return trees.length > 0 ? { trees, weights } : undefined
+}
 
 /** However many rules feed one list, borrowed objects never exceed this share of it. */
 const MAX_BORROWED_SHARE = 0.9
@@ -178,6 +214,33 @@ export function applyBiomeDecorationMix(
     treePools[Number(id) as BiomeId] = { obstacles: pool.obstacles.filter(isTreeDecoration), clutter: [], mountains: [], pools: [] }
   }
   return { pools, treePools, weights }
+}
+
+/** For each biome, the objects of other biomes that the rules (borrow rules and wood-mine forests)
+ *  let it use — biome isolation (biome-isolation.ts) must not refuse those. */
+export function decorationIsolationExceptions(
+  basePools: Record<BiomeId, FuzzyObstaclePool>, rules: DecorationRule[] = BIOME_DECORATION_RULES, mineRules: MineForestRule[] = MINE_FOREST_RULES,
+): Map<number, Set<string>> {
+  const exceptions = new Map<number, Set<string>>()
+  const allow = (biome: BiomeId, sid: string): void => {
+    const set = exceptions.get(biome) ?? new Set<string>()
+    set.add(sid)
+    exceptions.set(biome, set)
+  }
+  for (const rule of rules) {
+    if (!isBorrowRule(rule) || rule.chance <= 0) continue
+    for (const list of LIST_NAMES) {
+      for (const sid of basePools[BIOME_ID_BY_NAME[rule.from]][list]) {
+        if (matchesDecoration(rule, parseDecorationSid(sid), list)) allow(BIOME_ID_BY_NAME[rule.into], sid)
+      }
+    }
+  }
+  for (const rule of mineRules) {
+    for (const sid of basePools[BIOME_ID_BY_NAME[rule.from]].obstacles) {
+      if (isTreeDecoration(sid) && matchesDecoration(rule, parseDecorationSid(sid), 'obstacles')) allow(BIOME_ID_BY_NAME[rule.biome], sid)
+    }
+  }
+  return exceptions
 }
 
 /** `list` in random order, an object with a higher weight tending to come earlier. With no
