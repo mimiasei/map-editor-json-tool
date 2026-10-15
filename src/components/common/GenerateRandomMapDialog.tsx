@@ -783,65 +783,65 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     {gameTemplate && <p className="text-xs text-muted-foreground">Players ignored — the game template below sets its own player count.</p>}
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Label htmlFor="rmg-random-faction" className="text-xs">Random starting towns</Label>
-                      <FieldInfo text="Every player starts with a random faction, picked when the game starts, instead of one that matches the land around their start. The land is chosen freely too, so any player can start on any terrain." />
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1">
+                        <Label htmlFor="rmg-random-faction" className="text-xs">Random starting towns</Label>
+                        <FieldInfo text="Every player starts with a random faction, picked when the game starts, instead of one that matches the land around their start. The land is chosen freely too, so any player can start on any terrain." />
+                      </div>
+                      <Switch
+                        id="rmg-random-faction"
+                        checked={!!classic.randomPlayerFaction}
+                        onCheckedChange={(v) => setClassic((prev) => ({ ...prev, randomPlayerFaction: v || undefined }))}
+                        disabled={terrainLocked}
+                      />
                     </div>
-                    <Switch
-                      id="rmg-random-faction"
-                      checked={!!classic.randomPlayerFaction}
-                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, randomPlayerFaction: v || undefined }))}
-                      disabled={terrainLocked}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Label htmlFor="rmg-pandora" className="text-xs">Include Pandora's Box</Label>
-                      <FieldInfo text="Lets a neutral zone hold one Pandora's Box, at a low chance (about 1 zone in 5). Off by default: it grants 15+ spells." />
-                    </div>
-                    <Switch
-                      id="rmg-pandora"
-                      checked={!!classic.includePandoraBox}
-                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, includePandoraBox: v || undefined }))}
-                      disabled={terrainLocked}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Label htmlFor="rmg-mirrored" className="text-xs">Mirrored map</Label>
-                      <FieldInfo text={`The right half of the map is an exact mirror image of the left half, so every player has precisely the same surroundings: the same zones, land, roads, mines, dwellings, guards and treasure. Players take turns on the two sides (player 1 on the left, player 2 on the right, player 3 on the left, ...), so two human players in the first two slots face each other and the AI players are split evenly. Needs an even number of players and an even map width. What differs: the starting heroes (each is unique), and everything is generated for the left half only, so mirrored maps have no rivers, islands or portals and no City Hold (there is no single city in the middle). Objects that straddle the middle line are left out. With random starting towns each player is still dealt their own random town.`} />
-                    </div>
-                    <Switch
-                      id="rmg-mirrored"
-                      checked={mirroredMap}
-                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, mirrored: v || undefined, water: v && prev.water === 'islands' ? 'some' : prev.water }))}
-                      disabled={terrainLocked || !mirrorPossible}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
                         <Label htmlFor="rmg-limit-cities" className="text-xs">Set number of random cities</Label>
                         <FieldInfo text={`Random cities are neutral cities anyone can capture. They only appear in neutral zones, never in a player's own zone (every player already starts with a city). Off: the map gets the default of 1. On: you choose the total for the whole map, from 0 up to ${MAX_CITIES_PER_ZONE} per neutral zone. They are spread over different zones first, and a zone only gets a second or third city once every neutral zone has one. The number of neutral zones depends on the player count and the zone layout the generator picks: with ${playerCount} players the map has ${neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones, so up to ${maxCities} cities fit. If the layout it picks has fewer zones, the extra cities are simply not placed. A game template uses its own zones.`} />
                       </div>
                       <Switch id="rmg-limit-cities" checked={limitCities} onCheckedChange={setLimitCities} disabled={terrainLocked} />
                     </div>
-                    {limitCities && (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            {neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones with {playerCount} players
-                          </span>
-                          <span className="text-xs font-medium tabular-nums">{cityTotalShown} {cityTotalShown === 1 ? 'city' : 'cities'}</span>
-                        </div>
-                        <Slider min={0} max={maxCities} step={1} value={[cityTotalShown]} onValueChange={([v]) => setCityTotal(v)} disabled={terrainLocked} />
-                        <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums"><span>0</span><span>{maxCities}</span></div>
+                  </div>
+                  {limitCities && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          {neutralZones.min === neutralZones.max ? neutralZones.min : `${neutralZones.min}-${neutralZones.max}`} neutral zones with {playerCount} players
+                        </span>
+                        <span className="text-xs font-medium tabular-nums">{cityTotalShown} {cityTotalShown === 1 ? 'city' : 'cities'}</span>
                       </div>
-                    )}
+                      <Slider min={0} max={maxCities} step={1} value={[cityTotalShown]} onValueChange={([v]) => setCityTotal(v)} disabled={terrainLocked} />
+                      <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums"><span>0</span><span>{maxCities}</span></div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1">
+                        <Label htmlFor="rmg-pandora" className="text-xs">Include Pandora's Box</Label>
+                        <FieldInfo text="Lets a neutral zone hold one Pandora's Box, at a low chance (about 1 zone in 5). Off by default." />
+                      </div>
+                      <Switch
+                        id="rmg-pandora"
+                        checked={!!classic.includePandoraBox}
+                        onCheckedChange={(v) => setClassic((prev) => ({ ...prev, includePandoraBox: v || undefined }))}
+                        disabled={terrainLocked}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1">
+                        <Label htmlFor="rmg-mirrored" className="text-xs">Mirrored map</Label>
+                        <FieldInfo text={`The right half of the map is an exact mirror image of the left half, so every player has precisely the same surroundings: the same zones, land, roads, mines, dwellings, guards and treasure. Players take turns on the two sides (player 1 on the left, player 2 on the right, player 3 on the left, ...), so two human players in the first two slots face each other and the AI players are split evenly. Needs an even number of players and an even map width. What differs: the starting heroes (each is unique), and everything is generated for the left half only, so mirrored maps have no rivers, islands or portals and no City Hold (there is no single city in the middle). Objects that straddle the middle line are left out. With random starting towns each player is still dealt their own random town.`} />
+                      </div>
+                      <Switch
+                        id="rmg-mirrored"
+                        checked={mirroredMap}
+                        onCheckedChange={(v) => setClassic((prev) => ({ ...prev, mirrored: v || undefined, water: v && prev.water === 'islands' ? 'some' : prev.water }))}
+                        disabled={terrainLocked || !mirrorPossible}
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
