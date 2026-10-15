@@ -46,7 +46,9 @@ import type { ZoneSpec } from './zone-graph'
 // — the same "calibrate the input for known downstream loss" approach
 // this generator's own `baseTreasureCount` doc comment already documents
 // for treasure placement.
-const ANIMAL_PER_1000_LAND_TILES = 10.0
+// Raised from 10.0 along with the bird share going from 30% to 15%: the non-bird animals double
+// (7 -> 14 per 1000 land tiles, 16.5 x 0.85) and birds drop slightly (3 -> 2.5).
+const ANIMAL_PER_1000_LAND_TILES = 16.5
 const FISH_PER_1000_WATER_TILES = 2.35
 const FX_PER_1000_TOTAL_TILES = 10.66
 
@@ -58,7 +60,7 @@ const HOME_BIOME_WEIGHT = 4
 /** Chance a land-animal roll draws from the biome-less `birds*` pool
  *  instead of a biome-weighted pick — real samples show `birds*` present
  *  in most decorated maps regardless of biome mix. */
-const UNIVERSAL_ANIMAL_CHANCE = 0.3
+const UNIVERSAL_ANIMAL_CHANCE = 0.15
 
 const ALL_BIOME_IDS: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 

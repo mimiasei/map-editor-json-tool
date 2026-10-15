@@ -464,6 +464,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         decorationElevationDecayStrength: opts.decorationElevationDecayStrength,
         mineGoldBiomeBiasStrength: opts.mineGoldBiomeBiasStrength,
         disabledInteractableSids: opts.disabledInteractableSids,
+        includePandoraBox: classic.includePandoraBox,
         randomCityCount: limitCities ? cityTotalShown : opts.randomCityCount,
         richness: opts.richness,
         difficulty: opts.difficulty,
@@ -795,6 +796,19 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                     />
                   </div>
                   
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="rmg-pandora" className="text-xs">Include Pandora's Box</Label>
+                      <FieldInfo text="Lets Pandora's Box show up among the treasure and interactable objects. Off by default: its reward is very strong." />
+                    </div>
+                    <Switch
+                      id="rmg-pandora"
+                      checked={!!classic.includePandoraBox}
+                      onCheckedChange={(v) => setClassic((prev) => ({ ...prev, includePandoraBox: v || undefined }))}
+                      disabled={terrainLocked}
+                    />
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <Label htmlFor="rmg-mirrored" className="text-xs">Mirrored map</Label>

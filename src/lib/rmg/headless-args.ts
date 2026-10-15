@@ -74,6 +74,15 @@ function parseFaction(raw: ArgValue): boolean | undefined {
   throw new Error(`--faction must be matching or random (got "${raw}")`)
 }
 
+/** A true/false flag (`--pandora`): true / 1 / on / yes (or no value at all) turns it on; false / 0 / off / no or leaving it out keeps it off. */
+function parseFlag(raw: ArgValue, flag: string): boolean | undefined {
+  if (raw === undefined) return undefined
+  const text = raw.trim().toLowerCase()
+  if (['', 'true', '1', 'on', 'yes'].includes(text)) return true
+  if (['false', '0', 'off', 'no'].includes(text)) return undefined
+  throw new Error(`--${flag} must be true or false (got "${raw}")`)
+}
+
 /** `--mirror`: true / 1 / on / yes (or no value at all) turns it on; false / 0 / off / no or leaving it out keeps it off. */
 function parseMirror(raw: ArgValue): boolean | undefined {
   if (raw === undefined) return undefined
@@ -94,6 +103,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
   }
 
   const mirrored = parseMirror(raw.mirror)
+  const includePandoraBox = parseFlag(raw.pandora, 'pandora')
   if (mirrored && playerCount % 2 !== 0) throw new Error(`--mirror needs an even number of players (got ${playerCount})`)
 
   let seed: number | undefined
@@ -128,6 +138,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
       winConditions: parseWinConditionList(raw.win),
       randomPlayerFaction: parseFaction(raw.faction),
       mirrored,
+      includePandoraBox,
     },
   }
 }

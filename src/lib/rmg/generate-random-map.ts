@@ -294,6 +294,8 @@ export interface GenerateRandomMapOptions {
    *  own dedicated scatter pass. Empty/omitted (the default) is today's
    *  exact behavior — every real interactable stays eligible. */
   disabledInteractableSids?: string[]
+  /** Pandora's Box may be rolled into the object pools and scattered as an interactable. Default false: its reward is too strong. */
+  includePandoraBox?: boolean
   /** Classic mode's richness selector (issue #250) — see `populateZones`. */
   richness?: RmgRichness
   /** Classic mode's difficulty selector — scales every guard squad's value
@@ -331,13 +333,14 @@ export interface GenerateRandomMapResult {
 }
 
 export async function generateRandomMap(template: MapContainer, catalog: GameCatalog, options: GenerateRandomMapOptions): Promise<GenerateRandomMapResult> {
-  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent: requestedWater = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals: requestedPortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, mirrored = false, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
+  const { sizeX, sizeZ, playerCount, playerSpawnerSid, waterContent: requestedWater = 'normal', waterChance = 0.4, islandsIncludePlayerZones = false, islandLandRatio = 0.4, hillChance = 0, valleyChance = 0, gameElevationLayouts = false, obstacleDensity, interactableDensity, mountainDensity = 0.35, treasureDensity, objectVariety, usePortals: requestedPortals = false, zoneJaggedness = 0.5, zoneSpread = 1, layoutArchetype, boundaryGuardStrength = 'strong', squadDensity = 0.45, roadWindingAmplitude = 3, roadWindingWavelength = 50, rng = Math.random, terrainOnly = false, enabledBiomes, randomPlayerFaction = false, mirrored = false, randomCityCount = 1, contentCountLimits = [{ sid: 'university', maxCount: 1 }], stoneRoadChance = 0.35, roadPointOfInterestChance = 0.8, roadFullConnectivityChance = 0.8, gameTemplateJson, organicTerrainBlending = 0, decorationRoadDecayStrength = 0, decorationCoOccurrenceStrength = 0, decorationElevationDecayStrength = 0, mineGoldBiomeBiasStrength = 0, disabledInteractableSids, includePandoraBox = false, richness, difficulty, tuning = EMPTY_TUNING, onProgress } = options
   if (mirrored && gameTemplateJson) throw new Error('A mirrored map cannot use a game template')
   // Islands and portals link zones across water in ways that are not mirrored, so a mirrored map has neither.
   const waterContent = mirrored && requestedWater === 'islands' ? 'normal' : requestedWater
   const usePortals = mirrored ? false : requestedPortals
   if (mirrored && (requestedWater === 'islands' || requestedPortals)) logWarn('Random map generation: a mirrored map has no islands or portals — using normal water and no portals')
-  const disabledInteractableSidSet = disabledInteractableSids && disabledInteractableSids.length > 0 ? new Set(disabledInteractableSids) : undefined
+  const disabledSids = [...(disabledInteractableSids ?? []), ...(includePandoraBox ? [] : ['pandora_box'])]
+  const disabledInteractableSidSet = disabledSids.length > 0 ? new Set(disabledSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
   // actual scheduled repaint between stages, React would batch every

@@ -85,6 +85,8 @@ export interface ClassicSettings {
   randomPlayerFaction?: boolean
   /** A left-right mirror image map for an even player count: both halves are identical (zone-mirror.ts). */
   mirrored?: boolean
+  /** Pandora's Box may be rolled into the object pools. Off (unset) by default: its reward is too strong. */
+  includePandoraBox?: boolean
 }
 
 export const DEFAULT_CLASSIC_SETTINGS: ClassicSettings = { richness: 'medium', complexity: 'medium', difficulty: 'normal', water: 'some' }
@@ -222,6 +224,7 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
     winOptions: settings.winOptions,
     randomPlayerFaction: settings.randomPlayerFaction,
     mirrored: settings.mirrored,
+    includePandoraBox: settings.includePandoraBox,
     randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     bannedMagics: tuning.spells?.banned ?? [],
     tuning,
