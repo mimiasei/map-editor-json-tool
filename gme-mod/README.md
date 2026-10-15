@@ -52,7 +52,7 @@ The BepInEx version is pinned in two places that must match: the
 The game's code is obfuscated and some names the mod uses change with game updates
 (last known: `qu`, `bvns`, `bvod`/`bvoe`, `bzyv`, `bzyx`, `bzyy`). The mod no longer depends on them:
 if a name is gone it finds the member by its shape instead and says so in
-`BepInExLogOutput.log`.
+`BepInExogoutput.log`.
 
 - Map size list: the `List<T>` property of `BhNewGenMap` where `T` has two int properties.
 - File index: a `Dictionary<string, T>` on a class with a static property of its own type, where `T`
