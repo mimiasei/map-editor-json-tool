@@ -6,7 +6,8 @@
 
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { buildFuzzyObstaclePools, buildTreePools } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
+import { applyBiomeDecorationMix, shuffledByWeight } from './biome-decoration-mix'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import { entranceApproachTiles, isRotationallySymmetricFootprint, tryPlaceAt, type PlacementState, type ZonePlacement } from './zone-population'
@@ -42,8 +43,9 @@ function shuffled<T>(list: T[], rng: () => number): T[] {
 
 export function scatterMineSurroundings(options: ScatterMineSurroundingsOptions): ZonePlacement[] {
   const { sizeX, sizeZ, mines, zoneBiome, zoneIdByNode, catalogById, mapObjects, state, rng } = options
-  const mountainPools = buildFuzzyObstaclePools(mapObjects)
-  const treePools = buildTreePools(mapObjects)
+  // Own objects are tried in uniform random order; the decoration mix rules (biome-decoration-mix.ts)
+  // only bring the borrowed ones in earlier or later by their chance.
+  const { pools: mountainPools, treePools, weights: mixWeights } = applyBiomeDecorationMix(buildFuzzyObstaclePools(mapObjects), undefined)
   const placements: ZonePlacement[] = []
   const inBounds = (x: number, z: number): boolean => x >= 0 && x < sizeX && z >= 0 && z < sizeZ
 
@@ -111,7 +113,7 @@ export function scatterMineSurroundings(options: ScatterMineSurroundingsOptions)
         }
         let done = false
         for (const node of shuffled([...candidates], rng)) {
-          for (const sid of shuffled(trees, rng).slice(0, 3)) {
+          for (const sid of shuffledByWeight(trees, rng, mixWeights?.[biome]).slice(0, 3)) {
             if (!fits(sid, node, glue) || !place(sid, node)) continue
             for (const n of solidNodes(sid, node)) glue.add(n)
             done = true
@@ -128,7 +130,7 @@ export function scatterMineSurroundings(options: ScatterMineSurroundingsOptions)
       const glue = new Set(footprint)
       for (let k = 0; k < count; k++) {
         let done = false
-        for (const sid of shuffled(pool, rng).slice(0, MOUNTAIN_SIDS_TRIED)) {
+        for (const sid of shuffledByWeight(pool, rng, mixWeights?.[biome]).slice(0, MOUNTAIN_SIDS_TRIED)) {
           for (let r = 1; r <= MOUNTAIN_SEARCH_RADIUS && !done; r++) {
             for (let dz = -r; dz <= r && !done; dz++) {
               for (let dx = -r; dx <= r; dx++) {

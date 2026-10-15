@@ -6,10 +6,13 @@
 //
 // How a borrow rule works: for each decoration list of the `into` biome
 // (obstacles, clutter, mountains, pools) the objects of the `from` biome that
-// match the rule are added to it, weighted so that they make up `chance` of
-// the picks from that list. Several rules into the same biome add up (capped
-// at MAX_BORROWED_SHARE). Because the borrowed objects sit in the biome's
-// ordinary lists, single decorations and cluster members borrow alike.
+// match the rule are added to it, weighted so that they make up `chance` of the
+// picks of the rule's `type` from that list ('tree' = 6 % of the tree picks, not
+// of every obstacle pick; a rule without a type is measured against the whole
+// list). Rules naming the same type add up (capped at MAX_BORROWED_SHARE).
+// Because the borrowed objects sit in the biome's ordinary lists, single
+// decorations, cluster members and the other steps that use these lists
+// borrow alike.
 
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import { BIOME_NAMES } from '@/lib/map-grid/terrain-colors'
@@ -66,6 +69,15 @@ export interface MixedDecorationPools {
   weights: SidWeights | undefined
 }
 
+interface BorrowEntry {
+  sids: string[]
+  from: BiomeId
+  chance: number
+  /** The types the rule names; undefined when it names none (measured against the whole list). */
+  types: string[] | undefined
+  typeKey: string
+}
+
 function isBorrowRule(rule: DecorationRule): rule is BorrowRule {
   return 'into' in rule
 }
@@ -103,50 +115,59 @@ export function applyBiomeDecorationMix(
   }
 
   // Borrowed objects per target biome and list, with the chance each rule gives them.
-  const borrowed = new Map<string, { biome: BiomeId; list: ListName; entries: { sids: string[]; from: BiomeId; chance: number }[] }>()
+  const borrowed = new Map<string, { biome: BiomeId; list: ListName; entries: BorrowEntry[] }>()
   for (const rule of rules) {
     if (!isBorrowRule(rule) || rule.chance <= 0) continue
     const into = BIOME_ID_BY_NAME[rule.into]
     const from = BIOME_ID_BY_NAME[rule.from]
     if (into === from) continue
+    const types = rule.type === undefined ? undefined : Array.isArray(rule.type) ? rule.type : [rule.type]
     for (const list of LIST_NAMES) {
       const own = new Set(pools[into][list])
       const sids = basePools[from][list].filter((sid) => !own.has(sid) && matchesDecoration(rule, parseDecorationSid(sid), list))
       if (sids.length === 0) continue
       const key = `${into}:${list}`
       const slot = borrowed.get(key) ?? { biome: into, list, entries: [] }
-      slot.entries.push({ sids, from, chance: rule.chance })
+      slot.entries.push({ sids, from, chance: rule.chance, types, typeKey: types ? [...types].sort().join(',') : '*' })
       borrowed.set(key, slot)
     }
   }
 
   for (const { biome, list, entries } of borrowed.values()) {
-    const ownSids = pools[biome][list]
+    const ownSids = [...pools[biome][list]]
     const ownWeights = weights?.[biome]
     // Own objects with no real weight keep it that way (they are never picked) — unless
     // none of them has one, then the whole list was a uniform pick and stays one.
-    const ownTotal = ownSids.reduce((sum, sid) => sum + (ownWeights?.[sid] ?? 0), 0)
     const target = ensureWeights(biome)
-    let ownWeightTotal = ownTotal
-    if (ownTotal <= 0) {
+    if (ownSids.reduce((sum, sid) => sum + (ownWeights?.[sid] ?? 0), 0) <= 0) {
       for (const sid of ownSids) target[sid] = 1
-      ownWeightTotal = ownSids.length
     }
-    if (ownWeightTotal <= 0) ownWeightTotal = 1 // an empty own list: borrowed objects are all there is
-    const totalChance = Math.min(MAX_BORROWED_SHARE, entries.reduce((sum, entry) => sum + entry.chance, 0))
-    const borrowedWeightTotal = ownWeightTotal * totalChance / (1 - totalChance)
-    const rawTotal = entries.reduce((sum, entry) => sum + entry.chance, 0)
+    const ownWeightOf = (sid: string): number => target[sid] ?? 0
+    const ownParsed = ownSids.map((sid) => ({ weight: ownWeightOf(sid), type: parseDecorationSid(sid).type }))
+    // Rules naming the same types share one group: the group's borrowed objects make up
+    // exactly the summed chance (capped) of the picks of those types in this biome's list.
+    const groups = new Map<string, BorrowEntry[]>()
+    for (const entry of entries) groups.set(entry.typeKey, [...(groups.get(entry.typeKey) ?? []), entry])
+
     // The biome's real weights can already hold entries for other biomes' objects
     // (Dirt's tilesets list grass objects); the rules decide the share, so they replace them.
     const borrowedWeights = new Map<string, number>()
-    for (const { sids, from, chance } of entries) {
-      const portion = borrowedWeightTotal * (chance / rawTotal)
-      const sourceWeights = weights?.[from]
-      const sourceTotal = sids.reduce((sum, sid) => sum + (sourceWeights?.[sid] ?? 0), 0)
-      for (const sid of sids) {
-        const share = sourceTotal > 0 ? (sourceWeights?.[sid] ?? 0) / sourceTotal : 1 / sids.length
-        borrowedWeights.set(sid, (borrowedWeights.get(sid) ?? 0) + portion * share)
-        if (!pools[biome][list].includes(sid)) pools[biome][list].push(sid)
+    for (const group of groups.values()) {
+      const types = group[0].types
+      const typed = ownParsed.filter((own) => !types || types.includes(own.type)).reduce((sum, own) => sum + own.weight, 0)
+      // A biome with none of that type (Sand has no pines) measures against its whole list instead.
+      const base = typed > 0 ? typed : ownParsed.reduce((sum, own) => sum + own.weight, 0) || 1
+      const groupChance = Math.min(MAX_BORROWED_SHARE, group.reduce((sum, entry) => sum + entry.chance, 0))
+      const rawChance = group.reduce((sum, entry) => sum + entry.chance, 0)
+      for (const { sids, from, chance } of group) {
+        const portion = base * groupChance / (1 - groupChance) * (chance / rawChance)
+        const sourceWeights = weights?.[from]
+        const sourceTotal = sids.reduce((sum, sid) => sum + (sourceWeights?.[sid] ?? 0), 0)
+        for (const sid of sids) {
+          const share = sourceTotal > 0 ? (sourceWeights?.[sid] ?? 0) / sourceTotal : 1 / sids.length
+          borrowedWeights.set(sid, (borrowedWeights.get(sid) ?? 0) + portion * share)
+          if (!pools[biome][list].includes(sid)) pools[biome][list].push(sid)
+        }
       }
     }
     for (const [sid, weight] of borrowedWeights) target[sid] = weight
@@ -157,4 +178,24 @@ export function applyBiomeDecorationMix(
     treePools[Number(id) as BiomeId] = { obstacles: pool.obstacles.filter(isTreeDecoration), clutter: [], mountains: [], pools: [] }
   }
   return { pools, treePools, weights }
+}
+
+/** `list` in random order, an object with a higher weight tending to come earlier. With no
+ *  weight for any of the objects (a biome the rules never touch) it is the plain shuffle,
+ *  drawing the same random numbers as before the rules existed. */
+export function shuffledByWeight(list: string[], rng: () => number, weights?: Record<string, number>): string[] {
+  const out = [...list]
+  if (!weights || !out.some((sid) => (weights[sid] ?? 0) > 0)) {
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1))
+      ;[out[i], out[j]] = [out[j], out[i]]
+    }
+    return out
+  }
+  // Weighted random order: sort by rng^(1/weight); a zero weight goes last.
+  const key = (sid: string): number => {
+    const weight = weights[sid] ?? 0
+    return weight > 0 ? Math.pow(rng(), 1 / weight) : -rng()
+  }
+  return out.map((sid) => ({ sid, key: key(sid) })).sort((a, b) => b.key - a.key).map((entry) => entry.sid)
 }
