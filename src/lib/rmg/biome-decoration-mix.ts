@@ -39,19 +39,18 @@ export type DecorationRule = BorrowRule | DenyRule
  *  mixing the generator always did between these three. Sand, Snow, Lava and
  *  Deathland use only their own unless a rule below says otherwise. */
 export const BIOME_DECORATION_RULES: DecorationRule[] = [
-  { into: 'Grass', from: 'Autumn', chance: 0.05 },
-  { into: 'Grass', from: 'Dirt', chance: 0.05 },
-  { into: 'Autumn', from: 'Grass', chance: 0.05 },
-  { into: 'Autumn', from: 'Dirt', chance: 0.05 },
-  { into: 'Dirt', from: 'Grass', chance: 0.05 },
-  { into: 'Dirt', from: 'Autumn', chance: 0.05 },
+  { into: 'Grass', from: 'Autumn', chance: 0.1 },
+  { into: 'Grass', from: 'Dirt', chance: 0.2 },
+  { into: 'Autumn', from: 'Grass', chance: 0.2 },
+  { into: 'Autumn', from: 'Dirt', chance: 0.2 },
+  { into: 'Dirt', from: 'Grass', chance: 0.2 },
+  { into: 'Dirt', from: 'Autumn', chance: 0.1 },
   // Lava also gets some Deathland scenery: mountains, mushroom trees and withered pines.
   // (The two tree rules add up: 20 % of Lava's tree picks.)
   { into: 'Lava', from: 'Deathland', type: 'mountain', chance: 0.15 },
   { into: 'Lava', from: 'Deathland', type: 'tree', variant: 'mushroom', chance: 0.1 },
   { into: 'Lava', from: 'Deathland', type: 'tree', variant: 'pine_withered', chance: 0.1 },
-  // More examples:
-  // { into: 'Lava', from: 'Deathland', type: 'tree', variant: 'dead', num: { max: 4 }, chance: 0.06 },
+  { into: 'Lava', from: 'Deathland', type: 'tree', variant: 'dead', num: { max: 4 }, chance: 0.3 },
   // { deny: 'Deathland', type: 'tree', variant: 'dead', num: { min: 7 } },
 ]
 
@@ -66,7 +65,7 @@ export interface MineForestRule extends DecorationMatcher {
 
 export const MINE_FOREST_RULES: MineForestRule[] = [
   // Lava's own trees do not suit a wood mine: Deathland's withered pines, and its dead trees less often.
-  { biome: 'Lava', from: 'Deathland', type: 'tree', variant: 'pine_withered', weight: 2 },
+  { biome: 'Lava', from: 'Deathland', type: 'tree', variant: 'pine_withered', weight: 3 },
   { biome: 'Lava', from: 'Deathland', type: 'tree', variant: 'dead', weight: 1 },
 ]
 
