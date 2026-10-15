@@ -68,6 +68,7 @@ import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
 import { sidBiome, violatesIsolation, violatesIsolationFor } from './biome-isolation'
+import { placeRoadBridges } from './zone-bridges'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, computeZoneBorderDistance, createZoneConfinementCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
 import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
@@ -1325,6 +1326,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       return true
     },
   }
+  // The shape code painted on each river tile (waterfalls left out) — road bridges sit on straight ones.
+  const riverShapeByNode = new Map<number, number>()
   const paintRiver = (route: RiverRoute): void => {
     for (const node of route.path) riverNodes.add(node)
     for (const node of route.widening ?? []) riverNodes.add(node)
@@ -1337,6 +1340,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       return { node, s: deriveRealShapeCode(dirs) }
     })
     for (const { node, upstream } of route.mouthWater ?? []) changes.push({ node, s: waterfallShapeCode(node, upstream, sizeX), isWaterfall: true })
+    for (const change of changes) {
+      if ('isWaterfall' in change) riverShapeByNode.delete(change.node)
+      else riverShapeByNode.set(change.node, change.s)
+    }
     block2 = paintRiverTiles(block2, changes)
   }
   // How many: each land zone adds one river with the tuning's chance.
@@ -1421,6 +1428,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // the road/river computation above (each already ran before this point).
   for (const node of roadNodes) state.blocked.add(node)
   for (const node of riverNodes) state.blocked.add(node)
+  // Bridges where a road crosses a straight river.
+  const bridgePlacements = placeRoadBridges({ sizeX, sizeZ, roadNodes, roadIdByNode, riverShapeByNode, waterNodes: waterNodesAll, catalogById, state })
 
   // Empty land specks cut off inside water (issue #248) — runs after roads/
   // rivers (so a road's own land bridge is never flooded) and before any
@@ -1495,7 +1504,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, mines: placements.filter((p) => MINE_SIDS_LOCAL.has(p.sid)), zoneBiome, zoneIdByNode, catalogById,
     mapObjects: catalog.mapObjects, state, rng,
   })
-  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, mineSurroundPlacements, scatterZoneObstacles({
+  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, bridgePlacements, mineSurroundPlacements, scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity, densityByZone, ambientPickupByZone,

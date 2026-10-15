@@ -16,8 +16,8 @@ export const RESTRICTED_BIOMES: ReadonlySet<number> = new Set([2, 4, 6])
 
 export const isRestrictedBiome = (biome: number | null | undefined): boolean => biome !== null && biome !== undefined && RESTRICTED_BIOMES.has(biome)
 
-/** The Grass pines and fish — allowed on every biome. */
-const UNIVERSAL_SID = /^(pinetree_\d+|fish)$/
+/** The Grass pines, fish and the road bridges (zone-bridges.ts) — allowed on every biome. */
+const UNIVERSAL_SID = /^(pinetree_\d+|fish|bridge_(wood|stone))$/
 
 /** Catalog biome string → tile biome id (the catalog says "Desert" for Sand). */
 const CATALOG_BIOME_TO_ID: Record<string, BiomeId> = {

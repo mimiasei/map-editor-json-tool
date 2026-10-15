@@ -38,7 +38,7 @@ const CONFIGS = [
 const BIOME_NAME: Record<number, string> = { 1: 'Grass', 2: 'Desert', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt' }
 const RESTRICTED = new Set(['Desert', 'Snow', 'Lava'])
 /** The grass pines are multi-purpose (user decision) and fish follow water, not biome: allowed anywhere. */
-const UNIVERSAL_SID = /^(pinetree_\d+|fish)$/
+const UNIVERSAL_SID = /^(pinetree_\d+|fish|bridge_(wood|stone))$/
 
 interface Block2 {
   tilesMap: number[]
