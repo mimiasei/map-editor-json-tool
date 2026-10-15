@@ -49,8 +49,8 @@ The BepInEx version is pinned in two places that must match: the
 
 ## After a game update
 
-The game's code is obfuscated, and some names the mod uses (`qp`, `bufc`,
-`bufo`, `byok`, `byom`, `byon`) change with game updates. When they do, the
+The game's code is obfuscated, and some names the mod uses (`qu`, `bvns`,
+`bvod`, `bzyv`, `bzyx`, `bzyy`) change with game updates. When they do, the
 mod disables itself and `BepInEx\LogOutput.log` lists each name it couldn't
 find (`Game API not found: …`). Update the constants at the top of
 `GameApi.cs`; the generated interop assemblies in `<game>\BepInEx\interop`

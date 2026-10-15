@@ -22,12 +22,13 @@ namespace GmeRmgMod
     internal static class GameApi
     {
         // Obfuscated game names — update here after a game update.
-        private const string FileManagerType = "qp";          // FileManager
-        private const string FileManagerInstance = "bufc";    // static FileManager instance
-        private const string FileIndex = "bufo";              // Dictionary<string virtualPath, file handle>
-        private const string NewGenMapSizes = "byok";         // BhNewGenMap: List<MapSize> behind the size dropdown
-        private const string MapSizeX = "byom";
-        private const string MapSizeZ = "byon";
+        private const string FileManagerType = "qu";          // FileManager
+        private const string FileManagerInstance = "bvns";    // static FileManager instance
+        // Dictionaries<string virtualPath, file handle>; which of them holds a given path is found by looking in each.
+        private static readonly string[] FileIndexes = { "bvod", "bvoe" };
+        private const string NewGenMapSizes = "bzyv";         // BhNewGenMap: List<MapSize> behind the size dropdown
+        private const string MapSizeX = "bzyx";
+        private const string MapSizeZ = "bzyy";
 
         public static Type NewGenMap;      // Hex.MapEditor.BhNewGenMap
         public static Type MapEditor;      // Hex.MapEditor.BhMapEditor
@@ -91,7 +92,7 @@ namespace GmeRmgMod
             RequireProperty(MapEditor, "me");
             RequireMethod(MapEditor, "Load");
             RequireProperty(FileManager, FileManagerInstance);
-            RequireProperty(FileManager, FileIndex);
+            foreach (string index in FileIndexes) RequireProperty(FileManager, index);
             RequireMethod(UnityObject, "Instantiate");
 
             foreach (string name in missing) log.LogError($"Game API not found: {name}");
@@ -231,8 +232,7 @@ namespace GmeRmgMod
             try
             {
                 object fileManager = GetStatic(FileManager, FileManagerInstance);
-                dynamic index = FileManager.GetProperty(FileIndex).GetValue(fileManager);
-                return $"{(int)index.Count} file(s) indexed";
+                return string.Join(", ", FileIndexes.Select(name => { dynamic index = FileManager.GetProperty(name).GetValue(fileManager); return $"{name}: {(int)index.Count} file(s)"; }));
             }
             catch (Exception ex) { return "(could not read: " + ex.Message + ")"; }
         }
@@ -246,9 +246,12 @@ namespace GmeRmgMod
                 log.LogError($"FileManager instance ({FileManagerType}.{FileManagerInstance}) is null");
                 return null;
             }
-            dynamic index = FileManager.GetProperty(FileIndex).GetValue(fileManager);
-            if (index == null || !(bool)index.ContainsKey(virtualPath)) return null;
-            return index[virtualPath];
+            foreach (string name in FileIndexes)
+            {
+                dynamic index = FileManager.GetProperty(name).GetValue(fileManager);
+                if (index != null && (bool)index.ContainsKey(virtualPath)) return index[virtualPath];
+            }
+            return null;
         }
     }
 }
