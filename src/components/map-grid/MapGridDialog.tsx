@@ -3779,6 +3779,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <X className="h-3 w-3" />
                 </Button>
               )}
+              {searchQuery.trim() && (
+                <span className="absolute left-1 top-full text-[10px] leading-none text-muted-foreground pointer-events-none">
+                  {searchMatchedNodes.size} found
+                </span>
+              )}
             </div>
             <MapGameSettingsDialog />
             <Button
