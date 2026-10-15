@@ -15,7 +15,8 @@
 
 import type { CatalogEnvironmentBiome, CatalogMapObject } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, buildTreePools, pickWeighted } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, buildFuzzyObstacleWeights, pickWeighted } from '@/lib/map-grid/fuzzy-obstacle'
+import { applyBiomeDecorationMix } from './biome-decoration-mix'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import { tryPlaceAt, isRotationallySymmetricFootprint, type PlacementState, type ZonePlacement } from './zone-population'
@@ -53,9 +54,11 @@ export function scatterEdgeFrame(options: ScatterEdgeFrameOptions): ZonePlacemen
   const placements: ZonePlacement[] = []
   if (strength <= 0 || sizeX < 16 || sizeZ < 16) return placements
 
-  const pools = buildFuzzyObstaclePools(mapObjects)
-  const treePools = buildTreePools(mapObjects)
-  const weights = rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined
+  // The biome decoration mix rules (biome-decoration-mix.ts) apply here as in the main scatter.
+  const { pools, treePools, weights } = applyBiomeDecorationMix(
+    buildFuzzyObstaclePools(mapObjects),
+    rmgEnvironmentAssets ? buildFuzzyObstacleWeights(rmgEnvironmentAssets) : undefined,
+  )
   const isBlocked = (n: number): boolean => waterNodes.has(n) || (state.blocked.has(n) && !walkableNodes.has(n))
   const clumpWeight = new Map<number, number>()
   const affinity = (x: number, z: number): number => {

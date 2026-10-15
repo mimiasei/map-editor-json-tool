@@ -93,6 +93,28 @@ const WALL_COST = 2
  *  it runs on level ground. */
 const HILL_COST = 1.5
 
+const rampGapCache = new WeakMap<number[], Uint8Array>()
+
+/** Tiles on or next to a ramp (8 neighbours): a river keeps a one-tile gap around every ramp. */
+function nearRamp(t: RiverTerrain): Uint8Array {
+  const cached = rampGapCache.get(t.climbs)
+  if (cached) return cached
+  const { sizeX, sizeZ, climbs } = t
+  const near = new Uint8Array(sizeX * sizeZ)
+  for (let n = 0; n < climbs.length; n++) {
+    if (!(climbs[n] > 0)) continue
+    const x = n % sizeX
+    const z = Math.floor(n / sizeX)
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (x + dx >= 0 && x + dx < sizeX && z + dz >= 0 && z + dz < sizeZ) near[(z + dz) * sizeX + x + dx] = 1
+      }
+    }
+  }
+  rampGapCache.set(t.climbs, near)
+  return near
+}
+
 const cliffDistCache = new WeakMap<number[], Map<number, Uint8Array>>()
 
 /** Per-tile 4-neighbour distance to the nearest hill (level ≥ 1) or elevation
@@ -193,7 +215,7 @@ export function routeRiver(
     return false
   }
   const allowed = (from: number, to: number, lowSoFar: number): boolean => {
-    if (t.water.has(to) || t.climbs[to] > 0 || t.usedAnchors.has(to) || (nearRiver(to) && !t.joinTile?.(to))) return false
+    if (t.water.has(to) || nearRamp(t)[to] || t.usedAnchors.has(to) || (nearRiver(to) && !t.joinTile?.(to))) return false
     const level = levels[to]
     if (level < 0 || level > levels[from]) return false
     if (level >= 1 && !sourceHill?.has(to)) return false
@@ -283,7 +305,7 @@ function meanderRoute(t: RiverTerrain, route: RiverRoute, meander: number, rng: 
   const xy = (n: number): [number, number] => [n % sizeX, Math.floor(n / sizeX)]
   const cliffDist = (t.cliffClearance ?? 0) > 0 ? cliffDistances(t, t.cliffClearance as number) : null
   const okTile = (n: number): boolean =>
-    t.levels[n] === 0 && !t.water.has(n) && t.climbs[n] === 0 && !t.blocked.has(n) && !t.usedAnchors.has(n) &&
+    t.levels[n] === 0 && !t.water.has(n) && !nearRamp(t)[n] && !t.blocked.has(n) && !t.usedAnchors.has(n) &&
     (!cliffDist || cliffDist[n] >= (t.cliffClearance as number))
 
   // Waypoints: alternately left/right of the course, the end stays put.
@@ -493,7 +515,7 @@ function widenMouth(t: RiverTerrain, route: RiverRoute, fraction: number, rng: (
       const nz = z + dz
       if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
       const n = nz * sizeX + nx
-      if (occupied(n) || t.levels[n] !== 0 || t.water.has(n) || t.blocked.has(n) || t.climbs[n] > 0 ||
+      if (occupied(n) || t.levels[n] !== 0 || t.water.has(n) || t.blocked.has(n) || nearRamp(t)[n] ||
         t.usedAnchors.has(n) || t.roadNodes.has(n) || isEdge(n, sizeX, sizeZ) || (cliffDist && cliffDist[n] < clearance)) continue
       // Touches the river only through its parent tile.
       const touching = DIRS.filter(([ex, ez]) => {
@@ -552,7 +574,7 @@ function mouthTests(t: RiverTerrain, m: number, onPath: ReadonlySet<number>) {
   const landTile = (x: number, z: number): boolean => {
     if (!inBounds(x, z) || x === 0 || z === 0 || x === sizeX - 1 || z === sizeZ - 1) return false
     const n = at(x, z)
-    if (t.levels[n] !== 0 || t.water.has(n) || t.blocked.has(n) || t.usedAnchors.has(n) || t.climbs[n] > 0 || t.riverNodes.has(n) || t.roadNodes.has(n) || onPath.has(n)) return false
+    if (t.levels[n] !== 0 || t.water.has(n) || t.blocked.has(n) || t.usedAnchors.has(n) || nearRamp(t)[n] || t.riverNodes.has(n) || t.roadNodes.has(n) || onPath.has(n)) return false
     if (cliffDist && cliffDist[n] < clearance) return false
     return DIRS.every(([ex, ez]) => {
       const q = at(x + ex, z + ez)
@@ -727,7 +749,7 @@ function carveRiver(
       const qx = q % sizeX
       const qz = Math.floor(q / sizeX)
       if (qx < 1 || qz < 1 || qx > sizeX - 2 || qz > sizeZ - 2) return false
-      if (t.levels[q] !== 0 || t.water.has(q) || t.blocked.has(q) || t.usedAnchors.has(q) || t.climbs[q] > 0 || t.roadNodes.has(q) || touchesRiver(q)) return false
+      if (t.levels[q] !== 0 || t.water.has(q) || t.blocked.has(q) || t.usedAnchors.has(q) || nearRamp(t)[q] || t.roadNodes.has(q) || touchesRiver(q)) return false
       if (poolCliffDist && poolCliffDist[q] < cliffClearance) return false
     }
     return true
@@ -787,7 +809,7 @@ function carveRiver(
     const hill = new Set(c)
     // A source at least 2 tiles inside the hill, on free ground.
     const interior = c.filter((n) => {
-      if (t.blocked.has(n) || t.usedAnchors.has(n) || t.climbs[n] > 0 || touchesRiver(n) || (t.sourceOk && !t.sourceOk(n))) return false
+      if (t.blocked.has(n) || t.usedAnchors.has(n) || nearRamp(t)[n] || touchesRiver(n) || (t.sourceOk && !t.sourceOk(n))) return false
       const x = n % sizeX
       const z = Math.floor(n / sizeX)
       for (let dz = -2; dz <= 2; dz++) {
@@ -834,7 +856,7 @@ function carveRiver(
       const x = n % sizeX
       const z = Math.floor(n / sizeX)
       if (x < PLAIN_SOURCE_EDGE_MARGIN || z < PLAIN_SOURCE_EDGE_MARGIN || x >= sizeX - PLAIN_SOURCE_EDGE_MARGIN || z >= sizeZ - PLAIN_SOURCE_EDGE_MARGIN) return false
-      return t.levels[n] === 0 && t.climbs[n] === 0 && !touchesRiver(n) && roomAround(n) && (!t.sourceOk || t.sourceOk(n)) && (!cliffDist || cliffDist[n] >= cliffClearance + 2)
+      return t.levels[n] === 0 && !nearRamp(t)[n] && !touchesRiver(n) && roomAround(n) && (!t.sourceOk || t.sourceOk(n)) && (!cliffDist || cliffDist[n] >= cliffClearance + 2)
     }), rng).sort((a, b) => Number(preferNode(b)) - Number(preferNode(a)))
     for (const start of spots.slice(0, MAX_SOURCE_TRIES)) {
       const route = routeRiver(t, start, null, goal, minLength, rng, 0, meander)
@@ -848,7 +870,7 @@ function carveRiver(
 
   // Lowland river: lake shore or map edge → another lake or edge, far away.
   const sources = shuffle(t.levels.map((_, n) => n).filter((n) =>
-    t.levels[n] === 0 && !t.blocked.has(n) && !t.usedAnchors.has(n) && t.climbs[n] === 0 && !touchesRiver(n) &&
+    t.levels[n] === 0 && !t.blocked.has(n) && !t.usedAnchors.has(n) && !nearRamp(t)[n] && !touchesRiver(n) &&
     (touchesWater(n, t) || isEdge(n, sizeX, sizeZ))), rng)
   for (const start of sources.slice(0, MAX_SOURCE_TRIES)) {
     const sx = start % sizeX

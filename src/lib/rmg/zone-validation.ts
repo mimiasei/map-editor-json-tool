@@ -188,6 +188,8 @@ export interface SealedZoneRepairOptions {
    *  with no portals (or one that hasn't been updated) sees no behavior
    *  change. */
   portalAdjacency?: Map<number, number>
+  /** Tiles that never get a ramp (the river tiles: a ramp there would cut the river). */
+  noRampNodes?: ReadonlySet<number>
 }
 
 export interface SealedZoneRepairResult {
@@ -221,7 +223,7 @@ export interface SealedZoneRepairResult {
  * degenerate case this guards without assuming can't happen).
  */
 export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneRepairResult {
-  const { sizeX, sizeZ, zoneIds, zoneIdByNode, objectGroups, decorativePlacements, spawnerSid, catalog, catalogById, levelsMap, climbsMap, waterMap, portalAdjacency } = options
+  const { sizeX, sizeZ, zoneIds, zoneIdByNode, objectGroups, decorativePlacements, spawnerSid, catalog, catalogById, levelsMap, climbsMap, waterMap, portalAdjacency, noRampNodes: noRamp } = options
 
   // Resolves tempId-based portalAdjacency to node-based once up front —
   // portals themselves are never in `decorativePlacements` (so
@@ -302,8 +304,8 @@ export function repairSealedZones(options: SealedZoneRepairOptions): SealedZoneR
         if (!stillSealed.has(zoneIdByNode[node])) continue
         if (!isElevationWallTile(node, sizeX, sizeZ, levelsMap, climbsMap)) continue
         if (levelsMap[node] < 0 && blocked.has(node)) continue // the valley tile itself is occupied — not a usable ramp spot either
-        const rampNode = levelsMap[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMap, blocked)
-        if (rampNode === null || climbsMap[rampNode] === 1) continue
+        const rampNode = levelsMap[node] < 0 ? node : findAdjacentLevelZeroNode(node, sizeX, sizeZ, levelsMap, noRamp ? new Set([...blocked, ...noRamp]) : blocked)
+        if (rampNode === null || climbsMap[rampNode] === 1 || noRamp?.has(rampNode)) continue
         climbsMap[rampNode] = 1
         addedClimbChanges.push({ node: rampNode, climb: 1 })
         addedAny = true
@@ -331,6 +333,8 @@ export interface IsolatedStartRepairOptions {
   climbsMap: number[]
   waterMap: number[]
   portalAdjacency?: Map<number, number>
+  /** Tiles that never get a ramp (the river tiles: a ramp there would cut the river). */
+  noRampNodes?: ReadonlySet<number>
 }
 
 export interface IsolatedStartRepairResult {
@@ -365,7 +369,7 @@ export interface IsolatedStartRepairResult {
  * re-verifies, up to 3 rounds.
  */
 export function repairIsolatedPlayerStarts(options: IsolatedStartRepairOptions): IsolatedStartRepairResult {
-  const { sizeX, sizeZ, players, objectGroups, catalog, catalogById, levelsMap, climbsMap, waterMap, portalAdjacency } = options
+  const { sizeX, sizeZ, players, objectGroups, catalog, catalogById, levelsMap, climbsMap, waterMap, portalAdjacency, noRampNodes: noRamp } = options
   if (players.length < 2) return { isolatedOwners: [], stillIsolatedOwners: [], addedClimbChanges: [] }
 
   const portalNodeAdjacency = resolvePortalNodeAdjacency(portalAdjacency, objectGroups, catalogById, sizeX, sizeZ)
@@ -423,7 +427,7 @@ export function repairIsolatedPlayerStarts(options: IsolatedStartRepairOptions):
           if (pocket.has(n)) continue
           if (!isElevationWallTile(n, sizeX, sizeZ, levelsMap, climbsMap)) continue
           const rampNode = (levelsMap[node] ?? 0) < (levelsMap[n] ?? 0) ? node : n
-          if (blocked.has(rampNode) || climbsMap[rampNode] === 1) continue
+          if (blocked.has(rampNode) || climbsMap[rampNode] === 1 || noRamp?.has(rampNode)) continue
           const rx = rampNode % sizeX
           const rz = Math.floor(rampNode / sizeX)
           const dist = (rx - seedX) ** 2 + (rz - seedZ) ** 2

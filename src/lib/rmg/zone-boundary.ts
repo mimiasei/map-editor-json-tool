@@ -43,7 +43,8 @@
 import { createSeededRng } from './seeded-rng'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import type { BiomeId } from '@/lib/map-grid/terrain-colors'
-import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
+import { buildFuzzyObstaclePools, pickWeighted } from '@/lib/map-grid/fuzzy-obstacle'
+import { applyBiomeDecorationMix } from './biome-decoration-mix'
 import {
   pickSquadRange,
   randomInRange,
@@ -358,7 +359,9 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
   const zoneTileCounts = new Map<number, number>()
   for (const zoneId of zoneIdByNode) zoneTileCounts.set(zoneId, (zoneTileCounts.get(zoneId) ?? 0) + 1)
 
-  const pools = buildFuzzyObstaclePools(mapObjects)
+  // Walls pick uniformly among a biome's objects; the decoration mix rules only add the borrowed
+  // objects with their chance, a biome without a rule keeps its exact uniform pick.
+  const { pools, weights: wallWeights } = applyBiomeDecorationMix(buildFuzzyObstaclePools(mapObjects), undefined)
   const wallPlacements: ZonePlacement[] = []
   for (const node of computeAllBoundaryTiles(zoneIdByNode, sizeX, sizeZ)) {
     if (gateBufferAll.has(node)) continue
@@ -381,7 +384,7 @@ export function fortifyZoneBoundaries(options: FortifyZoneBoundariesOptions): Fo
     const candidates = mountainHeavy ? pool.mountains : pool.obstacles.length > 0 ? pool.obstacles : pool.mountains;
 
     if (candidates.length === 0) continue
-    const sid = candidates[Math.floor(rng() * candidates.length)]
+    const sid = pickWeighted(candidates, rng, wallWeights?.[biome])
     if (tryPlaceAt(sid, node, sizeX, sizeZ, catalogById, state)) {
       wallPlacements.push({ tempId: state.nextTempId++, sid, node })
     }

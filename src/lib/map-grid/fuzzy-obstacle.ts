@@ -108,7 +108,7 @@ function isMountainDecoration(id: string): boolean {
  *  faction-biome finding that Desert is purely decorative, no natural
  *  faction — see CLAUDE.md) — a Trees-tool stroke over Sand tiles is
  *  expected to place nothing, not a bug to work around. */
-function isTreeDecoration(id: string): boolean {
+export function isTreeDecoration(id: string): boolean {
   return id.startsWith('tree_') || id.startsWith('pinetree_')
 }
 

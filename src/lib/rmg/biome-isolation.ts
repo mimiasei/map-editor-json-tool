@@ -16,8 +16,8 @@ export const RESTRICTED_BIOMES: ReadonlySet<number> = new Set([2, 4, 6])
 
 export const isRestrictedBiome = (biome: number | null | undefined): boolean => biome !== null && biome !== undefined && RESTRICTED_BIOMES.has(biome)
 
-/** The Grass pines and fish — allowed on every biome. */
-const UNIVERSAL_SID = /^(pinetree_\d+|fish)$/
+/** The Grass pines, fish and the road bridges (zone-bridges.ts) — allowed on every biome. */
+const UNIVERSAL_SID = /^(pinetree_\d+|fish|bridge_(wood|stone))$/
 
 /** Catalog biome string → tile biome id (the catalog says "Desert" for Sand). */
 const CATALOG_BIOME_TO_ID: Record<string, BiomeId> = {
@@ -29,6 +29,16 @@ export function sidBiome(sid: string, catalogById: Map<string, CatalogMapObject>
   if (UNIVERSAL_SID.test(sid)) return null
   const biome = catalogById.get(sid)?.biome
   return biome ? CATALOG_BIOME_TO_ID[biome] ?? null : null
+}
+
+/** Objects a biome may use although they belong to another one (the decoration mix rules,
+ *  biome-decoration-mix.ts): tile biome id -> sids allowed on it. */
+export type IsolationExceptions = ReadonlyMap<number, ReadonlySet<string>>
+
+/** `violatesIsolation`, except for the sids `exceptions` allow on that tile biome. */
+export function violatesIsolationFor(sid: string, objectBiome: number | null, tileBiome: number | undefined, exceptions?: IsolationExceptions): boolean {
+  if (!violatesIsolation(objectBiome, tileBiome)) return false
+  return !(tileBiome !== undefined && exceptions?.get(tileBiome)?.has(sid))
 }
 
 /** True when an object of `objectBiome` must not stand on `tileBiome`: they

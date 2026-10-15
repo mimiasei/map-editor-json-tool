@@ -67,7 +67,8 @@ import { buildInteractableRarity } from './interactable-rarity'
 import { scatterZoneFauna, WATER_COMPATIBLE_FAUNA_SIDS } from './zone-fauna'
 import { scatterBeaches } from './zone-beaches'
 import { scatterRiverBanks } from './zone-river-banks'
-import { sidBiome, violatesIsolation } from './biome-isolation'
+import { sidBiome, violatesIsolation, violatesIsolationFor } from './biome-isolation'
+import { placeRoadBridges } from './zone-bridges'
 import { computeRoadDistanceField, createRoadAvoidanceCost, createWindingCost, computeZoneBorderDistance, createZoneConfinementCost, nearestNode, shortestPath, smoothPath } from './zone-connections'
 import { choosePassages, orderTreeEdges, selectRoadEdges } from './road-edges'
 import { buildObjectLogicsIndex } from './value-model'
@@ -1325,6 +1326,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       return true
     },
   }
+  // The shape code painted on each river tile (waterfalls left out) — road bridges sit on straight ones.
+  const riverShapeByNode = new Map<number, number>()
   const paintRiver = (route: RiverRoute): void => {
     for (const node of route.path) riverNodes.add(node)
     for (const node of route.widening ?? []) riverNodes.add(node)
@@ -1337,6 +1340,10 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
       return { node, s: deriveRealShapeCode(dirs) }
     })
     for (const { node, upstream } of route.mouthWater ?? []) changes.push({ node, s: waterfallShapeCode(node, upstream, sizeX), isWaterfall: true })
+    for (const change of changes) {
+      if ('isWaterfall' in change) riverShapeByNode.delete(change.node)
+      else riverShapeByNode.set(change.node, change.s)
+    }
     block2 = paintRiverTiles(block2, changes)
   }
   // How many: each land zone adds one river with the tuning's chance.
@@ -1421,6 +1428,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   // the road/river computation above (each already ran before this point).
   for (const node of roadNodes) state.blocked.add(node)
   for (const node of riverNodes) state.blocked.add(node)
+  // Bridges where a road crosses a straight river.
+  const bridgePlacements = placeRoadBridges({ sizeX, sizeZ, roadNodes, roadIdByNode, riverShapeByNode, waterNodes: waterNodesAll, catalogById, state })
 
   // Empty land specks cut off inside water (issue #248) — runs after roads/
   // rivers (so a road's own land bridge is never flooded) and before any
@@ -1495,7 +1504,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     sizeX, sizeZ, mines: placements.filter((p) => MINE_SIDS_LOCAL.has(p.sid)), zoneBiome, zoneIdByNode, catalogById,
     mapObjects: catalog.mapObjects, state, rng,
   })
-  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, mineSurroundPlacements, scatterZoneObstacles({
+  const obstaclePlacements = edgeFramePlacements.concat(riverPoolPlacements, bridgePlacements, mineSurroundPlacements, scatterZoneObstacles({
     sizeX, sizeZ, zones: graph.zones, centers, tilesByZone, zoneBiome, catalogById,
     mapObjects: catalog.mapObjects, excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng,
     density: obstacleDensity, densityByZone, ambientPickupByZone,
@@ -1593,7 +1602,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     let dropped = 0
     for (const list of [obstaclePlacements, faunaPlacements, bankPlacements, beachResult.placements]) {
       for (let i = list.length - 1; i >= 0; i--) {
-        if (violatesIsolation(sidBiome(list[i].sid, catalogById), tileBiomeFinal[list[i].node])) { list.splice(i, 1); dropped++ }
+        if (violatesIsolationFor(list[i].sid, sidBiome(list[i].sid, catalogById), tileBiomeFinal[list[i].node], state.isolationExceptions)) { list.splice(i, 1); dropped++ }
       }
     }
     if (dropped > 0) logWarn(`Random map generation: dropped ${dropped} decoration(s) that broke biome isolation`)
@@ -1677,7 +1686,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     decorativePlacements: [...obstaclePlacements, ...boundaryResult.wallPlacements],
     spawnerSid: playerSpawnerSid,
     catalog, catalogById, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal,
-    portalAdjacency,
+    portalAdjacency, noRampNodes: riverNodes,
   })
   // A zone repairSealedZones opened by adding a ramp (its own second repair
   // tactic, for the case decorative-obstacle removal alone can't fix — a
@@ -1703,7 +1712,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const isolatedStartResult = repairIsolatedPlayerStarts({
     sizeX, sizeZ, players, objectGroups, catalog, catalogById,
     levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal,
-    portalAdjacency,
+    portalAdjacency, noRampNodes: riverNodes,
   })
   if (isolatedStartResult.addedClimbChanges.length > 0) {
     block2 = paintClimbTiles(block2, isolatedStartResult.addedClimbChanges)

@@ -394,6 +394,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // a "look here" pulse, the other can be many nodes and needs to stay
   // legible as a set, not pulse in unison.
   const [searchQuery, setSearchQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const searchMatchedNodes = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     if (!q) return new Set<number>()
@@ -3763,6 +3764,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             <div className="relative w-64 shrink-0" data-nodrag>
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
+                ref={searchInputRef}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search sid / entity SID / name"
@@ -3774,10 +3776,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   size="icon"
                   className="absolute right-0 top-1/2 -translate-y-1/2 h-6 w-6"
                   title="Clear search"
-                  onClick={() => setSearchQuery('')}
+                  type="button"
+                  // Clears on press, not on release: after selecting an object on the grid the release was lost.
+                  onPointerDown={(e) => { e.preventDefault(); setSearchQuery(''); searchInputRef.current?.focus() }}
+                  onClick={() => { setSearchQuery(''); searchInputRef.current?.focus() }}
                 >
                   <X className="h-3 w-3" />
                 </Button>
+              )}
+              {searchQuery.trim() && (
+                <span className="absolute left-1 top-full mt-2 text-[10px] leading-none text-muted-foreground pointer-events-none">
+                  {searchMatchedNodes.size} objects found
+                </span>
               )}
             </div>
             <MapGameSettingsDialog />
@@ -5238,14 +5248,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 />
               ))}
 
-              {/* Search-match highlight (issue #130) — one static (non-pulsing)
-                  outline per matched node, deliberately distinct from the single
-                  pulsing portal-highlight above so a multi-result set stays
-                  legible as a set instead of all pulsing in unison. */}
+              {/* Search-match highlight (issue #130) — one outline per matched node, pulsing
+                  white to cyan so the matches stand out. */}
               {Array.from(searchMatchedNodes).map((node) => (
                 <div
                   key={node}
-                  className="absolute pointer-events-none rounded-sm border-[3px] border-cyan-400"
+                  className="absolute pointer-events-none rounded-sm border-[3px] border-cyan-400 search-match-pulse"
                   style={{
                     left: (node % sizeX) * effectiveCellPx,
                     top: (sizeZ - 1 - Math.floor(node / sizeX)) * effectiveCellPx,

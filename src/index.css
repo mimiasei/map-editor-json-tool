@@ -185,3 +185,12 @@
 .dark .json-num  { color: #67e8f9; }  /* cyan-300   */
 .dark .json-bool { color: #fb923c; }  /* orange-400 */
 .dark .json-null { color: #f87171; }  /* red-400    */
+
+/* Map Grid search matches: the outline pulses between white and cyan. */
+@keyframes search-match-pulse {
+  0%, 100% { border-color: #ffffff; }
+  50% { border-color: #22d3ee; }
+}
+.search-match-pulse {
+  animation: search-match-pulse 1.1s ease-in-out infinite;
+}

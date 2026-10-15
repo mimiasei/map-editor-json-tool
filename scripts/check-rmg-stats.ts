@@ -17,6 +17,8 @@ import { readMapContainer, type MapContainer } from '@/lib/map-write'
 import { generateRandomMap } from '@/lib/rmg/generate-random-map'
 import { buildClassicOptions, DEFAULT_CLASSIC_SETTINGS } from '@/lib/rmg/classic-presets'
 import { createSeededRng } from '@/lib/rmg/seeded-rng'
+import { buildFuzzyObstaclePools } from '@/lib/map-grid/fuzzy-obstacle'
+import { decorationIsolationExceptions } from '@/lib/rmg/biome-decoration-mix'
 import { INTERACTABLE_RARE_SIDS } from '@/lib/rmg/object-variety'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
@@ -36,7 +38,7 @@ const CONFIGS = [
 const BIOME_NAME: Record<number, string> = { 1: 'Grass', 2: 'Desert', 3: 'Deathland', 4: 'Snow', 5: 'Autumn', 6: 'Lava', 7: 'Dirt' }
 const RESTRICTED = new Set(['Desert', 'Snow', 'Lava'])
 /** The grass pines are multi-purpose (user decision) and fish follow water, not biome: allowed anywhere. */
-const UNIVERSAL_SID = /^(pinetree_\d+|fish)$/
+const UNIVERSAL_SID = /^(pinetree_\d+|fish|bridge_(wood|stone))$/
 
 interface Block2 {
   tilesMap: number[]
@@ -60,12 +62,15 @@ async function main() {
   const catalogById = new Map<string, CatalogMapObject>(catalog.mapObjects.map((o) => [o.id, o]))
   const template: MapContainer = readMapContainer(new Uint8Array(gunzipSync(readFileSync(TEMPLATE))))
   const zero = zeroWeightSids(catalog)
+  // Objects the decoration mix rules deliberately allow on another biome (tile biome id -> sids).
+  const exceptions = decorationIsolationExceptions(buildFuzzyObstaclePools(catalog.mapObjects))
   // Faction start dwellings (`barracks_*`) are placed on purpose, never scattered.
   const rare = new Set<string>([...INTERACTABLE_RARE_SIDS, ...zero].filter((s) => !s.startsWith('barracks_')))
 
   const rareCount = new Map<string, number>()
   const interactableCount = new Map<string, number>()
   const violations = new Map<string, number>()
+  const mixed = new Map<string, number>()
   const violationExamples = new Map<string, string>()
   let objects = 0
   let interactables = 0
@@ -107,11 +112,14 @@ async function main() {
           for (const cell of computeFootprintTiles(info, node % cfg.size, Math.floor(node / cfg.size))) {
             if (cell.x < 0 || cell.z < 0 || cell.x >= cfg.size || cell.z >= cfg.size) continue
             const cellBiome = BIOME_NAME[block2.tilesMap[cell.z * cfg.size + cell.x]]
-            if (cellBiome && cellBiome !== sidBiome && (RESTRICTED.has(sidBiome) || RESTRICTED.has(cellBiome))) { cellViolations++; cellExamples.add(`${obj.sid} (${sidBiome} on ${cellBiome})`); break }
+            if (cellBiome && cellBiome !== sidBiome && (RESTRICTED.has(sidBiome) || RESTRICTED.has(cellBiome)) && !exceptions.get(block2.tilesMap[cell.z * cfg.size + cell.x])?.has(obj.sid)) { cellViolations++; cellExamples.add(`${obj.sid} (${sidBiome} on ${cellBiome})`); break }
           }
         }
         const tileBiome = BIOME_NAME[block2.tilesMap[node]]
-        if (sidBiome && tileBiome && sidBiome !== tileBiome && (RESTRICTED.has(sidBiome) || RESTRICTED.has(tileBiome))) {
+        if (sidBiome && tileBiome && sidBiome !== tileBiome && exceptions.get(block2.tilesMap[node])?.has(obj.sid)) {
+          mixed.set(`${sidBiome} object on ${tileBiome}`, (mixed.get(`${sidBiome} object on ${tileBiome}`) ?? 0) + 1)
+        }
+        if (sidBiome && tileBiome && sidBiome !== tileBiome && (RESTRICTED.has(sidBiome) || RESTRICTED.has(tileBiome)) && !exceptions.get(block2.tilesMap[node])?.has(obj.sid)) {
           const kind = `${sidBiome} object on ${tileBiome}`
           violations.set(kind, (violations.get(kind) ?? 0) + 1)
           if (!violationExamples.has(kind)) violationExamples.set(kind, obj.sid)
@@ -137,6 +145,7 @@ async function main() {
   console.log(`maps ${maps}, objects ${objects}, interactables ${interactables} (${interactableCount.size} distinct sids)`)
   console.log(`fairness (mean score): ${fairnessN ? (fairnessSum / fairnessN).toFixed(1) : 'n/a'}, unreachable placements: ${unreachable}`)
   console.log(`rare / zero-weight interactables placed: ${sum(rareCount)}`, Object.fromEntries(rareCount))
+  console.log('objects placed through the decoration mix rules (other biome, on purpose):', Object.fromEntries(mixed))
   console.log(`biome-isolation violations: ${sum(violations)} (objects with any footprint cell off-biome: ${cellViolations}) ${[...cellExamples].slice(0, 6).join(", ")}`)
   console.log('distance of a violating object to its own biome:', distHist)
   console.log('top violating sids:', [...sidHist].sort((a, b) => b[1] - a[1]).slice(0, 15))
