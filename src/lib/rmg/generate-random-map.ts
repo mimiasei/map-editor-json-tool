@@ -730,6 +730,8 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const ROAD_AVOIDANCE_RADIUS = 4
   const ROAD_BORDER_RADIUS = 4
   const ROAD_ISOLATED_PENALTY = 25
+  /** Road cost 1, 2 and 3 tiles from an elevation wall tile (a Fibonacci step down). */
+  const ROAD_WALL_COSTS = [89, 34, 13] as const
   const ROAD_BORDER_PENALTY = 2
   const ROAD_FOREIGN_ZONE_PENALTY = 6
   const ROAD_AVOIDANCE_STRENGTH = 1.5
@@ -961,6 +963,52 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     }
   }
   const isolatedCost = (x: number, z: number): number => (isolatedNodes.has(z * sizeX + x) ? ROAD_ISOLATED_PENALTY : 0)
+  // Roads keep off the tiles beside an elevation wall: the rubble the game puts
+  // there hides the road, and it looks cramped. The cost falls off with the
+  // distance (8-neighbour steps) from the nearest wall tile, 1 to 3 tiles out.
+  // A road straight out of a ramp (the line through it that crosses the level
+  // change) is free of it, so a road still goes straight over a ramp.
+  const wallCostByDistance = [0, ROAD_WALL_COSTS[0], ROAD_WALL_COSTS[1], ROAD_WALL_COSTS[2]]
+  const wallDistance = new Uint8Array(sizeX * sizeZ)
+  if (elevationWallNodesAll.size > 0) {
+    let frontier = [...elevationWallNodesAll]
+    for (let d = 1; d <= 3; d++) {
+      const next: number[] = []
+      for (const n of frontier) {
+        const nx = n % sizeX
+        const nz = Math.floor(n / sizeX)
+        for (let dz = -1; dz <= 1; dz++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const x = nx + dx
+            const z = nz + dz
+            if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ) continue
+            const q = z * sizeX + x
+            if (wallDistance[q] !== 0 || elevationWallNodesAll.has(q)) continue
+            wallDistance[q] = d
+            next.push(q)
+          }
+        }
+      }
+      frontier = next
+    }
+    for (let ramp = 0; ramp < climbsMapFinal.length; ramp++) {
+      if (climbsMapFinal[ramp] !== 1) continue
+      const rx = ramp % sizeX
+      const rz = Math.floor(ramp / sizeX)
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const x = rx + dx
+        const z = rz + dz
+        if (x < 0 || x >= sizeX || z < 0 || z >= sizeZ || levelsMapFinal[z * sizeX + x] === levelsMapFinal[ramp]) continue
+        // This neighbour is across the level change: the lane runs both ways along its axis.
+        for (let k = -3; k <= 3; k++) {
+          const lx = rx + dx * k
+          const lz = rz + dz * k
+          if (lx >= 0 && lx < sizeX && lz >= 0 && lz < sizeZ) wallDistance[lz * sizeX + lx] = 0
+        }
+      }
+    }
+  }
+  const wallCost = (x: number, z: number): number => wallCostByDistance[wallDistance[z * sizeX + x]]
   // One leg of a road: winding + confinement (+ any extra) cost from `from`
   // to a tile or to the nearest tile of a set.
   const routeLeg = (from: number, goal: number | ReadonlySet<number>, zones: ReadonlySet<number>, extra?: (x: number, z: number) => number): number[] | null => {
@@ -968,7 +1016,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     if (aim === null) return null
     const windingCost = createWindingCost(sizeX, from, aim, rng, roadWindingAmplitude, 0.5, roadWindingWavelength)
     const confined = confinementCost(zones)
-    return routeRoad(from, goal, (x, z) => windingCost(x, z) + confined(x, z) + isolatedCost(x, z) + (extra ? extra(x, z) : 0))
+    return routeRoad(from, goal, (x, z) => windingCost(x, z) + confined(x, z) + isolatedCost(x, z) + wallCost(x, z) + (extra ? extra(x, z) : 0))
   }
   // The road for connection u—v as consecutive legs. The crossing is chosen
   // FIRST (choosePassage): one leg runs inside v from its endpoint to the
