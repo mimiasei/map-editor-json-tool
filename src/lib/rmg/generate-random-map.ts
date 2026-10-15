@@ -1686,7 +1686,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     decorativePlacements: [...obstaclePlacements, ...boundaryResult.wallPlacements],
     spawnerSid: playerSpawnerSid,
     catalog, catalogById, levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal,
-    portalAdjacency,
+    portalAdjacency, noRampNodes: riverNodes,
   })
   // A zone repairSealedZones opened by adding a ramp (its own second repair
   // tactic, for the case decorative-obstacle removal alone can't fix — a
@@ -1712,7 +1712,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const isolatedStartResult = repairIsolatedPlayerStarts({
     sizeX, sizeZ, players, objectGroups, catalog, catalogById,
     levelsMap: levelsMapFinal, climbsMap: climbsMapFinal, waterMap: waterMapFinal,
-    portalAdjacency,
+    portalAdjacency, noRampNodes: riverNodes,
   })
   if (isolatedStartResult.addedClimbChanges.length > 0) {
     block2 = paintClimbTiles(block2, isolatedStartResult.addedClimbChanges)
