@@ -85,7 +85,7 @@ export interface ClassicSettings {
   randomPlayerFaction?: boolean
   /** A left-right mirror image map for an even player count: both halves are identical (zone-mirror.ts). */
   mirrored?: boolean
-  /** Pandora's Box may be rolled into the object pools. Off (unset) by default: its reward is too strong. */
+  /** Pandora's Box may appear: at most one per neutral zone, at a low chance. Off (unset) by default: its reward is too strong. */
   includePandoraBox?: boolean
 }
 

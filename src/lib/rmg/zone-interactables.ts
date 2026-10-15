@@ -66,9 +66,32 @@ export interface ScatterInteractablesOptions {
   rarity?: InteractableRarity
   /** Tiles carrying a river: riverside objects (see RIVERSIDE_SIDS) go next to them. */
   riverNodes?: ReadonlySet<number>
+  /** Chance (0-1) that a neutral zone gets one Pandora's Box (never more than one,
+   *  never in a player zone). Omitted or 0: none. It is kept out of every other
+   *  pool because its reward (15+ spells) is far too strong to be common. */
+  pandoraChancePerNeutralZone?: number
 }
 
 export function scatterZoneInteractables(options: ScatterInteractablesOptions): ZonePlacement[] {
+  const placements = scatterInteractablesPool(options)
+  const chance = options.pandoraChancePerNeutralZone ?? 0
+  if (chance <= 0) return placements
+  const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng } = options
+  for (const zone of zones) {
+    if (zone.kind !== 'neutral' || rng() >= chance) continue
+    const free = (tilesByZone.get(zone.id) ?? []).filter((n) => !excludedNodes.has(n))
+    // A few tries: the spot may collide with an object that is already there.
+    for (let attempt = 0; attempt < 20 && free.length > 0; attempt++) {
+      const node = free[Math.floor(rng() * free.length)]
+      if (!tryPlaceAt('pandora_box', node, sizeX, sizeZ, catalogById, state)) continue
+      placements.push({ tempId: state.nextTempId++, sid: 'pandora_box', node })
+      break
+    }
+  }
+  return placements
+}
+
+function scatterInteractablesPool(options: ScatterInteractablesOptions): ZonePlacement[] {
   const { sizeX, sizeZ, zones, tilesByZone, catalogById, excludedNodes, state, rng, density = 0.25, disabledInteractableSids, symmetricZones = false, rarity, riverNodes } = options
   const placements: ZonePlacement[] = []
   const isDisabled = (candidate: string): boolean => isRmgIneligibleInteractableSid(candidate) || (disabledInteractableSids?.has(candidate) ?? false) || (rarity?.isBlocked(candidate) ?? false)

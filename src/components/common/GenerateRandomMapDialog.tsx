@@ -799,7 +799,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <Label htmlFor="rmg-pandora" className="text-xs">Include Pandora's Box</Label>
-                      <FieldInfo text="Lets Pandora's Box show up among the treasure and interactable objects. Off by default: its reward is very strong." />
+                      <FieldInfo text="Lets a neutral zone hold one Pandora's Box, at a low chance (about 1 zone in 5). Off by default: it grants 15+ spells." />
                     </div>
                     <Switch
                       id="rmg-pandora"

@@ -102,6 +102,9 @@ import { createSeededRng } from './seeded-rng'
  *  balance-analyzer's own test harness) simply omits it. */
 export type RmgProgressCallback = (label: string, pct: number) => void
 
+/** Chance that a neutral zone gets its one Pandora's Box, when the option is on. */
+const PANDORA_CHANCE_PER_NEUTRAL_ZONE = 0.2
+
 export interface GenerateRandomMapOptions {
   sizeX: number
   sizeZ: number
@@ -294,7 +297,7 @@ export interface GenerateRandomMapOptions {
    *  own dedicated scatter pass. Empty/omitted (the default) is today's
    *  exact behavior — every real interactable stays eligible. */
   disabledInteractableSids?: string[]
-  /** Pandora's Box may be rolled into the object pools and scattered as an interactable. Default false: its reward is too strong. */
+  /** One Pandora's Box may stand in a neutral zone, at a low chance (PANDORA_CHANCE_PER_NEUTRAL_ZONE). Default false: its reward (15+ spells) is too strong. */
   includePandoraBox?: boolean
   /** Classic mode's richness selector (issue #250) — see `populateZones`. */
   richness?: RmgRichness
@@ -339,7 +342,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
   const waterContent = mirrored && requestedWater === 'islands' ? 'normal' : requestedWater
   const usePortals = mirrored ? false : requestedPortals
   if (mirrored && (requestedWater === 'islands' || requestedPortals)) logWarn('Random map generation: a mirrored map has no islands or portals — using normal water and no portals')
-  const disabledSids = [...(disabledInteractableSids ?? []), ...(includePandoraBox ? [] : ['pandora_box'])]
+  const disabledSids = [...(disabledInteractableSids ?? []), 'pandora_box']
   const disabledInteractableSidSet = disabledSids.length > 0 ? new Set(disabledSids) : undefined
   // Each report is immediately followed by a `yieldToUI()` — this whole
   // pipeline is one long synchronous call stack per stage, so without an
@@ -1527,6 +1530,7 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     excludedNodes: new Set([...roadNodes, ...riverNodes, ...waterNodesAll]), state, rng, riverNodes,
     density: interactableDensity, disabledInteractableSids: disabledInteractableSidSet, symmetricZones: !gameTemplateJson,
     rarity: buildInteractableRarity(catalog, tuning.interactables?.weightBySid),
+    pandoraChancePerNeutralZone: includePandoraBox ? PANDORA_CHANCE_PER_NEUTRAL_ZONE : 0,
   })
 
   // Ambient animal/fx decoration (issue #210 follow-up) — real-map-
