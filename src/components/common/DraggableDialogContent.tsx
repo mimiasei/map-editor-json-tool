@@ -327,6 +327,12 @@ export const DraggableDialogContent = React.forwardRef<
               className
             )}
             onPointerDownOutside={handlePointerDownOutside}
+            // The close button comes first in the DOM, so Radix would focus it on open. Focus the dialog itself
+            // instead (Esc still closes it); a caller can pass its own onOpenAutoFocus.
+            onOpenAutoFocus={(e) => {
+              e.preventDefault()
+              containerRef.current?.focus()
+            }}
             {...props}
           >
             {/* ---- Resize handles ---- */}
