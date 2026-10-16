@@ -666,7 +666,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         <DialogTitle className="sr-only">Game Database</DialogTitle>
 
         {/* ── Header / drag handle ── */}
-        <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 border-b border-border shrink-0 gap-3">
+        <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0 gap-3">
           <span className="text-sm font-semibold">Game Database</span>
 
           {/* Tab bar */}
