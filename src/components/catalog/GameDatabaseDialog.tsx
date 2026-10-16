@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Copy, Check, Filter } from 'lucide-react'
+import { Copy, Check, Filter, Sparkles } from 'lucide-react'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,
@@ -361,6 +361,7 @@ function DetailPane({
 
 export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }: Props) {
   const rawCatalog = useCatalogStore((s) => s.catalog)
+  const objectChanges = useCatalogStore((s) => s.objectChanges)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
   const heroPlacements = useMapContextStore((s) => s.context?.heroPlacements) ?? []
   const creaturePlacements = useMapContextStore((s) => s.context?.creaturePlacements) ?? []
@@ -434,6 +435,8 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
   const [activeTab, setActiveTab] = useState<TabId>('heroes')
   const [search, setSearch] = useState('')
   const [onlyUsed, setOnlyUsed] = useState(false)
+  const [onlyNew, setOnlyNew] = useState(false)
+  const newObjectIds = useMemo(() => new Set(objectChanges?.added ?? []), [objectChanges])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filterState, setFilterState] = useState<GameDatabaseFilterState>(loadSavedFilter)
 
@@ -554,6 +557,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
 
     return items.filter((item) => {
       if (onlyUsed && totalCount(item.id) === 0) return false
+      if (onlyNew && activeTab === 'mapObjects' && !newObjectIds.has(item.id)) return false
       if (q && !item.name.toLowerCase().includes(q) && !item.id.toLowerCase().includes(q)) return false
 
       // Tab-specific filter logic
@@ -590,7 +594,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       return true
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, onlyUsed, filterState, activeTab, mapCounts, scriptCounts])
+  }, [items, search, onlyUsed, onlyNew, newObjectIds, filterState, activeTab, mapCounts, scriptCounts])
 
   // Heroes are shown grouped by faction, in the game's own faction order. Null for
   // every other tab, which keeps its flat list.
@@ -696,6 +700,17 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
                 >
                   <Filter className="h-3.5 w-3.5" />
                 </Button>
+                {activeTab === 'mapObjects' && newObjectIds.size > 0 && (
+                  <Button
+                    variant={onlyNew ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-7 w-7 shrink-0"
+                    title={`Only show the ${newObjectIds.size} map objects that are new since the previous Core.zip (noticed ${new Date(objectChanges?.detectedAt ?? '').toLocaleDateString()})`}
+                    onClick={() => setOnlyNew((v) => !v)}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </Button>
+                )}
                 {activeTab !== 'skills' && (
                   <GameDatabaseFilter
                     activeTab={activeTab}
