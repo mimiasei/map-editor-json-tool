@@ -217,7 +217,7 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-              <span className="truncate">
+              <span className="min-w-0 truncate" title={progress.current || undefined}>
                 {progress.current ? `Extracting: ${progress.current}` : 'Starting…'}
               </span>
             </div>

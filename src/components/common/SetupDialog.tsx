@@ -335,7 +335,10 @@ export default function SetupDialog({ open, onOpenChange }: Props) {
                 ) : (
                   <div className="h-4 w-4 shrink-0 rounded-full border border-muted-foreground/30" />
                 )}
-                <span className={phase !== 'extracting' ? 'text-muted-foreground' : ''}>
+                <span
+                  className={`min-w-0 truncate ${phase !== 'extracting' ? 'text-muted-foreground' : ''}`}
+                  title={phase === 'extracting' ? progress.current || undefined : undefined}
+                >
                   {phase === 'extracting' && progress.current
                     ? `Extracting: ${progress.current}`
                     : 'Extracting icon thumbnails…'}
