@@ -21,13 +21,16 @@ namespace GmeRmgMod
 {
     internal static class GameApi
     {
-        // Obfuscated game names — update here after a game update.
-        private const string FileManagerType = "qp";          // FileManager
-        private const string FileManagerInstance = "bufc";    // static FileManager instance
-        private const string FileIndex = "bufo";              // Dictionary<string virtualPath, file handle>
-        private const string NewGenMapSizes = "byok";         // BhNewGenMap: List<MapSize> behind the size dropdown
-        private const string MapSizeX = "byom";
-        private const string MapSizeZ = "byon";
+        // Obfuscated game names. These are only hints: when a name has changed, the
+        // member is found by its shape instead (see FindMapSizes and IndexSources), so
+        // a game update normally needs no change here.
+        private const string FileManagerType = "qu";          // FileManager
+        private const string FileManagerInstance = "bvns";    // static FileManager instance
+        // Dictionaries<string virtualPath, file handle>; which of them holds a given path is found by looking in each.
+        private static readonly string[] FileIndexes = { "bvod", "bvoe" };
+        private const string NewGenMapSizes = "bzyv";         // BhNewGenMap: List<MapSize> behind the size dropdown
+        private const string MapSizeX = "bzyx";
+        private const string MapSizeZ = "bzyy";
 
         public static Type NewGenMap;      // Hex.MapEditor.BhNewGenMap
         public static Type MapEditor;      // Hex.MapEditor.BhMapEditor
@@ -41,6 +44,7 @@ namespace GmeRmgMod
         public static Type Dropdown;       // TMPro.TMP_Dropdown
         public static Type OptionData;     // TMPro.TMP_Dropdown+OptionData
         public static Type Il2CppList;     // Il2CppSystem.Collections.Generic.List`1
+        public static Type Il2CppDictionary; // Il2CppSystem.Collections.Generic.Dictionary`2
         // Optional (not needed for the mod to work):
         public static Type TextComponent;  // TMPro.TMP_Text, for the layout description
         public static Type TextAlignment;  // TMPro.TextAlignmentOptions
@@ -63,7 +67,7 @@ namespace GmeRmgMod
 
             NewGenMap = FindType("Hex", "Hex.MapEditor.BhNewGenMap");
             MapEditor = FindType("Hex", "Hex.MapEditor.BhMapEditor");
-            FileManager = FindType("Hex", FileManagerType);
+            FileManager = FindType("Hex", FileManagerType, required: false);
             RectTransform = FindType("UnityEngine.CoreModule", "UnityEngine.RectTransform");
             GameObject = FindType("UnityEngine.CoreModule", "UnityEngine.GameObject");
             UnityObject = FindType("UnityEngine.CoreModule", "UnityEngine.Object");
@@ -73,6 +77,7 @@ namespace GmeRmgMod
             Dropdown = FindType("Unity.TextMeshPro", "TMPro.TMP_Dropdown");
             OptionData = FindType("Unity.TextMeshPro", "TMPro.TMP_Dropdown+OptionData");
             Il2CppList = FindType("Il2Cppmscorlib", "Il2CppSystem.Collections.Generic.List`1");
+            Il2CppDictionary = FindType("Il2Cppmscorlib", "Il2CppSystem.Collections.Generic.Dictionary`2", required: false);
 
             TextComponent = FindType("Unity.TextMeshPro", "TMPro.TMP_Text", required: false);
             TextAlignment = FindType("Unity.TextMeshPro", "TMPro.TextAlignmentOptions", required: false);
@@ -86,12 +91,10 @@ namespace GmeRmgMod
             RequireProperty(NewGenMap, "dropdown");
             RequireProperty(NewGenMap, "template");
             RequireProperty(NewGenMap, "seed");
-            RequireProperty(NewGenMap, NewGenMapSizes);
+            FindMapSizes();
             RequireMethod(NewGenMap, "Hide");
             RequireProperty(MapEditor, "me");
             RequireMethod(MapEditor, "Load");
-            RequireProperty(FileManager, FileManagerInstance);
-            RequireProperty(FileManager, FileIndex);
             RequireMethod(UnityObject, "Instantiate");
 
             foreach (string name in missing) log.LogError($"Game API not found: {name}");
@@ -215,40 +218,139 @@ namespace GmeRmgMod
         public static List<(int x, int z)> MapSizes(object newGenMap)
         {
             var sizes = new List<(int, int)>();
-            dynamic list = NewGenMap.GetProperty(NewGenMapSizes).GetValue(newGenMap);
+            dynamic list = sizesProperty.GetValue(newGenMap);
             if (list == null) return null;
             for (int i = 0; i < (int)list.Count; i++)
             {
                 object entry = list[i];
-                sizes.Add(((int)entry.GetType().GetProperty(MapSizeX).GetValue(entry), (int)entry.GetType().GetProperty(MapSizeZ).GetValue(entry)));
+                sizes.Add(((int)sizeXProperty.GetValue(entry), (int)sizeZProperty.GetValue(entry)));
             }
             return sizes;
         }
 
-        /// <summary>How many files the game's file index holds, for the log when a lookup fails.</summary>
+        // ── Map sizes ───────────────────────────────────────────────────────
+
+        private static PropertyInfo sizesProperty, sizeXProperty, sizeZProperty;
+
+        /// <summary>
+        /// Finds the size list behind the dropdown: a List&lt;T&gt; property of BhNewGenMap whose T
+        /// holds two int properties (width, depth). The remembered names are preferred.
+        /// </summary>
+        private static void FindMapSizes()
+        {
+            if (NewGenMap == null || Il2CppList == null) return;
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
+            var found = new List<(PropertyInfo list, PropertyInfo x, PropertyInfo z)>();
+            foreach (PropertyInfo property in NewGenMap.GetProperties(flags))
+            {
+                Type type = property.PropertyType;
+                if (!type.IsGenericType || type.GetGenericTypeDefinition() != Il2CppList) continue;
+                var ints = type.GetGenericArguments()[0].GetProperties(flags).Where(p => p.PropertyType == typeof(int)).OrderBy(p => p.MetadataToken).ToList();
+                if (ints.Count != 2) continue;
+                PropertyInfo named(string name) => ints.FirstOrDefault(p => p.Name == name);
+                found.Add((property, named(MapSizeX) ?? ints[0], named(MapSizeZ) ?? ints[1]));
+            }
+            if (found.Count == 0) { missing.Add($"a List<T> of width/depth sizes on {NewGenMap.FullName}"); return; }
+            var pick = found.FirstOrDefault(f => f.list.Name == NewGenMapSizes);
+            if (pick.list == null) pick = found[0];
+            if (pick.list.Name != NewGenMapSizes) log.LogWarning($"Map size list found by its shape: {pick.list.Name} ({pick.x.Name}, {pick.z.Name}){(found.Count > 1 ? $", one of {found.Count} candidates" : "")}");
+            (sizesProperty, sizeXProperty, sizeZProperty) = pick;
+        }
+
+        // ── The game's file index ───────────────────────────────────────────
+
+        /// <summary>One dictionary of the file manager: the static property holding the instance, and the property holding the dictionary.</summary>
+        private sealed class IndexSource
+        {
+            public PropertyInfo Instance, Dictionary;
+            public override string ToString() => $"{Instance.DeclaringType.Name}.{Instance.Name} -> {Dictionary.Name}";
+        }
+
+        private static List<IndexSource> indexSources;
+        private static bool scanned;
+
+        private static IEnumerable<IndexSource> NamedIndexSources()
+        {
+            if (FileManager == null) yield break;
+            PropertyInfo instance = FileManager.GetProperty(FileManagerInstance, BindingFlags.Public | BindingFlags.Static);
+            if (instance == null) yield break;
+            foreach (string name in FileIndexes)
+            {
+                PropertyInfo dictionary = FileManager.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+                if (dictionary != null) yield return new IndexSource { Instance = instance, Dictionary = dictionary };
+            }
+        }
+
+        /// <summary>
+        /// Every dictionary that could be the file index, found by its shape: a Dictionary&lt;string, T&gt;
+        /// property on a class with a static property of its own type (the singleton), where T is something
+        /// BhMapEditor.Load accepts. Slow (it walks every game type), so only done when the remembered names fail.
+        /// </summary>
+        private static IEnumerable<IndexSource> ScannedIndexSources()
+        {
+            if (Il2CppDictionary == null || MapEditor == null) yield break;
+            var loadParameters = MapEditor.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => m.Name == "Load" && m.GetParameters().Length == 1)
+                .Select(m => m.GetParameters()[0].ParameterType).ToList();
+            Type[] types;
+            try { types = MapEditor.Assembly.GetTypes(); }
+            catch (ReflectionTypeLoadException ex) { types = ex.Types.Where(t => t != null).ToArray(); }
+            foreach (Type type in types)
+            {
+                PropertyInfo[] properties;
+                try { properties = type.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly); }
+                catch { continue; }
+                PropertyInfo instance = properties.FirstOrDefault(p => p.PropertyType == type && p.GetMethod != null && p.GetMethod.IsStatic);
+                if (instance == null) continue;
+                foreach (PropertyInfo p in properties)
+                {
+                    if (p.GetMethod == null || p.GetMethod.IsStatic || !p.PropertyType.IsGenericType || p.PropertyType.GetGenericTypeDefinition() != Il2CppDictionary) continue;
+                    Type[] args = p.PropertyType.GetGenericArguments();
+                    if (args[0] == typeof(string) && loadParameters.Any(l => l.IsAssignableFrom(args[1]))) yield return new IndexSource { Instance = instance, Dictionary = p };
+                }
+            }
+        }
+
+        /// <summary>How many files the game's file indexes hold, for the log when a lookup fails.</summary>
         public static string DescribeIndex()
         {
             try
             {
-                object fileManager = GetStatic(FileManager, FileManagerInstance);
-                dynamic index = FileManager.GetProperty(FileIndex).GetValue(fileManager);
-                return $"{(int)index.Count} file(s) indexed";
+                var parts = new List<string>();
+                foreach (IndexSource source in indexSources ?? NamedIndexSources().ToList())
+                {
+                    dynamic dictionary = source.Dictionary.GetValue(source.Instance.GetValue(null));
+                    parts.Add(dictionary == null ? $"{source}: null" : $"{source}: {(int)dictionary.Count} file(s)");
+                }
+                return parts.Count > 0 ? string.Join(", ", parts) : "(no file index found)";
             }
             catch (Exception ex) { return "(could not read: " + ex.Message + ")"; }
         }
 
-        /// <summary>The FileManager's file handle for a virtual path (e.g. "maps/user/x.map"), or null.</summary>
+        /// <summary>The file manager's file handle for a virtual path (e.g. "maps/user/x.map"), or null.</summary>
         public static object FindIndexedFile(string virtualPath)
         {
-            object fileManager = GetStatic(FileManager, FileManagerInstance);
-            if (fileManager == null)
+            if (indexSources == null) indexSources = NamedIndexSources().ToList();
+            object handle = Lookup(indexSources, virtualPath);
+            if (handle != null || scanned || indexSources.Count > 0) return handle;
+            // The remembered names are gone: look for the index by its shape, once.
+            scanned = true;
+            var found = ScannedIndexSources().ToList();
+            if (found.Count > 0) log.LogWarning($"File index found by its shape: {string.Join("; ", found)}");
+            else log.LogError("No dictionary shaped like the game's file index was found");
+            indexSources = found;
+            return Lookup(indexSources, virtualPath);
+        }
+
+        private static object Lookup(List<IndexSource> sources, string virtualPath)
+        {
+            foreach (IndexSource source in sources)
             {
-                log.LogError($"FileManager instance ({FileManagerType}.{FileManagerInstance}) is null");
-                return null;
+                dynamic index = null;
+                try { index = source.Dictionary.GetValue(source.Instance.GetValue(null)); } catch { }
+                if (index != null && (bool)index.ContainsKey(virtualPath)) return index[virtualPath];
             }
-            dynamic index = FileManager.GetProperty(FileIndex).GetValue(fileManager);
-            if (index == null || !(bool)index.ContainsKey(virtualPath)) return null;
-            return index[virtualPath];
+            return null;
         }
     }
 }

@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { findCoreZip, loadZipFromFile, loadZipFromPath } from '@/lib/catalog/zip-loader'
 import { buildCatalog } from '@/lib/catalog/builder'
 import type { GameCatalog } from '@/lib/catalog/types'
+import { countAdded, countRemoved, trackCatalogChanges, type CatalogChanges } from '@/lib/catalog/catalog-snapshot'
 import { loadRmgSchema } from '@/lib/rmg/rmg-schema'
 import { getGameDir, streamingAssetsPath } from '@/lib/game-dir'
 import { logInfo, logError } from '@/lib/logger'
@@ -43,10 +44,19 @@ function saveOverridePath(path: string | null): void {
   } catch { /* ignore */ }
 }
 
+/** Tracks the catalog against the last Core.zip seen and logs what is new. */
+function noteCatalogChanges(catalog: GameCatalog): CatalogChanges | null {
+  const changes = trackCatalogChanges(catalog)
+  if (changes) logInfo(`Since the previous Core.zip: ${countAdded(changes)} new, ${countRemoved(changes)} gone`)
+  return changes
+}
+
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 interface CatalogStore {
   catalog: GameCatalog | null
+  /** Heroes, creatures, artifacts, spells, skills and map objects added to / removed from Core.zip since the one loaded before it (null: none, or no earlier one). */
+  catalogChanges: CatalogChanges | null
   loading: boolean
   error: string | null
   /** Path the user manually selected (Tauri only). Persisted to localStorage. */
@@ -70,6 +80,7 @@ interface CatalogStore {
 
 export const useCatalogStore = create<CatalogStore>((set, get) => ({
   catalog: null,
+  catalogChanges: null,
   loading: false,
   error: null,
   overridePath: getSavedOverridePath(),
@@ -86,7 +97,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
           const { zip, sourceHint } = await lp(override)
           const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), override)
           logInfo(`Catalog loaded from override path: ${sourceHint} (${catalog.heroes.length} heroes, ${catalog.creatures.length} creatures)`)
-          set({ catalog, loading: false })
+          set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
           return
         } catch (e) {
           logError(`Failed to load catalog from override path: ${String(e)}`)
@@ -106,7 +117,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
       }
       const catalog = await withRmgSchema(await buildCatalog(result.zip, result.sourceHint), result.path)
       logInfo(`Catalog loaded (${catalog.heroes.length} heroes, ${catalog.spells.length} spells, ${catalog.dialogs.length} dialogs)`)
-      set({ catalog, loading: false })
+      set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       logError(`Catalog build failed: ${msg}`)
@@ -120,7 +131,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
       const { zip, sourceHint } = await loadZipFromFile(file)
       const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), null)
       logInfo(`Catalog loaded from file (${catalog.heroes.length} heroes)`)
-      set({ catalog, loading: false })
+      set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       logError(`Catalog build from file failed: ${msg}`)
@@ -135,7 +146,7 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
       const { zip, sourceHint } = await loadZipFromPath(filePath)
       const catalog = await withRmgSchema(await buildCatalog(zip, sourceHint), filePath)
       logInfo(`Catalog loaded from path: ${sourceHint}`)
-      set({ catalog, loading: false })
+      set({ catalog, catalogChanges: noteCatalogChanges(catalog), loading: false })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       logError(`Catalog build from path failed: ${msg}`)
@@ -146,9 +157,9 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
   clear(clearPath = false) {
     if (clearPath) {
       saveOverridePath(null)
-      set({ catalog: null, error: null, overridePath: null })
+      set({ catalog: null, catalogChanges: null, error: null, overridePath: null })
     } else {
-      set({ catalog: null, error: null })
+      set({ catalog: null, catalogChanges: null, error: null })
     }
   },
 }))

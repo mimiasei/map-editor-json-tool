@@ -21,11 +21,12 @@ import {
   STATIC_SPELLS,
 } from '@/lib/catalog/static-catalog'
 import { DEBUG } from '@/lib/debug'
+import { SNAPSHOT_KINDS, countAdded } from '@/lib/catalog/catalog-snapshot'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Copy, Check, Filter } from 'lucide-react'
+import { Copy, Check, Filter, Sparkles } from 'lucide-react'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,
@@ -361,6 +362,7 @@ function DetailPane({
 
 export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }: Props) {
   const rawCatalog = useCatalogStore((s) => s.catalog)
+  const catalogChanges = useCatalogStore((s) => s.catalogChanges)
   const mapEntities = useMapContextStore((s) => s.context?.entities) ?? []
   const heroPlacements = useMapContextStore((s) => s.context?.heroPlacements) ?? []
   const creaturePlacements = useMapContextStore((s) => s.context?.creaturePlacements) ?? []
@@ -434,6 +436,15 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
   const [activeTab, setActiveTab] = useState<TabId>('heroes')
   const [search, setSearch] = useState('')
   const [onlyUsed, setOnlyUsed] = useState(false)
+  const [onlyNew, setOnlyNew] = useState(false)
+  const newIdsByTab = useMemo(() => {
+    const byTab = new Map<string, Set<string>>()
+    for (const kind of SNAPSHOT_KINDS) byTab.set(kind, new Set(catalogChanges?.added[kind] ?? []))
+    return byTab
+  }, [catalogChanges])
+  const newCount = countAdded(catalogChanges)
+  const newOnly = onlyNew && newCount > 0
+  const newIds = newIdsByTab.get(activeTab)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filterState, setFilterState] = useState<GameDatabaseFilterState>(loadSavedFilter)
 
@@ -554,6 +565,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
 
     return items.filter((item) => {
       if (onlyUsed && totalCount(item.id) === 0) return false
+      if (newOnly && !newIds?.has(item.id)) return false
       if (q && !item.name.toLowerCase().includes(q) && !item.id.toLowerCase().includes(q)) return false
 
       // Tab-specific filter logic
@@ -590,7 +602,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
       return true
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, search, onlyUsed, filterState, activeTab, mapCounts, scriptCounts])
+  }, [items, search, onlyUsed, newOnly, newIds, filterState, activeTab, mapCounts, scriptCounts])
 
   // Heroes are shown grouped by faction, in the game's own faction order. Null for
   // every other tab, which keeps its flat list.
@@ -654,7 +666,7 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
         <DialogTitle className="sr-only">Game Database</DialogTitle>
 
         {/* ── Header / drag handle ── */}
-        <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 border-b border-border shrink-0 gap-3">
+        <DraggableDialogDragHandle className="flex items-center px-4 py-2.5 pr-10 border-b border-border shrink-0 gap-3">
           <span className="text-sm font-semibold">Game Database</span>
 
           {/* Tab bar */}
@@ -673,6 +685,18 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
               </button>
             ))}
           </div>
+
+          {newCount > 0 && (
+            <Button
+              variant={onlyNew ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              title={`Only show what is new since the previous Core.zip: ${newCount} in all (${SNAPSHOT_KINDS.filter((k) => (catalogChanges?.added[k]?.length ?? 0) > 0).map((k) => `${catalogChanges?.added[k]?.length} ${k}`).join(', ')}), noticed ${new Date(catalogChanges?.detectedAt ?? '').toLocaleDateString()}`}
+              onClick={() => setOnlyNew((v) => !v)}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </DraggableDialogDragHandle>
 
         {/* ── Body ── */}
@@ -737,6 +761,9 @@ export default function GameDatabaseDialog({ open, onOpenChange, focusRequest }:
               <div className="px-2.5 py-1.5 border-t border-border text-[10px] text-muted-foreground">
                 {filtered.length} of {items.length} items
                 {onlyUsed && ' (filtered)'}
+                {newOnly && (newIds?.size ?? 0) > filtered.length && activeTab === 'mapObjects' && (
+                  <> — {(newIds?.size ?? 0) - filtered.length} more new map objects are artifact pickups (see Artifacts) or hidden by the category filter</>
+                )}
               </div>
               {!rawCatalog && (
                 <div className="px-2.5 py-1.5 border-t border-border text-[10px] text-muted-foreground italic">

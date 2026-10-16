@@ -327,6 +327,12 @@ export const DraggableDialogContent = React.forwardRef<
               className
             )}
             onPointerDownOutside={handlePointerDownOutside}
+            // The close button comes first in the DOM, so Radix would focus it on open. Focus the dialog itself
+            // instead (Esc still closes it); a caller can pass its own onOpenAutoFocus.
+            onOpenAutoFocus={(e) => {
+              e.preventDefault()
+              containerRef.current?.focus()
+            }}
             {...props}
           >
             {/* ---- Resize handles ---- */}
@@ -384,7 +390,7 @@ export const DraggableDialogContent = React.forwardRef<
             />
 
             {/* ---- Close button (always on top) ---- */}
-            <DialogPrimitive.Close className="absolute right-4 top-3.5 z-40 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <DialogPrimitive.Close className="absolute right-4 top-3.5 z-40 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
