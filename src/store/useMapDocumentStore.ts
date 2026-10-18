@@ -13,6 +13,7 @@ import { create } from 'zustand'
 import { temporal } from 'zundo'
 import { applyMapEdit, writeMapChunks, type MapSaveEdit, type MapSaveResult } from '@/lib/map-save'
 import type { MapContainer } from '@/lib/map-write'
+import type { ScenarioFile } from '@/types/scenario'
 import type { RawMapBlocks } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
@@ -115,7 +116,7 @@ interface MapDocumentStore {
    *  writes and clears mapIsDirty; also sets `mapValidationIssues` (see
    *  CommitResult) when a save-time check finds a problem, purely for the
    *  post-save warning dialog to show. */
-  commitToDisk: (mapFilePath: string) => Promise<CommitResult>
+  commitToDisk: (mapFilePath: string, scenario?: ScenarioFile) => Promise<CommitResult>
   /** Discard the loaded document without writing anything — used on New/
    *  closing a map, mirroring useMapContextStore's own clearContext(). */
   clear: () => void
@@ -217,12 +218,12 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
         return newId
       },
 
-      commitToDisk: async (mapFilePath) => {
+      commitToDisk: async (mapFilePath, scenario) => {
         const current = get().container
         if (!current) throw new Error('No .map document is currently loaded')
         const context = extractMapContext(containerToRawBlocks(current))
         const issues = findMapValidationIssues(context, useCatalogStore.getState().catalog)
-        const result = await writeMapChunks(mapFilePath, current)
+        const result = await writeMapChunks(mapFilePath, current, scenario)
         set({ mapIsDirty: false, mapValidationIssues: issues.length > 0 ? issues : null })
         return { status: 'saved', ...result }
       },

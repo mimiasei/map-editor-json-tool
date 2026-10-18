@@ -8,6 +8,8 @@ order: 2
 
 For **any** scripting logic to work on a map, a quest file `map_name.json` must exist in the same folder as `map_name.map`, and it must contain at least an empty `"quests"` block. Without it, even the simplest interaction triggers attached to objects via the map editor's "Actions Before/After" will break map loading entirely.
 
+**Quests run from the `.map`, not the `.json`.** The game reads quests from Block 4 inside the `.map` (flagged by the header byte after the version string, `0d 00` instead of `05 00`) and ignores the sidecar `.json` while playing. This tool embeds the quests into the `.map` on Save and on Publish; a `.json` edited by hand does nothing until the map is saved again. Two more things that make a map silently skip its quests or hide from the list: two `.map` files with the same header hash (a copied map needs a new hash), and `.zip` files in StreamingAssets whose dialog ids or text tokens repeat ones in Core.zip or another zip (they overwrite each other, so keep them unique per map).
+
 > **Warning:** Always create and export your quest file before testing scripting in-game, even if it only contains an empty quests array.
 
 ## One bad action breaks the entire trigger

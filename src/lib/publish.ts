@@ -1,8 +1,8 @@
 // ─── One-step publish ─────────────────────────────────────────────────────────
 // Shipping a map means putting two files in two different places:
 //
-//   1. the scenario JSON next to the binary .map file  (the game reads whichever
-//      .json shares a folder with the map)
+//   1. the scenario JSON next to the binary .map file (the editor's own copy; the game runs the
+//      quests embedded in the .map, which this step also rewrites)
 //   2. the map ZIP next to Core.zip in StreamingAssets (dialogs + localization)
 //
 // Both destinations are already known once a .map has been opened and Core.zip

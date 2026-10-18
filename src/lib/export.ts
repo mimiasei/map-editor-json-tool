@@ -1,4 +1,5 @@
 import type { ScenarioFile } from '@/types/scenario'
+import { cleanScenarioForGame } from '@/lib/scenario-clean'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
@@ -13,7 +14,7 @@ import type { TranslationMap } from '@/lib/languages'
 export function exportScenario(scenario: ScenarioFile): string {
   // Strip any _* keys that may have leaked into the scenario object
   const clean: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(scenario)) {
+  for (const [k, v] of Object.entries(cleanScenarioForGame(scenario))) {
     if (!k.startsWith('_')) clean[k] = v
   }
   return JSON.stringify(clean, null, '\t')
@@ -35,7 +36,7 @@ export function exportProjectJson(
   customBuffs: Record<string, CustomBuffDefinition> = {},
 ): string {
   const project: Record<string, unknown> = {
-    ...scenario,
+    ...cleanScenarioForGame(scenario),
     ...(mapName ? { _mapName: mapName } : {}),
     ...(Object.keys(dialogs).length > 0 ? { _dialogs: dialogs } : {}),
     ...(Object.keys(localization).length > 0 ? { _localization: localization } : {}),

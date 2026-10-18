@@ -4,6 +4,8 @@ import { useCatalogStore } from '@/store/useCatalogStore'
 import { exportProjectJson } from '@/lib/export'
 import { buildMapZipBlob, mapZipFileName } from '@/lib/zip-export'
 import { resolvePublishTargets, targetsReady } from '@/lib/publish'
+import { useMapDocumentStore } from '@/store/useMapDocumentStore'
+import { writeMapChunks } from '@/lib/map-save'
 import type { PublishTargets } from '@/lib/publish'
 import { pickSavePath, saveToPath, writeBinaryFile } from '@/lib/native-fs'
 import { validateScenario } from '@/lib/validate'
@@ -88,7 +90,7 @@ function TargetRow({
 // ─── Dialog ───────────────────────────────────────────────────────────────────
 
 export default function PublishDialog({ open, onOpenChange }: Props) {
-  const { scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, sidecarPath, currentFilePath, markClean, markZipPublished } =
+  const { scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, sidecarPath, currentFilePath, mapFilePath, markClean, markZipPublished } =
     useScenarioStore()
 
   const [targets, setTargets] = useState<PublishTargets | null>(null)
@@ -149,6 +151,11 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
       const json = exportProjectJson(scenario, mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)
       await saveToPath(targets.json.path!, json)
 
+      // The game runs a map's quests from Block 4 of the .map and ignores this JSON, so the quests
+      // have to be embedded in the .map itself or published quests never trigger.
+      const mapContainer = useMapDocumentStore.getState().container
+      if (mapFilePath && mapContainer) await writeMapChunks(mapFilePath, mapContainer, scenario)
+
       const blob = await buildMapZipBlob(mapName, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs)
       await writeBinaryFile(targets.zip.path!, new Uint8Array(await blob.arrayBuffer()))
 
@@ -181,7 +188,7 @@ export default function PublishDialog({ open, onOpenChange }: Props) {
         <DraggableDialogDragHandle className="px-6 pt-6 pb-3 pr-10 border-b border-border shrink-0">
           <DialogTitle>Publish map</DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Writes the scenario JSON next to your .map file and the ZIP into StreamingAssets.
+            Embeds the quests in your .map file, writes the scenario JSON next to it and the ZIP into StreamingAssets.
           </p>
         </DraggableDialogDragHandle>
 

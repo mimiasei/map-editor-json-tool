@@ -263,7 +263,7 @@ export async function commitMapWithPathPrompt(options?: { forceNewPath?: boolean
     mapPath = await pickSavePath(fileName, { name: 'Map file', extensions: ['map'] }, 'Save map')
     if (!mapPath) return 'cancelled' // user cancelled — leave the in-memory edits dirty
   }
-  await commitToDisk(mapPath)
+  await commitToDisk(mapPath, scenarioState.scenario)
   if (mapPath !== scenarioState.mapFilePath) {
     const name = mapPath.replace(/\\/g, '/').split('/').pop() ?? mapPath
     scenarioState.setMapFile(mapPath, sidecarPathFor(mapPath, name))

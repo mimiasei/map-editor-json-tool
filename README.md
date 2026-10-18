@@ -42,7 +42,7 @@ It is a companion to the map editor, not a replacement for it.
 
 1. **Build your map** in the game's built-in map editor. It saves a binary map file somewhere on disk.
 
-2. **Write the script** in this tool. Use **Save As** to save the `.json` file **in the same folder as the binary map file**. The game loads whichever `.json` shares a folder with the map.
+2. **Write the script** in this tool. Use **Save As** to save the `.json` file **in the same folder as the binary map file**. The game runs the quests embedded in the `.map` (Save and Publish write them there); the `.json` is this tool's own copy.
 
 3. **Author dialogs** — for every `Dialog` action in the script, open the Dialog Editor and build the slides. Fill in English text via the **Localization** button.
 
