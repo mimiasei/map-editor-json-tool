@@ -22,6 +22,8 @@
 //
 // Block count is NOT always 4 — one sample map ships with 3. Read until EOF.
 
+import type { ScenarioFile } from '@/types/scenario'
+
 export interface MapContainer {
   /** Header hash bytes, without the length-prefix byte. */
   hash: Uint8Array
@@ -121,6 +123,40 @@ export function buildMapContainer(container: MapContainer): Uint8Array {
     parts.push(writeVarint(chunk.length), chunk)
   }
   return concatBytes(parts)
+}
+
+// ─── Scripting (Block 4) ─────────────────────────────────────────────────────
+// The game runs a map's quests from Block 4 inside the .map, not from the
+// sidecar .json (that file is the editor's own copy). Block 4 is only read when
+// bit 0x08 of the first separator byte is set: every shipped map with scripts
+// has 0d 00 there, every 3-block map 05 00.
+
+const SCRIPTS_FLAG = 0x08
+
+/**
+ * Returns a copy of `container` whose Block 4 holds the scenario's counters,
+ * interruptions and quests, with the header flag set so the game reads it.
+ * Block 4's other fields (comment, aiRolesId, …) are kept when it already exists.
+ */
+export function embedScenarioInContainer(container: MapContainer, scenario: ScenarioFile): MapContainer {
+  // Blocks 1–3 always exist in a real map; never pad past a missing one.
+  if (container.chunks.length < 3) return container
+  const chunks = container.chunks.slice()
+  let block4: Record<string, unknown> = { comment: '', aiRolesId: '', counters: [], interruptions: [], quests: [] }
+  if (chunks[3]) {
+    try {
+      block4 = { ...block4, ...(JSON.parse(new TextDecoder().decode(chunks[3])) as Record<string, unknown>) }
+    } catch {
+      // unreadable Block 4: start over from the default shell
+    }
+  }
+  block4.counters = scenario.counters
+  block4.interruptions = scenario.interruptions
+  block4.quests = scenario.quests
+  chunks[3] = new TextEncoder().encode(JSON.stringify(block4))
+  const separator = container.separator.slice()
+  separator[0] |= SCRIPTS_FLAG
+  return { ...container, chunks, separator }
 }
 
 // ─── gzip ────────────────────────────────────────────────────────────────────

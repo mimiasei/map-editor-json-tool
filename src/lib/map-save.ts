@@ -13,9 +13,11 @@
 // that one-shot shape and has nothing to do with this feature.
 
 import { readBinaryFile, writeBinaryFile, checkFileExists } from '@/lib/native-fs'
+import type { ScenarioFile } from '@/types/scenario'
 import {
   readMapContainer,
   buildMapContainer,
+  embedScenarioInContainer,
   gzipBytes,
   gunzipBytes,
   renameEntitySid,
@@ -749,8 +751,10 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
  * in-memory snapshot), write the result, then re-parse what actually landed
  * on disk back into the map-context store.
  */
-export async function writeMapChunks(mapFilePath: string, container: MapContainer): Promise<MapSaveResult> {
-  const gzipped = await gzipBytes(buildMapContainer(container))
+export async function writeMapChunks(mapFilePath: string, container: MapContainer, scenario?: ScenarioFile): Promise<MapSaveResult> {
+  // With a scenario, its quests go into Block 4: the game ignores the sidecar .json when it runs a map.
+  const toWrite = scenario ? embedScenarioInContainer(container, scenario) : container
+  const gzipped = await gzipBytes(buildMapContainer(toWrite))
 
   const backupPath = `${mapFilePath}.bak`
   const backupCreated = !(await checkFileExists(backupPath))
