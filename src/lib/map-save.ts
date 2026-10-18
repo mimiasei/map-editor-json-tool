@@ -14,6 +14,7 @@
 
 import { readBinaryFile, writeBinaryFile, checkFileExists } from '@/lib/native-fs'
 import type { ScenarioFile } from '@/types/scenario'
+import { cleanScenarioForGame } from '@/lib/scenario-clean'
 import {
   readMapContainer,
   buildMapContainer,
@@ -753,7 +754,7 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
  */
 export async function writeMapChunks(mapFilePath: string, container: MapContainer, scenario?: ScenarioFile): Promise<MapSaveResult> {
   // With a scenario, its quests go into Block 4: the game ignores the sidecar .json when it runs a map.
-  const toWrite = scenario ? embedScenarioInContainer(container, scenario) : container
+  const toWrite = scenario ? embedScenarioInContainer(container, cleanScenarioForGame(scenario)) : container
   const gzipped = await gzipBytes(buildMapContainer(toWrite))
 
   const backupPath = `${mapFilePath}.bak`
