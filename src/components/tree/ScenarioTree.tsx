@@ -444,6 +444,21 @@ export default function ScenarioTree() {
   const toggleSubQuest = (qi: number, sqi: number) =>
     setOpenSubQuests((s) => ({ ...s, [`${qi}-${sqi}`]: !s[`${qi}-${sqi}`] }))
 
+  // Double-click on a quest row: expand the quest and all its subquests, then
+  // select the first trigger found (stays on the quest if it has none).
+  const expandQuestAndSelectFirstTrigger = (qi: number) => {
+    const quest = scenario.quests[qi]
+    if (!quest) return
+    setOpenQuests(s => ({ ...s, [qi]: true }))
+    setOpenSubQuests(s => {
+      const next = { ...s }
+      quest.subQuests.forEach((_, sqi) => { next[`${qi}-${sqi}`] = true })
+      return next
+    })
+    const sqi = quest.subQuests.findIndex(sq => sq.triggers.length > 0)
+    if (sqi >= 0) setSelection('trigger', [qi, sqi, 0])
+  }
+
   const isSelected = (type: string, ...path: number[]) =>
     selectedType === type && path.every((v, i) => selectedPath[i] === v)
 
@@ -569,6 +584,7 @@ export default function ScenarioTree() {
                     )}
                     style={{ paddingLeft: '22px' }}
                     onClick={() => setSelection('quest', [qi])}
+                    onDoubleClick={() => expandQuestAndSelectFirstTrigger(qi)}
                   >
                     <button
                       className="shrink-0 p-0.5 text-muted-foreground"
