@@ -2646,15 +2646,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    if (paintStaged.size === 0) return
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)'
-    ctx.lineWidth = 2
-    for (const node of paintStaged.keys()) {
-      const x = node % sizeX
-      const z = Math.floor(node / sizeX)
-      const screenRow = sizeZ - 1 - z
-      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
-    }
+    // No outline is drawn: the thick black border read as a distracting
+    // artifact while dragging, and the base canvas already shows the staged
+    // tile in its final colour (same reasoning as road/water below).
   }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
 
   // ── Object-paint "pending" indicator canvas — same outline technique and
@@ -3850,7 +3844,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                alone (mode-switching UX research: minimizes "mode error"
                risk). Behavior is unchanged from before this phase — same
                state, same handlers, same stage-then-Save convention. */
-            <div className="flex items-center gap-2 -mx-4 px-4 py-1 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
+            <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
               <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
               {placingSid ? (
                 <div className="flex items-center gap-1">
