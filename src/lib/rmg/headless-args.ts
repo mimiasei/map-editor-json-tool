@@ -120,6 +120,14 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
     }
   }
 
+  let maxHeroes: number | undefined
+  if (raw['max-heroes'] !== undefined) {
+    maxHeroes = Number(raw['max-heroes'])
+    if (!Number.isInteger(maxHeroes) || maxHeroes < 1 || maxHeroes > 10) {
+      throw new Error(`--max-heroes must be an integer 1-10 (got "${raw['max-heroes']}")`)
+    }
+  }
+
   return {
     output,
     result: raw.result?.trim() || null,
@@ -139,6 +147,7 @@ export function parseHeadlessArgs(raw: Record<string, ArgValue>): HeadlessArgs {
       randomPlayerFaction: parseFaction(raw.faction),
       mirrored,
       includePandoraBox,
+      maxHeroes,
     },
   }
 }
