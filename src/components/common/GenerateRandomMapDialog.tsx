@@ -762,7 +762,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1.5">
                         <Label className="text-xs">Size</Label>
                         <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
@@ -783,6 +783,19 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             {PLAYER_COUNT_OPTIONS.map((n) => (
                               <SelectItem key={n} value={String(n)}>{n}</SelectItem>
                             ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1">
+                          <Label className="text-xs">Max heroes</Label>
+                          <FieldInfo text="How many heroes each player can have at once (the map's heroCountMax). Overrides the value of an imported game template." />
+                        </div>
+                        <Select value={String(maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked}>
+                          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
@@ -823,18 +836,6 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                       <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums"><span>0</span><span>{maxCities}</span></div>
                     </div>
                   )}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1">
-                      <Label className="text-xs">Max heroes per player</Label>
-                      <FieldInfo text="How many heroes each player can have at once (the map's heroCountMax). Overrides the value of an imported game template." />
-                    </div>
-                    <Select value={String(maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked}>
-                      <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     <div className="flex items-center justify-between gap-2">
