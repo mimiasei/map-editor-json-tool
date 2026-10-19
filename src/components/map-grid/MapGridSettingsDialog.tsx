@@ -83,6 +83,9 @@ export interface MapGridSettings {
    *  (e.g. full terrain opacity with a faint reference image, or vice
    *  versa). */
   backgroundImageOpacity: number
+  /** Ask for confirmation before deleting a single placed object. Clear All
+   *  always asks, regardless of this. */
+  confirmBeforeDelete: boolean
 }
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
@@ -102,6 +105,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   bucketFillObjectsAsBoundary: false,
   backgroundImageVisible: true,
   backgroundImageOpacity: 0.5,
+  confirmBeforeDelete: true,
 }
 
 const SETTINGS_STORAGE_KEY = 'oe-map-grid-settings'
@@ -256,6 +260,15 @@ export default function MapGridSettingsDialog({
             min={0} max={4} step={1}
             value={[settings.cellBorderThickness]}
             onValueChange={([v]) => update({ cellBorderThickness: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-confirm-delete" className="text-xs cursor-pointer">Confirm before deleting</Label>
+          <Switch
+            id="grid-confirm-delete"
+            checked={settings.confirmBeforeDelete}
+            onCheckedChange={(v) => update({ confirmBeforeDelete: v })}
           />
         </div>
 

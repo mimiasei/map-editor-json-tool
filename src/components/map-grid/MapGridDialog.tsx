@@ -3096,6 +3096,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // keyboard shortcut below target the right item on a multi-item tile.
   const [inspectedItem, setInspectedItem] = useState<PlacedObject | null>(null)
   const startDelete = (item: PlacedObject) => {
+    if (!settings.confirmBeforeDelete) {
+      applyEdit({ kind: 'deleteObject', entityType: item.type, entityId: item.id }, 'delete object')
+      return
+    }
     setDeleteConfirmTarget({ key: item.key, type: item.type, id: item.id })
   }
   const cancelDelete = () => setDeleteConfirmTarget(null)
