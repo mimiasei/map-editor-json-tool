@@ -70,6 +70,7 @@ import type { PlayerBalance } from '@/lib/map-grid/player-balance'
 import {
     COMPLEXITY_LEVELS,
     DEFAULT_CLASSIC_SETTINGS,
+    DEFAULT_MAX_HEROES,
     DIFFICULTY_LEVELS,
     RICHNESS_LEVELS,
     WATER_LEVELS,
@@ -204,6 +205,8 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const [playerCount, setPlayerCount] = useState(2)
   // Total neutral cities: off = the default (tuning file or 1), on = `cityTotal`.
   const [limitCities, setLimitCities] = useState(false)
+  // Max heroes per player (Block 2 settings.heroCountMax), shared by Classic and Advanced.
+  const [maxHeroes, setMaxHeroes] = useState(DEFAULT_MAX_HEROES)
   const [cityTotal, setCityTotal] = useState(1)
   const neutralZones = neutralZoneRange(playerCount)
   const maxCities = MAX_CITIES_PER_ZONE * neutralZones.max
@@ -466,6 +469,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         disabledInteractableSids: opts.disabledInteractableSids,
         includePandoraBox: classic.includePandoraBox,
         randomCityCount: limitCities ? cityTotalShown : opts.randomCityCount,
+        maxHeroes,
         richness: opts.richness,
         difficulty: opts.difficulty,
         gameElevationLayouts: opts.gameElevationLayouts,
@@ -558,6 +562,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
       disabledInteractableSids: [...disabledInteractableSids],
       enabledBiomes: enabledBiomesList,
       randomCityCount: limitCities ? cityTotalShown : DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+      maxHeroes,
       // No dedicated UI control yet for these (Phase 1's own "start small"
       // scope) — saved/loaded at their template defaults.
       contentCountLimits: DEFAULT_TEMPLATE_OVERRIDES.contentCountLimits,
@@ -584,6 +589,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
       setPlayerCount(template.playerCount)
       setLimitCities(template.randomCityCount !== DEFAULT_TEMPLATE_OVERRIDES.randomCityCount)
       setCityTotal(template.randomCityCount)
+      setMaxHeroes(template.maxHeroes ?? DEFAULT_MAX_HEROES)
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
       setIslandLandRatio(template.islandLandRatio)
@@ -626,6 +632,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
   const handleResetAll= () => {
       setLimitCities(false)
       setCityTotal(DEFAULT_TEMPLATE_OVERRIDES.randomCityCount)
+      setMaxHeroes(DEFAULT_MAX_HEROES)
       setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
       setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
       setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
@@ -816,6 +823,18 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                       <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums"><span>0</span><span>{maxCities}</span></div>
                     </div>
                   )}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs">Max heroes per player</Label>
+                      <FieldInfo text="How many heroes each player can have at once (the map's heroCountMax). Overrides the value of an imported game template." />
+                    </div>
+                    <Select value={String(maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked}>
+                      <SelectTrigger className="h-8 w-20 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     <div className="flex items-center justify-between gap-2">

@@ -121,6 +121,8 @@ export interface RandomMapTemplate {
    *  (confirmed: zero references anywhere in src/lib/rmg/ before this).
    *  Defaults to 1. */
   randomCityCount: number
+  /** Max heroes per player (1-10); missing in older templates = 10. */
+  maxHeroes?: number
   /** Map-wide caps on specific object sids, mirroring the real game's own
    *  RMG template format (`maps/templates/*.rmg.json`'s own generic
    *  `contentCountLimits: [{sid, maxCount}]` shape — e.g. `Shamrock.rmg.json`
@@ -276,6 +278,7 @@ export function templateToOptions(template: RandomMapTemplate): GenerateRandomMa
     decorationElevationDecayStrength,
     mineGoldBiomeBiasStrength,
     disabledInteractableSids,
+    maxHeroes: template.maxHeroes,
     rng: seed !== undefined ? createSeededRng(seed) : undefined,
   }
 }
@@ -327,6 +330,7 @@ export function parseRandomMapTemplate(json: string): RandomMapTemplate {
     roadWindingAmplitude: typeof data.roadWindingAmplitude === 'number' ? data.roadWindingAmplitude : DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude,
     roadWindingWavelength: typeof data.roadWindingWavelength === 'number' ? data.roadWindingWavelength : DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength,
     enabledBiomes: Array.isArray(data.enabledBiomes) && data.enabledBiomes.length > 0 ? data.enabledBiomes : DEFAULT_TEMPLATE_OVERRIDES.enabledBiomes,
+    maxHeroes: typeof data.maxHeroes === 'number' ? Math.min(10, Math.max(1, Math.round(data.maxHeroes))) : undefined,
     randomCityCount: typeof data.randomCityCount === 'number' ? data.randomCityCount : DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     contentCountLimits: Array.isArray(data.contentCountLimits) ? data.contentCountLimits : DEFAULT_TEMPLATE_OVERRIDES.contentCountLimits,
     stoneRoadChance: typeof data.stoneRoadChance === 'number' ? data.stoneRoadChance : DEFAULT_TEMPLATE_OVERRIDES.stoneRoadChance,

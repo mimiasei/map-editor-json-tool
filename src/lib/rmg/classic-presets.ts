@@ -87,7 +87,11 @@ export interface ClassicSettings {
   mirrored?: boolean
   /** Pandora's Box may appear: at most one per neutral zone, at a low chance. Off (unset) by default: its reward is too strong. */
   includePandoraBox?: boolean
+  /** Max heroes per player (1-10); unset = 10. */
+  maxHeroes?: number
 }
+
+export const DEFAULT_MAX_HEROES = 10
 
 export const DEFAULT_CLASSIC_SETTINGS: ClassicSettings = { richness: 'medium', complexity: 'medium', difficulty: 'normal', water: 'some' }
 
@@ -225,6 +229,7 @@ export function buildClassicOptions(settings: ClassicSettings, rng: () => number
     randomPlayerFaction: settings.randomPlayerFaction,
     mirrored: settings.mirrored,
     includePandoraBox: settings.includePandoraBox,
+    maxHeroes: settings.maxHeroes ?? DEFAULT_MAX_HEROES,
     randomCityCount: settings.maxRandomCities ?? tuning.cities?.maxRandom ?? DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
     bannedMagics: tuning.spells?.banned ?? [],
     tuning,
