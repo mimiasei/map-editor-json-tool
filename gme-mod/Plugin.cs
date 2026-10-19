@@ -31,7 +31,7 @@ namespace GmeRmgMod
 
         // The added dropdowns (TMP_Dropdown), set by StartPostfix.
         private static object seedDropdown, playersDropdown, richnessDropdown, complexityDropdown, difficultyDropdown, waterDropdown;
-        private static object layoutDropdown, townsDropdown, mirrorDropdown;
+        private static object layoutDropdown, townsDropdown, mirrorDropdown, heroesDropdown;
 
         // Layout names as tse's --layout takes them; index 0 (Random) sends no flag.
         private static readonly string[] LayoutArgs = { "", "ring", "ringCenter", "innerRing", "doubleNeutral", "pockets", "hub" };
@@ -198,6 +198,11 @@ namespace GmeRmgMod
             // Last in the right column: a left-right mirror image map (needs an even player count).
             mirrorDropdown = AddDropdown(sizeDropdown, parent, "Mirror_Dropdown", rightX, baseY - 70f - 35f * WinChoices.Length,
                 new[] { "Mirrored Map: Off", "Mirrored Map: On" }, 0);
+            // Max heroes per player, 1-10 (--max-heroes), default 10 (the last entry).
+            var heroChoices = new string[10];
+            for (int i = 0; i < heroChoices.Length; i++) heroChoices[i] = "Max Heroes: " + (i + 1);
+            heroesDropdown = AddDropdown(sizeDropdown, parent, "Heroes_Dropdown", rightX, baseY - 70f - 35f * (WinChoices.Length + 1),
+                heroChoices, 9);
 
             // Grow the dialog's background frame down by the left column's added rows and right by the second column.
             foreach (object rectObj in GameApi.GetComponentsInChildren(dialog, GameApi.RectTransform, true))
@@ -401,6 +406,7 @@ namespace GmeRmgMod
                     + (wins.Count > 0 ? $" --win classic,{string.Join(",", wins)}" : "")
                     + (Selected(townsDropdown, 0) == 1 ? " --faction random" : "")
                     + (mirror ? " --mirror true" : "")
+                    + $" --max-heroes {Math.Clamp(Selected(heroesDropdown, 9), 0, 9) + 1}"
                     + (progressFile != null ? $" --progress \"{progressFile}\"" : ""),
                 CreateNoWindow = true,
                 UseShellExecute = false,

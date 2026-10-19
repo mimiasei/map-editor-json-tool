@@ -246,6 +246,8 @@ export interface GenerateRandomMapOptions {
   /** Total `random-city` (neutral) placements scattered across neutral
    *  zones. Defaults to 1. */
   randomCityCount?: number
+  /** Max heroes per player (1-10), written to Block 2 `settings.heroCountMax`; unset = the template map's own value. */
+  maxHeroes?: number
   /** Map-wide per-sid placement caps (template.ts's own doc comment).
    *  Defaults to capping `university` at 1. */
   contentCountLimits?: { sid: string; maxCount: number }[]
@@ -2041,6 +2043,14 @@ export async function generateRandomMap(template: MapContainer, catalog: GameCat
     const rawTemplate = parseGameTemplateJson(gameTemplateJson)
     const gameRulesPatch = extractGameRulesPatch(rawTemplate)
     const patched = patchGameRules(finalBlock1, finalBlock2, gameRulesPatch)
+    finalBlock1 = patched.block1Chunk
+    finalBlock2 = patched.block2Chunk
+  }
+
+  // Max heroes per player: wins over an imported game template's heroCountMax.
+  if (options.maxHeroes !== undefined) {
+    const maxHeroes = Math.min(10, Math.max(1, Math.round(options.maxHeroes)))
+    const patched = patchGameRules(finalBlock1, finalBlock2, { heroCountMax: maxHeroes })
     finalBlock1 = patched.block1Chunk
     finalBlock2 = patched.block2Chunk
   }

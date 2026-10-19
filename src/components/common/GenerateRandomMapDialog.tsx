@@ -45,6 +45,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dices, LayoutGrid, X } from 'lucide-react'
 import FieldInfo from '@/components/common/FieldInfo'
+import { loadRmgDialogSettings, saveRmgDialogSettings } from '@/lib/rmg/dialog-persist'
 import { neutralZoneRange, availableArchetypes, LAYOUT_LABELS, type LayoutArchetype } from '@/lib/rmg/zone-archetypes'
 import { MAX_CITIES_PER_ZONE } from '@/lib/rmg/rmg-tuning'
 import { MAP_SIZE_PRESETS, presetKey } from '@/components/common/NewMapDialog'
@@ -70,6 +71,7 @@ import type { PlayerBalance } from '@/lib/map-grid/player-balance'
 import {
     COMPLEXITY_LEVELS,
     DEFAULT_CLASSIC_SETTINGS,
+    DEFAULT_MAX_HEROES,
     DIFFICULTY_LEVELS,
     RICHNESS_LEVELS,
     WATER_LEVELS,
@@ -197,19 +199,23 @@ function RerollButton({ onClick, disabled, title }: { onClick: () => void; disab
 export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerated }: Props) {
   // Classic (3 word selectors) vs Advanced (the category nav + sliders) —
   // either-or, never mixed (issue #250).
-  const [mode, setMode] = useState<'classic' | 'advanced'>('classic')
-  const [classic, setClassic] = useState<ClassicSettings>(DEFAULT_CLASSIC_SETTINGS)
-  const [mapName, setMapName] = useState('Random Map')
-  const [sizeKey, setSizeKey] = useState(DEFAULT_SIZE_KEY)
-  const [playerCount, setPlayerCount] = useState(2)
+  // Last used settings (localStorage), restored on open and saved again below.
+  const [saved] = useState(loadRmgDialogSettings)
+  const [mode, setMode] = useState<'classic' | 'advanced'>(saved.mode ?? 'classic')
+  const [classic, setClassic] = useState<ClassicSettings>(saved.classic ?? DEFAULT_CLASSIC_SETTINGS)
+  const [mapName, setMapName] = useState(saved.mapName ?? 'Random Map')
+  const [sizeKey, setSizeKey] = useState(saved.sizeKey ?? DEFAULT_SIZE_KEY)
+  const [playerCount, setPlayerCount] = useState(saved.playerCount ?? 2)
   // Total neutral cities: off = the default (tuning file or 1), on = `cityTotal`.
-  const [limitCities, setLimitCities] = useState(false)
-  const [cityTotal, setCityTotal] = useState(1)
+  const [limitCities, setLimitCities] = useState(saved.limitCities ?? false)
+  // Max heroes per player (Block 2 settings.heroCountMax), shared by Classic and Advanced.
+  const [maxHeroes, setMaxHeroes] = useState(saved.maxHeroes ?? DEFAULT_MAX_HEROES)
+  const [cityTotal, setCityTotal] = useState(saved.cityTotal ?? 1)
   const neutralZones = neutralZoneRange(playerCount)
   const maxCities = MAX_CITIES_PER_ZONE * neutralZones.max
   const cityTotalShown = Math.min(cityTotal, maxCities)
-  const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
-  const [waterChance, setWaterChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
+  const [waterContent, setWaterContent] = useState<'none' | 'normal' | 'islands'>(saved.waterContent ?? DEFAULT_TEMPLATE_OVERRIDES.waterContent)
+  const [waterChance, setWaterChance] = useState(saved.waterChance ?? DEFAULT_TEMPLATE_OVERRIDES.waterChance)
   // No longer a user-editable toggle (issue #232 — a player's own start
   // being an island is now always on whenever water content is 'islands';
   // previously an off-by-default switch most people never turned on).
@@ -217,44 +223,44 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   // every read below just derives it from waterContent instead of storing
   // separate state that could drift out of sync.
   const islandsIncludePlayerZones = waterContent === 'islands'
-  const [islandLandRatio, setIslandLandRatio] = useState(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
-  const [hillChance, setHillChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.hillChance)
-  const [valleyChance, setValleyChance] = useState(DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
-  const [obstacleDensity, setObstacleDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
-  const [interactableDensity, setInteractableDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
-  const [mountainDensity, setMountainDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
-  const [treasureDensity, setTreasureDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
-  const [objectVariety, setObjectVariety] = useState(DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
-  const [usePortals, setUsePortals] = useState(DEFAULT_TEMPLATE_OVERRIDES.usePortals)
-  const [zoneJaggedness, setZoneJaggedness] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
-  const [zoneSpread, setZoneSpread] = useState(DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
-  const [boundaryGuardStrength, setBoundaryGuardStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength)
-  const [squadDensity, setSquadDensity] = useState(DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
-  const [roadWindingAmplitude, setRoadWindingAmplitude] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
-  const [roadWindingWavelength, setRoadWindingWavelength] = useState(DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
-  const [organicTerrainBlending, setOrganicTerrainBlending] = useState(DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending)
-  const [decorationRoadDecayStrength, setDecorationRoadDecayStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationRoadDecayStrength)
-  const [decorationCoOccurrenceStrength, setDecorationCoOccurrenceStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
-  const [decorationElevationDecayStrength, setDecorationElevationDecayStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength)
-  const [mineGoldBiomeBiasStrength, setMineGoldBiomeBiasStrength] = useState(DEFAULT_TEMPLATE_OVERRIDES.mineGoldBiomeBiasStrength)
+  const [islandLandRatio, setIslandLandRatio] = useState(saved.islandLandRatio ?? DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
+  const [hillChance, setHillChance] = useState(saved.hillChance ?? DEFAULT_TEMPLATE_OVERRIDES.hillChance)
+  const [valleyChance, setValleyChance] = useState(saved.valleyChance ?? DEFAULT_TEMPLATE_OVERRIDES.valleyChance)
+  const [obstacleDensity, setObstacleDensity] = useState(saved.obstacleDensity ?? DEFAULT_TEMPLATE_OVERRIDES.obstacleDensity)
+  const [interactableDensity, setInteractableDensity] = useState(saved.interactableDensity ?? DEFAULT_TEMPLATE_OVERRIDES.interactableDensity)
+  const [mountainDensity, setMountainDensity] = useState(saved.mountainDensity ?? DEFAULT_TEMPLATE_OVERRIDES.mountainDensity)
+  const [treasureDensity, setTreasureDensity] = useState(saved.treasureDensity ?? DEFAULT_TEMPLATE_OVERRIDES.treasureDensity)
+  const [objectVariety, setObjectVariety] = useState(saved.objectVariety ?? DEFAULT_TEMPLATE_OVERRIDES.objectVariety)
+  const [usePortals, setUsePortals] = useState(saved.usePortals ?? DEFAULT_TEMPLATE_OVERRIDES.usePortals)
+  const [zoneJaggedness, setZoneJaggedness] = useState(saved.zoneJaggedness ?? DEFAULT_TEMPLATE_OVERRIDES.zoneJaggedness)
+  const [zoneSpread, setZoneSpread] = useState(saved.zoneSpread ?? DEFAULT_TEMPLATE_OVERRIDES.zoneSpread)
+  const [boundaryGuardStrength, setBoundaryGuardStrength] = useState(saved.boundaryGuardStrength ?? DEFAULT_TEMPLATE_OVERRIDES.boundaryGuardStrength)
+  const [squadDensity, setSquadDensity] = useState(saved.squadDensity ?? DEFAULT_TEMPLATE_OVERRIDES.squadDensity)
+  const [roadWindingAmplitude, setRoadWindingAmplitude] = useState(saved.roadWindingAmplitude ?? DEFAULT_TEMPLATE_OVERRIDES.roadWindingAmplitude)
+  const [roadWindingWavelength, setRoadWindingWavelength] = useState(saved.roadWindingWavelength ?? DEFAULT_TEMPLATE_OVERRIDES.roadWindingWavelength)
+  const [organicTerrainBlending, setOrganicTerrainBlending] = useState(saved.organicTerrainBlending ?? DEFAULT_TEMPLATE_OVERRIDES.organicTerrainBlending)
+  const [decorationRoadDecayStrength, setDecorationRoadDecayStrength] = useState(saved.decorationRoadDecayStrength ?? DEFAULT_TEMPLATE_OVERRIDES.decorationRoadDecayStrength)
+  const [decorationCoOccurrenceStrength, setDecorationCoOccurrenceStrength] = useState(saved.decorationCoOccurrenceStrength ?? DEFAULT_TEMPLATE_OVERRIDES.decorationCoOccurrenceStrength)
+  const [decorationElevationDecayStrength, setDecorationElevationDecayStrength] = useState(saved.decorationElevationDecayStrength ?? DEFAULT_TEMPLATE_OVERRIDES.decorationElevationDecayStrength)
+  const [mineGoldBiomeBiasStrength, setMineGoldBiomeBiasStrength] = useState(saved.mineGoldBiomeBiasStrength ?? DEFAULT_TEMPLATE_OVERRIDES.mineGoldBiomeBiasStrength)
   // Real interactable sids excluded from the RMG's own picks (issue #238) —
   // a Set locally (cheap membership checks for the picker dialog), always
   // converted to/from DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids'
   // own string[] shape at the template/generation boundary.
-  const [disabledInteractableSids, setDisabledInteractableSids] = useState<Set<string>>(() => new Set(DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids))
+  const [disabledInteractableSids, setDisabledInteractableSids] = useState<Set<string>>(() => new Set(saved.disabledInteractableSids ?? DEFAULT_TEMPLATE_OVERRIDES.disabledInteractableSids))
   const [interactablePickerOpen, setInteractablePickerOpen] = useState(false)
   // Spell sids banned on the generated map (added to the tuning file's spells.banned).
-  const [bannedSpellSids, setBannedSpellSids] = useState<Set<string>>(() => new Set())
+  const [bannedSpellSids, setBannedSpellSids] = useState<Set<string>>(() => new Set(saved.bannedSpellSids))
   const [spellPickerOpen, setSpellPickerOpen] = useState(false)
   // Artifact sids banned on the generated map (banInfoData.bannedItems).
-  const [bannedArtifactSids, setBannedArtifactSids] = useState<Set<string>>(() => new Set())
+  const [bannedArtifactSids, setBannedArtifactSids] = useState<Set<string>>(() => new Set(saved.bannedArtifactSids))
   const [artifactPickerOpen, setArtifactPickerOpen] = useState(false)
   // Which of the 7 real biomes generation may use at all — a real user
   // request ("how many terrain types the RMG will use"). All on by
   // default; at least one must always stay checked (see the checkbox's
   // own onCheckedChange below).
   const [enabledBiomes, setEnabledBiomes] = useState<Record<BiomeId, boolean>>(
-    () => Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, true])) as Record<BiomeId, boolean>,
+    () => Object.fromEntries(ALL_TEMPLATE_BIOMES.map((b) => [b, saved.enabledBiomes?.[b] ?? true])) as Record<BiomeId, boolean>,
   )
   // Real game RMG template (issue #210, Stage 1) — when set, its own zone/
   // connection topology (and playerCount, derived from its own Spawn zones)
@@ -287,6 +293,15 @@ export default function GenerateRandomMapDialog({ open, onOpenChange, onGenerate
   const lockedTerrainRef = useRef<TerrainResult | null>(null)
 
   const enabledBiomesList = ALL_TEMPLATE_BIOMES.filter((b) => enabledBiomes[b])
+
+  // Persist the last used settings whenever any of them changes.
+  useEffect(() => {
+    saveRmgDialogSettings({
+      mode, classic, mapName, sizeKey, limitCities, usePortals, waterContent, boundaryGuardStrength, playerCount, cityTotal, maxHeroes, waterChance, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, zoneJaggedness, zoneSpread, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength,
+      enabledBiomes,
+      disabledInteractableSids: [...disabledInteractableSids], bannedSpellSids: [...bannedSpellSids], bannedArtifactSids: [...bannedArtifactSids],
+    })
+  }, [mode, classic, mapName, sizeKey, limitCities, usePortals, waterContent, boundaryGuardStrength, playerCount, cityTotal, maxHeroes, waterChance, islandLandRatio, hillChance, valleyChance, obstacleDensity, interactableDensity, mountainDensity, treasureDensity, objectVariety, zoneJaggedness, zoneSpread, squadDensity, roadWindingAmplitude, roadWindingWavelength, organicTerrainBlending, decorationRoadDecayStrength, decorationCoOccurrenceStrength, decorationElevationDecayStrength, mineGoldBiomeBiasStrength, enabledBiomes, disabledInteractableSids, bannedSpellSids, bannedArtifactSids])
   const selectedSize = MAP_SIZE_PRESETS.find((p) => presetKey(p) === sizeKey) ?? MAP_SIZE_PRESETS[6]
 const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.sizeZ, playerCount)
   const previewActive = previewPhase !== 'off'
@@ -466,6 +481,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
         disabledInteractableSids: opts.disabledInteractableSids,
         includePandoraBox: classic.includePandoraBox,
         randomCityCount: limitCities ? cityTotalShown : opts.randomCityCount,
+        maxHeroes,
         richness: opts.richness,
         difficulty: opts.difficulty,
         gameElevationLayouts: opts.gameElevationLayouts,
@@ -558,6 +574,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
       disabledInteractableSids: [...disabledInteractableSids],
       enabledBiomes: enabledBiomesList,
       randomCityCount: limitCities ? cityTotalShown : DEFAULT_TEMPLATE_OVERRIDES.randomCityCount,
+      maxHeroes,
       // No dedicated UI control yet for these (Phase 1's own "start small"
       // scope) — saved/loaded at their template defaults.
       contentCountLimits: DEFAULT_TEMPLATE_OVERRIDES.contentCountLimits,
@@ -584,6 +601,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
       setPlayerCount(template.playerCount)
       setLimitCities(template.randomCityCount !== DEFAULT_TEMPLATE_OVERRIDES.randomCityCount)
       setCityTotal(template.randomCityCount)
+      setMaxHeroes(template.maxHeroes ?? DEFAULT_MAX_HEROES)
       setWaterContent(template.waterContent)
       setWaterChance(template.waterChance)
       setIslandLandRatio(template.islandLandRatio)
@@ -626,6 +644,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
   const handleResetAll= () => {
       setLimitCities(false)
       setCityTotal(DEFAULT_TEMPLATE_OVERRIDES.randomCityCount)
+      setMaxHeroes(DEFAULT_MAX_HEROES)
       setWaterContent(DEFAULT_TEMPLATE_OVERRIDES.waterContent)
       setWaterChance(DEFAULT_TEMPLATE_OVERRIDES.waterChance)
       setIslandLandRatio(DEFAULT_TEMPLATE_OVERRIDES.islandLandRatio)
@@ -755,7 +774,7 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1.5">
                         <Label className="text-xs">Size</Label>
                         <Select value={sizeKey} onValueChange={setSizeKey} disabled={terrainLocked}>
@@ -776,6 +795,20 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                             {PLAYER_COUNT_OPTIONS.map((n) => (
                               <SelectItem key={n} value={String(n)}>{n}</SelectItem>
                             ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        {/* Same box as the bare Players label: the info icon lives inside the Label and is capped at h-3, so it cannot make this row taller. */}
+                        <Label className="text-xs">
+                          Max heroes
+                          <FieldInfo className="ml-1 h-3 align-middle" text="How many heroes each player can have at once (the map's heroCountMax). Overrides the value of an imported game template." />
+                        </Label>
+                        <Select value={String(maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked}>
+                          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>

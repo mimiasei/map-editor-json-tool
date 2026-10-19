@@ -2143,7 +2143,11 @@ export function patchGameRules(
   const { objOpen, objClose, span } = findJsonObjectSpan(text2, 'settings')
   const settings = JSON.parse(span) as Record<string, unknown>
   if (patch.heroCountMin !== undefined) settings.heroCountMin = patch.heroCountMin
-  if (patch.heroCountMax !== undefined) settings.heroCountMax = patch.heroCountMax
+  if (patch.heroCountMax !== undefined) {
+    settings.heroCountMax = patch.heroCountMax
+    // Keep the minimum from exceeding the new maximum.
+    if (typeof settings.heroCountMin === 'number' && settings.heroCountMin > patch.heroCountMax) settings.heroCountMin = patch.heroCountMax
+  }
   if (patch.heroCountIncrement !== undefined) settings.heroCountIncrement = patch.heroCountIncrement
   if (patch.heroHireBan !== undefined) settings.enableHeroHireBan = patch.heroHireBan
   if (patch.factionLawsExpModifier !== undefined) settings.factionLawsExpModifier = patch.factionLawsExpModifier
