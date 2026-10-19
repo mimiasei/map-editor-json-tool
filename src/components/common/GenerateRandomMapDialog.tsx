@@ -788,10 +788,11 @@ const availableLayouts = availableArchetypes(selectedSize.sizeX, selectedSize.si
                       </div>
 
                       <div className="space-y-1.5">
-                        <div className="flex items-center gap-1">
-                          <Label className="text-xs">Max heroes</Label>
-                          <FieldInfo text="How many heroes each player can have at once (the map's heroCountMax). Overrides the value of an imported game template." />
-                        </div>
+                        {/* Same box as the bare Players label: the info icon lives inside the Label and is capped at h-3, so it cannot make this row taller. */}
+                        <Label className="text-xs">
+                          Max heroes
+                          <FieldInfo className="ml-1 h-3 align-middle" text="How many heroes each player can have at once (the map's heroCountMax). Overrides the value of an imported game template." />
+                        </Label>
                         <Select value={String(maxHeroes)} onValueChange={(v) => setMaxHeroes(Number(v))} disabled={terrainLocked}>
                           <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
