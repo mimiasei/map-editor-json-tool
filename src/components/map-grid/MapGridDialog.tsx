@@ -121,7 +121,9 @@ import {
     Users,
     Gem,
     LandPlot,
-    Box
+    Box,
+  Castle,
+  Crown
 } from 'lucide-react'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
@@ -2646,15 +2648,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    if (paintStaged.size === 0) return
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)'
-    ctx.lineWidth = 2
-    for (const node of paintStaged.keys()) {
-      const x = node % sizeX
-      const z = Math.floor(node / sizeX)
-      const screenRow = sizeZ - 1 - z
-      ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
-    }
+    // No outline is drawn: the thick black border read as a distracting
+    // artifact while dragging, and the base canvas already shows the staged
+    // tile in its final colour (same reasoning as road/water below).
   }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
 
   // ── Object-paint "pending" indicator canvas — same outline technique and
@@ -3102,6 +3098,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // keyboard shortcut below target the right item on a multi-item tile.
   const [inspectedItem, setInspectedItem] = useState<PlacedObject | null>(null)
   const startDelete = (item: PlacedObject) => {
+    if (!settings.confirmBeforeDelete) {
+      applyEdit({ kind: 'deleteObject', entityType: item.type, entityId: item.id }, 'delete object')
+      return
+    }
     setDeleteConfirmTarget({ key: item.key, type: item.type, id: item.id })
   }
   const cancelDelete = () => setDeleteConfirmTarget(null)
@@ -3251,6 +3251,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Escape or right-click ends it. Mutually exclusive with Move (the icon
   // click/pointerup guards below key off whichever of the two is active).
   const [placingSid, setPlacingSid] = useState<string | null>(null)
+  // City/Hero spawner tool (next to Objects): which spawner it places.
+  const [spawnerKind, setSpawnerKind] = useState<'city' | 'hero'>('city')
+  const spawnerPlacing = placingSid === 'city-spawner' || placingSid === 'hero-spawner'
   const stopPlacing = () => {
     setPlacingSid(null)
     setPaintObjectStaged(new Map())
@@ -3850,9 +3853,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                alone (mode-switching UX research: minimizes "mode error"
                risk). Behavior is unchanged from before this phase — same
                state, same handlers, same stage-then-Save convention. */
-            <div className="flex items-center gap-2 -mx-4 px-4 py-1 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
+            <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
               <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
-              {placingSid ? (
+              {placingSid && !spawnerPlacing ? (
                 <div className="flex items-center gap-1">
                   <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
                     <Box className="h-3.5 w-3.5" />
@@ -3899,7 +3902,43 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Box className="h-3.5 w-3.5" />}
                   label="Objects"
                   title="Place a new object"
-                  onClick={() => { stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { if (spawnerPlacing) stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
+                />
+              )}
+              {/* City/Hero spawner tool — own icon next to Objects. Armed, it shows a
+                  City/Hero toggle; placement reuses the placingSid flow (single tile). */}
+              {spawnerPlacing ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click a tile to place a spawner">
+                    {spawnerKind === 'city' ? <Castle className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5" />}
+                    Spawner
+                  </Button>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${spawnerKind === 'city' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="City spawner"
+                      onClick={() => { setSpawnerKind('city'); setPlacingSid('city-spawner') }}
+                    >
+                      City
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${spawnerKind === 'hero' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Hero spawner"
+                      onClick={() => { setSpawnerKind('hero'); setPlacingSid('hero-spawner') }}
+                    >
+                      Hero
+                    </button>
+                  </div>
+                  {paintObjectStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
+                  )}
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Castle className="h-3.5 w-3.5" />}
+                  label="Spawner"
+                  title="Place a city or hero spawner"
+                  onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid(spawnerKind === 'city' ? 'city-spawner' : 'hero-spawner') }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
