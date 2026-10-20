@@ -568,54 +568,6 @@ export default function MapGridCellContent({
             </div>
           )}
 
-          {selected
-            && (selected.type === 0 ? !selected.isCity && !isHeroSpawner : selected.type === 2)
-            && (selected.guardUnitProps !== undefined || onSetGuardSquad) && (() => {
-              const guardRows = selected.guardUnitProps ?? []
-              // A standalone squads[] placement (type 2) isn't "guarding"
-              // anything — it IS the unit — so "Guard" would read oddly;
-              // everything else about this editor (HeroCatalogListEditor,
-              // onSetGuardSquad → upsertPropSquads) is already generic on
-              // entityType and needs no further change.
-              const heading = selected.type === 2 ? 'Composition' : 'Guard'
-              return (
-                <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-                  <p className="text-xs font-semibold text-muted-foreground">{heading}</p>
-                  {onSetGuardSquad ? (
-                    <HeroCatalogListEditor
-                      category="creature"
-                      rows={guardRows}
-                      onChange={(rows) => onSetGuardSquad(selected, rows)}
-                      maxRows={12}
-                      refField="sid"
-                      emptyRow={{ sid: '', count: 1 }}
-                      addLabel="Add unit"
-                      renderExtraFields={(row, _i, update) => (
-                        <Input
-                          type="number"
-                          value={row.count}
-                          onChange={(e) => update({ count: Number(e.target.value) || 1 })}
-                          className="h-8 w-16 text-xs"
-                          title="Count"
-                        />
-                      )}
-                    />
-                  ) : (
-                    <ul className="text-xs list-disc list-inside space-y-0.5">
-                      {guardRows.map((u, i) => (
-                        <li key={i}>{catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid} x{u.count}</li>
-                      ))}
-                    </ul>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {selected.type === 2
-                      ? 'Leave empty for a randomized count/creature, resolved by the game itself — setting an exact unit here overrides that.'
-                      : 'Confirmed on interactable objects in real shipped maps; never observed on a mine specifically, though nothing here prevents setting one.'}
-                  </p>
-                </div>
-              )
-            })()}
-
           {selected.spawnerInfo && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground">Spawner</p>
@@ -833,6 +785,54 @@ export default function MapGridCellContent({
               </div>
             )
           })()}
+
+          {selected
+            && (selected.type === 0 ? !selected.isCity && !isHeroSpawner : selected.type === 2)
+            && (selected.guardUnitProps !== undefined || onSetGuardSquad) && (() => {
+              const guardRows = selected.guardUnitProps ?? []
+              // A standalone squads[] placement (type 2) isn't "guarding"
+              // anything — it IS the unit — so "Guard" would read oddly;
+              // everything else about this editor (HeroCatalogListEditor,
+              // onSetGuardSquad → upsertPropSquads) is already generic on
+              // entityType and needs no further change.
+              const heading = selected.type === 2 ? 'Composition' : 'Guard'
+              return (
+                <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                  <p className="text-xs font-semibold text-muted-foreground">{heading}</p>
+                  {onSetGuardSquad ? (
+                    <HeroCatalogListEditor
+                      category="creature"
+                      rows={guardRows}
+                      onChange={(rows) => onSetGuardSquad(selected, rows)}
+                      maxRows={12}
+                      refField="sid"
+                      emptyRow={{ sid: '', count: 1 }}
+                      addLabel="Add unit"
+                      renderExtraFields={(row, _i, update) => (
+                        <Input
+                          type="number"
+                          value={row.count}
+                          onChange={(e) => update({ count: Number(e.target.value) || 1 })}
+                          className="h-8 w-16 text-xs"
+                          title="Count"
+                        />
+                      )}
+                    />
+                  ) : (
+                    <ul className="text-xs list-disc list-inside space-y-0.5">
+                      {guardRows.map((u, i) => (
+                        <li key={i}>{catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid} x{u.count}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {selected.type === 2
+                      ? 'Leave empty for a randomized count/creature, resolved by the game itself — setting an exact unit here overrides that.'
+                      : 'Confirmed on interactable objects in real shipped maps; never observed on a mine specifically, though nothing here prevents setting one.'}
+                  </p>
+                </div>
+              )
+            })()}
 
           {selected && selected.isCity && (selected.citySquadSids !== undefined || onSetCityGarrison) && (() => {
             const garrisonSids = selected.citySquadSids ?? []
