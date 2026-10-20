@@ -7,7 +7,7 @@
 // until "Create story". The optional text writer (desktop only) upgrades the
 // built-in text in place; without it everything still works.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, ArrowDown, ArrowUp, Dices, Loader2, Plus, Settings2, Trash2 } from 'lucide-react'
 import {
   Dialog,
@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import type { MapContext } from '@/types/map-context'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { TONES, TONE_LABELS, type Tone } from '@/lib/script-templates/text-gen/phrases'
@@ -61,6 +62,10 @@ import { useStoryTexts } from './useStoryTexts'
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** True while a story is being set up, so the app can offer to resume it after the dialog is closed. */
+  onDraftChange?: (hasDraft: boolean) => void
+  /** Bumped by the app to throw the draft away. */
+  discardToken?: number
 }
 
 type Step = 'pick' | 'import' | 'build' | 'bind' | 'style' | 'preview' | 'done'
@@ -92,7 +97,16 @@ function newSeed(): number {
   return 1 + Math.floor(Math.random() * 999_999)
 }
 
-export default function StoryBuilderDialog({ open, onOpenChange }: Props) {
+/** Every entity sid currently on the map. */
+function mapSids(ctx: MapContext | null): Set<string> {
+  const out = new Set<string>()
+  if (!ctx) return out
+  for (const e of ctx.entities) out.add(e.sid)
+  for (const p of ctx.placedObjects) if (p.entitySid) out.add(p.entitySid)
+  return out
+}
+
+export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, discardToken = 0 }: Props) {
   const saved = useMemo(() => loadStoryBuilderSettings(), [])
 
   const [step, setStep] = useState<Step>('pick')
@@ -197,13 +211,14 @@ export default function StoryBuilderDialog({ open, onOpenChange }: Props) {
     setSlots({})
     setExtraLangs([])
     setDoneNote(null)
+    setRemovedPicks([])
     setSeed(newSeed())
   }
 
-  // Hiding for a map pick calls onOpenChange directly (see requestMapPick) and
-  // keeps state; only a real close through the dialog itself resets it.
+  // Closing (X, Escape, "Hide") keeps the draft so the user can edit the map and
+  // come back; only "Discard", finishing, or the app's banner throws it away.
   const handleOpenChange = (o: boolean) => {
-    if (!o) reset()
+    if (!o && step === 'done') reset()
     onOpenChange(o)
   }
 
@@ -211,6 +226,44 @@ export default function StoryBuilderDialog({ open, onOpenChange }: Props) {
     reset()
     onOpenChange(false)
   }
+
+  const hasDraft = step !== 'pick' && step !== 'done'
+  useEffect(() => {
+    onDraftChange?.(hasDraft)
+  }, [hasDraft, onDraftChange])
+
+  const firstDiscard = useRef(true)
+  useEffect(() => {
+    if (firstDiscard.current) {
+      firstDiscard.current = false
+      return
+    }
+    reset()
+  }, [discardToken])
+
+  // Picks that pointed at something the user has since removed from the map are
+  // cleared, so they pick again instead of getting a story about a missing place.
+  const slotsRef = useRef(slots)
+  slotsRef.current = slots
+  const knownSids = useRef<Set<string>>(new Set())
+  const [removedPicks, setRemovedPicks] = useState<string[]>([])
+  useEffect(() => {
+    if (!open) return
+    const current = mapSids(mapContext)
+    const before = knownSids.current
+    knownSids.current = current
+    if (before.size === 0 || !mapContext) return
+    const gone = new Set<string>()
+    for (const values of Object.values(slotsRef.current)) {
+      for (const v of values) if (v && before.has(v) && !current.has(v)) gone.add(v)
+    }
+    if (gone.size === 0) return
+    setSlots((s) =>
+      Object.fromEntries(Object.entries(s).map(([k, vals]) => [k, vals.map((v) => (gone.has(v) ? '' : v))])),
+    )
+    setRemovedPicks([...gone])
+    setStep((cur) => (cur === 'style' || cur === 'preview' ? 'bind' : cur))
+  }, [open, mapContext])
 
   const pickStory = (story: StoryDef) => {
     setStoryId(story.id)
@@ -612,6 +665,16 @@ export default function StoryBuilderDialog({ open, onOpenChange }: Props) {
                   </AlertDescription>
                 </Alert>
               )}
+              {removedPicks.length > 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="ml-2">
+                    {removedPicks.length === 1 ? 'A pick is' : `${removedPicks.length} picks are`} no longer on the map (
+                    {removedPicks.map((s) => entityNameMap(mapContext)[s] ?? s).join(', ')}). Choose{' '}
+                    {removedPicks.length === 1 ? 'another' : 'new ones'} below.
+                  </AlertDescription>
+                </Alert>
+              )}
               {def.slots.map((slot) => (
                 <SlotPicker
                   key={slot.id}
@@ -745,7 +808,12 @@ export default function StoryBuilderDialog({ open, onOpenChange }: Props) {
             )}
             {step !== 'done' && (
               <Button variant="ghost" onClick={closeAndReset}>
-                Cancel
+                {hasDraft ? 'Discard draft' : 'Cancel'}
+              </Button>
+            )}
+            {hasDraft && !importBusy && (
+              <Button variant="outline" onClick={() => onOpenChange(false)} title="Close this window and keep the draft, so you can edit the map and come back">
+                Hide to edit map
               </Button>
             )}
             {step === 'import' && (

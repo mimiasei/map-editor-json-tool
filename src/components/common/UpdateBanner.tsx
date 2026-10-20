@@ -2,7 +2,34 @@
 // Strips shown under the toolbar for things the user should know but must not be
 // interrupted by. Styling follows AnnotationBanner.
 
-import { Download, ImageIcon, Info, X } from 'lucide-react'
+import { BookOpen, Download, ImageIcon, Info, X } from 'lucide-react'
+
+interface StoryDraftBannerProps {
+  onResume: () => void
+  onDiscard: () => void
+}
+
+/** A Story Builder draft is waiting while the user edits the map. */
+export function StoryDraftBanner({ onResume, onDiscard }: StoryDraftBannerProps) {
+  return (
+    <div className="mx-3 mt-2 flex items-center gap-2 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-700/30 dark:bg-blue-950/40 dark:text-blue-200">
+      <BookOpen className="h-3.5 w-3.5 shrink-0 text-blue-500 dark:text-blue-400" />
+      <span className="flex-1">A story is in progress. Nothing is added to the map until you create it.</span>
+      <button type="button" onClick={onResume} className="shrink-0 font-medium underline underline-offset-2 hover:no-underline">
+        Resume story
+      </button>
+      <button
+        type="button"
+        onClick={onDiscard}
+        className="shrink-0 text-blue-500 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
+        aria-label="Discard story draft"
+        title="Discard the draft"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  )
+}
 
 interface UpdateBannerProps {
   version: string

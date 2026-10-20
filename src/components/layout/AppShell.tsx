@@ -22,7 +22,7 @@ import type { AvailableUpdate } from '@/lib/updater'
 import { checkModelAtStartup } from '@/lib/text-writer'
 import { restoreSessionHandoff } from '@/lib/session-handoff'
 import type { RestoreResult } from '@/lib/session-handoff'
-import { UpdateBanner, RestoreBanner, ThumbnailsBanner } from '@/components/common/UpdateBanner'
+import { UpdateBanner, RestoreBanner, ThumbnailsBanner, StoryDraftBanner } from '@/components/common/UpdateBanner'
 import UpdateDialog from '@/components/common/UpdateDialog'
 import UnsavedChangesDialog from '@/components/common/UnsavedChangesDialog'
 import MapValidationErrorDialog from '@/components/common/MapValidationErrorDialog'
@@ -117,6 +117,10 @@ export default function AppShell() {
   const [templateOpen,  setTemplateOpen]  = useState(false)
   const [scriptTemplatesOpen, setScriptTemplatesOpen] = useState(false)
   const [storyBuilderOpen, setStoryBuilderOpen] = useState(false)
+  // A Story Builder draft survives closing the dialog so the map can be edited meanwhile.
+  const [storyDraft, setStoryDraft] = useState(false)
+  const [storyDiscardToken, setStoryDiscardToken] = useState(0)
+  const pickPending = useViewBridgeStore((s) => s.pendingPick !== null)
   const [guidesOpen,    setGuidesOpen]    = useState(false)
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
@@ -672,6 +676,12 @@ export default function AppShell() {
           onDismiss={() => setRestoreInfo(null)}
         />
       )}
+      {storyDraft && !storyBuilderOpen && !pickPending && (
+        <StoryDraftBanner
+          onResume={() => setStoryBuilderOpen(true)}
+          onDiscard={() => setStoryDiscardToken((n) => n + 1)}
+        />
+      )}
       {pendingIcons > 0 && !iconsDismissed && (
         <ThumbnailsBanner
           count={pendingIcons}
@@ -731,7 +741,12 @@ export default function AppShell() {
       <LocalizationDialog />
       <TemplatePickerDialog open={templateOpen} onOpenChange={setTemplateOpen} />
       <ScriptTemplateDialog open={scriptTemplatesOpen} onOpenChange={setScriptTemplatesOpen} />
-      <StoryBuilderDialog open={storyBuilderOpen} onOpenChange={setStoryBuilderOpen} />
+      <StoryBuilderDialog
+        open={storyBuilderOpen}
+        onOpenChange={setStoryBuilderOpen}
+        onDraftChange={setStoryDraft}
+        discardToken={storyDiscardToken}
+      />
       <GuidesDialog
         open={guidesOpen}
         onOpenChange={setGuidesOpen}
