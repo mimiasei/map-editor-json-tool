@@ -19,6 +19,7 @@ import { loadThumbnailManifest, getThumbnailCount } from '@/hooks/useThumbnailMa
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
 import { checkForUpdate, isUpdaterAvailable } from '@/lib/updater'
 import type { AvailableUpdate } from '@/lib/updater'
+import { checkModelAtStartup } from '@/lib/text-writer'
 import { restoreSessionHandoff } from '@/lib/session-handoff'
 import type { RestoreResult } from '@/lib/session-handoff'
 import { UpdateBanner, RestoreBanner, ThumbnailsBanner } from '@/components/common/UpdateBanner'
@@ -130,6 +131,8 @@ export default function AppShell() {
   useEffect(() => {
     if (pendingDatabaseFocus) setGameDatabaseOpen(true)
   }, [pendingDatabaseFocus])
+  // With a text writer key saved, confirm once at startup that the model still exists.
+  useEffect(() => { void checkModelAtStartup() }, [])
   // Desktop exit-confirmation (issue #195 follow-up) — resolved via
   // askExitChoice below, which the close-request handler awaits.
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false)

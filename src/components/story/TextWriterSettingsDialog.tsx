@@ -18,6 +18,7 @@ import {
   getProvider,
   hasConsent,
   hasKey,
+  onWriterStatus,
   setConsent,
   setKey,
   setProvider,
@@ -41,7 +42,29 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
+  const [status, setStatus] = useState('')
+  const [seconds, setSeconds] = useState(0)
+
   const refresh = useCallback(async (p: Provider) => setStored(await hasKey(p)), [])
+
+  // While a request runs: the step Rust reports and a seconds counter.
+  useEffect(() => {
+    if (!busy) return
+    setStatus('Starting…')
+    setSeconds(0)
+    const timer = setInterval(() => setSeconds((s) => s + 1), 1000)
+    let off: (() => void) | undefined
+    let cancelled = false
+    void onWriterStatus(setStatus).then((fn) => {
+      if (cancelled) fn()
+      else off = fn
+    })
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+      off?.()
+    }
+  }, [busy])
 
   useEffect(() => {
     if (open) {
@@ -81,8 +104,8 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
       await setKey(provider, keyInput.trim())
       setKeyInput('')
       setConsent(true)
-      await testKey(provider)
-      setMessage({ ok: true, text: 'Saved. The text writer is ready.' })
+      const model = await testKey(provider)
+      setMessage({ ok: true, text: `Saved. The text writer is ready${model ? ` (model: ${model})` : ''}.` })
     } catch (e) {
       setMessage({ ok: false, text: failure(e) })
     } finally {
@@ -97,8 +120,8 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
     setBusy(true)
     setMessage(null)
     try {
-      await testKey(provider)
-      setMessage({ ok: true, text: `Connected to ${info.label}. The saved key works.` })
+      const model = await testKey(provider)
+      setMessage({ ok: true, text: `Connected to ${info.label}${model ? ` (model: ${model})` : ''}. The saved key works.` })
     } catch (e) {
       setMessage({ ok: false, text: failure(e) })
     } finally {
@@ -187,7 +210,13 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
             </p>
           )}
 
-          {message && (
+          {busy && (
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              Checking… {status} ({seconds} s)
+            </p>
+          )}
+
+          {message && !busy && (
             <Alert variant={message.ok ? 'default' : 'destructive'}>
               {!message.ok && <AlertTriangle className="h-4 w-4" />}
               <AlertDescription className={message.ok ? '' : 'ml-2'}>{message.text}</AlertDescription>

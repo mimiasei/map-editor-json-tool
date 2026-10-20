@@ -36,8 +36,6 @@ tauri-plugin-clipboard-manager = "2"
 # Text writer (Story Builder): HTTPS calls to the user's chosen text service, and the OS
 # credential store for their key. Same reqwest version tauri already pulls in.
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
-# Pause before retrying when every model is busy; tauri already pulls tokio in.
-tokio = { version = "1", features = ["time"] }
 
 [target.'cfg(windows)'.dependencies.keyring]
 version = "3"

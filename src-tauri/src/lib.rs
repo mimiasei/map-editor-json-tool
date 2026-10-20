@@ -26,22 +26,41 @@ fn text_writer_clear_key(provider: Provider) -> Result<(), WriterError> {
     text_writer::clear_key(provider)
 }
 
+/// Progress lines for the UI while a text request runs.
+fn writer_status(app: &tauri::AppHandle) -> impl Fn(&str) + Sync + '_ {
+    move |s: &str| {
+        let _ = app.emit("text-writer-status", s);
+    }
+}
+
+/// Which model will be used (looked up in the service's model list).
 #[tauri::command]
-async fn text_writer_test(provider: Provider) -> Result<(), WriterError> {
-    text_writer::test(provider).await
+async fn text_writer_check(app: tauri::AppHandle, provider: Provider) -> Result<String, WriterError> {
+    text_writer::check(provider, &writer_status(&app)).await
+}
+
+#[tauri::command]
+async fn text_writer_test(app: tauri::AppHandle, provider: Provider) -> Result<String, WriterError> {
+    text_writer::test(provider, &writer_status(&app)).await
 }
 
 #[tauri::command]
 async fn text_writer_generate(
+    app: tauri::AppHandle,
     provider: Provider,
     requests: Vec<TextRequest>,
 ) -> Result<Vec<GeneratedText>, WriterError> {
-    text_writer::generate(provider, requests).await
+    text_writer::generate(provider, requests, &writer_status(&app)).await
 }
 
 #[tauri::command]
-async fn story_import(provider: Provider, text: String, lang: String) -> Result<StoryDraft, WriterError> {
-    text_writer::import_story(provider, &text, &lang).await
+async fn story_import(
+    app: tauri::AppHandle,
+    provider: Provider,
+    text: String,
+    lang: String,
+) -> Result<StoryDraft, WriterError> {
+    text_writer::import_story(provider, &text, &lang, &writer_status(&app)).await
 }
 
 /// The game's install folder (see game_dir.rs), or None when not found.
@@ -222,6 +241,7 @@ pub fn run() {
             text_writer_set_key,
             text_writer_has_key,
             text_writer_clear_key,
+            text_writer_check,
             text_writer_test,
             text_writer_generate,
             story_import
