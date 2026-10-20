@@ -1,6 +1,7 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import { AVATAR_ANIMATIONS, RESULT_DIALOG_VALUES } from '@/types/dialog'
+import { validateStoryState } from '@/lib/story-validate'
 
 export interface ValidationMessage {
   path: string
@@ -340,6 +341,13 @@ export function validateScenario(
       }
     }
   }
+
+  const storyResult = validateStoryState(scenario, {
+    mapName: extras?.mapName,
+    dialogs: extras?.dialogs,
+  })
+  errors.push(...storyResult.errors)
+  warnings.push(...storyResult.warnings)
 
   return { errors, warnings }
 }

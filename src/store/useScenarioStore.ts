@@ -221,6 +221,14 @@ interface ScenarioStore {
   /** Merges a script-template-generated Quest (and any Counters it needs) into
    *  the current project in one set() call, so undo removes it in one step. */
   appendGeneratedContent: (quest: Quest, counters: Counter[]) => void
+  /** Story Builder: merges several quests, counters and interruptions in one
+   *  set() call, so a single undo removes the whole story. Dialogs and
+   *  localization are committed separately and are not part of undo history. */
+  appendGeneratedStory: (content: {
+    quests: Quest[]
+    counters: Counter[]
+    interruptions: Interruption[]
+  }) => void
 
   // ── SubQuest operations ──────────────────────────────────────────────────
   addSubQuest: (questIndex: number, subQuest?: SubQuest) => void
@@ -699,6 +707,17 @@ export const useScenarioStore = create<ScenarioStore>()(
         ...s.scenario,
         quests: [...s.scenario.quests, quest],
         counters: [...s.scenario.counters, ...counters],
+      },
+      isDirty: true,
+    })),
+
+  appendGeneratedStory: ({ quests, counters, interruptions }) =>
+    set((s) => ({
+      scenario: {
+        ...s.scenario,
+        quests: [...s.scenario.quests, ...quests],
+        counters: [...s.scenario.counters, ...counters],
+        interruptions: [...s.scenario.interruptions, ...interruptions],
       },
       isDirty: true,
     })),
