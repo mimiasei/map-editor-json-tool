@@ -89,7 +89,7 @@ export type MapSaveEdit =
   | { kind: 'paintClimb'; changes: { node: number; climb: 0 | 1 }[] }
   | { kind: 'paintZone'; changes: { node: number; zoneId: number }[] }
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
-  | { kind: 'paintObjects'; additions: { node: number; sid: string; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
+  | { kind: 'paintObjects'; additions: { node: number; sid: string; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string }; spawnerOverrides?: { owner?: number; heroSid?: string } }[]; deletions: number[] }
   | { kind: 'clearAll' }
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
