@@ -38,6 +38,7 @@ import LocalizationDialog from '@/components/dialogs/LocalizationDialog'
 import GuidesDialog from '@/components/guides/GuidesDialog'
 import TemplatePickerDialog from '@/components/guides/TemplatePickerDialog'
 import ScriptTemplateDialog from '@/components/tree/ScriptTemplateDialog'
+import StoryBuilderDialog from '@/components/story/StoryBuilderDialog'
 import DialogBrowser from '@/components/catalog/DialogBrowser'
 import GameDatabaseDialog from '@/components/catalog/GameDatabaseDialog'
 import MapGridDialog from '@/components/map-grid/MapGridDialog'
@@ -114,6 +115,7 @@ export default function AppShell() {
   const [statsOpen,     setStatsOpen]     = useState(false)
   const [templateOpen,  setTemplateOpen]  = useState(false)
   const [scriptTemplatesOpen, setScriptTemplatesOpen] = useState(false)
+  const [storyBuilderOpen, setStoryBuilderOpen] = useState(false)
   const [guidesOpen,    setGuidesOpen]    = useState(false)
   const [dialogBrowserOpen, setDialogBrowserOpen] = useState(false)
   const [gameDatabaseOpen, setGameDatabaseOpen] = useState(false)
@@ -646,6 +648,7 @@ export default function AppShell() {
         onStatsOpen={() => setStatsOpen(true)}
         onTemplateOpen={() => setTemplateOpen(true)}
         onScriptTemplatesOpen={() => setScriptTemplatesOpen(true)}
+        onStoryBuilderOpen={() => setStoryBuilderOpen(true)}
         onGuidesOpen={() => setGuidesOpen(true)}
         onDialogBrowserOpen={() => setDialogBrowserOpen(true)}
         onGameDatabaseOpen={() => setGameDatabaseOpen(true)}
@@ -725,6 +728,7 @@ export default function AppShell() {
       <LocalizationDialog />
       <TemplatePickerDialog open={templateOpen} onOpenChange={setTemplateOpen} />
       <ScriptTemplateDialog open={scriptTemplatesOpen} onOpenChange={setScriptTemplatesOpen} />
+      <StoryBuilderDialog open={storyBuilderOpen} onOpenChange={setStoryBuilderOpen} />
       <GuidesDialog
         open={guidesOpen}
         onOpenChange={setGuidesOpen}

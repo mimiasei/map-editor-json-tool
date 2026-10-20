@@ -97,6 +97,7 @@ interface ToolbarProps {
   onStatsOpen?: () => void
   onTemplateOpen?: () => void
   onScriptTemplatesOpen?: () => void
+  onStoryBuilderOpen?: () => void
   onGuidesOpen?: () => void
   onDialogBrowserOpen?: () => void
   onGameDatabaseOpen?: () => void
@@ -123,6 +124,7 @@ export default function Toolbar({
   onStatsOpen,
   onTemplateOpen,
   onScriptTemplatesOpen,
+  onStoryBuilderOpen,
   onGuidesOpen,
   onDialogBrowserOpen,
   onGameDatabaseOpen,
@@ -657,6 +659,16 @@ export default function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Generate scripting for classic HoMM3 objects Olden Era is missing</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={onStoryBuilderOpen} className="gap-1.5 text-muted-foreground">
+                <BookOpen className="h-4 w-4" />
+                Story
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add a ready-made or custom story with quests, dialogs and player choices</TooltipContent>
           </Tooltip>
 
           {!isTauri() && (
