@@ -215,6 +215,10 @@ export interface PlacedObject {
    *  spawnerInfo?.spawnPointType === 0 alone would miss it). Use this, not
    *  spawnerInfo, to decide whether to show city-only UI. */
   isCity?: boolean
+  /** Enrichment: objectsProperties.propHeroes.heroSid for this instance — a
+   *  `random-hero`'s hero (or the literal "random"). Spawners also carry it in
+   *  spawnerInfo.heroSid; this is the same value for any object with a row. */
+  heroSid?: string
 }
 
 export interface MapContext {

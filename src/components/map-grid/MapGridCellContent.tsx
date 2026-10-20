@@ -108,6 +108,10 @@ export interface MapGridCellContentProps {
   onSetCitySpawnHero?: (item: PlacedObject, spawnHero: boolean) => void
   /** Set a hero spawner's own hero, or 'random' — docked-only, like the above. */
   onSetHeroSid?: (item: PlacedObject, heroSid: string) => void
+  /** A random-hero's owning player — an existing one, no new slot (unlike the spawners). */
+  onSetObjectOwner?: (item: PlacedObject, owner: number) => void
+  /** A random-hero's hero, or 'random'. */
+  onSetObjectHero?: (item: PlacedObject, heroSid: string) => void
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
@@ -211,6 +215,8 @@ export default function MapGridCellContent({
   onSetCityFaction,
   onSetCitySpawnHero,
   onSetHeroSid,
+  onSetObjectOwner,
+  onSetObjectHero,
   allPortals = [],
   onSetPortalTarget,
   highlightedNode = null,
@@ -752,6 +758,66 @@ export default function MapGridCellContent({
               </div>
             </div>
           )}
+
+          {/* A free-standing random hero: unlike the hero spawner it takes no new
+              player slot, it belongs to a player that already exists. */}
+          {selected && selected.sid === 'random-hero' && !selected.spawnerInfo && (() => {
+            const heroSid = selected.heroSid ?? 'random'
+            const owner = selected.owner
+            const ownerOptions = Array.from({ length: playersCount }, (_, i) => i + 1)
+            if (owner !== undefined && !ownerOptions.includes(owner)) ownerOptions.push(owner)
+            return (
+              <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground">Random hero</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Player</p>
+                  {onSetObjectOwner ? (
+                    <Select
+                      value={owner !== undefined ? String(owner) : undefined}
+                      onValueChange={(v) => onSetObjectOwner(selected, Number(v))}
+                    >
+                      <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
+                        <SelectValue placeholder="Not set" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ownerOptions.map((p) => (
+                          <SelectItem key={p} value={String(p)}>{p === -1 ? 'Neutral' : `Player ${p}`}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-xs">{owner === undefined ? 'Not set' : owner === -1 ? 'Neutral' : `Player ${owner}`}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Hero</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs">{heroSid === 'random' ? 'Random' : (catalog?.heroes.find((h) => h.id === heroSid)?.name ?? heroSid)}</p>
+                    {onSetObjectHero && (
+                      <>
+                        <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
+                          Browse…
+                        </Button>
+                        {heroSid !== 'random' && (
+                          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSetObjectHero(selected, 'random')}>
+                            Set to random
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  {onSetObjectHero && (
+                    <HeroPickerDialog
+                      open={heroPickerOpen}
+                      onOpenChange={setHeroPickerOpen}
+                      value={heroSid !== 'random' ? heroSid : undefined}
+                      onSelect={(entry) => { if (entry.heroId) onSetObjectHero(selected, entry.heroId) }}
+                    />
+                  )}
+                </div>
+              </div>
+            )
+          })()}
 
           {selected && selected.isCity && (selected.citySquadSids !== undefined || onSetCityGarrison) && (() => {
             const garrisonSids = selected.citySquadSids ?? []

@@ -46,6 +46,7 @@ export interface PlacedObjectEnrichment {
   citySquadSidsByKey: Map<string, string[]>
   randomSquadValueByKey: Map<string, number>
   isCityByKey: Set<string>
+  heroSidByKey: Map<string, string>
 }
 
 /**
@@ -82,6 +83,7 @@ export function buildPlacedObjects(
       citySquadSids: enrichment.citySquadSidsByKey.get(key),
       randomSquadValue: enrichment.randomSquadValueByKey.get(key),
       isCity: enrichment.isCityByKey.has(key) || undefined,
+      heroSid: enrichment.heroSidByKey.get(key),
     })
   }
 
@@ -341,6 +343,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     citySquadSidsByKey,
     randomSquadValueByKey,
     isCityByKey,
+    heroSidByKey,
   })
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))
 

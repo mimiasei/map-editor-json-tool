@@ -30,6 +30,8 @@ import {
   upsertPropPortals,
   setCustomCityName,
   upsertPropHero,
+  upsertPropOwner,
+  upsertPropHeroRow,
   setCitySpawnHero,
   setCityFaction,
   upsertPropSquads,
@@ -70,6 +72,10 @@ export type MapSaveEdit =
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
   | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
+  /** A free-standing `random-hero`: its owner is an existing player (propOwners) and its hero
+   *  propHeroes — no Block 1 spawns entry, unlike the hero-spawner's setHeroSid/swapSpawnerOwner. */
+  | { kind: 'setObjectOwner'; entityType: number; entityId: number; owner: number }
+  | { kind: 'setObjectHero'; entityType: number; entityId: number; heroSid: string }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
   | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
   | { kind: 'setMapSettings'; patch: MapSettingsPatch }
@@ -192,6 +198,10 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const patched = upsertPropHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
     newChunks[0] = patched.block1Chunk
     newChunks[1] = patched.block2Chunk
+  } else if (edit?.kind === 'setObjectOwner') {
+    newChunks[1] = upsertPropOwner(newChunks[1], edit.entityType, edit.entityId, edit.owner)
+  } else if (edit?.kind === 'setObjectHero') {
+    newChunks[1] = upsertPropHeroRow(newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
   } else if (edit?.kind === 'setCitySpawnHero') {
     const patched = setCitySpawnHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
     newChunks[0] = patched.block1Chunk
@@ -383,6 +393,22 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const match = entries.find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
     if (!match || match.customCityName !== edit.customCityName) {
       throw new Error('Verification failed: city name not reflected in the rebuilt propCities table')
+    }
+  } else if (edit?.kind === 'setObjectOwner') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propOwners?: Array<{ type?: number | string; id?: number; owner?: number }> }
+    }
+    const match = (block2.objectsProperties?.propOwners ?? []).find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.owner !== edit.owner) {
+      throw new Error('Verification failed: owner not reflected in the rebuilt propOwners table')
+    }
+  } else if (edit?.kind === 'setObjectHero') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propHeroes?: Array<{ type?: number | string; id?: number; isDefined?: boolean; heroSid?: string }> }
+    }
+    const match = (block2.objectsProperties?.propHeroes ?? []).find((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!match || match.heroSid !== edit.heroSid || match.isDefined !== (edit.heroSid !== 'random')) {
+      throw new Error('Verification failed: hero not reflected in the rebuilt propHeroes table')
     }
   } else if (edit?.kind === 'setHeroSid') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

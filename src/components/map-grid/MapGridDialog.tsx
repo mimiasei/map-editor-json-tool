@@ -2963,6 +2963,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
   const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
+  // A random-hero belongs to an existing player; no spawner slot is involved.
+  const handleSetObjectOwner = (item: PlacedObject, owner: number) =>
+    applyEdit({ kind: 'setObjectOwner', entityType: item.type, entityId: item.id, owner }, 'set hero owner')
+  const handleSetObjectHero = (item: PlacedObject, heroSid: string) =>
+    applyEdit({ kind: 'setObjectHero', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
 
   // The object's entity SID, assigning a fresh one (`<template sid>_<n>`, with
   // the faction in the name for city spawners) if it has none yet. Shared by
@@ -5452,6 +5457,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetCityFaction={canEditEntities ? handleSetCityFaction : undefined}
                   onSetCitySpawnHero={canEditEntities ? handleSetCitySpawnHero : undefined}
                   onSetHeroSid={canEditEntities ? handleSetHeroSid : undefined}
+                  onSetObjectOwner={canEditEntities ? handleSetObjectOwner : undefined}
+                  onSetObjectHero={canEditEntities ? handleSetObjectHero : undefined}
                   allPortals={allPortals}
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}

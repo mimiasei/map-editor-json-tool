@@ -1392,7 +1392,46 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
   if (RESOURCE_PICKUP_SIDS.has(sid)) {
     tryAppendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(newId))
   }
+  if (sid === 'random-hero') {
+    // Every one of 42 shipped random-heroes has both rows: the owning player and
+    // the hero. A fresh one starts as player 1's random hero, like GME's default.
+    tryAppendRow('propOwners', { type: 0, id: newId, owner: 1 })
+    tryAppendRow('propHeroes', { type: 0, id: newId, isDefined: false, heroSid: 'random' })
+  }
   return text
+}
+
+// ─── Owner + hero of a free-standing `random-hero` ───────────────────────────
+// Unlike a hero-spawner, a random-hero takes no player slot of its own: its
+// owner is just `propOwners.owner` (a player that already exists) and its hero
+// `propHeroes` — no Block 1 `spawns[]` entry, so nothing else is touched.
+
+/** Set (or create) the `propOwners` row of an object: the player it belongs to. */
+export function upsertPropOwner(block2Chunk: Uint8Array, entityType: number, entityId: number, owner: number): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propOwners')
+  const entries = JSON.parse(span) as Array<{ type?: number | string; id?: number; owner?: number }>
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) existing.owner = owner
+  else entries.push({ type: entityType, id: entityId, owner })
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
+/** Set (or create) the `propHeroes` row of an object without touching Block 1;
+ *  pass 'random' for the game's own random pick (isDefined:false). */
+export function upsertPropHeroRow(block2Chunk: Uint8Array, entityType: number, entityId: number, heroSid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propHeroes')
+  const entries = JSON.parse(span) as PropHeroEntry[]
+  const isDefined = heroSid !== 'random'
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) {
+    existing.heroSid = heroSid
+    existing.isDefined = isDefined
+  } else {
+    entries.push({ type: entityType, id: entityId, isDefined, heroSid })
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 
 // ─── city-spawner / hero-spawner (real player-start points) ────────────────
