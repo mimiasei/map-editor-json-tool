@@ -52,8 +52,17 @@ impl Provider {
                             Err(WriterError::BadResponse(m)) if is_try_next(&m) => {
                                 last = WriterError::BadResponse(m);
                             }
+                            // A model that never answers (timeout) is skipped too.
+                            Err(WriterError::Network(m)) => {
+                                log::warn!("text writer: {model} did not answer, trying the next model");
+                                last = WriterError::Network(m);
+                            }
                             other => return other,
                         }
+                    }
+                    // Waiting longer will not help when the models went silent.
+                    if matches!(last, WriterError::Network(_)) {
+                        break;
                     }
                 }
                 Err(last)
@@ -86,8 +95,10 @@ fn map_status(status: reqwest::StatusCode, body: &str) -> WriterError {
 /// carries no key (it travels in a header), so the error text is safe to log.
 fn network_error(e: &reqwest::Error) -> WriterError {
     log::warn!("text writer: request failed: {e:?}");
-    let why = if e.is_timeout() {
-        "the request timed out"
+    let why = if e.is_timeout() && e.is_connect() {
+        "the connection could not be opened in time - check the firewall, antivirus or proxy"
+    } else if e.is_timeout() {
+        "the service did not answer in time (it may be overloaded)"
     } else if e.is_connect() {
         "no connection - check the internet, firewall, antivirus or proxy"
     } else if e.is_request() {

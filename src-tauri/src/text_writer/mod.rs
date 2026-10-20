@@ -29,7 +29,10 @@ const BATCH_SIZE: usize = 10;
 
 fn client() -> Result<reqwest::Client, WriterError> {
     reqwest::Client::builder()
-        .timeout(Duration::from_secs(60))
+        // Per request; a silent model then hands over to the next one instead of
+        // leaving the user waiting a minute for each.
+        .connect_timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(35))
         .build()
         .map_err(|e| {
             log::warn!("text writer: could not set up the HTTP client: {e:?}");
