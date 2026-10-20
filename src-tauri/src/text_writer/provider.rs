@@ -171,14 +171,51 @@ async fn gemini(
         })
 }
 
+/// Best chat model the key can use, by preference; falls back to the old fixed
+/// name if the list cannot be fetched.
+async fn groq_model(client: &reqwest::Client, key: &str) -> String {
+    const PREFER: &[&str] = &[
+        "gpt-oss-120b",
+        "llama-4-maverick",
+        "llama-3.3-70b",
+        "llama-4-scout",
+        "gpt-oss-20b",
+        "llama-3.1-8b",
+    ];
+    const SKIP: &[&str] = &["whisper", "guard", "tts", "playai", "orpheus", "compound", "embed", "safeguard"];
+    let list = send(client.get("https://api.groq.com/openai/v1/models").bearer_auth(key)).await;
+    let ids: Vec<String> = match list {
+        Ok(v) => v["data"]
+            .as_array()
+            .map(|a| a.iter().filter_map(|m| m["id"].as_str().map(str::to_owned)).collect())
+            .unwrap_or_default(),
+        Err(_) => return GROQ_MODEL.to_owned(),
+    };
+    let usable: Vec<&String> = ids.iter().filter(|id| !SKIP.iter().any(|s| id.contains(s))).collect();
+    let pick = PREFER
+        .iter()
+        .find_map(|p| usable.iter().find(|id| id.contains(p)))
+        .or_else(|| usable.first())
+        .map(|s| s.to_string());
+    match pick {
+        Some(m) => {
+            log::info!("text writer: using Groq model {m}");
+            m
+        }
+        None => GROQ_MODEL.to_owned(),
+    }
+}
+
 async fn groq(
     client: &reqwest::Client,
     key: &str,
     system: &str,
     user: &str,
 ) -> Result<String, WriterError> {
+    // Groq retires models now and then, so ask which ones this key can use.
+    let model = groq_model(client, key).await;
     let body = json!({
-        "model": GROQ_MODEL,
+        "model": model,
         "messages": [
             { "role": "system", "content": system },
             { "role": "user", "content": user },
