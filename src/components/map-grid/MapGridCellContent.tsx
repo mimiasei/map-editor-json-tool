@@ -9,7 +9,7 @@
 // the tile, and a detail panel below for whichever row is selected.
 
 import { useEffect, useState } from 'react'
-import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import { groupOf, GRID_GROUP_LABELS } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import { formatRewardParam } from '@/lib/map-grid/reward-params'
@@ -763,6 +763,8 @@ export default function MapGridCellContent({
               player slot, it belongs to a player that already exists. */}
           {selected && selected.sid === 'random-hero' && !selected.spawnerInfo && (() => {
             const heroSid = selected.heroSid ?? 'random'
+            const pickedHero = heroSid !== 'random' ? catalog?.heroes.find((h) => h.id === heroSid) : undefined
+            const heroName = heroSid === 'random' ? 'Random' : (pickedHero?.name ?? heroSid)
             const owner = selected.owner
             const ownerOptions = Array.from({ length: playersCount }, (_, i) => i + 1)
             if (owner !== undefined && !ownerOptions.includes(owner)) ownerOptions.push(owner)
@@ -791,10 +793,23 @@ export default function MapGridCellContent({
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Hero</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs">{heroSid === 'random' ? 'Random' : (catalog?.heroes.find((h) => h.id === heroSid)?.name ?? heroSid)}</p>
+                  <div className="flex items-start gap-2">
+                    {/* Portrait with the name under it; "Random" has no portrait. */}
+                    <div className="flex w-16 shrink-0 flex-col items-center gap-0.5">
+                      {heroSid !== 'random' && (
+                        <PortraitThumb
+                          iconId={pickedHero?.icon}
+                          name={heroName}
+                          size={56}
+                          height={56}
+                          previewSize={256}
+                          resolve={heroPortraitPath}
+                        />
+                      )}
+                      <p className="w-full break-words text-center text-[11px] leading-tight">{heroName}</p>
+                    </div>
                     {onSetObjectHero && (
-                      <>
+                      <div className="flex flex-col items-start gap-1">
                         <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
                           Browse…
                         </Button>
@@ -803,7 +818,7 @@ export default function MapGridCellContent({
                             Set to random
                           </Button>
                         )}
-                      </>
+                      </div>
                     )}
                   </div>
                   {onSetObjectHero && (
