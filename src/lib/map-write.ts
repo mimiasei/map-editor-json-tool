@@ -1770,15 +1770,7 @@ function patchRandomSquadRow(
 export function paintObjects(
   block1Chunk: Uint8Array,
   block2Chunk: Uint8Array,
-  additions: {
-    node: number
-    sid: string
-    rotation?: number
-    randomSquadOverrides?: { requestedValue: number; fraction: string }
-    /** `city-spawner`/`hero-spawner` only: a free player slot to take instead of
-     *  the lowest free one, and (hero-spawner) the hero it spawns instead of random. */
-    spawnerOverrides?: { owner?: number; heroSid?: string }
-  }[],
+  additions: { node: number; sid: string; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[],
   deletions: number[],
 ): { block1Chunk: Uint8Array; block2Chunk: Uint8Array; newIds: number[] } {
   let b1 = block1Chunk
@@ -1789,23 +1781,12 @@ export function paintObjects(
     b2 = result.block2Chunk
   }
   const newIds: number[] = []
-  for (const { node, sid, rotation, randomSquadOverrides, spawnerOverrides } of additions) {
+  for (const { node, sid, rotation, randomSquadOverrides } of additions) {
     const result = addObjectInstance(b1, b2, 0, sid, node, rotation)
     b1 = result.block1Chunk
     b2 = result.block2Chunk
     if (sid === 'random-squad' && randomSquadOverrides) {
       b2 = patchRandomSquadRow(b2, result.newId, randomSquadOverrides)
-    }
-    // Owner first: the hero write finds Block 1's entry through the owner.
-    if (spawnerOverrides?.owner !== undefined && PLAYER_START_SPAWNER_DEFAULTS[sid]) {
-      const swapped = swapSpawnerOwners(b1, b2, 0, result.newId, spawnerOverrides.owner)
-      b1 = swapped.block1Chunk
-      b2 = swapped.block2Chunk
-    }
-    if (spawnerOverrides?.heroSid && sid === 'hero-spawner') {
-      const hero = upsertPropHero(b1, b2, 0, result.newId, spawnerOverrides.heroSid)
-      b1 = hero.block1Chunk
-      b2 = hero.block2Chunk
     }
     newIds.push(result.newId)
   }

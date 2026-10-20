@@ -73,7 +73,6 @@ import ToolButton from '@/components/map-grid/ToolButton'
 import RenameEntitySidDialog from '@/components/tree/RenameEntitySidDialog'
 import SetDisplayNameDialog from '@/components/tree/SetDisplayNameDialog'
 import HeroEditorDialog from '@/components/tree/HeroEditorDialog'
-import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import { buildEntityUsageMap, describeEntityUsage } from '@/lib/entity-usage'
 import { isTauri, openImageFile } from '@/lib/native-fs'
 import { useMapDocumentStore } from '@/store/useMapDocumentStore'
@@ -3259,19 +3258,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const [placingSid, setPlacingSid] = useState<string | null>(null)
   // City/Hero spawner tool (next to Objects): which spawner it places.
   const [spawnerKind, setSpawnerKind] = useState<'city' | 'hero'>('city')
-  // Which player the next spawner takes (0 = the lowest free slot, as before) and,
-  // for a hero spawner, which hero it spawns ('' = random).
-  const [spawnerOwner, setSpawnerOwner] = useState(0)
-  const [spawnerHeroSid, setSpawnerHeroSid] = useState('')
-  const [spawnerHeroPickerOpen, setSpawnerHeroPickerOpen] = useState(false)
-  // A player slot holds one spawner, so only unclaimed slots can be chosen.
-  const freeSpawnerOwners = useMemo(() => {
-    const taken = new Set<number>()
-    for (const o of placedObjects) if (o.spawnerInfo) taken.add(o.spawnerInfo.owner)
-    const free: number[] = []
-    for (let p = 1; p <= (context?.playersCount ?? 0); p++) if (!taken.has(p)) free.push(p)
-    return free
-  }, [placedObjects, context?.playersCount])
   const spawnerPlacing = placingSid === 'city-spawner' || placingSid === 'hero-spawner'
   const stopPlacing = () => {
     setPlacingSid(null)
@@ -3432,27 +3418,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n)).map((n): [number, string] => [n, sid]) : [])
       : [...paintObjectStaged.entries()]
     if (entries.length === 0) return
-    // The chosen player/hero go to the first spawner of this stroke only; any
-    // further ones (rectangle mode) take the next free slot and a random hero.
-    let spawnerOverridesUsed = false
-    const additions = entries.map(([node, s]) => {
-      const addition: { node: number; sid: string; rotation?: number; spawnerOverrides?: { owner?: number; heroSid?: string } } =
-        { node, sid: s, rotation: randomInitialRotation(s) }
-      if ((s === 'city-spawner' || s === 'hero-spawner') && !spawnerOverridesUsed) {
-        spawnerOverridesUsed = true
-        const owner = freeSpawnerOwners.includes(spawnerOwner) ? spawnerOwner : undefined
-        const heroSid = s === 'hero-spawner' && spawnerHeroSid ? spawnerHeroSid : undefined
-        if (owner !== undefined || heroSid) addition.spawnerOverrides = { owner, heroSid }
-      }
-      return addition
-    })
+    const additions = entries.map(([node, s]) => ({ node, sid: s, rotation: randomInitialRotation(s) }))
     const targetNodes = new Set(entries.map(([n]) => n))
     const deletions = placedObjects
       .filter((o) => o.type === 0 && targetNodes.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
       .map((o) => o.id)
     setPaintObjectStaged(new Map())
     applyEdit({ kind: 'paintObjects', additions, deletions }, 'paint objects')
-  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit, placingSid, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, freeSpawnerOwners, spawnerOwner, spawnerHeroSid])
+  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit, placingSid, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint])
 
   // ── In-progress-stroke full-fidelity preview (issue #195 Phase 1) —
   // deliberately placed here rather than up near sortedIconEntries, since a
@@ -3961,41 +3934,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       Hero
                     </button>
                   </div>
-                  <select
-                    className="h-6 rounded border border-input bg-background px-1 text-xs"
-                    value={freeSpawnerOwners.includes(spawnerOwner) ? spawnerOwner : 0}
-                    onChange={(e) => setSpawnerOwner(Number(e.target.value))}
-                    title="Which player the spawner belongs to. Only players without a spawner can be chosen; Next free takes the lowest one (or adds a player)."
-                  >
-                    <option value={0}>Player: next free</option>
-                    {freeSpawnerOwners.map((p) => (
-                      <option key={p} value={p}>Player {p}</option>
-                    ))}
-                  </select>
-                  {spawnerKind === 'hero' && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                        onClick={() => setSpawnerHeroPickerOpen(true)}
-                        title="Choose which hero this spawner gives the player"
-                      >
-                        Hero: {spawnerHeroSid ? (catalog?.heroes.find((h) => h.id === spawnerHeroSid)?.name ?? spawnerHeroSid) : 'Random'}…
-                      </Button>
-                      {spawnerHeroSid && (
-                        <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => setSpawnerHeroSid('')} title="Back to a random hero">
-                          <X className="h-3 w-3" />
-                        </Button>
-                      )}
-                      <HeroPickerDialog
-                        open={spawnerHeroPickerOpen}
-                        onOpenChange={setSpawnerHeroPickerOpen}
-                        value={spawnerHeroSid || undefined}
-                        onSelect={(entry) => { if (entry.heroId) setSpawnerHeroSid(entry.heroId) }}
-                      />
-                    </>
-                  )}
                   {paintObjectStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintObjectStaged.size} staged</p>
                   )}
