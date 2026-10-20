@@ -88,6 +88,8 @@ It is a companion to the map editor, not a replacement for it.
 
 ◾**Scenario scripting** — full CRUD across counters → interruptions → quests → sub-quests → triggers → conditions/actions, with 55 condition types and 114 action types, labelled fields and inline tooltips, plus a forward-compatible fallback for anything the registry doesn't know yet.
 
+◾**Story Builder** — add a whole story in a few clicks: ready-made stories (with real player choices), steps you stack yourself, or (desktop, optional) your own idea in any language. It generates ordinary connected quests, integer counters that remember the player's choices, and the dialogs, with an editable text preview. English is always the base language. With an optional free Gemini or Groq key the text is written to fit your story and your map; without one, built-in text is used.
+
 ◾**Custom content** — build your own heroes, map objects, artifacts, and buffs, either from scratch or by cloning something that already exists.
 
 ◾**Game Data Catalog** — load your game's `Core.zip` to populate every dropdown with real names and artwork, and browse the full Hero / Creature / Artifact / Object database and every one of the game's ~769 shipped dialogs.
@@ -196,6 +198,8 @@ src/
 │   ├── map-write.ts / map-save.ts — Span-patch-and-splice .map edits, verified before write
 │   ├── map-grid/               — Footprint, passability and cell-visual helpers for the Map Grid
 │   ├── rmg/                   — Random map generator: zones, terrain, rivers, roads, population, tuning, headless CLI args
+│   ├── stories/               — Story Builder: beat generators, premade stories, sid namer, offline text banks
+│   ├── text-writer.ts         — Desktop-only wrapper around the Rust text writer commands
 │   ├── map-file.ts            — Opens a .map plus its sidecar scenario JSON
 │   ├── timeline.ts / quest-flow.ts — Derived views for the timeline and DAG
 │   ├── native-fs.ts           — The only place Tauri file APIs are touched; isTauri() guard
@@ -211,6 +215,7 @@ src/
     ├── dialogs/               — DialogEditor, LocalizationDialog, AvatarStrip, AssetCombobox
     ├── catalog/               — GameDatabaseDialog, HeroPickerDialog, DialogBrowser, filters
     ├── guides/                — GuidesDialog, GuideArticle, TemplatePicker, AnnotationBanner
+    ├── story/                 — Story Builder wizard and text writer settings
     ├── panels/                — Undocked panel windows (PanelShell, PanelContent)
     ├── map-grid/               — MapGridDialog, ObjectBrowserPanel, cell-info column (desktop)
     └── common/                — JsonPreview, DraggableDialogContent, Publish/Update/Setup/
@@ -220,6 +225,7 @@ gme-mod/                       — BepInEx plugin for the game's map editor (see
 
 src-tauri/
 ├── src/lib.rs                 — Tauri setup: menu bar, updater, extract_thumbnails command, headless --generate mode
+├── src/text_writer/           — Story text service: prompts, key store, Gemini/Groq adapters, reply validation, story import
 └── sidecar/                   — Python + UnityPy icon extractor (built by scripts/build-sidecar.sh)
 ```
 
