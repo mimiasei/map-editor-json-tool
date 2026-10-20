@@ -15,9 +15,17 @@ pub enum Provider {
     Groq,
 }
 
-/// Tried in order; the alias follows Google's current Flash model, the pinned
-/// name is the fallback if the alias is ever unavailable.
-const GEMINI_MODELS: &[&str] = &["gemini-flash-latest", "gemini-2.5-flash"];
+/// Tried in order when one is missing (404), overloaded (503) or silent. The
+/// alias follows Google's current Flash model; then the model Google's own 404
+/// message names as the replacement for 2.5 ("no longer available to new
+/// users"), then the lighter alias (usually less busy), then 2.5 for keys that
+/// still have access to it.
+const GEMINI_MODELS: &[&str] = &[
+    "gemini-flash-latest",
+    "gemini-3.8-flash",
+    "gemini-flash-lite-latest",
+    "gemini-2.5-flash",
+];
 const GROQ_MODEL: &str = "llama-3.3-70b-versatile";
 const MAX_OUTPUT_TOKENS: u32 = 2400;
 
