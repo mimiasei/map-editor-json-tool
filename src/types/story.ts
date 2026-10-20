@@ -151,6 +151,9 @@ export interface StoryDef {
   slots: StorySlotDef[]
   variables: StoryVariableDef[]
   beats: BeatDef[]
+  /** Optional per-beat facts from the player's own story idea (same index as
+   *  `beats`); passed to the text writer as context so scenes reflect them. */
+  notes?: (string | undefined)[]
 }
 
 /** Everything the user decided in the wizard. */

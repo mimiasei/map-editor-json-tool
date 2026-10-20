@@ -182,6 +182,8 @@ export function buildStory(
   function buildQuest(i: number, beat: BeatDef): Quest {
     const questSid = questSids[i]
     const baseVals: Record<string, string> = { place: firstPlace }
+    const note = def.notes?.[i]
+    if (note) baseVals.note = note
     const triggers: Trigger[] = []
 
     switch (beat.kind) {

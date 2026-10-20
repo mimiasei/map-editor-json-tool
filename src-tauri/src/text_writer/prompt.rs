@@ -40,6 +40,7 @@ For each item return text of the stated kind, tone and length, in the stated out
 Mode write: compose new text. Mode translate: translate sourceText from sourceLang into the output language, \
 keeping the meaning, names and tone. Mode polish: fix spelling, grammar and flow of sourceText in its own language \
 without adding or removing story content. Use names from context as they are written; do not invent other proper names. \
+If context has a \"note\", it is a fact from the player's own story idea that the text should reflect. \
 Plain text only: no markdown, no quotation marks around the whole text, no lists, no links.\n\n{KIND_GUIDE}\n\n\
 Reply with only a JSON object of this shape: {{\"texts\":[{{\"id\":\"<same id>\",\"text\":\"<the text>\"}}]}} \
 with exactly one entry per request, in the same order."
@@ -50,7 +51,7 @@ fn request_value(r: &TextRequest) -> Value {
     let context: serde_json::Map<String, Value> = r
         .context
         .iter()
-        .map(|(k, v)| (sanitize(k, 24), Value::String(sanitize(v, 60))))
+        .map(|(k, v)| (sanitize(k, 24), Value::String(sanitize(v, if k == "note" { 200 } else { 60 }))))
         .collect();
     json!({
         "id": r.id,
