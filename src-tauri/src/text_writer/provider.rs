@@ -65,11 +65,39 @@ fn map_status(status: reqwest::StatusCode, body: &str) -> WriterError {
     }
 }
 
+/// Why a request never got an answer, in words the user can act on. The URL
+/// carries no key (it travels in a header), so the error text is safe to log.
+fn network_error(e: &reqwest::Error) -> WriterError {
+    log::warn!("text writer: request failed: {e:?}");
+    let why = if e.is_timeout() {
+        "the request timed out"
+    } else if e.is_connect() {
+        "no connection - check the internet, firewall, antivirus or proxy"
+    } else if e.is_request() {
+        "the request could not be sent (a TLS/certificate or proxy problem is likely)"
+    } else if e.is_decode() || e.is_body() {
+        "the reply was cut off"
+    } else {
+        "unknown network error"
+    };
+    WriterError::Network(format!("Could not reach the text service: {why}."))
+}
+
+/// Gemini/Groq put a readable reason in `error.message`; kept short, log only.
+fn api_error_message(body: &str) -> Option<String> {
+    let v: Value = serde_json::from_str(body).ok()?;
+    let m = v["error"]["message"].as_str()?;
+    Some(m.chars().take(300).collect())
+}
+
 async fn send(req: reqwest::RequestBuilder) -> Result<Value, WriterError> {
-    let resp = req.send().await.map_err(|_| WriterError::network())?;
+    let resp = req.send().await.map_err(|e| network_error(&e))?;
     let status = resp.status();
-    let body = resp.text().await.map_err(|_| WriterError::network())?;
+    let body = resp.text().await.map_err(|e| network_error(&e))?;
     if !status.is_success() {
+        if let Some(m) = api_error_message(&body) {
+            log::warn!("text writer: service said: {m}");
+        }
         return Err(map_status(status, &body));
     }
     serde_json::from_str(&body)
@@ -97,7 +125,14 @@ async fn gemini(
     v["candidates"][0]["content"]["parts"][0]["text"]
         .as_str()
         .map(str::to_owned)
-        .ok_or_else(|| WriterError::BadResponse("The service reply had no text.".into()))
+        .ok_or_else(|| {
+            let reason = v["candidates"][0]["finishReason"]
+                .as_str()
+                .or_else(|| v["promptFeedback"]["blockReason"].as_str())
+                .unwrap_or("unknown");
+            log::warn!("text writer: {model} reply had no text (finish reason: {reason})");
+            WriterError::BadResponse(format!("The service reply had no text (reason: {reason})."))
+        })
 }
 
 async fn groq(

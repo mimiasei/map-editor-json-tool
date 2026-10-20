@@ -31,7 +31,10 @@ fn client() -> Result<reqwest::Client, WriterError> {
     reqwest::Client::builder()
         .timeout(Duration::from_secs(60))
         .build()
-        .map_err(|_| WriterError::network())
+        .map_err(|e| {
+            log::warn!("text writer: could not set up the HTTP client: {e:?}");
+            WriterError::Network(format!("Could not set up the connection: {e}"))
+        })
 }
 
 /// One validated round trip: build the prompt, call the service, validate the

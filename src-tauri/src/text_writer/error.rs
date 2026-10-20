@@ -27,10 +27,6 @@ impl WriterError {
         WriterError::NoKey("No key has been set.".into())
     }
 
-    pub fn network() -> Self {
-        WriterError::Network("Could not reach the text service.".into())
-    }
-
     pub fn invalid(msg: String) -> Self {
         WriterError::Invalid(msg)
     }

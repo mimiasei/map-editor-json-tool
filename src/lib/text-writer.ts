@@ -203,7 +203,13 @@ export function describeError(e: TextWriterError): string | null {
     case 'unavailable':
     case 'no_key':
       return null
+    case 'network':
+      return `${e.message || 'The text service could not be reached.'} Built-in text is used.`
+    case 'bad_response':
+      return `The text service answered, but not with usable text (${e.message || 'no details'}). Built-in text is used.`
+    case 'store':
+      return `The saved key could not be read (${e.message || 'no details'}). Enter it again in the text writer settings.`
     default:
-      return 'The text writer could not be reached, so built-in text is used.'
+      return 'The text writer could not be used, so built-in text is used.'
   }
 }
