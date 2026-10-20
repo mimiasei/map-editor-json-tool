@@ -92,6 +92,20 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
     }
   }
 
+  // Checks the already saved key and the connection with one tiny real request.
+  const test = async () => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      await testKey(provider)
+      setMessage({ ok: true, text: `Connected to ${info.label}. The saved key works.` })
+    } catch (e) {
+      setMessage({ ok: false, text: failure(e) })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const remove = async () => {
     setBusy(true)
     try {
@@ -181,6 +195,11 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
           )}
         </div>
         <DialogFooter>
+          {stored && (
+            <Button variant="outline" onClick={test} disabled={busy || !consent} title={consent ? undefined : 'Tick the box above first'}>
+              {busy ? 'Checking…' : 'Test connection'}
+            </Button>
+          )}
           {stored && (
             <Button variant="ghost" onClick={remove} disabled={busy}>
               Remove key
