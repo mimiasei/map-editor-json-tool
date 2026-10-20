@@ -60,7 +60,8 @@ export function validateStoryState(
   const read = new Set<string>()
   for (const a of actions) {
     if (COUNTER_WRITE_ACTIONS.has(a.a) && a.p?.[0]) written.add(a.p[0])
-    if (COUNTER_READ_DIALOG_ACTIONS.has(a.a) && a.p?.[0]) read.add(a.p[0])
+    // DialogIfCounter params: [dialogSid, counterSid, op, value]
+    if (COUNTER_READ_DIALOG_ACTIONS.has(a.a) && a.p?.[1]) read.add(a.p[1])
   }
   for (const c of conditions) {
     if (!COUNTER_READ_CONDITIONS.has(c.c)) continue

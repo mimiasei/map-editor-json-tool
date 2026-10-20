@@ -57,6 +57,9 @@ export function createStoryNamer(
     counter: (name) => mint(taken.counters, name),
     interruption: (name) => mint(taken.interruptions, name),
     dialog: (name) => mint(taken.dialogs, name),
-    token: (owner, part) => mint(taken.tokens, `${owner}_${part}`),
+    token: (owner, part) => {
+      const local = owner.startsWith(`${prefix}_`) ? owner.slice(prefix.length + 1) : owner
+      return mint(taken.tokens, `${local}_${part}`)
+    },
   }
 }

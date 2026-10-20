@@ -6,6 +6,7 @@
 
 import type { Quest, Counter, Interruption } from './scenario'
 import type { DialogFlow } from './dialog'
+import type { Tone } from '@/lib/script-templates/text-gen/phrases'
 
 /** The kinds of piece of text a story needs written. Used to pick phrases and,
  *  when the text writer is enabled, to build the (hidden) request. */
@@ -81,3 +82,89 @@ export const EMPTY_GENERATED_STORY = (): GeneratedStory => ({
   textSpecs: [],
   variables: [],
 })
+
+// ─── Story definitions (authoring side) ────────────────────────────────────────
+
+/** A map entity the user binds a story slot to (towns, objects, squads). */
+export interface StorySlotDef {
+  id: string
+  label: string
+  /** 'one' = a single entity; 'many' = a list (e.g. several clue sites). */
+  cardinality: 'one' | 'many'
+  /** Minimum picks needed for the story to be buildable. */
+  min: number
+  /** Hint for auto-suggestion from the map ('town', 'object', 'squad'). */
+  entityKind: 'town' | 'object' | 'squad'
+}
+
+/** What a choice answer does besides recording which answer was picked. */
+export type Consequence =
+  | { kind: 'score'; variable: string; amount: number }
+  | { kind: 'resource'; resource: string; amount: number }
+
+export interface ChoiceAnswerDef {
+  intent: AnswerIntent
+  consequences: Consequence[]
+  /** Only offered while the player holds at least this much gold. */
+  requiresGold?: number
+}
+
+/** An ending shown by a finale beat, picked by a counter condition (first match
+ *  wins, so order the specific ones first). `when` undefined = the fallback. */
+export interface EndingDef {
+  when?: { variable: string; op: '=' | '>' | '<' | '>=' | '<='; value: number }
+  speaker?: string
+}
+
+export type BeatDef =
+  | { kind: 'intro' }
+  | { kind: 'visit'; slot: string; variable: string }
+  | { kind: 'capture'; slot: string }
+  | { kind: 'defeat'; slot: string }
+  | { kind: 'resources'; resource: string; amount: number }
+  | { kind: 'timer'; days: number }
+  | { kind: 'reward'; resource: string; amount: number }
+  | {
+      kind: 'choice'
+      /** Counter that records which answer was picked (1-based). */
+      variable: string
+      /** Optionally held at a slot object: the dialog opens when visiting it. */
+      slot?: string
+      answers: ChoiceAnswerDef[]
+    }
+  | { kind: 'finale'; endings: EndingDef[]; victory: boolean }
+
+/** A story variable declared by the story; beats refer to it by `key`. */
+export interface StoryVariableDef {
+  key: string
+  label: string
+  kind: VariableKind
+  min?: number
+  max?: number
+}
+
+export interface StoryDef {
+  id: string
+  title: string
+  blurb: string
+  tone: Tone
+  slots: StorySlotDef[]
+  variables: StoryVariableDef[]
+  beats: BeatDef[]
+}
+
+/** Everything the user decided in the wizard. */
+export interface StoryInput {
+  /** slot id -> entity sids */
+  slots: Record<string, string[]>
+  tone: Tone
+  length: TextLength
+  seed: number
+}
+
+/** Map facts the generators need (names for text, existing sids for collisions). */
+export interface StoryEnv {
+  mapName: string
+  /** entity sid -> display name for text ("Ravenhold"); falls back to a humanized sid. */
+  entityNames: Record<string, string>
+}
