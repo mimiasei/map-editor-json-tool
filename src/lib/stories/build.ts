@@ -156,7 +156,7 @@ export function buildStory(
   ): string {
     const dialogSid = namer.dialog(owner)
     const slide: DialogSlide = { id: 'start', text: text(kind, dialogSid, vals), end: true, ...extra }
-    out.dialogFlows.push({ id: dialogSid, slides: [slide] } as DialogFlow)
+    out.dialogFlows.push({ id: dialogSid, localization: true, slides: [slide] } as DialogFlow)
     return dialogSid
   }
 
@@ -272,6 +272,7 @@ export function buildStory(
         })
         out.dialogFlows.push({
           id: dialogSid,
+          localization: true,
           slides: [{ id: 'start', text: text('choice_prompt', dialogSid, baseVals), answers }, ...slides],
         } as DialogFlow)
         const slotTarget = beat.slot ? picks(beat.slot)[0] : undefined
