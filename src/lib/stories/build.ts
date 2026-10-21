@@ -222,7 +222,7 @@ export function buildStory(
         sites.forEach((site, k) => {
           const d = simpleDialog(`${i + 1}_clue_${k + 1}`, 'clue', { ...baseVals, place: nameOf(site) })
           triggers.push({
-            conditions: [{ c: 'ObjectInteractionAfter', p: [site, ''] }],
+            conditions: [{ c: 'ObjectInteractionBefore', p: [site, ''] }],
             actions: [{ a: 'CounterPlus', p: [counter, '1'] }, { a: 'Dialog', p: [d] }],
           })
         })
@@ -300,7 +300,7 @@ export function buildStory(
         } as DialogFlow)
         const slotTarget = beat.slot ? picks(beat.slot)[0] : undefined
         triggers.push({
-          conditions: [slotTarget ? { c: 'ObjectInteractionAfter', p: [slotTarget, ''] } : now],
+          conditions: [slotTarget ? { c: 'ObjectInteractionBefore', p: [slotTarget, ''] } : now],
           actions: [{ a: 'Dialog', p: [dialogSid] }],
         })
         triggers.push({
