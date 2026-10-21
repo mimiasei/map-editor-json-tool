@@ -1434,6 +1434,52 @@ export function upsertPropHeroRow(block2Chunk: Uint8Array, entityType: number, e
   return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 
+/** Set, replace or remove the "Actions Before"/"Actions After" row of an object or zone (joined on (type, id)).
+ *  A null value, or one with no actions, deletes the row. Rows keep the shipped shape
+ *  {type,id,repeat,sides,actions:[{comment:"",p,a}]}. */
+export function setObjectActions(
+  block2Chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  which: 'before' | 'after',
+  value: { repeat: boolean; sides: string; actions: { a: string; p: string[] }[] } | null,
+): Uint8Array {
+  const table = which === 'before' ? 'propActionsBefore' : 'propActionsAfter'
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, table)
+  const entries = JSON.parse(span) as Array<{ type?: number | string; id?: number }>
+  const index = entries.findIndex((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!value || value.actions.length === 0) {
+    if (index !== -1) entries.splice(index, 1)
+  } else {
+    const row = {
+      type: entityType,
+      id: entityId,
+      repeat: value.repeat,
+      sides: value.sides,
+      actions: value.actions.map((a) => ({ comment: '', p: a.p, a: a.a })),
+    }
+    if (index !== -1) entries[index] = row
+    else entries.push(row)
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
+/** Set (or create) a zone's propMarkers row: the editor's "Activate" and "Delete after trigger" checkboxes. */
+export function upsertPropMarker(block2Chunk: Uint8Array, entityId: number, isActivate: boolean, isDelete: boolean): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propMarkers')
+  const entries = JSON.parse(span) as Array<{ type?: number | string; id?: number; isDelete?: boolean; isActivate?: boolean }>
+  const existing = entries.find((e) => String(e.type) === '1' && e.id === entityId)
+  if (existing) {
+    existing.isActivate = isActivate
+    existing.isDelete = isDelete
+  } else {
+    entries.push({ type: 1, id: entityId, isDelete, isActivate })
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
 // ─── city-spawner / hero-spawner (real player-start points) ────────────────
 // Unlike every other addable sid, these two are tied to an actual player
 // slot, not a free-standing decoration: confirmed across every real sample
@@ -1581,7 +1627,8 @@ export function addMarkerInstance(chunk: Uint8Array, sid: string, node: number):
   const patchedSpan = JSON.stringify(entries)
   const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
   const finalChunk = patchTopLevelScalar(new TextEncoder().encode(patchedText), 'markersFreeId', newId + 1)
-  return { chunk: finalChunk, newId }
+  // Every zone in the 9 shipped maps that have any (111 zones) has a propMarkers row; a zone without one is unverified.
+  return { chunk: upsertPropMarker(finalChunk, newId, true, false), newId }
 }
 
 // ─── Delete a placed instance (objects[] / squads[] / markers[]) ───────────

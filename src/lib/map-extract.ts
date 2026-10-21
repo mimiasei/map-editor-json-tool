@@ -12,6 +12,7 @@ import type {
   CreaturePlacement,
   ArtifactPlacement,
   PlacedObject,
+  ObjectActions,
 } from '@/types/map-context'
 import type { ScenarioFile } from '@/types/scenario'
 import { normalizeQuests } from '@/lib/scenario-normalize'
@@ -47,6 +48,8 @@ export interface PlacedObjectEnrichment {
   randomSquadValueByKey: Map<string, number>
   isCityByKey: Set<string>
   heroSidByKey: Map<string, string>
+  actionsBeforeByKey: Map<string, ObjectActions>
+  actionsAfterByKey: Map<string, ObjectActions>
 }
 
 /**
@@ -84,6 +87,8 @@ export function buildPlacedObjects(
       randomSquadValue: enrichment.randomSquadValueByKey.get(key),
       isCity: enrichment.isCityByKey.has(key) || undefined,
       heroSid: enrichment.heroSidByKey.get(key),
+      actionsBefore: enrichment.actionsBeforeByKey.get(key),
+      actionsAfter: enrichment.actionsAfterByKey.get(key),
     })
   }
 
@@ -277,6 +282,22 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     const key = `${o.type ?? ''}:${o.id}`
     if (!ownerByKey.has(key)) ownerByKey.set(key, o.owner)
   }
+  const actionsByKey = (rows: NonNullable<RawMapBlock2['objectsProperties']>['propActionsBefore']): Map<string, ObjectActions> => {
+    const out = new Map<string, ObjectActions>()
+    for (const r of rows ?? []) {
+      if (r.id === undefined) continue
+      const key = `${r.type ?? ''}:${r.id}`
+      if (out.has(key)) continue
+      out.set(key, {
+        repeat: r.repeat === true,
+        sides: r.sides ?? '',
+        actions: (r.actions ?? []).filter((a) => typeof a.a === 'string').map((a) => ({ a: a.a as string, p: (a.p ?? []).map(String) })),
+      })
+    }
+    return out
+  }
+  const actionsBeforeByKey = actionsByKey(b2.objectsProperties?.propActionsBefore)
+  const actionsAfterByKey = actionsByKey(b2.objectsProperties?.propActionsAfter)
   const markerActiveByKey = new Map<string, boolean>()
   const markerDeleteAfterTriggerByKey = new Map<string, boolean>()
   for (const m of b2.objectsProperties?.propMarkers ?? []) {
@@ -343,6 +364,8 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
     citySquadSidsByKey,
     randomSquadValueByKey,
     isCityByKey,
+    actionsBeforeByKey,
+    actionsAfterByKey,
     heroSidByKey,
   })
   const placedByKey = new Map(placedObjects.map((p) => [p.key, p]))

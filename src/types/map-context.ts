@@ -219,6 +219,17 @@ export interface PlacedObject {
    *  `random-hero`'s hero (or the literal "random"). Spawners also carry it in
    *  spawnerInfo.heroSid; this is the same value for any object with a row. */
   heroSid?: string
+  /** Enrichment: objectsProperties.propActionsBefore / propActionsAfter — what runs when a hero interacts with
+   *  this object or steps onto this zone. Absent when the instance has no such row. */
+  actionsBefore?: ObjectActions
+  actionsAfter?: ObjectActions
+}
+
+/** One "Actions Before"/"Actions After" property: `sides` is "" for any player, else a 0-based player index. */
+export interface ObjectActions {
+  repeat: boolean
+  sides: string
+  actions: { a: string; p: string[] }[]
 }
 
 export interface MapContext {

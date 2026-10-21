@@ -31,6 +31,8 @@ import {
   setCustomCityName,
   upsertPropHero,
   upsertPropOwner,
+  setObjectActions,
+  upsertPropMarker,
   upsertPropHeroRow,
   setCitySpawnHero,
   setCityFaction,
@@ -76,6 +78,8 @@ export type MapSaveEdit =
    *  propHeroes — no Block 1 spawns entry, unlike the hero-spawner's setHeroSid/swapSpawnerOwner. */
   | { kind: 'setObjectOwner'; entityType: number; entityId: number; owner: number }
   | { kind: 'setObjectHero'; entityType: number; entityId: number; heroSid: string }
+  | { kind: 'setObjectActions'; entityType: number; entityId: number; which: 'before' | 'after'; value: { repeat: boolean; sides: string; actions: { a: string; p: string[] }[] } | null }
+  | { kind: 'setMarkerState'; entityId: number; isActivate: boolean; isDelete: boolean }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
   | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
   | { kind: 'setMapSettings'; patch: MapSettingsPatch }
@@ -97,6 +101,14 @@ export type MapSaveEdit =
   | { kind: 'paintRiver'; changes: { node: number; s: number; isWaterfall?: boolean }[]; deletions?: number[] }
   | { kind: 'paintObjects'; additions: { node: number; sid: string; rotation?: number; randomSquadOverrides?: { requestedValue: number; fraction: string } }[]; deletions: number[] }
   | { kind: 'clearAll' }
+
+interface ActionRowCheck {
+  type?: number | string
+  id?: number
+  repeat?: boolean
+  sides?: string
+  actions?: Array<{ a?: string; p?: string[] }>
+}
 
 /** Which chunk indices a given edit touches — every edit but setSpawnerPlayerType/
  *  swapSpawnerOwner/deleteObject/addObject/paintObjects/setHeroSid/setCitySpawnHero/
@@ -202,6 +214,10 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = upsertPropOwner(newChunks[1], edit.entityType, edit.entityId, edit.owner)
   } else if (edit?.kind === 'setObjectHero') {
     newChunks[1] = upsertPropHeroRow(newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
+  } else if (edit?.kind === 'setObjectActions') {
+    newChunks[1] = setObjectActions(newChunks[1], edit.entityType, edit.entityId, edit.which, edit.value)
+  } else if (edit?.kind === 'setMarkerState') {
+    newChunks[1] = upsertPropMarker(newChunks[1], edit.entityId, edit.isActivate, edit.isDelete)
   } else if (edit?.kind === 'setCitySpawnHero') {
     const patched = setCitySpawnHero(newChunks[0], newChunks[1], edit.entityType, edit.entityId, edit.spawnHero)
     newChunks[0] = patched.block1Chunk
@@ -410,6 +426,33 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     if (!match || match.heroSid !== edit.heroSid || match.isDefined !== (edit.heroSid !== 'random')) {
       throw new Error('Verification failed: hero not reflected in the rebuilt propHeroes table')
     }
+  } else if (edit?.kind === 'setObjectActions') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propActionsBefore?: Array<ActionRowCheck>; propActionsAfter?: Array<ActionRowCheck> }
+    }
+    const rows = (edit.which === 'before' ? block2.objectsProperties?.propActionsBefore : block2.objectsProperties?.propActionsAfter) ?? []
+    const matches = rows.filter((e) => String(e.type) === String(edit.entityType) && e.id === edit.entityId)
+    if (!edit.value || edit.value.actions.length === 0) {
+      if (matches.length > 0) throw new Error('Verification failed: removed actions row still present in the rebuilt table')
+    } else {
+      const row = matches[0]
+      const value = edit.value
+      const same =
+        matches.length === 1 &&
+        row.repeat === value.repeat &&
+        row.sides === value.sides &&
+        (row.actions ?? []).length === value.actions.length &&
+        value.actions.every((a, i) => row.actions?.[i]?.a === a.a && JSON.stringify(row.actions?.[i]?.p ?? []) === JSON.stringify(a.p))
+      if (!same) throw new Error('Verification failed: actions not reflected in the rebuilt actions table')
+    }
+  } else if (edit?.kind === 'setMarkerState') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propMarkers?: Array<{ type?: number | string; id?: number; isActivate?: boolean; isDelete?: boolean }> }
+    }
+    const matches = (block2.objectsProperties?.propMarkers ?? []).filter((e) => String(e.type) === '1' && e.id === edit.entityId)
+    if (matches.length !== 1 || matches[0].isActivate !== edit.isActivate || matches[0].isDelete !== edit.isDelete) {
+      throw new Error('Verification failed: zone state not reflected in the rebuilt propMarkers table')
+    }
   } else if (edit?.kind === 'setHeroSid') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: {
@@ -600,6 +643,10 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     const match = (block2.markers ?? []).find((m) => m.id === addedId)
     if (!match || match.node !== edit.node || match.sid !== edit.sid || block2.markersFreeId !== addedId! + 1) {
       throw new Error('Verification failed: new marker not reflected in the rebuilt markers table')
+    }
+    const zoneState = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as { objectsProperties?: { propMarkers?: Array<{ type?: number | string; id?: number }> } }
+    if (!(zoneState.objectsProperties?.propMarkers ?? []).some((e) => String(e.type) === '1' && e.id === addedId)) {
+      throw new Error('Verification failed: new marker has no propMarkers row')
     }
   } else if (edit?.kind === 'deleteObject') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {

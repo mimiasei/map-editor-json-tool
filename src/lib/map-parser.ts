@@ -214,6 +214,11 @@ export interface RawMapBlock2 {
      *  movement or fire its actions at all; "Delete after trigger" removes
      *  the zone automatically the first time it fires. */
     propMarkers?: Array<{ type?: string; id?: number; isActivate?: boolean; isDelete?: boolean }>
+    /** "Actions Before" / "Actions After" of an object or zone, joined on (type, id). Checked on every shipped map:
+     *  both tables exist on all 16, `sides` is "" (any player) or one 0-based player index, an action row only has
+     *  comment/p/a, and zones (type 1) only ever use Before. */
+    propActionsBefore?: Array<{ type?: string | number; id?: number; repeat?: boolean; sides?: string; actions?: Array<{ a?: string; p?: string[]; comment?: string }> }>
+    propActionsAfter?: Array<{ type?: string | number; id?: number; repeat?: boolean; sides?: string; actions?: Array<{ a?: string; p?: string[]; comment?: string }> }>
     [key: string]: unknown
   }
   [key: string]: unknown
