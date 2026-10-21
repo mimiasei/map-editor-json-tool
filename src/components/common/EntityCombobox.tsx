@@ -78,14 +78,22 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
   // Custom buffs (issue #165) — same reasoning as custom artifacts above:
   // scenario-local, resolved against this project's own localization map.
   const customBuffs = useScenarioStore((s) => s.customBuffs)
+  const customHeroes = useScenarioStore((s) => s.customHeroes)
   const localization = useScenarioStore((s) => s.localization)
 
   return useMemo(() => {
-    if (!catalog) return ENTITY_REGISTRIES[category]
+    // Scenario-local clones are in neither the catalog nor the static registry.
+    const customHeroEntries = (): EntityEntry[] =>
+      Object.values(customHeroes).map((def) => {
+        const nameSid = typeof def.definition.name === 'string' ? def.definition.name : def.heroSid
+        const icon = typeof def.definition.icon === 'string' ? def.definition.icon : undefined
+        return { id: def.heroSid, label: localization[nameSid] ?? def.heroSid, icon }
+      })
+    if (!catalog) return category === 'hero' ? [...ENTITY_REGISTRIES.hero, ...customHeroEntries()] : ENTITY_REGISTRIES[category]
 
     switch (category) {
       case 'hero':
-        return catalog.heroes.map((h) => ({ id: h.id, label: `${h.name}`, icon: h.icon }))
+        return [...catalog.heroes.map((h) => ({ id: h.id, label: `${h.name}`, icon: h.icon })), ...customHeroEntries()]
       case 'creature':
         return catalog.creatures.map((c) => ({ id: c.id, label: c.name, icon: c.icon }))
       case 'artifact': {
@@ -153,7 +161,7 @@ function useCatalogEntries(category: EntityCategory): EntityEntry[] {
       default:
         return ENTITY_REGISTRIES[category] ?? []
     }
-  }, [catalog, category, customArtifacts, customBuffs, localization])
+  }, [catalog, category, customArtifacts, customBuffs, customHeroes, localization])
 }
 
 // ─── Map object filter helpers ────────────────────────────────────────────────
