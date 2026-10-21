@@ -671,13 +671,15 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     type: 'CreateVFX',
     label: 'Create VFX',
     category: 'Map Objects',
-    description: 'Creates a visual effect at the specified node. boolRotation: random rotation. isActive: show/hide. entityVFX is optional.',
+    description: 'Creates a visual effect at the specified node. boolRotation: random rotation. isActive: show/hide. entityVFX is required in practice (see the param).',
     params: [
       { label: 'VFX SID', hint: 'e.g. fx_map_fire', required: true, entity: 'vfx' as const },
       { label: 'Node index', hint: 'e.g. 520', required: true, nodeIndex: true },
       { label: 'Random rotation?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Active?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      // Marked required on evidence: all 17 CreateVFX actions in the shipped maps carry 5 params, and a 4-param one threw
+      // IndexOutOfRangeException in the game when a zone ran it (the guide calls it optional).
+      { label: 'Entity SID', hint: 'name for this effect, e.g. fx_light_1', required: true, mapEntity: true },
     ],
   },
   EventBankRefresh: {
