@@ -324,7 +324,8 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
         }
       }
     }
-    setLocalizationBatch(snap.english)
+    // Texts the user can edit come from the preview; fixed lines (sub-quest objectives) come straight from the build.
+    setLocalizationBatch({ ...generated.localizationTokens, ...snap.english })
     if (texts.nonEnglish && Object.keys(snap.native).length > 0) setTranslationBatch(lang, snap.native)
     for (const [target, res] of Object.entries(extraResults)) setTranslationBatch(target, res)
     for (const flow of generated.dialogFlows) setDialogFlow(flow.id, flow)
