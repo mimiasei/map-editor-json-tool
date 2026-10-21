@@ -479,7 +479,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Game Rules',
     description: 'Forces the player with the specified index to lose (defeat message shown, all heroes removed, all objects go neutral).',
     params: [
-      { label: 'Player index', hint: '0=Player1, 1=Player2, etc.', required: true, type: 'enum', options: ['0', '1', '2', '3'] },
+      { label: 'Player', hint: 'Which player', required: true, player: true },
     ],
   },
   ChangeCampaignOneStep: {
@@ -677,9 +677,9 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Node index', hint: 'e.g. 520', required: true, nodeIndex: true },
       { label: 'Random rotation?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Active?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      // Marked required on evidence: all 17 CreateVFX actions in the shipped maps carry 5 params, and a 4-param one threw
-      // IndexOutOfRangeException in the game when a zone ran it (the guide calls it optional).
-      { label: 'Entity SID', hint: 'name for this effect, e.g. fx_light_1', required: true, mapEntity: true },
+      // The game needs it: all 17 CreateVFX actions in the shipped maps carry 5 params, and a 4-param one threw
+      // IndexOutOfRangeException in the game when a zone ran it (the guide calls it optional). Left blank, cleanAction names it.
+      { label: 'Entity SID', hint: 'blank = named automatically', required: false, mapEntity: true },
     ],
   },
   EventBankRefresh: {
@@ -907,7 +907,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     params: [
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Node index', hint: 'e.g. 47', required: true, nodeIndex: true },
-      { label: 'Player index', hint: '0=Player1, 1=Player2', required: true, type: 'number' },
+      { label: 'Player', hint: 'Which player', required: true, player: true },
     ],
   },
   DeleteHero: {

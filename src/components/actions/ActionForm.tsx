@@ -5,6 +5,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { resolveCastleFaction, getBuildingOptions, getBuildingLevelNames } from '@/lib/building-options'
 import { useMemo } from 'react'
+import type { ParamDef } from '@/schema/conditions'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -19,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { MapPin, Trash2, ExternalLink, ClipboardCopy } from 'lucide-react'
+import PlayerSelect from '@/components/common/PlayerSelect'
 import SidCombobox from '@/components/common/SidCombobox'
 import DialogSidField from '@/components/common/DialogSidField'
 import EntityCombobox from '@/components/common/EntityCombobox'
@@ -27,6 +29,9 @@ import HelpTooltip from '@/components/ui/HelpTooltip'
 import { isTauri } from '@/lib/native-fs'
 import { copyToClipboard } from '@/lib/clipboard'
 import { useDialogActionCascadeGuard } from '@/hooks/useDialogActionCascadeGuard'
+
+/** Short values (node index, player, number, enum) keep their width; SID fields take the spare room. */
+const FIXED_WIDTH = (p: ParamDef) => !!(p.nodeIndex || p.player || p.type === 'number' || p.type === 'enum')
 
 interface Props {
   action: Action
@@ -172,7 +177,7 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
 
       {/* Known params */}
       {def && def.params.length > 0 && (
-        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+        <div className="flex flex-wrap gap-2">
           {def.params.map((param, i) => {
             const isBuildingLevelParam = buildingSidIndex >= 0 && i === buildingSidIndex + 1
             const buildingLevelOptions =
@@ -180,12 +185,14 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
                 ? buildingLevelNames.map((name, idx) => ({ value: String(idx + 1), label: name }))
                 : undefined
             return (
-            <div key={i} className="space-y-1">
+            <div key={i} className={`space-y-1 min-w-[160px] basis-40 ${FIXED_WIDTH(param) ? 'grow-0' : 'grow'}`}>
               <div className="flex items-center gap-1">
                 <Label className="text-xs">{param.label}</Label>
                 <HelpTooltip category="actions" id={action.a} paramIndex={i} />
               </div>
-              {param.buildingSid && buildingOptions.length > 0 ? (
+              {param.player ? (
+                <PlayerSelect value={(action.p ?? [])[i] ?? ''} onChange={(v) => updateParam(i, v)} placeholder={param.hint} />
+              ) : param.buildingSid && buildingOptions.length > 0 ? (
                 <Select
                   value={(action.p ?? [])[i] ?? ''}
                   onValueChange={(v) => updateParam(i, v)}

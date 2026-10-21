@@ -28,6 +28,8 @@ export interface ParamDef {
    *  renderer to make the node number clickable ("open Map Grid centered on
    *  this node") instead of treating it as a hero/heroes-picker/lookup. */
   nodeIndex?: true
+  /** A player index (0-based in the file). Always rendered as a Player dropdown, never a number field. */
+  player?: true
 }
 
 export interface ConditionDef {
@@ -174,7 +176,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Player Defeated',
     description: 'DEPRECATED — use CheckLoseIfHeroKilled + CheckLoseIfCityLost instead. Triggers when the player with the specified index is completely removed from the map.',
     params: [
-      { label: 'Player index', hint: '0=Player1, 1=Player2, etc.', required: true, type: 'enum', options: ['0', '1', '2', '3'] },
+      { label: 'Player', hint: 'Which player', required: true, player: true },
     ],
   },
   CheckLoseIfHeroKilled: {
@@ -182,7 +184,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Check Lose: Hero Killed',
     description: 'Auxiliary condition. Triggers if the player loses a hero and has no castles/heroes remaining. Use only in an "Or" combination with CheckLoseIfCityLost.',
     params: [
-      { label: 'Player index', hint: '0=Player1, 1=Player2, etc.', required: true, type: 'enum', options: ['0', '1', '2', '3'] },
+      { label: 'Player', hint: 'Which player', required: true, player: true },
     ],
   },
   CheckLoseIfCityLost: {
@@ -190,7 +192,7 @@ export const CONDITION_REGISTRY: Record<string, ConditionDef> = {
     label: 'Check Lose: City Lost',
     description: 'Auxiliary condition. Triggers if the player loses a castle and has no castles/heroes remaining. Use only in an "Or" combination with CheckLoseIfHeroKilled.',
     params: [
-      { label: 'Player index', hint: '0=Player1, 1=Player2, etc.', required: true, type: 'enum', options: ['0', '1', '2', '3'] },
+      { label: 'Player', hint: 'Which player', required: true, player: true },
     ],
   },
 

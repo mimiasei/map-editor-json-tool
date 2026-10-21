@@ -25,9 +25,18 @@ function trimParams(p: string[] | undefined, params: ParamDef[] | undefined): st
   return changed ? filled : p
 }
 
-export function cleanAction(action: Action): Action {
+/** CreateVFX without its 5th param (entity SID) crashes the game, so a blank one gets a name from effect and node. */
+function withVfxEntity(action: Action): Action {
+  const p = action.p ?? []
+  if (action.a !== 'CreateVFX' || !p[0] || !p[1] || !isBlank(p[4])) return action
+  const filled = [p[0], p[1], p[2] || 'false', p[3] || 'true', `vfx_${p[0]}_${p[1]}`]
+  return { ...action, p: filled }
+}
+
+export function cleanAction(raw: Action): Action {
+  const action = withVfxEntity(raw)
   const p = trimParams(action.p, ACTION_REGISTRY[action.a]?.params)
-  return p === action.p ? action : { ...action, p }
+  return p === raw.p ? action : { ...action, p }
 }
 
 function cleanCondition(condition: Condition): Condition {
