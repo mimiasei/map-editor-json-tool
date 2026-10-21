@@ -4,10 +4,10 @@
 // with one Apply, since every write is a full-document undo step and typing would otherwise write per keystroke.
 
 import { useMemo, useState } from 'react'
-import type { Action } from '@/types/scenario'
 import type { ObjectActions } from '@/types/map-context'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { HIDDEN_ACTION_TYPES, formatActionSentence, isActionConfigured } from '@/lib/trigger-visual'
+import { cleanAction } from '@/lib/scenario-clean'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import ActionForm from '@/components/actions/ActionForm'
 import { Button } from '@/components/ui/button'
@@ -22,15 +22,6 @@ const QUEST_FILE_ONLY = new Set([
   'SubQuestDone', 'NextQuestAfterGroup', 'NextAfterGroup', 'NextSubGroupAfterGroup', 'TriggerClear', 'TriggerClearCustom',
 ])
 const allowedType = (type: string) => !QUEST_FILE_ONLY.has(type) && !HIDDEN_ACTION_TYPES.has(type)
-
-/** Wrong parameter count means the action never fires, and optional trailing params may be left out (guide). */
-function trimTrailingBlanks(action: Action): { a: string; p: string[] } {
-  const p = (action.p ?? []).map(String)
-  const required = ACTION_REGISTRY[action.a]?.params.filter((x) => x.required).length ?? 0
-  let end = p.length
-  while (end > required && p[end - 1].trim() === '') end--
-  return { a: action.a, p: p.slice(0, end) }
-}
 
 interface Props {
   title: string
@@ -144,7 +135,7 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
             size="sm"
             className="h-7 text-xs"
             disabled={incomplete}
-            onClick={() => onApply(draft.actions.length === 0 ? null : { ...draft, actions: draft.actions.map(trimTrailingBlanks) })}
+            onClick={() => onApply(draft.actions.length === 0 ? null : { ...draft, actions: draft.actions.map((a) => ({ a: a.a, p: (cleanAction(a).p ?? []).map(String) })) })}
           >
             Apply
           </Button>

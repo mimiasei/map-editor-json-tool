@@ -13,15 +13,19 @@ import type { ParamDef } from '@/schema/conditions'
 
 const isBlank = (v: string | undefined) => v === undefined || v === ''
 
-/** Drops trailing blank values after the last required param. Unknown types are left alone. */
+/** Drops trailing blank values after the last required param. Unknown types are left alone.
+ *  A blank enum slot before a filled one (CreateVFX [sid, node, "", "true"]) gets the enum's default, its first
+ *  option: the game throws "String was not recognized as a valid Boolean" on "" and freezes (seen in Player.log). */
 function trimParams(p: string[] | undefined, params: ParamDef[] | undefined): string[] | undefined {
   if (!p || !params) return p
   let end = p.length
   while (end > 0 && isBlank(p[end - 1]) && !params[end - 1]?.required && end - 1 < params.length) end--
-  return end === p.length ? p : p.slice(0, end)
+  const filled = p.slice(0, end).map((v, i) => (isBlank(v) && params[i]?.type === 'enum' && params[i].options?.length ? params[i].options![0] : v))
+  const changed = end !== p.length || filled.some((v, i) => v !== p[i])
+  return changed ? filled : p
 }
 
-function cleanAction(action: Action): Action {
+export function cleanAction(action: Action): Action {
   const p = trimParams(action.p, ACTION_REGISTRY[action.a]?.params)
   return p === action.p ? action : { ...action, p }
 }
