@@ -13,7 +13,7 @@ import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thum
 import { groupOf, GRID_GROUP_LABELS } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import { formatRewardParam } from '@/lib/map-grid/reward-params'
-import type { PlacedObject, MapEntity } from '@/types/map-context'
+import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog, Wand2 } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import ObjectActionsEditor from './ObjectActionsEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 
@@ -112,6 +113,10 @@ export interface MapGridCellContentProps {
   onSetObjectOwner?: (item: PlacedObject, owner: number) => void
   /** A random-hero's hero, or 'random'. */
   onSetObjectHero?: (item: PlacedObject, heroSid: string) => void
+  /** Replace (or, with null, remove) an object's or zone's Actions Before/After — docked-only. */
+  onSetObjectActions?: (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) => void
+  /** A zone's Activate / Delete-after-trigger switches — docked-only. */
+  onSetMarkerState?: (item: PlacedObject, isActivate: boolean, isDelete: boolean) => void
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
@@ -217,6 +222,8 @@ export default function MapGridCellContent({
   onSetHeroSid,
   onSetObjectOwner,
   onSetObjectHero,
+  onSetObjectActions,
+  onSetMarkerState,
   allPortals = [],
   onSetPortalTarget,
   highlightedNode = null,
@@ -1012,7 +1019,7 @@ export default function MapGridCellContent({
               {selected.markerActive !== undefined && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Switch id="mgc-marker-active" checked={selected.markerActive} disabled />
+                    <Switch id="mgc-marker-active" checked={selected.markerActive} disabled={!onSetMarkerState} onCheckedChange={(on) => onSetMarkerState?.(selected, on, selected.markerDeleteAfterTrigger ?? false)} />
                     <Label htmlFor="mgc-marker-active" className="text-xs">Active</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -1025,7 +1032,7 @@ export default function MapGridCellContent({
               {selected.markerDeleteAfterTrigger !== undefined && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Switch id="mgc-marker-delete" checked={selected.markerDeleteAfterTrigger} disabled />
+                    <Switch id="mgc-marker-delete" checked={selected.markerDeleteAfterTrigger} disabled={!onSetMarkerState} onCheckedChange={(on) => onSetMarkerState?.(selected, selected.markerActive ?? true, on)} />
                     <Label htmlFor="mgc-marker-delete" className="text-xs">Delete after trigger</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -1035,6 +1042,33 @@ export default function MapGridCellContent({
                 </div>
               )}
             </div>
+          )}
+
+          {(selected.type === 0 || selected.type === 1) && (onSetObjectActions || selected.actionsBefore || selected.actionsAfter) && (
+            <>
+              <ObjectActionsEditor
+                key={`${selected.key}-before`}
+                title={selected.type === 1 ? 'Actions when a hero enters' : 'Actions before the interaction'}
+                hint={
+                  selected.type === 1
+                    ? 'Run when a hero steps onto this zone from outside. The hero always stops there while the zone is active.'
+                    : 'Run when a hero interacts with this object, before its own effect.'
+                }
+                value={selected.actionsBefore}
+                playersCount={playersCount ?? 0}
+                onApply={onSetObjectActions ? (v) => onSetObjectActions(selected, 'before', v) : undefined}
+              />
+              {(selected.type === 0 || selected.actionsAfter) && (
+                <ObjectActionsEditor
+                  key={`${selected.key}-after`}
+                  title="Actions after the interaction"
+                  hint="Run after the object's own effect has happened."
+                  value={selected.actionsAfter}
+                  playersCount={playersCount ?? 0}
+                  onApply={onSetObjectActions ? (v) => onSetObjectActions(selected, 'after', v) : undefined}
+                />
+              )}
+            </>
           )}
         </div>
       )}

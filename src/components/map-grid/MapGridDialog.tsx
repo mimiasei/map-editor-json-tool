@@ -48,7 +48,7 @@ import {
   resolveDecorationSubcategory,
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
-import type { PlacedObject, MapEntity } from '@/types/map-context'
+import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
@@ -2981,6 +2981,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'setObjectOwner', entityType: item.type, entityId: item.id, owner }, 'set hero owner')
   const handleSetObjectHero = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setObjectHero', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
+  const handleSetObjectActions = (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) =>
+    applyEdit({ kind: 'setObjectActions', entityType: item.type, entityId: item.id, which, value }, `set actions ${which}`)
+  const handleSetMarkerState = (item: PlacedObject, isActivate: boolean, isDelete: boolean) =>
+    applyEdit({ kind: 'setMarkerState', entityId: item.id, isActivate, isDelete }, 'set zone state')
 
   // The object's entity SID, assigning a fresh one (`<template sid>_<n>`, with
   // the faction in the name for city spawners) if it has none yet. Shared by
@@ -5429,6 +5433,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetHeroSid={canEditEntities ? handleSetHeroSid : undefined}
                   onSetObjectOwner={canEditEntities ? handleSetObjectOwner : undefined}
                   onSetObjectHero={canEditEntities ? handleSetObjectHero : undefined}
+                  onSetObjectActions={canEditEntities ? handleSetObjectActions : undefined}
+                  onSetMarkerState={canEditEntities ? handleSetMarkerState : undefined}
                   allPortals={allPortals}
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}
