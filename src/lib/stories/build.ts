@@ -179,6 +179,29 @@ export function buildStory(
   ]
   const now: Condition = { c: 'StartTurn', p: [] }
 
+  function objectiveText(beat: BeatDef, place: string): string {
+    switch (beat.kind) {
+      case 'intro':
+        return 'Begin your journey'
+      case 'visit':
+        return `Visit the marked places (${picks(beat.slot).length})`
+      case 'capture':
+        return `Capture ${place}`
+      case 'defeat':
+        return `Defeat the guards of ${place}`
+      case 'resources':
+        return `Gather ${beat.amount} ${beat.resource}`
+      case 'timer':
+        return `Survive ${beat.days} days`
+      case 'reward':
+        return 'Claim your reward'
+      case 'choice':
+        return 'Make your choice'
+      case 'finale':
+        return 'See the story to its end'
+    }
+  }
+
   function buildQuest(i: number, beat: BeatDef): Quest {
     const questSid = questSids[i]
     const baseVals: Record<string, string> = { place: firstPlace }
@@ -305,7 +328,11 @@ export function buildStory(
       }
     }
 
-    const subQuest: SubQuest = { sid: '1', activeOnStart: true, comment: COMMENT, triggers }
+    // The quest log lists every sub-quest by name; without one the game shows "NULL".
+    // Objectives are short fixed English lines (not written by the text service).
+    const objectiveSid = namer.token(questSid, 'objective')
+    out.localizationTokens[objectiveSid] = objectiveText(beat, baseVals.place)
+    const subQuest: SubQuest = { sid: '1', name: objectiveSid, activeOnStart: true, comment: COMMENT, triggers }
     return {
       sid: questSid,
       name: text('quest_name', questSid, baseVals),
