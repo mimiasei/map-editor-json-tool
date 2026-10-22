@@ -38,6 +38,7 @@ import {
 } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import { objectImagePath } from '@/lib/catalog/object-images'
+import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
   INTERACTABLE_SUBCATEGORY_LABELS,
@@ -3414,15 +3415,30 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // uses, plus whatever THIS stroke has staged so far) can't be painted on
   // at all; an existing non-blocking decorative instance sitting exactly on
   // a paintable tile gets overwritten (deleted, then replaced) on commit.
-  const isNodeBlockedForObjectPaint = useCallback((node: number): boolean => {
-    if (blockedTileSet.has(node)) return true
+  // Ground cover (grass etc.) is the bottom layer: object footprints don't stop it, only water
+  // and elevation walls do.
+  const terrainBlockedSet = useMemo(
+    () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects: [], levelsMap, climbsMap, waterMap }, catalog),
+    [sizeX, sizeZ, levelsMap, climbsMap, waterMap, catalog],
+  )
+  const isNodeBlockedForObjectPaint = useCallback((node: number, sid: string): boolean => {
+    if ((isGroundCoverSid(sid, catalog) ? terrainBlockedSet : blockedTileSet).has(node)) return true
     for (const [stagedNode, sid] of paintObjectStaged) {
       for (const cell of objectBlockedCells(sid, stagedNode % sizeX, Math.floor(stagedNode / sizeX), catalog)) {
         if (cell.z * sizeX + cell.x === node) return true
       }
     }
     return false
-  }, [blockedTileSet, paintObjectStaged, sizeX, catalog])
+  }, [blockedTileSet, terrainBlockedSet, paintObjectStaged, sizeX, catalog])
+
+  // Whether painting `paintedSid` on a tile removes an existing object there. Ordinary paint
+  // replaces non-blocking instances; ground cover only replaces other ground cover, so grass never
+  // deletes the things it sits underneath.
+  const objectPaintReplaces = useCallback((paintedSid: string | undefined, existing: PlacedObject): boolean => {
+    if (!paintedSid) return false
+    if (isGroundCoverSid(paintedSid, catalog)) return isGroundCoverSid(existing.sid, catalog)
+    return objectBlockedCells(existing.sid, existing.x, existing.z, catalog).length === 0
+  }, [catalog])
 
   const applyImageColorMapping = useCallback(async (
     result: ImageColorMappingResult,
@@ -3446,7 +3462,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           waterChanges.set(node, target.waterId)
           waterLevelChanges.set(node, -1)
         }
-        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
+        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node, target.sid)) {
           additions.push({ node, sid: target.sid, rotation: randomInitialRotation(target.sid) })
         }
       }
@@ -3477,7 +3493,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // city-spawner/hero-spawner are real player-start points, never a
     // decorative scatter — always single-tile, brush Size/Disperse ignored.
     const tiles = (isSingleTileSid(sid) ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
-      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
+      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid))
     if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
     setPaintObjectStaged((prev) => {
       const next = new Map(prev)
@@ -3496,17 +3512,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const commitObjectPaintStroke = useCallback((nodes?: number[]) => {
     const sid = placingSid
     const entries: [number, string][] = nodes
-      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n)).map((n): [number, string] => [n, sid]) : [])
+      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid)).map((n): [number, string] => [n, sid]) : [])
       : [...paintObjectStaged.entries()]
     if (entries.length === 0) return
     const additions = entries.map(([node, s]) => ({ node, sid: s, rotation: randomInitialRotation(s) }))
-    const targetNodes = new Set(entries.map(([n]) => n))
+    const sidByNode = new Map(entries)
     const deletions = placedObjects
-      .filter((o) => o.type === 0 && targetNodes.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
+      .filter((o) => o.type === 0 && objectPaintReplaces(sidByNode.get(o.node), o))
       .map((o) => o.id)
     setPaintObjectStaged(new Map())
     applyEdit({ kind: 'paintObjects', additions, deletions }, 'paint objects')
-  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit, placingSid, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint])
+  }, [paintObjectStaged, placedObjects, randomInitialRotation, applyEdit, placingSid, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, objectPaintReplaces])
 
   // ── In-progress-stroke full-fidelity preview (issue #195 Phase 1) —
   // deliberately placed here rather than up near sortedIconEntries, since a
@@ -3522,12 +3538,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const keys = new Set<string>()
     if (paintObjectStaged.size === 0) return keys
     for (const o of placedObjects) {
-      if (o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0) {
+      if (o.type === 0 && objectPaintReplaces(paintObjectStaged.get(o.node), o)) {
         keys.add(o.key)
       }
     }
     return keys
-  }, [paintObjectStaged, placedObjects, catalog])
+  }, [paintObjectStaged, placedObjects, objectPaintReplaces])
 
   // Staged Paint Objects additions, rendered with their real catalog icon
   // instead of a flat swatch. Bounded by paintObjectStaged.size (a brush
