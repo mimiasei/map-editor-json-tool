@@ -36,6 +36,7 @@ import {
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
+import { objectImagePath } from '@/lib/catalog/object-images'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
   INTERACTABLE_SUBCATEGORY_LABELS,
@@ -2388,6 +2389,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // catalog changes, or whenever the canvas element itself (re)mounts. Same
   // callback-ref reasoning as viewportEl above.
   const [canvasEl, setCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
+  // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
+  // the swatch is then the only thing marking the object.
+  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= ICON_LOD_THRESHOLD_PX
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2409,6 +2414,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
+      if (iconsVisibleForSwatch && settings.iconImagesEnabled && objectImagePath(pick.primary.sid)) continue
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       ctx.fillStyle = GROUP_COLORS[pick.group]
@@ -2434,7 +2440,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap, paintStaged,
+    settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled,
   ])
 
   // ── Road/river line-feature canvas — a SEPARATE, higher-internal-
