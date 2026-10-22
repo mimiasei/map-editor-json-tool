@@ -4844,7 +4844,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               onWheel={onWheel}
               onContextMenu={onContextMenuViewport}
             >
-              <div className="absolute left-0">
+              <div className="absolute left-0 z-[1000]">
                   {settings.showGridNumbers && Array.from(
                       { length: visibleRange.zMax - visibleRange.zMin + 1 },
                       (_, i) => visibleRange.zMin + i,
@@ -4864,7 +4864,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       </div>
                   ))}
               </div>
-              <div className="absolute top-0">
+              <div className="absolute top-0 z-[1000]">
                 {settings.showGridNumbers && Array.from(
                     { length: visibleRange.xMax - visibleRange.xMin + 1 },
                     (_, i) => visibleRange.xMin + i,
