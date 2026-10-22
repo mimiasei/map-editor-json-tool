@@ -1,12 +1,11 @@
 import type { Action } from '@/types/scenario'
 import ActionForm from './ActionForm'
 import { Button } from '@/components/ui/button'
-import { Plus, ClipboardPaste } from 'lucide-react'
-import { useClipboardHasPayload } from '@/lib/clipboard'
+import { Plus } from 'lucide-react'
 
 interface Props {
   actions: Action[]
-  /** Appends a new action. Pass a specific action (e.g. from the clipboard) to insert
+  /** Appends a new action. Pass a specific action (e.g. a duplicate) to insert
    *  that instead of the caller's usual blank default. */
   onAdd: (action?: Action) => void
   onUpdate: (index: number, action: Action) => void
@@ -16,8 +15,6 @@ interface Props {
 }
 
 export default function ActionList({ actions, onAdd, onUpdate, onRemove, typeFilter }: Props) {
-  const pasteable = useClipboardHasPayload<Action>('action')
-
   return (
     <div className="space-y-2">
       {actions.length === 0 && (
@@ -30,6 +27,8 @@ export default function ActionList({ actions, onAdd, onUpdate, onRemove, typeFil
           onChange={(a) => onUpdate(i, a)}
           onRemove={() => onRemove(i)}
           typeFilter={typeFilter}
+          siblingActions={actions}
+          onDuplicate={(copy) => onAdd(copy)}
         />
       ))}
       <div className="flex items-center gap-2">
@@ -37,18 +36,6 @@ export default function ActionList({ actions, onAdd, onUpdate, onRemove, typeFil
           <Plus className="h-3 w-3" />
           Add Action
         </Button>
-        {pasteable && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onAdd(pasteable)}
-            className="gap-1.5 text-xs"
-            title="Paste the copied action"
-          >
-            <ClipboardPaste className="h-3 w-3" />
-            Paste Action
-          </Button>
-        )}
       </div>
     </div>
   )

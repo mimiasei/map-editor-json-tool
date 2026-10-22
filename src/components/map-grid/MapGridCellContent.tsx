@@ -9,11 +9,11 @@
 // the tile, and a detail panel below for whichever row is selected.
 
 import { useEffect, useState } from 'react'
-import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import { groupOf, GRID_GROUP_LABELS } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import { formatRewardParam } from '@/lib/map-grid/reward-params'
-import type { PlacedObject, MapEntity } from '@/types/map-context'
+import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog, Wand2 } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
+import ObjectActionsEditor from './ObjectActionsEditor'
 import RewardSlotEditor from '@/components/tree/RewardSlotEditor'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, randomInRange, randomSquadDifficultyLabel, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 
@@ -108,6 +109,14 @@ export interface MapGridCellContentProps {
   onSetCitySpawnHero?: (item: PlacedObject, spawnHero: boolean) => void
   /** Set a hero spawner's own hero, or 'random' — docked-only, like the above. */
   onSetHeroSid?: (item: PlacedObject, heroSid: string) => void
+  /** A random-hero's owning player — an existing one, no new slot (unlike the spawners). */
+  onSetObjectOwner?: (item: PlacedObject, owner: number) => void
+  /** A random-hero's hero, or 'random'. */
+  onSetObjectHero?: (item: PlacedObject, heroSid: string) => void
+  /** Replace (or, with null, remove) an object's or zone's Actions Before/After — docked-only. */
+  onSetObjectActions?: (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) => void
+  /** A zone's Activate / Delete-after-trigger switches — docked-only. */
+  onSetMarkerState?: (item: PlacedObject, isActivate: boolean, isDelete: boolean) => void
   /** Every portal instance on the map, for the target picker (issue #127 item 8). */
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
@@ -211,6 +220,10 @@ export default function MapGridCellContent({
   onSetCityFaction,
   onSetCitySpawnHero,
   onSetHeroSid,
+  onSetObjectOwner,
+  onSetObjectHero,
+  onSetObjectActions,
+  onSetMarkerState,
   allPortals = [],
   onSetPortalTarget,
   highlightedNode = null,
@@ -562,54 +575,6 @@ export default function MapGridCellContent({
             </div>
           )}
 
-          {selected
-            && (selected.type === 0 ? !selected.isCity && !isHeroSpawner : selected.type === 2)
-            && (selected.guardUnitProps !== undefined || onSetGuardSquad) && (() => {
-              const guardRows = selected.guardUnitProps ?? []
-              // A standalone squads[] placement (type 2) isn't "guarding"
-              // anything — it IS the unit — so "Guard" would read oddly;
-              // everything else about this editor (HeroCatalogListEditor,
-              // onSetGuardSquad → upsertPropSquads) is already generic on
-              // entityType and needs no further change.
-              const heading = selected.type === 2 ? 'Composition' : 'Guard'
-              return (
-                <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
-                  <p className="text-xs font-semibold text-muted-foreground">{heading}</p>
-                  {onSetGuardSquad ? (
-                    <HeroCatalogListEditor
-                      category="creature"
-                      rows={guardRows}
-                      onChange={(rows) => onSetGuardSquad(selected, rows)}
-                      maxRows={12}
-                      refField="sid"
-                      emptyRow={{ sid: '', count: 1 }}
-                      addLabel="Add unit"
-                      renderExtraFields={(row, _i, update) => (
-                        <Input
-                          type="number"
-                          value={row.count}
-                          onChange={(e) => update({ count: Number(e.target.value) || 1 })}
-                          className="h-8 w-16 text-xs"
-                          title="Count"
-                        />
-                      )}
-                    />
-                  ) : (
-                    <ul className="text-xs list-disc list-inside space-y-0.5">
-                      {guardRows.map((u, i) => (
-                        <li key={i}>{catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid} x{u.count}</li>
-                      ))}
-                    </ul>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {selected.type === 2
-                      ? 'Leave empty for a randomized count/creature, resolved by the game itself — setting an exact unit here overrides that.'
-                      : 'Confirmed on interactable objects in real shipped maps; never observed on a mine specifically, though nothing here prevents setting one.'}
-                  </p>
-                </div>
-              )
-            })()}
-
           {selected.spawnerInfo && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground">Spawner</p>
@@ -752,6 +717,129 @@ export default function MapGridCellContent({
               </div>
             </div>
           )}
+
+          {/* A free-standing random hero: unlike the hero spawner it takes no new
+              player slot, it belongs to a player that already exists. */}
+          {selected && selected.sid === 'random-hero' && !selected.spawnerInfo && (() => {
+            const heroSid = selected.heroSid ?? 'random'
+            const pickedHero = heroSid !== 'random' ? catalog?.heroes.find((h) => h.id === heroSid) : undefined
+            const heroName = heroSid === 'random' ? 'Random' : (pickedHero?.name ?? heroSid)
+            const owner = selected.owner
+            const ownerOptions = Array.from({ length: playersCount }, (_, i) => i + 1)
+            if (owner !== undefined && !ownerOptions.includes(owner)) ownerOptions.push(owner)
+            return (
+              <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground">Random hero</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Player</p>
+                  {onSetObjectOwner ? (
+                    <Select
+                      value={owner !== undefined ? String(owner) : undefined}
+                      onValueChange={(v) => onSetObjectOwner(selected, Number(v))}
+                    >
+                      <SelectTrigger className="h-7 text-xs mt-0.5 w-28">
+                        <SelectValue placeholder="Not set" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ownerOptions.map((p) => (
+                          <SelectItem key={p} value={String(p)}>{p === -1 ? 'Neutral' : `Player ${p}`}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-xs">{owner === undefined ? 'Not set' : owner === -1 ? 'Neutral' : `Player ${owner}`}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Hero</p>
+                  <div className="flex items-start gap-2">
+                    {/* Portrait with the name under it; "Random" has no portrait. */}
+                    <div className="flex w-16 shrink-0 flex-col items-center gap-0.5">
+                      {heroSid !== 'random' && (
+                        <PortraitThumb
+                          iconId={pickedHero?.icon}
+                          name={heroName}
+                          size={56}
+                          height={56}
+                          previewSize={256}
+                          resolve={heroPortraitPath}
+                        />
+                      )}
+                      <p className="w-full break-words text-center text-[11px] leading-tight">{heroName}</p>
+                    </div>
+                    {onSetObjectHero && (
+                      <div className="flex flex-col items-start gap-1">
+                        <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setHeroPickerOpen(true)}>
+                          Browse…
+                        </Button>
+                        {heroSid !== 'random' && (
+                          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => onSetObjectHero(selected, 'random')}>
+                            Set to random
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {onSetObjectHero && (
+                    <HeroPickerDialog
+                      open={heroPickerOpen}
+                      onOpenChange={setHeroPickerOpen}
+                      value={heroSid !== 'random' ? heroSid : undefined}
+                      onSelect={(entry) => { if (entry.heroId) onSetObjectHero(selected, entry.heroId) }}
+                    />
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+
+          {selected
+            && (selected.type === 0 ? !selected.isCity && !isHeroSpawner : selected.type === 2)
+            && (selected.guardUnitProps !== undefined || onSetGuardSquad) && (() => {
+              const guardRows = selected.guardUnitProps ?? []
+              // A standalone squads[] placement (type 2) isn't "guarding"
+              // anything — it IS the unit — so "Guard" would read oddly;
+              // everything else about this editor (HeroCatalogListEditor,
+              // onSetGuardSquad → upsertPropSquads) is already generic on
+              // entityType and needs no further change.
+              const heading = selected.type === 2 ? 'Composition' : 'Guard'
+              return (
+                <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
+                  <p className="text-xs font-semibold text-muted-foreground">{heading}</p>
+                  {onSetGuardSquad ? (
+                    <HeroCatalogListEditor
+                      category="creature"
+                      rows={guardRows}
+                      onChange={(rows) => onSetGuardSquad(selected, rows)}
+                      maxRows={12}
+                      refField="sid"
+                      emptyRow={{ sid: '', count: 1 }}
+                      addLabel="Add unit"
+                      renderExtraFields={(row, _i, update) => (
+                        <Input
+                          type="number"
+                          value={row.count}
+                          onChange={(e) => update({ count: Number(e.target.value) || 1 })}
+                          className="h-8 w-16 text-xs"
+                          title="Count"
+                        />
+                      )}
+                    />
+                  ) : (
+                    <ul className="text-xs list-disc list-inside space-y-0.5">
+                      {guardRows.map((u, i) => (
+                        <li key={i}>{catalog?.creatures.find((c) => c.id === u.sid)?.name ?? u.sid} x{u.count}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {selected.type === 2
+                      ? 'Leave empty for a randomized count/creature, resolved by the game itself — setting an exact unit here overrides that.'
+                      : 'Confirmed on interactable objects in real shipped maps; never observed on a mine specifically, though nothing here prevents setting one.'}
+                  </p>
+                </div>
+              )
+            })()}
 
           {selected && selected.isCity && (selected.citySquadSids !== undefined || onSetCityGarrison) && (() => {
             const garrisonSids = selected.citySquadSids ?? []
@@ -931,7 +1019,7 @@ export default function MapGridCellContent({
               {selected.markerActive !== undefined && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Switch id="mgc-marker-active" checked={selected.markerActive} disabled />
+                    <Switch id="mgc-marker-active" checked={selected.markerActive} disabled={!onSetMarkerState} onCheckedChange={(on) => onSetMarkerState?.(selected, on, selected.markerDeleteAfterTrigger ?? false)} />
                     <Label htmlFor="mgc-marker-active" className="text-xs">Active</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -944,7 +1032,7 @@ export default function MapGridCellContent({
               {selected.markerDeleteAfterTrigger !== undefined && (
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Switch id="mgc-marker-delete" checked={selected.markerDeleteAfterTrigger} disabled />
+                    <Switch id="mgc-marker-delete" checked={selected.markerDeleteAfterTrigger} disabled={!onSetMarkerState} onCheckedChange={(on) => onSetMarkerState?.(selected, selected.markerActive ?? true, on)} />
                     <Label htmlFor="mgc-marker-delete" className="text-xs">Delete after trigger</Label>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -954,6 +1042,33 @@ export default function MapGridCellContent({
                 </div>
               )}
             </div>
+          )}
+
+          {(selected.type === 0 || selected.type === 1) && (onSetObjectActions || selected.actionsBefore || selected.actionsAfter) && (
+            <>
+              <ObjectActionsEditor
+                key={`${selected.key}-before`}
+                title={selected.type === 1 ? 'Actions when a hero enters' : 'Actions before the interaction'}
+                hint={
+                  selected.type === 1
+                    ? 'Run when a hero steps onto this zone from outside. The hero always stops there while the zone is active.'
+                    : 'Run when a hero interacts with this object, before its own effect.'
+                }
+                value={selected.actionsBefore}
+                playersCount={playersCount ?? 0}
+                onApply={onSetObjectActions ? (v) => onSetObjectActions(selected, 'before', v) : undefined}
+              />
+              {(selected.type === 0 || selected.actionsAfter) && (
+                <ObjectActionsEditor
+                  key={`${selected.key}-after`}
+                  title="Actions after the interaction"
+                  hint="Run after the object's own effect has happened."
+                  value={selected.actionsAfter}
+                  playersCount={playersCount ?? 0}
+                  onApply={onSetObjectActions ? (v) => onSetObjectActions(selected, 'after', v) : undefined}
+                />
+              )}
+            </>
           )}
         </div>
       )}

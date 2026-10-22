@@ -79,6 +79,7 @@ import { saveMapFile } from '@/lib/map-save'
 import { mintCustomHeroSid } from '@/lib/zip-export'
 import { getMeshOptions, getMountForFraction, getSkillsRollVariant, getDefaultStatsAndRolls, isHeroIdTaken } from '@/lib/hero-authoring'
 import { BIOME_NAMES } from '@/lib/map-grid/terrain-colors'
+import { syncHeroItemsEverywhere } from '@/lib/hero-items-sync'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useLocalizedTextField } from '@/hooks/useLocalizedTextField'
@@ -287,6 +288,7 @@ export default function HeroEditorDialog({
   const [startSquadAlt, setStartSquadAlt] = useState<HeroSquadEntry[]>([])
   const [startSkills, setStartSkills] = useState<HeroSkillEntry[]>([])
   const [startMagics, setStartMagics] = useState<HeroMagicEntry[]>([])
+  const [startArtifacts, setStartArtifacts] = useState<{ sid: string }[]>([])
   const [portraitPickerOpen, setPortraitPickerOpen] = useState(false)
   const [initialized, setInitialized] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -336,6 +338,7 @@ export default function HeroEditorDialog({
     setStartSquadAlt(toSquadEntries(def?.startSquadAlt))
     setStartSkills(toSkillEntries(def?.startSkills))
     setStartMagics(toMagicEntries(def?.startMagics))
+    setStartArtifacts((existingCustomHero?.startArtifacts ?? []).map((sid) => ({ sid })))
     setError(null)
     setInitialized(true)
   }
@@ -475,7 +478,16 @@ export default function HeroEditorDialog({
       // "Build from scratch" records no specific source hero — mesh/mount/
       // skill table trace back to fraction+classType instead, not one
       // individual hero's identity.
-      setCustomHero(trimmedId, { heroSid: trimmedId, sourceHeroSid: mode === 'scratch' ? '' : baseHeroSid, definition })
+      const artifacts = startArtifacts.map((a) => a.sid.trim()).filter(Boolean)
+      setCustomHero(trimmedId, {
+        heroSid: trimmedId,
+        sourceHeroSid: mode === 'scratch' ? '' : baseHeroSid,
+        definition,
+        ...(artifacts.length > 0 ? { startArtifacts: artifacts } : {}),
+      })
+
+      // Starting artifacts become generated actions/quests (heroes have no artifact field in the game).
+      syncHeroItemsEverywhere()
 
       manageToken(previousSid, nameField.trimmedSid, nameField.trimmedText)
       manageToken(previousDescSid, descField.trimmedSid, descField.trimmedText)
@@ -531,12 +543,12 @@ export default function HeroEditorDialog({
                 <FieldInfo text="Clone one hero: every field starts from a real hero's own values. Build from scratch: skip picking a specific hero — mesh/mount/skill table/starting stats come from fraction + class type alone, and squad/skills/magics start empty. Switchable at any time." />
               </div>
               <div className="flex gap-1.5">
-                <Button type="button" variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
+                <Button type="button" aria-pressed={mode === 'clone'} variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
                   Clone one hero
                 </Button>
                 <Button
                   type="button"
-                  variant={mode === 'scratch' ? 'default' : 'outline'}
+                  aria-pressed={mode === 'scratch'} variant={mode === 'scratch' ? 'default' : 'outline'}
                   size="sm"
                   className="h-7 text-xs"
                   onClick={() => { setMode('scratch'); setSourceHeroSid(''); setSourcePickerValue('') }}
@@ -877,6 +889,24 @@ export default function HeroEditorDialog({
                       </div>
                     </>
                   )}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Starting artifacts</Label>
+                <p className="text-xs text-muted-foreground">
+                  The game has no artifact field on heroes, so these are given on day 1 by a generated trigger
+                  (a quest named after the map ending in "hero_start_items"; edits to it are overwritten).
+                </p>
+                <HeroCatalogListEditor
+                  category="artifact"
+                  rows={startArtifacts}
+                  onChange={setStartArtifacts}
+                  maxRows={20}
+                  refField="sid"
+                  emptyRow={{ sid: '' }}
+                  addLabel="Add artifact"
+                  renderExtraFields={() => null}
                 />
               </div>
             </>

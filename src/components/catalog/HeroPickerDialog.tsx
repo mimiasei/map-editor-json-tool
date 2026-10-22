@@ -14,6 +14,7 @@ import {
   DraggableDialogDragHandle,
 } from '@/components/common/DraggableDialogContent'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useScenarioStore } from '@/store/useScenarioStore'
 import { STATIC_HEROES } from '@/lib/catalog/static-catalog'
 import { PortraitThumb, thumbnailPath, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import { factionDisplayName, groupByFaction } from '@/lib/factions'
@@ -55,6 +56,8 @@ export default function HeroPickerDialog({
   lockedFaction,
 }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
+  const customHeroes = useScenarioStore((s) => s.customHeroes)
+  const localization = useScenarioStore((s) => s.localization)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PortraitFilterState>(loadPortraitFilter)
 
@@ -65,22 +68,45 @@ export default function HeroPickerDialog({
   // Hero mode still works without Core.zip by falling back to the bundled hero list. The
   // portrait list cannot: it is built from the dialog references only Core.zip carries.
   const entries = useMemo<PortraitEntry[]>(() => {
+    // Custom heroes are scenario-local clones, so neither the catalog nor the static list has them.
+    // Hero mode only: a clone reuses its source hero's art, so portrait mode would list it twice.
+    const custom: PortraitEntry[] =
+      mode === 'hero'
+        ? Object.values(customHeroes).map((def) => {
+            const nameSid = typeof def.definition.name === 'string' ? def.definition.name : ''
+            const icon = typeof def.definition.icon === 'string' ? def.definition.icon : ''
+            return {
+              key: `custom-hero:${def.heroSid}`,
+              icon: heroAvatarIcon(icon),
+              name: localization[nameSid] ?? def.heroSid,
+              sublabel: def.heroSid,
+              kind: 'hero' as const,
+              fraction: typeof def.definition.fraction === 'string' ? def.definition.fraction : '',
+              heroId: def.heroSid,
+              heroIcon: icon,
+            }
+          })
+        : []
     if (catalog) {
       const all = buildPortraitEntries(catalog)
-      return mode === 'portrait' ? all : all.filter((e) => e.kind === 'hero' && !e.variant)
+      const real = mode === 'portrait' ? all : all.filter((e) => e.kind === 'hero' && !e.variant)
+      return [...real, ...custom]
     }
     if (mode === 'portrait') return []
-    return STATIC_HEROES.map((h) => ({
-      key: `hero:${h.id}`,
-      icon: heroAvatarIcon(h.icon),
-      name: h.name,
-      sublabel: h.id,
-      kind: 'hero' as const,
-      fraction: h.fraction,
-      heroId: h.id,
-      heroIcon: h.icon,
-    }))
-  }, [catalog, mode])
+    return [
+      ...STATIC_HEROES.map((h) => ({
+        key: `hero:${h.id}`,
+        icon: heroAvatarIcon(h.icon),
+        name: h.name,
+        sublabel: h.id,
+        kind: 'hero' as const,
+        fraction: h.fraction,
+        heroId: h.id,
+        heroIcon: h.icon,
+      })),
+      ...custom,
+    ]
+  }, [catalog, mode, customHeroes, localization])
 
   const factionOf = (e: PortraitEntry) =>
     factionDisplayName(e.fraction, catalog?.factions) || 'Neutral'

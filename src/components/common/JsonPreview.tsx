@@ -17,7 +17,9 @@ import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { CustomBuffDefinition } from '@/types/custom-buff'
 import { buildJsonDocs, SCENARIO_DOC_ID } from '@/lib/json-docs'
-import type { JsonDoc } from '@/lib/json-docs'
+import type { JsonDoc, MapActionTables } from '@/lib/json-docs'
+import { parseActionTableDoc } from '@/lib/map-action-tables'
+import { useMapDocumentStore, containerToRawBlocks } from '@/store/useMapDocumentStore'
 import { parseDialogFile } from '@/lib/dialog-file'
 import { validateDialogFlow } from '@/lib/validate'
 import type { ValidationMessage } from '@/lib/validate'
@@ -92,6 +94,8 @@ export interface JsonSaveHandlers {
   onSaveCustomArtifactTemplates: (templates: Record<string, unknown>[]) => string | void
   onSaveCustomArtifactMapObjects: (templates: Record<string, unknown>[]) => string | void
   onSaveCustomBuffTemplates: (templates: Record<string, unknown>[]) => string | void
+  /** Replaces a whole Actions Before/After table in the open .map; returns an error string, or nothing on success. */
+  onSaveMapActions: (which: 'before' | 'after', rows: Record<string, unknown>[]) => string | void
 }
 
 // ─── Content (used by both docked and undocked) ───────────────────────────────
@@ -108,6 +112,8 @@ interface JsonPreviewContentProps {
   customArtifacts?: Record<string, CustomArtifactDefinition>
   customBuffs?: Record<string, CustomBuffDefinition>
   mapName?: string
+  /** The open .map's action tables, when one is loaded (docked window only). */
+  mapActions?: MapActionTables
   /** When provided, shows an Edit button that lets the user edit the JSON inline. */
   handlers?: JsonSaveHandlers
 }
@@ -122,6 +128,7 @@ export function JsonPreviewContent({
   customArtifacts = {},
   customBuffs = {},
   mapName = '',
+  mapActions,
   handlers,
 }: JsonPreviewContentProps) {
   const [copied, setCopied] = useState(false)
@@ -134,8 +141,8 @@ export function JsonPreviewContent({
   const [docId, setDocId] = useState<string>(SCENARIO_DOC_ID)
 
   const docs = useMemo(
-    () => buildJsonDocs(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName),
-    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName],
+    () => buildJsonDocs(scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions),
+    [scenario, dialogs, localization, translations, customHeroes, customMapObjects, customArtifacts, customBuffs, mapName, mapActions],
   )
 
   // Fall back to the scenario if the selected dialog was renamed or deleted
@@ -289,6 +296,18 @@ export function JsonPreviewContent({
     if (doc.kind === 'customArtifactMapObjects') {
       try {
         const error = handlers.onSaveCustomArtifactMapObjects(parseArrayField(editValue))
+        if (error) { setParseError(error); return }
+        clearEditState()
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+      }
+      return
+    }
+
+    // ── Zone & object actions (.map Block 2) ─────────────────────────────────
+    if (doc.kind === 'mapActions') {
+      try {
+        const error = handlers.onSaveMapActions(doc.actionTable!, parseActionTableDoc(editValue))
         if (error) { setParseError(error); return }
         clearEditState()
       } catch (err) {
@@ -521,6 +540,13 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
       },
       onSaveCustomBuffTemplates: (templates) =>
         applyBatchedTemplates(customBuffs, templates, setCustomBuff, 'buff'),
+      onSaveMapActions: (which, rows) => {
+        try {
+          useMapDocumentStore.getState().applyEdit({ kind: 'replaceActionTable', which, rows })
+        } catch (err) {
+          return err instanceof Error ? err.message : 'The map rejected these rows'
+        }
+      },
     }),
     [
       setScenario, setDialogFlow, removeDialogFlow, setLocalizationBatch, setTranslationBatch,
@@ -528,6 +554,15 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
       customBuffs, setCustomBuff,
     ],
   )
+
+  // The tables are read from the open .map so what is shown is what Save writes; edits go through applyEdit
+  // (verified, undoable, written to disk with File > Save).
+  const container = useMapDocumentStore((st) => st.container)
+  const mapActions = useMemo<MapActionTables | undefined>(() => {
+    if (!container) return undefined
+    const props = containerToRawBlocks(container).block2?.objectsProperties
+    return { before: props?.propActionsBefore ?? [], after: props?.propActionsAfter ?? [] }
+  }, [container])
 
   return (
     <div className="group flex h-full flex-col">
@@ -548,6 +583,7 @@ export default function JsonPreview({ onUndock, undocked }: JsonPreviewProps) {
           customArtifacts={customArtifacts}
           customBuffs={customBuffs}
           mapName={mapName}
+          mapActions={mapActions}
           handlers={handlers}
         />
       </div>

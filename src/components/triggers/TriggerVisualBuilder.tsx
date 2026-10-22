@@ -438,6 +438,7 @@ export default function TriggerVisualBuilder({ questIndex, subQuestIndex, trigge
         onRemoveCondition={handleRemoveCondition}
         onUpdateAction={(i, a) => updateAction(questIndex, subQuestIndex, triggerIndex, i, a)}
         onRemoveAction={handleRemoveAction}
+        onDuplicateAction={(a) => addAction(questIndex, subQuestIndex, triggerIndex, a)}
         onPickFromMap={handlePickFromMap}
       />
     </div>

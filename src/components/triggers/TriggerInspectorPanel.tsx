@@ -18,6 +18,8 @@ interface Props {
   onRemoveCondition: (index: number) => void
   onUpdateAction: (index: number, action: Action) => void
   onRemoveAction: (index: number) => void
+  /** Adds an identical copy of the open action to the trigger. */
+  onDuplicateAction?: (action: Action) => void
   /** "Pick from map" for a mapEntity/hero field on whichever row is open —
    *  see ConditionForm/ActionForm's identical prop. */
   onPickFromMap?: (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') => void
@@ -31,6 +33,7 @@ export default function TriggerInspectorPanel({
   onRemoveCondition,
   onUpdateAction,
   onRemoveAction,
+  onDuplicateAction,
   onPickFromMap,
 }: Props) {
   const catalog = useCatalogStore((s) => s.catalog)
@@ -109,6 +112,15 @@ export default function TriggerInspectorPanel({
                 onClose()
               }}
               onPickFromMap={onPickFromMap}
+              siblingActions={trigger.actions}
+              onDuplicate={
+                onDuplicateAction
+                  ? (copy) => {
+                      onDuplicateAction(copy)
+                      onClose()
+                    }
+                  : undefined
+              }
             />
             <div className="mt-4 flex justify-end gap-2">
               <Button variant="outline" onClick={handleCancel}>

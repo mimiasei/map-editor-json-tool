@@ -1392,7 +1392,100 @@ function backfillNewObjectPropertiesDefaults(block2Text: string, newId: number, 
   if (RESOURCE_PICKUP_SIDS.has(sid)) {
     tryAppendRow(RESOURCE_PICKUP_TABLE_DEFAULT.table, RESOURCE_PICKUP_TABLE_DEFAULT.row(newId))
   }
+  if (sid === 'random-hero') {
+    // Every one of 42 shipped random-heroes has both rows: the owning player and
+    // the hero. A fresh one starts as player 1's random hero, like GME's default.
+    tryAppendRow('propOwners', { type: 0, id: newId, owner: 1 })
+    tryAppendRow('propHeroes', { type: 0, id: newId, isDefined: false, heroSid: 'random' })
+  }
   return text
+}
+
+// ─── Owner + hero of a free-standing `random-hero` ───────────────────────────
+// Unlike a hero-spawner, a random-hero takes no player slot of its own: its
+// owner is just `propOwners.owner` (a player that already exists) and its hero
+// `propHeroes` — no Block 1 `spawns[]` entry, so nothing else is touched.
+
+/** Set (or create) the `propOwners` row of an object: the player it belongs to. */
+export function upsertPropOwner(block2Chunk: Uint8Array, entityType: number, entityId: number, owner: number): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propOwners')
+  const entries = JSON.parse(span) as Array<{ type?: number | string; id?: number; owner?: number }>
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) existing.owner = owner
+  else entries.push({ type: entityType, id: entityId, owner })
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
+/** Set (or create) the `propHeroes` row of an object without touching Block 1;
+ *  pass 'random' for the game's own random pick (isDefined:false). */
+export function upsertPropHeroRow(block2Chunk: Uint8Array, entityType: number, entityId: number, heroSid: string): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propHeroes')
+  const entries = JSON.parse(span) as PropHeroEntry[]
+  const isDefined = heroSid !== 'random'
+  const existing = entries.find((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (existing) {
+    existing.heroSid = heroSid
+    existing.isDefined = isDefined
+  } else {
+    entries.push({ type: entityType, id: entityId, isDefined, heroSid })
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
+/** Set, replace or remove the "Actions Before"/"Actions After" row of an object or zone (joined on (type, id)).
+ *  A null value, or one with no actions, deletes the row. Rows keep the shipped shape
+ *  {type,id,repeat,sides,actions:[{comment:"",p,a}]}. */
+export function setObjectActions(
+  block2Chunk: Uint8Array,
+  entityType: number,
+  entityId: number,
+  which: 'before' | 'after',
+  value: { repeat: boolean; sides: string; actions: { a: string; p: string[]; comment?: string }[] } | null,
+): Uint8Array {
+  const table = which === 'before' ? 'propActionsBefore' : 'propActionsAfter'
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, table)
+  const entries = JSON.parse(span) as Array<{ type?: number | string; id?: number }>
+  const index = entries.findIndex((e) => String(e.type) === String(entityType) && e.id === entityId)
+  if (!value || value.actions.length === 0) {
+    if (index !== -1) entries.splice(index, 1)
+  } else {
+    const row = {
+      type: entityType,
+      id: entityId,
+      repeat: value.repeat,
+      sides: value.sides,
+      actions: value.actions.map((a) => ({ comment: a.comment ?? '', p: a.p, a: a.a })),
+    }
+    if (index !== -1) entries[index] = row
+    else entries.push(row)
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
+/** Replace a whole Actions Before/After table (the JSON editor's "Zone & object actions" documents). */
+export function replaceActionTable(block2Chunk: Uint8Array, which: 'before' | 'after', rows: unknown[]): Uint8Array {
+  const table = which === 'before' ? 'propActionsBefore' : 'propActionsAfter'
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose } = findJsonArraySpan(text, table)
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(rows) + text.slice(arrayClose + 1))
+}
+
+/** Set (or create) a zone's propMarkers row: the editor's "Activate" and "Delete after trigger" checkboxes. */
+export function upsertPropMarker(block2Chunk: Uint8Array, entityId: number, isActivate: boolean, isDelete: boolean): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propMarkers')
+  const entries = JSON.parse(span) as Array<{ type?: number | string; id?: number; isDelete?: boolean; isActivate?: boolean }>
+  const existing = entries.find((e) => String(e.type) === '1' && e.id === entityId)
+  if (existing) {
+    existing.isActivate = isActivate
+    existing.isDelete = isDelete
+  } else {
+    entries.push({ type: 1, id: entityId, isDelete, isActivate })
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 
 // ─── city-spawner / hero-spawner (real player-start points) ────────────────
@@ -1542,7 +1635,8 @@ export function addMarkerInstance(chunk: Uint8Array, sid: string, node: number):
   const patchedSpan = JSON.stringify(entries)
   const patchedText = text.slice(0, arrayOpen) + patchedSpan + text.slice(arrayClose + 1)
   const finalChunk = patchTopLevelScalar(new TextEncoder().encode(patchedText), 'markersFreeId', newId + 1)
-  return { chunk: finalChunk, newId }
+  // Every zone in the 9 shipped maps that have any (111 zones) has a propMarkers row; a zone without one is unverified.
+  return { chunk: upsertPropMarker(finalChunk, newId, true, false), newId }
 }
 
 // ─── Delete a placed instance (objects[] / squads[] / markers[]) ───────────

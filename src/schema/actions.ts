@@ -479,7 +479,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     category: 'Game Rules',
     description: 'Forces the player with the specified index to lose (defeat message shown, all heroes removed, all objects go neutral).',
     params: [
-      { label: 'Player index', hint: '0=Player1, 1=Player2, etc.', required: true, type: 'enum', options: ['0', '1', '2', '3'] },
+      { label: 'Player', hint: 'Which player', required: true, player: true },
     ],
   },
   ChangeCampaignOneStep: {
@@ -652,7 +652,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Object SID', hint: 'e.g. mine_gold', required: true, entity: 'interactiveObject' },
       { label: 'Node index', hint: 'e.g. 1755', required: true, nodeIndex: true },
       { label: 'Mirror?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   SpawnMapObject: {
@@ -664,20 +664,22 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Object SID', hint: 'e.g. hill_dead_big', required: true, entity: 'decoration' },
       { label: 'Node index', hint: 'e.g. 1986', required: true, nodeIndex: true },
       { label: 'Rotation', hint: '0', required: false, type: 'enum', options: ['0', '1', '2', '3'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   CreateVFX: {
     type: 'CreateVFX',
     label: 'Create VFX',
     category: 'Map Objects',
-    description: 'Creates a visual effect at the specified node. boolRotation: random rotation. isActive: show/hide. entityVFX is optional.',
+    description: 'Creates a visual effect at the specified node. boolRotation: random rotation. isActive: show/hide. entityVFX is required in practice (see the param).',
     params: [
       { label: 'VFX SID', hint: 'e.g. fx_map_fire', required: true, entity: 'vfx' as const },
       { label: 'Node index', hint: 'e.g. 520', required: true, nodeIndex: true },
       { label: 'Random rotation?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
       { label: 'Active?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      // The game needs it: all 17 CreateVFX actions in the shipped maps carry 5 params, and a 4-param one threw
+      // IndexOutOfRangeException in the game when a zone ran it (the guide calls it optional). Left blank, cleanAction names it.
+      { label: 'Entity SID', hint: 'blank = named automatically', required: false, mapEntity: true, defines: true },
     ],
   },
   EventBankRefresh: {
@@ -792,7 +794,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   SpawnSquadNPC: {
@@ -805,7 +807,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   SetFlagEscape: {
@@ -905,7 +907,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
     params: [
       { label: 'Hero SID', hint: 'e.g. demon_hero_6', required: true, entity: 'hero' },
       { label: 'Node index', hint: 'e.g. 47', required: true, nodeIndex: true },
-      { label: 'Player index', hint: '0=Player1, 1=Player2', required: true, type: 'number' },
+      { label: 'Player', hint: 'Which player', required: true, player: true },
     ],
   },
   DeleteHero: {

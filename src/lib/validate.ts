@@ -1,6 +1,7 @@
 import type { ScenarioFile } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import { AVATAR_ANIMATIONS, RESULT_DIALOG_VALUES } from '@/types/dialog'
+import { validateStoryState } from '@/lib/story-validate'
 
 export interface ValidationMessage {
   path: string
@@ -252,7 +253,16 @@ export function validateScenario(
           warnings.push({ path: trigPath, message: 'Trigger has no actions.' })
         }
 
-        // Check action references
+      }
+    }
+  }
+
+  // Action references are checked after every quest is registered, so a trigger
+  // may point at a quest defined further down the list (e.g. NextQuest chains).
+  for (const [qi, quest] of scenario.quests.entries()) {
+    for (const [sqi, subQuest] of quest.subQuests.entries()) {
+      for (const [ti, trigger] of subQuest.triggers.entries()) {
+        const trigPath = `Quest[${qi}] "${quest.sid}" > SubQuest[${sqi}] "${subQuest.sid}" > Trigger[${ti}]`
         for (const action of trigger.actions) {
           checkActionRefs(action, trigPath, counterSids, topQuestSids, questSids, warnings)
         }
@@ -340,6 +350,13 @@ export function validateScenario(
       }
     }
   }
+
+  const storyResult = validateStoryState(scenario, {
+    mapName: extras?.mapName,
+    dialogs: extras?.dialogs,
+  })
+  errors.push(...storyResult.errors)
+  warnings.push(...storyResult.warnings)
 
   return { errors, warnings }
 }

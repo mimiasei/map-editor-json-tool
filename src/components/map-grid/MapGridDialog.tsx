@@ -48,7 +48,7 @@ import {
   resolveDecorationSubcategory,
   type DecorationSubcategory,
 } from '@/lib/map-grid/decoration-subcategories'
-import type { PlacedObject, MapEntity } from '@/types/map-context'
+import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
@@ -123,7 +123,8 @@ import {
     LandPlot,
     Box,
   Castle,
-  Crown
+  Crown,
+  UserRound
 } from 'lucide-react'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
@@ -272,6 +273,15 @@ interface Props {
   /** True while the cell-info column is already undocked — shows a placeholder instead. */
   undocked?: boolean
 }
+
+/** The player number drawn over a spawner or a random hero on the map. */
+const mapBadgeOwner = (o: PlacedObject): number | undefined =>
+  o.spawnerInfo?.owner ?? (o.sid === 'random-hero' && o.owner !== undefined && o.owner > 0 ? o.owner : undefined)
+
+/** Objects placed one at a time by a click (no brush, rectangle or bucket): the
+ *  player-start spawners and the random hero. */
+const isSingleTileSid = (sid: string | null): boolean =>
+  sid === 'city-spawner' || sid === 'hero-spawner' || sid === 'random-hero'
 
 export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }: Props) {
   const context = useMapContextStore((s) => s.context)
@@ -1815,7 +1825,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // zone marker stays single-click-only (their own doc comments), so this
     // checks placingSid specifically, ahead of the broader click-vs-drag
     // arm below that also covers those two.
-    if (placingSid && interactionMode === 'rectangle') {
+    if (placingSid && !isSingleTileSid(placingSid) && interactionMode === 'rectangle') {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
         e.currentTarget.setPointerCapture(e.pointerId)
@@ -1824,7 +1834,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       return
     }
-    if (placingSid && objectsBucketMode) {
+    if (placingSid && !isSingleTileSid(placingSid) && objectsBucketMode) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) {
         const region = bucketFillRegion(node)
@@ -2093,7 +2103,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // brush-radius-aware commit below (not a bespoke single-tile path —
       // see that branch's own comment for why).
       const node = screenToNode(e.clientX, e.clientY, rect)
-      if (node !== null && placingSid) stageObjectPaint(node, placingSid)
+      // A single-tile object (spawner, random hero) is placed by the click on
+      // release, never by dragging a trail of them.
+      if (node !== null && placingSid && !isSingleTileSid(placingSid)) stageObjectPaint(node, placingSid)
       setHoveredNode(node)
       return
     }
@@ -2282,7 +2294,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (wasClick && placingSid) {
         const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
         if (node !== null) {
-          const tiles = tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
+          const tiles = isSingleTileSid(placingSid)
+            ? [node]
+            : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
           commitObjectPaintStroke(tiles)
         }
       } else if (wasClick && placingCreatureId) {
@@ -2962,6 +2976,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }
   const handleSetHeroSid = (item: PlacedObject, heroSid: string) =>
     applyEdit({ kind: 'setHeroSid', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
+  // A random-hero belongs to an existing player; no spawner slot is involved.
+  const handleSetObjectOwner = (item: PlacedObject, owner: number) =>
+    applyEdit({ kind: 'setObjectOwner', entityType: item.type, entityId: item.id, owner }, 'set hero owner')
+  const handleSetObjectHero = (item: PlacedObject, heroSid: string) =>
+    applyEdit({ kind: 'setObjectHero', entityType: item.type, entityId: item.id, heroSid }, 'set hero')
+  const handleSetObjectActions = (item: PlacedObject, which: 'before' | 'after', value: ObjectActions | null) =>
+    applyEdit({ kind: 'setObjectActions', entityType: item.type, entityId: item.id, which, value }, `set actions ${which}`)
+  const handleSetMarkerState = (item: PlacedObject, isActivate: boolean, isDelete: boolean) =>
+    applyEdit({ kind: 'setMarkerState', entityId: item.id, isActivate, isDelete }, 'set zone state')
 
   // The object's entity SID, assigning a fresh one (`<template sid>_<n>`, with
   // the faction in the name for city spawners) if it has none yet. Shared by
@@ -3390,7 +3413,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const stageObjectPaint = useCallback((node: number, sid: string) => {
     // city-spawner/hero-spawner are real player-start points, never a
     // decorative scatter — always single-tile, brush Size/Disperse ignored.
-    const tiles = (sid === 'city-spawner' || sid === 'hero-spawner' ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
+    const tiles = (isSingleTileSid(sid) ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
       .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
     if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
     setPaintObjectStaged((prev) => {
@@ -3620,7 +3643,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // following set, not a per-map-tile render — doesn't reintroduce the
   // one-DOM-node-per-map-tile pattern this codebase avoids. Ramp/Road stay
   // deliberately excluded — always single-tile, no brush shape to preview.
-  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive)
+  const brushToolActive = interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive)
   const brushPreviewTiles = useMemo(() => {
     if (!brushToolActive || hoveredNode === null) return []
     return tilesInRadius(hoveredNode % sizeX, Math.floor(hoveredNode / sizeX), brushRadius, sizeX, sizeZ, brushDisperse)
@@ -3855,7 +3878,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                state, same handlers, same stage-then-Save convention. */
             <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
               <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
-              {placingSid && !spawnerPlacing ? (
+              {placingSid && !isSingleTileSid(placingSid) ? (
                 <div className="flex items-center gap-1">
                   <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
                     <Box className="h-3.5 w-3.5" />
@@ -3902,7 +3925,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   icon={<Box className="h-3.5 w-3.5" />}
                   label="Objects"
                   title="Place a new object"
-                  onClick={() => { if (spawnerPlacing) stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
+                  onClick={() => { if (isSingleTileSid(placingSid)) stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen((prev) => !prev) }}
                 />
               )}
               {/* City/Hero spawner tool — own icon next to Objects. Armed, it shows a
@@ -3939,6 +3962,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   label="Spawner"
                   title="Place a city or hero spawner"
                   onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid(spawnerKind === 'city' ? 'city-spawner' : 'hero-spawner') }}
+                />
+              )}
+              {/* Hero — a free-standing random hero that belongs to a player
+                  which already exists (unlike the hero spawner, it adds no
+                  player). One per click: no brush, rectangle or bucket. */}
+              {placingSid === 'random-hero' ? (
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click a tile to place a hero">
+                    <UserRound className="h-3.5 w-3.5" />
+                    Hero
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<UserRound className="h-3.5 w-3.5" />}
+                  label="Hero"
+                  title="Place a hero that belongs to an existing player (one per click)"
+                  onClick={() => { stopPlacing(); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setSpawnerSelectorOpen(false); setObjectBrowserOpen(false); setPlacingSid('random-hero') }}
                 />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
@@ -4509,7 +4550,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   ordinary ground matches no level-(-1) tile, so nothing
                   visibly happens) — Ramp's own onPointerDown branch ignores
                   interactionMode entirely for the same reason. */}
-              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || placingSid !== null) && (
+              {(paintBiome !== null || levelBrush !== null || roadBrush !== null || interactableActive || squadActive || obstacleBrushActive || treesActive || eraserActive || resourceActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid))) && (
                 <>
                   <div className="flex-1" />
                   {(obstacleBrushActive || treesActive || interactableActive || squadActive || resourceActive) && (
@@ -4559,7 +4600,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   already select their own explicit region, so radius has
                   nothing to modify for either. Ramp/Road are deliberately
                   excluded too — always single-tile, no brush to size. */}
-              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || placingSid !== null || interactableActive || squadActive || resourceActive) && (
+              {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
                   <Button
@@ -4998,7 +5039,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           src={settings.iconImagesEnabled ? undefined : null}
                         />
                       )}
-                      {entry.pick.primary.spawnerInfo?.owner !== undefined && (
+                      {mapBadgeOwner(entry.pick.primary) !== undefined && (
                         <span
                           className="absolute inset-0 flex items-center justify-center font-black leading-none pointer-events-none"
                           style={{
@@ -5007,7 +5048,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             textShadow: '0 0 3px black, 0 0 3px black, 1px 1px 1px black',
                           }}
                         >
-                          {entry.pick.primary.spawnerInfo.owner}
+                          {mapBadgeOwner(entry.pick.primary)}
                         </span>
                       )}
                       {entry.pick.count > 1 && (
@@ -5390,6 +5431,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetCityFaction={canEditEntities ? handleSetCityFaction : undefined}
                   onSetCitySpawnHero={canEditEntities ? handleSetCitySpawnHero : undefined}
                   onSetHeroSid={canEditEntities ? handleSetHeroSid : undefined}
+                  onSetObjectOwner={canEditEntities ? handleSetObjectOwner : undefined}
+                  onSetObjectHero={canEditEntities ? handleSetObjectHero : undefined}
+                  onSetObjectActions={canEditEntities ? handleSetObjectActions : undefined}
+                  onSetMarkerState={canEditEntities ? handleSetMarkerState : undefined}
                   allPortals={allPortals}
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}

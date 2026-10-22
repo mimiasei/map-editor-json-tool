@@ -23,4 +23,7 @@ export interface CustomHeroDefinition {
    *  renaming what they need to (e.g. cm_fun_hero_1.json keeps Funerella's
    *  original name/description/motto sids unchanged). */
   definition: Record<string, unknown>
+  /** Artifacts the hero starts with. Editor-only: heroes have no artifact field in the game, so these become a managed
+   *  GiveItemHero quest (src/lib/hero-start-items.ts) and never reach the shipped hero JSON. */
+  startArtifacts?: string[]
 }

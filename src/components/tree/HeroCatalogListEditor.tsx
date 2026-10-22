@@ -19,7 +19,7 @@ import EntityCombobox from '@/components/common/EntityCombobox'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface HeroCatalogListEditorProps<T extends Record<string, unknown>> {
-  category: 'creature' | 'skill' | 'spell' | 'squadTemplate'
+  category: 'creature' | 'skill' | 'spell' | 'squadTemplate' | 'artifact'
   rows: T[]
   onChange: (rows: T[]) => void
   maxRows: number

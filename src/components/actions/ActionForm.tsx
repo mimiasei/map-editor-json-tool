@@ -5,6 +5,7 @@ import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { resolveCastleFaction, getBuildingOptions, getBuildingLevelNames } from '@/lib/building-options'
 import { useMemo } from 'react'
+import type { ParamDef } from '@/schema/conditions'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -18,15 +19,18 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { MapPin, Trash2, ExternalLink, ClipboardCopy } from 'lucide-react'
+import { MapPin, Trash2, ExternalLink, Copy } from 'lucide-react'
+import PlayerSelect from '@/components/common/PlayerSelect'
 import SidCombobox from '@/components/common/SidCombobox'
 import DialogSidField from '@/components/common/DialogSidField'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 import HelpTooltip from '@/components/ui/HelpTooltip'
-import { isTauri } from '@/lib/native-fs'
-import { copyToClipboard } from '@/lib/clipboard'
+import { duplicateAction, definedEntityNames } from '@/lib/action-duplicate'
 import { useDialogActionCascadeGuard } from '@/hooks/useDialogActionCascadeGuard'
+
+/** Short values (node index, player, number, enum) keep their width; SID fields take the spare room. */
+const FIXED_WIDTH = (p: ParamDef) => !!(p.nodeIndex || p.player || p.type === 'number' || p.type === 'enum')
 
 interface Props {
   action: Action
@@ -41,14 +45,19 @@ interface Props {
    *  type outside the filter is never made unrepresentable, just not offered
    *  as a fresh pick. */
   typeFilter?: (type: string) => boolean
+  /** Shows a Duplicate button; receives an identical copy (entity names it creates are suffixed) for the caller to insert. */
+  onDuplicate?: (copy: Action) => void
+  /** Actions beside this one that are not yet in the scenario (a draft), so the copy's new names avoid theirs too. */
+  siblingActions?: Action[]
 }
 
-export default function ActionForm({ action, onChange, onRemove, onPickFromMap, typeFilter }: Props) {
+export default function ActionForm({ action, onChange, onRemove, onPickFromMap, typeFilter, onDuplicate, siblingActions }: Props) {
   const def = ACTION_REGISTRY[action.a]
   const isCustom = !def
   const { openDialogEditor } = useScenarioStore()
   const cascadeGuard = useDialogActionCascadeGuard()
   const entities = useMapContextStore((s) => s.context?.entities)
+  const scenario = useScenarioStore((s) => s.scenario)
   const placedObjects = useMapContextStore((s) => s.context?.placedObjects)
   const catalog = useCatalogStore((s) => s.catalog)
   const entityCoordsMap = useMemo(() => {
@@ -147,15 +156,24 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
             <p className="text-xs text-muted-foreground">{def.description}</p>
           )}
         </div>
-        {isTauri() && (
+        {onDuplicate && (
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8 mt-4 text-muted-foreground hover:text-primary"
-            onClick={() => copyToClipboard('action', action)}
-            title="Copy action to clipboard"
+            onClick={() => {
+              const taken = definedEntityNames(scenario)
+              for (const e of entities ?? []) taken.add(e.sid)
+              for (const a of [action, ...(siblingActions ?? [])]) {
+                ACTION_REGISTRY[a.a]?.params.forEach((param, i) => {
+                  if (param.defines && a.p?.[i]) taken.add(a.p[i])
+                })
+              }
+              onDuplicate(duplicateAction(action, taken))
+            }}
+            title="Duplicate action"
           >
-            <ClipboardCopy className="h-3.5 w-3.5" />
+            <Copy className="h-3.5 w-3.5" />
           </Button>
         )}
         <Button
@@ -172,7 +190,7 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
 
       {/* Known params */}
       {def && def.params.length > 0 && (
-        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+        <div className="flex flex-wrap gap-2">
           {def.params.map((param, i) => {
             const isBuildingLevelParam = buildingSidIndex >= 0 && i === buildingSidIndex + 1
             const buildingLevelOptions =
@@ -180,12 +198,14 @@ export default function ActionForm({ action, onChange, onRemove, onPickFromMap, 
                 ? buildingLevelNames.map((name, idx) => ({ value: String(idx + 1), label: name }))
                 : undefined
             return (
-            <div key={i} className="space-y-1">
+            <div key={i} className={`space-y-1 min-w-[160px] basis-40 ${FIXED_WIDTH(param) ? 'grow-0' : 'grow'}`}>
               <div className="flex items-center gap-1">
                 <Label className="text-xs">{param.label}</Label>
                 <HelpTooltip category="actions" id={action.a} paramIndex={i} />
               </div>
-              {param.buildingSid && buildingOptions.length > 0 ? (
+              {param.player ? (
+                <PlayerSelect value={(action.p ?? [])[i] ?? ''} onChange={(v) => updateParam(i, v)} placeholder={param.hint} />
+              ) : param.buildingSid && buildingOptions.length > 0 ? (
                 <Select
                   value={(action.p ?? [])[i] ?? ''}
                   onValueChange={(v) => updateParam(i, v)}

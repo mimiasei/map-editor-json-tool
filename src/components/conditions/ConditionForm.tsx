@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { MapPin, Trash2 } from 'lucide-react'
+import PlayerSelect from '@/components/common/PlayerSelect'
 import SidCombobox from '@/components/common/SidCombobox'
 import EntityCombobox from '@/components/common/EntityCombobox'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
@@ -176,6 +177,8 @@ export default function ConditionForm({ condition, onChange, onRemove, onPickFro
                     ))}
                   </SelectContent>
                 </Select>
+              ) : param.player ? (
+                <PlayerSelect value={(condition.p ?? [])[i] ?? ''} onChange={(v) => updateParam(i, v)} placeholder={param.hint} />
               ) : param.type === 'enum' && param.options ? (
                 <Select
                   value={(condition.p ?? [])[i] ?? ''}

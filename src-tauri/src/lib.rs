@@ -4,6 +4,64 @@ use tauri::{
 };
 
 mod game_dir;
+mod text_writer;
+
+use text_writer::{GeneratedText, Provider, StoryDraft, TextRequest, WriterError};
+
+// ─── Text writer (Story Builder) ─────────────────────────────────────────────
+// Prompts and validation live in text_writer/; the key never leaves Rust.
+
+#[tauri::command]
+fn text_writer_set_key(provider: Provider, key: String) -> Result<(), WriterError> {
+    text_writer::set_key(provider, &key)
+}
+
+#[tauri::command]
+fn text_writer_has_key(provider: Provider) -> bool {
+    text_writer::has_key(provider)
+}
+
+#[tauri::command]
+fn text_writer_clear_key(provider: Provider) -> Result<(), WriterError> {
+    text_writer::clear_key(provider)
+}
+
+/// Progress lines for the UI while a text request runs.
+fn writer_status(app: &tauri::AppHandle) -> impl Fn(&str) + Sync + '_ {
+    move |s: &str| {
+        let _ = app.emit("text-writer-status", s);
+    }
+}
+
+/// Which model will be used (looked up in the service's model list).
+#[tauri::command]
+async fn text_writer_check(app: tauri::AppHandle, provider: Provider) -> Result<String, WriterError> {
+    text_writer::check(provider, &writer_status(&app)).await
+}
+
+#[tauri::command]
+async fn text_writer_test(app: tauri::AppHandle, provider: Provider) -> Result<String, WriterError> {
+    text_writer::test(provider, &writer_status(&app)).await
+}
+
+#[tauri::command]
+async fn text_writer_generate(
+    app: tauri::AppHandle,
+    provider: Provider,
+    requests: Vec<TextRequest>,
+) -> Result<Vec<GeneratedText>, WriterError> {
+    text_writer::generate(provider, requests, &writer_status(&app)).await
+}
+
+#[tauri::command]
+async fn story_import(
+    app: tauri::AppHandle,
+    provider: Provider,
+    text: String,
+    lang: String,
+) -> Result<StoryDraft, WriterError> {
+    text_writer::import_story(provider, &text, &lang, &writer_status(&app)).await
+}
 
 /// The game's install folder (see game_dir.rs), or None when not found.
 #[tauri::command]
@@ -177,7 +235,17 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .invoke_handler(tauri::generate_handler![extract_thumbnails, detect_game_dir])
+        .invoke_handler(tauri::generate_handler![
+            extract_thumbnails,
+            detect_game_dir,
+            text_writer_set_key,
+            text_writer_has_key,
+            text_writer_clear_key,
+            text_writer_check,
+            text_writer_test,
+            text_writer_generate,
+            story_import
+        ])
         .setup(|app| {
             // ── Auto-update (desktop only) ───────────────────────────────────
             // The frontend drives the check and install via the JS API; this only

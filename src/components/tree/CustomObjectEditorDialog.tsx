@@ -646,7 +646,7 @@ export default function CustomObjectEditorDialog({
                 <div className="flex gap-1.5">
                   <Button
                     type="button"
-                    variant={mode === 'clone' ? 'default' : 'outline'}
+                    aria-pressed={mode === 'clone'} variant={mode === 'clone' ? 'default' : 'outline'}
                     size="sm"
                     className="h-7 text-xs"
                     onClick={() => setMode('clone')}
@@ -655,7 +655,7 @@ export default function CustomObjectEditorDialog({
                   </Button>
                   <Button
                     type="button"
-                    variant={mode === 'scratch' ? 'default' : 'outline'}
+                    aria-pressed={mode === 'scratch'} variant={mode === 'scratch' ? 'default' : 'outline'}
                     size="sm"
                     className="h-7 text-xs"
                     onClick={() => {
@@ -817,7 +817,7 @@ export default function CustomObjectEditorDialog({
                   <div className="flex gap-1.5">
                     <Button
                       type="button"
-                      variant={noNativeLogic ? 'default' : 'outline'}
+                      aria-pressed={noNativeLogic} variant={noNativeLogic ? 'default' : 'outline'}
                       size="sm"
                       className="h-7 text-xs"
                       onClick={() => {
@@ -829,7 +829,7 @@ export default function CustomObjectEditorDialog({
                     </Button>
                     <Button
                       type="button"
-                      variant={!noNativeLogic ? 'default' : 'outline'}
+                      aria-pressed={!noNativeLogic} variant={!noNativeLogic ? 'default' : 'outline'}
                       size="sm"
                       className="h-7 text-xs"
                       onClick={() => setNoNativeLogic(false)}

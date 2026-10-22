@@ -170,6 +170,17 @@
   transform: translateY(2px) !important;
 }
 
+/* A toggle that is on (aria-pressed="true") reads as pushed in: darker face, deep inner shadow, sunk 2px, and no hover
+   lift. Several toggles in one group can be on at once, so this must not depend on the variant. */
+.buttons-3d button[aria-pressed="true"]:not(:disabled),
+.buttons-3d button[aria-pressed="true"]:not(:disabled):hover,
+.buttons-3d button[aria-pressed="true"]:not(:disabled):focus {
+  background-color: #C9CCE8 !important;
+  color: #1F2140 !important;
+  box-shadow: rgba(45, 35, 66, 0.55) 0 4px 9px inset, rgba(45, 35, 66, 0.35) 0 1px 2px inset, #9EA2CC 0 0 0 1.5px inset !important;
+  transform: translateY(2px) !important;
+}
+
 /* ─── JSON preview syntax highlighting ──────────────────────────────────────
    Light: darker saturated tones for contrast on white.
    Dark:  pastel tones on dark background.

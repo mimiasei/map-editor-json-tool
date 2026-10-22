@@ -8,21 +8,24 @@
 // "Drawing…"/"Stop (Esc)" active state (only one tool at a time) keeps its
 // own separate rendering, unaffected by this.
 
-import type { ReactNode, MouseEventHandler } from 'react'
+import { forwardRef } from 'react'
+import type { ReactNode, ButtonHTMLAttributes } from 'react'
 
-interface Props {
+interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'title' | 'children'> {
   icon: ReactNode
   label: string
   title: string
-  onClick: MouseEventHandler<HTMLButtonElement>
 }
 
-export default function ToolButton({ icon, label, title, onClick }: Props) {
+// forwardRef + prop spread: a Radix `<PopoverTrigger asChild>` hands its ref and handlers to this button; without
+// them the popover has no anchor and never opens (the Zones tool).
+const ToolButton = forwardRef<HTMLButtonElement, Props>(function ToolButton({ icon, label, title, ...rest }, ref) {
   return (
     <button
+      ref={ref}
       type="button"
       title={title}
-      onClick={onClick}
+      {...rest}
       className="group flex items-center h-6 px-1.5 rounded-lg text-xs font-medium text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-accent-foreground"
     >
       {icon}
@@ -31,4 +34,6 @@ export default function ToolButton({ icon, label, title, onClick }: Props) {
       </span>
     </button>
   )
-}
+})
+
+export default ToolButton

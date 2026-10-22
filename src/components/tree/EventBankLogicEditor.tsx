@@ -165,8 +165,8 @@ function str(v: unknown, fallback = ''): string {
 function BoolToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex gap-1.5">
-      <Button type="button" variant={value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(true)}>Yes</Button>
-      <Button type="button" variant={!value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(false)}>No</Button>
+      <Button type="button" aria-pressed={value} variant={value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(true)}>Yes</Button>
+      <Button type="button" aria-pressed={!value} variant={!value ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => onChange(false)}>No</Button>
     </div>
   )
 }

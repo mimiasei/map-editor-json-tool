@@ -35,6 +35,7 @@ export interface JsonDoc {
     | 'customArtifactTemplates'
     | 'customArtifactMapObjects'
     | 'customBuffTemplates'
+    | 'mapActions'
   /** Short label for the switcher. */
   label: string
   /** Where this document ends up on disk, shown under the switcher. */
@@ -48,6 +49,14 @@ export interface JsonDoc {
   heroSid?: string
   /** Custom map object id — only set for customMapObjectLogic docs. */
   objectId?: string
+  /** Which table — only set for mapActions docs. */
+  actionTable?: 'before' | 'after'
+}
+
+/** The open .map's Block 2 action tables; absent when no map is loaded (and in undocked windows). */
+export interface MapActionTables {
+  before: unknown[]
+  after: unknown[]
 }
 
 export function dialogDocId(dialogId: string): string {
@@ -73,6 +82,7 @@ export function buildJsonDocs(
   customArtifacts: Record<string, CustomArtifactDefinition>,
   customBuffs: Record<string, CustomBuffDefinition>,
   mapName = '',
+  mapActions?: MapActionTables,
 ): JsonDoc[] {
   const docs: JsonDoc[] = [
     {
@@ -181,6 +191,20 @@ export function buildJsonDocs(
       pathHint: `DB/buffs/custom_maps/${mapNameBase}_buffs.json`,
       text: JSON.stringify({ array: buffTemplates }, null, '\t'),
     })
+  }
+
+  // ── Zone & object actions (live in the .map, not in the ZIP) ─────────────────
+  if (mapActions) {
+    for (const which of ['before', 'after'] as const) {
+      docs.push({
+        id: `mapActions:${which}`,
+        kind: 'mapActions',
+        label: `Map: Actions ${which === 'before' ? 'Before' : 'After'}`,
+        pathHint: `<map>.map · Block 2 · objectsProperties.propActions${which === 'before' ? 'Before' : 'After'}`,
+        text: JSON.stringify({ array: mapActions[which] }, null, '	'),
+        actionTable: which,
+      })
+    }
   }
 
   return docs
