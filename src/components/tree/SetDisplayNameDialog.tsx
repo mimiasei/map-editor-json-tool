@@ -265,6 +265,8 @@ export default function SetDisplayNameDialog({
           heroSid: heroSidForClone,
           sourceHeroSid: baseHeroSid,
           definition,
+          // Keep the starting artifacts the full hero editor set; this dialog only renames.
+          startArtifacts: existingCustomHero?.startArtifacts,
         })
 
         if (autoManageLoc) {
