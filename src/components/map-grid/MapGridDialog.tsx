@@ -5103,7 +5103,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
                       )}
                       {visual.kind === 'image' && (
-                        <CatalogIcon iconId={entry.pick.primary.sid} name={name} size={thisIconSize} src={visual.src} />
+                        <CatalogIcon iconId={entry.pick.primary.sid} name={name} size={thisIconSize} src={visual.src} className="drop-shadow-[5px_-4px_2px_rgba(0,0,0,0.5)]" />
                       )}
                       {visual.kind === 'catalog' && (
                         <CatalogIcon
@@ -5180,7 +5180,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     >
                       {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
                       {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
-                      {visual.kind === 'image' && <CatalogIcon iconId={icon.sid} name={icon.sid} size={iconSize} src={visual.src} />}
+                      {visual.kind === 'image' && <CatalogIcon iconId={icon.sid} name={icon.sid} size={iconSize} src={visual.src} className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)]" />}
                       {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
                         <CatalogIcon
                           iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}
