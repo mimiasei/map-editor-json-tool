@@ -32,6 +32,7 @@ import {
   upsertPropHero,
   upsertPropOwner,
   setObjectActions,
+  replaceActionTable,
   upsertPropMarker,
   upsertPropHeroRow,
   setCitySpawnHero,
@@ -79,6 +80,7 @@ export type MapSaveEdit =
   | { kind: 'setObjectOwner'; entityType: number; entityId: number; owner: number }
   | { kind: 'setObjectHero'; entityType: number; entityId: number; heroSid: string }
   | { kind: 'setObjectActions'; entityType: number; entityId: number; which: 'before' | 'after'; value: { repeat: boolean; sides: string; actions: { a: string; p: string[] }[] } | null }
+  | { kind: 'replaceActionTable'; which: 'before' | 'after'; rows: unknown[] }
   | { kind: 'setMarkerState'; entityId: number; isActivate: boolean; isDelete: boolean }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }
   | { kind: 'setCityFaction'; entityType: number; entityId: number; factionSid: string; heroSid?: string }
@@ -216,6 +218,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     newChunks[1] = upsertPropHeroRow(newChunks[1], edit.entityType, edit.entityId, edit.heroSid)
   } else if (edit?.kind === 'setObjectActions') {
     newChunks[1] = setObjectActions(newChunks[1], edit.entityType, edit.entityId, edit.which, edit.value)
+  } else if (edit?.kind === 'replaceActionTable') {
+    newChunks[1] = replaceActionTable(newChunks[1], edit.which, edit.rows)
   } else if (edit?.kind === 'setMarkerState') {
     newChunks[1] = upsertPropMarker(newChunks[1], edit.entityId, edit.isActivate, edit.isDelete)
   } else if (edit?.kind === 'setCitySpawnHero') {
@@ -445,6 +449,12 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
         value.actions.every((a, i) => row.actions?.[i]?.a === a.a && JSON.stringify(row.actions?.[i]?.p ?? []) === JSON.stringify(a.p))
       if (!same) throw new Error('Verification failed: actions not reflected in the rebuilt actions table')
     }
+  } else if (edit?.kind === 'replaceActionTable') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propActionsBefore?: unknown[]; propActionsAfter?: unknown[] }
+    }
+    const rows = edit.which === 'before' ? block2.objectsProperties?.propActionsBefore : block2.objectsProperties?.propActionsAfter
+    if (JSON.stringify(rows) !== JSON.stringify(edit.rows)) throw new Error('Verification failed: actions table not reflected in the rebuilt map')
   } else if (edit?.kind === 'setMarkerState') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: { propMarkers?: Array<{ type?: number | string; id?: number; isActivate?: boolean; isDelete?: boolean }> }

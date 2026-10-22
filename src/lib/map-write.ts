@@ -1465,6 +1465,14 @@ export function setObjectActions(
   return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
 }
 
+/** Replace a whole Actions Before/After table (the JSON editor's "Zone & object actions" documents). */
+export function replaceActionTable(block2Chunk: Uint8Array, which: 'before' | 'after', rows: unknown[]): Uint8Array {
+  const table = which === 'before' ? 'propActionsBefore' : 'propActionsAfter'
+  const text = new TextDecoder('utf-8').decode(block2Chunk)
+  const { arrayOpen, arrayClose } = findJsonArraySpan(text, table)
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(rows) + text.slice(arrayClose + 1))
+}
+
 /** Set (or create) a zone's propMarkers row: the editor's "Activate" and "Delete after trigger" checkboxes. */
 export function upsertPropMarker(block2Chunk: Uint8Array, entityId: number, isActivate: boolean, isDelete: boolean): Uint8Array {
   const text = new TextDecoder('utf-8').decode(block2Chunk)
