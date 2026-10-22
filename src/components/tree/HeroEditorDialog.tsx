@@ -79,6 +79,7 @@ import { saveMapFile } from '@/lib/map-save'
 import { mintCustomHeroSid } from '@/lib/zip-export'
 import { getMeshOptions, getMountForFraction, getSkillsRollVariant, getDefaultStatsAndRolls, isHeroIdTaken } from '@/lib/hero-authoring'
 import { BIOME_NAMES } from '@/lib/map-grid/terrain-colors'
+import { syncHeroItemsEverywhere } from '@/lib/hero-items-sync'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useLocalizedTextField } from '@/hooks/useLocalizedTextField'
@@ -484,6 +485,9 @@ export default function HeroEditorDialog({
         definition,
         ...(artifacts.length > 0 ? { startArtifacts: artifacts } : {}),
       })
+
+      // Starting artifacts become generated actions/quests (heroes have no artifact field in the game).
+      syncHeroItemsEverywhere()
 
       manageToken(previousSid, nameField.trimmedSid, nameField.trimmedText)
       manageToken(previousDescSid, descField.trimmedSid, descField.trimmedText)

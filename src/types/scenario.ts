@@ -78,6 +78,8 @@ export interface Action {
   a: string
   p?: string[]
   break?: boolean
+  /** Shipped files carry "" here; generated actions use it to mark themselves (src/lib/hero-start-items.ts). */
+  comment?: string
 }
 
 // ─── Selection state ────────────────────────────────────────────────────────────

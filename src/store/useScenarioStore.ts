@@ -14,7 +14,6 @@ import type {
 } from '@/types/scenario'
 import type { DialogFlow } from '@/types/dialog'
 import type { CustomHeroDefinition } from '@/types/hero'
-import { syncHeroStartItems } from '@/lib/hero-start-items'
 import type { CustomMapObjectDefinition } from '@/types/custom-map-object'
 import type { CustomArtifactDefinition } from '@/types/custom-artifact'
 import type { CustomBuffDefinition } from '@/types/custom-buff'
@@ -520,18 +519,16 @@ export const useScenarioStore = create<ScenarioStore>()(
   // ships its own file into the exported ZIP (DB/heroes|map/objects|items|buffs/
   // custom_maps/*), so this is exactly the "DB json changes" issue #160 means.
 
-  // The hero's starting artifacts live in a managed quest; keep it in step with the heroes.
   setCustomHero: (heroSid, definition) =>
     set((s) => {
-      const customHeroes = { ...s.customHeroes, [heroSid]: definition }
-      return { customHeroes, scenario: syncHeroStartItems(s.scenario, customHeroes, s.mapName), isDirty: true, zipDirty: true }
+      return { customHeroes: { ...s.customHeroes, [heroSid]: definition }, isDirty: true, zipDirty: true }
     }),
 
   removeCustomHero: (heroSid) =>
     set((s) => {
       const customHeroes = { ...s.customHeroes }
       delete customHeroes[heroSid]
-      return { customHeroes, scenario: syncHeroStartItems(s.scenario, customHeroes, s.mapName), isDirty: true, zipDirty: true }
+      return { customHeroes, isDirty: true, zipDirty: true }
     }),
 
   // ── Custom map object identities ─────────────────────────────────────────────

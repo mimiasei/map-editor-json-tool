@@ -1442,7 +1442,7 @@ export function setObjectActions(
   entityType: number,
   entityId: number,
   which: 'before' | 'after',
-  value: { repeat: boolean; sides: string; actions: { a: string; p: string[] }[] } | null,
+  value: { repeat: boolean; sides: string; actions: { a: string; p: string[]; comment?: string }[] } | null,
 ): Uint8Array {
   const table = which === 'before' ? 'propActionsBefore' : 'propActionsAfter'
   const text = new TextDecoder('utf-8').decode(block2Chunk)
@@ -1457,7 +1457,7 @@ export function setObjectActions(
       id: entityId,
       repeat: value.repeat,
       sides: value.sides,
-      actions: value.actions.map((a) => ({ comment: '', p: a.p, a: a.a })),
+      actions: value.actions.map((a) => ({ comment: a.comment ?? '', p: a.p, a: a.a })),
     }
     if (index !== -1) entries[index] = row
     else entries.push(row)

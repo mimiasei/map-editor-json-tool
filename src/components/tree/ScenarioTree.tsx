@@ -33,6 +33,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { isTauri } from '@/lib/native-fs'
+import { syncHeroItemsEverywhere } from '@/lib/hero-items-sync'
 import { copyToClipboard, useClipboardHasPayload } from '@/lib/clipboard'
 import type { SubQuest, Trigger } from '@/types/scenario'
 import type { MapEntity } from '@/types/map-context'
@@ -807,6 +808,7 @@ export default function ScenarioTree() {
                     onClick={(e) => {
                       e.stopPropagation()
                       removeCustomHero(id)
+                      syncHeroItemsEverywhere()
                     }}
                   >
                     <Trash2 className="h-3 w-3" />

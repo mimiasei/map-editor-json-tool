@@ -8,6 +8,7 @@ import type { ObjectActions } from '@/types/map-context'
 import { ACTION_REGISTRY } from '@/schema/actions'
 import { HIDDEN_ACTION_TYPES, formatActionSentence, isActionConfigured } from '@/lib/trigger-visual'
 import { cleanAction } from '@/lib/scenario-clean'
+import { withSpawnItems } from '@/lib/hero-start-items'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import ActionForm from '@/components/actions/ActionForm'
@@ -38,6 +39,7 @@ const EMPTY: ObjectActions = { repeat: false, sides: '', actions: [] }
 
 export default function ObjectActionsEditor({ title, hint, value, playersCount, onApply }: Props) {
   const counters = useScenarioStore((s) => s.scenario.counters)
+  const customHeroes = useScenarioStore((s) => s.customHeroes)
   const requestPick = useViewBridgeStore((s) => s.requestPick)
   const saved = value ?? EMPTY
   const [draft, setDraft] = useState<ObjectActions>(saved)
@@ -158,7 +160,7 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
             size="sm"
             className="h-7 text-xs"
             disabled={incomplete}
-            onClick={() => onApply(draft.actions.length === 0 ? null : { ...draft, actions: draft.actions.map((a) => ({ a: a.a, p: (cleanAction(a).p ?? []).map(String) })) })}
+            onClick={() => onApply(draft.actions.length === 0 ? null : { ...draft, actions: withSpawnItems(draft.actions.map((a) => ({ a: a.a, p: (cleanAction(a).p ?? []).map(String), comment: a.comment })), customHeroes) })}
           >
             Apply
           </Button>

@@ -79,7 +79,7 @@ export type MapSaveEdit =
    *  propHeroes — no Block 1 spawns entry, unlike the hero-spawner's setHeroSid/swapSpawnerOwner. */
   | { kind: 'setObjectOwner'; entityType: number; entityId: number; owner: number }
   | { kind: 'setObjectHero'; entityType: number; entityId: number; heroSid: string }
-  | { kind: 'setObjectActions'; entityType: number; entityId: number; which: 'before' | 'after'; value: { repeat: boolean; sides: string; actions: { a: string; p: string[] }[] } | null }
+  | { kind: 'setObjectActions'; entityType: number; entityId: number; which: 'before' | 'after'; value: { repeat: boolean; sides: string; actions: { a: string; p: string[]; comment?: string }[] } | null }
   | { kind: 'replaceActionTable'; which: 'before' | 'after'; rows: unknown[] }
   | { kind: 'setMarkerState'; entityId: number; isActivate: boolean; isDelete: boolean }
   | { kind: 'setCitySpawnHero'; entityType: number; entityId: number; spawnHero: boolean; heroSid?: string }

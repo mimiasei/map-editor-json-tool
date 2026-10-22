@@ -291,7 +291,7 @@ export function extractMapContext(raw: RawMapBlocks): MapContext {
       out.set(key, {
         repeat: r.repeat === true,
         sides: r.sides ?? '',
-        actions: (r.actions ?? []).filter((a) => typeof a.a === 'string').map((a) => ({ a: a.a as string, p: (a.p ?? []).map(String) })),
+        actions: (r.actions ?? []).filter((a) => typeof a.a === 'string').map((a) => ({ a: a.a as string, p: (a.p ?? []).map(String), ...(a.comment ? { comment: a.comment } : {}) })),
       })
     }
     return out

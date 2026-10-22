@@ -229,7 +229,7 @@ export interface PlacedObject {
 export interface ObjectActions {
   repeat: boolean
   sides: string
-  actions: { a: string; p: string[] }[]
+  actions: { a: string; p: string[]; comment?: string }[]
 }
 
 export interface MapContext {
