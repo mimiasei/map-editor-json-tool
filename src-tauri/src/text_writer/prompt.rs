@@ -93,8 +93,26 @@ Each beat has a \"kind\" and an optional \"note\" (one sentence, at most 180 cha
 - {\"kind\":\"choice\",\"variable\":<choice variable>,\"slot\":<optional slot id, object>,\"answers\":[2 to 4 of {\"intent\":\"bold\"|\"cautious\"|\"diplomatic\"|\"greedy\"|\"merciful\"|\"cunning\",\"consequences\":[{\"kind\":\"score\",\"variable\":<score variable>,\"amount\":integer}|{\"kind\":\"resource\",\"resource\":\"gold\",\"amount\":integer}],\"requiresGold\":integer?}]}\n\
 - {\"kind\":\"finale\",\"victory\":true,\"endings\":[{\"when\":{\"variable\":<score variable>,\"op\":\">=\",\"value\":integer}} ..., then one last ending with no \"when\"]}\n\n\
 Rules: at most 10 beats; start with an intro and end with exactly one finale; every slot and variable you use must be declared; \
-use choices wherever the idea has a decision, and let later endings depend on the scores those choices change; keep amounts modest."
+use choices wherever the idea has a decision, and let later endings depend on the scores those choices change; keep amounts modest.\n\
+A \"visit\" beat needs BOTH a slot with cardinality \"many\" and entityKind \"object\" AND a variable of kind \"progress\". \
+A \"capture\" beat needs a slot with cardinality \"one\" and entityKind \"town\"; a \"defeat\" beat one with cardinality \"one\" and entityKind \"squad\". \
+A \"choice\" beat needs a variable of kind \"choice\"; score changes and ending conditions need variables of kind \"score\". \
+Only use the beat kinds above; if the idea has an event with no matching kind, express it with the closest one (e.g. a battle is \"defeat\", reaching a place is \"visit\" or \"capture\").\n\n\
+Example of a valid reply:\n\
+{\"title\":\"The Lost Heir\",\"tone\":\"mysterious\",\"slots\":[{\"id\":\"sites\",\"label\":\"Clue sites\",\"cardinality\":\"many\",\"min\":2,\"entityKind\":\"object\"},{\"id\":\"keep\",\"label\":\"The keep\",\"cardinality\":\"one\",\"min\":1,\"entityKind\":\"town\"}],\
+\"variables\":[{\"key\":\"clues\",\"label\":\"Clues\",\"kind\":\"progress\",\"min\":0},{\"key\":\"verdict\",\"label\":\"Verdict\",\"kind\":\"choice\",\"min\":0,\"max\":4},{\"key\":\"trust\",\"label\":\"Trust\",\"kind\":\"score\",\"min\":0,\"max\":5}],\
+\"beats\":[{\"kind\":\"intro\",\"note\":\"An heir has vanished.\"},{\"kind\":\"visit\",\"slot\":\"sites\",\"variable\":\"clues\"},{\"kind\":\"capture\",\"slot\":\"keep\"},\
+{\"kind\":\"choice\",\"variable\":\"verdict\",\"answers\":[{\"intent\":\"merciful\",\"consequences\":[{\"kind\":\"score\",\"variable\":\"trust\",\"amount\":1}]},{\"intent\":\"bold\",\"consequences\":[{\"kind\":\"resource\",\"resource\":\"gold\",\"amount\":200}]}]},\
+{\"kind\":\"finale\",\"victory\":true,\"endings\":[{\"when\":{\"variable\":\"trust\",\"op\":\">=\",\"value\":1}},{}]}]}"
         .to_string()
+}
+
+/// The same request again, plus why the last outline was rejected. Capped so a long reason cannot grow the prompt.
+pub fn user_for_import_retry(user: &str, reason: &str) -> String {
+    format!(
+        "{user}\nYour previous outline was rejected: {}. Reply again with only the corrected JSON object.",
+        sanitize(reason, 160)
+    )
 }
 
 pub fn user_for_import(idea: &str, lang: &str) -> String {

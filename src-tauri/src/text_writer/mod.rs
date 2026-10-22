@@ -8,8 +8,9 @@
 //!   handed back; anything that does not fit the expected shape is rejected.
 //! * The key lives in the OS credential store (`keystore.rs`) and is only read
 //!   here, in Rust. It is never returned to the webview or logged.
-//! * Nothing is retried automatically: a failed call is reported and the user
-//!   decides whether to try again (see `provider.rs`).
+//! * Nothing is retried automatically, with one exception: an idea whose outline
+//!   fails the consistency check gets a single second request that names the
+//!   problem (`import_story`). Network and key errors are never retried.
 
 mod error;
 mod import;
@@ -104,10 +105,21 @@ pub async fn import_story(
     types::check_lang(lang)?;
     let system = prompt::system_for_import();
     let user = prompt::user_for_import(&text, lang);
-    complete_validated(provider, &key, &system, &user, WRITE_TIMEOUT, status, |raw| {
-        import::parse_and_validate(raw)
+    let client = client(WRITE_TIMEOUT)?;
+    let raw = provider.complete(&client, &key, &system, &user, status).await?;
+    let reason = match import::parse_and_validate(&raw) {
+        Ok(draft) => return Ok(draft),
+        Err(reason) => reason,
+    };
+    // One more request, at most: the outline is a strict structure and a model often gets one reference
+    // wrong. The reason is our own validation text; sanitized because it can quote model-chosen ids.
+    log::info!("text writer: outline rejected ({reason}), asking once more");
+    let retry_user = prompt::user_for_import_retry(&user, &reason);
+    let raw = provider.complete(&client, &key, &system, &retry_user, status).await?;
+    import::parse_and_validate(&raw).map_err(|reason| {
+        log::info!("text writer: outline rejected again ({reason})");
+        WriterError::invalid(format!("The text service's reply could not be used ({reason}). Try again."))
     })
-    .await
 }
 
 pub fn set_key(provider: Provider, key: &str) -> Result<(), WriterError> {

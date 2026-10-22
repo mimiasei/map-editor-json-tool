@@ -131,8 +131,111 @@ fn key_ok(k: &str) -> bool {
 pub fn parse_and_validate(raw: &str) -> Result<StoryDraft, String> {
     let mut draft: StoryDraft = serde_json::from_str(raw.trim())
         .map_err(|e| format!("the outline did not match the required shape ({e})"))?;
+    repair(&mut draft);
     validate(&mut draft)?;
     Ok(draft)
+}
+
+/// "visit_sites" becomes "Visit sites".
+fn label_from_id(id: &str) -> String {
+    let spaced = id.replace('_', " ");
+    let mut chars = spaced.chars();
+    chars.next().map(|c| c.to_uppercase().collect::<String>() + chars.as_str()).unwrap_or_default()
+}
+
+/// Fixes the slips a model makes most often, where the intended meaning is clear, so a good story is not thrown away
+/// over a missing declaration: an undeclared slot or variable is declared, and a declared one of the wrong kind is
+/// corrected when every beat that uses it agrees on what it should be. Anything ambiguous is left for `validate`.
+fn repair(d: &mut StoryDraft) {
+    use std::collections::{HashMap, HashSet};
+    // What each beat needs of the slot / variable it names: (cardinality, entity kind) and variable kind.
+    let mut slot_needs: HashMap<String, HashSet<(&'static str, &'static str)>> = HashMap::new();
+    let mut var_needs: HashMap<String, HashSet<&'static str>> = HashMap::new();
+    for b in &d.beats {
+        match &b.beat {
+            Beat::Visit { slot, variable } => {
+                slot_needs.entry(slot.clone()).or_default().insert(("many", "object"));
+                var_needs.entry(variable.clone()).or_default().insert("progress");
+            }
+            Beat::Capture { slot } => {
+                slot_needs.entry(slot.clone()).or_default().insert(("one", "town"));
+            }
+            Beat::Defeat { slot } => {
+                slot_needs.entry(slot.clone()).or_default().insert(("one", "squad"));
+            }
+            Beat::Choice { variable, slot, answers } => {
+                var_needs.entry(variable.clone()).or_default().insert("choice");
+                if let Some(s) = slot {
+                    slot_needs.entry(s.clone()).or_default().insert(("one", "object"));
+                }
+                for a in answers {
+                    for c in &a.consequences {
+                        if let Consequence::Score { variable, .. } = c {
+                            var_needs.entry(variable.clone()).or_default().insert("score");
+                        }
+                    }
+                }
+            }
+            Beat::Finale { endings, .. } => {
+                for e in endings {
+                    if let Some(c) = &e.when {
+                        var_needs.entry(c.variable.clone()).or_default().insert("score");
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    for (id, needs) in slot_needs {
+        if needs.len() != 1 || !key_ok(&id) {
+            continue;
+        }
+        let (card, kind) = *needs.iter().next().unwrap();
+        match d.slots.iter_mut().find(|s| s.id == id) {
+            Some(s) => {
+                s.cardinality = card.into();
+                s.entity_kind = kind.into();
+                if card == "one" {
+                    s.min = s.min.min(1);
+                } else if s.min == 0 {
+                    s.min = 2;
+                }
+            }
+            None => d.slots.push(Slot {
+                label: label_from_id(&id),
+                id,
+                cardinality: card.into(),
+                min: if card == "one" { 1 } else { 2 },
+                entity_kind: kind.into(),
+            }),
+        }
+    }
+    for (key, needs) in var_needs {
+        if needs.len() != 1 || !key_ok(&key) {
+            continue;
+        }
+        let kind = *needs.iter().next().unwrap();
+        match d.variables.iter_mut().find(|v| v.key == key) {
+            Some(v) => v.kind = kind.into(),
+            None => d.variables.push(Variable {
+                label: label_from_id(&key),
+                key,
+                kind: kind.into(),
+                min: Some(0),
+                max: match kind {
+                    "choice" => Some(4),
+                    "score" => Some(5),
+                    _ => None,
+                },
+            }),
+        }
+    }
+
+    // A story that forgot its ending still gets one, rather than being rejected.
+    if !d.beats.is_empty() && !d.beats.iter().any(|b| matches!(b.beat, Beat::Finale { .. })) && d.beats.len() < 10 {
+        d.beats.push(DraftBeat { beat: Beat::Finale { endings: vec![Ending { when: None }], victory: true }, note: None });
+    }
 }
 
 fn validate(d: &mut StoryDraft) -> Result<(), String> {
@@ -319,7 +422,9 @@ mod tests {
     fn rejects_unknown_beats_fields_and_references() {
         assert!(parse_and_validate(&GOOD.replace("\"visit\"", "\"teleport\"")).is_err());
         assert!(parse_and_validate(&GOOD.replace("\"title\"", "\"extra\":1,\"title\"")).is_err());
-        assert!(parse_and_validate(&GOOD.replace("\"slot\":\"sites\"", "\"slot\":\"nope\"")).is_err());
+        // An undeclared but well-formed slot is declared by repair(); a malformed id cannot be, so it is rejected.
+        assert!(parse_and_validate(&GOOD.replace("\"slot\":\"sites\"", "\"slot\":\"nope\"")).is_ok());
+        assert!(parse_and_validate(&GOOD.replace("\"slot\":\"sites\"", "\"slot\":\"No pe!\"")).is_err());
         assert!(parse_and_validate(&GOOD.replace("{\"when\":{\"variable\":\"trust\",\"op\":\">=\",\"value\":1}},{}", "{}, {}")).is_ok());
         assert!(parse_and_validate(&GOOD.replace(",{}]}", "]}")).is_err());
     }
@@ -328,6 +433,34 @@ mod tests {
     fn rejects_out_of_range_values() {
         assert!(parse_and_validate(&GOOD.replace("\"amount\":200", "\"amount\":900000")).is_err());
         assert!(parse_and_validate(&GOOD.replace("\"amount\":1}]", "\"amount\":99}]")).is_err());
+    }
+
+    #[test]
+    fn repairs_missing_declarations_and_wrong_kinds() {
+        // Visit with no slot declared, and its variable declared as the wrong kind.
+        let broken = GOOD
+            .replace("\"slots\": [{\"id\":\"sites\",\"label\":\"Clue sites\",\"cardinality\":\"many\",\"min\":2,\"entityKind\":\"object\"}]", "\"slots\": []")
+            .replace("\"kind\":\"progress\"", "\"kind\":\"score\"");
+        let d = parse_and_validate(&broken).unwrap();
+        assert_eq!(d.slots.len(), 1);
+        assert_eq!((d.slots[0].cardinality.as_str(), d.slots[0].entity_kind.as_str()), ("many", "object"));
+        assert_eq!(d.variables.iter().find(|v| v.key == "clues").unwrap().kind, "progress");
+        // A slot the model made "one" but used for a visit becomes "many".
+        let wrong_card = GOOD.replace("\"cardinality\":\"many\"", "\"cardinality\":\"one\"");
+        assert!(parse_and_validate(&wrong_card).is_ok());
+        // Missing finale is appended.
+        let no_finale = GOOD.replace(
+            ",\n        {\"kind\":\"finale\",\"victory\":true,\"endings\":[{\"when\":{\"variable\":\"trust\",\"op\":\">=\",\"value\":1}},{}]}",
+            "",
+        );
+        assert!(parse_and_validate(&no_finale).is_ok());
+    }
+
+    #[test]
+    fn ambiguous_use_is_not_guessed() {
+        // The same slot asked to be a town and an object: leave it, so validation rejects it.
+        let clash = GOOD.replace("{\"kind\":\"visit\",\"slot\":\"sites\"", "{\"kind\":\"capture\",\"slot\":\"sites\"}, {\"kind\":\"visit\",\"slot\":\"sites\"");
+        assert!(parse_and_validate(&clash).is_err());
     }
 
     #[test]
