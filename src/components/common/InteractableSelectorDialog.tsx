@@ -45,6 +45,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
+import { objectImagePath } from '@/lib/catalog/object-images'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
   INTERACTABLE_SUBCATEGORY_LABELS,
@@ -220,7 +221,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
                         }`}
                       >
                         <Checkbox checked={enabled} onCheckedChange={() => toggleOne(o.id)} />
-                        <CatalogIcon iconId={o.icon} name={o.name} size={28} />
+                        <CatalogIcon iconId={o.icon} name={o.name} size={28} src={objectImagePath(o.id) ?? undefined} />
                         <div className="flex-1 min-w-0">
                           <p className="text-[9px] font-medium">{o.name}</p>
                         </div>

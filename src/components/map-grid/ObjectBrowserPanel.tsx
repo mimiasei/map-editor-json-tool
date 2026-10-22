@@ -32,6 +32,7 @@ import { Switch } from '@/components/ui/switch'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CatalogIcon, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
+import { objectImagePath } from '@/lib/catalog/object-images'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {
   DECORATION_SUBCATEGORY_ORDER,
@@ -239,9 +240,9 @@ function unitTypeLabel(aiType: string | undefined): string | null {
 }
 
 /** Icon that shows the full-size image in a floating popover while hovered. */
-function HoverZoomIcon({ iconId, name, size = 24 }: { iconId?: string; name: string; size?: number }) {
+function HoverZoomIcon({ sid, iconId, name, size = 24 }: { sid?: string; iconId?: string; name: string; size?: number }) {
   const [rect, setRect] = useState<DOMRect | null>(null)
-  const src = iconId ? thumbnailPath(iconId) : null
+  const src = objectImagePath(sid) ?? (iconId ? thumbnailPath(iconId) : null)
 
   return (
     <span
@@ -249,7 +250,7 @@ function HoverZoomIcon({ iconId, name, size = 24 }: { iconId?: string; name: str
       onMouseLeave={() => setRect(null)}
       className="shrink-0"
     >
-      <CatalogIcon iconId={iconId} name={name} size={size} />
+      <CatalogIcon iconId={iconId} name={name} size={size} src={src} />
       {src && rect && createPortal(
         <img
           src={src}
@@ -732,7 +733,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                     o.id === placingSid ? 'bg-accent' : 'hover:bg-accent/50'
                   }`}
                 >
-                  <HoverZoomIcon iconId={o.icon} name={o.name} size={24} />
+                  <HoverZoomIcon sid={o.id} iconId={o.icon} name={o.name} size={24} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{o.name}</p>
                     <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
