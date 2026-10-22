@@ -5023,6 +5023,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       {visual.kind === 'text' && (
                         <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
                       )}
+                      {visual.kind === 'image' && (
+                        <CatalogIcon iconId={entry.pick.primary.sid} name={name} size={thisIconSize} src={visual.src} />
+                      )}
                       {visual.kind === 'catalog' && (
                         <CatalogIcon
                           iconId={entry.pick.primary.sid}
@@ -5098,6 +5101,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     >
                       {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
                       {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
+                      {visual.kind === 'image' && <CatalogIcon iconId={icon.sid} name={icon.sid} size={iconSize} src={visual.src} />}
                       {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
                         <CatalogIcon
                           iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}
