@@ -29,6 +29,7 @@ import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import {
   buildTileIndex,
   pickPrimary,
+  type PrimaryPick,
   getVisibleRange,
   resolveFootprintCells,
   GRID_GROUP_ORDER,
@@ -494,8 +495,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return map
   }, [placedObjects, catalog])
 
-  const primaryByNode = useMemo(() => {
+  const { primaryByNode, underlayByNode } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
+    // What lies under an object drawn as a transparent bundled image: the best other item on the
+    // same tile, so e.g. grass decorations stay visible behind a mine instead of only terrain.
+    const underlay = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
+    const accepted = (pick: PrimaryPick | undefined): pick is PrimaryPick => {
+      if (!pick || !filter[pick.group]) return false
+      if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) return false
+      if (pick.group === 'decorations') {
+        const category = catalog?.mapObjects.find((o) => o.id === pick.primary.sid)?.category
+        if (!decorationSubFilter[resolveDecorationSubcategory(pick.primary.sid, category)]) return false
+      }
+      return true
+    }
     for (const [node, items] of tileIndex) {
       // issue #130: markers ("zones") are real, filterable items now — no
       // hard exclusion here anymore, just the per-group filter[] toggle below.
@@ -503,17 +516,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // before picking a primary, so they neither render nor count.
       const candidates = entitySidsOnly ? items.filter((item) => item.entitySid?.trim()) : items
       const pick = pickPrimary(candidates, catalog)
-      if (!pick || !filter[pick.group]) continue
       // issue #130: interactables additionally need their sub-category selected.
-      if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) continue
-      if (pick.group === 'decorations') {
-        const category = catalog?.mapObjects.find((o) => o.id === pick.primary.sid)?.category
-        if (!decorationSubFilter[resolveDecorationSubcategory(pick.primary.sid, category)]) continue
-      }
+      if (!accepted(pick)) continue
       map.set(node, pick)
+      if (settings.iconImagesEnabled && objectImagePath(pick.primary.sid)) {
+        const below = pickPrimary(
+          candidates.filter((i) => i.key !== pick.primary.key && !objectImagePath(i.sid)),
+          catalog,
+        )
+        if (accepted(below)) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
+      }
     }
-    return map
-  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter])
+    return { primaryByNode: map, underlayByNode: underlay }
+  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter, settings.iconImagesEnabled])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation
   // walls + water (src/lib/map-grid/passability.ts). Independent of
@@ -2414,10 +2429,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
-      if (iconsVisibleForSwatch && settings.iconImagesEnabled && objectImagePath(pick.primary.sid)) continue
+      const under = iconsVisibleForSwatch && settings.iconImagesEnabled && objectImagePath(pick.primary.sid)
+        ? underlayByNode.get(node)
+        : undefined
+      if (iconsVisibleForSwatch && settings.iconImagesEnabled && objectImagePath(pick.primary.sid) && !under) continue
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
-      ctx.fillStyle = GROUP_COLORS[pick.group]
+      ctx.fillStyle = GROUP_COLORS[(under ?? pick).group]
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
     // Road/river rendering moved to a dedicated sub-tile-resolution canvas
@@ -2439,7 +2457,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
   }, [
-    canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
+    canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
     settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled,
   ])
 
@@ -2787,6 +2805,26 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return cells
   }, [showIcons, visibleRange, sizeX, sizeZ, primaryByNode, footprintCellsByKey])
 
+  // Single-tile icons for what lies under an image object (see underlayByNode). Multi-tile things
+  // underneath are skipped: repeating one big object's icon on every covered cell would look wrong.
+  const underlayCells = useMemo(() => {
+    if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
+    const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
+    for (let screenRow = visibleRange.zMin; screenRow <= visibleRange.zMax; screenRow++) {
+      const z = sizeZ - 1 - screenRow
+      for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
+        const node = z * sizeX + x
+        const pick = underlayByNode.get(node)
+        if (!pick) continue
+        const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
+        const bounds1 = cells1 ? footprintIconBounds(cells1) : null
+        if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
+        cells.push({ x, z, node, pick })
+      }
+    }
+    return cells
+  }, [showIcons, visibleRange, sizeX, sizeZ, underlayByNode, footprintCellsByKey])
+
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
   // box is found by its own extent-vs-viewport intersection regardless of
@@ -2836,7 +2874,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       clickNode: number
       pick: { primary: PlacedObject; group: GridGroup; count: number }
       sortRow: number; sortCol: number
+      /** 0 = under an image object, painted before everything else. */
+      layer: 0 | 1
     }[] = []
+    for (const c of underlayCells) {
+      const screenRow = sizeZ - 1 - c.z
+      entries.push({
+        key: `u${c.node}`,
+        left: c.x * BASE_CELL_PX,
+        top: screenRow * BASE_CELL_PX,
+        width: BASE_CELL_PX,
+        height: BASE_CELL_PX,
+        clickNode: c.node,
+        pick: c.pick,
+        sortRow: screenRow,
+        sortCol: c.x,
+        layer: 0,
+      })
+    }
     for (const c of visibleCells) {
       const screenRow = sizeZ - 1 - c.z
       entries.push({
@@ -2849,6 +2904,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         pick: c.pick,
         sortRow: screenRow,
         sortCol: c.x,
+        layer: 1,
       })
     }
     for (const m of multiTileIcons) {
@@ -2862,11 +2918,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         pick: m.pick,
         sortRow: m.screenRowMin,
         sortCol: m.minX,
+        layer: 1,
       })
     }
-    entries.sort((a, b) => a.sortRow - b.sortRow || a.sortCol - b.sortCol)
+    entries.sort((a, b) => a.layer - b.layer || a.sortRow - b.sortRow || a.sortCol - b.sortCol)
     return entries
-  }, [visibleCells, multiTileIcons, sizeZ])
+  }, [underlayCells, visibleCells, multiTileIcons, sizeZ])
 
   // Ramp/slope direction arrows — windowed to the viewport the same way
   // visibleCells is, since ramp tiles (unlike the flood-fill tint/overlay
