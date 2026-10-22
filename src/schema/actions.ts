@@ -652,7 +652,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Object SID', hint: 'e.g. mine_gold', required: true, entity: 'interactiveObject' },
       { label: 'Node index', hint: 'e.g. 1755', required: true, nodeIndex: true },
       { label: 'Mirror?', hint: 'false', required: false, type: 'enum', options: ['false', 'true'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   SpawnMapObject: {
@@ -664,7 +664,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Object SID', hint: 'e.g. hill_dead_big', required: true, entity: 'decoration' },
       { label: 'Node index', hint: 'e.g. 1986', required: true, nodeIndex: true },
       { label: 'Rotation', hint: '0', required: false, type: 'enum', options: ['0', '1', '2', '3'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   CreateVFX: {
@@ -679,7 +679,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Active?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
       // The game needs it: all 17 CreateVFX actions in the shipped maps carry 5 params, and a 4-param one threw
       // IndexOutOfRangeException in the game when a zone ran it (the guide calls it optional). Left blank, cleanAction names it.
-      { label: 'Entity SID', hint: 'blank = named automatically', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'blank = named automatically', required: false, mapEntity: true, defines: true },
     ],
   },
   EventBankRefresh: {
@@ -794,7 +794,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   SpawnSquadNPC: {
@@ -807,7 +807,7 @@ export const ACTION_REGISTRY: Record<string, ActionDef> = {
       { label: 'Node index', hint: 'e.g. 1234', required: true, nodeIndex: true },
       { label: 'Value (strength)', hint: 'e.g. 1000', required: true, type: 'number' },
       { label: 'Scale by difficulty?', hint: 'true', required: false, type: 'enum', options: ['true', 'false'] },
-      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true },
+      { label: 'Entity SID', hint: 'optional', required: false, mapEntity: true, defines: true },
     ],
   },
   SetFlagEscape: {

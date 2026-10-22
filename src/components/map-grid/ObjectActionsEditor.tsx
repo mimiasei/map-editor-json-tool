@@ -102,6 +102,8 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
           action={action}
           typeFilter={allowedType}
           onPickFromMap={pickFromMap(i)}
+          siblingActions={draft.actions}
+          onDuplicate={(copy) => setDraft({ ...draft, actions: [...draft.actions.slice(0, i + 1), { a: copy.a, p: copy.p ?? [] }, ...draft.actions.slice(i + 1)] })}
           onChange={(next) => setDraft({ ...draft, actions: draft.actions.map((a, j) => (j === i ? { a: next.a, p: next.p ?? [] } : a)) })}
           onRemove={() => setDraft({ ...draft, actions: draft.actions.filter((_, j) => j !== i) })}
         />

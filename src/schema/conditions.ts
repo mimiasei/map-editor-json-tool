@@ -30,6 +30,8 @@ export interface ParamDef {
   nodeIndex?: true
   /** A player index (0-based in the file). Always rendered as a Player dropdown, never a number field. */
   player?: true
+  /** The value names something this action creates (entity SID); a duplicate of the action must not reuse it. */
+  defines?: true
 }
 
 export interface ConditionDef {
