@@ -539,12 +539,12 @@ export default function HeroEditorDialog({
                 <FieldInfo text="Clone one hero: every field starts from a real hero's own values. Build from scratch: skip picking a specific hero — mesh/mount/skill table/starting stats come from fraction + class type alone, and squad/skills/magics start empty. Switchable at any time." />
               </div>
               <div className="flex gap-1.5">
-                <Button type="button" variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
+                <Button type="button" aria-pressed={mode === 'clone'} variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
                   Clone one hero
                 </Button>
                 <Button
                   type="button"
-                  variant={mode === 'scratch' ? 'default' : 'outline'}
+                  aria-pressed={mode === 'scratch'} variant={mode === 'scratch' ? 'default' : 'outline'}
                   size="sm"
                   className="h-7 text-xs"
                   onClick={() => { setMode('scratch'); setSourceHeroSid(''); setSourcePickerValue('') }}

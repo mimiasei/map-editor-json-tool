@@ -169,7 +169,7 @@ export default function TextWriterSettingsDialog({ open, onOpenChange, onChanged
                   key={p.id}
                   type="button"
                   size="sm"
-                  variant={provider === p.id ? 'default' : 'outline'}
+                  aria-pressed={provider === p.id} variant={provider === p.id ? 'default' : 'outline'}
                   onClick={() => pickProvider(p.id)}
                 >
                   {p.label}

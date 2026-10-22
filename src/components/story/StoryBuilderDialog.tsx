@@ -704,7 +704,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                       key={t}
                       type="button"
                       size="sm"
-                      variant={tone === t ? 'default' : 'outline'}
+                      aria-pressed={tone === t} variant={tone === t ? 'default' : 'outline'}
                       onClick={() => setTone(t)}
                     >
                       {TONE_LABELS[t]}
@@ -716,7 +716,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                 <Label>Text length</Label>
                 <div className="flex gap-1.5">
                   {(['short', 'medium'] as TextLength[]).map((l) => (
-                    <Button key={l} type="button" size="sm" variant={length === l ? 'default' : 'outline'} onClick={() => setLength(l)}>
+                    <Button key={l} type="button" size="sm" aria-pressed={length === l} variant={length === l ? 'default' : 'outline'} onClick={() => setLength(l)}>
                       {LENGTH_LABEL[l]}
                     </Button>
                   ))}
@@ -735,7 +735,7 @@ export default function StoryBuilderDialog({ open, onOpenChange, onDraftChange, 
                         key={l.id}
                         type="button"
                         size="sm"
-                        variant={extraLangs.includes(l.id) ? 'default' : 'outline'}
+                        aria-pressed={extraLangs.includes(l.id)} variant={extraLangs.includes(l.id) ? 'default' : 'outline'}
                         onClick={() =>
                           setExtraLangs((cur) => (cur.includes(l.id) ? cur.filter((x) => x !== l.id) : [...cur, l.id]))
                         }

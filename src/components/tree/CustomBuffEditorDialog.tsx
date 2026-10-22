@@ -354,12 +354,12 @@ export default function CustomBuffEditorDialog({
               <FieldInfo text="Clone one buff: every field starts from a real buff's own values. Build from scratch: stats/tags start blank. Switchable at any time." />
             </div>
             <div className="flex gap-1.5">
-              <Button type="button" variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
+              <Button type="button" aria-pressed={mode === 'clone'} variant={mode === 'clone' ? 'default' : 'outline'} size="sm" className="h-7 text-xs" onClick={() => setMode('clone')}>
                 Clone one buff
               </Button>
               <Button
                 type="button"
-                variant={mode === 'scratch' ? 'default' : 'outline'}
+                aria-pressed={mode === 'scratch'} variant={mode === 'scratch' ? 'default' : 'outline'}
                 size="sm"
                 className="h-7 text-xs"
                 onClick={() => { setMode('scratch'); setSourceBuffId(''); setSourcePickerValue('') }}
