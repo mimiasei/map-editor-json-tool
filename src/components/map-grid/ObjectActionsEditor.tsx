@@ -9,6 +9,7 @@ import { ACTION_REGISTRY } from '@/schema/actions'
 import { HIDDEN_ACTION_TYPES, formatActionSentence, isActionConfigured } from '@/lib/trigger-visual'
 import { cleanAction } from '@/lib/scenario-clean'
 import { useScenarioStore } from '@/store/useScenarioStore'
+import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import ActionForm from '@/components/actions/ActionForm'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -37,6 +38,7 @@ const EMPTY: ObjectActions = { repeat: false, sides: '', actions: [] }
 
 export default function ObjectActionsEditor({ title, hint, value, playersCount, onApply }: Props) {
   const counters = useScenarioStore((s) => s.scenario.counters)
+  const requestPick = useViewBridgeStore((s) => s.requestPick)
   const saved = value ?? EMPTY
   const [draft, setDraft] = useState<ObjectActions>(saved)
   const [seen, setSeen] = useState(saved)
@@ -53,6 +55,24 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
     const def = ACTION_REGISTRY[a.a]
     return def?.params.some((p, i) => p.ref === 'counter' && a.p?.[i] && !counterIds.has(a.p?.[i] ?? ''))
   })
+
+  // Tile/object/hero params are picked on the grid this column belongs to; the draft stays as it is meanwhile.
+  const pickFromMap = (actionIndex: number) => (paramIndex: number, kind: 'mapEntity' | 'hero' | 'node') =>
+    requestPick({
+      kind,
+      label: ACTION_REGISTRY[draft.actions[actionIndex]?.a]?.params[paramIndex]?.label ?? 'value',
+      keepMapGridOpen: true,
+      onResolve: (value) =>
+        setDraft((d) => ({
+          ...d,
+          actions: d.actions.map((a, j) => {
+            if (j !== actionIndex) return a
+            const p = [...(a.p ?? [])]
+            p[paramIndex] = value
+            return { ...a, p }
+          }),
+        })),
+    })
 
   if (!onApply) {
     if (!value) return null
@@ -81,6 +101,7 @@ export default function ObjectActionsEditor({ title, hint, value, playersCount, 
           key={i}
           action={action}
           typeFilter={allowedType}
+          onPickFromMap={pickFromMap(i)}
           onChange={(next) => setDraft({ ...draft, actions: draft.actions.map((a, j) => (j === i ? { a: next.a, p: next.p ?? [] } : a)) })}
           onRemove={() => setDraft({ ...draft, actions: draft.actions.filter((_, j) => j !== i) })}
         />

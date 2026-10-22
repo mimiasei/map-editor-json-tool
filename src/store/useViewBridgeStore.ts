@@ -41,6 +41,9 @@ export interface PendingPick {
    *  own "pick from map" button (ConditionForm/ActionForm), which behaves
    *  exactly like the mapEntity/hero pick buttons: one click, done. */
   confirmOnChange?: boolean
+  /** Picked from inside the Map Grid itself (its info column): the grid is already open, so resolving or
+   *  cancelling must not close it or send the user back to the Scenario Editor. */
+  keepMapGridOpen?: boolean
 }
 
 export interface PendingDatabaseFocus {
@@ -132,13 +135,21 @@ export const useViewBridgeStore = create<ViewBridgeStore>((set, get) => ({
     const pick = get().pendingPick
     if (!pick) return
     pick.onResolve(value)
-    set({ pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection ?? null })
+    set(
+      pick.keepMapGridOpen
+        ? { pendingPick: null }
+        : { pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection ?? null },
+    )
     pick.onFinish?.()
   },
   cancelPick: () => {
     const pick = get().pendingPick
     if (!pick) return
-    set({ pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection ?? null })
+    set(
+      pick.keepMapGridOpen
+        ? { pendingPick: null }
+        : { pendingPick: null, mapGridOpen: false, pendingResumeSelection: pick.resumeSelection ?? null },
+    )
     pick.onFinish?.()
   },
 
