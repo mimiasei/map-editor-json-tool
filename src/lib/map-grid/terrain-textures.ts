@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import { BIOME_TEXTURE_ICONS } from '@/lib/catalog/icon-requests'
 import { compositeSplat } from './terrain-splat'
-import { thumbnailPath } from '@/lib/catalog/thumbnails'
+import { thumbnailFilePath, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { isBiomeId } from './terrain-colors'
 
 export type TextureKey = keyof typeof BIOME_TEXTURE_ICONS
@@ -70,9 +70,18 @@ function pixelsOf(img: HTMLImageElement, size: number): Uint8ClampedArray | null
   return ctx.getImageData(0, 0, size, size).data
 }
 
+/**
+ * Read through the fs plugin into a blob URL: pixels of an asset:// image cannot be read back from a canvas (cross-origin),
+ * and the blend needs them.
+ */
 async function loadNamed(name: string): Promise<HTMLImageElement | null> {
-  const url = thumbnailPath(name)
-  return url ? loadImage(url) : null
+  const path = thumbnailFilePath(name)
+  if (!path) return null
+  const { readFile } = await import('@tauri-apps/plugin-fs')
+  const url = URL.createObjectURL(new Blob([await readFile(path)], { type: 'image/png' }))
+  const img = await loadImage(url)
+  URL.revokeObjectURL(url)
+  return img
 }
 
 /** The biome's layers blended through the splat map, or null when any of them is not extracted. */
@@ -99,9 +108,10 @@ async function loadAll(): Promise<void> {
   for (const name of Object.keys(BIOME_TEXTURE_ICONS)) {
     const key: TextureKey = name === 'water' ? 'water' : (Number(name) as TextureKey)
     if (loaded.has(key)) continue
-    const blended = await blendBiome(key)
+    const blended = await blendBiome(key).catch((e) => { console.warn('terrain blend failed, using the minimap texture', e); return null })
     if (blended) { loaded.set(key, blended); continue }
-    const img = await loadNamed(BIOME_TEXTURE_ICONS[key])
+    const url = thumbnailPath(BIOME_TEXTURE_ICONS[key])
+    const img = url ? await loadImage(url) : null
     if (img) loaded.set(key, img)
   }
 }

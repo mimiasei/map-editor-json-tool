@@ -33,7 +33,8 @@ export async function warmThumbnailDir(): Promise<void> {
  * This function is synchronous and safe to call during render.
  * Relies on warmThumbnailDir() and loadThumbnailManifest() being called first.
  */
-export function thumbnailPath(iconId: string | undefined): string | null {
+/** Plain file path of an extracted thumbnail (for reading its bytes), same rules as thumbnailPath. */
+export function thumbnailFilePath(iconId: string | undefined): string | null {
   if (!iconId) return null
   if (!isTauri()) return null
   if (!_appLocalDataDir) return null
@@ -43,8 +44,12 @@ export function thumbnailPath(iconId: string | undefined): string | null {
   // "icons/dialogue/dialogue_unit_peasant" — without this they never resolved.
   const lower = assetLeafName(iconId).toLowerCase()
   if (!isIconKnown(lower)) return null
-  const filePath = `${_appLocalDataDir}thumbnails/${lower}.png`
-  return convertFileSrc(filePath)
+  return `${_appLocalDataDir}thumbnails/${lower}.png`
+}
+
+export function thumbnailPath(iconId: string | undefined): string | null {
+  const filePath = thumbnailFilePath(iconId)
+  return filePath ? convertFileSrc(filePath) : null
 }
 
 // ─── CatalogIcon ─────────────────────────────────────────────────────────────
