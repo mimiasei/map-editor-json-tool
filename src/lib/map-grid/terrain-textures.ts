@@ -13,11 +13,11 @@ import { isBiomeId } from './terrain-colors'
 export type TextureKey = keyof typeof BIOME_TEXTURE_ICONS
 
 /** How many tiles one copy of a texture spans. The game's own scale is not known; chosen by eye. */
-export const TEXTURE_REPEAT_TILES = 12
+export const TEXTURE_REPEAT_TILES = 16
 
 /** Canvas pixels per tile for the texture layer, capped so the canvas stays at most ~3072 px on a side. */
 export function textureScale(sizeX: number, sizeZ: number): number {
-  return Math.max(8, Math.min(32, Math.floor(3072 / Math.max(sizeX, sizeZ, 1))))
+  return Math.max(4, Math.min(32, Math.floor(3072 / Math.max(sizeX, sizeZ, 1))))
 }
 
 /** True when the textures have been extracted (manifest knows them). */
@@ -137,27 +137,23 @@ export function useBiomeTextures(): ReadonlyMap<TextureKey, TextureSource> {
 }
 
 /**
- * One repeating pattern per texture, sized so a copy spans TEXTURE_REPEAT_TILES tiles at `scale` px/tile. Each
- * pattern tile is the texture mirrored 2x2: opposite edges of the originals differ by a few grey levels (checked on
- * the extracted files), which shows as a seam in a plain repeat; mirroring makes every join match.
+ * One repeating pattern per texture, sized so a copy spans TEXTURE_REPEAT_TILES tiles at `scale` px/tile. A plain repeat:
+ * opposite edges of the minimap originals differ by a few grey levels (checked on the extracted files), so a faint seam can
+ * show; mirroring 2x2 hid that but made a visible symmetry (see git history for it).
  */
 export function buildTexturePatterns(
   ctx: CanvasRenderingContext2D,
   textures: ReadonlyMap<TextureKey, TextureSource>,
   scale: number,
 ): Map<TextureKey, CanvasPattern> {
-  const half = TEXTURE_REPEAT_TILES * scale
+  const size = TEXTURE_REPEAT_TILES * scale
   const patterns = new Map<TextureKey, CanvasPattern>()
   for (const [key, img] of textures) {
     const tile = document.createElement('canvas')
-    tile.width = tile.height = half * 2
+    tile.width = tile.height = size
     const t = tile.getContext('2d')
     if (!t) continue
-    for (const [qx, qz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
-      // Quadrant (qx, qz) holds the image mirrored in x and/or z around the quadrant's centre.
-      t.setTransform(qx ? -1 : 1, 0, 0, qz ? -1 : 1, qx * half + half / 2, qz * half + half / 2)
-      t.drawImage(img, -half / 2, -half / 2, half, half)
-    }
+    t.drawImage(img, 0, 0, size, size)
     const pattern = ctx.createPattern(tile, 'repeat')
     if (pattern) patterns.set(key, pattern)
   }
