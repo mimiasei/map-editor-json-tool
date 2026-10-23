@@ -6,17 +6,18 @@
 
 import { useEffect, useState } from 'react'
 import { BIOME_TEXTURE_ICONS } from '@/lib/catalog/icon-requests'
+import { compositeSplat } from './terrain-splat'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
 import { isBiomeId } from './terrain-colors'
 
 export type TextureKey = keyof typeof BIOME_TEXTURE_ICONS
 
 /** How many tiles one copy of a texture spans. The game's own scale is not known; chosen by eye. */
-export const TEXTURE_REPEAT_TILES = 16
+export const TEXTURE_REPEAT_TILES = 12
 
 /** Canvas pixels per tile for the texture layer, capped so the canvas stays at most ~3072 px on a side. */
 export function textureScale(sizeX: number, sizeZ: number): number {
-  return Math.max(4, Math.min(16, Math.floor(3072 / Math.max(sizeX, sizeZ, 1))))
+  return Math.max(8, Math.min(32, Math.floor(3072 / Math.max(sizeX, sizeZ, 1))))
 }
 
 /** True when the textures have been extracted (manifest knows them). */
@@ -30,7 +31,24 @@ export function textureKeyFor(tileId: number | undefined, waterId: number | unde
   return tileId !== undefined && isBiomeId(tileId) ? tileId : null
 }
 
-const loaded = new Map<TextureKey, HTMLImageElement>()
+/** What a pattern is cut from: the game's own image, or a canvas where layers were blended through the splat map. */
+export type TextureSource = HTMLImageElement | HTMLCanvasElement
+
+/**
+ * Biomes the game builds from layers over a splat map (see terrain-splat.ts). `channel` is which splat colour brings a layer in.
+ * Layer names are from the game's materials (humanbase_mt: grass2, grass1, grass3, dirt_ground3; battle_autumn_mt: autumn_ground4,
+ * _1, _2); which channel drives which layer is NOT known from the data, so this assignment is by eye. A biome without a recipe
+ * (or with a layer not extracted) uses its single minimap texture.
+ */
+const TERRAIN_RECIPES: Partial<Record<TextureKey, { base: string; layers: { name: string; channel: 0 | 1 | 2 }[] }>> = {
+  1: { base: 'grass2', layers: [{ name: 'grass3', channel: 0 }, { name: 'grass1', channel: 1 }, { name: 'grass_dirt', channel: 2 }] },
+  5: { base: 'autumn_ground1', layers: [{ name: 'autumn_ground4', channel: 1 }, { name: 'autumn_ground2', channel: 2 }] },
+}
+
+/** Side of a blended texture in px; layers (512) are tiled to fill it at native resolution. */
+const BLEND_SIZE = 1024
+
+const loaded = new Map<TextureKey, TextureSource>()
 
 function loadImage(url: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
@@ -41,21 +59,56 @@ function loadImage(url: string): Promise<HTMLImageElement | null> {
   })
 }
 
+/** Pixels of an image drawn tiled (not stretched) over a size x size canvas. */
+function pixelsOf(img: HTMLImageElement, size: number): Uint8ClampedArray | null {
+  const c = document.createElement('canvas')
+  c.width = c.height = size
+  const ctx = c.getContext('2d', { willReadFrequently: true })
+  if (!ctx) return null
+  if (img.width >= size) ctx.drawImage(img, 0, 0, size, size)
+  else for (let y = 0; y < size; y += img.height) for (let x = 0; x < size; x += img.width) ctx.drawImage(img, x, y)
+  return ctx.getImageData(0, 0, size, size).data
+}
+
+async function loadNamed(name: string): Promise<HTMLImageElement | null> {
+  const url = thumbnailPath(name)
+  return url ? loadImage(url) : null
+}
+
+/** The biome's layers blended through the splat map, or null when any of them is not extracted. */
+async function blendBiome(key: TextureKey): Promise<HTMLCanvasElement | null> {
+  const recipe = TERRAIN_RECIPES[key]
+  if (!recipe) return null
+  const [splat, base, ...layers] = await Promise.all([
+    loadNamed('splat_map1'), loadNamed(recipe.base), ...recipe.layers.map((l) => loadNamed(l.name)),
+  ])
+  if (!splat || !base || layers.some((l) => !l)) return null
+  const splatPx = pixelsOf(splat, BLEND_SIZE)
+  const basePx = pixelsOf(base, BLEND_SIZE)
+  const layerPx = layers.map((l, i) => ({ rgba: pixelsOf(l!, BLEND_SIZE), channel: recipe.layers[i].channel }))
+  if (!splatPx || !basePx || layerPx.some((l) => !l.rgba)) return null
+  const out = compositeSplat(basePx, layerPx as { rgba: Uint8ClampedArray; channel: 0 | 1 | 2 }[], splatPx)
+  const c = document.createElement('canvas')
+  c.width = c.height = BLEND_SIZE
+  c.getContext('2d')?.putImageData(new ImageData(out, BLEND_SIZE, BLEND_SIZE), 0, 0)
+  return c
+}
+
 async function loadAll(): Promise<void> {
   // Object.keys gives the biome ids as strings; the tiles look them up as numbers.
   for (const name of Object.keys(BIOME_TEXTURE_ICONS)) {
     const key: TextureKey = name === 'water' ? 'water' : (Number(name) as TextureKey)
     if (loaded.has(key)) continue
-    const url = thumbnailPath(BIOME_TEXTURE_ICONS[key])
-    if (!url) continue
-    const img = await loadImage(url)
+    const blended = await blendBiome(key)
+    if (blended) { loaded.set(key, blended); continue }
+    const img = await loadNamed(BIOME_TEXTURE_ICONS[key])
     if (img) loaded.set(key, img)
   }
 }
 
 /** Loaded textures; the map is replaced when more arrive (also after a fresh extraction), so it can sit in effect deps. */
-export function useBiomeTextures(): ReadonlyMap<TextureKey, HTMLImageElement> {
-  const [textures, setTextures] = useState<ReadonlyMap<TextureKey, HTMLImageElement>>(() => new Map(loaded))
+export function useBiomeTextures(): ReadonlyMap<TextureKey, TextureSource> {
+  const [textures, setTextures] = useState<ReadonlyMap<TextureKey, TextureSource>>(() => new Map(loaded))
   useEffect(() => {
     let cancelled = false
     const refresh = () => {
@@ -80,7 +133,7 @@ export function useBiomeTextures(): ReadonlyMap<TextureKey, HTMLImageElement> {
  */
 export function buildTexturePatterns(
   ctx: CanvasRenderingContext2D,
-  textures: ReadonlyMap<TextureKey, HTMLImageElement>,
+  textures: ReadonlyMap<TextureKey, TextureSource>,
   scale: number,
 ): Map<TextureKey, CanvasPattern> {
   const half = TEXTURE_REPEAT_TILES * scale

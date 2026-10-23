@@ -26,6 +26,17 @@ export const BIOME_TEXTURE_ICONS = {
   water: 'minimap_water',
 } as const
 
+/**
+ * Layer textures and the splat map the game blends into its ground (verified in the game data: materials such as
+ * `humanbase_mt` list these as their `_Texture0..3`, and `splat_map1` is a 2048x2048 RGBA Texture2D). See TERRAIN_RECIPES in
+ * `map-grid/terrain-textures.ts`, which holds the per-biome layer lists.
+ */
+export const TERRAIN_LAYER_ICONS = [
+  'splat_map1',
+  'grass1', 'grass2', 'grass3', 'grass_dirt', 'dirt_ground3',
+  'autumn_ground1', 'autumn_ground2', 'autumn_ground4',
+] as const
+
 /** Suffix of the large hero portraits — see heroPortraitIcon(). */
 export const LARGE_PORTRAIT_SUFFIX = '_large'
 
@@ -95,7 +106,7 @@ export function buildIconRequests(catalog: GameCatalog | null): IconRequests {
   const mapObjectIcons: string[] = []
 
   // Not catalog data, so they are requested even before a catalog is loaded.
-  icons.push(...Object.values(BIOME_TEXTURE_ICONS))
+  icons.push(...Object.values(BIOME_TEXTURE_ICONS), ...TERRAIN_LAYER_ICONS)
 
   if (catalog) {
     for (const h of catalog.heroes) {
