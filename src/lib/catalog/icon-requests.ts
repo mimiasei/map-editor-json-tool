@@ -33,8 +33,13 @@ export const BIOME_TEXTURE_ICONS = {
  */
 export const TERRAIN_LAYER_ICONS = [
   'splat_map1',
-  'grass1', 'grass2', 'grass3', 'grass_dirt', 'dirt_ground3',
+  'grass1', 'grass2', 'grass_dirt',
+  'sand2', 'sand3',
+  'dead_ground1', 'dead_ground2', 'dead_grass2',
+  'Snow2', 'Snow4',
   'autumn_ground1', 'autumn_ground2', 'autumn_ground4',
+  'lava_cracks', 'lava_blank', 'lava_glowy',
+  'dirt_ground1', 'dirt_ground2', 'dirt_ground3',
 ] as const
 
 /** Suffix of the large hero portraits — see heroPortraitIcon(). */
