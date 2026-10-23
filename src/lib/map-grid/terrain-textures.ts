@@ -42,7 +42,9 @@ function loadImage(url: string): Promise<HTMLImageElement | null> {
 }
 
 async function loadAll(): Promise<void> {
-  for (const key of Object.keys(BIOME_TEXTURE_ICONS) as unknown as TextureKey[]) {
+  // Object.keys gives the biome ids as strings; the tiles look them up as numbers.
+  for (const name of Object.keys(BIOME_TEXTURE_ICONS)) {
+    const key: TextureKey = name === 'water' ? 'water' : (Number(name) as TextureKey)
     if (loaded.has(key)) continue
     const url = thumbnailPath(BIOME_TEXTURE_ICONS[key])
     if (!url) continue
