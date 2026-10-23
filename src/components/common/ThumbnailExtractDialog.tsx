@@ -2,7 +2,7 @@
 // Three-state dialog: idle → running → done
 // Invokes the extract_thumbnails Tauri command and streams progress via events.
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -12,11 +12,12 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, FolderOpen, AlertTriangle } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { loadThumbnailManifest } from '@/hooks/useThumbnailManifest'
-import { buildIconRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
+import { buildIconRequests, onlyNewRequests, recordExtractedRequests } from '@/lib/catalog/icon-requests'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,15 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
   const [progress, setProgress] = useState<ProgressState>({ done: 0, total: 0, current: '' })
   const [done, setDone] = useState<DoneState | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [everything, setEverything] = useState(false)
+
+  // After an earlier extraction only the names it never asked for need extracting; the sidecar keeps the rest.
+  const requests = useMemo(() => buildIconRequests(catalog), [catalog])
+  const onlyNew = useMemo(() => {
+    const part = onlyNewRequests(requests)
+    return part && part.icons.length + part.mapObjectIcons.length > 0 ? part : null
+  }, [requests, open]) // eslint-disable-line react-hooks/exhaustive-deps
+  const newCount = onlyNew ? new Set([...onlyNew.icons, ...onlyNew.mapObjectIcons]).size : 0
 
   // Auto-detect on first open
   useEffect(() => {
@@ -121,8 +131,7 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
       const outputDir = `${rawDir.replace(/\\/g, '/').replace(/\/?$/, '/')}thumbnails`
 
       // Which icons to extract — shared with the first-run wizard.
-      const requests = buildIconRequests(catalog)
-      const { icons, mapObjectIcons } = requests
+      const { icons, mapObjectIcons } = onlyNew && !everything ? onlyNew : requests
 
       const result = await invoke<{ saved: number; missing: string[] }>('extract_thumbnails', {
         gameDir: gameDir.trim(),
@@ -171,6 +180,18 @@ export default function ThumbnailExtractDialog({ open, onOpenChange }: Props) {
               Select your Heroes of Might and Magic: Olden Era installation folder.
               Icons will be extracted to the app data directory and shown in all dropdowns.
             </p>
+
+            {onlyNew && (
+              <div className="space-y-2">
+                <p className="text-sm">
+                  {newCount} new image{newCount !== 1 ? 's' : ''} can be extracted. Only {newCount !== 1 ? 'those' : 'it'} will be extracted; what is already there is kept.
+                </p>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Checkbox checked={everything} onCheckedChange={(v) => setEverything(v === true)} />
+                  Extract everything again
+                </label>
+              </div>
+            )}
 
             {!catalog && (
               <Alert className="py-2">

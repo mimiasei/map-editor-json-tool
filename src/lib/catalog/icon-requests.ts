@@ -184,6 +184,19 @@ function storedRequests(): Set<string> | null {
 }
 
 /**
+ * The part of `requests` the last extraction never asked for, or null when nothing was recorded (then everything is new and the
+ * caller should extract it all). The sidecar merges its manifest, so extracting only these keeps what is already there.
+ */
+export function onlyNewRequests(requests: IconRequests): IconRequests | null {
+  const previous = storedRequests()
+  if (!previous) return null
+  return {
+    icons: requests.icons.filter((n) => !previous.has(n)),
+    mapObjectIcons: requests.mapObjectIcons.filter((n) => !previous.has(n)),
+  }
+}
+
+/**
  * Names the app wants that the last extraction never asked for.
  *
  * With nothing recorded — either a first run, or an install that extracted before this
