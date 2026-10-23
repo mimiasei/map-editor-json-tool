@@ -12,8 +12,18 @@ import { isBiomeId } from './terrain-colors'
 
 export type TextureKey = keyof typeof BIOME_TEXTURE_ICONS
 
-/** How many tiles one copy of a texture spans. The game's own scale is not known; chosen by eye. */
-export const TEXTURE_REPEAT_TILES = 16
+/** How many tiles one copy of a single-image texture spans. The game's own scale is not known; chosen by eye. */
+export const TEXTURE_REPEAT_TILES = 12
+
+/** The same for a blended biome: one copy of the splat map. */
+export const SPLAT_REPEAT_TILES = 24
+
+/**
+ * How many tiles one copy of a layer texture (512 px) spans inside a blended texture. Measured on GME screenshots with objects
+ * that fill exactly one tile: a grass tuft is about a quarter tile, which puts a 512 px layer at about 3 tiles. The splat blobs
+ * are 2-3 tiles across, which fits one splat map spanning about SPLAT_REPEAT_TILES.
+ */
+const LAYER_TILES = 3
 
 /** Canvas pixels per tile for the texture layer, capped so the canvas stays at most ~3072 px on a side. */
 export function textureScale(sizeX: number, sizeZ: number): number {
@@ -45,7 +55,7 @@ const TERRAIN_RECIPES: Partial<Record<TextureKey, { base: string; layers: { name
   5: { base: 'autumn_ground1', layers: [{ name: 'autumn_ground4', channel: 1 }, { name: 'autumn_ground2', channel: 2 }] },
 }
 
-/** Side of a blended texture in px; layers (512) are tiled to fill it at native resolution. */
+/** Side of a blended texture in px; the layers are tiled inside it. */
 const BLEND_SIZE = 1024
 
 const loaded = new Map<TextureKey, TextureSource>()
@@ -59,14 +69,14 @@ function loadImage(url: string): Promise<HTMLImageElement | null> {
   })
 }
 
-/** Pixels of an image drawn tiled (not stretched) over a size x size canvas. */
-function pixelsOf(img: HTMLImageElement, size: number): Uint8ClampedArray | null {
+/** Pixels of an image drawn `copies` x `copies` times over a size x size canvas. */
+function pixelsOf(img: HTMLImageElement, size: number, copies: number): Uint8ClampedArray | null {
   const c = document.createElement('canvas')
   c.width = c.height = size
   const ctx = c.getContext('2d', { willReadFrequently: true })
   if (!ctx) return null
-  if (img.width >= size) ctx.drawImage(img, 0, 0, size, size)
-  else for (let y = 0; y < size; y += img.height) for (let x = 0; x < size; x += img.width) ctx.drawImage(img, x, y)
+  const w = size / copies
+  for (let y = 0; y < size; y += w) for (let x = 0; x < size; x += w) ctx.drawImage(img, x, y, w, w)
   return ctx.getImageData(0, 0, size, size).data
 }
 
@@ -92,9 +102,10 @@ async function blendBiome(key: TextureKey): Promise<HTMLCanvasElement | null> {
     loadNamed('splat_map1'), loadNamed(recipe.base), ...recipe.layers.map((l) => loadNamed(l.name)),
   ])
   if (!splat || !base || layers.some((l) => !l)) return null
-  const splatPx = pixelsOf(splat, BLEND_SIZE)
-  const basePx = pixelsOf(base, BLEND_SIZE)
-  const layerPx = layers.map((l, i) => ({ rgba: pixelsOf(l!, BLEND_SIZE), channel: recipe.layers[i].channel }))
+  const copies = Math.max(1, Math.round(SPLAT_REPEAT_TILES / LAYER_TILES))
+  const splatPx = pixelsOf(splat, BLEND_SIZE, 1)
+  const basePx = pixelsOf(base, BLEND_SIZE, copies)
+  const layerPx = layers.map((l, i) => ({ rgba: pixelsOf(l!, BLEND_SIZE, copies), channel: recipe.layers[i].channel }))
   if (!splatPx || !basePx || layerPx.some((l) => !l.rgba)) return null
   const out = compositeSplat(basePx, layerPx as { rgba: Uint8ClampedArray; channel: 0 | 1 | 2 }[], splatPx)
   const c = document.createElement('canvas')
@@ -137,7 +148,7 @@ export function useBiomeTextures(): ReadonlyMap<TextureKey, TextureSource> {
 }
 
 /**
- * One repeating pattern per texture, sized so a copy spans TEXTURE_REPEAT_TILES tiles at `scale` px/tile. A plain repeat:
+ * One repeating pattern per texture, sized so a copy spans TEXTURE_REPEAT_TILES (SPLAT_REPEAT_TILES for a blend) tiles at `scale` px/tile. A plain repeat:
  * opposite edges of the minimap originals differ by a few grey levels (checked on the extracted files), so a faint seam can
  * show; mirroring 2x2 hid that but made a visible symmetry (see git history for it).
  */
@@ -146,9 +157,9 @@ export function buildTexturePatterns(
   textures: ReadonlyMap<TextureKey, TextureSource>,
   scale: number,
 ): Map<TextureKey, CanvasPattern> {
-  const size = TEXTURE_REPEAT_TILES * scale
   const patterns = new Map<TextureKey, CanvasPattern>()
   for (const [key, img] of textures) {
+    const size = (img instanceof HTMLCanvasElement ? SPLAT_REPEAT_TILES : TEXTURE_REPEAT_TILES) * scale
     const tile = document.createElement('canvas')
     tile.width = tile.height = size
     const t = tile.getContext('2d')
