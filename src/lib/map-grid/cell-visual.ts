@@ -112,6 +112,13 @@ const MINE_COLOR: Record<string, string> = {
     mine_mercury: RESOURCE_COLOR.resource_mercury,
 }
 
+/** The sid whose render stands for a placed object: its own, or for a city spawner with a chosen faction that faction's city. */
+export function renderSidFor(item: { sid: string; spawnerInfo?: { factionSid?: string } }): string {
+  const faction = item.spawnerInfo?.factionSid
+  if (item.sid === 'city-spawner' && faction) return `${faction === 'necropolis' ? 'undead' : faction}_city`
+  return item.sid
+}
+
 export function resolveGridCellVisual(
   item: PlacedObject,
   catalog: GameCatalog | null,
@@ -145,6 +152,11 @@ export function resolveGridCellVisual(
       return { kind: 'catalogOverride', iconId: creature.icon, name: creature.name }
     }
   }
+
+  // A city spawner with a chosen faction is drawn as that faction's city (same 3x3 footprint and offsets as the spawner);
+  // the player number is drawn over it by the grid. A random-faction spawner keeps its icon.
+  const cityRender = useImages && item.sid === 'city-spawner' ? objectRender(renderSidFor(item)) : null
+  if (cityRender) return { kind: 'render', render: cityRender }
 
   const spawnerKey = Object.keys(SID_ICON_OVERRIDES).find((k) => item.sid === k || item.sid.startsWith(k))
   const spawnerOverride = spawnerKey ? SID_ICON_OVERRIDES[spawnerKey] : undefined

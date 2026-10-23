@@ -36,7 +36,7 @@ import {
   GRID_GROUP_LABELS,
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
-import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
+import { renderSidFor, resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
 import { hasObjectRender } from '@/lib/object-render/render-index'
 import { RenderedObject } from '@/components/map-grid/RenderedObject'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
@@ -525,9 +525,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // issue #130: interactables additionally need their sub-category selected.
       if (!accepted(pick)) continue
       map.set(node, pick)
-      if (settings.iconImagesEnabled && hasObjectRender(pick.primary.sid)) {
+      if (settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary))) {
         const below = pickPrimary(
-          candidates.filter((i) => i.key !== pick.primary.key && !hasObjectRender(i.sid)),
+          candidates.filter((i) => i.key !== pick.primary.key && !hasObjectRender(renderSidFor(i))),
           catalog,
         )
         if (accepted(below)) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
@@ -2464,10 +2464,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity, undefined, 1 - textureStrength)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
-      const under = iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(pick.primary.sid)
+      const under = iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary))
         ? underlayByNode.get(node)
         : undefined
-      if (iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(pick.primary.sid) && !under) continue
+      if (iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary)) && !under) continue
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       ctx.fillStyle = GROUP_COLORS[(under ?? pick).group]

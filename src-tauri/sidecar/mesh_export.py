@@ -20,6 +20,7 @@ from typing import Callable
 _DB_FILES = (
     ("4_interactables.json", "interactables"),
     ("3_resources.json", "interactables"),
+    ("6_artifacts.json", "interactables"),
     ("1_environments.json", "decorations"),
     ("2_animals.json", "decorations"),
 )
@@ -50,8 +51,15 @@ def list_objects(game_dir: Path) -> list[dict]:
             raw = z.read(f"DB/map/objects/{fname}").decode("utf-8-sig")
             entries = json.loads(raw)["array"]
             ids = {t["id"] for t in entries}
+            prefab_of = {t["id"]: t["prefs"][0] for t in entries if t.get("prefs")}
             for t in entries:
                 sid = t["id"]
+                # custom_<x> is a scripting wrapper of <x> with the same prefab: it shares its render.
+                base = sid[len("custom_"):]
+                if sid.startswith("custom_") and sid not in seen and t.get("prefs") and prefab_of.get(base) == t["prefs"][0]:
+                    seen.add(sid)
+                    out.append({"sid": sid, "job": job, "prefab": t["prefs"][0], "offsetX": 0, "offsetZ": 0, "rot": 0, "alias": base})
+                    continue
                 # custom_* are scripting wrappers around a base object, block* only block tiles, campaign ones are story props.
                 if sid.startswith(("custom_", "block", "campaign_")) or sid.endswith("_campaign") or "_block_" in sid:
                     continue
