@@ -19,7 +19,7 @@ import {
     type LucideIcon } from 'lucide-react'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
-import { objectImagePath } from '@/lib/catalog/object-images'
+import { objectRender, type ObjectRender } from '@/lib/object-render/render-index'
 import { randomSquadDifficultyLabel, squadValueFromUnits, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import type { PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -33,8 +33,8 @@ export type GridCellVisual =
   /** Real thumbnail, but under a different iconId/name than the item's own
    *  sid — e.g. a squad showing its first unit's creature icon. */
   | { kind: 'catalogOverride'; iconId: string; name: string }
-  /** Bundled rendered image (webp with alpha) from public/object-images or public/resource-images. */
-  | { kind: 'image'; src: string }
+  /** The object rendered from the game's own prefab (see lib/object-render), drawn around the prefab's origin. */
+  | { kind: 'render'; render: ObjectRender }
 
 /** No real 2D icon texture exists for these (confirmed in issue #125/#127's
  *  investigation) — always use the manual icon, no real-icon check needed.
@@ -165,9 +165,9 @@ export function resolveGridCellVisual(
     return { kind: 'icon', Icon: spawnerOverride }
   }
 
-  // Bundled images win over the extracted icons and the generic mine/resource glyphs below.
-  const bundledImage = useImages ? objectImagePath(item.sid) : null
-  if (bundledImage) return { kind: 'image', src: bundledImage }
+  // Renders win over the extracted icons and the generic mine/resource glyphs below.
+  const render = useImages ? objectRender(item.sid) : null
+  if (render) return { kind: 'render', render }
 
   // Portals — unconfirmed whether the game ships a real 2D icon for these
   // (may be animated scene prefabs with none at all), so prefer a real

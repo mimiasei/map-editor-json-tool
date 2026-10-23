@@ -336,7 +336,7 @@ export default function MapGridCellContent({
                 const visual = resolveGridCellVisual(item, catalog)
                 if (visual.kind === 'icon') return <visual.Icon size={24} className="shrink-0" />
                 if (visual.kind === 'text') return <span className="text-[10px] font-semibold shrink-0 w-6 text-center">{visual.text}</span>
-                if (visual.kind === 'image') return <CatalogIcon iconId={item.sid} name={name} size={24} src={visual.src} />
+                if (visual.kind === 'render') return <CatalogIcon iconId={item.sid} name={name} size={24} src={visual.render.src} />
                 if (visual.kind === 'catalogOverride') return <CatalogIcon iconId={visual.iconId} name={visual.name} size={24} />
                 return <CatalogIcon iconId={item.sid} name={name} size={24} />
               })()}

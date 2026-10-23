@@ -45,7 +45,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search } from 'lucide-react'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
-import { objectImagePath } from '@/lib/catalog/object-images'
+import { objectRender } from '@/lib/object-render/render-index'
+import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
   INTERACTABLE_SUBCATEGORY_LABELS,
@@ -70,6 +71,7 @@ interface Props {
 }
 
 export default function InteractableSelectorDialog({ open, onOpenChange, disabledSids, onChange }: Props) {
+  useObjectRenderStore((s) => s.index) // redraw when a render job adds images
   const catalog = useCatalogStore((s) => s.catalog)
   const [search, setSearch] = useState('')
   const [displayFilter, setDisplayFilter] = useState<Record<InteractableSubcategory, boolean>>(
@@ -221,7 +223,7 @@ export default function InteractableSelectorDialog({ open, onOpenChange, disable
                         }`}
                       >
                         <Checkbox checked={enabled} onCheckedChange={() => toggleOne(o.id)} />
-                        <CatalogIcon iconId={o.icon} name={o.name} size={28} src={objectImagePath(o.id) ?? undefined} />
+                        <CatalogIcon iconId={o.icon} name={o.name} size={28} src={objectRender(o.id)?.src ?? undefined} />
                         <div className="flex-1 min-w-0">
                           <p className="text-[9px] font-medium">{o.name}</p>
                         </div>

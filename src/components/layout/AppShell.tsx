@@ -46,6 +46,10 @@ import MapGridDialog from '@/components/map-grid/MapGridDialog'
 import GenerateRandomMapDialog from '@/components/common/GenerateRandomMapDialog'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
 import SetupDialog from '@/components/common/SetupDialog'
+import ObjectRenderDialog, { RENDER_PROMPT_OFF_KEY } from '@/components/common/ObjectRenderDialog'
+import ObjectRenderProgressBar from '@/components/layout/ObjectRenderProgressBar'
+import { loadRenderIndex } from '@/lib/object-render/render-index'
+import { refreshPendingCounts } from '@/lib/object-render/render-job'
 import { SquareArrowOutUpRight } from 'lucide-react'
 
 const SETUP_SHOWN_KEY = 'oe-setup-shown'
@@ -154,6 +158,14 @@ export default function AppShell() {
   }
   const [thumbnailDialogOpen, setThumbnailDialogOpen] = useState(false)
   const [setupOpen, setSetupOpen] = useState(false)
+  const [renderDialogOpen, setRenderDialogOpen] = useState(false)
+  const [renderDialogStartup, setRenderDialogStartup] = useState(false)
+  const setupOpenRef = useRef(false)
+  useEffect(() => {
+    setupOpenRef.current = setupOpen
+    // The wizard extracts the icons on a fresh install; the render offer was held back until it closes.
+    if (!setupOpen) window.dispatchEvent(new Event('oe:render-check'))
+  }, [setupOpen])
 
   // ── Auto-update state ────────────────────────────────────────────────────────
   // `updateDismissed` is component state on purpose: dismissal lasts for the
@@ -220,6 +232,42 @@ export default function AppShell() {
     return () => {
       unsubscribe()
       window.removeEventListener('oe:thumbnails-extracted', onExtracted)
+    }
+  }, [])
+
+  // ── Object images ────────────────────────────────────────────────────────────
+  // Loads what has been rendered, and offers to render what has not (new game objects included: the job only
+  // does what is missing from renders/index.json). Asked at every start until all is rendered or the user ticks
+  // "don't ask again"; More > Render Object Images opens the same dialog any time.
+  useEffect(() => {
+    if (!isTauri()) return
+    let cancelled = false
+    let decided = false
+    const check = async () => {
+      await Promise.all([warmThumbnailDir(), loadThumbnailManifest()])
+      await loadRenderIndex()
+      // A fresh install is being walked through the setup wizard; don't stack a second dialog on it.
+      if (decided || getThumbnailCount() === 0) return
+      const pending = await refreshPendingCounts()
+      if (cancelled || !pending || setupOpenRef.current) return
+      decided = true
+      let off = false
+      try { off = localStorage.getItem(RENDER_PROMPT_OFF_KEY) === '1' } catch { /* private mode: ask */ }
+      if (!off && pending.interactables + pending.decorations > 0) {
+        setRenderDialogStartup(true)
+        setRenderDialogOpen(true)
+      }
+    }
+    void check()
+    window.addEventListener('oe:thumbnails-extracted', check)
+    window.addEventListener('oe:render-check', check)
+    const onOpen = () => { setRenderDialogStartup(false); setRenderDialogOpen(true) }
+    window.addEventListener('oe:render-objects-open', onOpen)
+    return () => {
+      cancelled = true
+      window.removeEventListener('oe:thumbnails-extracted', check)
+      window.removeEventListener('oe:render-check', check)
+      window.removeEventListener('oe:render-objects-open', onOpen)
     }
   }, [])
 
@@ -717,6 +765,11 @@ export default function AppShell() {
         open={setupOpen}
         onOpenChange={setSetupOpen}
       />
+      <ObjectRenderDialog
+        open={renderDialogOpen}
+        onOpenChange={setRenderDialogOpen}
+        startup={renderDialogStartup}
+      />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <TimelineDialog
         open={timelineOpen}
@@ -846,6 +899,7 @@ export default function AppShell() {
         </Panel>
       </Group>
       )}
+      <ObjectRenderProgressBar />
     </div>
   )
 }

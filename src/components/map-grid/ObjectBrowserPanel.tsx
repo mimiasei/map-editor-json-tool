@@ -32,7 +32,8 @@ import { Switch } from '@/components/ui/switch'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CatalogIcon, CreatureStatsSection, thumbnailPath } from '@/lib/catalog/thumbnails'
-import { objectImagePath } from '@/lib/catalog/object-images'
+import { objectRender } from '@/lib/object-render/render-index'
+import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import { BIOME_NAMES, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import {
   DECORATION_SUBCATEGORY_ORDER,
@@ -242,7 +243,8 @@ function unitTypeLabel(aiType: string | undefined): string | null {
 /** Icon that shows the full-size image in a floating popover while hovered. */
 function HoverZoomIcon({ sid, iconId, name, size = 24 }: { sid?: string; iconId?: string; name: string; size?: number }) {
   const [rect, setRect] = useState<DOMRect | null>(null)
-  const src = objectImagePath(sid) ?? (iconId ? thumbnailPath(iconId) : null)
+  useObjectRenderStore((s) => s.index) // redraw when a render job adds images
+  const src = objectRender(sid)?.src ?? (iconId ? thumbnailPath(iconId) : null)
 
   return (
     <span

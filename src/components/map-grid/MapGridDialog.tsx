@@ -37,7 +37,9 @@ import {
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
 import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
-import { objectImagePath } from '@/lib/catalog/object-images'
+import { hasObjectRender } from '@/lib/object-render/render-index'
+import { RenderedObject } from '@/components/map-grid/RenderedObject'
+import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
@@ -424,6 +426,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [placedObjects, searchQuery])
 
   const [settings, setSettings] = useState(loadMapGridSettings)
+  // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
+  const renderIndex = useObjectRenderStore((s) => s.index)
   const updateSettings = (next: typeof settings) => {
     setSettings(next)
     saveMapGridSettings(next)
@@ -521,16 +525,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // issue #130: interactables additionally need their sub-category selected.
       if (!accepted(pick)) continue
       map.set(node, pick)
-      if (settings.iconImagesEnabled && objectImagePath(pick.primary.sid)) {
+      if (settings.iconImagesEnabled && hasObjectRender(pick.primary.sid)) {
         const below = pickPrimary(
-          candidates.filter((i) => i.key !== pick.primary.key && !objectImagePath(i.sid)),
+          candidates.filter((i) => i.key !== pick.primary.key && !hasObjectRender(i.sid)),
           catalog,
         )
         if (accepted(below)) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
       }
     }
     return { primaryByNode: map, underlayByNode: underlay }
-  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter, settings.iconImagesEnabled])
+  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter, settings.iconImagesEnabled, renderIndex])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation
   // walls + water (src/lib/map-grid/passability.ts). Independent of
@@ -2460,10 +2464,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity, undefined, 1 - textureStrength)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
-      const under = iconsVisibleForSwatch && settings.iconImagesEnabled && objectImagePath(pick.primary.sid)
+      const under = iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(pick.primary.sid)
         ? underlayByNode.get(node)
         : undefined
-      if (iconsVisibleForSwatch && settings.iconImagesEnabled && objectImagePath(pick.primary.sid) && !under) continue
+      if (iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(pick.primary.sid) && !under) continue
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       ctx.fillStyle = GROUP_COLORS[(under ?? pick).group]
@@ -2489,7 +2493,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
   }, [
     canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, textureStrength,
-    settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled,
+    settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex,
   ])
 
   // ── Road/river line-feature canvas — a SEPARATE, higher-internal-
@@ -5143,8 +5147,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       {visual.kind === 'text' && (
                         <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
                       )}
-                      {visual.kind === 'image' && (
-                        <CatalogIcon iconId={entry.pick.primary.sid} name={name} size={thisIconSize} src={visual.src} className="drop-shadow-[5px_-4px_2px_rgba(0,0,0,0.5)]" />
+                      {visual.kind === 'render' && (
+                        <RenderedObject
+                          render={visual.render}
+                          name={name}
+                          cell={BASE_CELL_PX}
+                          // Relative to this box: the anchor tile's corner minus the box corner.
+                          shiftX={entry.pick.primary.x * BASE_CELL_PX - entry.left}
+                          shiftY={(sizeZ - 1 - entry.pick.primary.z) * BASE_CELL_PX - entry.top}
+                        />
                       )}
                       {visual.kind === 'catalog' && (
                         <CatalogIcon
@@ -5221,7 +5232,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     >
                       {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
                       {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
-                      {visual.kind === 'image' && <CatalogIcon iconId={icon.sid} name={icon.sid} size={iconSize} src={visual.src} className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.7)]" />}
+                      {visual.kind === 'render' && <RenderedObject render={visual.render} name={icon.sid} cell={BASE_CELL_PX} shiftX={0} shiftY={0} />}
                       {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
                         <CatalogIcon
                           iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}
