@@ -11,6 +11,21 @@ export interface IconRequests {
   mapObjectIcons: string[]
 }
 
+/**
+ * Ground textures the Map Grid can lay under the terrain colours, by tile biome id (see BIOME_NAMES) plus water. Verified in
+ * the game data: each name exists once as a 1024x1024 Texture2D, so the sidecar saves it as `thumbnails/<name>.png` like an icon.
+ */
+export const BIOME_TEXTURE_ICONS = {
+  1: 'minimap_grass_biom',
+  2: 'minimap_sand_biom',
+  3: 'minimap_dead_biom',
+  4: 'minimap_snow_biom',
+  5: 'minimap_autumn_biom',
+  6: 'minimap_lava_biom',
+  7: 'minimap_dirt_biom',
+  water: 'minimap_water',
+} as const
+
 /** Suffix of the large hero portraits — see heroPortraitIcon(). */
 export const LARGE_PORTRAIT_SUFFIX = '_large'
 
@@ -78,6 +93,9 @@ export function avatarIconRequests(avatarIcons: string[]): string[] {
 export function buildIconRequests(catalog: GameCatalog | null): IconRequests {
   const icons: string[] = []
   const mapObjectIcons: string[] = []
+
+  // Not catalog data, so they are requested even before a catalog is loaded.
+  icons.push(...Object.values(BIOME_TEXTURE_ICONS))
 
   if (catalog) {
     for (const h of catalog.heroes) {

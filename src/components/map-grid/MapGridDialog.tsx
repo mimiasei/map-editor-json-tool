@@ -54,6 +54,7 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { buildTexturePatterns, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
@@ -2405,6 +2406,35 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // catalog changes, or whenever the canvas element itself (re)mounts. Same
   // callback-ref reasoning as viewportEl above.
   const [canvasEl, setCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  // Ground textures: a canvas stacked under canvasEl, shown through the base terrain fill (which gets alpha
+  // 1 - strength while textures are on), so swatches, tints, roads and icons above stay untouched. Strength 0 or
+  // nothing extracted leaves the base canvas opaque, i.e. exactly the flat-colour grid.
+  const [textureCanvasEl, setTextureCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const biomeTextures = useBiomeTextures()
+  const textureStrength = biomeTextures.size > 0 ? settings.terrainTextureStrength : 0
+  useEffect(() => {
+    if (!textureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const scale = textureScale(sizeX, sizeZ)
+    textureCanvasEl.width = sizeX * scale
+    textureCanvasEl.height = sizeZ * scale
+    const ctx = textureCanvasEl.getContext('2d')
+    if (!ctx || textureStrength <= 0) return
+    const patterns = buildTexturePatterns(ctx, biomeTextures, scale)
+    const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
+    // One path per texture, filled once: far fewer fill calls than one per tile.
+    const paths = new Map<TextureKey, Path2D>()
+    for (let node = 0; node < sizeX * sizeZ; node++) {
+      const key = textureKeyFor(stagedTilesMap[node], waterMap[node])
+      if (key === null || !patterns.has(key)) continue
+      let path = paths.get(key)
+      if (!path) paths.set(key, (path = new Path2D()))
+      path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
+    }
+    for (const [key, path] of paths) {
+      ctx.fillStyle = patterns.get(key)!
+      ctx.fill(path)
+    }
+  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged])
   // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
   // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
   // the swatch is then the only thing marking the object.
@@ -2427,7 +2457,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // Shared with GenerateRandomMapDialog.tsx's own live-preview canvas
     // (`paintTerrainCanvas`) so both stay in sync by construction.
     const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
-    paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity)
+    paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity, undefined, 1 - textureStrength)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
       const under = iconsVisibleForSwatch && settings.iconImagesEnabled && objectImagePath(pick.primary.sid)
@@ -2458,7 +2488,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
   }, [
-    canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
+    canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, textureStrength,
     settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled,
   ])
 
@@ -4996,6 +5026,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     canvas itself see-through. A background image sitting behind it
                     needs actual CSS opacity here to ever be visible; only applied
                     while that feature is active so it can't affect anyone else. */}
+                <canvas
+                  ref={setTextureCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    opacity: backgroundImageUrl && settings.backgroundImageVisible
+                      ? 1 - settings.backgroundImageOpacity
+                      : 1,
+                  }}
+                />
                 <canvas
                   ref={setCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"

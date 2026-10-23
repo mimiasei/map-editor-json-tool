@@ -16,12 +16,16 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { DEFAULT_TERRAIN_BLEND } from '@/lib/map-grid/terrain-colors'
+import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
 import { Settings, ChevronDown } from 'lucide-react'
 
 export interface MapGridSettings {
   /** 0-1, blended against white for the terrain fill (see terrainFillColor). */
   terrainOpacity: number
+  /** 0-1, how strongly the game's ground textures show through the terrain colours (0 = flat colours only). Needs the
+   *  textures extracted, see biomeTexturesAvailable(). */
+  terrainTextureStrength: number
   /** When false, every cell forces its letter-badge fallback instead of a real icon. */
   iconImagesEnabled: boolean
   /** When false, a rotated object's small green degree badge is hidden. */
@@ -90,6 +94,7 @@ export interface MapGridSettings {
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainOpacity: DEFAULT_TERRAIN_BLEND,
+  terrainTextureStrength: 0.5,
   iconImagesEnabled: true,
   rotationNumberEnabled: true,
   showGridLines: false,
@@ -175,6 +180,22 @@ export default function MapGridSettingsDialog({
             value={[settings.terrainOpacity]}
             onValueChange={([v]) => update({ terrainOpacity: v })}
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Terrain texture</Label>
+            <span className="text-xs text-muted-foreground">{Math.round(settings.terrainTextureStrength * 100)}%</span>
+          </div>
+          <Slider
+            min={0} max={1} step={0.01}
+            value={[settings.terrainTextureStrength]}
+            onValueChange={([v]) => update({ terrainTextureStrength: v })}
+            disabled={!biomeTexturesAvailable()}
+          />
+          {!biomeTexturesAvailable() && (
+            <p className="text-[10px] text-muted-foreground">Extract the game images (desktop app) to enable ground textures.</p>
+          )}
         </div>
 
         <div className="flex items-center justify-between">

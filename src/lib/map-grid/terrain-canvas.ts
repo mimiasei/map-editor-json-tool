@@ -31,6 +31,7 @@ export function paintTerrainCanvas(
   waterMap: number[],
   opacity?: number,
   roadNodes?: Set<number>,
+  fillAlpha = 1,
 ): void {
   ctx.clearRect(0, 0, sizeX, sizeZ)
   const tileCount = sizeX * sizeZ
@@ -38,7 +39,7 @@ export function paintTerrainCanvas(
   for (let node = 0; node < tileCount; node++) {
     const x = node % sizeX
     const z = Math.floor(node / sizeX)
-    ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node], opacity)
+    ctx.fillStyle = terrainFillColor(tilesMap[node], waterMap[node], opacity, fillAlpha)
     ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
   }
   if (roadNodes) {
