@@ -215,6 +215,106 @@ async fn extract_thumbnails(
     last_result.ok_or_else(|| "sidecar exited without reporting a result".to_string())
 }
 
+// ─── Object meshes (input of the in-app object renderer) ─────────────────────
+
+/// The running mesh export, so the job's Cancel can stop it instead of letting it finish unseen.
+static MESH_CHILD: std::sync::Mutex<Option<tauri_plugin_shell::process::CommandChild>> = std::sync::Mutex::new(None);
+
+/// Run the sidecar in `list-objects` or `export-meshes` mode. Every `object` / `warning` line it prints is forwarded as
+/// a `mesh-event`; the returned value is the `objects` line (list) or `{"type":"done"}` (export).
+#[tauri::command]
+async fn object_meshes(
+    app: tauri::AppHandle,
+    mode: String,
+    game_dir: String,
+    output_dir: String,
+    sids: Vec<String>,
+) -> Result<serde_json::Value, String> {
+    use std::io::Write;
+    use tauri_plugin_shell::process::CommandEvent;
+    use tauri_plugin_shell::ShellExt;
+
+    if mode != "list-objects" && mode != "export-meshes" {
+        return Err(format!("unknown mode {mode}"));
+    }
+    let mut sids_file = tempfile::Builder::new()
+        .prefix("oe-sids-")
+        .suffix(".json")
+        .tempfile()
+        .map_err(|e| format!("failed to create sids temp file: {e}"))?;
+    sids_file
+        .write_all(serde_json::to_string(&sids).map_err(|e| e.to_string())?.as_bytes())
+        .and_then(|_| sids_file.flush())
+        .map_err(|e| format!("failed to write sids temp file: {e}"))?;
+    let sids_path = sids_file.path().to_string_lossy().into_owned();
+
+    let (mut rx, child) = app
+        .shell()
+        .sidecar("extract_thumbnails")
+        .map_err(|e| format!("failed to find sidecar: {e}"))?
+        .args([
+            "--mode",
+            &mode,
+            "--game-dir",
+            &game_dir,
+            "--output-dir",
+            &output_dir,
+            "--sids-file",
+            &sids_path,
+        ])
+        .spawn()
+        .map_err(|e| format!("failed to spawn sidecar: {e}"))?;
+
+    *MESH_CHILD.lock().unwrap() = Some(child);
+    let mut result: Option<serde_json::Value> = None;
+    let outcome: Result<(), String> = async {
+        while let Some(event) = rx.recv().await {
+            match event {
+                CommandEvent::Stdout(line) => {
+                    let text = String::from_utf8_lossy(&line);
+                    let Ok(val) = serde_json::from_str::<serde_json::Value>(text.trim()) else {
+                        continue;
+                    };
+                    match val.get("type").and_then(|t| t.as_str()) {
+                        Some("object") | Some("warning") => {
+                            app.emit("mesh-event", &val).ok();
+                        }
+                        Some("objects") | Some("done") => result = Some(val),
+                        Some("error") => {
+                            return Err(val["message"].as_str().unwrap_or("unknown error").to_string());
+                        }
+                        _ => {}
+                    }
+                }
+                CommandEvent::Stderr(line) => {
+                    log::warn!("sidecar stderr: {}", String::from_utf8_lossy(&line).trim());
+                }
+                CommandEvent::Error(e) => return Err(format!("sidecar error: {e}")),
+                CommandEvent::Terminated(status) => {
+                    if status.code.is_some_and(|c| c != 0) {
+                        return Err(format!("sidecar exited with code {}", status.code.unwrap_or(-1)));
+                    }
+                    break;
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+    .await;
+    *MESH_CHILD.lock().unwrap() = None;
+    outcome?;
+    result.ok_or_else(|| "sidecar exited without reporting a result".to_string())
+}
+
+/// Stop the running mesh export (the job's Cancel).
+#[tauri::command]
+fn cancel_object_meshes() {
+    if let Some(child) = MESH_CHILD.lock().unwrap().take() {
+        child.kill().ok();
+    }
+}
+
 // ─── App entry point ─────────────────────────────────────────────────────────
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -237,6 +337,8 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![
             extract_thumbnails,
+            object_meshes,
+            cancel_object_meshes,
             detect_game_dir,
             text_writer_set_key,
             text_writer_has_key,
