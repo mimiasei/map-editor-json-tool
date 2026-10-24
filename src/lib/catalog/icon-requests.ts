@@ -41,7 +41,7 @@ export const TERRAIN_LAYER_ICONS = [
   'lava_cracks', 'lava_blank', 'lava_glowy',
   'dirt_ground1', 'dirt_ground2', 'dirt_ground3',
   // Roads and rivers on the Map Grid: cobble road, brown dirt, water (the game's own road/river meshes are shader-driven, no texture of their own).
-  'nature_road', 'WaterTexture',
+  'nature_road', 'WaterTexture', 'road_dirt_1', 'road_stone_1',
 ] as const
 
 /** Suffix of the large hero portraits — see heroPortraitIcon(). */

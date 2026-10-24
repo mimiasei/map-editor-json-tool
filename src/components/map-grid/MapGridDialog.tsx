@@ -62,6 +62,7 @@ import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
 import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
 import { buildTexturePatterns, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
+import { buildLoneRoadTiles, buildRoadSegments, drawRoads, useRoadStrokes } from '@/lib/map-grid/road-strokes'
 import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
@@ -2699,13 +2700,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // merges in exactly like every other paint tool's preview.
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   const lineTextures = useLineTextures()
+  const roadStrokes = useRoadStrokes()
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
     // Textured: a finer canvas (capped at 4096 px) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
     const textured = settings.lineFeatureTextures && lineTextures.size > 0
-    const SUBPX = textured ? Math.max(12, Math.min(32, Math.floor(4096 / Math.max(sizeX, sizeZ)))) : 12
-    const BAND = textured ? SUBPX * 0.3 : 3.5
+    const strokedRoads = settings.lineFeatureTextures && roadStrokes !== null
+    const SUBPX = textured || strokedRoads ? Math.max(12, Math.min(32, Math.floor(4096 / Math.max(sizeX, sizeZ)))) : 12
+    const BAND = textured || strokedRoads ? SUBPX * 0.3 : 3.5
     const OFFSET = Math.floor((SUBPX - BAND) / 2)
     canvas.width = sizeX * SUBPX
     canvas.height = sizeZ * SUBPX
@@ -2828,7 +2831,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
 
     const tileCount = sizeX * sizeZ
-    if (roadsMap.length === tileCount) {
+    if (strokedRoads && roadStrokes) {
+      // The game's own road strokes, one per connection (road-strokes.ts).
+      const roadAt = (node: number) => mergedRoadId(node)
+      const segments = buildRoadSegments(sizeX, sizeZ, roadAt).filter((seg) => !(primaryByNode.has(seg.az * sizeX + seg.ax) && primaryByNode.has(seg.bz * sizeX + seg.bx)))
+      const lone = buildLoneRoadTiles(sizeX, sizeZ, roadAt).filter((l) => !primaryByNode.has(l.z * sizeX + l.x))
+      drawRoads(ctx, roadStrokes, segments, lone, SUBPX, sizeZ)
+    } else if (roadsMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
         const roadId = mergedRoadId(node)
         if (!roadId) continue
@@ -2839,7 +2848,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawBand(node, fillFor('river', RIVER_BASE_COLOR), hasRiver)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
