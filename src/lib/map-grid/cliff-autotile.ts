@@ -120,7 +120,7 @@ export function buildCliffPieces(sizeX: number, sizeZ: number, levels: ArrayLike
           const sid = (turn: number) => cliffSid('corner', variant, ([0, 90, 180, 270][pick(z * sizeX + x, 5, 4)] + turn) % 360, false)
           // Per corner: sid(turn), then the shift in tiles (right, down) from the corner tile's centre, so each corner can be tuned on its own.
           if (c.rot === 270) add(tx, tz, sid(0), false, 0.75, 0.25) // north-west
-          else if (c.rot === 180) add(tx, tz, sid(0), false, -1.0, 0.5) // north-east
+          else if (c.rot === 180) add(tx, tz, sid(270), false, -0.5, 0.25) // north-east
           else add(tx, tz, sid(0), false, -c.sx * 0.5, c.sz * 0.5) // south corners
         } else {
           diagonal(x, z)
