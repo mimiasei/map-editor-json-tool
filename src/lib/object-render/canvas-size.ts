@@ -10,8 +10,8 @@ export const ELEVATION = 25
  * ground depth to 0.42 and breaks the walls up. The sidecar names these renders with the same angle (_e60), see mesh_export.py.
  */
 export const CLIFF_ELEVATION = 60
-/** Ends every cliff render's sid: the camera angle, and "m" = made with a top-surface mask. A new tag makes old renders count as missing. */
-export const CLIFF_TAG = `e${CLIFF_ELEVATION}m`
+/** Ends every cliff render's sid: the camera angle, and "n" = made with a top-surface mask and side variants. A new tag makes old renders count as missing. */
+export const CLIFF_TAG = `e${CLIFF_ELEVATION}n`
 
 /** Smallest canvas (px at RENDER_PPU) that holds the exported mesh and its shadow, from the exported bounding box. */
 export function canvasForBounds(min: [number, number, number], max: [number, number, number]): number {

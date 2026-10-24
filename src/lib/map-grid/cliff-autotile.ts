@@ -34,9 +34,9 @@ export const CLIFF_TOP_SHIFT = 0.68 * Math.cos((CLIFF_ELEVATION * Math.PI) / 180
 /** Offset of the higher neighbour -> turn of the straight piece on the low tile, and whether it is drawn as a top. */
 const ORTHOGONAL = [
   { dx: 0, dz: 1, rot: 0, top: false },   // high to the north
-  { dx: -1, dz: 0, rot: 90, top: false }, // west
+  { dx: -1, dz: 0, rot: 90, top: false }, // high to the west: the plateau's east edge, full face in shadow
   { dx: 0, dz: -1, rot: 180, top: true }, // south
-  { dx: 1, dz: 0, rot: 270, top: false }, // east
+  { dx: 1, dz: 0, rot: 270, top: 'side' }, // high to the east: the plateau's west edge, a narrow band of the face
 ] as const
 
 /**
@@ -62,8 +62,9 @@ function pick(node: number, salt: number, count: number): number {
   return (h >>> 0) % count
 }
 
-export function cliffSid(kind: Kind, variant: number, rot: number, top: boolean): string {
-  return `cliff_${kind}_${String(variant).padStart(2, '0')}${top ? '_top' : ''}_r${rot}_${CLIFF_TAG}`
+export function cliffSid(kind: Kind, variant: number, rot: number, style: boolean | 'side'): string {
+  const part = style === 'side' ? '_side' : style ? '_top' : ''
+  return `cliff_${kind}_${String(variant).padStart(2, '0')}${part}_r${rot}_${CLIFF_TAG}`
 }
 
 /**
@@ -109,13 +110,11 @@ export function buildCliffPieces(sizeX: number, sizeZ: number, levels: ArrayLike
           consume(x, z + c.sz, x, z)
           consume(x + c.sx, z, x, z)
           consume(x + c.sx, z - c.sz, x, z - c.sz)
-          rubble(x, z, c.rot + 31)
         } else {
           diagonal(x, z)
           consume(x, z + c.sz, x, z)
           consume(x + c.sx, z, x, z)
         }
-        rubble(x + c.sx, z + c.sz, c.rot + 41)
       }
     }
   }

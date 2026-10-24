@@ -98,11 +98,13 @@ def list_objects(game_dir: Path) -> list[dict]:
     # to all four sides; the grid picks the turn that matches the edge.
     for name in _CLIFF_PIECES:
         for rot in (0, 90, 180, 270):
-            out.append({"sid": f"{name}_r{rot}_e60m", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot})
+            out.append({"sid": f"{name}_r{rot}_e60n", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot})
             # Where the face turns away from the camera the raised ground hides the wall and only its top shows (seen in game
             # screenshots), so walls also get a "top" render (no ground shadow): everything below 0.55 (walls are 0.67-0.72 tall) cut away.
             if not name.startswith("cliff_corner"):
-                out.append({"sid": f"{name}_top_r{rot}_e60m", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
+                # West walls show only a narrow band of the face (seen in game screenshots): cut away the lower 0.35.
+                out.append({"sid": f"{name}_side_r{rot}_e60n", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.35})
+                out.append({"sid": f"{name}_top_r{rot}_e60n", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
     return out
 
 

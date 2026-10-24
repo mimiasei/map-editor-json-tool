@@ -2469,33 +2469,56 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const s = scale / RENDER_PX_PER_TILE
     const patterns = biomeTextures.size > 0 ? buildTexturePatterns(ctx, biomeTextures, scale) : new Map<TextureKey, CanvasPattern>()
     const baked = new Map<string, HTMLCanvasElement>()
-    const textured = (sid: string, key: TextureKey, w: number, h: number): HTMLCanvasElement | null => {
+    // The game's rock is cooler and darker than the plain render (bluish in shade), and its tops carry the biome's ground texture.
+    const bake = (sid: string, key: TextureKey | null, w: number, h: number): HTMLCanvasElement | null => {
       const id = sid + '|' + key
       const known = baked.get(id)
       if (known) return known
       const img = cliffSprites.sprites.get(sid)
-      const mask = cliffSprites.masks.get(sid)
-      const pattern = patterns.get(key)
-      if (!img || !mask || !pattern) return null
+      if (!img) return null
       const out = document.createElement('canvas')
       out.width = w
       out.height = h
       const g = out.getContext('2d')
-      const top = document.createElement('canvas')
-      top.width = w
-      top.height = h
-      const t = top.getContext('2d')
-      if (!g || !t) return null
+      if (!g) return null
       g.imageSmoothingQuality = 'high'
       g.drawImage(img, 0, 0, w, h)
-      t.fillStyle = pattern
-      t.fillRect(0, 0, w, h)
-      t.globalCompositeOperation = 'destination-in'
-      t.drawImage(mask, 0, 0, w, h)
-      g.globalAlpha = 0.85
-      g.drawImage(top, 0, 0)
+      g.globalCompositeOperation = 'multiply'
+      g.fillStyle = 'rgb(205, 205, 232)'
+      g.fillRect(0, 0, w, h)
+      g.globalCompositeOperation = 'destination-in'
+      g.drawImage(img, 0, 0, w, h)
+      g.globalCompositeOperation = 'source-over'
+      const mask = cliffSprites.masks.get(sid)
+      const pattern = key !== null ? patterns.get(key) : undefined
+      if (mask && pattern) {
+        const top = document.createElement('canvas')
+        top.width = w
+        top.height = h
+        const t = top.getContext('2d')
+        if (t) {
+          t.fillStyle = pattern
+          t.fillRect(0, 0, w, h)
+          t.globalCompositeOperation = 'destination-in'
+          t.drawImage(mask, 0, 0, w, h)
+          g.globalAlpha = 0.85
+          g.drawImage(top, 0, 0)
+        }
+      }
       baked.set(id, out)
       return out
+    }
+    // The plateau casts a dark shadow strip onto the low ground east of its east edge (the game's sun is in the west).
+    const shadowTiles = new Set<number>()
+    for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) if (/_r90_/.test(piece.sid) && /^cliff_(vertical_)?straight/.test(piece.sid)) shadowTiles.add(piece.node)
+    for (const node of shadowTiles) {
+      const x0 = (node % sizeX) * scale
+      const y0 = (sizeZ - 1 - Math.floor(node / sizeX)) * scale
+      const grad = ctx.createLinearGradient(x0, 0, x0 + scale * 0.9, 0)
+      grad.addColorStop(0, 'rgba(20, 22, 55, 0.4)')
+      grad.addColorStop(1, 'rgba(20, 22, 55, 0)')
+      ctx.fillStyle = grad
+      ctx.fillRect(x0, y0, scale * 0.9, scale)
     }
     for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) {
       const img = cliffSprites.sprites.get(piece.sid)
@@ -2504,7 +2527,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const w = Math.max(1, Math.ceil(entry.w * s))
       const h = Math.max(1, Math.ceil(entry.h * s))
       const key = textureKeyFor(tilesMap[piece.node], waterMap[piece.node])
-      const source = key !== null ? textured(piece.sid, key, w, h) : null
+      const source = bake(piece.sid, key, w, h)
       const cx = ((piece.node % sizeX) + 0.5) * scale
       const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0)) * scale
       ctx.drawImage(source ?? img, cx - entry.ox * s, cy - entry.oy * s, source ? w : entry.w * s, source ? h : entry.h * s)
