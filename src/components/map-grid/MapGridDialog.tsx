@@ -2540,9 +2540,6 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     // Ramps: the slope the game puts where a wall has a gap, the ground texture on the game's S-curve profile (RAMP_PROFILE). A point at
     // height h is drawn (RAMP_HEIGHT - h) * cos(camera) lower than the plateau edge it climbs to, like the wall sprites above.
-    // Light comes from the east at 50 degrees, as for the cliff shadows.
-    const lightX = Math.cos((50 * Math.PI) / 180)
-    const lightZ = Math.sin((50 * Math.PI) / 180)
     for (const ramp of buildRampSlopes(sizeX, sizeZ, levels, climbs)) {
       const pattern = patterns.get(textureKeyFor(tilesMap[ramp.node], waterMap[ramp.node]) as TextureKey)
       if (!pattern) continue
@@ -2565,8 +2562,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         ctx.fill(path)
         // Diffuse light on the slope, against flat ground: darker facing away from the east, lighter facing it.
         const g = (h1 - h0) / (p1 - p0)
-        const lit = (-g * ramp.dx * lightX + lightZ) / Math.sqrt(1 + g * g) / lightZ
-        ctx.fillStyle = lit < 1 ? `rgba(0,0,0,${Math.min(0.6, (1 - lit) * 0.9)})` : `rgba(255,255,255,${Math.min(0.3, (lit - 1) * 0.6)})`
+        // Light from the north-east, 50 degrees above the horizon.
+        const lightUp = Math.sin((50 * Math.PI) / 180)
+        const lightEast = Math.cos((50 * Math.PI) / 180) / Math.SQRT2
+        const lightNorth = lightEast
+        const lit = (-g * (ramp.dx * lightEast + ramp.dz * lightNorth) + lightUp) / Math.sqrt(1 + g * g) / lightUp
+        // 0 at both ends of the ramp, 1 in the middle (sine of the strip's midpoint along the climb).
+        const fade = Math.sin(Math.PI * ((p0 + p1) / 2))
+        const DARK = 0.4   // darkest alpha, west-facing mid-section
+        const LIGHT = 0.25  // lightest alpha, east-facing mid-section
+        ctx.fillStyle = lit < 1 ? `rgba(0,0,0,${fade * DARK})` : `rgba(255,255,210,${fade * LIGHT})`
         ctx.fill(path)
       }
     }
