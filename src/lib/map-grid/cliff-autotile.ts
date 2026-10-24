@@ -107,9 +107,12 @@ export function buildCliffPieces(sizeX: number, sizeZ: number, levels: ArrayLike
         const kind: Kind = drop >= 2 ? 'vertical_diagonal' : 'diagonal'
         const diagonal = (px: number, pz: number) => add(px, pz, cliffSid(kind, pick(pz * sizeX + px, c.rot + 7, VARIANTS[kind]), c.rot, c.top), true)
         if (run(-c.sx, 0, 0, c.sz) >= SQUARE_CORNER && run(0, -c.sz, c.sx, 0) >= SQUARE_CORNER) {
-          // North corners: the thin rim runs on over the corner tile (as in the game's editor); only the south corners get boulders.
-          if (c.top) add(x + c.sx, z + c.sz, cliffSid('straight', pick(z * sizeX + x, c.rot + 41, VARIANTS.straight), 180, true), true)
-          else rubble(x + c.sx, z + c.sz, c.rot + 41)
+          // North corners: the rim turns down into the side wall, so the side wall's piece is also placed on the corner tile; only the south
+          // corners get boulders.
+          if (c.top) {
+            const rot = c.sx < 0 ? 270 : 90
+            add(x + c.sx, z + c.sz, cliffSid('straight', pick(z * sizeX + x, c.rot + 41, VARIANTS.straight), rot, c.sx < 0 ? 'side' : false), true)
+          } else rubble(x + c.sx, z + c.sz, c.rot + 41)
         } else {
           diagonal(x, z)
           consume(x, z + c.sz, x, z)
