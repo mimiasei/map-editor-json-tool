@@ -32,7 +32,7 @@ export interface RoadStrokes {
 let cached: Promise<RoadStrokes | null> | null = null
 
 async function loadKind(kind: RoadKind): Promise<{ strokes: HTMLCanvasElement[]; refHeight: number } | null> {
-  const sheet = await loadLayer(SHEETS[kind].name).catch(() => null)
+  const sheet = await loadLayer(SHEETS[kind].name, true).catch(() => null)
   if (!sheet) return null
   const cw = Math.floor(sheet.width / COLUMNS)
   const ch = Math.floor(sheet.height / ROWS)

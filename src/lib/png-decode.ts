@@ -6,7 +6,7 @@
 export interface DecodedPng {
   width: number
   height: number
-  /** RGBA with alpha forced to 255. */
+  /** RGBA; alpha is 255 unless `keepAlpha` was asked for. */
   rgba: Uint8ClampedArray
 }
 
@@ -18,7 +18,7 @@ async function inflate(data: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await new Response(stream).arrayBuffer())
 }
 
-export async function decodePng(bytes: Uint8Array): Promise<DecodedPng> {
+export async function decodePng(bytes: Uint8Array, keepAlpha = false): Promise<DecodedPng> {
   if (SIGNATURE.some((v, i) => bytes[i] !== v)) throw new Error('not a PNG')
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   let width = 0, height = 0, channels = 0
@@ -72,7 +72,8 @@ export async function decodePng(bytes: Uint8Array): Promise<DecodedPng> {
     rgba[i * 4] = pixels[s]
     rgba[i * 4 + 1] = grey ? pixels[s] : pixels[s + 1]
     rgba[i * 4 + 2] = grey ? pixels[s] : pixels[s + 2]
-    rgba[i * 4 + 3] = 255
+    // Grey+alpha has its alpha second, RGBA fourth; the other types have none.
+    rgba[i * 4 + 3] = keepAlpha && (channels === 2 || channels === 4) ? pixels[s + channels - 1] : 255
   }
   return { width, height, rgba }
 }
