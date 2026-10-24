@@ -50,8 +50,12 @@ const CORNERS = [
   { rot: 270, top: true, sx: -1, sz: 1 },   // north-west
 ] as const
 
-/** A corner is cut over two tiles per side (as in the game screenshots) when each of the two walls is at least this many tiles long. */
-const LONG_WALL = 4
+/**
+ * A convex corner whose two walls are both at least this many tiles long is a real corner of a rectangle and stays square: the straight walls
+ * run to it and a few boulders lie on the diagonal tile (the test map cliff_test_block, a 10x3 raised block, seen in the game's own editor).
+ * A shorter wall on either side means the outline is a staircase, which the game draws with diagonal pieces.
+ */
+const SQUARE_CORNER = 3
 
 /** Stable pseudo-random pick, so a piece does not change when the map is repainted elsewhere. */
 function pick(node: number, salt: number, count: number): number {
@@ -102,14 +106,8 @@ export function buildCliffPieces(sizeX: number, sizeZ: number, levels: ArrayLike
         const drop = here - Math.max(level(x, z + c.sz), level(x + c.sx, z), level(x + c.sx, z + c.sz))
         const kind: Kind = drop >= 2 ? 'vertical_diagonal' : 'diagonal'
         const diagonal = (px: number, pz: number) => add(px, pz, cliffSid(kind, pick(pz * sizeX + px, c.rot + 7, VARIANTS[kind]), c.rot, c.top), true)
-        if (run(-c.sx, 0, 0, c.sz) >= LONG_WALL && run(0, -c.sz, c.sx, 0) >= LONG_WALL) {
-          // Long walls: the corner tile itself drops out and two diagonals run from one wall to the other (a cut of two tiles per side).
-          diagonal(x - c.sx, z)
-          diagonal(x, z - c.sz)
-          consume(x - c.sx, z + c.sz, x - c.sx, z)
-          consume(x, z + c.sz, x, z)
-          consume(x + c.sx, z, x, z)
-          consume(x + c.sx, z - c.sz, x, z - c.sz)
+        if (run(-c.sx, 0, 0, c.sz) >= SQUARE_CORNER && run(0, -c.sz, c.sx, 0) >= SQUARE_CORNER) {
+          rubble(x + c.sx, z + c.sz, c.rot + 41)
         } else {
           diagonal(x, z)
           consume(x, z + c.sz, x, z)
