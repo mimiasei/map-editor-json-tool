@@ -57,7 +57,7 @@ import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
-import { buildCliffPieces, CLIFF_TOP_SHIFT } from '@/lib/map-grid/cliff-autotile'
+import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
 import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
 import { buildTexturePatterns, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
@@ -2537,6 +2537,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const cx = ((piece.node % sizeX) + 0.5 + (piece.shiftX ?? 0)) * scale
       const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0) + (piece.shiftY ?? 0)) * scale
       placed.push({ baked: bake(piece.sid, key, w, h), img, x: cx - entry.ox * s, y: cy - entry.oy * s, w, h, node: piece.node, rim: /_top_r180_/.test(piece.sid) })
+    }
+    // Ramps: the slope the game puts where a wall has a gap, the ground texture on the game's S-curve profile (RAMP_PROFILE). A point at
+    // height h is drawn (RAMP_HEIGHT - h) * cos(camera) lower than the plateau edge it climbs to, like the wall sprites above.
+    // Light comes from the east at 50 degrees, as for the cliff shadows.
+    const lightX = Math.cos((50 * Math.PI) / 180)
+    const lightZ = Math.sin((50 * Math.PI) / 180)
+    for (const ramp of buildRampSlopes(sizeX, sizeZ, levels, climbs)) {
+      const pattern = patterns.get(textureKeyFor(tilesMap[ramp.node], waterMap[ramp.node]) as TextureKey)
+      if (!pattern) continue
+      const cx = (ramp.node % sizeX) + 0.5
+      const cz = sizeZ - 1 - Math.floor(ramp.node / sizeX) + 0.5
+      // Screen position (in tiles) of the point p along the climb (0 low edge, 1 high edge) and v across it, at height h.
+      const at = (p: number, v: number, h: number): [number, number] => [
+        (cx + (p - 0.5) * ramp.dx - v * ramp.dz) * scale,
+        (cz - (p - 0.5) * ramp.dz - v * ramp.dx + (RAMP_HEIGHT - h) * CAMERA_COS) * scale,
+      ]
+      for (let i = 0; i + 1 < RAMP_PROFILE.length; i++) {
+        const [p0, h0] = RAMP_PROFILE[i]
+        const [p1, h1] = RAMP_PROFILE[i + 1]
+        // A hair wider across, so neighbouring ramp tiles do not show a seam.
+        const quad = [at(p0, -0.505, h0), at(p0, 0.505, h0), at(p1, 0.505, h1), at(p1, -0.505, h1)]
+        const path = new Path2D()
+        quad.forEach(([x, y], k) => (k === 0 ? path.moveTo(x, y) : path.lineTo(x, y)))
+        path.closePath()
+        ctx.fillStyle = pattern
+        ctx.fill(path)
+        // Diffuse light on the slope, against flat ground: darker facing away from the east, lighter facing it.
+        const g = (h1 - h0) / (p1 - p0)
+        const lit = (-g * ramp.dx * lightX + lightZ) / Math.sqrt(1 + g * g) / lightZ
+        ctx.fillStyle = lit < 1 ? `rgba(0,0,0,${Math.min(0.6, (1 - lit) * 0.9)})` : `rgba(255,255,255,${Math.min(0.3, (lit - 1) * 0.6)})`
+        ctx.fill(path)
+      }
     }
     // Shadows first (under every rock), each clipped to the tiles around its piece that are not higher than the piece's tile.
     for (const p of placed) {

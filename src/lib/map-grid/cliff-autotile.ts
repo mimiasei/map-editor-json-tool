@@ -34,6 +34,48 @@ type Kind = keyof typeof VARIANTS
 /** How far down a wall's sprite moves so its top lines up with the boundary between the high and the low tile: wall height 0.68 x cos(camera elevation). */
 export const CLIFF_TOP_SHIFT = 0.68 * Math.cos((CLIFF_ELEVATION * Math.PI) / 180)
 
+/** cos of the camera elevation the cliff sprites are rendered at: a height of h is drawn h * this tiles higher up the screen. */
+export const CAMERA_COS = Math.cos((CLIFF_ELEVATION * Math.PI) / 180)
+
+/**
+ * Height profile of a ramp tile, read from the game's climb prefabs (objects/test/climb/climb_2 and climbgenerate: the mesh `center_tile` on a
+ * plain grey "tile" material): one tile wide, an S-curve of (distance from the low edge, height), 0 to 0.6 tiles. The last point is assumed
+ * to be the top of the mesh's bounds (0.6); the other seven are its vertex columns.
+ */
+export const RAMP_PROFILE: readonly (readonly [number, number])[] = [
+  [0, 0], [0.16, 0.03], [0.29, 0.07], [0.45, 0.16], [0.58, 0.31], [0.71, 0.5], [0.85, 0.58], [1, 0.6],
+]
+export const RAMP_HEIGHT = 0.6
+
+export interface RampSlope {
+  node: number
+  /** Direction from the ramp tile to its higher neighbour (grid axes, z grows north). */
+  dx: number
+  dz: number
+}
+
+/**
+ * The ramps to draw as slopes: every climbsMap tile that has a higher neighbour. A ramp lies on the lower side, against the higher tile
+ * (ramps_map.map and the game's screenshots of it); the walls are left out there, see buildCliffPieces.
+ */
+export function buildRampSlopes(sizeX: number, sizeZ: number, levels: ArrayLike<number>, climbs: ArrayLike<number>): RampSlope[] {
+  const out: RampSlope[] = []
+  for (let z = 0; z < sizeZ; z++) {
+    for (let x = 0; x < sizeX; x++) {
+      const node = z * sizeX + x
+      if (!climbs[node]) continue
+      const here = levels[node] ?? 0
+      const up = [[0, 1], [1, 0], [-1, 0], [0, -1]].find(([dx, dz]) => {
+        const nx = x + dx
+        const nz = z + dz
+        return nx >= 0 && nz >= 0 && nx < sizeX && nz < sizeZ && !climbs[nz * sizeX + nx] && (levels[nz * sizeX + nx] ?? 0) > here
+      })
+      if (up) out.push({ node, dx: up[0], dz: up[1] })
+    }
+  }
+  return out
+}
+
 /** Offset of the higher neighbour -> turn of the straight piece on the low tile, and whether it is drawn as a top. */
 const ORTHOGONAL = [
   { dx: 0, dz: 1, rot: 0, top: false },   // high to the north
