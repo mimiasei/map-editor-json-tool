@@ -2468,29 +2468,43 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     ctx.imageSmoothingQuality = 'high'
     const s = scale / RENDER_PX_PER_TILE
     const patterns = biomeTextures.size > 0 ? buildTexturePatterns(ctx, biomeTextures, scale) : new Map<TextureKey, CanvasPattern>()
-    const baked = new Map<string, HTMLCanvasElement>()
-    // The game's rock is cooler and darker than the plain render (bluish in shade), and its tops carry the biome's ground texture.
-    const bake = (sid: string, key: TextureKey | null, w: number, h: number): HTMLCanvasElement | null => {
+    // Each piece is split into the rock and its ground shadow (the dark, semi-transparent pixels): a shadow may only fall on tiles that are not
+    // higher than the piece's own tile, since a higher wall would cut it off.
+    interface Baked { rock: HTMLCanvasElement; shadow: HTMLCanvasElement }
+    const baked = new Map<string, Baked>()
+    // The rock is tan like the game's (a plain render is greyer), and its tops carry the biome's ground texture.
+    const bake = (sid: string, key: TextureKey | null, w: number, h: number): Baked | null => {
       const id = sid + '|' + key
       const known = baked.get(id)
       if (known) return known
       const img = cliffSprites.sprites.get(sid)
       if (!img) return null
-      const out = document.createElement('canvas')
-      out.width = w
-      out.height = h
-      const g = out.getContext('2d')
-      if (!g) return null
+      const rock = document.createElement('canvas')
+      rock.width = w
+      rock.height = h
+      const shadow = document.createElement('canvas')
+      shadow.width = w
+      shadow.height = h
+      const g = rock.getContext('2d')
+      const sg = shadow.getContext('2d')
+      if (!g || !sg) return null
       g.imageSmoothingQuality = 'high'
       g.drawImage(img, 0, 0, w, h)
-      // Cool tint on the colour only: a multiply fill would also colour the semi-transparent ground shadow.
+      // Per pixel, not a multiply fill, which would also colour the semi-transparent shadow.
       const px = g.getImageData(0, 0, w, h)
+      const sh = sg.createImageData(w, h)
       for (let i = 0; i < px.data.length; i += 4) {
-        px.data[i] *= 0.8
-        px.data[i + 1] *= 0.8
+        if (px.data[i + 3] < 200 && px.data[i] + px.data[i + 1] + px.data[i + 2] < 60) {
+          sh.data.set(px.data.subarray(i, i + 4), i)
+          px.data[i + 3] = 0
+          continue
+        }
+        px.data[i] *= 1.18
+        px.data[i + 1] *= 1.1
         px.data[i + 2] *= 0.9
       }
       g.putImageData(px, 0, 0)
+      sg.putImageData(sh, 0, 0)
       const mask = cliffSprites.masks.get(sid)
       const pattern = key !== null ? patterns.get(key) : undefined
       if (mask && pattern) {
@@ -2507,9 +2521,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           g.drawImage(top, 0, 0)
         }
       }
-      baked.set(id, out)
-      return out
+      const result = { rock, shadow }
+      baked.set(id, result)
+      return result
     }
+    const placed: { baked: Baked | null; img: HTMLImageElement; x: number; y: number; w: number; h: number; node: number }[] = []
     for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) {
       const img = cliffSprites.sprites.get(piece.sid)
       const entry = renderIndex.objects[piece.sid]
@@ -2517,10 +2533,32 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const w = Math.max(1, Math.ceil(entry.w * s))
       const h = Math.max(1, Math.ceil(entry.h * s))
       const key = textureKeyFor(tilesMap[piece.node], waterMap[piece.node])
-      const source = bake(piece.sid, key, w, h)
       const cx = ((piece.node % sizeX) + 0.5 + (piece.shiftX ?? 0)) * scale
       const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0) + (piece.shiftY ?? 0)) * scale
-      ctx.drawImage(source ?? img, cx - entry.ox * s, cy - entry.oy * s, source ? w : entry.w * s, source ? h : entry.h * s)
+      placed.push({ baked: bake(piece.sid, key, w, h), img, x: cx - entry.ox * s, y: cy - entry.oy * s, w, h, node: piece.node })
+    }
+    // Shadows first (under every rock), each clipped to the tiles around its piece that are not higher than the piece's tile.
+    for (const p of placed) {
+      if (!p.baked) continue
+      const tx = p.node % sizeX
+      const tz = Math.floor(p.node / sizeX)
+      const clip = new Path2D()
+      for (let dz = -3; dz <= 3; dz++) {
+        for (let dx = -3; dx <= 3; dx++) {
+          const nx = tx + dx
+          const nz = tz + dz
+          if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ || (levels[nz * sizeX + nx] ?? 0) > (levels[p.node] ?? 0)) continue
+          clip.rect(nx * scale, (sizeZ - 1 - nz) * scale, scale, scale)
+        }
+      }
+      ctx.save()
+      ctx.clip(clip)
+      ctx.drawImage(p.baked.shadow, p.x, p.y)
+      ctx.restore()
+    }
+    for (const p of placed) {
+      if (p.baked) ctx.drawImage(p.baked.rock, p.x, p.y)
+      else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
     }
   }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
   // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
