@@ -27,7 +27,7 @@ export interface RenderIndex {
   skipped: string[]
 }
 
-export type JobName = 'interactables' | 'decorations'
+export type JobName = 'interactables' | 'decorations' | 'cliffs'
 export type JobPhase = 'idle' | 'preparing' | 'exporting' | 'rendering' | 'done' | 'error' | 'cancelled'
 
 export interface JobState {

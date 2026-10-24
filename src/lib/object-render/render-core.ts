@@ -48,6 +48,8 @@ export interface RenderRequest {
   canvas: number
   /** Turn around Y, degrees. */
   rot: number
+  /** Hide everything below this height (default 0, the ground): leaves only the top of a cliff wall. */
+  cutBelow?: number
 }
 
 export interface RenderResult {
@@ -225,6 +227,7 @@ export async function renderObject(req: RenderRequest): Promise<RenderResult> {
   const size = px * SUPERSAMPLE
   const gl = getRenderer()
   gl.setSize(size, size, false)
+  gl.clippingPlanes = [new THREE.Plane(new THREE.Vector3(0, 1, 0), -(req.cutBelow ?? 0))]
   const built = await buildScene(req, meta)
   const composer = new EffectComposer(gl)
   composer.addPass(new RenderPass(built.scene, built.camera))

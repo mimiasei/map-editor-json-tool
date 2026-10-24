@@ -1,5 +1,6 @@
 // ─── Render job ──────────────────────────────────────────────────────────────
-// Two opt-in jobs, "interactables" first, then "decorations". Each one
+// Three opt-in jobs, "interactables" first, then "decorations", then "cliffs" (the game's cliff pieces, listed by the sidecar next to the
+// objects and rendered the same way). Each one
 //   1. asks the sidecar which objects exist (Core.zip) and keeps only those missing from renders/index.json,
 //   2. has the sidecar export their meshes (OBJ + textures) into <appLocalData>/meshes/<sid>/, one at a time,
 //   3. renders every object as soon as its mesh is on disk, on a small pool of workers (render.worker.ts),
@@ -29,6 +30,8 @@ interface ListedObject {
   offsetX: number
   offsetZ: number
   rot: number
+  /** Cliff rims: render only above this height. */
+  cut?: number
   alias?: string
 }
 
@@ -37,7 +40,7 @@ const PARALLEL = 3
 /** The index is saved this often so a crash or a cancel loses almost nothing. */
 const SAVE_EVERY = 20
 
-const JOBS: JobName[] = ['interactables', 'decorations']
+const JOBS: JobName[] = ['interactables', 'decorations', 'cliffs']
 
 let listed: Promise<ListedObject[]> | null = null
 let running: AbortController | null = null
@@ -72,6 +75,7 @@ export async function refreshPendingCounts(): Promise<PendingCounts | null> {
     const pending = {
       interactables: missing(objects, index, 'interactables').length,
       decorations: missing(objects, index, 'decorations').length,
+      cliffs: missing(objects, index, 'cliffs').length,
     }
     store.setPending(pending)
     return pending
@@ -210,7 +214,7 @@ export async function runRenderJob(job: JobName): Promise<void> {
       let canvas = canvasForBounds(meta.bbox_min, meta.bbox_max)
       for (;;) {
         // The buffers are cloned into the worker, not transferred, so a retry at a bigger canvas can reuse them.
-        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot })
+        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut })
         const next = CANVAS_STEPS.find((c) => c > canvas)
         if (r.clipped && next) { canvas = next; continue }
         if (r.empty) throw new Error('nothing visible')

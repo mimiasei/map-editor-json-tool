@@ -25,6 +25,17 @@ _DB_FILES = (
     ("2_animals.json", "decorations"),
 )
 
+# The game's cliff pieces (autotile set for the edges of raised ground), prefabs under cliffs/prefabs/ in the ResourceManager
+# container (checked in the data: exactly these 21, each one cliff mesh on material matCliff1). They are not map objects, so
+# they come from here and not from Core.zip; each is rendered like an object, with its origin at the tile centre.
+_CLIFF_PIECES = (
+    *(f"cliff_straight_{i:02d}" for i in range(8)),
+    *(f"cliff_corner_{i:02d}" for i in range(3)),
+    *(f"cliff_diagonal_{i:02d}" for i in range(3)),
+    *(f"cliff_vertical_straight_{i:02d}" for i in range(4)),
+    *(f"cliff_vertical_diagonal_{i:02d}" for i in range(3)),
+)
+
 # Animals that are only an animation variant of another one share its render (chicken_2 -> chicken_1); fish and birds are
 # not land animals and are not drawn.
 _ANIMAL_SKIP = re.compile(r"^(fish|birds(_\d+)?)$")
@@ -81,6 +92,15 @@ def list_objects(game_dir: Path) -> list[dict]:
                 if fname == "2_animals.json" and m and int(m.group(2)) > 1 and f"{m.group(1)}_1" in ids:
                     item["alias"] = f"{m.group(1)}_1"
                 out.append(item)
+    # A piece faces one way (the wall lies on the north side of its tile, face toward the camera), so each one is rendered turned
+    # to all four sides; the grid picks the turn that matches the edge.
+    for name in _CLIFF_PIECES:
+        for rot in (0, 90, 180, 270):
+            out.append({"sid": f"{name}_r{rot}", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot})
+            # Where the face turns away from the camera the raised ground hides the wall and only its top shows (seen in game
+            # screenshots), so walls also get a "rim" render: everything below 0.55 (walls are 0.67-0.72 tall) cut away.
+            if not name.startswith("cliff_corner"):
+                out.append({"sid": f"{name}_rim_r{rot}", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
     return out
 
 
@@ -289,7 +309,7 @@ def export_meshes(game_dir: Path, out_root: Path, sids: list[str], emit: Callabl
     if any(o["sid"] == "camp_fire" for o in todo):
         fire_sprite()
     for n, o in enumerate(todo, 1):
-        key = "objects/" + o["prefab"].lower()
+        key = o.get("key") or "objects/" + o["prefab"].lower()
         status = "ok"
         if key not in cont:
             status = "missing"
