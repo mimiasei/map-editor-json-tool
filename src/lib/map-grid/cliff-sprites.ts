@@ -3,6 +3,7 @@
 // once and hands them to the grid; with none rendered the map is empty and the grid keeps its flat elevation tint only.
 
 import { useEffect, useState } from 'react'
+import { CLIFF_ELEVATION } from '@/lib/object-render/canvas-size'
 import { objectRender } from '@/lib/object-render/render-index'
 import { useObjectRenderStore } from '@/store/useObjectRenderStore'
 
@@ -23,7 +24,7 @@ export function useCliffSprites(): ReadonlyMap<string, HTMLImageElement> {
   const [sprites, setSprites] = useState<ReadonlyMap<string, HTMLImageElement>>(() => new Map(loaded))
   useEffect(() => {
     if (!index) return
-    const wanted = Object.keys(index.objects).filter((sid) => sid.startsWith('cliff_') && !loaded.has(sid))
+    const wanted = Object.keys(index.objects).filter((sid) => sid.startsWith('cliff_') && sid.endsWith(`_e${CLIFF_ELEVATION}`) && !loaded.has(sid))
     if (wanted.length === 0) return
     let cancelled = false
     void Promise.all(wanted.map(async (sid) => {

@@ -18,7 +18,7 @@ import {
   type RenderIndex,
 } from '@/store/useObjectRenderStore'
 import { appDataDir, emptyIndex, loadRenderIndex, saveRenderIndex } from './render-index'
-import { CANVAS_STEPS, canvasForBounds } from './canvas-size'
+import { CANVAS_STEPS, CLIFF_ELEVATION, canvasForBounds } from './canvas-size'
 import type { RenderRequest, RenderResult } from './render-core'
 import type { WorkerMessage, WorkerReply } from './render.worker'
 
@@ -158,9 +158,18 @@ export async function runRenderJob(job: JobName): Promise<void> {
     const dir = await appDataDir()
     const objects = await listObjects(gameDir)
     for (const o of objects) if (o.job === job && o.alias) index.aliases[o.sid] = o.alias
+    const { readFile, readTextFile, writeFile, mkdir, remove } = await import('@tauri-apps/plugin-fs')
+    if (job === 'cliffs') {
+      // Renders of cliff pieces that are no longer listed (an older camera angle or naming) would only take space.
+      const current = new Set(objects.filter((o) => o.job === 'cliffs').map((o) => o.sid))
+      for (const sid of Object.keys(index.objects)) {
+        if (!sid.startsWith('cliff_') || current.has(sid)) continue
+        delete index.objects[sid]
+        await remove(`${dir}renders/${sid}.png`).catch(() => undefined)
+      }
+    }
     const todo = missing(objects, index, job)
     const bySid = new Map(todo.map((o) => [o.sid, o]))
-    const { readFile, readTextFile, writeFile, mkdir, remove } = await import('@tauri-apps/plugin-fs')
     await mkdir(`${dir}renders`, { recursive: true })
     await mkdir(`${dir}meshes`, { recursive: true })
     store.setJob({ phase: 'exporting', total: todo.length })
@@ -214,7 +223,7 @@ export async function runRenderJob(job: JobName): Promise<void> {
       let canvas = canvasForBounds(meta.bbox_min, meta.bbox_max)
       for (;;) {
         // The buffers are cloned into the worker, not transferred, so a retry at a bigger canvas can reuse them.
-        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut })
+        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined })
         const next = CANVAS_STEPS.find((c) => c > canvas)
         if (r.clipped && next) { canvas = next; continue }
         if (r.empty) throw new Error('nothing visible')

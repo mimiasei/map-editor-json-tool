@@ -92,15 +92,17 @@ def list_objects(game_dir: Path) -> list[dict]:
                 if fname == "2_animals.json" and m and int(m.group(2)) > 1 and f"{m.group(1)}_1" in ids:
                     item["alias"] = f"{m.group(1)}_1"
                 out.append(item)
+    # The _e60 in the sids is the camera elevation these are rendered at (CLIFF_ELEVATION in lib/object-render/canvas-size.ts); a new
+    # angle means new sids, so old renders count as missing and the new ones get made.
     # A piece faces one way (the wall lies on the north side of its tile, face toward the camera), so each one is rendered turned
     # to all four sides; the grid picks the turn that matches the edge.
     for name in _CLIFF_PIECES:
         for rot in (0, 90, 180, 270):
-            out.append({"sid": f"{name}_r{rot}", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot})
+            out.append({"sid": f"{name}_r{rot}_e60", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot})
             # Where the face turns away from the camera the raised ground hides the wall and only its top shows (seen in game
             # screenshots), so walls also get a "top" render (no ground shadow): everything below 0.55 (walls are 0.67-0.72 tall) cut away.
             if not name.startswith("cliff_corner"):
-                out.append({"sid": f"{name}_top_r{rot}", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
+                out.append({"sid": f"{name}_top_r{rot}_e60", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
     return out
 
 

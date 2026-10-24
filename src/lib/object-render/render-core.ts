@@ -50,6 +50,8 @@ export interface RenderRequest {
   rot: number
   /** Hide everything below this height (default 0, the ground): leaves only the top of a cliff wall. */
   cutBelow?: number
+  /** Camera elevation in degrees (default ELEVATION). */
+  elevation?: number
 }
 
 export interface RenderResult {
@@ -105,7 +107,7 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
   const disposables: { dispose(): void }[] = []
   const camera = new THREE.OrthographicCamera(-half, half, half, -half, 0.1, 100)
   const a = (AZIMUTH * Math.PI) / 180
-  const e = (ELEVATION * Math.PI) / 180
+  const e = ((req.elevation ?? ELEVATION) * Math.PI) / 180
   const target = new THREE.Vector3(0, TARGET_Y, 0)
   camera.position
     .copy(target)
@@ -291,7 +293,7 @@ export async function renderObject(req: RenderRequest): Promise<RenderResult> {
     // The prefab origin sits at the canvas centre horizontally and, because the camera looks at TARGET_Y, below it by
     // TARGET_Y * cos(elevation) tiles.
     ox: px / 2 - x0,
-    oy: px / 2 + TARGET_Y * Math.cos((ELEVATION * Math.PI) / 180) * RENDER_PPU - y0,
+    oy: px / 2 + TARGET_Y * Math.cos(((req.elevation ?? ELEVATION) * Math.PI) / 180) * RENDER_PPU - y0,
     clipped,
     empty: false,
   }
