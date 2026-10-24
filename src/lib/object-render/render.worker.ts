@@ -12,7 +12,7 @@ self.onmessage = async (ev: MessageEvent<WorkerMessage>) => {
   const { id, request } = ev.data
   try {
     const result = await renderObject(request)
-    ;(self as unknown as Worker).postMessage({ id, result } satisfies WorkerReply, [result.png])
+    ;(self as unknown as Worker).postMessage({ id, result } satisfies WorkerReply, [result.png, ...(result.mask ? [result.mask] : [])])
   } catch (e) {
     ;(self as unknown as Worker).postMessage({ id, error: e instanceof Error ? e.message : String(e) } satisfies WorkerReply)
   }

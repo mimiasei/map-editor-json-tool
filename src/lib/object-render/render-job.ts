@@ -166,6 +166,7 @@ export async function runRenderJob(job: JobName): Promise<void> {
         if (!sid.startsWith('cliff_') || current.has(sid)) continue
         delete index.objects[sid]
         await remove(`${dir}renders/${sid}.png`).catch(() => undefined)
+        await remove(`${dir}renders/${sid}_m.png`).catch(() => undefined)
       }
     }
     const todo = missing(objects, index, job)
@@ -223,11 +224,12 @@ export async function runRenderJob(job: JobName): Promise<void> {
       let canvas = canvasForBounds(meta.bbox_min, meta.bbox_max)
       for (;;) {
         // The buffers are cloned into the worker, not transferred, so a retry at a bigger canvas can reuse them.
-        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined })
+        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined, topMask: o.job === 'cliffs' })
         const next = CANVAS_STEPS.find((c) => c > canvas)
         if (r.clipped && next) { canvas = next; continue }
         if (r.empty) throw new Error('nothing visible')
         await writeFile(`${dir}renders/${sid}.png`, new Uint8Array(r.png))
+        if (r.mask) await writeFile(`${dir}renders/${sid}_m.png`, new Uint8Array(r.mask))
         index.objects[sid] = { w: r.w, h: r.h, ox: Math.round(r.ox), oy: Math.round(r.oy), dx: o.offsetX, dz: o.offsetZ }
         return
       }

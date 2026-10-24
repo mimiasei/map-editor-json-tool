@@ -7,17 +7,18 @@
 //  - A diagonal piece's wall runs corner to corner through ONE tile (its top is a 45 degree line from one corner of the tile to the opposite
 //    one) and its ends meet the straight walls on both sides. The game cuts every convex corner of raised ground with it, which is the
 //    chamfered outline in the screenshots: it sits on the corner's HIGH tile, and the two straight walls that would have met there are left out.
-//    Turn 0 cuts the south-east corner (the face looks south-east), 90 north-east, 180 north-west, 270 south-west.
-// Walls whose face turns away from the camera (high ground to the south or east, corners on the north side) are drawn as "top" renders:
-// the top of the wall only, because the raised ground hides the rest, as in the game.
+//    Turn 0 cuts the south-west corner (its wall runs from the north-west to the south-east and the face looks south-west; read from the
+//    piece geometry), 90 the south-east corner, 180 the north-east, 270 the north-west.
+// Walls whose face looks north (high ground to the south, and the two corners on the north side) are drawn as "top" renders: the top of
+// the wall only, because the raised ground hides the rest. East, west and south walls show some of the cliff side, as in the game screenshots.
 // The placement rules are inferred from the renders and screenshots, not from the game's own code.
 
-import { CLIFF_ELEVATION } from '@/lib/object-render/canvas-size'
+import { CLIFF_ELEVATION, CLIFF_TAG } from '@/lib/object-render/canvas-size'
 
 export interface CliffPiece {
   /** The tile the piece is drawn on. */
   node: number
-  /** Render sid, e.g. cliff_straight_03_top_r180_e60. */
+  /** Render sid, e.g. cliff_straight_03_top_r180_e60m. */
   sid: string
   /** Rubble lies on the ground; walls and diagonals are drawn shifted down by their height, see CLIFF_TOP_SHIFT. */
   wall: boolean
@@ -35,7 +36,7 @@ const ORTHOGONAL = [
   { dx: 0, dz: 1, rot: 0, top: false },   // high to the north
   { dx: -1, dz: 0, rot: 90, top: false }, // west
   { dx: 0, dz: -1, rot: 180, top: true }, // south
-  { dx: 1, dz: 0, rot: 270, top: true },  // east
+  { dx: 1, dz: 0, rot: 270, top: false }, // east
 ] as const
 
 /**
@@ -43,10 +44,10 @@ const ORTHOGONAL = [
  * face of its diagonal looks that way.
  */
 const CORNERS = [
-  { rot: 0, top: false, sx: 1, sz: -1 },   // south-east corner
-  { rot: 90, top: true, sx: 1, sz: 1 },    // north-east
-  { rot: 180, top: true, sx: -1, sz: 1 },  // north-west
-  { rot: 270, top: false, sx: -1, sz: -1 }, // south-west
+  { rot: 0, top: false, sx: -1, sz: -1 },  // south-west corner
+  { rot: 90, top: false, sx: 1, sz: -1 },   // south-east
+  { rot: 180, top: true, sx: 1, sz: 1 },    // north-east
+  { rot: 270, top: true, sx: -1, sz: 1 },   // north-west
 ] as const
 
 /** A corner is cut over two tiles per side (as in the game screenshots) when each of the two walls is at least this many tiles long. */
@@ -62,7 +63,7 @@ function pick(node: number, salt: number, count: number): number {
 }
 
 export function cliffSid(kind: Kind, variant: number, rot: number, top: boolean): string {
-  return `cliff_${kind}_${String(variant).padStart(2, '0')}${top ? '_top' : ''}_r${rot}_e${CLIFF_ELEVATION}`
+  return `cliff_${kind}_${String(variant).padStart(2, '0')}${top ? '_top' : ''}_r${rot}_${CLIFF_TAG}`
 }
 
 /**

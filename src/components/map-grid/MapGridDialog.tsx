@@ -2444,6 +2444,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged])
   // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
   // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
+  // As in the game, the upward-facing surfaces of the rock carry the ground texture of the tile's biome: each piece is baked once per biome
+  // with the texture painted through its top-surface mask.
   const [cliffCanvasEl, setCliffCanvasEl] = useState<HTMLCanvasElement | null>(null)
   const cliffSprites = useCliffSprites()
   useEffect(() => {
@@ -2452,7 +2454,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
     const ctx = cliffCanvasEl.getContext('2d')
-    if (!ctx || !settings.showCliffs || !renderIndex || cliffSprites.size === 0) return
+    if (!ctx || !settings.showCliffs || !renderIndex || cliffSprites.sprites.size === 0) return
     let levels = levelsMap
     if (paintLevelStaged.size > 0) {
       levels = levelsMap.slice()
@@ -2465,15 +2467,49 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     ctx.imageSmoothingQuality = 'high'
     const s = scale / RENDER_PX_PER_TILE
+    const patterns = biomeTextures.size > 0 ? buildTexturePatterns(ctx, biomeTextures, scale) : new Map<TextureKey, CanvasPattern>()
+    const baked = new Map<string, HTMLCanvasElement>()
+    const textured = (sid: string, key: TextureKey, w: number, h: number): HTMLCanvasElement | null => {
+      const id = sid + '|' + key
+      const known = baked.get(id)
+      if (known) return known
+      const img = cliffSprites.sprites.get(sid)
+      const mask = cliffSprites.masks.get(sid)
+      const pattern = patterns.get(key)
+      if (!img || !mask || !pattern) return null
+      const out = document.createElement('canvas')
+      out.width = w
+      out.height = h
+      const g = out.getContext('2d')
+      const top = document.createElement('canvas')
+      top.width = w
+      top.height = h
+      const t = top.getContext('2d')
+      if (!g || !t) return null
+      g.imageSmoothingQuality = 'high'
+      g.drawImage(img, 0, 0, w, h)
+      t.fillStyle = pattern
+      t.fillRect(0, 0, w, h)
+      t.globalCompositeOperation = 'destination-in'
+      t.drawImage(mask, 0, 0, w, h)
+      g.globalAlpha = 0.85
+      g.drawImage(top, 0, 0)
+      baked.set(id, out)
+      return out
+    }
     for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) {
-      const img = cliffSprites.get(piece.sid)
+      const img = cliffSprites.sprites.get(piece.sid)
       const entry = renderIndex.objects[piece.sid]
       if (!img || !entry) continue
+      const w = Math.max(1, Math.ceil(entry.w * s))
+      const h = Math.max(1, Math.ceil(entry.h * s))
+      const key = textureKeyFor(tilesMap[piece.node], waterMap[piece.node])
+      const source = key !== null ? textured(piece.sid, key, w, h) : null
       const cx = ((piece.node % sizeX) + 0.5) * scale
       const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0)) * scale
-      ctx.drawImage(img, cx - entry.ox * s, cy - entry.oy * s, entry.w * s, entry.h * s)
+      ctx.drawImage(source ?? img, cx - entry.ox * s, cy - entry.oy * s, source ? w : entry.w * s, source ? h : entry.h * s)
     }
-  }, [cliffCanvasEl, cliffSprites, renderIndex, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
   // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
   // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
   // the swatch is then the only thing marking the object.

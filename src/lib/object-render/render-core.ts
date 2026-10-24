@@ -52,6 +52,8 @@ export interface RenderRequest {
   cutBelow?: number
   /** Camera elevation in degrees (default ELEVATION). */
   elevation?: number
+  /** Also answer with a mask of the upward-facing surfaces (see RenderResult.mask). */
+  topMask?: boolean
 }
 
 export interface RenderResult {
@@ -64,6 +66,8 @@ export interface RenderResult {
   /** Visible pixels touch the canvas border: the object is cut off and needs a bigger canvas. */
   clipped: boolean
   empty: boolean
+  /** Same size as png: white where the rock's top surfaces are, alpha = how much. The grid paints the biome's ground texture through it. */
+  mask?: ArrayBuffer
 }
 
 type Canvas2D = OffscreenCanvasRenderingContext2D
@@ -286,8 +290,27 @@ export async function renderObject(req: RenderRequest): Promise<RenderResult> {
   full.getContext('2d')!.putImageData(out, 0, 0)
   cg.drawImage(full, x0, y0, w, h, 0, 0, w, h)
   const blob = await crop.convertToBlob({ type: 'image/png' })
+  let mask: ArrayBuffer | undefined
+  if (req.topMask) {
+    // The tops of the rock are its brightest surfaces (lit from above, no shading); sides and shadowed ground are darker. Brightness of the
+    // un-premultiplied colour, times coverage, so shadow and edges stay out. An extra normal-material pass was tried first and did not work
+    // through the composer.
+    const m = new ImageData(px, px)
+    for (let i = 0; i < px * px; i++) {
+      const lum = 0.3 * out.data[i * 4] + 0.59 * out.data[i * 4 + 1] + 0.11 * out.data[i * 4 + 2]
+      const t = Math.min(1, Math.max(0, (lum - 150) / 25))
+      m.data[i * 4] = m.data[i * 4 + 1] = m.data[i * 4 + 2] = 255
+      m.data[i * 4 + 3] = Math.round(t * t * (3 - 2 * t) * out.data[i * 4 + 3])
+    }
+    const mfull = new OffscreenCanvas(px, px)
+    mfull.getContext('2d')!.putImageData(m, 0, 0)
+    const mcrop = new OffscreenCanvas(w, h)
+    mcrop.getContext('2d')!.drawImage(mfull, x0, y0, w, h, 0, 0, w, h)
+    mask = await (await mcrop.convertToBlob({ type: 'image/png' })).arrayBuffer()
+  }
   return {
     png: await blob.arrayBuffer(),
+    mask,
     w,
     h,
     // The prefab origin sits at the canvas centre horizontally and, because the camera looks at TARGET_Y, below it by
