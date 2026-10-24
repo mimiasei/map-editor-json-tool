@@ -24,6 +24,8 @@ const FIRE: Record<string, { pos: [number, number, number]; h: number }> = {
 }
 
 interface MaterialInfo {
+  name?: string
+  shader?: string
   queue?: number
   alpha_min?: number
   emissive?: string
@@ -166,9 +168,22 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
   ground.visible = !(req.noShadow || (req.cutBelow && req.cutBelow >= 0.5))
   disposables.push(ground.geometry, groundMat)
 
-  const mats: Record<string, THREE.MeshStandardMaterial> = {}
+  const mats: Record<string, THREE.Material> = {}
   for (const [name, info] of Object.entries(meta.materials)) {
     const map = await loadTexture(req.files[`${name}_diffuse.png`])
+    // River pieces: the terrain's cut-out (CT_mat) only hides what lies below the ground, and the animated water (Hex/Sea) is its flat deep colour.
+    if (name === 'CT_mat') {
+      mats[name] = new THREE.MeshBasicMaterial({ colorWrite: false })
+      mats[name].userData.clip = true
+      disposables.push(mats[name])
+      continue
+    }
+    if (info.shader === 'Hex/Sea') {
+      mats[name] = new THREE.MeshBasicMaterial({ map, side: THREE.DoubleSide })
+      disposables.push(mats[name])
+      if (map) disposables.push(map)
+      continue
+    }
     const emissiveMap = info.emissive ? await loadTexture(req.files[`${name}_emissive.png`]) : null
     const cutout = info.queue === 2450 && info._AlphaClipEnabled === 1 && (info.alpha_min ?? 255) < 255
     const blended = info.queue === 3000 && info._RenderMode === 2 && (info.alpha_min ?? 255) < 255
@@ -202,6 +217,7 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
     m.castShadow = true
     m.receiveShadow = true
     const list = ([] as THREE.Material[]).concat(m.material)
+    if (list.every((x) => mats[x.name]?.userData.clip)) m.castShadow = m.receiveShadow = false
     m.material = Array.isArray(m.material) ? list.map((x) => mats[x.name] ?? x) : (mats[m.material.name] ?? m.material)
     // Glass-like blended parts would cast a solid shadow.
     if (list.every((x) => (mats[x.name] ?? x).userData.blended)) m.castShadow = false

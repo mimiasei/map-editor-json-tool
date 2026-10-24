@@ -56,7 +56,7 @@ export default function ObjectRenderDialog({ open, onOpenChange, startup }: Prop
     start()
   }
 
-  const total = pending ? pending.interactables + pending.decorations + pending.cliffs : null
+  const total = pending ? pending.interactables + pending.decorations + pending.cliffs + pending.rivers : null
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { remember(); onOpenChange(false) } }}>
@@ -89,7 +89,7 @@ export default function ObjectRenderDialog({ open, onOpenChange, startup }: Prop
               </p>
               <p className="text-xs text-muted-foreground">
                 Waiting: {pending!.interactables} map objects, then {pending!.decorations} decorations (trees, rocks,
-                animals), then {pending!.cliffs} cliff pieces (the edges of raised ground).
+                animals), then {pending!.cliffs} cliff pieces (the edges of raised ground), then {pending!.rivers} river pieces.
               </p>
             </>
           )}

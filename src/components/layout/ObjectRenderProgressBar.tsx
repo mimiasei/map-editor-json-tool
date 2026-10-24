@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useObjectRenderStore, type JobName } from '@/store/useObjectRenderStore'
 import { cancelRenderJob } from '@/lib/object-render/render-job'
 
-const JOB_LABEL: Record<JobName, string> = { interactables: 'map objects', decorations: 'decorations', cliffs: 'cliffs' }
+const JOB_LABEL: Record<JobName, string> = { interactables: 'map objects', decorations: 'decorations', cliffs: 'cliffs', rivers: 'river pieces' }
 
 export default function ObjectRenderProgressBar() {
   const job = useObjectRenderStore((s) => s.job)

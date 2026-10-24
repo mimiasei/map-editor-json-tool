@@ -36,6 +36,14 @@ _CLIFF_PIECES = (
     *(f"cliff_vertical_diagonal_{i:02d}" for i in range(3)),
 )
 
+# The game's river pieces: children of one prefab (objects/test/rivers/rivers), one per connection shape of a river tile, each a coast
+# mesh (the bank, a shallow channel dipping below the ground) with a flat water sheet just above its floor, so the depth test shapes the
+# water, plus loose stones. Checked in the data: river_AB a turn, river_ABD a T, river_ABCD a cross, river_point an end, and three
+# straights (river_AC, .001, .002). Rendered from straight above (RIVER_TAG) in all four turns; the grid works out which edges each touches.
+_RIVER_PIECES = {"AB": "river_AB", "ABD": "river_ABD", "ABCD": "river_ABCD", "point": "river_point",
+                 "AC0": "river_AC", "AC1": "river_AC.001", "AC2": "river_AC.002"}
+_RIVER_TAG = "t89"
+
 # Animals that are only an animation variant of another one share its render (chicken_2 -> chicken_1); fish and birds are
 # not land animals and are not drawn.
 _ANIMAL_SKIP = re.compile(r"^(fish|birds(_\d+)?)$")
@@ -106,6 +114,11 @@ def list_objects(game_dir: Path) -> list[dict]:
                 # West walls show only a narrow band of the face (seen in game screenshots): cut away the lower 0.35.
                 out.append({"sid": f"{name}_side_r{rot}_e50p", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.35})
                 out.append({"sid": f"{name}_top_r{rot}_e50p", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
+    # The river pieces dip below the ground, so nothing is cut away (cut -1) and there is no ground shadow.
+    for short, child in _RIVER_PIECES.items():
+        for rot in (0, 90, 180, 270):
+            out.append({"sid": f"river_{short}_r{rot}_{_RIVER_TAG}", "job": "rivers", "prefab": child, "key": "objects/test/rivers/rivers", "child": child,
+                        "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": -1, "noShadow": True})
     return out
 
 
@@ -170,12 +183,12 @@ def export_meshes(game_dir: Path, out_root: Path, sids: list[str], emit: Callabl
     def shader_name(mat) -> str:
         return getattr(mat.m_Shader.read().m_ParsedForm, "m_Name", "?") if mat and mat.m_Shader else "?"
 
-    def export(sid: str, key: str, outdir: Path) -> None:
+    def export(sid: str, key: str, outdir: Path, only: str | None = None) -> None:
         parts, mats_done = [], {}
 
-        def walk(go_obj, parent):
+        def walk(go_obj, parent, depth=0):
             go = go_obj.read()
-            if not go.m_IsActive:
+            if not go.m_IsActive or (only and depth == 1 and go.m_Name != only):
                 return
             tr = mf = mr = None
             for c in go.m_Component:
@@ -197,7 +210,7 @@ def export_meshes(game_dir: Path, out_root: Path, sids: list[str], emit: Callabl
             if mr is not None and mr[1].m_Enabled and mesh_ptr:
                 parts.append((go.m_Name, mesh_ptr.read(), [m.read() if m else None for m in mr[1].m_Materials], M))
             for ch in tr.m_Children:
-                walk(ch.read().m_GameObject.deref(), M)
+                walk(ch.read().m_GameObject.deref(), M, depth + 1)
 
         def emissive_for(diffuse_name: str):
             base = diffuse_name.lower().replace("_diffuse", "").replace("_difusse", "").replace("_diff", "")
@@ -214,6 +227,13 @@ def export_meshes(game_dir: Path, out_root: Path, sids: list[str], emit: Callabl
             sp = mat.m_SavedProperties
             tex = {k: v for k, v in sp.m_TexEnvs}
             info = {"name": mat.m_Name, "shader": shader_name(mat)}
+            if info["shader"] == "Hex/Sea":
+                # Animated water: drawn as its deep colour, flat.
+                deep = next(c for k, c in sp.m_Colors if k == "_DeepColor")
+                Image.new("RGB", (4, 4), tuple(round(v * 255) for v in (deep.r, deep.g, deep.b))).save(outdir / f"{mat.m_Name}_diffuse.png")
+                info["diffuse"] = "deep colour"
+                mats_done[mat.m_Name] = info
+                return
             main = tex.get("_MainTex")
             main = main.m_Texture.read() if main and main.m_Texture else None
             fl = {k: v for k, v in sp.m_Floats}
@@ -253,10 +273,10 @@ def export_meshes(game_dir: Path, out_root: Path, sids: list[str], emit: Callabl
             mat_names = " ".join(m.m_Name.lower() for m in mats if m)
             # Terrain plates / ground decals under towns and cities (the grid draws its own terrain), and parts with a
             # zero scale (invisible in-game).
-            if re.search(r"(^|[_ .])ground(|_|$)", name.lower()) or name.lower() == "quad" or "decal" in mat_names or abs(det) < 1e-20:
+            if re.search(r"(^|[_ .])ground(|_|$)", name.lower()) or name.lower() == "quad" or (not only and "_hole" in name.lower()) or name.lower().startswith("waterflag") or "decal" in mat_names or abs(det) < 1e-20:
                 continue
             shaders = [shader_name(m) for m in mats]
-            if shaders and all(s not in _STATIC_SHADERS for s in shaders):
+            if shaders and all(s not in _STATIC_SHADERS and not (only and s in ("Hex/Sea", "Standard")) for s in shaders):
                 continue
             flip = det < 0  # mirrored part: its winding is inverted
             h = MeshHandler(mesh)
@@ -320,7 +340,7 @@ def export_meshes(game_dir: Path, out_root: Path, sids: list[str], emit: Callabl
             status = "missing"
         else:
             try:
-                export(o["sid"], key, out_root / o["sid"])
+                export(o["sid"], key, out_root / o["sid"], o.get("child"))
             except Exception as exc:  # one broken prefab must not stop the rest
                 shutil.rmtree(out_root / o["sid"], ignore_errors=True)
                 if isinstance(exc, ValueError):

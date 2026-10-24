@@ -1,5 +1,5 @@
 // ─── Render job ──────────────────────────────────────────────────────────────
-// Three opt-in jobs, "interactables" first, then "decorations", then "cliffs" (the game's cliff pieces, listed by the sidecar next to the
+// Three opt-in jobs, "interactables" first, then "decorations", then "cliffs" and "rivers" (the game's cliff and river pieces, listed by the sidecar next to the
 // objects and rendered the same way). Each one
 //   1. asks the sidecar which objects exist (Core.zip) and keeps only those missing from renders/index.json,
 //   2. has the sidecar export their meshes (OBJ + textures) into <appLocalData>/meshes/<sid>/, one at a time,
@@ -18,7 +18,7 @@ import {
   type RenderIndex,
 } from '@/store/useObjectRenderStore'
 import { appDataDir, emptyIndex, loadRenderIndex, saveRenderIndex } from './render-index'
-import { CANVAS_STEPS, CLIFF_AZIMUTH, CLIFF_ELEVATION, canvasForBounds } from './canvas-size'
+import { CANVAS_STEPS, CLIFF_AZIMUTH, CLIFF_ELEVATION, RIVER_ELEVATION, canvasForBounds } from './canvas-size'
 import type { RenderRequest, RenderResult } from './render-core'
 import type { WorkerMessage, WorkerReply } from './render.worker'
 
@@ -41,7 +41,7 @@ const PARALLEL = 3
 /** The index is saved this often so a crash or a cancel loses almost nothing. */
 const SAVE_EVERY = 20
 
-const JOBS: JobName[] = ['interactables', 'decorations', 'cliffs']
+const JOBS: JobName[] = ['interactables', 'decorations', 'cliffs', 'rivers']
 
 let listed: Promise<ListedObject[]> | null = null
 let running: AbortController | null = null
@@ -77,6 +77,7 @@ export async function refreshPendingCounts(): Promise<PendingCounts | null> {
       interactables: missing(objects, index, 'interactables').length,
       decorations: missing(objects, index, 'decorations').length,
       cliffs: missing(objects, index, 'cliffs').length,
+      rivers: missing(objects, index, 'rivers').length,
     }
     store.setPending(pending)
     return pending
@@ -225,7 +226,7 @@ export async function runRenderJob(job: JobName): Promise<void> {
       let canvas = canvasForBounds(meta.bbox_min, meta.bbox_max)
       for (;;) {
         // The buffers are cloned into the worker, not transferred, so a retry at a bigger canvas can reuse them.
-        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, noShadow: o.noShadow, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined, azimuth: o.job === 'cliffs' ? CLIFF_AZIMUTH : undefined, topMask: o.job === 'cliffs' })
+        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, noShadow: o.noShadow, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : o.job === 'rivers' ? RIVER_ELEVATION : undefined, azimuth: o.job === 'cliffs' || o.job === 'rivers' ? CLIFF_AZIMUTH : undefined, topMask: o.job === 'cliffs' })
         const next = CANVAS_STEPS.find((c) => c > canvas)
         if (r.clipped && next) { canvas = next; continue }
         if (r.empty) throw new Error('nothing visible')

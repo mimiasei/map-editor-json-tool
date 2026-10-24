@@ -21,7 +21,7 @@ const loadedMasks = new Map<string, HTMLImageElement>()
  * Read through the fs plugin into a blob URL: the grid reads pixels of these (it tints the rock), and a canvas holding an asset:// image
  * is cross-origin and refuses getImageData.
  */
-async function loadFile(path: string): Promise<HTMLImageElement | null> {
+export async function loadFile(path: string): Promise<HTMLImageElement | null> {
   try {
     const { readFile } = await import('@tauri-apps/plugin-fs')
     const url = URL.createObjectURL(new Blob([await readFile(path)], { type: 'image/png' }))

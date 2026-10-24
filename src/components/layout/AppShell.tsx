@@ -253,7 +253,7 @@ export default function AppShell() {
       decided = true
       let off = false
       try { off = localStorage.getItem(RENDER_PROMPT_OFF_KEY) === '1' } catch { /* private mode: ask */ }
-      if (!off && pending.interactables + pending.decorations + pending.cliffs > 0) {
+      if (!off && pending.interactables + pending.decorations + pending.cliffs + pending.rivers > 0) {
         setRenderDialogStartup(true)
         setRenderDialogOpen(true)
       }
