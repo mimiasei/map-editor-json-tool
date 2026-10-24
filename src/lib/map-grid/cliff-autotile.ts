@@ -116,7 +116,11 @@ export function buildCliffPieces(sizeX: number, sizeZ: number, levels: ArrayLike
           const tx = x + c.sx
           const tz = z + c.sz
           const variant = c.top ? 1 + pick(z * sizeX + x, c.rot + 41, 2) : pick(z * sizeX + x, c.rot + 41, VARIANTS.corner)
-          add(tx, tz, cliffSid('corner', variant, [0, 90, 180, 270][pick(z * sizeX + x, 5, 4)], false), false, -c.sx * 0.5, c.sz * 0.5)
+          const sid = cliffSid('corner', variant, [0, 90, 180, 270][pick(z * sizeX + x, 5, 4)], false)
+          // Shift in tiles (right, down) from the corner tile's centre, one line per corner so each can be tuned on its own.
+          if (c.rot === 270) add(tx, tz, sid, false, 0.75, 0.25) // north-west
+          else if (c.rot === 180) add(tx, tz, sid, false, -0.75, 0.25) // north-east
+          else add(tx, tz, sid, false, -c.sx * 0.5, c.sz * 0.5) // south corners
         } else {
           diagonal(x, z)
           consume(x, z + c.sz, x, z)
