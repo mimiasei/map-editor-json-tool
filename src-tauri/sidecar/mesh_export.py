@@ -98,9 +98,9 @@ def list_objects(game_dir: Path) -> list[dict]:
         for rot in (0, 90, 180, 270):
             out.append({"sid": f"{name}_r{rot}", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot})
             # Where the face turns away from the camera the raised ground hides the wall and only its top shows (seen in game
-            # screenshots), so walls also get a "rim" render: everything below 0.55 (walls are 0.67-0.72 tall) cut away.
+            # screenshots), so walls also get a "top" render (no ground shadow): everything below 0.55 (walls are 0.67-0.72 tall) cut away.
             if not name.startswith("cliff_corner"):
-                out.append({"sid": f"{name}_rim_r{rot}", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
+                out.append({"sid": f"{name}_top_r{rot}", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
     return out
 
 

@@ -11,7 +11,7 @@
 export interface CliffPiece {
   /** The low tile the piece lies on. */
   node: number
-  /** Render sid, e.g. cliff_straight_03_rim_r180. */
+  /** Render sid, e.g. cliff_straight_03_top_r180. */
   sid: string
   /** Rubble lies on the ground; walls and diagonals are drawn shifted down by their height, see CLIFF_TOP_SHIFT. */
   wall: boolean
@@ -49,7 +49,7 @@ function pick(node: number, salt: number, count: number): number {
 }
 
 export function cliffSid(kind: Kind, variant: number, rot: number, rim: boolean): string {
-  return `cliff_${kind}_${String(variant).padStart(2, '0')}${rim ? '_rim' : ''}_r${rot}`
+  return `cliff_${kind}_${String(variant).padStart(2, '0')}${rim ? '_top' : ''}_r${rot}`
 }
 
 /**

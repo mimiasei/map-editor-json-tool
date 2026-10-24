@@ -152,6 +152,8 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
   ground.rotation.x = -Math.PI / 2
   ground.receiveShadow = true
   scene.add(ground)
+  // A cliff top (cutBelow) sits on raised ground that hides its foot, so it casts no shadow onto the low ground.
+  ground.visible = !req.cutBelow
   disposables.push(ground.geometry, groundMat)
 
   const mats: Record<string, THREE.MeshStandardMaterial> = {}
