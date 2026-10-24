@@ -18,6 +18,7 @@ import type { RawMapBlocks } from '@/lib/map-parser'
 import { extractMapContext } from '@/lib/map-extract'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useCatalogStore } from '@/store/useCatalogStore'
+import { useStackOrderStore } from '@/store/useStackOrderStore'
 import { findMapValidationIssues, type MapValidationIssue } from '@/lib/map-grid/map-validation'
 import { computeBoundsAutoFix } from '@/lib/map-grid/bounds-autofix'
 import { computeEntranceAutoFix } from '@/lib/map-grid/entrance-autofix'
@@ -207,6 +208,7 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       loadContainer: (container) => {
         set({ container, mapIsDirty: false })
         useMapDocumentStore.temporal.getState().clear()
+        useStackOrderStore.getState().clear()
       },
 
       applyEdit: (edit) => {
@@ -231,6 +233,7 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       clear: () => {
         set({ container: null, mapIsDirty: false })
         useMapDocumentStore.temporal.getState().clear()
+        useStackOrderStore.getState().clear()
       },
 
       undo: () => {

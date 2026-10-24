@@ -22,13 +22,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
+import { useStackOrderStore } from '@/store/useStackOrderStore'
+import { layerOrder, orderStack } from '@/lib/map-grid/stack-order'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import {
   buildTileIndex,
-  pickPrimary,
+  groupOf,
   type PrimaryPick,
   getVisibleRange,
   resolveFootprintCells,
@@ -507,40 +509,51 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return map
   }, [placedObjects, catalog])
 
-  const { primaryByNode, underlayByNode } = useMemo(() => {
+  // The user's own arrangement of a tile's stack (info column), see stack-order.ts.
+  const manualStacks = useStackOrderStore((s) => s.byNode)
+
+  // Whether one object is drawn under the current filters. Each object on a stacked tile is judged on its own, so hiding the trees
+  // shows the mine under one instead of an empty tile.
+  const isShown = useCallback((item: PlacedObject): boolean => {
+    const group = groupOf(item, catalog)
+    if (!group || !filter[group]) return false
+    if (group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(item.sid)]) return false
+    if (group === 'decorations') {
+      const category = catalog?.mapObjects.find((o) => o.id === item.sid)?.category
+      if (!decorationSubFilter[resolveDecorationSubcategory(item.sid, category)]) return false
+    }
+    return true
+  }, [catalog, filter, interactableSubFilter, decorationSubFilter])
+
+  const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
+    /** Every drawn object of a tile, top of the stack first. */
+    const stacks = new Map<number, PrimaryPick[]>()
+    /** An object registered on several tiles (a mountain) keeps the pick of the first one met. */
+    const byKey = new Map<string, PrimaryPick>()
     // What lies under an object drawn as a transparent bundled image: the best other item on the
     // same tile, so e.g. grass decorations stay visible behind a mine instead of only terrain.
     const underlay = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
-    const accepted = (pick: PrimaryPick | undefined): pick is PrimaryPick => {
-      if (!pick || !filter[pick.group]) return false
-      if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) return false
-      if (pick.group === 'decorations') {
-        const category = catalog?.mapObjects.find((o) => o.id === pick.primary.sid)?.category
-        if (!decorationSubFilter[resolveDecorationSubcategory(pick.primary.sid, category)]) return false
-      }
-      return true
-    }
     for (const [node, items] of tileIndex) {
       // issue #130: markers ("zones") are real, filterable items now — no
-      // hard exclusion here anymore, just the per-group filter[] toggle below.
+      // hard exclusion here anymore, just the per-group filter[] toggle.
       // "Entity SIDs only" is cross-cutting: untagged items are dropped
       // before picking a primary, so they neither render nor count.
       const candidates = entitySidsOnly ? items.filter((item) => item.entitySid?.trim()) : items
-      const pick = pickPrimary(candidates, catalog)
-      // issue #130: interactables additionally need their sub-category selected.
-      if (!accepted(pick)) continue
-      map.set(node, pick)
-      if (settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary))) {
-        const below = pickPrimary(
-          candidates.filter((i) => i.key !== pick.primary.key && !hasObjectRender(renderSidFor(i))),
-          catalog,
-        )
-        if (accepted(below)) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
+      const ordered = orderStack(candidates.filter(isShown), catalog, manualStacks[node])
+      if (ordered.length === 0) continue
+      const picks = ordered.map((item, i): PrimaryPick => ({ primary: item, group: groupOf(item, catalog)!, count: i === 0 ? candidates.length : 1 }))
+      const top = picks[0]
+      stacks.set(node, picks)
+      for (const p of picks) if (!byKey.has(p.primary.key)) byKey.set(p.primary.key, p)
+      map.set(node, top)
+      if (settings.iconImagesEnabled && hasObjectRender(renderSidFor(top.primary))) {
+        const below = picks.find((p) => p !== top && !hasObjectRender(renderSidFor(p.primary)))
+        if (below) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
       }
     }
-    return { primaryByNode: map, underlayByNode: underlay }
-  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter, settings.iconImagesEnabled, renderIndex])
+    return { primaryByNode: map, underlayByNode: underlay, stackByNode: stacks, pickByKey: byKey }
+  }, [tileIndex, catalog, isShown, manualStacks, entitySidsOnly, settings.iconImagesEnabled, renderIndex])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation
   // walls + water (src/lib/map-grid/passability.ts). Independent of
@@ -2770,8 +2783,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     const fillFor = (kind: 'road1' | 'road2' | 'river', color: string): string | CanvasPattern =>
       patterns.get(kind === 'road2' ? 'stone' : kind === 'road1' ? 'dirt' : 'water') ?? color
+    // An object drawn as a picture lets the road or river show through its transparent parts; only a flat swatch (no picture) hides it.
+    const coversLine = (node: number) => {
+      const pick = primaryByNode.get(node)
+      return !!pick && !(iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary)))
+    }
     const drawBand = (node: number, color: string | CanvasPattern, hasFeature: (n: number) => boolean) => {
-      if (primaryByNode.has(node)) return
+      if (coversLine(node)) return
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
       const baseX = x * SUBPX
@@ -2837,8 +2855,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (strokedRoads && roadStrokes) {
       // The game's own road strokes, one per connection (road-strokes.ts).
       const roadAt = (node: number) => mergedRoadId(node)
-      const segments = buildRoadSegments(sizeX, sizeZ, roadAt).filter((seg) => !(primaryByNode.has(seg.az * sizeX + seg.ax) && primaryByNode.has(seg.bz * sizeX + seg.bx)))
-      const lone = buildLoneRoadTiles(sizeX, sizeZ, roadAt).filter((l) => !primaryByNode.has(l.z * sizeX + l.x))
+      const segments = buildRoadSegments(sizeX, sizeZ, roadAt).filter((seg) => !(coversLine(seg.az * sizeX + seg.ax) && coversLine(seg.bz * sizeX + seg.bx)))
+      const lone = buildLoneRoadTiles(sizeX, sizeZ, roadAt).filter((l) => !coversLine(l.z * sizeX + l.x))
       drawRoads(ctx, roadStrokes, segments, lone, SUBPX, sizeZ)
     } else if (roadsMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
@@ -2860,7 +2878,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         drawBand(node, fillFor('river', RIVER_BASE_COLOR), hasRiver)
         return
       }
-      if (primaryByNode.has(node)) return
+      if (coversLine(node)) return
       const k = SUBPX / RENDER_PX_PER_TILE
       ctx.drawImage(sprite, ((node % sizeX) + 0.5) * SUBPX - entry.ox * k, (sizeZ - 1 - Math.floor(node / sizeX) + 0.5) * SUBPX - entry.oy * k, sprite.width * k, sprite.height * k)
     }
@@ -2869,7 +2887,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawRiver(node)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, iconsVisibleForSwatch, settings.iconImagesEnabled, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
@@ -3049,6 +3067,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     [transform, containerSize, sizeX, sizeZ],
   )
 
+  // Every drawn single-tile object, not only the top of each stack: objects placed on top of each other all show, in stack order.
   const visibleCells = useMemo(() => {
     if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
     const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
@@ -3058,39 +3077,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const z = sizeZ - 1 - screenRow
       for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
         const node = z * sizeX + x
-        const pick = primaryByNode.get(node)
-        if (!pick) continue
-        // Multi-tile footprints (issue #167) get one bigger icon spanning
-        // their bounding box instead — see multiTileIcons below — so skip
-        // them here to avoid rendering the same object once per cell.
-        const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
-        const bounds1 = cells1 ? footprintIconBounds(cells1) : null
-        if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
-        cells.push({ x, z, node, pick })
+        const stack = stackByNode.get(node)
+        if (!stack) continue
+        for (const pick of stack) {
+          // Multi-tile footprints (issue #167) get one bigger icon spanning
+          // their bounding box instead — see multiTileIcons below — so skip
+          // them here to avoid rendering the same object once per cell.
+          const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
+          const bounds1 = cells1 ? footprintIconBounds(cells1) : null
+          if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
+          cells.push({ x, z, node, pick })
+        }
       }
     }
     return cells
-  }, [showIcons, visibleRange, sizeX, sizeZ, primaryByNode, footprintCellsByKey])
-
-  // Single-tile icons for what lies under an image object (see underlayByNode). Multi-tile things
-  // underneath are skipped: repeating one big object's icon on every covered cell would look wrong.
-  const underlayCells = useMemo(() => {
-    if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
-    const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
-    for (let screenRow = visibleRange.zMin; screenRow <= visibleRange.zMax; screenRow++) {
-      const z = sizeZ - 1 - screenRow
-      for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
-        const node = z * sizeX + x
-        const pick = underlayByNode.get(node)
-        if (!pick) continue
-        const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
-        const bounds1 = cells1 ? footprintIconBounds(cells1) : null
-        if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
-        cells.push({ x, z, node, pick })
-      }
-    }
-    return cells
-  }, [showIcons, visibleRange, sizeX, sizeZ, underlayByNode, footprintCellsByKey])
+  }, [showIcons, visibleRange, sizeX, sizeZ, stackByNode, footprintCellsByKey])
 
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
@@ -3116,8 +3117,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const bounds = footprintIconBounds(cells)
       if (!bounds) continue
       if (bounds.maxX === bounds.minX && bounds.maxZ === bounds.minZ) continue // plain 1x1 — handled above
-      const pick = primaryByNode.get(obj.node)
-      if (!pick || pick.primary.key !== obj.key) continue
+      const pick = pickByKey.get(obj.key)
+      if (!pick) continue
       const screenRowMin = sizeZ - 1 - bounds.maxZ
       const screenRowMax = sizeZ - 1 - bounds.minZ
       if (bounds.maxX < visibleRange.xMin || bounds.minX > visibleRange.xMax) continue
@@ -3125,7 +3126,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       icons.push({ key: obj.key, ...bounds, screenRowMin, screenRowMax, pick })
     }
     return icons
-  }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, primaryByNode, visibleRange])
+  }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, pickByKey, visibleRange])
 
   // Combined, position-sorted render list — plain 1x1 icons and multi-tile
   // bounding boxes together, painted in top-left → bottom-right order
@@ -3140,57 +3141,45 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       left: number; top: number; width: number; height: number
       clickNode: number
       pick: { primary: PlacedObject; group: GridGroup; count: number }
-      sortRow: number; sortCol: number
-      /** 0 = under an image object, painted before everything else. */
-      layer: 0 | 1
+      row: number; col: number
+      /** Tiles the object stands on, for the stack order. */
+      nodes: number[]
     }[] = []
-    for (const c of underlayCells) {
-      const screenRow = sizeZ - 1 - c.z
-      entries.push({
-        key: `u${c.node}`,
-        left: c.x * BASE_CELL_PX,
-        top: screenRow * BASE_CELL_PX,
-        width: BASE_CELL_PX,
-        height: BASE_CELL_PX,
-        clickNode: c.node,
-        pick: c.pick,
-        sortRow: screenRow,
-        sortCol: c.x,
-        layer: 0,
-      })
-    }
     for (const c of visibleCells) {
       const screenRow = sizeZ - 1 - c.z
       entries.push({
-        key: `s${c.node}`,
+        key: c.pick.primary.key,
         left: c.x * BASE_CELL_PX,
         top: screenRow * BASE_CELL_PX,
         width: BASE_CELL_PX,
         height: BASE_CELL_PX,
         clickNode: c.node,
         pick: c.pick,
-        sortRow: screenRow,
-        sortCol: c.x,
-        layer: 1,
+        row: screenRow,
+        col: c.x,
+        nodes: [c.node],
       })
     }
     for (const m of multiTileIcons) {
+      const nodes = (footprintCellsByKey.get(m.key) ?? []).filter((cell) => cell.value === 1 && cell.x >= 0 && cell.x < sizeX && cell.z >= 0 && cell.z < sizeZ).map((cell) => cell.z * sizeX + cell.x)
       entries.push({
-        key: `m${m.key}`,
+        key: m.key,
         left: m.minX * BASE_CELL_PX,
         top: m.screenRowMin * BASE_CELL_PX,
         width: (m.maxX - m.minX + 1) * BASE_CELL_PX,
         height: (m.screenRowMax - m.screenRowMin + 1) * BASE_CELL_PX,
         clickNode: m.pick.primary.node,
         pick: m.pick,
-        sortRow: m.screenRowMin,
-        sortCol: m.minX,
-        layer: 1,
+        row: m.screenRowMin,
+        col: m.minX,
+        nodes,
       })
     }
-    entries.sort((a, b) => a.layer - b.layer || a.sortRow - b.sortRow || a.sortCol - b.sortCol)
-    return entries
-  }, [underlayCells, visibleCells, multiTileIcons, sizeZ])
+    // Lower right in front by default; an object always comes after the one under it on a shared tile (stack-order.ts).
+    const keysByNode = new Map<number, string[]>()
+    for (const [node, picks] of stackByNode) keysByNode.set(node, picks.map((p) => p.primary.key))
+    return layerOrder(entries, keysByNode)
+  }, [visibleCells, multiTileIcons, footprintCellsByKey, stackByNode, sizeX, sizeZ])
 
   // Ramp/slope direction arrows — windowed to the viewport the same way
   // visibleCells is, since ramp tiles (unlike the flood-fill tint/overlay
@@ -3221,7 +3210,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const columnClosed = useMapGridStore((s) => s.columnClosed)
   const selectNode = useMapGridStore((s) => s.selectNode)
   const closeColumn = useMapGridStore((s) => s.closeColumn)
-  const selectedItems = selectedNode !== null ? tileIndex.get(selectedNode) ?? [] : []
+  // Everything on the tile, top of the stack first (the order the info column lists and the map draws).
+  const selectedItems = useMemo(
+    () => (selectedNode !== null ? orderStack(tileIndex.get(selectedNode) ?? [], catalog, manualStacks[selectedNode]) : []),
+    [selectedNode, tileIndex, catalog, manualStacks],
+  )
+  const handleMoveInStack = (item: PlacedObject, delta: -1 | 1) => {
+    if (selectedNode === null) return
+    const keys = selectedItems.map((i) => i.key)
+    const from = keys.indexOf(item.key)
+    const to = from + delta
+    if (from < 0 || to < 0 || to >= keys.length) return
+    const moved = keys.splice(from, 1)[0]
+    keys.splice(to, 0, moved)
+    useStackOrderStore.getState().setOrder(selectedNode, keys)
+  }
   // The cell-info column swaps to a full object browser while this is true
   // (see the column render below), forcing the column open even with no
   // tile selected — declared up here (not alongside the rest of the "Place
@@ -3687,23 +3690,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects: [], levelsMap, climbsMap, waterMap }, catalog),
     [sizeX, sizeZ, levelsMap, climbsMap, waterMap, catalog],
   )
-  const isNodeBlockedForObjectPaint = useCallback((node: number, sid: string): boolean => {
-    if ((isGroundCoverSid(sid, catalog) ? terrainBlockedSet : blockedTileSet).has(node)) return true
+  // Objects may be placed on top of others (GME does too, e.g. a tree on a mountain's tile; the newest is drawn in front, see
+  // stack-order.ts), so only water and elevation walls block; the stroke's own footprints still do.
+  const isNodeBlockedForObjectPaint = useCallback((node: number): boolean => {
+    if (terrainBlockedSet.has(node)) return true
     for (const [stagedNode, sid] of paintObjectStaged) {
       for (const cell of objectBlockedCells(sid, stagedNode % sizeX, Math.floor(stagedNode / sizeX), catalog)) {
         if (cell.z * sizeX + cell.x === node) return true
       }
     }
     return false
-  }, [blockedTileSet, terrainBlockedSet, paintObjectStaged, sizeX, catalog])
+  }, [terrainBlockedSet, paintObjectStaged, sizeX, catalog])
 
-  // Whether painting `paintedSid` on a tile removes an existing object there. Ordinary paint
-  // replaces non-blocking instances; ground cover only replaces other ground cover, so grass never
-  // deletes the things it sits underneath.
+  // Whether painting `paintedSid` on a tile removes an existing object there. Objects stack, so only a copy of the same
+  // object is replaced (painting over a stroke twice must not pile up duplicates); ground cover also replaces other ground cover,
+  // so grass never deletes the things it sits underneath.
   const objectPaintReplaces = useCallback((paintedSid: string | undefined, existing: PlacedObject): boolean => {
     if (!paintedSid) return false
     if (isGroundCoverSid(paintedSid, catalog)) return isGroundCoverSid(existing.sid, catalog)
-    return objectBlockedCells(existing.sid, existing.x, existing.z, catalog).length === 0
+    return existing.sid === paintedSid
   }, [catalog])
 
   const applyImageColorMapping = useCallback(async (
@@ -3728,7 +3733,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           waterChanges.set(node, target.waterId)
           waterLevelChanges.set(node, -1)
         }
-        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node, target.sid)) {
+        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
           additions.push({ node, sid: target.sid, rotation: randomInitialRotation(target.sid) })
         }
       }
@@ -3759,7 +3764,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // city-spawner/hero-spawner are real player-start points, never a
     // decorative scatter — always single-tile, brush Size/Disperse ignored.
     const tiles = (isSingleTileSid(sid) ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
-      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid))
+      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
     if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
     setPaintObjectStaged((prev) => {
       const next = new Map(prev)
@@ -3778,7 +3783,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const commitObjectPaintStroke = useCallback((nodes?: number[]) => {
     const sid = placingSid
     const entries: [number, string][] = nodes
-      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid)).map((n): [number, string] => [n, sid]) : [])
+      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n)).map((n): [number, string] => [n, sid]) : [])
       : [...paintObjectStaged.entries()]
     if (entries.length === 0) return
     const additions = entries.map(([node, s]) => ({ node, sid: s, rotation: randomInitialRotation(s) }))
@@ -5792,6 +5797,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               ) : selectedNode !== null ? (
                 <MapGridCellContent
                   items={selectedItems}
+                  onMoveInStack={canEditEntities ? handleMoveInStack : undefined}
                   terrainLabel={terrainLabel(tilesMap, waterMap, selectedNode, sizeX, levelsMap, rampDirectionMap.get(selectedNode))}
                   catalog={catalog}
                   existingSids={existingSids}

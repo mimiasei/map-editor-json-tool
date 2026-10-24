@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, PenLine, Tag, UserCog, Wand2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, PenLine, Tag, UserCog, Wand2 } from 'lucide-react'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import ObjectActionsEditor from './ObjectActionsEditor'
@@ -180,6 +180,8 @@ export interface MapGridCellContentProps {
    *  a stable reference); objects/squads only, not markers/zones. Docked-only,
    *  like the other handlers above. */
   onCreateRule?: (item: PlacedObject) => void
+  /** Move `item` one place up (-1, toward the front) or down (1) in this tile's stack. Docked-only. */
+  onMoveInStack?: (item: PlacedObject, delta: -1 | 1) => void
 }
 
 const LINK_KIND_LABELS: Record<'two-way' | 'one-way' | 'unlinked', string> = {
@@ -244,6 +246,7 @@ export default function MapGridCellContent({
   onCancelDelete,
   onSelectionChange,
   onCreateRule,
+  onMoveInStack,
 }: MapGridCellContentProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(items[0]?.key ?? null)
   const [newSidInput, setNewSidInput] = useState('')
@@ -264,9 +267,9 @@ export default function MapGridCellContent({
 
   // A newly-clicked tile arrives as a new `items` array — default back to
   // the first row rather than keeping a stale selection from the old tile.
+  // Rearranging the stack hands in a new array too; the selection stays on its object then.
   useEffect(() => {
-    setSelectedKey(items[0]?.key ?? null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setSelectedKey((prev) => (prev !== null && items.some((i) => i.key === prev) ? prev : items[0]?.key ?? null))
   }, [items])
 
   const selected = items.find((i) => i.key === selectedKey) ?? items[0] ?? null
@@ -312,6 +315,7 @@ export default function MapGridCellContent({
         <p className="text-sm font-semibold">{terrainLabel}</p>
         <p className="text-xs text-muted-foreground">
           {items.length} item{items.length !== 1 ? 's' : ''}
+          {items.length > 1 && ' · top of the list is drawn in front'}
         </p>
       </div>
 
@@ -323,14 +327,12 @@ export default function MapGridCellContent({
           const group = groupOf(item, catalog)
           const name = item.displayName || item.entitySid || item.sid
           const isSelected = item.key === selected?.key
+          const index = items.indexOf(item)
           return (
+            <div key={item.key} className={cn('flex items-center border-b border-border/50 transition-colors', isSelected ? 'bg-accent' : 'hover:bg-accent/50')}>
             <button
-              key={item.key}
               onClick={() => setSelectedKey(item.key)}
-              className={cn(
-                'w-full flex items-center gap-2 px-3 py-2 text-left border-b border-border/50 transition-colors',
-                isSelected ? 'bg-accent' : 'hover:bg-accent/50',
-              )}
+              className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 text-left"
             >
               {(() => {
                 const visual = resolveGridCellVisual(item, catalog)
@@ -347,6 +349,27 @@ export default function MapGridCellContent({
                 </p>
               </div>
             </button>
+            {onMoveInStack && items.length > 1 && (
+              <div className="flex shrink-0 pr-1">
+                <button
+                  className="p-1 rounded hover:bg-background/60 disabled:opacity-30 disabled:pointer-events-none"
+                  title="Bring forward"
+                  disabled={index === 0}
+                  onClick={() => onMoveInStack(item, -1)}
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  className="p-1 rounded hover:bg-background/60 disabled:opacity-30 disabled:pointer-events-none"
+                  title="Send backward"
+                  disabled={index === items.length - 1}
+                  onClick={() => onMoveInStack(item, 1)}
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+            </div>
           )
         })}
       </div>

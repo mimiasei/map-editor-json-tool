@@ -6,7 +6,7 @@
 import type { PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
-import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
+import { orderStack } from '@/lib/map-grid/stack-order'
 
 // ─── User-facing groups ───────────────────────────────────────────────────────
 // Collapses the 9 raw CatalogMapObject categories + squads + markers into the
@@ -129,24 +129,13 @@ export interface PrimaryPick {
 }
 
 /**
- * Pick which item "wins" a tile's icon when multiple objects are stacked —
- * highest-priority group first (GRID_GROUP_ORDER), first-encountered within a
- * tier as the deterministic tiebreak. Returns undefined only for an empty
- * `items` list — every placed object now resolves to a real group (issue #130).
+ * The item on top of a tile's stack (stack-order.ts: the newest object, or the user's arrangement in `manual`). Returns undefined only
+ * for an empty `items` list.
  */
-export function pickPrimary(items: PlacedObject[], catalog: GameCatalog | null): PrimaryPick | undefined {
-  let best: { placed: PlacedObject; group: GridGroup; rank: number } | undefined
-  for (const item of items) {
-    const group = groupOf(item, catalog)
-    if (!group) continue // marker — doesn't compete
-    // Walkable ground clutter is always the bottom of the stack, below every other decoration too.
-    const rank = item.type === 0 && isGroundCoverSid(item.sid, catalog)
-      ? GRID_GROUP_ORDER.length
-      : GRID_GROUP_ORDER.indexOf(group)
-    if (!best || rank < best.rank) best = { placed: item, group, rank }
-  }
-  if (!best) return undefined
-  return { primary: best.placed, group: best.group, count: items.length }
+export function pickPrimary(items: PlacedObject[], catalog: GameCatalog | null, manual?: readonly string[]): PrimaryPick | undefined {
+  const top = orderStack(items, catalog, manual)[0]
+  const group = top ? groupOf(top, catalog) : undefined
+  return top && group ? { primary: top, group, count: items.length } : undefined
 }
 
 // ─── Viewport windowing (tier-2 rendering) ───────────────────────────────────
