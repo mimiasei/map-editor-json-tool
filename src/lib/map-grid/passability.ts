@@ -8,15 +8,18 @@
 //    must be able to stand there to interact); `0` cells are plain walkable
 //    ground. Only `objects[]` (type 0) carries a real footprint template —
 //    squads (armies, type 2) and markers (zones, type 1) aren't terrain.
-// 2. Elevation "wall": `levelsMap` (-1 lowered / 0 ground / 1 heightened) —
-//    a level-≠0 tile is only blocked at its *boundary* with a different
-//    level, and only when no adjacent tile is a `climbsMap` ramp. This is
-//    symmetric for both directions (0↔-1 and 0↔1) — the interior of either
-//    tier, once past a ramp, is normal walkable ground. Confirmed empirically
-//    (4-neighbor checks against `Gorges_of_Discord.map`/`Fun_and_Graves.map`/
-//    `Glittering_Strait.map`): every real `climbsMap === 1` tile sits on the
-//    lower side of a height boundary, directly bordering the higher side —
-//    it's the ramp, not a blocker itself.
+// 2. Elevation "wall": `levelsMap` (-1 lowered / 0 ground / 1 heightened).
+//    The blocked tiles are the LOWER tiles next to a higher one, diagonals
+//    included (the cliff pieces stand there); the higher tiles themselves,
+//    edge or interior, stay walkable. Verified in the game on a test map
+//    (cliff_test_block): a 10x3 raised block had all 30 of its tiles walkable
+//    and the 30 tiles of the ring around it (12x5 minus the block, corners
+//    too) blocked. A tile with a `climbsMap` ramp as a 4-neighbour is not
+//    blocked, and a ramp is never blocked: every real `climbsMap === 1` tile
+//    sits on the lower side of a height boundary, directly bordering the
+//    higher side (4-neighbor checks against `Gorges_of_Discord.map`/
+//    `Fun_and_Graves.map`/`Glittering_Strait.map`). Only the raised-block
+//    case was checked in the game; lowered areas use the same rule (assumed).
 // 3. Water: `waterMap !== 0` blocks independently of the wall rule — a hero
 //    can't stand on water anywhere in a basin, edge or middle alike, unlike
 //    a dry elevation change where only the transition itself is impassable
@@ -28,6 +31,7 @@ import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 
 const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+const NEIGHBOR_OFFSETS_8: [number, number][] = [...NEIGHBOR_OFFSETS, [-1, -1], [1, -1], [-1, 1], [1, 1]]
 
 /** These spawn-placeholder sids (Core/DB/map/objects/7_spawns.json) are
  *  walked ONTO to interact — collecting a resource pile, engaging a guard
@@ -40,15 +44,11 @@ const NEIGHBOR_OFFSETS: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 export const NON_BLOCKING_SPAWNER_SIDS = new Set(['random-res', 'random-squad', 'random-item'])
 
 /**
- * Whether `node` is an elevation "wall" tile: its own level is not 0, at
- * least one 4-neighbor is a *different* level, and no 4-neighbor is a ramp.
- * A ramp tile itself is never a wall — confirmed against every real sample
- * map with any climbsMap data: level -1 ramp tiles are common (Fun_and_Graves
- * 11 of 28, Glittering_Strait 78 of 171, Gorges_of_Discord 11 of 21, ...) and
- * most of them (e.g. 52 of 78 on Glittering_Strait) have no OTHER ramp
- * neighbor, so without this exemption the ramp itself — the one tile whose
- * whole purpose is to be walked across — read as impassable, which made every
- * valley ramp a false "sealed by elevation" / unreachable report.
+ * Whether `node` is an elevation "wall" tile: a tile lower than at least one of its 8 neighbours (the cliff stands on the low side, see
+ * the header), unless it is a ramp or has a ramp as a 4-neighbour. A ramp tile itself is never a wall — confirmed against every real
+ * sample map with any climbsMap data: level -1 ramp tiles are common (Fun_and_Graves 11 of 28, Glittering_Strait 78 of 171,
+ * Gorges_of_Discord 11 of 21, ...) and most of them (e.g. 52 of 78 on Glittering_Strait) have no OTHER ramp neighbor, so without this
+ * exemption the ramp itself — the one tile whose whole purpose is to be walked across — read as impassable.
  */
 export function isElevationWallTile(
   node: number,
@@ -57,22 +57,24 @@ export function isElevationWallTile(
   levelsMap: number[],
   climbsMap: number[],
 ): boolean {
-  const level = levelsMap[node]
-  if (!level) return false // 0 or undefined — ground itself is never a wall
+  const level = levelsMap[node] ?? 0
   if (climbsMap[node] === 1) return false
   const x = node % sizeX
   const z = Math.floor(node / sizeX)
-  let isWall = false
-  let nearRamp = false
-  for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+  let lowerThanNeighbour = false
+  for (const [dx, dz] of NEIGHBOR_OFFSETS_8) {
     const nx = x + dx
     const nz = z + dz
     if (nx < 0 || nx >= sizeX || nz < 0 || nz >= sizeZ) continue
-    const nNode = nz * sizeX + nx
-    if (levelsMap[nNode] !== level) isWall = true
-    if (climbsMap[nNode] === 1) nearRamp = true
+    if ((levelsMap[nz * sizeX + nx] ?? 0) > level) lowerThanNeighbour = true
   }
-  return isWall && !nearRamp
+  if (!lowerThanNeighbour) return false
+  for (const [dx, dz] of NEIGHBOR_OFFSETS) {
+    const nx = x + dx
+    const nz = z + dz
+    if (nx >= 0 && nx < sizeX && nz >= 0 && nz < sizeZ && climbsMap[nz * sizeX + nx] === 1) return false
+  }
+  return true
 }
 
 type PassabilityContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects' | 'levelsMap' | 'climbsMap' | 'waterMap'>
