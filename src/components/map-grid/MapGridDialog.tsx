@@ -2525,7 +2525,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       baked.set(id, result)
       return result
     }
-    const placed: { baked: Baked | null; img: HTMLImageElement; x: number; y: number; w: number; h: number; node: number }[] = []
+    const placed: { baked: Baked | null; img: HTMLImageElement; x: number; y: number; w: number; h: number; node: number; rim: boolean }[] = []
     for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) {
       const img = cliffSprites.sprites.get(piece.sid)
       const entry = renderIndex.objects[piece.sid]
@@ -2535,7 +2535,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const key = textureKeyFor(tilesMap[piece.node], waterMap[piece.node])
       const cx = ((piece.node % sizeX) + 0.5 + (piece.shiftX ?? 0)) * scale
       const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0) + (piece.shiftY ?? 0)) * scale
-      placed.push({ baked: bake(piece.sid, key, w, h), img, x: cx - entry.ox * s, y: cy - entry.oy * s, w, h, node: piece.node })
+      placed.push({ baked: bake(piece.sid, key, w, h), img, x: cx - entry.ox * s, y: cy - entry.oy * s, w, h, node: piece.node, rim: /_top_r180_/.test(piece.sid) })
     }
     // Shadows first (under every rock), each clipped to the tiles around its piece that are not higher than the piece's tile.
     for (const p of placed) {
@@ -2556,9 +2556,34 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.drawImage(p.baked.shadow, p.x, p.y)
       ctx.restore()
     }
+    // Rocks: higher ground to the south is nearer to the camera and hides what lies behind it, so a piece is cut away where it reaches over
+    // a higher tile south of its own (a lowered area's side walls and corner piles would otherwise show below its south rim). The rim that
+    // belongs to that very wall (high ground to the south, turn 180) is the exception: it sits on that boundary.
     for (const p of placed) {
+      let hidden: Path2D | null = null
+      if (!p.rim) {
+        const tx = p.node % sizeX
+        const tz = Math.floor(p.node / sizeX)
+        for (let dz = 1; dz <= 2; dz++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            const nx = tx + dx
+            const nz = tz - dz
+            if (nx < 0 || nz < 0 || nx >= sizeX || (levels[nz * sizeX + nx] ?? 0) <= (levels[p.node] ?? 0)) continue
+            hidden ??= new Path2D()
+            hidden.rect(nx * scale, (sizeZ - 1 - nz) * scale + 0.25 * scale, scale, scale)
+          }
+        }
+      }
+      ctx.save()
+      if (hidden) {
+        const keep = new Path2D()
+        keep.rect(p.x - 2, p.y - 2, p.w + 4, p.h + 4)
+        keep.addPath(hidden)
+        ctx.clip(keep, 'evenodd')
+      }
       if (p.baked) ctx.drawImage(p.baked.rock, p.x, p.y)
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
+      ctx.restore()
     }
   }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
   // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
