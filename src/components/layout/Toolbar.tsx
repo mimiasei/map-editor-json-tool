@@ -955,6 +955,10 @@ export default function Toolbar({
                       </Badge>
                     )}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTimeout(() => window.dispatchEvent(new Event('oe:render-objects-open')), 0)}>
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    Render Object Images…
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTimeout(handleImportH3mClick, 0)}>
                     <FileInput className="h-4 w-4 mr-2" />
                     Import H3 Map…

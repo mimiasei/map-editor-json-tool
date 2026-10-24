@@ -11,6 +11,39 @@ export interface IconRequests {
   mapObjectIcons: string[]
 }
 
+/**
+ * Ground textures the Map Grid can lay under the terrain colours, by tile biome id (see BIOME_NAMES) plus water. Verified in
+ * the game data: each name exists once as a 1024x1024 Texture2D, so the sidecar saves it as `thumbnails/<name>.png` like an icon.
+ */
+export const BIOME_TEXTURE_ICONS = {
+  1: 'minimap_grass_biom',
+  2: 'minimap_sand_biom',
+  3: 'minimap_dead_biom',
+  4: 'minimap_snow_biom',
+  5: 'minimap_autumn_biom',
+  6: 'minimap_lava_biom',
+  7: 'minimap_dirt_biom',
+  water: 'minimap_water',
+} as const
+
+/**
+ * Layer textures and the splat map the game blends into its ground (verified in the game data: materials such as
+ * `humanbase_mt` list these as their `_Texture0..3`, and `splat_map1` is a 2048x2048 RGBA Texture2D). See TERRAIN_RECIPES in
+ * `map-grid/terrain-textures.ts`, which holds the per-biome layer lists.
+ */
+export const TERRAIN_LAYER_ICONS = [
+  'splat_map1',
+  'grass1', 'grass2', 'grass_dirt',
+  'sand2', 'sand3',
+  'dead_ground1', 'dead_ground2', 'dead_grass2',
+  'Snow2', 'Snow4',
+  'autumn_ground1', 'autumn_ground2', 'autumn_ground4',
+  'lava_cracks', 'lava_blank', 'lava_glowy',
+  'dirt_ground1', 'dirt_ground2', 'dirt_ground3',
+  // Roads and rivers on the Map Grid: cobble road, brown dirt, water (the game's own road/river meshes are shader-driven, no texture of their own).
+  'nature_road', 'WaterTexture',
+] as const
+
 /** Suffix of the large hero portraits — see heroPortraitIcon(). */
 export const LARGE_PORTRAIT_SUFFIX = '_large'
 
@@ -79,6 +112,9 @@ export function buildIconRequests(catalog: GameCatalog | null): IconRequests {
   const icons: string[] = []
   const mapObjectIcons: string[] = []
 
+  // Not catalog data, so they are requested even before a catalog is loaded.
+  icons.push(...Object.values(BIOME_TEXTURE_ICONS), ...TERRAIN_LAYER_ICONS)
+
   if (catalog) {
     for (const h of catalog.heroes) {
       if (!h.icon) continue
@@ -146,6 +182,19 @@ function storedRequests(): Set<string> | null {
     return new Set(parsed.filter((n): n is string => typeof n === 'string'))
   } catch {
     return null
+  }
+}
+
+/**
+ * The part of `requests` the last extraction never asked for, or null when nothing was recorded (then everything is new and the
+ * caller should extract it all). The sidecar merges its manifest, so extracting only these keeps what is already there.
+ */
+export function onlyNewRequests(requests: IconRequests): IconRequests | null {
+  const previous = storedRequests()
+  if (!previous) return null
+  return {
+    icons: requests.icons.filter((n) => !previous.has(n)),
+    mapObjectIcons: requests.mapObjectIcons.filter((n) => !previous.has(n)),
   }
 }
 

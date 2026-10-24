@@ -87,13 +87,13 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]
 }
 
-function mixWithWhite(hex: string, amount: number): string {
+function mixWithWhite(hex: string, amount: number, alpha = 1): string {
   const [r, g, b] = hexToRgb(hex)
   const mix = (c: number) => Math.round(c * amount + 255 * (1 - amount))
-  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`
+  return alpha < 1 ? `rgba(${mix(r)}, ${mix(g)}, ${mix(b)}, ${alpha})` : `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`
 }
 
-function isBiomeId(id: number): id is BiomeId {
+export function isBiomeId(id: number): id is BiomeId {
   return id >= 1 && id <= 7
 }
 
@@ -101,16 +101,18 @@ function isBiomeId(id: number): id is BiomeId {
  * Light fill color for one tile — water (if present) wins over the base
  * biome, matching how water visually covers terrain in-game. `blendAmount`
  * (0-1) is user-adjustable via the Map Grid settings dialog; defaults to
- * DEFAULT_TERRAIN_BLEND.
+ * DEFAULT_TERRAIN_BLEND. `alpha` < 1 makes the fill see-through so a ground texture
+ * drawn underneath shows (Map Grid texture layer); the default keeps it opaque.
  */
 export function terrainFillColor(
   tileId: number | undefined,
   waterId: number | undefined,
   blendAmount: number = DEFAULT_TERRAIN_BLEND,
+  alpha = 1,
 ): string {
-  if (waterId) return mixWithWhite(WATER_BASE_COLOR, blendAmount)
-  if (tileId === undefined || !isBiomeId(tileId)) return mixWithWhite(UNKNOWN_BASE_COLOR, blendAmount)
-  return mixWithWhite(BIOME_BASE_COLORS[tileId], blendAmount)
+  if (waterId) return mixWithWhite(WATER_BASE_COLOR, blendAmount, alpha)
+  if (tileId === undefined || !isBiomeId(tileId)) return mixWithWhite(UNKNOWN_BASE_COLOR, blendAmount, alpha)
+  return mixWithWhite(BIOME_BASE_COLORS[tileId], blendAmount, alpha)
 }
 
 /**

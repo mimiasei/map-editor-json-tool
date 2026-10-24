@@ -19,6 +19,7 @@ import {
     type LucideIcon } from 'lucide-react'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
+import { objectRender, type ObjectRender } from '@/lib/object-render/render-index'
 import { randomSquadDifficultyLabel, squadValueFromUnits, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 import type { PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
@@ -32,6 +33,8 @@ export type GridCellVisual =
   /** Real thumbnail, but under a different iconId/name than the item's own
    *  sid — e.g. a squad showing its first unit's creature icon. */
   | { kind: 'catalogOverride'; iconId: string; name: string }
+  /** The object rendered from the game's own prefab (see lib/object-render), drawn around the prefab's origin. */
+  | { kind: 'render'; render: ObjectRender }
 
 /** No real 2D icon texture exists for these (confirmed in issue #125/#127's
  *  investigation) — always use the manual icon, no real-icon check needed.
@@ -109,6 +112,13 @@ const MINE_COLOR: Record<string, string> = {
     mine_mercury: RESOURCE_COLOR.resource_mercury,
 }
 
+/** The sid whose render stands for a placed object: its own, or for a city spawner with a chosen faction that faction's city. */
+export function renderSidFor(item: { sid: string; spawnerInfo?: { factionSid?: string } }): string {
+  const faction = item.spawnerInfo?.factionSid
+  if (item.sid === 'city-spawner' && faction) return `${faction === 'necropolis' ? 'undead' : faction}_city`
+  return item.sid
+}
+
 export function resolveGridCellVisual(
   item: PlacedObject,
   catalog: GameCatalog | null,
@@ -143,6 +153,11 @@ export function resolveGridCellVisual(
     }
   }
 
+  // A city spawner with a chosen faction is drawn as that faction's city (same 3x3 footprint and offsets as the spawner);
+  // the player number is drawn over it by the grid. A random-faction spawner keeps its icon.
+  const cityRender = useImages && item.sid === 'city-spawner' ? objectRender(renderSidFor(item)) : null
+  if (cityRender) return { kind: 'render', render: cityRender }
+
   const spawnerKey = Object.keys(SID_ICON_OVERRIDES).find((k) => item.sid === k || item.sid.startsWith(k))
   const spawnerOverride = spawnerKey ? SID_ICON_OVERRIDES[spawnerKey] : undefined
   if (spawnerOverride) {
@@ -161,6 +176,10 @@ export function resolveGridCellVisual(
     }
     return { kind: 'icon', Icon: spawnerOverride }
   }
+
+  // Renders win over the extracted icons and the generic mine/resource glyphs below.
+  const render = useImages ? objectRender(item.sid) : null
+  if (render) return { kind: 'render', render }
 
   // Portals — unconfirmed whether the game ships a real 2D icon for these
   // (may be animated scene prefabs with none at all), so prefer a real
