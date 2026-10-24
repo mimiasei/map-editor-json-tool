@@ -2518,8 +2518,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const h = Math.max(1, Math.ceil(entry.h * s))
       const key = textureKeyFor(tilesMap[piece.node], waterMap[piece.node])
       const source = bake(piece.sid, key, w, h)
-      const cx = ((piece.node % sizeX) + 0.5) * scale
-      const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0)) * scale
+      const cx = ((piece.node % sizeX) + 0.5 + (piece.shiftX ?? 0)) * scale
+      const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0) + (piece.shiftY ?? 0)) * scale
       ctx.drawImage(source ?? img, cx - entry.ox * s, cy - entry.oy * s, source ? w : entry.w * s, source ? h : entry.h * s)
     }
   }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])

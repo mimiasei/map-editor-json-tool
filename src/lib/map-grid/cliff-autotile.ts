@@ -22,6 +22,9 @@ export interface CliffPiece {
   sid: string
   /** Rubble lies on the ground; walls and diagonals are drawn shifted down by their height, see CLIFF_TOP_SHIFT. */
   wall: boolean
+  /** Shift in tiles (screen x right, y down): a corner pile is centred half a tile toward the plateau's corner, which is a corner of its tile. */
+  shiftX?: number
+  shiftY?: number
 }
 
 /** Variants rendered per piece kind (cliffs/prefabs/cliff_<kind>_00.. in the game data). */
@@ -80,7 +83,8 @@ export function buildCliffPieces(sizeX: number, sizeZ: number, levels: ArrayLike
   const level = (x: number, z: number) => levels[z * sizeX + x] ?? 0
   const ramp = (x: number, z: number) => (climbs[z * sizeX + x] ?? 0) !== 0
   const pieces: { piece: CliffPiece; z: number }[] = []
-  const add = (x: number, z: number, sid: string, wall: boolean) => pieces.push({ piece: { node: z * sizeX + x, sid, wall }, z })
+  const add = (x: number, z: number, sid: string, wall: boolean, shiftX?: number, shiftY?: number) =>
+    pieces.push({ piece: { node: z * sizeX + x, sid, wall, shiftX, shiftY }, z })
   const rubble = (x: number, z: number, salt: number) =>
     add(x, z, cliffSid('corner', pick(z * sizeX + x, salt, VARIANTS.corner), [0, 90, 180, 270][pick(z * sizeX + x, 5, 4)], false), false)
 
@@ -112,7 +116,7 @@ export function buildCliffPieces(sizeX: number, sizeZ: number, levels: ArrayLike
           const tx = x + c.sx
           const tz = z + c.sz
           const variant = c.top ? 1 + pick(z * sizeX + x, c.rot + 41, 2) : pick(z * sizeX + x, c.rot + 41, VARIANTS.corner)
-          add(tx, tz, cliffSid('corner', variant, [0, 90, 180, 270][pick(z * sizeX + x, 5, 4)], false), false)
+          add(tx, tz, cliffSid('corner', variant, [0, 90, 180, 270][pick(z * sizeX + x, 5, 4)], false), false, -c.sx * 0.5, c.sz * 0.5)
         } else {
           diagonal(x, z)
           consume(x, z + c.sz, x, z)
