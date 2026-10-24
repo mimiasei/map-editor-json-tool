@@ -18,7 +18,7 @@ import {
   type RenderIndex,
 } from '@/store/useObjectRenderStore'
 import { appDataDir, emptyIndex, loadRenderIndex, saveRenderIndex } from './render-index'
-import { CANVAS_STEPS, CLIFF_ELEVATION, canvasForBounds } from './canvas-size'
+import { CANVAS_STEPS, CLIFF_AZIMUTH, CLIFF_ELEVATION, canvasForBounds } from './canvas-size'
 import type { RenderRequest, RenderResult } from './render-core'
 import type { WorkerMessage, WorkerReply } from './render.worker'
 
@@ -225,7 +225,7 @@ export async function runRenderJob(job: JobName): Promise<void> {
       let canvas = canvasForBounds(meta.bbox_min, meta.bbox_max)
       for (;;) {
         // The buffers are cloned into the worker, not transferred, so a retry at a bigger canvas can reuse them.
-        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, noShadow: o.noShadow, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined, topMask: o.job === 'cliffs' })
+        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, noShadow: o.noShadow, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined, azimuth: o.job === 'cliffs' ? CLIFF_AZIMUTH : undefined, topMask: o.job === 'cliffs' })
         const next = CANVAS_STEPS.find((c) => c > canvas)
         if (r.clipped && next) { canvas = next; continue }
         if (r.empty) throw new Error('nothing visible')

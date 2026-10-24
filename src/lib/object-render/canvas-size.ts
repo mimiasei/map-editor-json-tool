@@ -11,7 +11,9 @@ export const ELEVATION = 25
  */
 export const CLIFF_ELEVATION = 50
 /** Ends every cliff render's sid: the camera angle, and "n" = made with a top-surface mask and side variants. A new tag makes old renders count as missing. */
-export const CLIFF_TAG = `e${CLIFF_ELEVATION}o`
+/** Camera azimuth of the cliff pieces: exactly 180, so a wall along a grid axis is exactly vertical/horizontal on the grid (objects use 190). */
+export const CLIFF_AZIMUTH = 180
+export const CLIFF_TAG = `e${CLIFF_ELEVATION}p`
 
 /** Smallest canvas (px at RENDER_PPU) that holds the exported mesh and its shadow, from the exported bounding box. */
 export function canvasForBounds(min: [number, number, number], max: [number, number, number]): number {

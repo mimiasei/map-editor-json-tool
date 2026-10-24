@@ -92,20 +92,20 @@ def list_objects(game_dir: Path) -> list[dict]:
                 if fname == "2_animals.json" and m and int(m.group(2)) > 1 and f"{m.group(1)}_1" in ids:
                     item["alias"] = f"{m.group(1)}_1"
                 out.append(item)
-    # The _e50o in the sids is the camera elevation these are rendered at (o: version tag) (CLIFF_ELEVATION in lib/object-render/canvas-size.ts); a new
+    # The _e50p in the sids is the camera elevation these are rendered at (o: version tag) (CLIFF_ELEVATION in lib/object-render/canvas-size.ts); a new
     # angle means new sids, so old renders count as missing and the new ones get made.
     # A piece faces one way (the wall lies on the north side of its tile, face toward the camera), so each one is rendered turned
     # to all four sides; the grid picks the turn that matches the edge.
     for name in _CLIFF_PIECES:
         for rot in (0, 90, 180, 270):
             # The light comes from the east, so the plateau's east edge (high ground to the west of the tile, turn 90) casts its shadow onto the plateau.
-            out.append({"sid": f"{name}_r{rot}_e50o", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, **({"noShadow": True} if rot == 90 else {})})
+            out.append({"sid": f"{name}_r{rot}_e50p", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, **({"noShadow": True} if rot == 90 else {})})
             # Where the face turns away from the camera the raised ground hides the wall and only its top shows (seen in game
             # screenshots), so walls also get a "top" render (no ground shadow): everything below 0.55 (walls are 0.67-0.72 tall) cut away.
             if not name.startswith("cliff_corner"):
                 # West walls show only a narrow band of the face (seen in game screenshots): cut away the lower 0.35.
-                out.append({"sid": f"{name}_side_r{rot}_e50o", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.35})
-                out.append({"sid": f"{name}_top_r{rot}_e50o", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
+                out.append({"sid": f"{name}_side_r{rot}_e50p", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.35})
+                out.append({"sid": f"{name}_top_r{rot}_e50p", "job": "cliffs", "prefab": name, "key": f"cliffs/prefabs/{name}", "offsetX": 0, "offsetZ": 0, "rot": rot, "cut": 0.55})
     return out
 
 

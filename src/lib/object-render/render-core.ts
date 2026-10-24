@@ -56,6 +56,8 @@ export interface RenderRequest {
   topMask?: boolean
   /** No shadow on the ground (the cliff tops, and walls whose shadow falls on higher ground). */
   noShadow?: boolean
+  /** Camera azimuth in degrees (default AZIMUTH). */
+  azimuth?: number
 }
 
 export interface RenderResult {
@@ -112,7 +114,7 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
   const scene = new THREE.Scene()
   const disposables: { dispose(): void }[] = []
   const camera = new THREE.OrthographicCamera(-half, half, half, -half, 0.1, 100)
-  const a = (AZIMUTH * Math.PI) / 180
+  const a = ((req.azimuth ?? AZIMUTH) * Math.PI) / 180
   const e = ((req.elevation ?? ELEVATION) * Math.PI) / 180
   const target = new THREE.Vector3(0, TARGET_Y, 0)
   camera.position
