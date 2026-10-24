@@ -21,7 +21,7 @@ export const SPLAT_REPEAT_TILES = 24
 
 /** Canvas pixels per tile for the texture layer, capped so the canvas stays at most ~3072 px on a side. */
 export function textureScale(sizeX: number, sizeZ: number): number {
-  return Math.max(4, Math.min(48, Math.floor(3072 / Math.max(sizeX, sizeZ, 1))))
+  return Math.max(4, Math.min(64, Math.floor(4096 / Math.max(sizeX, sizeZ, 1))))
 }
 
 /** True when the textures have been extracted (manifest knows them). */

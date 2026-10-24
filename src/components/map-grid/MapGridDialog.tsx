@@ -2483,12 +2483,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       if (!g) return null
       g.imageSmoothingQuality = 'high'
       g.drawImage(img, 0, 0, w, h)
-      g.globalCompositeOperation = 'multiply'
-      g.fillStyle = 'rgb(205, 205, 232)'
-      g.fillRect(0, 0, w, h)
-      g.globalCompositeOperation = 'destination-in'
-      g.drawImage(img, 0, 0, w, h)
-      g.globalCompositeOperation = 'source-over'
+      // Cool tint on the colour only: a multiply fill would also colour the semi-transparent ground shadow.
+      const px = g.getImageData(0, 0, w, h)
+      for (let i = 0; i < px.data.length; i += 4) {
+        px.data[i] *= 0.8
+        px.data[i + 1] *= 0.8
+        px.data[i + 2] *= 0.9
+      }
+      g.putImageData(px, 0, 0)
       const mask = cliffSprites.masks.get(sid)
       const pattern = key !== null ? patterns.get(key) : undefined
       if (mask && pattern) {
@@ -2501,24 +2503,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           t.fillRect(0, 0, w, h)
           t.globalCompositeOperation = 'destination-in'
           t.drawImage(mask, 0, 0, w, h)
-          g.globalAlpha = 0.85
+          g.globalAlpha = 0.7
           g.drawImage(top, 0, 0)
         }
       }
       baked.set(id, out)
       return out
-    }
-    // The plateau casts a dark shadow strip onto the low ground east of its east edge (the game's sun is in the west).
-    const shadowTiles = new Set<number>()
-    for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) if (/_r90_/.test(piece.sid) && /^cliff_(vertical_)?straight/.test(piece.sid)) shadowTiles.add(piece.node)
-    for (const node of shadowTiles) {
-      const x0 = (node % sizeX) * scale
-      const y0 = (sizeZ - 1 - Math.floor(node / sizeX)) * scale
-      const grad = ctx.createLinearGradient(x0, 0, x0 + scale * 0.9, 0)
-      grad.addColorStop(0, 'rgba(20, 22, 55, 0.4)')
-      grad.addColorStop(1, 'rgba(20, 22, 55, 0)')
-      ctx.fillStyle = grad
-      ctx.fillRect(x0, y0, scale * 0.9, scale)
     }
     for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) {
       const img = cliffSprites.sprites.get(piece.sid)

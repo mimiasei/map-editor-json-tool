@@ -32,6 +32,7 @@ interface ListedObject {
   rot: number
   /** Cliff rims: render only above this height. */
   cut?: number
+  noShadow?: boolean
   alias?: string
 }
 
@@ -224,7 +225,7 @@ export async function runRenderJob(job: JobName): Promise<void> {
       let canvas = canvasForBounds(meta.bbox_min, meta.bbox_max)
       for (;;) {
         // The buffers are cloned into the worker, not transferred, so a retry at a bigger canvas can reuse them.
-        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined, topMask: o.job === 'cliffs' })
+        const r = await pool!.render({ sid, files, fireSprite: fire, canvas, rot: o.rot, cutBelow: o.cut, noShadow: o.noShadow, elevation: o.job === 'cliffs' ? CLIFF_ELEVATION : undefined, topMask: o.job === 'cliffs' })
         const next = CANVAS_STEPS.find((c) => c > canvas)
         if (r.clipped && next) { canvas = next; continue }
         if (r.empty) throw new Error('nothing visible')

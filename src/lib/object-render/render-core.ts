@@ -54,6 +54,8 @@ export interface RenderRequest {
   elevation?: number
   /** Also answer with a mask of the upward-facing surfaces (see RenderResult.mask). */
   topMask?: boolean
+  /** No shadow on the ground (the cliff tops, and walls whose shadow falls on higher ground). */
+  noShadow?: boolean
 }
 
 export interface RenderResult {
@@ -159,7 +161,7 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
   ground.receiveShadow = true
   scene.add(ground)
   // A cliff top (cut at 0.5 or more) sits on raised ground that hides its foot, so it casts no shadow onto the low ground.
-  ground.visible = !(req.cutBelow && req.cutBelow >= 0.5)
+  ground.visible = !(req.noShadow || (req.cutBelow && req.cutBelow >= 0.5))
   disposables.push(ground.geometry, groundMat)
 
   const mats: Record<string, THREE.MeshStandardMaterial> = {}
@@ -298,7 +300,7 @@ export async function renderObject(req: RenderRequest): Promise<RenderResult> {
     const m = new ImageData(px, px)
     for (let i = 0; i < px * px; i++) {
       const lum = 0.3 * out.data[i * 4] + 0.59 * out.data[i * 4 + 1] + 0.11 * out.data[i * 4 + 2]
-      const t = Math.min(1, Math.max(0, (lum - 150) / 25))
+      const t = Math.min(1, Math.max(0, (lum - 158) / 12))
       m.data[i * 4] = m.data[i * 4 + 1] = m.data[i * 4 + 2] = 255
       m.data[i * 4 + 3] = Math.round(t * t * (3 - 2 * t) * out.data[i * 4 + 3])
     }
