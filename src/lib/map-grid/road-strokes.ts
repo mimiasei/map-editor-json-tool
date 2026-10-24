@@ -13,8 +13,8 @@ export type RoadKind = 'dirt' | 'stone'
 
 /** Sheet to read, the colour its strokes average to in the game's top-down screenshots (the sheets are darker than what is drawn), and how much wider than the sheet's stroke the road is drawn (the stone road is broader in the game). */
 const SHEETS: Record<RoadKind, { name: string; target: readonly [number, number, number]; width: number }> = {
-  dirt: { name: 'road_dirt_1', target: [112, 84, 70], width: 1 },
-  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 1 },
+  dirt: { name: 'road_dirt_1', target: [112, 84, 70], width: 0.8 },
+  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 0.8 },
 }
 const COLUMNS = 3
 const ROWS = 2
