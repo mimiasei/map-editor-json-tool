@@ -55,6 +55,8 @@ export interface MapGridSettings {
   showElevationShading: boolean
   /** The game's own cliff pieces along the edges of raised ground (cliff-autotile.ts); needs the "cliffs" render job. */
   showCliffs: boolean
+  /** Roads and rivers filled with the game's own textures instead of flat colours (needs the extracted textures). */
+  lineFeatureTextures: boolean
   /** Translucent per-zone color fill over every painted "Player Areas" tile
    *  (see zone-colors.ts) — an escape hatch to hide the overlay, same
    *  rationale as showBlockedTiles above. */
@@ -106,6 +108,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showBlockedTiles: false,
   showElevationShading: true,
   showCliffs: true,
+  lineFeatureTextures: true,
   showPlayerAreas: true,
   lineFeatureShading: true,
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
@@ -270,6 +273,15 @@ export default function MapGridSettingsDialog({
               id="grid-show-player-areas"
               checked={settings.showPlayerAreas}
               onCheckedChange={(v) => update({ showPlayerAreas: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-line-feature-textures" className="text-xs cursor-pointer">Textured roads and rivers</Label>
+          <Switch
+              id="grid-line-feature-textures"
+              checked={settings.lineFeatureTextures}
+              onCheckedChange={(v) => update({ lineFeatureTextures: v })}
           />
         </div>
 

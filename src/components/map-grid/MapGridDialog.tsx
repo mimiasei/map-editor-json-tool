@@ -56,6 +56,7 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, CLIFF_TOP_SHIFT } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
 import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
@@ -2660,11 +2661,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // a flat full-tile fill. Live-preview data (paintRoadStaged/riverStaged)
   // merges in exactly like every other paint tool's preview.
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const lineTextures = useLineTextures()
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
-    const SUBPX = 12
-    const BAND = 3.5
+    // Textured: a finer canvas (capped at 4096 px) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
+    const textured = settings.lineFeatureTextures && lineTextures.size > 0
+    const SUBPX = textured ? Math.max(12, Math.min(32, Math.floor(4096 / Math.max(sizeX, sizeZ)))) : 12
+    const BAND = textured ? SUBPX * 0.3 : 3.5
     const OFFSET = Math.floor((SUBPX - BAND) / 2)
     canvas.width = sizeX * SUBPX
     canvas.height = sizeZ * SUBPX
@@ -2709,7 +2713,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
 
-    const drawBand = (node: number, color: string, hasFeature: (n: number) => boolean) => {
+    // One repeating pattern per texture, a copy spanning 2 tiles.
+    const patterns = new Map<LineTextureKey, CanvasPattern>()
+    if (textured) {
+      for (const [key, src] of lineTextures) {
+        const size = Math.round(SUBPX * 2)
+        const tile = document.createElement('canvas')
+        tile.width = tile.height = size
+        tile.getContext('2d')?.drawImage(src, 0, 0, size, size)
+        const pattern = ctx.createPattern(tile, 'repeat')
+        if (pattern) patterns.set(key, pattern)
+      }
+    }
+    const fillFor = (kind: 'road1' | 'road2' | 'river', color: string): string | CanvasPattern =>
+      patterns.get(kind === 'road2' ? 'stone' : kind === 'road1' ? 'dirt' : 'water') ?? color
+    const drawBand = (node: number, color: string | CanvasPattern, hasFeature: (n: number) => boolean) => {
       if (primaryByNode.has(node)) return
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
@@ -2777,14 +2795,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       for (let node = 0; node < tileCount; node++) {
         const roadId = mergedRoadId(node)
         if (!roadId) continue
-        drawBand(node, ROAD_BASE_COLORS[roadId] ?? ROAD_BASE_COLORS[1], hasRoad)
+        drawBand(node, fillFor(roadId === 2 ? 'road2' : 'road1', ROAD_BASE_COLORS[roadId] ?? ROAD_BASE_COLORS[1]), hasRoad)
       }
     }
-    for (const node of riverNodes.keys()) drawBand(node, RIVER_BASE_COLOR, hasRiver)
+    for (const node of riverNodes.keys()) drawBand(node, fillFor('river', RIVER_BASE_COLOR), hasRiver)
     for (const node of riverStaged) {
-      if (!riverNodes.has(node)) drawBand(node, RIVER_BASE_COLOR, hasRiver)
+      if (!riverNodes.has(node)) drawBand(node, fillFor('river', RIVER_BASE_COLOR), hasRiver)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile

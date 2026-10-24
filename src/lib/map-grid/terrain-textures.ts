@@ -114,7 +114,7 @@ function pixelsOf(img: HTMLCanvasElement, size: number, copies: number, blur = 0
  * An extracted texture as an opaque canvas. Read through the fs plugin and decoded by hand: pixels of an asset:// image cannot
  * be read back from a canvas (cross-origin), and a canvas would premultiply the colour by the height map in alpha.
  */
-async function loadLayer(name: string): Promise<HTMLCanvasElement | null> {
+export async function loadLayer(name: string): Promise<HTMLCanvasElement | null> {
   const path = thumbnailFilePath(name)
   if (!path) return null
   const { readFile } = await import('@tauri-apps/plugin-fs')
