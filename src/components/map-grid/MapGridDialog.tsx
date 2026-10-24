@@ -56,6 +56,9 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { buildCliffPieces, CLIFF_TOP_SHIFT } from '@/lib/map-grid/cliff-autotile'
+import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
+import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
 import { buildTexturePatterns, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
@@ -2439,6 +2442,38 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fill(path)
     }
   }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged])
+  // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
+  // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
+  const [cliffCanvasEl, setCliffCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const cliffSprites = useCliffSprites()
+  useEffect(() => {
+    if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const scale = textureScale(sizeX, sizeZ)
+    cliffCanvasEl.width = sizeX * scale
+    cliffCanvasEl.height = sizeZ * scale
+    const ctx = cliffCanvasEl.getContext('2d')
+    if (!ctx || !settings.showCliffs || !renderIndex || cliffSprites.size === 0) return
+    let levels = levelsMap
+    if (paintLevelStaged.size > 0) {
+      levels = levelsMap.slice()
+      for (const [node, level] of paintLevelStaged) levels[node] = level
+    }
+    let climbs = climbsMap
+    if (paintRampStaged.size > 0) {
+      climbs = climbsMap.slice()
+      for (const node of paintRampStaged) climbs[node] = 1
+    }
+    ctx.imageSmoothingQuality = 'high'
+    const s = scale / RENDER_PX_PER_TILE
+    for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) {
+      const img = cliffSprites.get(piece.sid)
+      const entry = renderIndex.objects[piece.sid]
+      if (!img || !entry) continue
+      const cx = ((piece.node % sizeX) + 0.5) * scale
+      const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0)) * scale
+      ctx.drawImage(img, cx - entry.ox * s, cy - entry.oy * s, entry.w * s, entry.h * s)
+    }
+  }, [cliffCanvasEl, cliffSprites, renderIndex, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
   // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
   // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
   // the swatch is then the only thing marking the object.
@@ -5078,6 +5113,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     height: sizeZ * BASE_CELL_PX,
                     imageRendering: 'pixelated',
                   }}
+                />
+
+                {/* Cliff pieces — see cliffCanvasEl above. After the road/river canvas, before the icon layer. */}
+                <canvas
+                  ref={setCliffCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
                 />
 
                 {/* Interactive icon layer — windowed to the visible range, only

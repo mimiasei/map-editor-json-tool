@@ -53,6 +53,8 @@ export interface MapGridSettings {
    *  elevation-shading.ts) — a flat elevation-relief tint, independent of the
    *  blocked-tile overlay's wall-vs-interior distinction. */
   showElevationShading: boolean
+  /** The game's own cliff pieces along the edges of raised ground (cliff-autotile.ts); needs the "cliffs" render job. */
+  showCliffs: boolean
   /** Translucent per-zone color fill over every painted "Player Areas" tile
    *  (see zone-colors.ts) — an escape hatch to hide the overlay, same
    *  rationale as showBlockedTiles above. */
@@ -103,6 +105,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showGridHover: true,
   showBlockedTiles: false,
   showElevationShading: true,
+  showCliffs: true,
   showPlayerAreas: true,
   lineFeatureShading: true,
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
@@ -249,6 +252,15 @@ export default function MapGridSettingsDialog({
               id="grid-show-elevation"
               checked={settings.showElevationShading}
               onCheckedChange={(v) => update({ showElevationShading: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges (rendered game art)</Label>
+          <Switch
+              id="grid-show-cliffs"
+              checked={settings.showCliffs}
+              onCheckedChange={(v) => update({ showCliffs: v })}
           />
         </div>
 
