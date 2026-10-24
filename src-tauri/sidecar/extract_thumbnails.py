@@ -8,10 +8,16 @@ Usage:
         --icons      icon1,icon2,icon3 \\
         [--map-object-icons icon4,icon5]
 
+    extract_thumbnails --mode list-objects --game-dir <dir>
+    extract_thumbnails --mode export-meshes --game-dir <dir> --output-dir <dir> --sids-file <json list of sids>
+        (meshes for the in-app object renderer, see mesh_export.py)
+
 Stdout protocol (one JSON object per line):
     {"type": "progress", "done": 12, "total": 500, "current": "icon_name"}
     {"type": "done", "saved": 487, "missing": ["icon_name"]}
     {"type": "error", "message": "..."}
+  list-objects:   {"type": "objects", "objects": [...]}
+  export-meshes:  {"type": "object", "sid": ..., "status": "ok|missing|error", "done": n, "total": m}, then {"type": "done"}
 
 Exit 0 on success, 1 on error.
 
@@ -240,7 +246,15 @@ def main() -> None:
         "--game-dir", required=True, help="Path to game install directory"
     )
     parser.add_argument(
-        "--output-dir", required=True, help="Directory to write PNG files"
+        "--output-dir", default="", help="Directory to write PNG files (or meshes)"
+    )
+    parser.add_argument(
+        "--mode",
+        default="thumbnails",
+        choices=["thumbnails", "list-objects", "export-meshes"],
+    )
+    parser.add_argument(
+        "--sids-file", default="", help="JSON list of object sids (export-meshes)"
     )
     parser.add_argument("--icons", default="", help="Comma-separated list of icon SIDs")
     parser.add_argument(
@@ -262,6 +276,21 @@ def main() -> None:
 
     game_dir = Path(args.game_dir)
     output_dir = Path(args.output_dir)
+
+    if args.mode != "thumbnails":
+        try:
+            import mesh_export
+
+            if args.mode == "list-objects":
+                _emit({"type": "objects", "objects": mesh_export.list_objects(game_dir)})
+            else:
+                sids = json.loads(Path(args.sids_file).read_text(encoding="utf-8"))
+                mesh_export.export_meshes(game_dir, output_dir, sids, _emit)
+                _emit({"type": "done"})
+        except Exception as exc:
+            _emit({"type": "error", "message": f"{type(exc).__name__}: {exc}"})
+            sys.exit(1)
+        return
 
     if args.icons_file:
         icons = json.loads(Path(args.icons_file).read_text(encoding="utf-8"))

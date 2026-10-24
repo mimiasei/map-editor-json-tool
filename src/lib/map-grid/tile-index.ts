@@ -6,6 +6,7 @@
 import type { PlacedObject } from '@/types/map-context'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
+import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
 
 // ─── User-facing groups ───────────────────────────────────────────────────────
 // Collapses the 9 raw CatalogMapObject categories + squads + markers into the
@@ -138,7 +139,10 @@ export function pickPrimary(items: PlacedObject[], catalog: GameCatalog | null):
   for (const item of items) {
     const group = groupOf(item, catalog)
     if (!group) continue // marker — doesn't compete
-    const rank = GRID_GROUP_ORDER.indexOf(group)
+    // Walkable ground clutter is always the bottom of the stack, below every other decoration too.
+    const rank = item.type === 0 && isGroundCoverSid(item.sid, catalog)
+      ? GRID_GROUP_ORDER.length
+      : GRID_GROUP_ORDER.indexOf(group)
     if (!best || rank < best.rank) best = { placed: item, group, rank }
   }
   if (!best) return undefined

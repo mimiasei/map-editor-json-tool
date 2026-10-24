@@ -8,3 +8,4 @@ etcpak
 astc_encoder_py
 archspec
 fmod_toolkit
+numpy

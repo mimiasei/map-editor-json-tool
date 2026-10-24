@@ -9,6 +9,9 @@
 // Shared by map-stats.ts (the stats panel) and MapGridDialog.tsx (the grid's
 // own sub-category toggle) so both agree on exactly the same breakdown.
 
+import type { GameCatalog } from '@/lib/catalog/types'
+import { computeFootprintTiles } from '@/lib/map-grid/footprint'
+
 export type DecorationSubcategory =
   | 'animals'
   | 'fx'
@@ -71,4 +74,29 @@ export function resolveDecorationSubcategory(sid: string, category: string | und
   if (WALKABLE_PREFIXES.some((w) => sid.includes(w))) return 'walkable'
   if (sid.includes('_hill_')) return 'hills'
   return 'other'
+}
+
+const groundCoverCache = new WeakMap<GameCatalog, Map<string, boolean>>()
+
+/** Walkable ground clutter (grass, flowers, mushrooms): a 'walkable' decoration with no solid
+ *  footprint cell. It always sits at the bottom of a tile's stack and may be painted on tiles
+ *  other objects block. The solid-cell check keeps out sids the naming convention calls walkable
+ *  but that really block (grass_log_1, grass_stump_1, grass_tropical_1/2 and grass_hill_1/2 have
+ *  a solid cell in Core.zip's 1_environments.json). */
+export function isGroundCoverSid(sid: string, catalog: GameCatalog | null): boolean {
+  if (!catalog) return false
+  let cache = groundCoverCache.get(catalog)
+  if (!cache) {
+    cache = new Map()
+    groundCoverCache.set(catalog, cache)
+  }
+  const known = cache.get(sid)
+  if (known !== undefined) return known
+  const template = catalog.mapObjects.find((o) => o.id === sid)
+  const result = !!template
+    && template.category === 'environments'
+    && resolveDecorationSubcategory(sid, template.category) === 'walkable'
+    && !computeFootprintTiles(template, 0, 0).some((cell) => cell.value === 1)
+  cache.set(sid, result)
+  return result
 }

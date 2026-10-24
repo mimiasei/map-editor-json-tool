@@ -1,0 +1,31 @@
+// Sizes of a render's canvas. Kept apart from render-core.ts so the render job on the main thread does not pull in
+// three.js, which only the workers need.
+
+/** Pixels per tile of the output (a render is 256 px per map tile before the app scales it). */
+export const RENDER_PPU = 256
+/** Camera elevation, degrees. */
+export const ELEVATION = 25
+/**
+ * Camera elevation of the cliff pieces. Steeper than objects: they are laid along tile edges on a flat grid, where a 25 degree view squashes
+ * ground depth to 0.42 and breaks the walls up. The sidecar names these renders with the same tag, see mesh_export.py.
+ */
+export const CLIFF_ELEVATION = 50
+/** Ends every cliff render's sid: the camera angle, and "n" = made with a top-surface mask and side variants. A new tag makes old renders count as missing. */
+/** Camera azimuth of the cliff pieces: exactly 180, so a wall along a grid axis is exactly vertical/horizontal on the grid (objects use 190). */
+export const CLIFF_AZIMUTH = 180
+export const CLIFF_TAG = `e${CLIFF_ELEVATION}p`
+/** Camera elevation of the river pieces: almost straight down, so a tile's river lies flat on the grid. Also the end of their render sids (mesh_export.py). */
+export const RIVER_ELEVATION = 89
+export const RIVER_TAG = `t${RIVER_ELEVATION}`
+
+/** Smallest canvas (px at RENDER_PPU) that holds the exported mesh and its shadow, from the exported bounding box. */
+export function canvasForBounds(min: [number, number, number], max: [number, number, number]): number {
+  const r = Math.max(Math.abs(min[0]), Math.abs(max[0]), Math.abs(min[2]), Math.abs(max[2]))
+  const h = Math.max(max[1], 0)
+  // Half the view height in tiles must cover the top (target y 0.8) and the ground footprint, with a margin for the shadow.
+  const need = Math.max(2 * (r * 1.15 + 0.6), 2 * ((h - 0.8) * 0.906 + r * 0.42 + 0.4), 2 * (0.8 * 0.906 + r * 0.42 + 0.4))
+  return CANVAS_STEPS.find((c) => c / RENDER_PPU >= need) ?? CANVAS_STEPS[CANVAS_STEPS.length - 1]
+}
+
+/** Canvas sizes tried in order; an object that still touches the border at the next size up is re-rendered there. */
+export const CANVAS_STEPS = [1024, 1536, 2048, 3072]

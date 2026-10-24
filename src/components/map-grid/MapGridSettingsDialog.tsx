@@ -16,12 +16,16 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { DEFAULT_TERRAIN_BLEND } from '@/lib/map-grid/terrain-colors'
+import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
 import { Settings, ChevronDown } from 'lucide-react'
 
 export interface MapGridSettings {
   /** 0-1, blended against white for the terrain fill (see terrainFillColor). */
   terrainOpacity: number
+  /** 0-1, how strongly the game's ground textures show through the terrain colours (0 = flat colours only). Needs the
+   *  textures extracted, see biomeTexturesAvailable(). */
+  terrainTextureStrength: number
   /** When false, every cell forces its letter-badge fallback instead of a real icon. */
   iconImagesEnabled: boolean
   /** When false, a rotated object's small green degree badge is hidden. */
@@ -49,6 +53,10 @@ export interface MapGridSettings {
    *  elevation-shading.ts) — a flat elevation-relief tint, independent of the
    *  blocked-tile overlay's wall-vs-interior distinction. */
   showElevationShading: boolean
+  /** The game's own cliff pieces along the edges of raised ground (cliff-autotile.ts); needs the "cliffs" render job. */
+  showCliffs: boolean
+  /** Roads and rivers filled with the game's own textures instead of flat colours (needs the extracted textures). */
+  lineFeatureTextures: boolean
   /** Translucent per-zone color fill over every painted "Player Areas" tile
    *  (see zone-colors.ts) — an escape hatch to hide the overlay, same
    *  rationale as showBlockedTiles above. */
@@ -90,6 +98,7 @@ export interface MapGridSettings {
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainOpacity: DEFAULT_TERRAIN_BLEND,
+  terrainTextureStrength: 0.5,
   iconImagesEnabled: true,
   rotationNumberEnabled: true,
   showGridLines: false,
@@ -98,6 +107,8 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showGridHover: true,
   showBlockedTiles: false,
   showElevationShading: true,
+  showCliffs: true,
+  lineFeatureTextures: true,
   showPlayerAreas: true,
   lineFeatureShading: true,
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
@@ -177,6 +188,22 @@ export default function MapGridSettingsDialog({
           />
         </div>
 
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Terrain texture</Label>
+            <span className="text-xs text-muted-foreground">{Math.round(settings.terrainTextureStrength * 100)}%</span>
+          </div>
+          <Slider
+            min={0} max={1} step={0.01}
+            value={[settings.terrainTextureStrength]}
+            onValueChange={([v]) => update({ terrainTextureStrength: v })}
+            disabled={!biomeTexturesAvailable()}
+          />
+          {!biomeTexturesAvailable() && (
+            <p className="text-[10px] text-muted-foreground">Extract the game images (desktop app) to enable ground textures.</p>
+          )}
+        </div>
+
         <div className="flex items-center justify-between">
           <Label htmlFor="grid-icon-images" className="text-xs cursor-pointer">Icon images</Label>
           <Switch
@@ -232,11 +259,29 @@ export default function MapGridSettingsDialog({
         </div>
 
         <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges (rendered game art)</Label>
+          <Switch
+              id="grid-show-cliffs"
+              checked={settings.showCliffs}
+              onCheckedChange={(v) => update({ showCliffs: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
           <Label htmlFor="grid-show-player-areas" className="text-xs cursor-pointer">Player Areas fill</Label>
           <Switch
               id="grid-show-player-areas"
               checked={settings.showPlayerAreas}
               onCheckedChange={(v) => update({ showPlayerAreas: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-line-feature-textures" className="text-xs cursor-pointer">Textured roads and rivers</Label>
+          <Switch
+              id="grid-line-feature-textures"
+              checked={settings.lineFeatureTextures}
+              onCheckedChange={(v) => update({ lineFeatureTextures: v })}
           />
         </div>
 

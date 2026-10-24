@@ -29,13 +29,18 @@ import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import {
   buildTileIndex,
   pickPrimary,
+  type PrimaryPick,
   getVisibleRange,
   resolveFootprintCells,
   GRID_GROUP_ORDER,
   GRID_GROUP_LABELS,
   type GridGroup,
 } from '@/lib/map-grid/tile-index'
-import { resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
+import { renderSidFor, resolveGridCellVisual } from '@/lib/map-grid/cell-visual'
+import { hasObjectRender } from '@/lib/object-render/render-index'
+import { RenderedObject } from '@/components/map-grid/RenderedObject'
+import { useObjectRenderStore } from '@/store/useObjectRenderStore'
+import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
 import {
   INTERACTABLE_SUBCATEGORY_ORDER,
   INTERACTABLE_SUBCATEGORY_LABELS,
@@ -51,7 +56,14 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
+import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
+import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
+import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
+import { buildTexturePatterns, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
+import { riverSid, useRiverSprites } from '@/lib/map-grid/river-tiles'
+import { buildLoneRoadTiles, buildRoadSegments, drawRoads, useRoadStrokes } from '@/lib/map-grid/road-strokes'
 import { connectedDirections } from '@/lib/map-grid/tile-connectivity'
 import { floodFillRegion } from '@/lib/map-grid/flood-fill'
 import { colorForZone } from '@/lib/map-grid/zone-colors'
@@ -420,6 +432,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [placedObjects, searchQuery])
 
   const [settings, setSettings] = useState(loadMapGridSettings)
+  // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
+  const renderIndex = useObjectRenderStore((s) => s.index)
   const updateSettings = (next: typeof settings) => {
     setSettings(next)
     saveMapGridSettings(next)
@@ -493,8 +507,20 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return map
   }, [placedObjects, catalog])
 
-  const primaryByNode = useMemo(() => {
+  const { primaryByNode, underlayByNode } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
+    // What lies under an object drawn as a transparent bundled image: the best other item on the
+    // same tile, so e.g. grass decorations stay visible behind a mine instead of only terrain.
+    const underlay = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
+    const accepted = (pick: PrimaryPick | undefined): pick is PrimaryPick => {
+      if (!pick || !filter[pick.group]) return false
+      if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) return false
+      if (pick.group === 'decorations') {
+        const category = catalog?.mapObjects.find((o) => o.id === pick.primary.sid)?.category
+        if (!decorationSubFilter[resolveDecorationSubcategory(pick.primary.sid, category)]) return false
+      }
+      return true
+    }
     for (const [node, items] of tileIndex) {
       // issue #130: markers ("zones") are real, filterable items now — no
       // hard exclusion here anymore, just the per-group filter[] toggle below.
@@ -502,17 +528,19 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // before picking a primary, so they neither render nor count.
       const candidates = entitySidsOnly ? items.filter((item) => item.entitySid?.trim()) : items
       const pick = pickPrimary(candidates, catalog)
-      if (!pick || !filter[pick.group]) continue
       // issue #130: interactables additionally need their sub-category selected.
-      if (pick.group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(pick.primary.sid)]) continue
-      if (pick.group === 'decorations') {
-        const category = catalog?.mapObjects.find((o) => o.id === pick.primary.sid)?.category
-        if (!decorationSubFilter[resolveDecorationSubcategory(pick.primary.sid, category)]) continue
-      }
+      if (!accepted(pick)) continue
       map.set(node, pick)
+      if (settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary))) {
+        const below = pickPrimary(
+          candidates.filter((i) => i.key !== pick.primary.key && !hasObjectRender(renderSidFor(i))),
+          catalog,
+        )
+        if (accepted(below)) underlay.set(node, { ...below, count: 1 }) // the top object already shows the stack count
+      }
     }
-    return map
-  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter])
+    return { primaryByNode: map, underlayByNode: underlay }
+  }, [tileIndex, catalog, filter, entitySidsOnly, interactableSubFilter, decorationSubFilter, settings.iconImagesEnabled, renderIndex])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation
   // walls + water (src/lib/map-grid/passability.ts). Independent of
@@ -2388,6 +2416,220 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // catalog changes, or whenever the canvas element itself (re)mounts. Same
   // callback-ref reasoning as viewportEl above.
   const [canvasEl, setCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  // Ground textures: a canvas stacked under canvasEl, shown through the base terrain fill (which gets alpha
+  // 1 - strength while textures are on), so swatches, tints, roads and icons above stay untouched. Strength 0 or
+  // nothing extracted leaves the base canvas opaque, i.e. exactly the flat-colour grid.
+  const [textureCanvasEl, setTextureCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const biomeTextures = useBiomeTextures()
+  const textureStrength = biomeTextures.size > 0 ? settings.terrainTextureStrength : 0
+  useEffect(() => {
+    if (!textureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const scale = textureScale(sizeX, sizeZ)
+    textureCanvasEl.width = sizeX * scale
+    textureCanvasEl.height = sizeZ * scale
+    const ctx = textureCanvasEl.getContext('2d')
+    if (!ctx || textureStrength <= 0) return
+    const patterns = buildTexturePatterns(ctx, biomeTextures, scale)
+    const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
+    // One path per texture, filled once: far fewer fill calls than one per tile.
+    const paths = new Map<TextureKey, Path2D>()
+    for (let node = 0; node < sizeX * sizeZ; node++) {
+      const key = textureKeyFor(stagedTilesMap[node], waterMap[node])
+      if (key === null || !patterns.has(key)) continue
+      let path = paths.get(key)
+      if (!path) paths.set(key, (path = new Path2D()))
+      path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
+    }
+    for (const [key, path] of paths) {
+      ctx.fillStyle = patterns.get(key)!
+      ctx.fill(path)
+    }
+  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged])
+  // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
+  // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
+  // As in the game, the upward-facing surfaces of the rock carry the ground texture of the tile's biome: each piece is baked once per biome
+  // with the texture painted through its top-surface mask.
+  const [cliffCanvasEl, setCliffCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const cliffSprites = useCliffSprites()
+  useEffect(() => {
+    if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const scale = textureScale(sizeX, sizeZ)
+    cliffCanvasEl.width = sizeX * scale
+    cliffCanvasEl.height = sizeZ * scale
+    const ctx = cliffCanvasEl.getContext('2d')
+    if (!ctx || !settings.showCliffs || !renderIndex || cliffSprites.sprites.size === 0) return
+    let levels = levelsMap
+    if (paintLevelStaged.size > 0) {
+      levels = levelsMap.slice()
+      for (const [node, level] of paintLevelStaged) levels[node] = level
+    }
+    let climbs = climbsMap
+    if (paintRampStaged.size > 0) {
+      climbs = climbsMap.slice()
+      for (const node of paintRampStaged) climbs[node] = 1
+    }
+    ctx.imageSmoothingQuality = 'high'
+    const s = scale / RENDER_PX_PER_TILE
+    const patterns = biomeTextures.size > 0 ? buildTexturePatterns(ctx, biomeTextures, scale) : new Map<TextureKey, CanvasPattern>()
+    // Each piece is split into the rock and its ground shadow (the dark, semi-transparent pixels): a shadow may only fall on tiles that are not
+    // higher than the piece's own tile, since a higher wall would cut it off.
+    interface Baked { rock: HTMLCanvasElement; shadow: HTMLCanvasElement }
+    const baked = new Map<string, Baked>()
+    // The rock is tan like the game's (a plain render is greyer), and its tops carry the biome's ground texture.
+    const bake = (sid: string, key: TextureKey | null, w: number, h: number): Baked | null => {
+      const id = sid + '|' + key
+      const known = baked.get(id)
+      if (known) return known
+      const img = cliffSprites.sprites.get(sid)
+      if (!img) return null
+      const rock = document.createElement('canvas')
+      rock.width = w
+      rock.height = h
+      const shadow = document.createElement('canvas')
+      shadow.width = w
+      shadow.height = h
+      const g = rock.getContext('2d')
+      const sg = shadow.getContext('2d')
+      if (!g || !sg) return null
+      g.imageSmoothingQuality = 'high'
+      g.drawImage(img, 0, 0, w, h)
+      // Per pixel, not a multiply fill, which would also colour the semi-transparent shadow.
+      const px = g.getImageData(0, 0, w, h)
+      const sh = sg.createImageData(w, h)
+      for (let i = 0; i < px.data.length; i += 4) {
+        if (px.data[i + 3] < 200 && px.data[i] + px.data[i + 1] + px.data[i + 2] < 60) {
+          sh.data.set(px.data.subarray(i, i + 4), i)
+          px.data[i + 3] = 0
+          continue
+        }
+        px.data[i] *= 1.18
+        px.data[i + 1] *= 1.1
+        px.data[i + 2] *= 0.9
+      }
+      g.putImageData(px, 0, 0)
+      sg.putImageData(sh, 0, 0)
+      const mask = cliffSprites.masks.get(sid)
+      const pattern = key !== null ? patterns.get(key) : undefined
+      if (mask && pattern) {
+        const top = document.createElement('canvas')
+        top.width = w
+        top.height = h
+        const t = top.getContext('2d')
+        if (t) {
+          t.fillStyle = pattern
+          t.fillRect(0, 0, w, h)
+          t.globalCompositeOperation = 'destination-in'
+          t.drawImage(mask, 0, 0, w, h)
+          g.globalAlpha = 0.7
+          g.drawImage(top, 0, 0)
+        }
+      }
+      const result = { rock, shadow }
+      baked.set(id, result)
+      return result
+    }
+    const placed: { baked: Baked | null; img: HTMLImageElement; x: number; y: number; w: number; h: number; node: number; rim: boolean }[] = []
+    for (const piece of buildCliffPieces(sizeX, sizeZ, levels, climbs)) {
+      const img = cliffSprites.sprites.get(piece.sid)
+      const entry = renderIndex.objects[piece.sid]
+      if (!img || !entry) continue
+      const w = Math.max(1, Math.ceil(entry.w * s))
+      const h = Math.max(1, Math.ceil(entry.h * s))
+      const key = textureKeyFor(tilesMap[piece.node], waterMap[piece.node])
+      const cx = ((piece.node % sizeX) + 0.5 + (piece.shiftX ?? 0)) * scale
+      const cy = (sizeZ - 1 - Math.floor(piece.node / sizeX) + 0.5 + (piece.wall ? CLIFF_TOP_SHIFT : 0) + (piece.shiftY ?? 0)) * scale
+      placed.push({ baked: bake(piece.sid, key, w, h), img, x: cx - entry.ox * s, y: cy - entry.oy * s, w, h, node: piece.node, rim: /_top_r180_/.test(piece.sid) })
+    }
+    // Ramps: the slope the game puts where a wall has a gap, the ground texture on the game's S-curve profile (RAMP_PROFILE). A point at
+    // height h is drawn (RAMP_HEIGHT - h) * cos(camera) lower than the plateau edge it climbs to, like the wall sprites above.
+    for (const ramp of buildRampSlopes(sizeX, sizeZ, levels, climbs)) {
+      const pattern = patterns.get(textureKeyFor(tilesMap[ramp.node], waterMap[ramp.node]) as TextureKey)
+      if (!pattern) continue
+      const cx = (ramp.node % sizeX) + 0.5
+      const cz = sizeZ - 1 - Math.floor(ramp.node / sizeX) + 0.5
+      // Screen position (in tiles) of the point p along the climb (0 low edge, 1 high edge) and v across it, at height h.
+      const at = (p: number, v: number, h: number): [number, number] => [
+        (cx + (p - 0.5) * ramp.dx - v * ramp.dz) * scale,
+        (cz - (p - 0.5) * ramp.dz - v * ramp.dx + (RAMP_HEIGHT - h) * CAMERA_COS) * scale,
+      ]
+      for (let i = 0; i + 1 < RAMP_PROFILE.length; i++) {
+        const [p0, h0] = RAMP_PROFILE[i]
+        const [p1, h1] = RAMP_PROFILE[i + 1]
+        // A hair wider across, so neighbouring ramp tiles do not show a seam.
+        const quad = [at(p0, -0.505, h0), at(p0, 0.505, h0), at(p1, 0.505, h1), at(p1, -0.505, h1)]
+        const path = new Path2D()
+        quad.forEach(([x, y], k) => (k === 0 ? path.moveTo(x, y) : path.lineTo(x, y)))
+        path.closePath()
+        ctx.fillStyle = pattern
+        ctx.fill(path)
+        // Diffuse light on the slope, against flat ground: darker facing away from the east, lighter facing it.
+        const g = (h1 - h0) / (p1 - p0)
+        // Light from the north-east, 50 degrees above the horizon.
+        const lightUp = Math.sin((50 * Math.PI) / 180)
+        const lightEast = Math.cos((50 * Math.PI) / 180) / Math.SQRT2
+        const lightNorth = lightEast
+        const lit = (-g * (ramp.dx * lightEast + ramp.dz * lightNorth) + lightUp) / Math.sqrt(1 + g * g) / lightUp
+        // 0 at both ends of the ramp, 1 in the middle (sine of the strip's midpoint along the climb).
+        const fade = Math.sin(Math.PI * ((p0 + p1) / 2))
+        const DARK = 0.4   // darkest alpha, west-facing mid-section
+        const LIGHT = 0.25  // lightest alpha, east-facing mid-section
+        ctx.fillStyle = lit < 1 ? `rgba(0,0,0,${fade * DARK})` : `rgba(255,255,210,${fade * LIGHT})`
+        ctx.fill(path)
+      }
+    }
+    // Shadows first (under every rock), each clipped to the tiles around its piece that are not higher than the piece's tile.
+    for (const p of placed) {
+      if (!p.baked) continue
+      const tx = p.node % sizeX
+      const tz = Math.floor(p.node / sizeX)
+      const clip = new Path2D()
+      for (let dz = -3; dz <= 3; dz++) {
+        for (let dx = -3; dx <= 3; dx++) {
+          const nx = tx + dx
+          const nz = tz + dz
+          if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ || (levels[nz * sizeX + nx] ?? 0) > (levels[p.node] ?? 0)) continue
+          clip.rect(nx * scale, (sizeZ - 1 - nz) * scale, scale, scale)
+        }
+      }
+      ctx.save()
+      ctx.clip(clip)
+      ctx.drawImage(p.baked.shadow, p.x, p.y)
+      ctx.restore()
+    }
+    // Rocks: higher ground to the south is nearer to the camera and hides what lies behind it, so a piece is cut away where it reaches over
+    // a higher tile south of its own (a lowered area's side walls and corner piles would otherwise show below its south rim). The rim that
+    // belongs to that very wall (high ground to the south, turn 180) is the exception: it sits on that boundary.
+    for (const p of placed) {
+      let hidden: Path2D | null = null
+      if (!p.rim) {
+        const tx = p.node % sizeX
+        const tz = Math.floor(p.node / sizeX)
+        for (let dz = 1; dz <= 2; dz++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            const nx = tx + dx
+            const nz = tz - dz
+            if (nx < 0 || nz < 0 || nx >= sizeX || (levels[nz * sizeX + nx] ?? 0) <= (levels[p.node] ?? 0)) continue
+            hidden ??= new Path2D()
+            hidden.rect(nx * scale, (sizeZ - 1 - nz) * scale + 0.25 * scale, scale, scale)
+          }
+        }
+      }
+      ctx.save()
+      if (hidden) {
+        const keep = new Path2D()
+        keep.rect(p.x - 2, p.y - 2, p.w + 4, p.h + 4)
+        keep.addPath(hidden)
+        ctx.clip(keep, 'evenodd')
+      }
+      if (p.baked) ctx.drawImage(p.baked.rock, p.x, p.y)
+      else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
+      ctx.restore()
+    }
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
+  // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
+  // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
+  // the swatch is then the only thing marking the object.
+  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= ICON_LOD_THRESHOLD_PX
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2406,12 +2648,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // Shared with GenerateRandomMapDialog.tsx's own live-preview canvas
     // (`paintTerrainCanvas`) so both stay in sync by construction.
     const stagedTilesMap = paintStaged.size > 0 ? tilesMap.map((t, node) => paintStaged.get(node) ?? t) : tilesMap
-    paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity)
+    paintTerrainCanvas(ctx, sizeX, sizeZ, stagedTilesMap, waterMap, settings.terrainOpacity, undefined, 1 - textureStrength)
     // Occupied-tile pass: opaque group-color swatch on top, as before.
     for (const [node, pick] of primaryByNode) {
+      const under = iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary))
+        ? underlayByNode.get(node)
+        : undefined
+      if (iconsVisibleForSwatch && settings.iconImagesEnabled && hasObjectRender(renderSidFor(pick.primary)) && !under) continue
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
-      ctx.fillStyle = GROUP_COLORS[pick.group]
+      ctx.fillStyle = GROUP_COLORS[(under ?? pick).group]
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
     // Road/river rendering moved to a dedicated sub-tile-resolution canvas
@@ -2433,8 +2679,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
   }, [
-    canvasEl, primaryByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity,
-    settings.showElevationShading, elevationTintMap, paintStaged,
+    canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, textureStrength,
+    settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex,
   ])
 
   // ── Road/river line-feature canvas — a SEPARATE, higher-internal-
@@ -2454,11 +2700,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // a flat full-tile fill. Live-preview data (paintRoadStaged/riverStaged)
   // merges in exactly like every other paint tool's preview.
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  const lineTextures = useLineTextures()
+  const roadStrokes = useRoadStrokes()
+  const riverSprites = useRiverSprites()
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
-    const SUBPX = 12
-    const BAND = 3.5
+    // Textured: a finer canvas (capped at 4096 px) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
+    const textured = settings.lineFeatureTextures && lineTextures.size > 0
+    const strokedRoads = settings.lineFeatureTextures && roadStrokes !== null
+    const strokedRivers = settings.lineFeatureTextures && riverSprites.size > 0 && renderIndex !== null
+    const SUBPX = textured || strokedRoads || strokedRivers ? Math.max(12, Math.min(strokedRoads || strokedRivers ? 64 : 32, Math.floor(4096 / Math.max(sizeX, sizeZ)))) : 12
+    const BAND = textured || strokedRoads || strokedRivers ? SUBPX * 0.3 : 3.5
     const OFFSET = Math.floor((SUBPX - BAND) / 2)
     canvas.width = sizeX * SUBPX
     canvas.height = sizeZ * SUBPX
@@ -2503,7 +2756,21 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
 
-    const drawBand = (node: number, color: string, hasFeature: (n: number) => boolean) => {
+    // One repeating pattern per texture, a copy spanning 2 tiles.
+    const patterns = new Map<LineTextureKey, CanvasPattern>()
+    if (textured) {
+      for (const [key, src] of lineTextures) {
+        const size = Math.round(SUBPX * 2)
+        const tile = document.createElement('canvas')
+        tile.width = tile.height = size
+        tile.getContext('2d')?.drawImage(src, 0, 0, size, size)
+        const pattern = ctx.createPattern(tile, 'repeat')
+        if (pattern) patterns.set(key, pattern)
+      }
+    }
+    const fillFor = (kind: 'road1' | 'road2' | 'river', color: string): string | CanvasPattern =>
+      patterns.get(kind === 'road2' ? 'stone' : kind === 'road1' ? 'dirt' : 'water') ?? color
+    const drawBand = (node: number, color: string | CanvasPattern, hasFeature: (n: number) => boolean) => {
       if (primaryByNode.has(node)) return
       const x = node % sizeX
       const z = Math.floor(node / sizeX)
@@ -2567,18 +2834,42 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
 
     const tileCount = sizeX * sizeZ
-    if (roadsMap.length === tileCount) {
+    if (strokedRoads && roadStrokes) {
+      // The game's own road strokes, one per connection (road-strokes.ts).
+      const roadAt = (node: number) => mergedRoadId(node)
+      const segments = buildRoadSegments(sizeX, sizeZ, roadAt).filter((seg) => !(primaryByNode.has(seg.az * sizeX + seg.ax) && primaryByNode.has(seg.bz * sizeX + seg.bx)))
+      const lone = buildLoneRoadTiles(sizeX, sizeZ, roadAt).filter((l) => !primaryByNode.has(l.z * sizeX + l.x))
+      drawRoads(ctx, roadStrokes, segments, lone, SUBPX, sizeZ)
+    } else if (roadsMap.length === tileCount) {
       for (let node = 0; node < tileCount; node++) {
         const roadId = mergedRoadId(node)
         if (!roadId) continue
-        drawBand(node, ROAD_BASE_COLORS[roadId] ?? ROAD_BASE_COLORS[1], hasRoad)
+        drawBand(node, fillFor(roadId === 2 ? 'road2' : 'road1', ROAD_BASE_COLORS[roadId] ?? ROAD_BASE_COLORS[1]), hasRoad)
       }
     }
-    for (const node of riverNodes.keys()) drawBand(node, RIVER_BASE_COLOR, hasRiver)
-    for (const node of riverStaged) {
-      if (!riverNodes.has(node)) drawBand(node, RIVER_BASE_COLOR, hasRiver)
+    // The game's river pieces: one render per tile, chosen by its connections (river-tiles.ts); the flat band where one is missing.
+    const drawRiver = (node: number) => {
+      const sid = (() => {
+        const dirs = connectedDirections(node, hasRiver, sizeX, sizeZ)
+        const mask = riverNodes.get(node)?.s ?? (dirs.includes('E') ? 1 : 0) + (dirs.includes('W') ? 2 : 0) + (dirs.includes('N') ? 4 : 0) + (dirs.includes('S') ? 8 : 0)
+        return riverSid(mask, node)
+      })()
+      const sprite = strokedRivers ? riverSprites.get(sid) : undefined
+      const entry = renderIndex?.objects[sid]
+      if (!sprite || !entry) {
+        drawBand(node, fillFor('river', RIVER_BASE_COLOR), hasRiver)
+        return
+      }
+      if (primaryByNode.has(node)) return
+      const k = SUBPX / RENDER_PX_PER_TILE
+      ctx.drawImage(sprite, ((node % sizeX) + 0.5) * SUBPX - entry.ox * k, (sizeZ - 1 - Math.floor(node / sizeX) + 0.5) * SUBPX - entry.oy * k, sprite.width * k, sprite.height * k)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading])
+    ctx.imageSmoothingQuality = 'high'
+    for (const node of riverNodes.keys()) drawRiver(node)
+    for (const node of riverStaged) {
+      if (!riverNodes.has(node)) drawRiver(node)
+    }
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
@@ -2781,6 +3072,26 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return cells
   }, [showIcons, visibleRange, sizeX, sizeZ, primaryByNode, footprintCellsByKey])
 
+  // Single-tile icons for what lies under an image object (see underlayByNode). Multi-tile things
+  // underneath are skipped: repeating one big object's icon on every covered cell would look wrong.
+  const underlayCells = useMemo(() => {
+    if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
+    const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
+    for (let screenRow = visibleRange.zMin; screenRow <= visibleRange.zMax; screenRow++) {
+      const z = sizeZ - 1 - screenRow
+      for (let x = visibleRange.xMin; x <= visibleRange.xMax; x++) {
+        const node = z * sizeX + x
+        const pick = underlayByNode.get(node)
+        if (!pick) continue
+        const cells1 = pick.primary.type === 0 ? footprintCellsByKey.get(pick.primary.key) : undefined
+        const bounds1 = cells1 ? footprintIconBounds(cells1) : null
+        if (bounds1 && (bounds1.maxX > bounds1.minX || bounds1.maxZ > bounds1.minZ)) continue
+        cells.push({ x, z, node, pick })
+      }
+    }
+    return cells
+  }, [showIcons, visibleRange, sizeX, sizeZ, underlayByNode, footprintCellsByKey])
+
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
   // box is found by its own extent-vs-viewport intersection regardless of
@@ -2830,7 +3141,24 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       clickNode: number
       pick: { primary: PlacedObject; group: GridGroup; count: number }
       sortRow: number; sortCol: number
+      /** 0 = under an image object, painted before everything else. */
+      layer: 0 | 1
     }[] = []
+    for (const c of underlayCells) {
+      const screenRow = sizeZ - 1 - c.z
+      entries.push({
+        key: `u${c.node}`,
+        left: c.x * BASE_CELL_PX,
+        top: screenRow * BASE_CELL_PX,
+        width: BASE_CELL_PX,
+        height: BASE_CELL_PX,
+        clickNode: c.node,
+        pick: c.pick,
+        sortRow: screenRow,
+        sortCol: c.x,
+        layer: 0,
+      })
+    }
     for (const c of visibleCells) {
       const screenRow = sizeZ - 1 - c.z
       entries.push({
@@ -2843,6 +3171,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         pick: c.pick,
         sortRow: screenRow,
         sortCol: c.x,
+        layer: 1,
       })
     }
     for (const m of multiTileIcons) {
@@ -2856,11 +3185,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         pick: m.pick,
         sortRow: m.screenRowMin,
         sortCol: m.minX,
+        layer: 1,
       })
     }
-    entries.sort((a, b) => a.sortRow - b.sortRow || a.sortCol - b.sortCol)
+    entries.sort((a, b) => a.layer - b.layer || a.sortRow - b.sortRow || a.sortCol - b.sortCol)
     return entries
-  }, [visibleCells, multiTileIcons, sizeZ])
+  }, [underlayCells, visibleCells, multiTileIcons, sizeZ])
 
   // Ramp/slope direction arrows — windowed to the viewport the same way
   // visibleCells is, since ramp tiles (unlike the flood-fill tint/overlay
@@ -3351,15 +3681,30 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // uses, plus whatever THIS stroke has staged so far) can't be painted on
   // at all; an existing non-blocking decorative instance sitting exactly on
   // a paintable tile gets overwritten (deleted, then replaced) on commit.
-  const isNodeBlockedForObjectPaint = useCallback((node: number): boolean => {
-    if (blockedTileSet.has(node)) return true
+  // Ground cover (grass etc.) is the bottom layer: object footprints don't stop it, only water
+  // and elevation walls do.
+  const terrainBlockedSet = useMemo(
+    () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects: [], levelsMap, climbsMap, waterMap }, catalog),
+    [sizeX, sizeZ, levelsMap, climbsMap, waterMap, catalog],
+  )
+  const isNodeBlockedForObjectPaint = useCallback((node: number, sid: string): boolean => {
+    if ((isGroundCoverSid(sid, catalog) ? terrainBlockedSet : blockedTileSet).has(node)) return true
     for (const [stagedNode, sid] of paintObjectStaged) {
       for (const cell of objectBlockedCells(sid, stagedNode % sizeX, Math.floor(stagedNode / sizeX), catalog)) {
         if (cell.z * sizeX + cell.x === node) return true
       }
     }
     return false
-  }, [blockedTileSet, paintObjectStaged, sizeX, catalog])
+  }, [blockedTileSet, terrainBlockedSet, paintObjectStaged, sizeX, catalog])
+
+  // Whether painting `paintedSid` on a tile removes an existing object there. Ordinary paint
+  // replaces non-blocking instances; ground cover only replaces other ground cover, so grass never
+  // deletes the things it sits underneath.
+  const objectPaintReplaces = useCallback((paintedSid: string | undefined, existing: PlacedObject): boolean => {
+    if (!paintedSid) return false
+    if (isGroundCoverSid(paintedSid, catalog)) return isGroundCoverSid(existing.sid, catalog)
+    return objectBlockedCells(existing.sid, existing.x, existing.z, catalog).length === 0
+  }, [catalog])
 
   const applyImageColorMapping = useCallback(async (
     result: ImageColorMappingResult,
@@ -3383,7 +3728,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
           waterChanges.set(node, target.waterId)
           waterLevelChanges.set(node, -1)
         }
-        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node)) {
+        else if (isNodeInBoundsForPlacement(target.sid, node) && !isNodeBlockedForObjectPaint(node, target.sid)) {
           additions.push({ node, sid: target.sid, rotation: randomInitialRotation(target.sid) })
         }
       }
@@ -3414,7 +3759,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // city-spawner/hero-spawner are real player-start points, never a
     // decorative scatter — always single-tile, brush Size/Disperse ignored.
     const tiles = (isSingleTileSid(sid) ? [node] : tilesInRadius(node % sizeX, Math.floor(node / sizeX), brushRadius, sizeX, sizeZ, brushDisperse))
-      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n))
+      .filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid))
     if (tiles.length === 0 || tiles.every((n) => paintObjectStaged.get(n) === sid)) return
     setPaintObjectStaged((prev) => {
       const next = new Map(prev)
@@ -3433,17 +3778,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const commitObjectPaintStroke = useCallback((nodes?: number[]) => {
     const sid = placingSid
     const entries: [number, string][] = nodes
-      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n)).map((n): [number, string] => [n, sid]) : [])
+      ? (sid ? nodes.filter((n) => isNodeInBoundsForPlacement(sid, n) && !isNodeBlockedForObjectPaint(n, sid)).map((n): [number, string] => [n, sid]) : [])
       : [...paintObjectStaged.entries()]
     if (entries.length === 0) return
     const additions = entries.map(([node, s]) => ({ node, sid: s, rotation: randomInitialRotation(s) }))
-    const targetNodes = new Set(entries.map(([n]) => n))
+    const sidByNode = new Map(entries)
     const deletions = placedObjects
-      .filter((o) => o.type === 0 && targetNodes.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0)
+      .filter((o) => o.type === 0 && objectPaintReplaces(sidByNode.get(o.node), o))
       .map((o) => o.id)
     setPaintObjectStaged(new Map())
     applyEdit({ kind: 'paintObjects', additions, deletions }, 'paint objects')
-  }, [paintObjectStaged, placedObjects, catalog, randomInitialRotation, applyEdit, placingSid, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint])
+  }, [paintObjectStaged, placedObjects, randomInitialRotation, applyEdit, placingSid, isNodeInBoundsForPlacement, isNodeBlockedForObjectPaint, objectPaintReplaces])
 
   // ── In-progress-stroke full-fidelity preview (issue #195 Phase 1) —
   // deliberately placed here rather than up near sortedIconEntries, since a
@@ -3459,12 +3804,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     const keys = new Set<string>()
     if (paintObjectStaged.size === 0) return keys
     for (const o of placedObjects) {
-      if (o.type === 0 && paintObjectStaged.has(o.node) && objectBlockedCells(o.sid, o.x, o.z, catalog).length === 0) {
+      if (o.type === 0 && objectPaintReplaces(paintObjectStaged.get(o.node), o)) {
         keys.add(o.key)
       }
     }
     return keys
-  }, [paintObjectStaged, placedObjects, catalog])
+  }, [paintObjectStaged, placedObjects, objectPaintReplaces])
 
   // Staged Paint Objects additions, rendered with their real catalog icon
   // instead of a flat swatch. Bounded by paintObjectStaged.size (a brush
@@ -4844,7 +5189,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               onWheel={onWheel}
               onContextMenu={onContextMenuViewport}
             >
-              <div className="absolute left-0">
+              <div className="absolute left-0 z-[1000]">
                   {settings.showGridNumbers && Array.from(
                       { length: visibleRange.zMax - visibleRange.zMin + 1 },
                       (_, i) => visibleRange.zMin + i,
@@ -4864,7 +5209,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       </div>
                   ))}
               </div>
-              <div className="absolute top-0">
+              <div className="absolute top-0 z-[1000]">
                 {settings.showGridNumbers && Array.from(
                     { length: visibleRange.xMax - visibleRange.xMin + 1 },
                     (_, i) => visibleRange.xMin + i,
@@ -4918,6 +5263,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     needs actual CSS opacity here to ever be visible; only applied
                     while that feature is active so it can't affect anyone else. */}
                 <canvas
+                  ref={setTextureCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{
+                    width: sizeX * BASE_CELL_PX,
+                    height: sizeZ * BASE_CELL_PX,
+                    opacity: backgroundImageUrl && settings.backgroundImageVisible
+                      ? 1 - settings.backgroundImageOpacity
+                      : 1,
+                  }}
+                />
+                <canvas
                   ref={setCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{
@@ -4954,6 +5310,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     height: sizeZ * BASE_CELL_PX,
                     imageRendering: 'pixelated',
                   }}
+                />
+
+                {/* Cliff pieces — see cliffCanvasEl above. After the road/river canvas, before the icon layer. */}
+                <canvas
+                  ref={setCliffCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
                 />
 
                 {/* Interactive icon layer — windowed to the visible range, only
@@ -5022,6 +5385,17 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className={`shrink-0 ${visual.colorClassName ?? ''}`} />}
                       {visual.kind === 'text' && (
                         <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>
+                      )}
+                      {visual.kind === 'render' && (
+                        <RenderedObject
+                          render={visual.render}
+                          name={name}
+                          cell={BASE_CELL_PX}
+                          // Relative to this box: the anchor tile's corner minus the box corner.
+                          shiftX={entry.pick.primary.x * BASE_CELL_PX - entry.left}
+                          // A faction city standing in for a city spawner sits one tile too high with the spawner's anchor: one tile lower (user-verified).
+                          shiftY={(sizeZ - 1 - entry.pick.primary.z + (entry.pick.primary.sid === 'city-spawner' ? 1 : 0)) * BASE_CELL_PX - entry.top}
+                        />
                       )}
                       {visual.kind === 'catalog' && (
                         <CatalogIcon
@@ -5098,6 +5472,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     >
                       {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
                       {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
+                      {visual.kind === 'render' && <RenderedObject render={visual.render} name={icon.sid} cell={BASE_CELL_PX} shiftX={0} shiftY={0} />}
                       {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
                         <CatalogIcon
                           iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}
