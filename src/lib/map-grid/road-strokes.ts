@@ -14,10 +14,13 @@ export type RoadKind = 'dirt' | 'stone'
 /** Sheet to read, the colour its strokes average to in the game's top-down screenshots (the sheets are darker than what is drawn), and how much wider than the sheet's stroke the road is drawn (the stone road is broader in the game). */
 const SHEETS: Record<RoadKind, { name: string; target: readonly [number, number, number]; width: number }> = {
   dirt: { name: 'road_dirt_1', target: [112, 84, 70], width: 1 },
-  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 1.3 },
+  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 1 },
 }
 const COLUMNS = 3
 const ROWS = 2
+
+/** How many tiles one repeat of the cobble texture (512 px, stones of about 50 px) covers, so a stone is about a sixth of the road's width. */
+const STONE_FILL_TILES = 1.6
 
 /** Stroke length as a share of the distance between two road tiles' centres: a little over, so neighbours overlap into one road. */
 const OVERLAP = 1.12
@@ -27,6 +30,8 @@ export interface RoadStrokes {
   strokes: Record<RoadKind, HTMLCanvasElement[]>
   /** Height in sheet pixels of a typical stroke: drawn this tall = one tile long. */
   refHeight: Record<RoadKind, number>
+  /** The cobble texture the stone road is filled with (the strokes give its shape), or null when not extracted. */
+  stoneFill: HTMLCanvasElement | null
 }
 
 let cached: Promise<RoadStrokes | null> | null = null
@@ -89,9 +94,10 @@ async function loadKind(kind: RoadKind): Promise<{ strokes: HTMLCanvasElement[];
 
 /** Both sheets, or null while one is not extracted yet. */
 export function loadRoadStrokes(): Promise<RoadStrokes | null> {
-  cached ??= Promise.all([loadKind('dirt'), loadKind('stone')]).then(([dirt, stone]) => {
+  cached ??= Promise.all([loadKind('dirt'), loadKind('stone'), loadLayer('road_stone').catch(() => null)]).then(([dirt, stone, stoneFill]) => {
     if (!dirt || !stone) return null
     return {
+      stoneFill,
       strokes: { dirt: dirt.strokes, stone: stone.strokes },
       refHeight: { dirt: dirt.refHeight, stone: stone.refHeight },
     }
@@ -175,7 +181,7 @@ export function buildLoneRoadTiles(sizeX: number, sizeZ: number, roadAt: (node: 
 /** Draw every stroke. `px` = canvas pixels per tile; the canvas row of tile z is sizeZ - 1 - z. */
 export function drawRoads(ctx: CanvasRenderingContext2D, assets: RoadStrokes, segments: RoadSegment[], lone: ReturnType<typeof buildLoneRoadTiles>, px: number, sizeZ: number): void {
   ctx.imageSmoothingQuality = 'high'
-  const stamp = (kind: RoadKind, variant: number, cx: number, cz: number, angle: number, length: number, flip: boolean) => {
+  const stamp = (ctx: CanvasRenderingContext2D, kind: RoadKind, variant: number, cx: number, cz: number, angle: number, length: number, flip: boolean) => {
     const stroke = assets.strokes[kind][variant % assets.strokes[kind].length]
     const unit = (px * OVERLAP) / assets.refHeight[kind] // canvas pixels per sheet pixel for a stroke one tile long
     ctx.save()
@@ -186,19 +192,41 @@ export function drawRoads(ctx: CanvasRenderingContext2D, assets: RoadStrokes, se
     ctx.drawImage(stroke, -wide / 2, (-stroke.height * unit * length) / 2, wide, stroke.height * unit * length)
     ctx.restore()
   }
-  // Dirt first, so a stone road lies over a dirt one where they meet.
-  for (const kind of ['dirt', 'stone'] as const) {
+  const lay = (target: CanvasRenderingContext2D, kind: RoadKind) => {
     for (const s of segments) {
       if (s.kind !== kind) continue
       const dx = s.bx - s.ax
       const dz = s.bz - s.az
       // The strokes are drawn upright; the canvas y axis runs south, so a step to the north (dz = 1) is "up".
-      stamp(kind, s.variant, (s.ax + s.bx) / 2 + 0.5, (s.az + s.bz) / 2, Math.atan2(dx, dz), Math.hypot(dx, dz), s.flip)
+      stamp(target, kind, s.variant, (s.ax + s.bx) / 2 + 0.5, (s.az + s.bz) / 2, Math.atan2(dx, dz), Math.hypot(dx, dz), s.flip)
     }
     for (const l of lone) {
-      if (l.kind === kind) stamp(kind, l.variant, l.x + 0.5, l.z, 0, 0.7, false)
+      if (l.kind === kind) stamp(target, kind, l.variant, l.x + 0.5, l.z, 0, 0.7, false)
     }
   }
+  // Dirt first, so a stone road lies over a dirt one where they meet.
+  lay(ctx, 'dirt')
+  const fill = assets.stoneFill
+  const layer = fill ? document.createElement('canvas') : null
+  const lg = layer?.getContext('2d')
+  if (!fill || !layer || !lg) {
+    lay(ctx, 'stone')
+    return
+  }
+  // The stone strokes give the shape; the cobble texture, laid in map space so neighbouring strokes continue it, is what shows.
+  layer.width = ctx.canvas.width
+  layer.height = ctx.canvas.height
+  lg.imageSmoothingQuality = 'high'
+  lay(lg, 'stone')
+  const pattern = lg.createPattern(fill, 'repeat')
+  if (pattern) {
+    pattern.setTransform(new DOMMatrix().scale((px * STONE_FILL_TILES) / fill.width))
+    lg.globalCompositeOperation = 'source-atop'
+    lg.globalAlpha = 0.85
+    lg.fillStyle = pattern
+    lg.fillRect(0, 0, layer.width, layer.height)
+  }
+  ctx.drawImage(layer, 0, 0)
 }
 
 /** The stroke sheets once extracted (and again after a new extraction), else null. */
