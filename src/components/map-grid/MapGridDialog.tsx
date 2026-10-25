@@ -63,7 +63,7 @@ import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textur
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
 import { RENDER_PX_PER_TILE } from '@/lib/object-render/render-index'
-import { buildTexturePatterns, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
+import { buildTexturePatterns, drawBiomeEdgeFade, textureKeyFor, textureScale, useBiomeTextures, type TextureKey } from '@/lib/map-grid/terrain-textures'
 import { computeShapeChanges } from '@/lib/map-grid/river-shape'
 import { riverSid, useRiverSprites } from '@/lib/map-grid/river-tiles'
 import { buildLoneRoadTiles, buildRoadSegments, drawRoads, useRoadStrokes } from '@/lib/map-grid/road-strokes'
@@ -2459,7 +2459,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillStyle = patterns.get(key)!
       ctx.fill(path)
     }
-  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged, quality.terrain])
+    if (settings.biomeEdgeFade) {
+      const keys = stagedTilesMap.map((t, node) => textureKeyFor(t, waterMap[node]))
+      drawBiomeEdgeFade(ctx, patterns, keys, sizeX, sizeZ, scale)
+    }
+  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged, quality.terrain, settings.biomeEdgeFade])
   // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
   // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
   // As in the game, the upward-facing surfaces of the rock carry the ground texture of the tile's biome: each piece is baked once per biome

@@ -30,6 +30,69 @@ export function biomeTexturesAvailable(): boolean {
   return thumbnailPath(BIOME_TEXTURE_ICONS[1]) !== null
 }
 
+// Land-to-land biome borders fade: along each tile edge that meets another biome, that biome's texture is laid over the tile in
+// steps of falling opacity. The widths and opacities are chosen by eye; the game itself blends through a splat map.
+/** How far the neighbour's texture reaches into the tile, as a share of the tile. */
+export const BIOME_FADE_TILES = 0.4
+/** Opacity of the neighbour's texture right at the border (0.5 = an even mix with the tile's own texture there). */
+export const BIOME_FADE_EDGE_OPACITY = 0.5
+const BIOME_FADE_STEPS = 6
+
+/**
+ * Draws the fade strips over a texture canvas already filled tile by tile. `keys` is each node's texture key; water and unknown ground
+ * take no part. Strips of one neighbour texture and one step share a path, so a map costs a few fills, not one per edge.
+ */
+export function drawBiomeEdgeFade(
+  ctx: CanvasRenderingContext2D,
+  patterns: ReadonlyMap<TextureKey, CanvasPattern>,
+  keys: readonly (TextureKey | null)[],
+  sizeX: number,
+  sizeZ: number,
+  scale: number,
+): void {
+  const reach = BIOME_FADE_TILES * scale
+  // Opacities per nested strip so that the opacities stack up to the edge value at the border and fall to nothing inside.
+  const total = BIOME_FADE_EDGE_OPACITY
+  const stepAlpha = 1 - Math.pow(1 - total, 1 / BIOME_FADE_STEPS)
+  const paths = new Map<TextureKey, Path2D[]>()
+  const pathFor = (key: TextureKey, step: number): Path2D => {
+    let list = paths.get(key)
+    if (!list) paths.set(key, (list = Array.from({ length: BIOME_FADE_STEPS }, () => new Path2D())))
+    return list[step]
+  }
+  for (let z = 0; z < sizeZ; z++) {
+    for (let x = 0; x < sizeX; x++) {
+      const here = keys[z * sizeX + x]
+      if (typeof here !== 'number') continue
+      const left = x * scale
+      const top = (sizeZ - 1 - z) * scale
+      // Neighbours as [dx, dz]; dz = +1 is the canvas row above.
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, 1], [0, -1]] as const) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ) continue
+        const there = keys[nz * sizeX + nx]
+        if (typeof there !== 'number' || there === here || !patterns.has(there)) continue
+        for (let step = 0; step < BIOME_FADE_STEPS; step++) {
+          const w = (reach * (BIOME_FADE_STEPS - step)) / BIOME_FADE_STEPS
+          const path = pathFor(there, step)
+          if (dx === -1) path.rect(left, top, w, scale)
+          else if (dx === 1) path.rect(left + scale - w, top, w, scale)
+          else if (dz === 1) path.rect(left, top, scale, w)
+          else path.rect(left, top + scale - w, scale, w)
+        }
+      }
+    }
+  }
+  ctx.save()
+  ctx.globalAlpha = stepAlpha
+  for (const [key, list] of paths) {
+    ctx.fillStyle = patterns.get(key)!
+    for (const path of list) ctx.fill(path)
+  }
+  ctx.restore()
+}
+
 /** Texture key of one tile: water wins over the biome, same rule as terrainFillColor. */
 export function textureKeyFor(tileId: number | undefined, waterId: number | undefined): TextureKey | null {
   if (waterId) return 'water'

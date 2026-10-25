@@ -37,6 +37,8 @@ export interface MapGridSettings {
   rotationNumberEnabled: boolean
   /** When false, the small badge with the number of objects on a tile is hidden. */
   objectCountEnabled: boolean
+  /** When true, a ground texture fades into the neighbouring biome's along land-to-land borders. */
+  biomeEdgeFade: boolean
   /** How finely each layer is drawn: a preset, or 'custom' with the numbers in drawQualityCustom (draw-quality.ts). */
   drawQuality: DrawQualityChoice
   drawQualityCustom: DrawQuality
@@ -112,6 +114,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   iconImagesEnabled: true,
   rotationNumberEnabled: true,
   objectCountEnabled: true,
+  biomeEdgeFade: true,
   drawQuality: 'high',
   drawQualityCustom: DRAW_QUALITY_PRESETS.high,
   showGridLines: false,
@@ -230,6 +233,16 @@ export default function MapGridSettingsDialog({
           {!biomeTexturesAvailable() && (
             <p className="text-[10px] text-muted-foreground">Extract the game images (desktop app) to enable ground textures.</p>
           )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
+          <Switch
+            id="grid-biome-fade"
+            checked={settings.biomeEdgeFade}
+            onCheckedChange={(v) => update({ biomeEdgeFade: v })}
+            disabled={!biomeTexturesAvailable()}
+          />
         </div>
 
         <div className="flex items-center justify-between">
