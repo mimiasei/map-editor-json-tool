@@ -13,8 +13,8 @@ export type RoadKind = 'dirt' | 'stone'
 
 /** Sheet to read, the colour its strokes average to in the game's top-down screenshots (the sheets are darker than what is drawn), and how much wider than the sheet's stroke the road is drawn (the stone road is broader in the game). */
 const SHEETS: Record<RoadKind, { name: string; target: readonly [number, number, number]; width: number }> = {
-  dirt: { name: 'road_dirt_1', target: [112, 84, 70], width: 0.8 },
-  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 0.8 },
+  dirt: { name: 'road_dirt_1', target: [112, 84, 70], width: 0.65 },
+  stone: { name: 'road_stone_1', target: [168, 166, 160], width: 0.65 },
 }
 const COLUMNS = 3
 const ROWS = 2
@@ -222,7 +222,7 @@ export function drawRoads(ctx: CanvasRenderingContext2D, assets: RoadStrokes, se
   if (pattern) {
     pattern.setTransform(new DOMMatrix().scale((px * STONE_FILL_TILES) / fill.width))
     lg.globalCompositeOperation = 'source-atop'
-    lg.globalAlpha = 0.85
+    lg.globalAlpha = 1
     lg.fillStyle = pattern
     lg.fillRect(0, 0, layer.width, layer.height)
   }
