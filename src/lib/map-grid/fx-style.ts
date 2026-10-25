@@ -10,12 +10,12 @@ export const FX_IMAGE_OPACITY = 0.5
 /** Any CSS mix-blend-mode: 'normal', 'screen' (brightens what is under it), 'plus-lighter' (light), 'overlay', 'soft-light', 'multiply', 'color-dodge'... */
 export const FX_IMAGE_BLEND_MODE: CSSProperties['mixBlendMode'] = 'normal'
 /** Any CSS filter on the image itself, applied before blending: 'none', 'brightness(1.4)', 'contrast(1.2)', 'saturate(0.6)', 'brightness(1.3) contrast(1.1)'... */
-export const FX_IMAGE_FILTER = 'none'
+export const FX_IMAGE_FILTER = 'contrast(4) saturate(0.7)'
 
 /** 0 to 1; the sparkle is white. */
-export const FX_SPARKLE_OPACITY = 1
+export const FX_SPARKLE_OPACITY = 0.75
 /** Sparkle size as a share of the icon (tile) size. */
-export const FX_SPARKLE_SIZE = 0.6
+export const FX_SPARKLE_SIZE = 0.66
 /** The dark outline keeps the white sparkle readable on light ground; 'none' removes it. */
 export const FX_SPARKLE_FILTER = 'drop-shadow(0 0 1px rgba(0,0,0,0.8))'
 
