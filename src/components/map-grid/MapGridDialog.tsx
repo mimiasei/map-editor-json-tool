@@ -4230,6 +4230,69 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                state, same handlers, same stage-then-Save convention. */
             <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 bg-amber-500/10 border-y border-amber-500/20" data-nodrag>
               <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span>
+
+              {paintBiome !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                          style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
+                        />
+                        {BIOME_NAMES[paintBiome]}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {PAINT_BIOME_ORDER.map((b) => (
+                        <button
+                          key={b}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setPaintBiome(b)}
+                        >
+                          <span
+                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                            style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
+                          />
+                          {BIOME_NAMES[b]}
+                        </button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setTerrainBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to fill the contiguous same-biome region"
+                      onClick={() => setTerrainBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
+                  {paintStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
+                    {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton
+                  icon={<Paintbrush className="h-3.5 w-3.5" />}
+                  label="Terrain"
+                  title="Paint terrain"
+                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
+                />
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+
               {placingSid && !isSingleTileSid(placingSid) ? (
                 <div className="flex items-center gap-1">
                   <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" onClick={stopPlacingOrClearStaged} title="Click to place one, drag to paint several">
@@ -4396,131 +4459,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 <ToolButton icon={<Gem className="h-3.5 w-3.5" />} label="Resource" title="Resource — drag to scatter resource pickups"
                             onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setResourceActive(true) }} />
               )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {paintZone !== null ? (
-                <div className="flex items-center gap-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
-                        <span
-                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                          style={{ backgroundColor: colorForZone(paintZone) }}
-                        />
-                        Zone {paintZone}
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
-                      {existingZoneIds.map((z) => (
-                        <button
-                          key={z}
-                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                          onClick={() => setPaintZone(z)}
-                        >
-                          <span
-                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                            style={{ backgroundColor: colorForZone(z) }}
-                          />
-                          Zone {z}
-                        </button>
-                      ))}
-                      <button
-                        className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent text-muted-foreground"
-                        onClick={() => setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                        New Zone
-                      </button>
-                    </PopoverContent>
-                  </Popover>
-                  <div className="flex items-center rounded border border-border overflow-hidden">
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${!zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Freehand brush — drag to paint"
-                      onClick={() => setZoneBucketMode(false)}
-                    >
-                      Brush
-                    </button>
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Bucket fill — click to fill the contiguous unpainted/same-zone region, stopping at blocked tiles and other zones"
-                      onClick={() => setZoneBucketMode(true)}
-                    >
-                      Bucket
-                    </button>
-                  </div>
-                  {paintZoneStaged.size > 0 && (
-                    <p className="text-xs text-amber-600">{paintZoneStaged.size} staged</p>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopZonePainting}>
-                    {paintZoneStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton icon={<LandPlot className="h-3.5 w-3.5" />} label="Player Areas" title="Player Areas — paint color-coded zones associated with a player"
-                            onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1) }} />
-              )}
-              <div className="w-px h-4 bg-amber-500/30" />
-              {paintBiome !== null ? (
-                <div className="flex items-center gap-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
-                        <span
-                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                          style={{ backgroundColor: BIOME_BASE_COLORS[paintBiome] }}
-                        />
-                        {BIOME_NAMES[paintBiome]}
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
-                      {PAINT_BIOME_ORDER.map((b) => (
-                        <button
-                          key={b}
-                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
-                          onClick={() => setPaintBiome(b)}
-                        >
-                          <span
-                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
-                            style={{ backgroundColor: BIOME_BASE_COLORS[b] }}
-                          />
-                          {BIOME_NAMES[b]}
-                        </button>
-                      ))}
-                    </PopoverContent>
-                  </Popover>
-                  <div className="flex items-center rounded border border-border overflow-hidden">
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${!terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Freehand brush — drag to paint"
-                      onClick={() => setTerrainBucketMode(false)}
-                    >
-                      Brush
-                    </button>
-                    <button
-                      className={`h-6 px-2 text-xs transition-colors ${terrainBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
-                      title="Bucket fill — click to fill the contiguous same-biome region"
-                      onClick={() => setTerrainBucketMode(true)}
-                    >
-                      Bucket
-                    </button>
-                  </div>
-                  {paintStaged.size > 0 && (
-                    <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
-                    {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
-                  </Button>
-                </div>
-              ) : (
-                <ToolButton
-                  icon={<Paintbrush className="h-3.5 w-3.5" />}
-                  label="Terrain"
-                  title="Paint terrain"
-                  onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopZonePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintBiome(1) }}
-                />
-              )}
+           
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Level brush (issue #193 Phase 2) — same freehand-stroke
                   staging as Terrain, targeting levelsMap instead of
@@ -4829,6 +4768,70 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     </Popover>
                   )}
                 </>
+              )}
+              <div className="w-px h-4 bg-amber-500/30" />
+              {paintZone !== null ? (
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="sm" className="h-6 text-xs gap-1.5">
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                          style={{ backgroundColor: colorForZone(paintZone) }}
+                        />
+                        Zone {paintZone}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1" data-nodrag>
+                      {existingZoneIds.map((z) => (
+                        <button
+                          key={z}
+                          className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent"
+                          onClick={() => setPaintZone(z)}
+                        >
+                          <span
+                            className="inline-block w-2.5 h-2.5 rounded-full border border-border/50"
+                            style={{ backgroundColor: colorForZone(z) }}
+                          />
+                          Zone {z}
+                        </button>
+                      ))}
+                      <button
+                        className="flex items-center gap-2 w-full px-2 py-1 text-xs rounded hover:bg-accent text-muted-foreground"
+                        onClick={() => setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        New Zone
+                      </button>
+                    </PopoverContent>
+                  </Popover>
+                  <div className="flex items-center rounded border border-border overflow-hidden">
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${!zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Freehand brush — drag to paint"
+                      onClick={() => setZoneBucketMode(false)}
+                    >
+                      Brush
+                    </button>
+                    <button
+                      className={`h-6 px-2 text-xs transition-colors ${zoneBucketMode ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      title="Bucket fill — click to fill the contiguous unpainted/same-zone region, stopping at blocked tiles and other zones"
+                      onClick={() => setZoneBucketMode(true)}
+                    >
+                      Bucket
+                    </button>
+                  </div>
+                  {paintZoneStaged.size > 0 && (
+                    <p className="text-xs text-amber-600">{paintZoneStaged.size} staged</p>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopZonePainting}>
+                    {paintZoneStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  </Button>
+                </div>
+              ) : (
+                <ToolButton icon={<LandPlot className="h-3.5 w-3.5" />} label="Player Areas" title="Player Areas — paint color-coded zones associated with a player"
+                            onClick={() => { stopPlacing(); setObjectBrowserOpen(false); stopPainting(); stopLevelPainting(); stopWaterPainting(); stopRoadPainting(); stopRampPainting(); stopInteractablePainting(); stopSquadPainting(); stopResourcePainting(); stopClearAllConfirm(); stopRiverPainting(); stopPlacingZone(); stopObstaclePainting(); stopTreePainting(); stopEraser(); setPaintZone((existingZoneIds[existingZoneIds.length - 1] ?? 0) + 1) }} />
               )}
               <div className="w-px h-4 bg-amber-500/30" />
               {/* Eraser (issue #195 follow-up) — deletes non-terrain
