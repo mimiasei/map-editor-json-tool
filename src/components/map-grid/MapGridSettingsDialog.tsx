@@ -210,20 +210,6 @@ export default function MapGridSettingsDialog({
         className={`${advancedOpen ? 'w-80' : 'w-64'} space-y-4 transition-[width] max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto`}
         data-nodrag
       >
-        {!(settings.terrainTextureEnabled && biomeTexturesAvailable()) && (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Terrain opacity</Label>
-              <span className="text-xs text-muted-foreground">{Math.round(settings.terrainOpacity * 100)}%</span>
-            </div>
-            <Slider
-              min={0} max={1} step={0.01}
-              value={[settings.terrainOpacity]}
-              onValueChange={([v]) => update({ terrainOpacity: v })}
-            />
-          </div>
-        )}
-
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="grid-terrain-texture" className="text-xs cursor-pointer">Terrain texture</Label>
@@ -238,6 +224,20 @@ export default function MapGridSettingsDialog({
             <p className="text-[10px] text-muted-foreground">Extract the game images (desktop app) to enable ground textures.</p>
           )}
         </div>
+
+        {!(settings.terrainTextureEnabled && biomeTexturesAvailable()) && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Terrain opacity</Label>
+              <span className="text-xs text-muted-foreground">{Math.round(settings.terrainOpacity * 100)}%</span>
+            </div>
+            <Slider
+              min={0} max={1} step={0.01}
+              value={[settings.terrainOpacity]}
+              onValueChange={([v]) => update({ terrainOpacity: v })}
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <Label htmlFor="grid-biome-fade" className="text-xs cursor-pointer">Fade between biomes</Label>
