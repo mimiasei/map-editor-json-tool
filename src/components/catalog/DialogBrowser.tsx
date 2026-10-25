@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { Search, Copy, ChevronDown, ChevronRight } from 'lucide-react'
+import { Search, Copy, ChevronDown, ChevronRight } from '@/components/ui/icons'
 import type { CatalogDialog } from '@/lib/catalog/types'
 
 // ─── Dialog row ───────────────────────────────────────────────────────────────

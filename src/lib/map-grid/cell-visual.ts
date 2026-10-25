@@ -16,7 +16,7 @@ import {
     Castle, Shield, DoorOpen, SquareDashed, Building2, UserRound, Swords, Gem, Package, Users,
     Trees, Mountain, MountainSnow, Flower2, Squirrel,
     CloudFog, Trophy, Waves, Flag, Box, Leaf, Tent, Pickaxe,
-    type LucideIcon } from 'lucide-react'
+    type AppIcon } from '@/components/ui/icons'
 import { groupOf } from '@/lib/map-grid/tile-index'
 import { thumbnailPath } from '@/lib/catalog/thumbnails'
 import { objectRender, type ObjectRender } from '@/lib/object-render/render-index'
@@ -27,7 +27,7 @@ import type { CatalogMapObject } from '@/lib/catalog/types'
 import { resolveDecorationSubcategory, type DecorationSubcategory } from '@/lib/map-grid/decoration-subcategories'
 
 export type GridCellVisual =
-  | { kind: 'icon'; Icon: LucideIcon; colorClassName?: string }
+  | { kind: 'icon'; Icon: AppIcon; colorClassName?: string }
   | { kind: 'text'; text: string }
   | { kind: 'catalog' }
   /** Real thumbnail, but under a different iconId/name than the item's own
@@ -49,7 +49,7 @@ export type GridCellVisual =
  *  "randomized" indicator) — per user feedback that made them impossible to
  *  tell apart on the grid, each now gets its own distinct icon instead,
  *  matching what it actually spawns. */
-const SID_ICON_OVERRIDES: Record<string, LucideIcon> = {
+const SID_ICON_OVERRIDES: Record<string, AppIcon> = {
   'city-spawner': Castle,
   'hero-spawner': Shield,
   'random-city': Building2,
@@ -61,7 +61,7 @@ const SID_ICON_OVERRIDES: Record<string, LucideIcon> = {
   'squad': Swords,
 }
 
-const SUBCATEGORY_ICON_FALLBACK: Partial<Record<DecorationSubcategory, LucideIcon>> = {
+const SUBCATEGORY_ICON_FALLBACK: Partial<Record<DecorationSubcategory, AppIcon>> = {
     animals: Squirrel,
     fx: CloudFog,
     mountains: Mountain,
@@ -74,7 +74,7 @@ const SUBCATEGORY_ICON_FALLBACK: Partial<Record<DecorationSubcategory, LucideIco
     other: Leaf,
 }
 
-const CATEGORY_ICON_FALLBACK: Partial<Record<CatalogMapObject['category'], LucideIcon>> = {
+const CATEGORY_ICON_FALLBACK: Partial<Record<CatalogMapObject['category'], AppIcon>> = {
     artifacts: Trophy,
 }
 

@@ -50,7 +50,7 @@ import ObjectRenderDialog, { RENDER_PROMPT_OFF_KEY } from '@/components/common/O
 import ObjectRenderProgressBar from '@/components/layout/ObjectRenderProgressBar'
 import { loadRenderIndex } from '@/lib/object-render/render-index'
 import { refreshPendingCounts } from '@/lib/object-render/render-job'
-import { SquareArrowOutUpRight } from 'lucide-react'
+import { SquareArrowOutUpRight } from '@/components/ui/icons'
 
 const SETUP_SHOWN_KEY = 'oe-setup-shown'
 

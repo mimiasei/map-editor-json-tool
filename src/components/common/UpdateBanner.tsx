@@ -2,7 +2,7 @@
 // Strips shown under the toolbar for things the user should know but must not be
 // interrupted by. Styling follows AnnotationBanner.
 
-import { BookOpen, Download, ImageIcon, Info, X } from 'lucide-react'
+import { BookOpen, Download, ImageIcon, Info, X } from '@/components/ui/icons'
 
 interface StoryDraftBannerProps {
   onResume: () => void

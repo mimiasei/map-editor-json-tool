@@ -14,7 +14,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { ChevronsUpDown, LayoutGrid, SlidersHorizontal, X } from 'lucide-react'
+import { ChevronsUpDown, LayoutGrid, SlidersHorizontal, X } from '@/components/ui/icons'
 import MapObjectFilter, { type MapObjectFilterState, loadSavedFilter } from '@/components/catalog/MapObjectFilter'
 import { CatalogIcon, PortraitThumb, heroPortraitPath } from '@/lib/catalog/thumbnails'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'

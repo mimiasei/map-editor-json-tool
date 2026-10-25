@@ -141,7 +141,7 @@ import {
   Castle,
   Crown,
   UserRound
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
@@ -150,9 +150,8 @@ const BASE_CELL_PX = 32
 const MIN_SCALE = 0.05
 const MAX_SCALE = 4
 
-// Custom cursor for the rotate-drag handle ring — lucide-react's RotateCw
-// glyph (see node_modules/lucide-react/dist/esm/icons/rotate-cw.js for the
-// source path data) on a translucent white badge so it reads on both light
+// Custom cursor for the rotate-drag handle ring — the RotateCw glyph of the
+// icon set the app used before Hugeicons (path data copied below) on a translucent white badge so it reads on both light
 // and dark canvas backgrounds. Built as a raw data-URI (not the React
 // component) since a CSS cursor needs a URL, not a rendered element.
 const ROTATE_CURSOR_CSS = `url("data:image/svg+xml,${encodeURIComponent(

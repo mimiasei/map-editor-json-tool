@@ -27,7 +27,7 @@ import HeroPickerFilter, {
 } from '@/components/catalog/HeroPickerFilter'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search } from 'lucide-react'
+import { Search } from '@/components/ui/icons'
 
 export type PickerMode = 'hero' | 'portrait'
 

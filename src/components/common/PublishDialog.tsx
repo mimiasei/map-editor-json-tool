@@ -27,7 +27,7 @@ import {
   Loader2,
   Package,
   Upload,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 
 interface Props {
   open: boolean

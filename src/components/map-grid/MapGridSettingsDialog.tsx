@@ -23,7 +23,7 @@ import {
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
-import { Settings, ChevronDown } from 'lucide-react'
+import { Settings, ChevronDown } from '@/components/ui/icons'
 
 export interface MapGridSettings {
   /** 0-1, blended against white for the terrain fill (see terrainFillColor). */

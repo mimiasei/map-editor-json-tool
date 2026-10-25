@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from '@/components/ui/icons'
 import ActionList from '@/components/actions/ActionList'
 
 // Matches the 5 interruption types the official guide documents.

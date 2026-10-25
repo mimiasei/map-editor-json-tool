@@ -23,7 +23,7 @@
 
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Settings, X, ChevronDown } from 'lucide-react'
+import { Search, Settings, X, ChevronDown } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'

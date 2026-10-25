@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { AlertTriangle, ArrowRight, Download, Loader2, ScrollText } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Download, Loader2, ScrollText } from '@/components/ui/icons'
 
 interface Props {
   open: boolean

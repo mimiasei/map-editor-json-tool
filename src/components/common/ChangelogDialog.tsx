@@ -16,7 +16,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { openExternal } from '@/lib/native-fs'
-import { AlertTriangle, ExternalLink, Loader2 } from 'lucide-react'
+import { AlertTriangle, ExternalLink, Loader2 } from '@/components/ui/icons'
 import about from '@/data/about.json'
 
 const COMMITS_API = 'https://api.github.com/repos/mimiasei/map-editor-json-tool/commits?per_page=60'

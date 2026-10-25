@@ -6,7 +6,7 @@
 // GenerateRandomMapDialog.tsx's own "Use game template" entry point.
 
 import { useEffect, useState } from 'react'
-import { Info } from 'lucide-react'
+import { Info } from '@/components/ui/icons'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/common/DraggableDialogContent'
 import { Button } from '@/components/ui/button'

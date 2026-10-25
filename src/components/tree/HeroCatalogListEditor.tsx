@@ -16,7 +16,7 @@
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import EntityCombobox from '@/components/common/EntityCombobox'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from '@/components/ui/icons'
 
 interface HeroCatalogListEditorProps<T extends Record<string, unknown>> {
   category: 'creature' | 'skill' | 'spell' | 'squadTemplate' | 'artifact'

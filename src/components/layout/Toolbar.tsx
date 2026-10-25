@@ -78,7 +78,7 @@ import {
   UploadCloud,
   FileInput,
   Dices,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import ThumbnailExtractDialog from '@/components/common/ThumbnailExtractDialog'
@@ -86,7 +86,7 @@ import ImportH3mDialog from '@/components/common/ImportH3mDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
-import { ImageIcon } from 'lucide-react'
+import { ImageIcon } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
 

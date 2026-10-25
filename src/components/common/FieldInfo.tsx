@@ -1,12 +1,12 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Info, type LucideIcon } from 'lucide-react'
+import { Info, type AppIcon } from '@/components/ui/icons'
 
 interface FieldInfoProps {
   /** The explanation text shown in the popover. */
   text: string
   className?: string
   /** Another icon instead of the ⓘ. */
-  icon?: LucideIcon
+  icon?: AppIcon
 }
 
 /**

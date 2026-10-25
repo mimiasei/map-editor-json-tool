@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, Info } from 'lucide-react'
+import { AlertTriangle, Info } from '@/components/ui/icons'
 import type { ReactNode } from 'react'
 
 interface LocalizedTextFieldProps {

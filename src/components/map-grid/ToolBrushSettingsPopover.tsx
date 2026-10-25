@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
-import { Settings } from 'lucide-react'
+import { Settings } from '@/components/ui/icons'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, type DifficultyRange } from '@/lib/map-grid/squad-pool'
 
 interface Props {

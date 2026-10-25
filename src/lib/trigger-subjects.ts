@@ -8,8 +8,8 @@
 // PlacedObject data (no new capability system) — trigger zones/markers and a
 // dedicated hero-verb menu are explicit follow-ups, not gaps here.
 
-import type { LucideIcon } from 'lucide-react'
-import { MapPin, Castle, DoorOpen, Users } from 'lucide-react'
+import type { AppIcon } from '@/components/ui/icons'
+import { MapPin, Castle, DoorOpen, Users } from '@/components/ui/icons'
 
 export type SubjectKey = 'object' | 'castle' | 'portal' | 'squad'
 
@@ -23,7 +23,7 @@ export interface SubjectVerb {
 export interface SubjectDef {
   key: SubjectKey
   label: string
-  icon: LucideIcon
+  icon: AppIcon
   verbs: SubjectVerb[]
 }
 

@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { MapPin, Trash2, ExternalLink, Copy } from 'lucide-react'
+import { MapPin, Trash2, ExternalLink, Copy } from '@/components/ui/icons'
 import PlayerSelect from '@/components/common/PlayerSelect'
 import SidCombobox from '@/components/common/SidCombobox'
 import DialogSidField from '@/components/common/DialogSidField'

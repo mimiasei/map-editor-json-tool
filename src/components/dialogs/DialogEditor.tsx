@@ -29,7 +29,7 @@ import AvatarStrip from './AvatarStrip'
 import AssetCombobox from './AssetCombobox'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import FieldInfo from '@/components/common/FieldInfo'
-import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine, LayoutGrid } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronRight, ArrowRight, AlertTriangle, PenLine, LayoutGrid } from '@/components/ui/icons'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 

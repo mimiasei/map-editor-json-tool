@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import { Trash2 } from '@/components/ui/icons'
 import MapEntityCombobox from '@/components/common/MapEntityCombobox'
 
 // ─── EntityPickerList ───────────────────────────────────────────────────────────

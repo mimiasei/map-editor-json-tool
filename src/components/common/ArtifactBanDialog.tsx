@@ -13,7 +13,7 @@ import { DraggableDialogContent, DraggableDialogDragHandle } from '@/components/
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, X } from 'lucide-react'
+import { Search, X } from '@/components/ui/icons'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { CatalogIcon } from '@/lib/catalog/thumbnails'
 import artifactData from '@/data/artifacts.json'

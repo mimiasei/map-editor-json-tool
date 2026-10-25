@@ -5,7 +5,7 @@
 
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal } from '@/components/ui/icons'
 import type { CatalogCreature, CatalogArtifact, CatalogSpell } from '@/lib/catalog/types'
 import { FACTION_ORDER } from '@/lib/factions'
 import FilterRows, {

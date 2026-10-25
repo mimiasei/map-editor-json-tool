@@ -1,7 +1,7 @@
 import type { Condition } from '@/types/scenario'
 import ConditionForm from './ConditionForm'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus } from '@/components/ui/icons'
 
 interface Props {
   conditions: Condition[]

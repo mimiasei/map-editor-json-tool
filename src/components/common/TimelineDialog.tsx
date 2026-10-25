@@ -14,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Clock, Hash, Zap, Shuffle, Repeat2 } from 'lucide-react'
+import { Clock, Hash, Zap, Shuffle, Repeat2 } from '@/components/ui/icons'
 import type { ScenarioFile, SelectionType } from '@/types/scenario'
 import UndockButton from '@/components/panels/UndockButton'
 

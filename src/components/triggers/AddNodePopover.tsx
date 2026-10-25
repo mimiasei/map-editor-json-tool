@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import type { AppIcon } from '@/components/ui/icons'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Command,
@@ -31,7 +31,7 @@ interface Item {
 
 interface Group {
   label: string
-  icon: LucideIcon
+  icon: AppIcon
   items: Item[]
 }
 

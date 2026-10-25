@@ -19,7 +19,7 @@ import {
   ScrollText,
   CornerDownRight,
   GitBranch,
-} from 'lucide-react'
+} from '@/components/ui/icons'
 import type { SelectionType } from '@/types/scenario'
 
 interface PaletteItem {

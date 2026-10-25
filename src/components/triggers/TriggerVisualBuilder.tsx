@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Repeat, Wand2, X } from 'lucide-react'
+import { Plus, Repeat, Wand2, X } from '@/components/ui/icons'
 import ConditionCard from './ConditionCard'
 import ActionCard from './ActionCard'
 import AddNodePopover from './AddNodePopover'

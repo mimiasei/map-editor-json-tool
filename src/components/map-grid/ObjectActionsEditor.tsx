@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Plus } from 'lucide-react'
+import { Plus } from '@/components/ui/icons'
 
 /** Actions that only exist in the quest file (guide, "Restrictions in usage"): they do nothing on an object or zone. */
 const QUEST_FILE_ONLY = new Set([

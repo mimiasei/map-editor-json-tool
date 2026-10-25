@@ -1,7 +1,7 @@
 import { useTooltips } from '@/hooks/useGuideData'
 import type { TooltipEntry } from '@/hooks/useGuideData'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Info, AlertTriangle } from 'lucide-react'
+import { Info, AlertTriangle } from '@/components/ui/icons'
 
 interface HelpTooltipProps {
   /** Which namespace to look up: actions, conditions, or fields */

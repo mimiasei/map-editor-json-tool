@@ -3,7 +3,7 @@ import { useScenarioStore } from '@/store/useScenarioStore'
 import { generateDisplayNameSid, dedupeSid } from '@/lib/slugify'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Plus, X } from 'lucide-react'
+import { Plus, X } from '@/components/ui/icons'
 import SidCombobox from './SidCombobox'
 
 interface Props {

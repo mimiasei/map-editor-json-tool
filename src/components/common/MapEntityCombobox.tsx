@@ -9,7 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { ChevronsUpDown, X } from 'lucide-react'
+import { ChevronsUpDown, X } from '@/components/ui/icons'
 
 // ─── MapEntityCombobox ────────────────────────────────────────────────────────
 // Autocomplete input backed by user-placed entities from the loaded .map file.

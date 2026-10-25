@@ -1,5 +1,5 @@
 import { isTauri } from '@/lib/native-fs'
-import { SquareArrowOutUpRight } from 'lucide-react'
+import { SquareArrowOutUpRight } from '@/components/ui/icons'
 import {
   Tooltip,
   TooltipContent,

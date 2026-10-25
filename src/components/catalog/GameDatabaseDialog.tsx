@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Copy, Check, Filter, Sparkles } from 'lucide-react'
+import { Copy, Check, Filter, Sparkles } from '@/components/ui/icons'
 import GameDatabaseFilter, {
   loadSavedFilter,
   type GameDatabaseFilterState,

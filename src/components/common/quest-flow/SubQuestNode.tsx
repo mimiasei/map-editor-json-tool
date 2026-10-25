@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { Zap } from 'lucide-react'
+import { Zap } from '@/components/ui/icons'
 import type { SubQuestNodeData } from '@/lib/quest-flow'
 
 export type SubQuestFlowNode = Node<SubQuestNodeData, 'subquest'>
