@@ -25,10 +25,10 @@ const STONE_FILL_TILES = 1.6
 // road_stone's colour is pale grey stones on near-white; its alpha is a height map (stones high, joints low). In the game the joints
 // are transparent and the terrain shows through (stated by the user, not read from game data), so alpha is kept as the joints' opacity.
 /** Opacity of the joints between the cobbles: 0 = fully transparent (terrain shows through), 1 = the texture's own pale colour. */
-const STONE_JOINT_OPACITY = 0
+const STONE_JOINT_OPACITY = 0.0
 // Texture alpha at or below JOINT_ALPHA_FROM is a joint, at or above JOINT_ALPHA_TO a stone, fading between (chosen by eye).
-const JOINT_ALPHA_FROM = 40
-const JOINT_ALPHA_TO = 150
+const JOINT_ALPHA_FROM = 100
+const JOINT_ALPHA_TO = 180
 
 /** Turns the cobble texture's alpha height map into joint transparency (stones stay opaque). */
 function bakeStoneJoints(rgba: Uint8ClampedArray): void {
