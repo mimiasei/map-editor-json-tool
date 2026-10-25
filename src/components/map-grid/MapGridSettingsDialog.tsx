@@ -30,6 +30,8 @@ export interface MapGridSettings {
   iconImagesEnabled: boolean
   /** When false, a rotated object's small green degree badge is hidden. */
   rotationNumberEnabled: boolean
+  /** When false, the small badge with the number of objects on a tile is hidden. */
+  objectCountEnabled: boolean
   /** 1px lines between every cell, on/off — always the same fixed thickness. */
   showGridLines: boolean
   /** 0 = off (icon fills the whole tile); otherwise the number of screen
@@ -101,6 +103,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainTextureStrength: 0.5,
   iconImagesEnabled: true,
   rotationNumberEnabled: true,
+  objectCountEnabled: true,
   showGridLines: false,
   cellBorderThickness: 0,
   showGridNumbers: false,
@@ -219,6 +222,15 @@ export default function MapGridSettingsDialog({
             id="grid-rotation-numbers"
             checked={settings.rotationNumberEnabled}
             onCheckedChange={(v) => update({ rotationNumberEnabled: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-object-count" className="text-xs cursor-pointer">Object count per tile</Label>
+          <Switch
+            id="grid-object-count"
+            checked={settings.objectCountEnabled}
+            onCheckedChange={(v) => update({ objectCountEnabled: v })}
           />
         </div>
 

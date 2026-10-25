@@ -5430,7 +5430,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           {mapBadgeOwner(entry.pick.primary)}
                         </span>
                       )}
-                      {entry.pick.count > 1 && (
+                      {settings.objectCountEnabled && entry.pick.count > 1 && (
                         <span className="absolute bottom-0 right-0 text-[9px] leading-none px-0.5 rounded bg-background/90 border border-border">
                           {entry.pick.count}
                         </span>
