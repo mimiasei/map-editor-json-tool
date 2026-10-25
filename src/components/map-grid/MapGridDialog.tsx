@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useStackOrderStore } from '@/store/useStackOrderStore'
 import { layerPxPerTile, resolveDrawQuality } from '@/lib/map-grid/draw-quality'
-import { isDefaultDepthOrder, layerOrder, orderStack } from '@/lib/map-grid/stack-order'
+import { isDefaultDepthOrder, isFxSid, layerOrder, orderStack } from '@/lib/map-grid/stack-order'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
@@ -5414,6 +5414,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           render={visual.render}
                           name={name}
                           cell={BASE_CELL_PX}
+                          fx={isFxSid(entry.pick.primary.sid, catalog)}
                           // Relative to this box: the anchor tile's corner minus the box corner.
                           shiftX={entry.pick.primary.x * BASE_CELL_PX - entry.left}
                           // A faction city standing in for a city spawner sits one tile too high with the spawner's anchor: one tile lower (user-verified).
@@ -5495,7 +5496,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     >
                       {visual.kind === 'icon' && <visual.Icon size={iconSize} className="shrink-0" />}
                       {visual.kind === 'text' && <span className="text-[9px] font-semibold leading-none shrink-0">{visual.text}</span>}
-                      {visual.kind === 'render' && <RenderedObject render={visual.render} name={icon.sid} cell={BASE_CELL_PX} shiftX={0} shiftY={0} />}
+                      {visual.kind === 'render' && <RenderedObject render={visual.render} name={icon.sid} cell={BASE_CELL_PX} shiftX={0} shiftY={0} fx={isFxSid(icon.sid, catalog)} />}
                       {(visual.kind === 'catalog' || visual.kind === 'catalogOverride') && (
                         <CatalogIcon
                           iconId={visual.kind === 'catalogOverride' ? visual.iconId : icon.sid}

@@ -7,8 +7,19 @@ import type { PlacedObject } from '@/types/map-context'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { isGroundCoverSid } from '@/lib/map-grid/decoration-subcategories'
 
-/** Walkable ground clutter lies under everything, zones under objects, units (squads) over everything. */
+const fxSidCache = new WeakMap<GameCatalog, Set<string>>()
+
+/** Visual effects (fog, light, flies): the catalog's `fxs` category. */
+export function isFxSid(sid: string, catalog: GameCatalog | null): boolean {
+  if (!catalog) return false
+  let sids = fxSidCache.get(catalog)
+  if (!sids) fxSidCache.set(catalog, (sids = new Set(catalog.mapObjects.filter((o) => o.category === 'fxs').map((o) => o.id))))
+  return sids.has(sid)
+}
+
+/** Walkable ground clutter lies under everything, zones under objects, units (squads) over objects, effects over everything. */
 function tier(item: PlacedObject, catalog: GameCatalog | null): number {
+  if (item.type === 0 && isFxSid(item.sid, catalog)) return 4
   if (item.type === 2) return 3
   if (item.type === 1) return 1
   return isGroundCoverSid(item.sid, catalog) ? 0 : 2
