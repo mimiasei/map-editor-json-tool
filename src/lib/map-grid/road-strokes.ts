@@ -22,19 +22,19 @@ const ROWS = 2
 /** How many tiles one repeat of the cobble texture (512 px, stones of about 50 px) covers, so a stone is about a sixth of the road's width. */
 const STONE_FILL_TILES = 1.6
 
-// road_stone's colour is pale grey stones on near-white; its alpha is a height map (stones high, joints low: joints average a brighter
-// colour than stones in the extracted file), so the game's dark joints must come from alpha. The dark colour and the alpha range
-// that fades to it are chosen by eye against the game's look, not read from game data.
-const STONE_JOINT_RGB = [38, 36, 34] as const
+// road_stone's colour is pale grey stones on near-white; its alpha is a height map (stones high, joints low). In the game the joints
+// are transparent and the terrain shows through (stated by the user, not read from game data), so alpha is kept as the joints' opacity.
+/** Opacity of the joints between the cobbles: 0 = fully transparent (terrain shows through), 1 = the texture's own pale colour. */
+const STONE_JOINT_OPACITY = 0
+// Texture alpha at or below JOINT_ALPHA_FROM is a joint, at or above JOINT_ALPHA_TO a stone, fading between (chosen by eye).
 const JOINT_ALPHA_FROM = 40
 const JOINT_ALPHA_TO = 150
 
-/** Darkens the joints of the cobble texture by its alpha height map, and makes it opaque. */
+/** Turns the cobble texture's alpha height map into joint transparency (stones stay opaque). */
 function bakeStoneJoints(rgba: Uint8ClampedArray): void {
   for (let i = 0; i < rgba.length; i += 4) {
     const t = Math.min(1, Math.max(0, (rgba[i + 3] - JOINT_ALPHA_FROM) / (JOINT_ALPHA_TO - JOINT_ALPHA_FROM)))
-    for (let c = 0; c < 3; c++) rgba[i + c] = STONE_JOINT_RGB[c] + (rgba[i + c] - STONE_JOINT_RGB[c]) * t
-    rgba[i + 3] = 255
+    rgba[i + 3] = 255 * (STONE_JOINT_OPACITY + (1 - STONE_JOINT_OPACITY) * t)
   }
 }
 
@@ -237,7 +237,7 @@ export function drawRoads(ctx: CanvasRenderingContext2D, assets: RoadStrokes, se
   const pattern = lg.createPattern(fill, 'repeat')
   if (pattern) {
     pattern.setTransform(new DOMMatrix().scale((px * STONE_FILL_TILES) / fill.width))
-    lg.globalCompositeOperation = 'source-atop'
+    lg.globalCompositeOperation = 'source-in'
     lg.globalAlpha = 1
     lg.fillStyle = pattern
     lg.fillRect(0, 0, layer.width, layer.height)

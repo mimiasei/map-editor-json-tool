@@ -114,7 +114,7 @@ function pixelsOf(img: HTMLCanvasElement, size: number, copies: number, blur = 0
 /**
  * An extracted texture as an opaque canvas. Read through the fs plugin and decoded by hand: pixels of an asset:// image cannot
  * be read back from a canvas (cross-origin), and a canvas would premultiply the colour by the height map in alpha.
- * `bake` gets the raw RGBA (alpha kept) to fold the height map into the colour itself; it must leave alpha at 255.
+ * `bake` gets the raw RGBA (alpha kept) to fold the height map into the colour itself; the result keeps whatever alpha it sets.
  */
 export async function loadLayer(name: string, keepAlpha = false, bake?: (rgba: Uint8ClampedArray) => void): Promise<HTMLCanvasElement | null> {
   const path = thumbnailFilePath(name)
