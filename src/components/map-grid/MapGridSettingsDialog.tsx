@@ -28,9 +28,9 @@ import { Settings, ChevronDown } from 'lucide-react'
 export interface MapGridSettings {
   /** 0-1, blended against white for the terrain fill (see terrainFillColor). */
   terrainOpacity: number
-  /** 0-1, how strongly the game's ground textures show through the terrain colours (0 = flat colours only). Needs the
-   *  textures extracted, see biomeTexturesAvailable(). */
-  terrainTextureStrength: number
+  /** The game's ground textures under the terrain colours (strength: TERRAIN_TEXTURE_STRENGTH). Needs the textures extracted,
+   *  see biomeTexturesAvailable(). */
+  terrainTextureEnabled: boolean
   /** When false, every cell forces its letter-badge fallback instead of a real icon. */
   iconImagesEnabled: boolean
   /** When false, a rotated object's small green degree badge is hidden. */
@@ -108,9 +108,12 @@ export interface MapGridSettings {
   confirmBeforeDelete: boolean
 }
 
+/** How strongly the ground textures show through the terrain colours (0-1); was the slider's default before it became a switch. */
+export const TERRAIN_TEXTURE_STRENGTH = 0.5
+
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainOpacity: DEFAULT_TERRAIN_BLEND,
-  terrainTextureStrength: 0.5,
+  terrainTextureEnabled: true,
   iconImagesEnabled: true,
   rotationNumberEnabled: true,
   objectCountEnabled: true,
@@ -207,29 +210,30 @@ export default function MapGridSettingsDialog({
         className={`${advancedOpen ? 'w-80' : 'w-64'} space-y-4 transition-[width] max-h-[min(80vh,var(--radix-popover-content-available-height))] overflow-y-auto`}
         data-nodrag
       >
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Terrain opacity</Label>
-            <span className="text-xs text-muted-foreground">{Math.round(settings.terrainOpacity * 100)}%</span>
+        {!(settings.terrainTextureEnabled && biomeTexturesAvailable()) && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Terrain opacity</Label>
+              <span className="text-xs text-muted-foreground">{Math.round(settings.terrainOpacity * 100)}%</span>
+            </div>
+            <Slider
+              min={0} max={1} step={0.01}
+              value={[settings.terrainOpacity]}
+              onValueChange={([v]) => update({ terrainOpacity: v })}
+            />
           </div>
-          <Slider
-            min={0} max={1} step={0.01}
-            value={[settings.terrainOpacity]}
-            onValueChange={([v]) => update({ terrainOpacity: v })}
-          />
-        </div>
+        )}
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Terrain texture</Label>
-            <span className="text-xs text-muted-foreground">{Math.round(settings.terrainTextureStrength * 100)}%</span>
+            <Label htmlFor="grid-terrain-texture" className="text-xs cursor-pointer">Terrain texture</Label>
+            <Switch
+              id="grid-terrain-texture"
+              checked={settings.terrainTextureEnabled}
+              onCheckedChange={(v) => update({ terrainTextureEnabled: v })}
+              disabled={!biomeTexturesAvailable()}
+            />
           </div>
-          <Slider
-            min={0} max={1} step={0.01}
-            value={[settings.terrainTextureStrength]}
-            onValueChange={([v]) => update({ terrainTextureStrength: v })}
-            disabled={!biomeTexturesAvailable()}
-          />
           {!biomeTexturesAvailable() && (
             <p className="text-[10px] text-muted-foreground">Extract the game images (desktop app) to enable ground textures.</p>
           )}
@@ -368,17 +372,19 @@ export default function MapGridSettingsDialog({
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-elevation" className="text-xs cursor-pointer">Elevation shading</Label>
-          <Switch
-              id="grid-show-elevation"
-              checked={settings.showElevationShading}
-              onCheckedChange={(v) => update({ showElevationShading: v })}
-          />
-        </div>
+        {!settings.showCliffs && (
+          <div className="flex items-center justify-between">
+            <Label htmlFor="grid-show-elevation" className="text-xs cursor-pointer">Elevation shading</Label>
+            <Switch
+                id="grid-show-elevation"
+                checked={settings.showElevationShading}
+                onCheckedChange={(v) => update({ showElevationShading: v })}
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges (rendered game art)</Label>
+          <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges</Label>
           <Switch
               id="grid-show-cliffs"
               checked={settings.showCliffs}

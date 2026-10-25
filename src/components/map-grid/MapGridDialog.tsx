@@ -100,6 +100,7 @@ import { logError } from '@/lib/logger'
 import UndockButton from '@/components/panels/UndockButton'
 import MapGridSettingsDialog, {
   loadMapGridSettings,
+  TERRAIN_TEXTURE_STRENGTH,
   saveMapGridSettings,
 } from '@/components/map-grid/MapGridSettingsDialog'
 import ImageColorMappingDialog, { type ImageColorMappingResult, type ImportedImage } from '@/components/map-grid/ImageColorMappingDialog'
@@ -2436,7 +2437,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // nothing extracted leaves the base canvas opaque, i.e. exactly the flat-colour grid.
   const [textureCanvasEl, setTextureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   const biomeTextures = useBiomeTextures()
-  const textureStrength = biomeTextures.size > 0 ? settings.terrainTextureStrength : 0
+  const textureStrength = biomeTextures.size > 0 && settings.terrainTextureEnabled ? TERRAIN_TEXTURE_STRENGTH : 0
   useEffect(() => {
     if (!textureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const scale = textureScale(sizeX, sizeZ, quality.terrain)
