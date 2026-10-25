@@ -114,12 +114,14 @@ function pixelsOf(img: HTMLCanvasElement, size: number, copies: number, blur = 0
 /**
  * An extracted texture as an opaque canvas. Read through the fs plugin and decoded by hand: pixels of an asset:// image cannot
  * be read back from a canvas (cross-origin), and a canvas would premultiply the colour by the height map in alpha.
+ * `bake` gets the raw RGBA (alpha kept) to fold the height map into the colour itself; it must leave alpha at 255.
  */
-export async function loadLayer(name: string, keepAlpha = false): Promise<HTMLCanvasElement | null> {
+export async function loadLayer(name: string, keepAlpha = false, bake?: (rgba: Uint8ClampedArray) => void): Promise<HTMLCanvasElement | null> {
   const path = thumbnailFilePath(name)
   if (!path) return null
   const { readFile } = await import('@tauri-apps/plugin-fs')
-  const { width, height, rgba } = await decodePng(await readFile(path), keepAlpha)
+  const { width, height, rgba } = await decodePng(await readFile(path), keepAlpha || !!bake)
+  bake?.(rgba)
   const c = document.createElement('canvas')
   c.width = width
   c.height = height

@@ -22,6 +22,22 @@ const ROWS = 2
 /** How many tiles one repeat of the cobble texture (512 px, stones of about 50 px) covers, so a stone is about a sixth of the road's width. */
 const STONE_FILL_TILES = 1.6
 
+// road_stone's colour is pale grey stones on near-white; its alpha is a height map (stones high, joints low: joints average a brighter
+// colour than stones in the extracted file), so the game's dark joints must come from alpha. The dark colour and the alpha range
+// that fades to it are chosen by eye against the game's look, not read from game data.
+const STONE_JOINT_RGB = [38, 36, 34] as const
+const JOINT_ALPHA_FROM = 40
+const JOINT_ALPHA_TO = 150
+
+/** Darkens the joints of the cobble texture by its alpha height map, and makes it opaque. */
+function bakeStoneJoints(rgba: Uint8ClampedArray): void {
+  for (let i = 0; i < rgba.length; i += 4) {
+    const t = Math.min(1, Math.max(0, (rgba[i + 3] - JOINT_ALPHA_FROM) / (JOINT_ALPHA_TO - JOINT_ALPHA_FROM)))
+    for (let c = 0; c < 3; c++) rgba[i + c] = STONE_JOINT_RGB[c] + (rgba[i + c] - STONE_JOINT_RGB[c]) * t
+    rgba[i + 3] = 255
+  }
+}
+
 /** Stroke length as a share of the distance between two road tiles' centres: a little over, so neighbours overlap into one road. */
 const OVERLAP = 1.12
 
@@ -94,7 +110,7 @@ async function loadKind(kind: RoadKind): Promise<{ strokes: HTMLCanvasElement[];
 
 /** Both sheets, or null while one is not extracted yet. */
 export function loadRoadStrokes(): Promise<RoadStrokes | null> {
-  cached ??= Promise.all([loadKind('dirt'), loadKind('stone'), loadLayer('road_stone').catch(() => null)]).then(([dirt, stone, stoneFill]) => {
+  cached ??= Promise.all([loadKind('dirt'), loadKind('stone'), loadLayer('road_stone', true, bakeStoneJoints).catch(() => null)]).then(([dirt, stone, stoneFill]) => {
     if (!dirt || !stone) return null
     return {
       stoneFill,
