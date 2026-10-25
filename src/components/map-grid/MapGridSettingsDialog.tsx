@@ -164,7 +164,10 @@ export default function MapGridSettingsDialog({
   // Not persisted — purely a "did the user open this section" UI state,
   // same as every other popover's own open/closed state.
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  const mapSize = useMapContextStore((s) => (s.context ? { x: s.context.sizeX, z: s.context.sizeZ } : null))
+  // Select primitives: an object built inside the selector is a new reference every call and loops the render.
+  const mapSizeX = useMapContextStore((s) => s.context?.sizeX)
+  const mapSizeZ = useMapContextStore((s) => s.context?.sizeZ)
+  const mapSize = mapSizeX && mapSizeZ ? { x: mapSizeX, z: mapSizeZ } : null
   const quality = resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom)
   const setQualityChoice = (choice: DrawQualityChoice) => {
     // Picking Custom starts from the numbers of the preset in use.
