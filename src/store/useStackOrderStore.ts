@@ -5,12 +5,16 @@ import { create } from 'zustand'
 
 interface StackOrderStore {
   byNode: Record<number, string[]>
+  /** Objects with an id at or above this were placed in this session (the loaded map's `objectsFreeId`); Infinity until a map is loaded. */
+  sessionFromId: number
   setOrder: (node: number, keys: string[]) => void
-  clear: () => void
+  /** Called when a map is loaded: forgets the manual orders and marks every object already in it as not placed this session. */
+  reset: (sessionFromId: number) => void
 }
 
 export const useStackOrderStore = create<StackOrderStore>()((set) => ({
   byNode: {},
+  sessionFromId: Infinity,
   setOrder: (node, keys) => set((s) => ({ byNode: { ...s.byNode, [node]: keys } })),
-  clear: () => set({ byNode: {} }),
+  reset: (sessionFromId) => set({ byNode: {}, sessionFromId }),
 }))

@@ -208,7 +208,7 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       loadContainer: (container) => {
         set({ container, mapIsDirty: false })
         useMapDocumentStore.temporal.getState().clear()
-        useStackOrderStore.getState().clear()
+        useStackOrderStore.getState().reset((containerToRawBlocks(container).block2 as { objectsFreeId?: number }).objectsFreeId ?? Infinity)
       },
 
       applyEdit: (edit) => {
@@ -233,7 +233,7 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       clear: () => {
         set({ container: null, mapIsDirty: false })
         useMapDocumentStore.temporal.getState().clear()
-        useStackOrderStore.getState().clear()
+        useStackOrderStore.getState().reset(Infinity)
       },
 
       undo: () => {

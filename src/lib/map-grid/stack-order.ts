@@ -28,11 +28,25 @@ export function orderStack(items: readonly PlacedObject[], catalog: GameCatalog 
 }
 
 /**
+ * True when two objects have no stacking order beyond their ids: both are plain objects of the same tier that were already in the map
+ * when it was loaded. Their ids only say who was placed first, not who is in front: the game draws by depth, so a mountain behind a city
+ * stays behind it. Only objects placed in the editor (id >= `sessionFromId`) are stacked newest-on-top, as GME does.
+ */
+export function isDefaultDepthOrder(a: PlacedObject, b: PlacedObject, catalog: GameCatalog | null, sessionFromId: number): boolean {
+  return a.type === 0 && b.type === 0 && tier(a, catalog) === tier(b, catalog) && a.id < sessionFromId && b.id < sessionFromId
+}
+
+/**
  * Painting order for icons. Starts from the usual one (screen row, then column: lower right in front) and then makes every object come
  * after the one under it on each tile they share, so the stack order wins over the position. `stackByNode` lists object keys per tile,
  * top first. A conflicting arrangement (A over B on one tile, B over A on another) keeps the first one met rather than looping.
  */
-export function layerOrder<T extends { key: string; row: number; col: number; nodes: readonly number[] }>(entries: T[], stackByNode: ReadonlyMap<number, readonly string[]>): T[] {
+export function layerOrder<T extends { key: string; row: number; col: number; nodes: readonly number[] }>(
+  entries: T[],
+  stackByNode: ReadonlyMap<number, readonly string[]>,
+  /** True when `upper` over `lower` on `node` is only the default id order, which must not override the position order. */
+  byDepth: (upper: string, lower: string, node: number) => boolean = () => false,
+): T[] {
   const base = [...entries].sort((a, b) => a.row - b.row || a.col - b.col)
   const byKey = new Map(base.map((e) => [e.key, e]))
   const done = new Set<string>()
@@ -48,7 +62,10 @@ export function layerOrder<T extends { key: string; row: number; col: number; no
       // The next one down that is drawn at all (filtered-out objects are not in `entries`).
       for (let i = at + 1; at >= 0 && i < stack.length; i++) {
         const below = byKey.get(stack[i])
-        if (below) { emit(below); break }
+        if (below) {
+          if (!byDepth(entry.key, below.key, node)) emit(below)
+          break
+        }
       }
     }
     visiting.delete(entry.key)

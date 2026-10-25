@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useStackOrderStore } from '@/store/useStackOrderStore'
 import { layerPxPerTile, resolveDrawQuality } from '@/lib/map-grid/draw-quality'
-import { layerOrder, orderStack } from '@/lib/map-grid/stack-order'
+import { isDefaultDepthOrder, layerOrder, orderStack } from '@/lib/map-grid/stack-order'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
 import { useMapGridStore } from '@/store/useMapGridStore'
@@ -514,6 +514,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // The user's own arrangement of a tile's stack (info column), see stack-order.ts.
   const manualStacks = useStackOrderStore((s) => s.byNode)
+  const sessionFromId = useStackOrderStore((s) => s.sessionFromId)
 
   // Whether one object is drawn under the current filters. Each object on a stacked tile is judged on its own, so hiding the trees
   // shows the mine under one instead of an empty tile.
@@ -3186,8 +3187,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // Lower right in front by default; an object always comes after the one under it on a shared tile (stack-order.ts).
     const keysByNode = new Map<number, string[]>()
     for (const [node, picks] of stackByNode) keysByNode.set(node, picks.map((p) => p.primary.key))
-    return layerOrder(entries, keysByNode)
-  }, [visibleCells, multiTileIcons, footprintCellsByKey, stackByNode, sizeX, sizeZ])
+    const placedByKey = new Map(placedObjects.map((o) => [o.key, o]))
+    // A tile the user has arranged by hand keeps that order whatever the ids say.
+    const byDepth = (upper: string, lower: string, node: number) => {
+      const a = placedByKey.get(upper)
+      const b = placedByKey.get(lower)
+      return !!a && !!b && !manualStacks[node] && isDefaultDepthOrder(a, b, catalog, sessionFromId)
+    }
+    return layerOrder(entries, keysByNode, byDepth)
+  }, [visibleCells, multiTileIcons, footprintCellsByKey, stackByNode, sizeX, sizeZ, placedObjects, manualStacks, catalog, sessionFromId])
 
   // Ramp/slope direction arrows — windowed to the viewport the same way
   // visibleCells is, since ramp tiles (unlike the flood-fill tint/overlay
