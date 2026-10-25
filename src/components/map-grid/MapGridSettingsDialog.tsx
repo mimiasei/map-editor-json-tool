@@ -283,8 +283,7 @@ export default function MapGridSettingsDialog({
             </select>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Higher for sharper textures but possibly slower redraws.
-            {mapSize && ' Current: ' + estimateCanvasMegabytes(quality, mapSize.x, mapSize.z) + ' MB of canvas memory.'}
+            {mapSize && 'Current: ' + estimateCanvasMegabytes(quality, mapSize.x, mapSize.z) + ' MB of canvas memory.'}
           </p>
           {settings.drawQuality === 'custom' && (
             <div className="space-y-2">
