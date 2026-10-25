@@ -108,8 +108,8 @@ export interface MapGridSettings {
   confirmBeforeDelete: boolean
 }
 
-/** How strongly the ground textures show through the terrain colours (0-1); was the slider's default before it became a switch. */
-export const TERRAIN_TEXTURE_STRENGTH = 0.5
+/** How strongly the ground textures show over the flat terrain colours (0-1). 1 = the texture alone: the colour layer is drawn fully transparent. */
+export const TERRAIN_TEXTURE_STRENGTH = 1
 
 export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   terrainOpacity: DEFAULT_TERRAIN_BLEND,
