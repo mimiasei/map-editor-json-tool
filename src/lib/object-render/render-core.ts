@@ -26,6 +26,7 @@ const FIRE: Record<string, { pos: [number, number, number]; h: number }> = {
 interface MaterialInfo {
   name?: string
   shader?: string
+  diffuse?: string
   queue?: number
   alpha_min?: number
   emissive?: string
@@ -33,6 +34,12 @@ interface MaterialInfo {
   _RenderMode?: number
   _Cutoff?: number
 }
+
+// The warm sun is strong enough that a sunlit dark-green leaf overflows its green channel first, and clamping each channel on its own
+// turns it tan (the pines came out with tan patches where the game's are uniformly deep green). Props on this texture array (pines,
+// dead trees, stumps, grass, mushrooms: 26 of the exported objects) scale an overflowing colour down as a whole instead, which keeps
+// its hue. Other objects keep the per-channel clamp their look was tuned with.
+const KEEP_HUE_ON_OVEREXPOSURE = new Set(['dirt_256_texture_array'])
 
 interface MeshMeta {
   materials: Record<string, MaterialInfo>
@@ -203,6 +210,15 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
       depthWrite: !isBlended,
     })
     mat.userData.blended = isBlended
+    if (info.diffuse && KEEP_HUE_ON_OVEREXPOSURE.has(info.diffuse)) {
+      mat.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <tonemapping_fragment>',
+          'gl_FragColor.rgb /= max(1.0, max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)));\n#include <tonemapping_fragment>',
+        )
+      }
+      mat.customProgramCacheKey = () => 'keep-hue'
+    }
     mats[name] = mat
     disposables.push(mat)
     for (const t of [map, emissiveMap, alphaMap]) if (t) disposables.push(t)
