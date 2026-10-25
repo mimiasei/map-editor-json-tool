@@ -140,7 +140,8 @@ import {
     Box,
   Castle,
   Crown,
-  UserRound
+  UserRound,
+  Sparkles,
 } from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
@@ -5422,20 +5423,41 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         />
                       )}
                       {visual.kind === 'catalog' && (
-                        <CatalogIcon
-                          iconId={entry.pick.primary.sid}
-                          name={name}
-                          size={thisIconSize}
-                          src={settings.iconImagesEnabled ? undefined : null}
-                        />
+                        <>
+                          {/* Effects (fog, light, flies) have no render, only their catalog image: half see-through with a sparkle (as RenderedObject does). */}
+                          <CatalogIcon
+                            iconId={entry.pick.primary.sid}
+                            name={name}
+                            size={thisIconSize}
+                            className={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? 'opacity-50' : undefined}
+                            src={settings.iconImagesEnabled ? undefined : null}
+                          />
+                          {settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) && (
+                            <Sparkles
+                              size={Math.max(8, thisIconSize * 0.6)}
+                              className="absolute pointer-events-none text-white"
+                              style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.8))' }}
+                            />
+                          )}
+                        </>
                       )}
                       {visual.kind === 'catalogOverride' && (
-                        <CatalogIcon
-                          iconId={visual.iconId}
-                          name={visual.name}
-                          size={thisIconSize}
-                          src={settings.iconImagesEnabled ? undefined : null}
-                        />
+                        <>
+                          <CatalogIcon
+                            iconId={visual.iconId}
+                            name={visual.name}
+                            size={thisIconSize}
+                            className={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? 'opacity-50' : undefined}
+                            src={settings.iconImagesEnabled ? undefined : null}
+                          />
+                          {settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) && (
+                            <Sparkles
+                              size={Math.max(8, thisIconSize * 0.6)}
+                              className="absolute pointer-events-none text-white"
+                              style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.8))' }}
+                            />
+                          )}
+                        </>
                       )}
                       {mapBadgeOwner(entry.pick.primary) !== undefined && (
                         <span
