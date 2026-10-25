@@ -51,7 +51,7 @@ import {
   FlagIcon,
   Flower01Icon,
   FolderOpenIcon,
-  GemIcon,
+  SketchIcon,
   GitBranchIcon,
   GraduationCapIcon,
   HashIcon,
@@ -187,7 +187,7 @@ export const Filter = make(FilterIcon, 'Filter')
 export const Flag = make(FlagIcon, 'Flag')
 export const Flower2 = make(Flower01Icon, 'Flower2')
 export const FolderOpen = make(FolderOpenIcon, 'FolderOpen')
-export const Gem = make(GemIcon, 'Gem')
+export const Gem = make(SketchIcon, 'Gem')
 export const GitBranch = make(GitBranchIcon, 'GitBranch')
 export const GraduationCap = make(GraduationCapIcon, 'GraduationCap')
 export const Hash = make(HashIcon, 'Hash')
