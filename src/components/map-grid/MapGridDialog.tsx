@@ -2816,7 +2816,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // edges, semi-transparent black over whatever color was just filled
       // so it works uniformly for both road colors and the river color
       // without a per-color darken table.
-      if (!settings.lineFeatureShading || dirs.length === 0) return
+      // The switch is hidden while textured roads and rivers are on, so shading is off then whatever its saved value.
+      if (!settings.lineFeatureShading || settings.lineFeatureTextures || dirs.length === 0) return
       const hasH = dirs.includes('E') || dirs.includes('W')
       const hasV = dirs.includes('N') || dirs.includes('S')
       if (hasH && !hasV) {

@@ -409,14 +409,16 @@ export default function MapGridSettingsDialog({
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor="grid-line-feature-shading" className="text-xs cursor-pointer">Road/river edge shading</Label>
-          <Switch
-              id="grid-line-feature-shading"
-              checked={settings.lineFeatureShading}
-              onCheckedChange={(v) => update({ lineFeatureShading: v })}
-          />
-        </div>
+        {!settings.lineFeatureTextures && (
+          <div className="flex items-center justify-between">
+            <Label htmlFor="grid-line-feature-shading" className="text-xs cursor-pointer">Road/river edge shading</Label>
+            <Switch
+                id="grid-line-feature-shading"
+                checked={settings.lineFeatureShading}
+                onCheckedChange={(v) => update({ lineFeatureShading: v })}
+            />
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
