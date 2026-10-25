@@ -19,7 +19,7 @@ import {
   CalendarClockIcon,
   CameraIcon,
   CastleIcon,
-  ChartBarBigIcon,
+  Analytics03Icon,
   CheckIcon,
   CheckmarkCircle02Icon,
   ChevronDownIcon,
@@ -118,7 +118,7 @@ import {
   UsersIcon,
   WandSparklesIcon,
   WavesIcon,
-  WorkflowIcon,
+  WorkflowCircle05Icon,
   WrenchIcon,
   XIcon,
   ZapIcon,
@@ -148,7 +148,7 @@ export const ArrowLeft = make(ArrowLeftIcon, 'ArrowLeft')
 export const ArrowRight = make(ArrowRightIcon, 'ArrowRight')
 export const ArrowUp = make(ArrowUpIcon, 'ArrowUp')
 export const Ban = make(BanIcon, 'Ban')
-export const BarChart2 = make(ChartBarBigIcon, 'BarChart2')
+export const BarChart2 = make(Analytics03Icon, 'BarChart2')
 export const BookOpen = make(BookOpenIcon, 'BookOpen')
 export const Bot = make(BotIcon, 'Bot')
 export const Box = make(BoxIcon, 'Box')
@@ -255,7 +255,7 @@ export const UserRound = make(UserRoundIcon, 'UserRound')
 export const Users = make(UsersIcon, 'Users')
 export const Wand2 = make(WandSparklesIcon, 'Wand2')
 export const Waves = make(WavesIcon, 'Waves')
-export const Workflow = make(WorkflowIcon, 'Workflow')
+export const Workflow = make(WorkflowCircle05Icon, 'Workflow')
 export const Wrench = make(WrenchIcon, 'Wrench')
 export const X = make(XIcon, 'X')
 export const Zap = make(ZapIcon, 'Zap')
