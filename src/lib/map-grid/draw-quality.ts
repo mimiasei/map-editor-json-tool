@@ -52,7 +52,7 @@ export const DRAW_QUALITY_PRESETS: Record<DrawQualityPreset, DrawQuality> = {
   ultra: {
     terrain: { pxPerTile: 128, maxSide: 8192 },
     cliffs: { pxPerTile: 128, maxSide: 8192 },
-    lines: { pxPerTile: 128, maxSide: 8192 },
+    lines: { pxPerTile: 80, maxSide: 8192 },
     objects: { iconFromPx: 12, overdrawTiles: 5 },
   },
 }
