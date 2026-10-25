@@ -35,11 +35,12 @@ interface MaterialInfo {
   _Cutoff?: number
 }
 
-// The warm sun is strong enough that a sunlit dark-green leaf overflows its green channel first, and clamping each channel on its own
-// turns it tan (the pines came out with tan patches where the game's are uniformly deep green). Props on this texture array (pines,
-// dead trees, stumps, grass, mushrooms: 26 of the exported objects) scale an overflowing colour down as a whole instead, which keeps
-// its hue. Other objects keep the per-channel clamp their look was tuned with.
-const KEEP_HUE_ON_OVEREXPOSURE = new Set(['dirt_256_texture_array'])
+// With the strong warm sun, the glossy default material puts a tan highlight on every sunlit leaf layer of the pines (checked by shading
+// the exported mesh with and without specular: with it the tan patches appear, without it the foliage is uniformly deep green, as in the game).
+// Props on this texture array (pines, dead trees, stumps, grass, mushrooms: 26 of the exported objects) get this much of the dielectric
+// specular instead, 0 = none. Other objects keep their look.
+const FOLIAGE_TEXTURE_ARRAYS = new Set(['dirt_256_texture_array'])
+const FOLIAGE_SPECULAR = 0
 
 interface MeshMeta {
   materials: Record<string, MaterialInfo>
@@ -196,7 +197,9 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
     const blended = info.queue === 3000 && info._RenderMode === 2 && (info.alpha_min ?? 255) < 255
     const alphaMap = cutout || blended ? await loadTexture(req.files[`${name}_alpha.png`], true) : null
     const isBlended = blended && !!alphaMap
-    const mat = new THREE.MeshStandardMaterial({
+    const foliage = !!info.diffuse && FOLIAGE_TEXTURE_ARRAYS.has(info.diffuse)
+    const mat = new THREE.MeshPhysicalMaterial({
+      specularIntensity: foliage ? FOLIAGE_SPECULAR : 1,
       map,
       roughness: 0.5,
       metalness: 0,
@@ -210,15 +213,6 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
       depthWrite: !isBlended,
     })
     mat.userData.blended = isBlended
-    if (info.diffuse && KEEP_HUE_ON_OVEREXPOSURE.has(info.diffuse)) {
-      mat.onBeforeCompile = (shader) => {
-        shader.fragmentShader = shader.fragmentShader.replace(
-          '#include <tonemapping_fragment>',
-          'gl_FragColor.rgb /= max(1.0, max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b)));\n#include <tonemapping_fragment>',
-        )
-      }
-      mat.customProgramCacheKey = () => 'keep-hue'
-    }
     mats[name] = mat
     disposables.push(mat)
     for (const t of [map, emissiveMap, alphaMap]) if (t) disposables.push(t)
