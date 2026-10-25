@@ -16,6 +16,11 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { DEFAULT_TERRAIN_BLEND } from '@/lib/map-grid/terrain-colors'
+import {
+  DRAW_QUALITY_LIMITS, DRAW_QUALITY_PRESETS, estimateCanvasMegabytes, layerPxPerTile, resolveDrawQuality,
+  type CanvasLayerQuality, type DrawQuality, type DrawQualityChoice,
+} from '@/lib/map-grid/draw-quality'
+import { useMapContextStore } from '@/store/useMapContextStore'
 import { biomeTexturesAvailable } from '@/lib/map-grid/terrain-textures'
 import { DEFAULT_SQUAD_DIFFICULTY_RANGES, DEFAULT_SQUAD_RANDOM_WEIGHTS, type DifficultyRange, type DifficultyWeight } from '@/lib/map-grid/squad-pool'
 import { Settings, ChevronDown } from 'lucide-react'
@@ -32,6 +37,9 @@ export interface MapGridSettings {
   rotationNumberEnabled: boolean
   /** When false, the small badge with the number of objects on a tile is hidden. */
   objectCountEnabled: boolean
+  /** How finely each layer is drawn: a preset, or 'custom' with the numbers in drawQualityCustom (draw-quality.ts). */
+  drawQuality: DrawQualityChoice
+  drawQualityCustom: DrawQuality
   /** 1px lines between every cell, on/off — always the same fixed thickness. */
   showGridLines: boolean
   /** 0 = off (icon fills the whole tile); otherwise the number of screen
@@ -104,6 +112,8 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   iconImagesEnabled: true,
   rotationNumberEnabled: true,
   objectCountEnabled: true,
+  drawQuality: 'high',
+  drawQualityCustom: DRAW_QUALITY_PRESETS.high,
   showGridLines: false,
   cellBorderThickness: 0,
   showGridNumbers: false,
@@ -154,6 +164,18 @@ export default function MapGridSettingsDialog({
   // Not persisted — purely a "did the user open this section" UI state,
   // same as every other popover's own open/closed state.
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const mapSize = useMapContextStore((s) => (s.context ? { x: s.context.sizeX, z: s.context.sizeZ } : null))
+  const quality = resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom)
+  const setQualityChoice = (choice: DrawQualityChoice) => {
+    // Picking Custom starts from the numbers of the preset in use.
+    update(choice === 'custom' ? { drawQuality: choice, drawQualityCustom: quality } : { drawQuality: choice })
+  }
+  const updateCustom = (patch: Partial<DrawQuality>) => update({ drawQuality: 'custom', drawQualityCustom: { ...quality, ...patch } })
+  const layerRows: { key: 'terrain' | 'cliffs' | 'lines'; label: string }[] = [
+    { key: 'terrain', label: 'Terrain textures' },
+    { key: 'cliffs', label: 'Cliff edges' },
+    { key: 'lines', label: 'Roads and rivers' },
+  ]
 
   const updateRange = (label: string, patch: Partial<Pick<DifficultyRange, 'min' | 'max'>>) => {
     update({
@@ -223,6 +245,75 @@ export default function MapGridSettingsDialog({
             checked={settings.rotationNumberEnabled}
             onCheckedChange={(v) => update({ rotationNumberEnabled: v })}
           />
+        </div>
+
+        <div className="space-y-2 rounded-md border border-border p-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Drawing quality</Label>
+            <select
+              className="h-6 rounded border border-input bg-background px-1 text-xs"
+              value={settings.drawQuality}
+              onChange={(e) => setQualityChoice(e.target.value as DrawQualityChoice)}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="ultra">Ultra</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Higher means sharper roads, rivers, cliffs and ground, but more memory and slower redraws on big maps. Lower it if the grid lags.
+            {mapSize && ' This map (' + mapSize.x + 'x' + mapSize.z + '): about ' + estimateCanvasMegabytes(quality, mapSize.x, mapSize.z) + ' MB of canvas memory.'}
+          </p>
+          {settings.drawQuality === 'custom' && (
+            <div className="space-y-2">
+              {layerRows.map(({ key, label }) => (
+                <div key={key} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">{label}</Label>
+                    <span className="text-xs text-muted-foreground">
+                      {quality[key].pxPerTile} px/tile{mapSize ? ` (now ${layerPxPerTile(quality[key], mapSize.x, mapSize.z)})` : ''}
+                    </span>
+                  </div>
+                  <Slider
+                    min={DRAW_QUALITY_LIMITS.pxPerTile.min} max={DRAW_QUALITY_LIMITS.pxPerTile.max} step={4}
+                    value={[quality[key].pxPerTile]}
+                    onValueChange={([v]) => updateCustom({ [key]: { ...quality[key], pxPerTile: v } as CanvasLayerQuality })}
+                  />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] text-muted-foreground">Largest canvas side</Label>
+                    <span className="text-[11px] text-muted-foreground">{quality[key].maxSide} px</span>
+                  </div>
+                  <Slider
+                    min={DRAW_QUALITY_LIMITS.maxSide.min} max={DRAW_QUALITY_LIMITS.maxSide.max} step={512}
+                    value={[quality[key].maxSide]}
+                    onValueChange={([v]) => updateCustom({ [key]: { ...quality[key], maxSide: v } as CanvasLayerQuality })}
+                  />
+                </div>
+              ))}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Object icons from</Label>
+                  <span className="text-xs text-muted-foreground">{quality.objects.iconFromPx} px per tile on screen</span>
+                </div>
+                <Slider
+                  min={DRAW_QUALITY_LIMITS.iconFromPx.min} max={DRAW_QUALITY_LIMITS.iconFromPx.max} step={2}
+                  value={[quality.objects.iconFromPx]}
+                  onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, iconFromPx: v } })}
+                />
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] text-muted-foreground">Extra tiles beyond the screen</Label>
+                  <span className="text-[11px] text-muted-foreground">{quality.objects.overdrawTiles}</span>
+                </div>
+                <Slider
+                  min={DRAW_QUALITY_LIMITS.overdrawTiles.min} max={DRAW_QUALITY_LIMITS.overdrawTiles.max} step={1}
+                  value={[quality.objects.overdrawTiles]}
+                  onValueChange={([v]) => updateCustom({ objects: { ...quality.objects, overdrawTiles: v } })}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between">

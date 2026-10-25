@@ -10,6 +10,7 @@ import { compositeSplat, type SplatLayerPixels } from './terrain-splat'
 import { decodePng } from '@/lib/png-decode'
 import { thumbnailFilePath, thumbnailPath } from '@/lib/catalog/thumbnails'
 import { isBiomeId } from './terrain-colors'
+import { DRAW_QUALITY_PRESETS, layerPxPerTile, type CanvasLayerQuality } from './draw-quality'
 
 export type TextureKey = keyof typeof BIOME_TEXTURE_ICONS
 
@@ -19,9 +20,9 @@ export const TEXTURE_REPEAT_TILES = 12
 /** The same for a blended biome: one copy of the splat map. */
 export const SPLAT_REPEAT_TILES = 24
 
-/** Canvas pixels per tile for the texture layer, capped so the canvas stays at most ~3072 px on a side. */
-export function textureScale(sizeX: number, sizeZ: number): number {
-  return Math.max(4, Math.min(64, Math.floor(4096 / Math.max(sizeX, sizeZ, 1))))
+/** Canvas pixels per tile for the texture layer (and the cliffs), within the chosen draw quality (draw-quality.ts). */
+export function textureScale(sizeX: number, sizeZ: number, layer: CanvasLayerQuality = DRAW_QUALITY_PRESETS.high.terrain): number {
+  return layerPxPerTile(layer, sizeX, sizeZ)
 }
 
 /** True when the textures have been extracted (manifest knows them). */

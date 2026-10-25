@@ -23,6 +23,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useStackOrderStore } from '@/store/useStackOrderStore'
+import { layerPxPerTile, resolveDrawQuality } from '@/lib/map-grid/draw-quality'
 import { layerOrder, orderStack } from '@/lib/map-grid/stack-order'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -160,9 +161,6 @@ const ROTATE_CURSOR_CSS = `url("data:image/svg+xml,${encodeURIComponent(
     '<path d="M21 3v5h-5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
     '</svg>'
 )}") 11 11, auto`
-/** Below this on-screen cell size, icons/letters aren't legible — canvas swatches only. */
-const ICON_LOD_THRESHOLD_PX = 16
-const OVERDRAW_CELLS = 3
 /** Same order as ObjectBrowserPanel.tsx's own BIOME_ORDER — each file keeps
  *  its own copy rather than sharing, matching that file's existing convention. */
 const PAINT_BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
@@ -434,6 +432,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [placedObjects, searchQuery])
 
   const [settings, setSettings] = useState(loadMapGridSettings)
+  // How finely each layer is drawn (draw-quality.ts). Below iconFromPx on-screen pixels per tile icons aren't legible: canvas swatches only.
+  const quality = useMemo(() => resolveDrawQuality(settings.drawQuality, settings.drawQualityCustom), [settings.drawQuality, settings.drawQualityCustom])
+  const iconLodPx = quality.objects.iconFromPx
+  const overdrawCells = quality.objects.overdrawTiles
   // Subscribing makes the grid redraw as a render job adds images; hasObjectRender/objectRender read the same store.
   const renderIndex = useObjectRenderStore((s) => s.index)
   const updateSettings = (next: typeof settings) => {
@@ -2437,7 +2439,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const textureStrength = biomeTextures.size > 0 ? settings.terrainTextureStrength : 0
   useEffect(() => {
     if (!textureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ)
+    const scale = textureScale(sizeX, sizeZ, quality.terrain)
     textureCanvasEl.width = sizeX * scale
     textureCanvasEl.height = sizeZ * scale
     const ctx = textureCanvasEl.getContext('2d')
@@ -2457,7 +2459,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillStyle = patterns.get(key)!
       ctx.fill(path)
     }
-  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged])
+  }, [textureCanvasEl, biomeTextures, textureStrength, tilesMap, waterMap, sizeX, sizeZ, paintStaged, quality.terrain])
   // Cliff pieces along the edges of raised ground: the game's own cliff meshes, rendered locally (cliff-autotile.ts). Sprites are drawn
   // back to front, so a nearer wall overlaps the one behind it. Staged elevation/ramp strokes are included so a brush previews live.
   // As in the game, the upward-facing surfaces of the rock carry the ground texture of the tile's biome: each piece is baked once per biome
@@ -2466,7 +2468,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const cliffSprites = useCliffSprites()
   useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
-    const scale = textureScale(sizeX, sizeZ)
+    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
     const ctx = cliffCanvasEl.getContext('2d')
@@ -2638,11 +2640,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
       ctx.restore()
     }
-  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ])
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
   // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
   // the swatch is then the only thing marking the object.
-  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= ICON_LOD_THRESHOLD_PX
+  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= iconLodPx
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2719,11 +2721,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
-    // Textured: a finer canvas (capped at 4096 px) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
+    // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
     const textured = settings.lineFeatureTextures && lineTextures.size > 0
     const strokedRoads = settings.lineFeatureTextures && roadStrokes !== null
     const strokedRivers = settings.lineFeatureTextures && riverSprites.size > 0 && renderIndex !== null
-    const SUBPX = textured || strokedRoads || strokedRivers ? Math.max(12, Math.min(strokedRoads || strokedRivers ? 64 : 32, Math.floor(4096 / Math.max(sizeX, sizeZ)))) : 12
+    const SUBPX = textured || strokedRoads || strokedRivers ? layerPxPerTile({ ...quality.lines, pxPerTile: strokedRoads || strokedRivers ? quality.lines.pxPerTile : Math.min(32, quality.lines.pxPerTile) }, sizeX, sizeZ, 12) : 12
     const BAND = textured || strokedRoads || strokedRivers ? SUBPX * 0.3 : 3.5
     const OFFSET = Math.floor((SUBPX - BAND) / 2)
     canvas.width = sizeX * SUBPX
@@ -2887,7 +2889,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawRiver(node)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, iconsVisibleForSwatch, settings.iconImagesEnabled, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, primaryByNode, iconsVisibleForSwatch, settings.iconImagesEnabled, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
@@ -3039,7 +3041,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
 
   // ── Windowed DOM layer ──────────────────────────────────────────────────────
   const effectiveCellPx = BASE_CELL_PX * transform.scale
-  const showIcons = effectiveCellPx >= ICON_LOD_THRESHOLD_PX
+  const showIcons = effectiveCellPx >= iconLodPx
 
   // "Cell border thickness" was previously a CSS border drawn on the icon
   // cell — but the icon <img> itself was always a fixed 24px regardless of
@@ -3062,9 +3064,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       containerSize,
       { sizeX, sizeZ },
       BASE_CELL_PX,
-      OVERDRAW_CELLS,
+      overdrawCells,
     ),
-    [transform, containerSize, sizeX, sizeZ],
+    [transform, containerSize, sizeX, sizeZ, overdrawCells],
   )
 
   // Every drawn single-tile object, not only the top of each stack: objects placed on top of each other all show, in stack order.
@@ -3096,7 +3098,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
   // box is found by its own extent-vs-viewport intersection regardless of
-  // where its anchor tile happens to sit (no OVERDRAW_CELLS bump needed for
+  // where its anchor tile happens to sit (no overdrawCells bump needed for
   // this, unlike the original plan's assumption — see MapGridDialog's commit
   // notes). Only objects that actually win the stacking pick at their own
   // anchor tile render here, so one 1x1 object sitting exactly on another
