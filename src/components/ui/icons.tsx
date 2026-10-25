@@ -62,7 +62,7 @@ import {
   LandmarkIcon,
   LanguagesIcon,
   LayersIcon,
-  LayoutGridIcon,
+  DashboardSquare01Icon,
   LeafIcon,
   ListChecksIcon,
   ListIcon,
@@ -132,8 +132,11 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'ref'> {
 }
 export type AppIcon = ComponentType<IconProps>
 
+/** Stroke thickness of every icon (the icons' own data says 1.5); a call site can still pass its own strokeWidth. */
+const STROKE_WIDTH = 2
+
 function make(icon: IconSvgElement, name: string): AppIcon {
-  const Icon = forwardRef<SVGSVGElement, IconProps>((props, ref) => <HugeiconsIcon ref={ref} icon={icon} {...props} />)
+  const Icon = forwardRef<SVGSVGElement, IconProps>((props, ref) => <HugeiconsIcon ref={ref} icon={icon} strokeWidth={STROKE_WIDTH} {...props} />)
   Icon.displayName = name
   return Icon
 }
@@ -195,7 +198,7 @@ export const LandPlot = make(LandPlotIcon, 'LandPlot')
 export const Landmark = make(LandmarkIcon, 'Landmark')
 export const Languages = make(LanguagesIcon, 'Languages')
 export const Layers = make(LayersIcon, 'Layers')
-export const LayoutGrid = make(LayoutGridIcon, 'LayoutGrid')
+export const LayoutGrid = make(DashboardSquare01Icon, 'LayoutGrid')
 export const Leaf = make(LeafIcon, 'Leaf')
 export const List = make(ListIcon, 'List')
 export const ListChecks = make(ListChecksIcon, 'ListChecks')
