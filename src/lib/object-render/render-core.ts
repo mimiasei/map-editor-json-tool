@@ -37,9 +37,10 @@ interface MaterialInfo {
 
 // With the strong warm sun, the glossy default material puts a tan highlight on every sunlit leaf layer of the pines (checked by shading
 // the exported mesh with and without specular: with it the tan patches appear, without it the foliage is uniformly deep green, as in the game).
-// Props on this texture array (pines, dead trees, stumps, grass, mushrooms: 26 of the exported objects) get this much of the dielectric
-// specular instead, 0 = none. Other objects keep their look.
-const FOLIAGE_TEXTURE_ARRAYS = new Set(['dirt_256_texture_array'])
+// Trees of every biome (pinetree_*, tree_dirt_*, tree_dead_*, tree_autumn_*, tree_lava_*, palms_*; not the two wonders tree_of_*) get this
+// much of the dielectric specular instead, 0 = none. Chosen by name because their texture arrays are shared with mountains, pools and
+// other props. Other objects keep their look.
+const FOLIAGE_SID = /^(pinetree_|tree_(?!of_)|palms_)/
 const FOLIAGE_SPECULAR = 0
 
 interface MeshMeta {
@@ -197,7 +198,7 @@ async function buildScene(req: RenderRequest, meta: MeshMeta): Promise<Built> {
     const blended = info.queue === 3000 && info._RenderMode === 2 && (info.alpha_min ?? 255) < 255
     const alphaMap = cutout || blended ? await loadTexture(req.files[`${name}_alpha.png`], true) : null
     const isBlended = blended && !!alphaMap
-    const foliage = !!info.diffuse && FOLIAGE_TEXTURE_ARRAYS.has(info.diffuse)
+    const foliage = FOLIAGE_SID.test(req.sid)
     const mat = new THREE.MeshPhysicalMaterial({
       specularIntensity: foliage ? FOLIAGE_SPECULAR : 1,
       map,
