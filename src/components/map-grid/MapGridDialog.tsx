@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label'
 import { useMapContextStore } from '@/store/useMapContextStore'
 import { useStackOrderStore } from '@/store/useStackOrderStore'
 import { layerPxPerTile, resolveDrawQuality } from '@/lib/map-grid/draw-quality'
+import { FX_IMAGE_STYLE, FX_SPARKLE_SIZE, FX_SPARKLE_STYLE } from '@/lib/map-grid/fx-style'
 import { isDefaultDepthOrder, isFxSid, layerOrder, orderStack } from '@/lib/map-grid/stack-order'
 import { useCatalogStore } from '@/store/useCatalogStore'
 import { useScenarioStore } from '@/store/useScenarioStore'
@@ -5429,14 +5430,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             iconId={entry.pick.primary.sid}
                             name={name}
                             size={thisIconSize}
-                            className={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? 'opacity-50' : undefined}
+                            style={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? FX_IMAGE_STYLE : undefined}
                             src={settings.iconImagesEnabled ? undefined : null}
                           />
                           {settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) && (
                             <Sparkles
-                              size={Math.max(8, thisIconSize * 0.6)}
+                              size={Math.max(8, thisIconSize * FX_SPARKLE_SIZE)}
                               className="absolute pointer-events-none text-white"
-                              style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.8))' }}
+                              style={FX_SPARKLE_STYLE}
                             />
                           )}
                         </>
@@ -5447,14 +5448,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                             iconId={visual.iconId}
                             name={visual.name}
                             size={thisIconSize}
-                            className={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? 'opacity-50' : undefined}
+                            style={settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) ? FX_IMAGE_STYLE : undefined}
                             src={settings.iconImagesEnabled ? undefined : null}
                           />
                           {settings.iconImagesEnabled && isFxSid(entry.pick.primary.sid, catalog) && (
                             <Sparkles
-                              size={Math.max(8, thisIconSize * 0.6)}
+                              size={Math.max(8, thisIconSize * FX_SPARKLE_SIZE)}
                               className="absolute pointer-events-none text-white"
-                              style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.8))' }}
+                              style={FX_SPARKLE_STYLE}
                             />
                           )}
                         </>

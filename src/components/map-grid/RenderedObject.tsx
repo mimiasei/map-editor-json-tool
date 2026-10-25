@@ -3,6 +3,7 @@
 
 import { renderBoxFromAnchorTile } from '@/lib/map-grid/render-placement'
 import { Sparkles } from '@/components/ui/icons'
+import { FX_IMAGE_STYLE, FX_SPARKLE_SIZE, FX_SPARKLE_STYLE } from '@/lib/map-grid/fx-style'
 import type { ObjectRender } from '@/lib/object-render/render-index'
 
 interface Props {
@@ -26,14 +27,13 @@ export function RenderedObject({ render, name, cell, shiftX, shiftY, fx }: Props
         alt={name}
         draggable={false}
         className="absolute max-w-none pointer-events-none select-none"
-        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, opacity: fx ? 0.5 : undefined }}
+        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, ...(fx ? FX_IMAGE_STYLE : undefined) }}
       />
       {fx && (
         <Sparkles
-          size={cell * 0.6}
+          size={cell * FX_SPARKLE_SIZE}
           className="absolute pointer-events-none select-none text-white"
-          // A dark outline keeps the white readable on light ground.
-          style={{ left: shiftX + cell * 0.2, top: shiftY + cell * 0.2, filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.8))' }}
+          style={{ left: shiftX + cell * (1 - FX_SPARKLE_SIZE) / 2, top: shiftY + cell * (1 - FX_SPARKLE_SIZE) / 2, ...FX_SPARKLE_STYLE }}
         />
       )}
     </>
