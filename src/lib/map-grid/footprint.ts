@@ -108,9 +108,9 @@ export function computeFootprintTiles(
     const lx = i % sizeX
     const lz = Math.floor(i / sizeX)
     cells.push({
-      // The game's mirrored variant (rotation 10-13) runs the local x axis the other way round
-      // the pivot (an assumption, see rmg/zone-mirror.ts); quarter turns are still not modelled.
-      x: rotation >= 10 ? anchorX - lx + pivotX : anchorX + lx - pivotX,
+      // The game's mirrored variant (rotation 10-13) flips the local x axis inside the object's own box, so it
+      // stays on the same tiles (user-specified; an assumption, see rmg/zone-mirror.ts); quarter turns are still not modelled.
+      x: anchorX + (rotation >= 10 ? sizeX - 1 - lx : lx) - pivotX,
       z: anchorZ - lz + pivotZ,
       value: template.nodes[i],
     })
