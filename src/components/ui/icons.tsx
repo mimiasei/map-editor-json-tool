@@ -32,6 +32,8 @@ import {
   Cancel01Icon,
   Configuration01Icon,
   Edit01Icon,
+  Link01Icon,
+  Unlink01Icon,
   Select01Icon,
   FilterResetIcon,
   ClipboardCopyIcon,
@@ -238,6 +240,8 @@ export const ScrollText = make(ScrollTextIcon, 'ScrollText')
 export const Configuration = make(Configuration01Icon, 'Configuration')
 export const FilterReset = make(FilterResetIcon, 'FilterReset')
 export const Cancel = make(Cancel01Icon, 'Cancel')
+export const LinkPortal = make(Link01Icon, 'LinkPortal')
+export const UnlinkPortal = make(Unlink01Icon, 'UnlinkPortal')
 export const StepUp = make(ArrowUp01Icon, 'StepUp')
 export const StepDown = make(ArrowDown01Icon, 'StepDown')
 export const Freehand = make(Edit01Icon, 'Freehand')

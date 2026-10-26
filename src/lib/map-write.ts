@@ -408,6 +408,45 @@ export function upsertPropPortals(
   return new TextEncoder().encode(patchedText)
 }
 
+/**
+ * Link two portals as a pair (each one's target is the other, both active), or with `b` null unlink `a` from its partner. A portal
+ * can only target one other, so whoever was linked to either of them before is set free (target -1) instead of being left pointing at
+ * a portal that now points elsewhere. Portals without a row get one.
+ */
+export function linkPortalPair(
+  chunk: Uint8Array,
+  a: { entityType: number; entityId: number },
+  b: { entityType: number; entityId: number } | null,
+): Uint8Array {
+  const text = new TextDecoder('utf-8').decode(chunk)
+  const { arrayOpen, arrayClose, span } = findJsonArraySpan(text, 'propPortals')
+  const entries = JSON.parse(span) as PropPortalEntry[]
+  const find = (type: number, id: number) => entries.find((e) => String(e.type) === String(type) && e.id === id)
+  const entry = (type: number, id: number): PropPortalEntry => {
+    let e = find(type, id)
+    if (!e) entries.push((e = { type, id, targetIdx: -1, isActive: true }))
+    return e
+  }
+  // Frees whoever `self` points at, if that one points back at `self`.
+  const release = (type: number, self: PropPortalEntry) => {
+    if (self.targetIdx === undefined || self.targetIdx === -1) return
+    const partner = find(type, self.targetIdx)
+    if (partner && partner.targetIdx === self.id) partner.targetIdx = -1
+    self.targetIdx = -1
+  }
+  const ea = entry(a.entityType, a.entityId)
+  release(a.entityType, ea)
+  if (b) {
+    const eb = entry(b.entityType, b.entityId)
+    release(b.entityType, eb)
+    ea.targetIdx = b.entityId
+    eb.targetIdx = a.entityId
+    ea.isActive = true
+    eb.isActive = true
+  }
+  return new TextEncoder().encode(text.slice(0, arrayOpen) + JSON.stringify(entries) + text.slice(arrayClose + 1))
+}
+
 // ─── Spawner "Player type" (Block 1 spawns.spawns[] + Block 2 propSpawns) ───
 // The one edit in this module that spans two chunks: this data is duplicated
 // in Block 1 (spawns.spawns[], one entry per spawner, matched by `owner`) and
