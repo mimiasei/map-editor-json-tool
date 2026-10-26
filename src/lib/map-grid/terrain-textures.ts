@@ -37,10 +37,14 @@ export const BIOME_FADE_TILES = 0.4
 /** Opacity of the neighbour's texture right at the border (0.5 = an even mix with the tile's own texture there). */
 export const BIOME_FADE_EDGE_OPACITY = 0.5
 const BIOME_FADE_STEPS = 6
+/** Shore: land's texture reaches this far into a water tile (its outer half), nearly opaque at the shore and falling to none. */
+const WATER_FADE_TILES = 0.5
+const WATER_FADE_EDGE_OPACITY = 0.95
 
 /**
- * Draws the fade strips over a texture canvas already filled tile by tile. `keys` is each node's texture key; water and unknown ground
- * take no part. Strips of one neighbour texture and one step share a path, so a map costs a few fills, not one per edge.
+ * Draws the fade strips over a texture canvas already filled tile by tile. `keys` is each node's texture key. Land borders fade into each
+ * other; along a shore the land's texture fades out over the water tile, so the water turns see-through toward the land. Strips of one
+ * neighbour texture and one step share a path, so a map costs a few fills, not one per edge.
  */
 export function drawBiomeEdgeFade(
   ctx: CanvasRenderingContext2D,
@@ -50,9 +54,23 @@ export function drawBiomeEdgeFade(
   sizeZ: number,
   scale: number,
 ): void {
-  const reach = BIOME_FADE_TILES * scale
+  fadeStrips(ctx, patterns, keys, sizeX, sizeZ, scale, BIOME_FADE_TILES, BIOME_FADE_EDGE_OPACITY, (here, there) => typeof here === 'number' && typeof there === 'number' && there !== here)
+  fadeStrips(ctx, patterns, keys, sizeX, sizeZ, scale, WATER_FADE_TILES, WATER_FADE_EDGE_OPACITY, (here, there) => here === 'water' && typeof there === 'number')
+}
+
+function fadeStrips(
+  ctx: CanvasRenderingContext2D,
+  patterns: ReadonlyMap<TextureKey, CanvasPattern>,
+  keys: readonly (TextureKey | null)[],
+  sizeX: number,
+  sizeZ: number,
+  scale: number,
+  reachTiles: number,
+  total: number,
+  applies: (here: TextureKey | null, there: TextureKey | null) => boolean,
+): void {
+  const reach = reachTiles * scale
   // Opacities per nested strip so that the opacities stack up to the edge value at the border and fall to nothing inside.
-  const total = BIOME_FADE_EDGE_OPACITY
   const stepAlpha = 1 - Math.pow(1 - total, 1 / BIOME_FADE_STEPS)
   const paths = new Map<TextureKey, Path2D[]>()
   const pathFor = (key: TextureKey, step: number): Path2D => {
@@ -63,7 +81,6 @@ export function drawBiomeEdgeFade(
   for (let z = 0; z < sizeZ; z++) {
     for (let x = 0; x < sizeX; x++) {
       const here = keys[z * sizeX + x]
-      if (typeof here !== 'number') continue
       const left = x * scale
       const top = (sizeZ - 1 - z) * scale
       // Neighbours as [dx, dz]; dz = +1 is the canvas row above.
@@ -72,7 +89,7 @@ export function drawBiomeEdgeFade(
         const nz = z + dz
         if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ) continue
         const there = keys[nz * sizeX + nx]
-        if (typeof there !== 'number' || there === here || !patterns.has(there)) continue
+        if (there === null || !applies(here, there) || !patterns.has(there)) continue
         for (let step = 0; step < BIOME_FADE_STEPS; step++) {
           const w = (reach * (BIOME_FADE_STEPS - step)) / BIOME_FADE_STEPS
           const path = pathFor(there, step)
