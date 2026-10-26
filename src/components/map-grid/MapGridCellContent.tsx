@@ -459,7 +459,9 @@ export default function MapGridCellContent({
             </div>
           )}
 
-          {selected.type === 0 && selected.rotation !== undefined && (
+          {/* GME offers Mirrored for interactables only (decorations have free rotation instead). */}
+          {selected.type === 0 && selected.rotation !== undefined &&
+            catalog?.mapObjects.find((o) => o.id === selected.sid)?.category === 'interactables' && (
             <div className="flex items-center gap-2">
               <Switch
                 id="mgc-mirrored"

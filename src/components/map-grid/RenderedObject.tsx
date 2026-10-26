@@ -16,11 +16,14 @@ interface Props {
   shiftY: number
   /** A visual effect (fog, light, flies): drawn half see-through with a sparkle on its anchor tile, so it reads as an effect, not an object. */
   fx?: boolean
-  /** Placed mirrored (rotations[] >= 10): flipped left-right about the anchor tile's centre (setMirrored moves the anchor so the body stays on its tiles). */
+  /** Placed mirrored (rotations[] >= 10): flipped left-right about the footprint's centre column. */
   mirrored?: boolean
+  /** Where the footprint's centre column lies, in tiles right of the anchor tile's centre. A mirrored image is flipped about
+   *  that column, so it stays on its own tiles whatever the object's anchor (select) tile is. */
+  mirrorCentreTiles?: number
 }
 
-export function RenderedObject({ render, name, cell, shiftX, shiftY, fx, mirrored }: Props) {
+export function RenderedObject({ render, name, cell, shiftX, shiftY, fx, mirrored, mirrorCentreTiles = 0 }: Props) {
   const box = renderBoxFromAnchorTile(render, cell)
   return (
     <>
@@ -29,7 +32,7 @@ export function RenderedObject({ render, name, cell, shiftX, shiftY, fx, mirrore
         alt={name}
         draggable={false}
         className="absolute max-w-none pointer-events-none select-none"
-        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, ...(mirrored ? { transform: 'scaleX(-1)', transformOrigin: `${cell / 2 - box.left}px 50%` } : undefined), ...(fx ? FX_IMAGE_STYLE : undefined) }}
+        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, ...(mirrored ? { transform: 'scaleX(-1)', transformOrigin: `${cell / 2 + mirrorCentreTiles * cell - box.left}px 50%` } : undefined), ...(fx ? FX_IMAGE_STYLE : undefined) }}
       />
       {fx && (
         <Sparkles

@@ -117,6 +117,8 @@ export function buildTileIndex(
       if (cell.x < 0 || cell.x >= sizeX || cell.z < 0 || cell.z >= sizeZ) continue
       add(cell.z * sizeX + cell.x, obj)
     }
+    // A mirrored footprint can leave the anchor (the tile the object's handle sits on) off its block tiles; keep it selectable there.
+    if ((obj.rotation ?? 0) >= 10 && !solidCells.some((c) => c.z * sizeX + c.x === obj.node)) add(obj.node, obj)
   }
   return index
 }

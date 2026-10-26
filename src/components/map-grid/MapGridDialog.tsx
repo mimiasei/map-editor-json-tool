@@ -79,7 +79,7 @@ import { tilesInRadius } from '@/lib/map-grid/brush'
 import {buildBlockedTileSet, buildEntranceTileSet, objectBlockedCells} from '@/lib/map-grid/passability'
 import { buildElevationTintMap } from '@/lib/map-grid/elevation-shading'
 import { buildRampDirectionMap, type RampDirection } from '@/lib/map-grid/ramp-direction'
-import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
+import { footprintIconBounds, isFootprintInBounds, computeFootprintTiles, mirrorSpan, type FootprintCell } from '@/lib/map-grid/footprint'
 import MapGridCellContent from '@/components/map-grid/MapGridCellContent'
 import ObjectBrowserPanel from '@/components/map-grid/ObjectBrowserPanel'
 import SpawnerSelectorPanel from '@/components/map-grid/SpawnerSelectorPanel'
@@ -3472,14 +3472,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'rotateObject', entityId: item.id, newRotation: stepRotation(item.rotation ?? 0, delta) }, 'rotate object')
   }
 
-  // The game flips a mirrored footprint about the anchor tile, so toggling the flag alone would move the body sideways. The anchor
-  // moves by width - 1 - 2 * pivotX columns (0 for a centre-column anchor) to keep every tile number on its own tile.
   const setMirrored = (item: PlacedObject, mirrored: boolean) => {
     const quadrant = (item.rotation ?? 0) % 10
     applyEdit({ kind: 'rotateObject', entityId: item.id, newRotation: quadrant + (mirrored ? 10 : 0) }, mirrored ? 'mirror object' : 'unmirror object')
-    const t = catalog?.mapObjects.find((o) => o.id === item.sid)
-    const dx = t?.nodes?.length ? ((t.sizeX ?? 1) - 1 - 2 * (t.pivotX ?? 0)) * (mirrored ? 1 : -1) : 0
-    if (dx !== 0) applyEdit({ kind: 'moveObject', entityType: 0, entityId: item.id, newNode: item.node + dx }, mirrored ? 'mirror object' : 'unmirror object')
   }
 
   // ── Delete (issue #167 Phase C) ─────────────────────────────────────────
@@ -5449,6 +5444,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           cell={BASE_CELL_PX}
                           fx={isFxSid(entry.pick.primary.sid, catalog)}
                           mirrored={entry.pick.primary.type === 0 && (entry.pick.primary.rotation ?? 0) >= 10}
+                          mirrorCentreTiles={(() => {
+                            const p = entry.pick.primary
+                            if (p.type !== 0 || (p.rotation ?? 0) < 10) return 0
+                            // Flip about the centre of the block tiles; the anchor (select) tile is pivotX columns in from the left edge.
+                            const t = catalog?.mapObjects.find((o) => o.id === p.sid)
+                            return t?.nodes?.length ? mirrorSpan(t) / 2 - (t.pivotX ?? 0) : 0
+                          })()}
                           // Relative to this box: the anchor tile's corner minus the box corner.
                           shiftX={entry.pick.primary.x * BASE_CELL_PX - entry.left}
                           // A faction city standing in for a city spawner sits one tile too high with the spawner's anchor: one tile lower (user-verified).
