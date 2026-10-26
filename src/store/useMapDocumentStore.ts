@@ -214,9 +214,20 @@ export const useMapDocumentStore = create<MapDocumentStore>()(
       applyEdit: (edit) => {
         const current = get().container
         if (!current) throw new Error('No .map document is currently loaded')
+        // TEMPORARY timing (why do edits lag on a dense 256x256 map?): remove once the slow step is found.
+        const t0 = performance.now()
         const { container: next, newId } = applyMapEdit(current, edit)
+        const t1 = performance.now()
         set({ container: next, mapIsDirty: true })
-        useMapContextStore.getState().setContext(extractMapContext(containerToRawBlocks(next)))
+        const t2 = performance.now()
+        const context = extractMapContext(containerToRawBlocks(next))
+        const t3 = performance.now()
+        useMapContextStore.getState().setContext(context)
+        const t4 = performance.now()
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const t5 = performance.now()
+          console.info(`[edit timing] ${edit.kind}: applyMapEdit ${(t1 - t0).toFixed(0)}ms, set container ${(t2 - t1).toFixed(0)}ms, extractMapContext ${(t3 - t2).toFixed(0)}ms, setContext (sync part) ${(t4 - t3).toFixed(0)}ms, until frame painted after setContext ${(t5 - t4).toFixed(0)}ms, total ${(t5 - t0).toFixed(0)}ms`)
+        }))
         return newId
       },
 
