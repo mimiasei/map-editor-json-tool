@@ -371,16 +371,14 @@ export default function MapGridSettingsDialog({
           />
         </div>
 
-        {!settings.showCliffs && (
-          <div className="flex items-center justify-between">
-            <Label htmlFor="grid-show-elevation" className="text-xs cursor-pointer">Elevation shading</Label>
-            <Switch
-                id="grid-show-elevation"
-                checked={settings.showElevationShading}
-                onCheckedChange={(v) => update({ showElevationShading: v })}
-            />
-          </div>
-        )}
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-show-elevation" className="text-xs cursor-pointer">Elevation shading</Label>
+          <Switch
+              id="grid-show-elevation"
+              checked={settings.showElevationShading}
+              onCheckedChange={(v) => update({ showElevationShading: v })}
+          />
+        </div>
 
         <div className="flex items-center justify-between">
           <Label htmlFor="grid-show-cliffs" className="text-xs cursor-pointer">Cliff edges</Label>
