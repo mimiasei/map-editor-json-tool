@@ -61,6 +61,7 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
@@ -149,6 +150,9 @@ import {
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
 // ─── Layout constants ────────────────────────────────────────────────────────
+
+// Height of the Paint tools row and the Browse pills row, so switching mode doesn't move the grid. min-h, because the pills wrap.
+const TOOLBAR_ROW_H = 'min-h-9'
 
 const BASE_CELL_PX = 32
 const MIN_SCALE = 0.05
@@ -2735,6 +2739,29 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // not real game graphics (per the original ask), just shaped instead of
   // a flat full-tile fill. Live-preview data (paintRoadStaged/riverStaged)
   // merges in exactly like every other paint tool's preview.
+  // Water as a translucent plane over the cliff walls, with the game's ripple shading and glints (water-surface.ts). The pit's walls show
+  // faintly through it and the rim stones stand out of it, as in GME. Stacked after the cliff canvas.
+  const waterSurface = useWaterSurface()
+  const [waterCanvasEl, setWaterCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    if (!waterCanvasEl || sizeX <= 0 || sizeZ <= 0) return
+    const scale = textureScale(sizeX, sizeZ, quality.cliffs)
+    waterCanvasEl.width = sizeX * scale
+    waterCanvasEl.height = sizeZ * scale
+    const ctx = waterCanvasEl.getContext('2d')
+    if (!ctx || !settings.waterSurface || !iconsVisibleForSwatch || !waterSurface) return
+    const path = new Path2D()
+    for (let node = 0; node < sizeX * sizeZ; node++) {
+      if (waterMap[node]) path.rect((node % sizeX) * scale, (sizeZ - 1 - Math.floor(node / sizeX)) * scale, scale, scale)
+    }
+    ctx.fillStyle = WATER_SURFACE_COLOR
+    ctx.fill(path)
+    const pattern = waterSurfacePattern(ctx, waterSurface, scale)
+    if (pattern) {
+      ctx.fillStyle = pattern
+      ctx.fill(path)
+    }
+  }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps
   // its previous Set when an edit (rotating a tree) doesn't change which tiles are covered; depending on primaryByNode redrew it every edit.
@@ -2903,6 +2930,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
     // The game's river pieces: one render per tile, chosen by its connections (river-tiles.ts); the flat band where one is missing.
+    const riverLayer = strokedRivers && settings.waterSurface && waterSurface ? document.createElement('canvas') : null
+    if (riverLayer) {
+      riverLayer.width = canvas.width
+      riverLayer.height = canvas.height
+    }
+    const riverLayerCtx = riverLayer?.getContext('2d') ?? null
+    if (riverLayerCtx) riverLayerCtx.imageSmoothingQuality = 'high'
     const drawRiver = (node: number) => {
       const sid = (() => {
         const dirs = connectedDirections(node, hasRiver, sizeX, sizeZ)
@@ -2917,14 +2951,25 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
       if (coversLine(node)) return
       const k = SUBPX / RENDER_PX_PER_TILE
-      ctx.drawImage(sprite, ((node % sizeX) + 0.5) * SUBPX - entry.ox * k, (sizeZ - 1 - Math.floor(node / sizeX) + 0.5) * SUBPX - entry.oy * k, sprite.width * k, sprite.height * k)
+      const target = riverLayerCtx ?? ctx
+      target.drawImage(sprite, ((node % sizeX) + 0.5) * SUBPX - entry.ox * k, (sizeZ - 1 - Math.floor(node / sizeX) + 0.5) * SUBPX - entry.oy * k, sprite.width * k, sprite.height * k)
     }
     ctx.imageSmoothingQuality = 'high'
     for (const node of riverNodes.keys()) drawRiver(node)
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawRiver(node)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
+    // The ripple shading and glints go on the river pieces only (not on a road beneath them), hence the separate layer.
+    if (riverLayer && riverLayerCtx && waterSurface) {
+      const pattern = waterSurfacePattern(riverLayerCtx, waterSurface, SUBPX)
+      if (pattern) {
+        riverLayerCtx.globalCompositeOperation = 'source-atop'
+        riverLayerCtx.fillStyle = pattern
+        riverLayerCtx.fillRect(0, 0, riverLayer.width, riverLayer.height)
+      }
+      ctx.drawImage(riverLayer, 0, 0)
+    }
+  }, [lineFeatureCanvasEl, waterSurface, settings.waterSurface, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
@@ -4277,7 +4322,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                state, same handlers, same stage-then-Save convention. */
 
             //bg-amber-500/10 border-y border-amber-500/20
-            <div className="flex items-center gap-2 -mx-4 px-4 h-9 shrink-0 " data-nodrag>
+            <div className={`flex items-center gap-2 -mx-4 px-4 ${TOOLBAR_ROW_H} shrink-0`} data-nodrag>
               {/* <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Tools:</span> */}
 
               {paintBiome !== null ? (
@@ -5070,7 +5115,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   (not-yet-committed) drag stroke. */}
             </div>
           ) : (
-          <div className="flex gap-1 flex-wrap" data-nodrag>
+          <div className={`flex items-center gap-1 flex-wrap ${TOOLBAR_ROW_H}`} data-nodrag>
             {GRID_GROUP_ORDER.map((g) => (
               <div key={g} className="flex items-stretch">
                 <button
@@ -5383,6 +5428,13 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                 {/* Cliff pieces — see cliffCanvasEl above. After the road/river canvas, before the icon layer. */}
                 <canvas
                   ref={setCliffCanvasEl}
+                  className="absolute top-0 left-0 pointer-events-none"
+                  style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
+                />
+
+                {/* Water surface — see waterCanvasEl above. After the cliff canvas, before the icon layer. */}
+                <canvas
+                  ref={setWaterCanvasEl}
                   className="absolute top-0 left-0 pointer-events-none"
                   style={{ width: sizeX * BASE_CELL_PX, height: sizeZ * BASE_CELL_PX }}
                 />

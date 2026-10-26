@@ -69,6 +69,8 @@ export interface MapGridSettings {
   showCliffs: boolean
   /** Roads and rivers filled with the game's own textures instead of flat colours (needs the extracted textures). */
   lineFeatureTextures: boolean
+  /** Water as a translucent teal plane over the cliff walls, with the game's ripple shading and glints (water-surface.ts), also on rivers. */
+  waterSurface: boolean
   /** Translucent per-zone color fill over every painted "Player Areas" tile
    *  (see zone-colors.ts) — an escape hatch to hide the overlay, same
    *  rationale as showBlockedTiles above. */
@@ -128,6 +130,7 @@ export const DEFAULT_MAP_GRID_SETTINGS: MapGridSettings = {
   showElevationShading: true,
   showCliffs: true,
   lineFeatureTextures: true,
+  waterSurface: true,
   showPlayerAreas: true,
   lineFeatureShading: true,
   squadDifficultyRanges: DEFAULT_SQUAD_DIFFICULTY_RANGES,
@@ -404,6 +407,15 @@ export default function MapGridSettingsDialog({
               id="grid-line-feature-textures"
               checked={settings.lineFeatureTextures}
               onCheckedChange={(v) => update({ lineFeatureTextures: v })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="grid-water-surface" className="text-xs cursor-pointer">Water ripples and surface</Label>
+          <Switch
+              id="grid-water-surface"
+              checked={settings.waterSurface}
+              onCheckedChange={(v) => update({ waterSurface: v })}
           />
         </div>
 
