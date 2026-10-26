@@ -61,6 +61,7 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { enclosedBlockedTiles } from '@/lib/map-grid/zone-fill'
 import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
 import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
@@ -731,6 +732,16 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // (placingZoneSid below) which is an unrelated marker/trigger-zone
   // feature.
   const [paintZone, setPaintZone] = useState<number | null>(null)
+  // Painting Player Areas while "Player Areas fill" is off in the settings shows nothing, which looks like a broken tool: a banner says
+  // so and offers to turn it on. "Don't show again" is remembered; the X only hides it until the next time the tool is started.
+  const PLAYER_AREAS_BANNER_KEY = 'oe:hide-player-areas-banner'
+  const [neverShowPlayerAreasBanner, setNeverShowPlayerAreasBanner] = useState(() => {
+    try { return localStorage.getItem(PLAYER_AREAS_BANNER_KEY) === '1' } catch { return false }
+  })
+  const [playerAreasBannerClosed, setPlayerAreasBannerClosed] = useState(false)
+  useEffect(() => {
+    if (paintZone === null) setPlayerAreasBannerClosed(false)
+  }, [paintZone])
   const [zoneBucketMode, setZoneBucketMode] = useState(false)
   const [paintZoneStaged, setPaintZoneStaged] = useState<Map<number, number>>(new Map())
   const zonePaintingRef = useRef(false)
@@ -776,7 +787,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // 0 = fully mixed across all biomes, 1 = only the biome painted on — same
   // meaning/inversion as treeBiomePurity below.
   const [obstacleBiomePurity, setObstacleBiomePurity] = useState(0.9)
-  const [obstacleAllowHighContrast, setObstacleAllowHighContrast] = useState(true)
+  const [obstacleAllowHighContrast, setObstacleAllowHighContrast] = useState(false)
 
   // ── Trees brush — a dedicated copy of the Obstacle brush restricted to
   // tree_/pinetree_ entries only (buildTreePools, fuzzy-obstacle.ts), same
@@ -788,7 +799,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // inverted before being passed as sampleFuzzyObstacles's crossBiomeChance
   // (0 there means "always own biome", the opposite direction).
   const [treeBiomePurity, setTreeBiomePurity] = useState(0.9)
-  const [treeAllowHighContrast, setTreeAllowHighContrast] = useState(true)
+  const [treeAllowHighContrast, setTreeAllowHighContrast] = useState(false)
 
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
@@ -1133,7 +1144,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return z === 0 || z === startZone
     })
     if (region.length === 0) return
-    applyEdit({ kind: 'paintZone', changes: region.map((n) => ({ node: n, zoneId })) }, 'bucket-fill player area')
+    // A city or mine inside the area is part of it: its blocked tiles are painted too (see zone-fill.ts).
+    const inside = enclosedBlockedTiles(region, (n) => blockedTileSet.has(n), (n) => (customAreasPainting[n] ?? 0) === 0 || customAreasPainting[n] === startZone, sizeX, sizeZ)
+    applyEdit({ kind: 'paintZone', changes: [...region, ...inside].map((n) => ({ node: n, zoneId })) }, 'bucket-fill player area')
   }, [customAreasPainting, sizeX, sizeZ, blockedTileSet, applyEdit])
 
   // Interactable brush settings + pool — declared here (rather than
@@ -1145,7 +1158,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // biome-unlabeled (a curated editor judgment call, not confirmed data).
   const [interactableActive, setInteractableActive] = useState(false)
   const [interactableBiomePurity, setInteractableBiomePurity] = useState(0.9)
-  const [interactableAllowHighContrast, setInteractableAllowHighContrast] = useState(true)
+  const [interactableAllowHighContrast, setInteractableAllowHighContrast] = useState(false)
   const interactablePools = useMemo(
     () => (catalog ? buildInteractablePools(catalog.mapObjects) : null),
     [catalog],
@@ -1935,7 +1948,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // priority over move-drag/pan since it's the more specific gesture, and
     // works independently of moveState (rotate isn't gated behind Move mode,
     // same as the pre-existing chevron rotate buttons).
-    if (canEditEntities && selectedRotatable) {
+    if (canEditEntities && selectedRotatable && !portalLinkFrom) {
       const rect = e.currentTarget.getBoundingClientRect()
       if (isInRotateRing(e.clientX, e.clientY, rect)) {
         const r = selectedFootprintClientRect(rect)!
@@ -1957,7 +1970,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // already active) is a drag-to-move candidate — real commitment (calling
     // startMove) waits for the same movement threshold as panning below, so
     // a plain click still reaches the icon's own onClick unmolested.
-    if (canEditEntities && !moveState) {
+    // Not while linking portals: the click must reach the pointer-up that picks the partner, not arm a drag-move of the portal under it.
+    if (canEditEntities && !moveState && !portalLinkFrom) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       const item = node !== null ? primaryByNode.get(node)?.primary : undefined
       if (item) {
@@ -2412,6 +2426,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (wasClick && moveState) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       if (node !== null) applyMoveTo(node)
+    }
+    if (wasClick && portalLinkFrom) {
+      const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+      if (node !== null) finishPortalLink(node)
     }
   }
   const onContextMenuViewport = (e: ReactMouseEvent) => {
@@ -3476,7 +3494,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     })
   }
 
-  const allPortals = useMemo(() => placedObjects.filter((p) => p.portalInfo), [placedObjects])
+  // Every portal on the map, including ones placed without a link row yet (the catalog's own portal list).
+  const portalSids = useMemo(() => new Set(catalog?.rmgGeneratorConfig?.portals ?? []), [catalog])
+  const allPortals = useMemo(() => placedObjects.filter((p) => p.type === 0 && (p.portalInfo || portalSids.has(p.sid))), [placedObjects, portalSids])
   const allSpawners = useMemo(() => placedObjects.filter((p) => p.spawnerInfo), [placedObjects])
   const selectSpawner = useCallback((item: PlacedObject) => {
     selectNode(item.node)
@@ -3485,6 +3505,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [selectNode, centerOnTile])
   const handleSetPortalTarget = (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) =>
     applyEdit({ kind: 'setPortalTarget', entityType: item.type, entityId: item.id, ...patch }, 'set portal target')
+  // Linking: "Link to portal" in the info column arms portalLinkFrom, the next click on another portal makes the pair (both ways).
+  const [portalLinkFrom, setPortalLinkFrom] = useState<PlacedObject | null>(null)
+  const handleUnlinkPortal = (item: PlacedObject) =>
+    applyEdit({ kind: 'linkPortals', a: { entityType: item.type, entityId: item.id }, b: null }, 'unlink portal')
+  const finishPortalLink = (node: number) => {
+    if (!portalLinkFrom) return
+    const target = (tileIndex.get(node) ?? []).find((i) => i.key !== portalLinkFrom.key && allPortals.some((p) => p.key === i.key))
+    if (!target) return
+    applyEdit({ kind: 'linkPortals', a: { entityType: portalLinkFrom.type, entityId: portalLinkFrom.id }, b: { entityType: target.type, entityId: target.id } }, 'link portals')
+    setPortalLinkFrom(null)
+    selectNode(portalLinkFrom.node)
+  }
   const [highlightedNode, setHighlightedNode] = useState<number | null>(null)
 
   const handleSetGuardSquad = (item: PlacedObject, unitProps: { sid: string; count: number }[]) =>
@@ -4002,7 +4034,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   }, [showIcons, moveState, sizeX, sizeZ])
 
   useEffect(() => {
-    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive && paintZone === null && !moveState)) return
+    if (!open || (!placingSid && !placingCreatureId && !placingZoneSid && !objectBrowserOpen && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive && paintZone === null && !moveState && !portalLinkFrom)) return
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       // Defer to a focused text field's own Escape handling (e.g. the
@@ -4018,7 +4050,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // above never included moveState, so Escape silently did nothing while
       // a drag-to-move was staged, with no other way to cancel it short of
       // finding its Save/Cancel buttons (which requires it to be selected).
-      if (moveState) cancelMove()
+      if (portalLinkFrom) setPortalLinkFrom(null)
+      else if (moveState) cancelMove()
       else if (placingSid) stopPlacingOrClearStaged()
       else if (placingCreatureId) stopPlacingCreature()
       else if (placingZoneSid) stopPlacingZone()
@@ -4039,7 +4072,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, roadBrush, rampActive, interactableActive, squadActive, riverActive, obstacleBrushActive, treesActive, eraserActive, resourceActive, paintZone, moveState, paintObjectStaged])
+  }, [open, placingSid, placingCreatureId, placingZoneSid, objectBrowserOpen, paintBiome, levelBrush, waterBrush, roadBrush, rampActive, interactableActive, squadActive, riverActive, obstacleBrushActive, treesActive, eraserActive, resourceActive, paintZone, moveState, portalLinkFrom, paintObjectStaged])
 
   // Ctrl+Z / Cmd+Z undoes the last edit applied to the in-memory .map
   // document (issue #195 follow-up: useMapDocumentStore's own zundo
@@ -5455,7 +5488,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   // the viewport's cursor (and its pointer events — the
                   // onClick below already no-ops in every one of these modes
                   // anyway) show through uninterrupted.
-                  const modeActive = !!moveState || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive
+                  const modeActive = !!moveState || !!portalLinkFrom || !!placingSid || !!placingCreatureId || !!placingZoneSid || paintBiome !== null || levelBrush !== null || waterBrush !== null || roadBrush !== null || rampActive || interactableActive || squadActive || riverActive || obstacleBrushActive || treesActive || eraserActive
                   // Staged-edit visual treatment (issue #195 Phase 1) — a
                   // committed icon that a pending edit will remove (Delete,
                   // or a Paint Objects stamp overwriting a decoration) or
@@ -5499,7 +5532,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                         outline: isDeleting ? '2px dashed rgba(220, 38, 38, 0.9)' : undefined,
                         outlineOffset: isDeleting ? '-2px' : undefined,
                       }}
-                      onClick={(e) => { e.stopPropagation(); if (!moveState && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) { selectNode(entry.clickNode); setSpawnerSelectorOpen(false) } }}
+                      onClick={(e) => { e.stopPropagation(); if (!moveState && !portalLinkFrom && !placingSid && !placingCreatureId && !placingZoneSid && paintBiome === null && levelBrush === null && waterBrush === null && roadBrush === null && !rampActive && !interactableActive && !squadActive && !riverActive && !obstacleBrushActive && !treesActive && !eraserActive) { selectNode(entry.clickNode); setSpawnerSelectorOpen(false) } }}
                     >
                       {visual.kind === 'icon' && <visual.Icon size={thisIconSize} className={`shrink-0 ${visual.colorClassName ?? ''}`} />}
                       {visual.kind === 'text' && (
@@ -5740,6 +5773,59 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {/* Connected-portal highlight (issue #127 item 8) — same screen-space
                   technique as the overlays above, so its border stays a constant
                   physical size instead of scaling with zoom. */}
+              {paintZone !== null && !settings.showPlayerAreas && !neverShowPlayerAreasBanner && !playerAreasBannerClosed && (
+                <div
+                  className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 rounded-lg bg-popover/95 px-3 py-2 text-xs shadow-lg ring-1 ring-amber-500/50"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerUp={(e) => e.stopPropagation()}
+                >
+                  <span>Player Areas are hidden in the settings, so what you paint here won't show.</span>
+                  <Button size="sm" className="h-6 text-xs" onClick={() => updateSettings({ ...settings, showPlayerAreas: true })}>
+                    Show player areas
+                  </Button>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
+                    <Checkbox
+                      checked={false}
+                      onCheckedChange={() => {
+                        try { localStorage.setItem(PLAYER_AREAS_BANNER_KEY, '1') } catch { /* not remembered */ }
+                        setNeverShowPlayerAreasBanner(true)
+                      }}
+                    />
+                    Don't show again
+                  </label>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Close" onClick={() => setPlayerAreasBannerClosed(true)}>
+                    <Cancel className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+              {portalLinkFrom && (
+                <>
+                  {allPortals.filter((p) => p.key !== portalLinkFrom.key).map((p) => (
+                    <div
+                      key={p.key}
+                      className="absolute pointer-events-none rounded-sm border-[3px] border-cyan-400 animate-pulse"
+                      style={{
+                        left: p.x * effectiveCellPx,
+                        top: (sizeZ - 1 - p.z) * effectiveCellPx,
+                        width: effectiveCellPx,
+                        height: effectiveCellPx,
+                        transform: `translate(${transform.x}px, ${transform.y}px)`,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  ))}
+                  <div
+                    className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 rounded-lg bg-popover/95 px-3 py-1.5 text-xs shadow-lg ring-1 ring-border"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onPointerUp={(e) => e.stopPropagation()}
+                  >
+                    <span>Click the portal to link <b>{portalLinkFrom.entitySid || portalLinkFrom.displayName || portalLinkFrom.sid}</b> with (highlighted)</span>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" title="Cancel (Esc)" onClick={() => setPortalLinkFrom(null)}>
+                      <Cancel className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </>
+              )}
               {highlightedNode !== null && (
                 <div
                   className="absolute pointer-events-none rounded-sm border-[3px] border-yellow-400 animate-pulse"
@@ -5961,6 +6047,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onSetObjectActions={canEditEntities ? handleSetObjectActions : undefined}
                   onSetMarkerState={canEditEntities ? handleSetMarkerState : undefined}
                   allPortals={allPortals}
+                  portalSids={portalSids}
+                  onStartPortalLink={canEditEntities ? setPortalLinkFrom : undefined}
+                  onUnlinkPortal={canEditEntities ? handleUnlinkPortal : undefined}
                   onSetPortalTarget={canEditEntities ? handleSetPortalTarget : undefined}
                   highlightedNode={highlightedNode}
                   onSetHighlightedNode={setHighlightedNode}

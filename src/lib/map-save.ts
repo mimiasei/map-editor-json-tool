@@ -45,6 +45,7 @@ import {
   rotateObjectInstance,
   paintTerrainTiles,
   paintLevelTiles,
+  linkPortalPair,
   paintWaterTiles,
   paintRoadTiles,
   paintClimbTiles,
@@ -73,6 +74,8 @@ export type MapSaveEdit =
   | { kind: 'setSpawnerPlayerType'; entityType: number; entityId: number; spawnType: 0 | 1 | 2 }
   | { kind: 'swapSpawnerOwner'; entityType: number; entityId: number; newOwner: number }
   | { kind: 'setPortalTarget'; entityType: number; entityId: number; targetIdx?: number; isActive?: boolean }
+  /** Link two portals both ways (`b` set) or unlink `a` from its partner (`b` null). */
+  | { kind: 'linkPortals'; a: { entityType: number; entityId: number }; b: { entityType: number; entityId: number } | null }
   | { kind: 'setCityName'; entityType: number; entityId: number; customCityName: string }
   | { kind: 'setHeroSid'; entityType: number; entityId: number; heroSid: string }
   /** A free-standing `random-hero`: its owner is an existing player (propOwners) and its hero
@@ -206,6 +209,8 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
       targetIdx: edit.targetIdx,
       isActive: edit.isActive,
     })
+  } else if (edit?.kind === 'linkPortals') {
+    newChunks[1] = linkPortalPair(newChunks[1], edit.a, edit.b)
   } else if (edit?.kind === 'setCityName') {
     newChunks[1] = setCustomCityName(newChunks[1], edit.entityType, edit.entityId, edit.customCityName)
   } else if (edit?.kind === 'setHeroSid') {
@@ -405,6 +410,18 @@ export function applyMapEdit(container: MapContainer, edit?: MapSaveEdit): Apply
     if (!match || !targetOk || !activeOk) {
       throw new Error('Verification failed: portal target not reflected in the rebuilt propPortals table')
     }
+  } else if (edit?.kind === 'linkPortals') {
+    const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
+      objectsProperties?: { propPortals?: Array<{ type?: number | string; id?: number; targetIdx?: number; isActive?: boolean }> }
+    }
+    const rows = block2.objectsProperties?.propPortals ?? []
+    const row = (e: { entityType: number; entityId: number }) => rows.find((r) => String(r.type) === String(e.entityType) && r.id === e.entityId)
+    const ra = row(edit.a)
+    const rb = edit.b ? row(edit.b) : undefined
+    const ok = edit.b
+      ? ra?.targetIdx === edit.b.entityId && rb?.targetIdx === edit.a.entityId && ra.isActive === true && rb.isActive === true
+      : ra?.targetIdx === -1
+    if (!ok) throw new Error('Verification failed: portal link not reflected in the rebuilt propPortals table')
   } else if (edit?.kind === 'setCityName') {
     const block2 = JSON.parse(new TextDecoder('utf-8').decode(reparsed.chunks[1])) as {
       objectsProperties?: { propCities?: Array<{ type?: number | string; id?: number; customCityName?: string }> }

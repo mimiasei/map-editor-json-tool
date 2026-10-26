@@ -16,8 +16,9 @@ import {
 } from '@/lib/map-grid/reachability-validation'
 import { checkForUpdate } from '@/lib/updater'
 import { buildIconRequests, newlyRequestedIcons } from '@/lib/catalog/icon-requests'
-import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog } from '@/lib/native-fs'
-import { openAndLoadMapFile, commitMapWithPathPrompt } from '@/lib/map-file'
+import { openFile, saveFile, saveToPath, isTauri, pickCoreZip, confirmDialog, readTextFileAt } from '@/lib/native-fs'
+import { openAndLoadMapFile, openMapFromPath, commitMapWithPathPrompt } from '@/lib/map-file'
+import { getRecentFiles, recordRecentFile, removeRecentFile, type RecentFile } from '@/lib/recent-files'
 import NewMapDialog from '@/components/common/NewMapDialog'
 import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { saveMapFile } from '@/lib/map-save'
@@ -78,6 +79,7 @@ import {
   UploadCloud,
   FileInput,
   Dices,
+  BalanceScale,
 } from '@/components/ui/icons'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -86,6 +88,9 @@ import ImportH3mDialog from '@/components/common/ImportH3mDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
+import PlayerBalancePanel, { DecorationBalanceSection } from '@/components/common/PlayerBalancePanel'
+import { computeDecorationBalance, type DecorationBalance } from '@/lib/map-grid/decoration-balance'
+import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
 import { ImageIcon } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
@@ -170,6 +175,13 @@ export default function Toolbar({
   const mapIsDirty = useMapDocumentStore((s) => s.mapIsDirty)
 
   const [validateOpen,        setValidateOpen]        = useState(false)
+  // Same on-demand rule as the placement check: scored when the dialog opens, from the loaded map. The score is the one the random map
+  // generator itself uses to pick and warn (computePlayerBalance).
+  const [fairnessOpen,        setFairnessOpen]        = useState(false)
+  // A boolean selector, so map edits don't re-render the toolbar.
+  const hasMap = useMapContextStore((s) => !!s.context)
+  const [fairness, setFairness] = useState<PlayerBalance | null>(null)
+  const [decorationBalance, setDecorationBalance] = useState<DecorationBalance | null>(null)
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   // On-demand only (per issue: no continuous/auto-validation while editing)
@@ -297,8 +309,10 @@ export default function Toolbar({
   const handleImport = async () => {
     // Opens a .json file only. For .map files use handleOpenMap.
     const result = await openFile()
-    if (!result) return
+    if (result) loadImportedJson(result)
+  }
 
+  const loadImportedJson = (result: { name: string; path: string; content: string }) => {
     const { scenario: imported, errors, warnings, mapName: mn, dialogs: dl, localization: loc, translations: tr, customHeroes: ch, customMapObjects: cmo, customArtifacts: ca, customBuffs: cb, annotations } = importScenario(result.content)
     if (imported) {
       setScenario(imported)
@@ -325,6 +339,7 @@ export default function Toolbar({
         useGuideStore.setState({ templateAnnotations: annotations })
       }
       logInfo(`Imported: ${result.name}`)
+      if (result.path) recordRecentFile(result.path, 'json')
     }
     if (errors.length > 0 || warnings.length > 0) {
       logWarn(`Import of ${result.name}: ${errors.length} error(s), ${warnings.length} warning(s)`)
@@ -377,6 +392,34 @@ export default function Toolbar({
       if (!ok) return
     }
     onGenerateMapOpen?.()
+  }
+
+  // ── File > Open Recent... — same unsaved-changes guard as New Map above, since opening replaces what is loaded.
+  const handleOpenRecentEntry = async (entry: RecentFile) => {
+    if (isDirty || mapIsDirty) {
+      const ok = await confirmDialog(`You have unsaved changes. Open ${entry.name} anyway?`, 'Open Recent')
+      if (!ok) return
+    }
+    try {
+      if (entry.kind === 'map') {
+        const result = await openMapFromPath(entry.path)
+        if (result.warnings.length > 0) {
+          setImportWarnings(result.warnings)
+          setImportFeedbackOpen(true)
+        }
+      } else {
+        const content = await readTextFileAt(entry.path)
+        if (content === null) throw new Error(`Could not read ${entry.path}. It may have been moved or deleted.`)
+        loadImportedJson({ name: entry.name, path: entry.path, content })
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      logError(`Failed to open recent file: ${msg}`)
+      // The menu can't offer an X per entry, so a file that is gone drops off the list when it fails to open.
+      removeRecentFile(entry.path)
+      setImportErrors([msg])
+      setImportFeedbackOpen(true)
+    }
   }
 
   // ── Open .map file ────────────────────────────────────────────────────────────
@@ -523,12 +566,16 @@ export default function Toolbar({
   // Dispatching through a ref that is refreshed on every render removes the dependency
   // array as a correctness requirement, rather than listing four more names that the next
   // new field would miss again.
-  const handlersRef = useRef({ handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates })
-  handlersRef.current = { handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates }
+  const handlersRef = useRef({ handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry })
+  handlersRef.current = { handleImport, handleOpenMap, handleImportH3mClick, handleSave, handleExport, handleCheckForUpdates, handleOpenRecentEntry }
 
   useEffect(() => {
     const onOpen      = () => { handlersRef.current.handleImport() }
     const onOpenMap   = () => { handlersRef.current.handleOpenMap() }
+    const onOpenRecentFile = (e: Event) => {
+      const entry = getRecentFiles().find((f) => f.path === (e as CustomEvent<string>).detail)
+      if (entry) void handlersRef.current.handleOpenRecentEntry(entry)
+    }
     const onImportH3m = () => { void handlersRef.current.handleImportH3mClick() }
     const onSave      = () => { handlersRef.current.handleSave() }
     const onSaveAs    = () => { handlersRef.current.handleExport() }
@@ -540,6 +587,7 @@ export default function Toolbar({
     window.addEventListener('oe:check-updates', onUpdates)
     window.addEventListener('oe:open',       onOpen)
     window.addEventListener('oe:open-map',   onOpenMap)
+    window.addEventListener('oe:open-recent-file', onOpenRecentFile)
     window.addEventListener('oe:import-h3m', onImportH3m)
     window.addEventListener('oe:save',       onSave)
     window.addEventListener('oe:save-as',    onSaveAs)
@@ -548,6 +596,7 @@ export default function Toolbar({
       window.removeEventListener('oe:check-updates', onUpdates)
       window.removeEventListener('oe:open',       onOpen)
       window.removeEventListener('oe:open-map',   onOpenMap)
+      window.removeEventListener('oe:open-recent-file', onOpenRecentFile)
       window.removeEventListener('oe:import-h3m', onImportH3m)
       window.removeEventListener('oe:save',       onSave)
       window.removeEventListener('oe:save-as',    onSaveAs)
@@ -565,6 +614,13 @@ export default function Toolbar({
   // like `validation` above (a full reachability flood-fill/BFS isn't cheap
   // on a large map, and continuously re-validating while the user is mid-edit
   // would be noisy besides) — only recomputed right before the dialog opens.
+  const handleOpenFairness = () => {
+    const context = useMapContextStore.getState().context
+    setFairness(context ? computePlayerBalance(context, catalog) : null)
+    setDecorationBalance(context ? computeDecorationBalance(context, catalog) : null)
+    setFairnessOpen(true)
+  }
+
   const handleOpenValidate = () => {
     const context = useMapContextStore.getState().context
     setMapPlacementCheck(
@@ -709,19 +765,34 @@ export default function Toolbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" onClick={handleOpenValidate} className="gap-1.5">
+              <Button variant="ghost" size="sm" onClick={handleOpenValidate} className="relative gap-1.5">
                 <ShieldCheck className="h-4 w-4" />
                 Validate
-                <Badge
-                  variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
-                  className={`ml-1 h-4 px-1 text-xs${validation.errors.length === 0 && validation.warnings.length === 0 ? ' invisible' : ''}`}
-                >
-                  {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
-                </Badge>
+                {/* Sits on the button's corner, so it adds no width: the gap to the next button is the same as to the one before. */}
+                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
+                  <Badge
+                    variant={validation.errors.length > 0 ? 'destructive' : 'secondary'}
+                    className="absolute -top-1 -right-1 h-4 min-w-4 justify-center px-1 text-[10px] leading-none"
+                  >
+                    {validation.errors.length > 0 ? validation.errors.length : validation.warnings.length}
+                  </Badge>
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>Validate scenario</TooltipContent>
           </Tooltip>
+
+          {hasMap && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleOpenFairness} className="gap-1.5">
+                  <BalanceScale className="h-4 w-4" />
+                  Fairness
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Check how even the map is between players</TooltipContent>
+            </Tooltip>
+          )}
 
           {isTauri() && (
             <Tooltip>
@@ -1082,6 +1153,20 @@ export default function Toolbar({
           </Tooltip>
         </div>
       </header>
+
+      {/* Fairness dialog */}
+      <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Map fairness</DialogTitle>
+          </DialogHeader>
+          <PlayerBalancePanel balance={fairness} />
+          <DecorationBalanceSection decoration={decorationBalance} />
+          <p className="text-xs text-muted-foreground">
+            The same score the random map generator uses. It compares each player's own area (land, mines, hills, sites), not the neutral zones between them.
+          </p>
+        </DialogContent>
+      </Dialog>
 
       {/* Validate dialog */}
       <Dialog open={validateOpen} onOpenChange={setValidateOpen}>

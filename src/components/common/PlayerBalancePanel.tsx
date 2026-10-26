@@ -1,4 +1,5 @@
 import type { PlayerBalance, BalanceDimension } from '@/lib/map-grid/player-balance'
+import type { DecorationBalance } from '@/lib/map-grid/decoration-balance'
 
 /** Player balance table + score (issue #255) — shared by the Stats panel and
  *  the Generate Random Map result step so both show the same numbers. */
@@ -43,14 +44,70 @@ export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance
           ))}
         </tbody>
       </table>
+      {balance.problems.length > 0 && (
+        <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2 space-y-1">
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Not compared</p>
+          <ul className="text-xs list-disc pl-4 space-y-0.5">
+            {balance.problems.map((text) => <li key={text}>{text}</li>)}
+          </ul>
+        </div>
+      )}
       {balance.reasons.length > 0 && (
         <ul className="text-xs text-muted-foreground list-disc pl-4">
           {balance.reasons.map((reason) => <li key={reason}>{reason}</li>)}
         </ul>
       )}
+      {balance.recommendations.length > 0 ? (
+        <div className="space-y-1">
+          <p className="text-xs font-semibold">Recommendations</p>
+          <ul className="text-xs list-disc pl-4 space-y-0.5">
+            {balance.recommendations.map((text) => <li key={text}>{text}</li>)}
+          </ul>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">Nothing stands out: no player is more than 10% off the group on land, mines, sites or hills.</p>
+      )}
       <p className="text-[11px] text-muted-foreground">
         Compares each player&apos;s own zone only — highlighted cells are over 10% off the group median. Guard strength and the neutral zones around each player are not compared.
       </p>
+    </div>
+  )
+}
+
+/** Decorations per player area (Fairness dialog only; not part of the score). */
+export function DecorationBalanceSection({ decoration }: { decoration: DecorationBalance | null }) {
+  if (!decoration) return null
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-semibold">Decorations</p>
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-border text-muted-foreground">
+            <th className="pb-1 text-left font-medium">Player</th>
+            <th className="pb-1 text-right font-medium" title="Mountains, trees, rocks and other decorations standing in the player's own area">Count</th>
+            <th className="pb-1 text-right font-medium" title="Share of the area's dry tiles that decorations block">Blocked</th>
+          </tr>
+        </thead>
+        <tbody>
+          {decoration.rows.map((r) => {
+            const tone = r.flagged ? 'text-amber-600 dark:text-amber-400 font-medium' : ''
+            return (
+              <tr key={r.zoneId} className="border-b border-border/50">
+                <td className="py-1">Player {r.owner}</td>
+                <td className={`py-1 text-right ${tone}`}>{r.decorationCount}</td>
+                <td className={`py-1 text-right ${tone}`}>{Math.round(r.blockedPct)}% ({r.blockedTiles} tiles)</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      {decoration.notes.length > 0 ? (
+        <ul className="text-xs list-disc pl-4 space-y-0.5">
+          {decoration.notes.map((text) => <li key={text}>{text}</li>)}
+        </ul>
+      ) : (
+        <p className="text-xs text-muted-foreground">Decorations are about even between the players.</p>
+      )}
     </div>
   )
 }

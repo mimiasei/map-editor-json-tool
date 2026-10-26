@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, PenLine, Tag, UserCog, Wand2 } from '@/components/ui/icons'
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, LinkPortal, PenLine, Tag, UnlinkPortal, UserCog, Wand2 } from '@/components/ui/icons'
 import HeroCatalogListEditor from '@/components/tree/HeroCatalogListEditor'
 import HeroPickerDialog from '@/components/catalog/HeroPickerDialog'
 import ObjectActionsEditor from './ObjectActionsEditor'
@@ -121,6 +121,12 @@ export interface MapGridCellContentProps {
   allPortals?: PlacedObject[]
   /** Change which portal this one connects to, and/or its active state — docked-only. */
   onSetPortalTarget?: (item: PlacedObject, patch: { targetIdx?: number; isActive?: boolean }) => void
+  /** Sids that are portals even when they have no link row yet (a freshly placed portal has none). */
+  portalSids?: ReadonlySet<string>
+  /** Arms the pick mode: the next portal clicked on the grid is linked with this one, both ways. Docked-only. */
+  onStartPortalLink?: (item: PlacedObject) => void
+  /** Frees this portal and its partner. */
+  onUnlinkPortal?: (item: PlacedObject) => void
   /** The tile currently highlighted on the grid (from "Highlight on grid" below), or null. */
   highlightedNode?: number | null
   /** Docked-only — the undocked mirror can't drive the main window's grid overlay. */
@@ -230,6 +236,9 @@ export default function MapGridCellContent({
   onSetMarkerState,
   allPortals = [],
   onSetPortalTarget,
+  portalSids,
+  onStartPortalLink,
+  onUnlinkPortal,
   highlightedNode = null,
   onSetHighlightedNode,
   onSetGuardSquad,
@@ -306,7 +315,11 @@ export default function MapGridCellContent({
   const trimmedSid = newSidInput.trim()
   const sidTaken = trimmedSid !== '' && existingSids.includes(trimmedSid)
 
-  const portalInfo = selected?.portalInfo
+  // A portal placed on the grid has no link row until it is first linked; it still gets the Portal section (unlinked, active).
+  const portalInfo: NonNullable<PlacedObject['portalInfo']> | undefined = selected?.portalInfo
+    ?? (selected && selected.type === 0 && portalSids?.has(selected.sid)
+      ? { id: selected.id, targetIdx: undefined, targetNode: undefined, isActive: true, linkKind: 'unlinked' }
+      : undefined)
   const connectedPortal = portalInfo?.targetNode !== undefined
     ? allPortals.find((p) => p.node === portalInfo.targetNode)
     : undefined
@@ -967,33 +980,35 @@ export default function MapGridCellContent({
             <div className="space-y-2 pt-2 mt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground">Portal</p>
 
-              <div>
+              <div className="space-y-1.5">
                 <p className="text-xs text-muted-foreground">Connected to</p>
-                {onSetPortalTarget ? (
-                  <Select
-                    value={portalInfo.targetIdx !== undefined ? String(portalInfo.targetIdx) : 'none'}
-                    onValueChange={(v) => onSetPortalTarget(selected, { targetIdx: v === 'none' ? -1 : Number(v) })}
-                  >
-                    <SelectTrigger className="h-7 text-xs mt-0.5">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Not connected</SelectItem>
-                      {allPortals.filter((p) => p.key !== selected.key).map((p) => (
-                        <SelectItem key={p.key} value={String(p.id)}>
-                          {p.sid} ({p.x}, {p.z})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-xs">
-                    {connectedPortal ? `${connectedPortal.sid} (${connectedPortal.x}, ${connectedPortal.z})` : 'Not connected'}
+                {connectedPortal ? (
+                  <p className="text-xs font-medium">
+                    {connectedPortal.entitySid || connectedPortal.displayName || connectedPortal.sid} ({connectedPortal.x}, {connectedPortal.z})
                   </p>
+                ) : portalInfo.targetIdx !== undefined ? (
+                  <p className="text-xs">Portal #{portalInfo.targetIdx} (not found on the map)</p>
+                ) : (
+                  <p className="text-xs">Not connected</p>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Changing this only affects this portal — edit the other one too if you want a two-way link.
-                </p>
+                {(onStartPortalLink || onUnlinkPortal) && (
+                  <div className="flex items-center gap-1.5">
+                    {onStartPortalLink && (
+                      <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onStartPortalLink(selected)}
+                        title="Then click the other portal on the map. Links both ways.">
+                        <LinkPortal className="h-3.5 w-3.5" />
+                        {portalInfo.targetIdx !== undefined ? 'Change link…' : 'Link to portal…'}
+                      </Button>
+                    )}
+                    {onUnlinkPortal && portalInfo.targetIdx !== undefined && (
+                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => onUnlinkPortal(selected)}
+                        title="Disconnect this portal and the one it leads to">
+                        <UnlinkPortal className="h-3.5 w-3.5" />
+                        Unlink
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2">

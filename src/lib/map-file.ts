@@ -2,7 +2,8 @@
 // Ties together: open dialog → binary parse → sidecar JSON check → load stores.
 // This is the single entry point for "Open .map file".
 
-import { openMapFile, checkFileExists, readTextFileAt, pickSavePath } from '@/lib/native-fs'
+import { openMapFile, checkFileExists, readTextFileAt, readBinaryFile, pickSavePath } from '@/lib/native-fs'
+import { recordRecentFile } from '@/lib/recent-files'
 import { parseMapFile } from '@/lib/map-parser'
 import { extractMapContext, extractScenario } from '@/lib/map-extract'
 import { importScenario } from '@/lib/import'
@@ -50,7 +51,19 @@ function sidecarPathFor(mapPath: string, mapName: string): string {
 export async function openAndLoadMapFile(): Promise<OpenMapResult | null> {
   const file = await openMapFile()
   if (!file) return null
-  return loadParsedMapFile(file.name, file.path || null, file.buffer)
+  const result = await loadParsedMapFile(file.name, file.path || null, file.buffer)
+  if (file.path) recordRecentFile(file.path, 'map')
+  return result
+}
+
+/** Opens a .map whose path is already known (File > Open Recent). Throws when the file can no longer be read. */
+export async function openMapFromPath(path: string): Promise<OpenMapResult> {
+  const buffer = await readBinaryFile(path)
+  if (!buffer) throw new Error(`Could not read ${path}. It may have been moved or deleted.`)
+  const name = path.replace(/\\/g, '/').split('/').pop() ?? path
+  const result = await loadParsedMapFile(name, path, buffer)
+  recordRecentFile(path, 'map')
+  return result
 }
 
 /**

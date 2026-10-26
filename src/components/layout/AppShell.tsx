@@ -11,6 +11,7 @@ import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import { commitMapWithPathPrompt } from '@/lib/map-file'
 import { exportProjectJson, isScenarioEmpty } from '@/lib/export'
 import { isTauri, saveFile, saveToPath, confirmDialog } from '@/lib/native-fs'
+import { clearRecentFiles, syncRecentMenu } from '@/lib/recent-files'
 import { logInfo, logError } from '@/lib/logger'
 import { createPanelSyncChannel, PANEL_META } from '@/lib/panel-sync'
 import type { PanelState } from '@/lib/panel-sync'
@@ -591,10 +592,16 @@ export default function AppShell() {
     ;(async () => {
       const { listen } = await import('@tauri-apps/api/event')
       unlistenMenu = await listen<string>('menu-action', (event) => {
+        // File > Open Recent entries carry their path in the id.
+        if (event.payload.startsWith('recent:')) {
+          window.dispatchEvent(new CustomEvent('oe:open-recent-file', { detail: event.payload.slice('recent:'.length) }))
+          return
+        }
         switch (event.payload) {
           case 'new':      handleNew(); break
           case 'open':     window.dispatchEvent(new Event('oe:open')); break
           case 'open-map': window.dispatchEvent(new Event('oe:open-map')); break
+          case 'clear-recent': clearRecentFiles(); break
           case 'import-h3m': window.dispatchEvent(new Event('oe:import-h3m')); break
           case 'save':     handleSave(); break
           case 'save-as':  window.dispatchEvent(new Event('oe:save-as')); break
@@ -618,6 +625,9 @@ export default function AppShell() {
           case 'quit': win.close(); break
         }
       })
+
+      // The native File > Open Recent submenu starts as a placeholder; fill it from the stored list.
+      syncRecentMenu()
 
       const { getCurrentWindow } = await import('@tauri-apps/api/window')
       const win = getCurrentWindow()
