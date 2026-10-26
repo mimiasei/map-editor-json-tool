@@ -1935,7 +1935,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // priority over move-drag/pan since it's the more specific gesture, and
     // works independently of moveState (rotate isn't gated behind Move mode,
     // same as the pre-existing chevron rotate buttons).
-    if (canEditEntities && selectedRotatable) {
+    if (canEditEntities && selectedRotatable && !portalLinkFrom) {
       const rect = e.currentTarget.getBoundingClientRect()
       if (isInRotateRing(e.clientX, e.clientY, rect)) {
         const r = selectedFootprintClientRect(rect)!
@@ -1957,7 +1957,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // already active) is a drag-to-move candidate — real commitment (calling
     // startMove) waits for the same movement threshold as panning below, so
     // a plain click still reaches the icon's own onClick unmolested.
-    if (canEditEntities && !moveState) {
+    // Not while linking portals: the click must reach the pointer-up that picks the partner, not arm a drag-move of the portal under it.
+    if (canEditEntities && !moveState && !portalLinkFrom) {
       const node = screenToNode(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
       const item = node !== null ? primaryByNode.get(node)?.primary : undefined
       if (item) {
@@ -5780,7 +5781,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     onPointerDown={(e) => e.stopPropagation()}
                     onPointerUp={(e) => e.stopPropagation()}
                   >
-                    <span>Click the portal to link <b>{portalLinkFrom.displayName || portalLinkFrom.sid}</b> with (highlighted)</span>
+                    <span>Click the portal to link <b>{portalLinkFrom.entitySid || portalLinkFrom.displayName || portalLinkFrom.sid}</b> with (highlighted)</span>
                     <Button variant="ghost" size="sm" className="h-6 text-xs" title="Cancel (Esc)" onClick={() => setPortalLinkFrom(null)}>
                       <Cancel className="h-3.5 w-3.5" />
                     </Button>

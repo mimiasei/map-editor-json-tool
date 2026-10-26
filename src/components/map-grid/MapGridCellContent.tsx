@@ -984,7 +984,7 @@ export default function MapGridCellContent({
                 <p className="text-xs text-muted-foreground">Connected to</p>
                 {connectedPortal ? (
                   <p className="text-xs font-medium">
-                    {connectedPortal.displayName || connectedPortal.sid} ({connectedPortal.x}, {connectedPortal.z})
+                    {connectedPortal.entitySid || connectedPortal.displayName || connectedPortal.sid} ({connectedPortal.x}, {connectedPortal.z})
                   </p>
                 ) : portalInfo.targetIdx !== undefined ? (
                   <p className="text-xs">Portal #{portalInfo.targetIdx} (not found on the map)</p>
