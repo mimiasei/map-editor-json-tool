@@ -47,6 +47,7 @@ import {
   resolveInteractableSubcategory,
   type InteractableSubcategory,
 } from '@/lib/map-grid/interactable-subcategories'
+import { computeFootprintTiles, footprintIconBounds } from '@/lib/map-grid/footprint'
 import type { GameCatalog, CatalogMapObject, CatalogCreature } from '@/lib/catalog/types'
 
 // The 6 object-type filters requested — a different grouping from the
@@ -94,6 +95,17 @@ type BrowseMode = 'objects' | 'creatures'
 // faction entry in Core/DB/fractions, so it isn't part of `catalog.factions`.
 const NEUTRAL_FRACTION_ID = 'neutral'
 
+// Footprint size buckets for the Size filter; anything else (non-square, 4x4 and up) is "other".
+const SIZE_ORDER = ['1x1', '2x2', '3x3', 'other'] as const
+type SizeKey = (typeof SIZE_ORDER)[number]
+const SIZE_LABELS: Record<SizeKey, string> = { '1x1': '1x1', '2x2': '2x2', '3x3': '3x3', other: 'Other' }
+
+/** Visual footprint ("1" cells only, as the grid draws it) as "WxH"; objects with no footprint count as 1x1. */
+function objectSizeLabel(o: CatalogMapObject): string {
+  const b = footprintIconBounds(computeFootprintTiles(o, 0, 0))
+  return b ? `${b.maxX - b.minX + 1}x${b.maxZ - b.minZ + 1}` : '1x1'
+}
+
 const BIOME_ORDER: BiomeId[] = [1, 2, 3, 4, 5, 6, 7]
 // Object catalog entries use their own biome string ("Desert") where tiles
 // use "Sand" for the same terrain (confirmed against every real
@@ -116,6 +128,7 @@ interface StoredFilter {
   types: TypeFilterKey[]
   plainType: TypeFilterKey | null
   biomes: Record<BiomeId, boolean>
+  sizes: Record<SizeKey, boolean>
   mode: BrowseMode
   fractions: string[]
   tiers: Record<number, boolean>
@@ -147,6 +160,7 @@ function loadStoredFilter(): StoredFilter {
     types: Array.isArray(parsed.types) ? parsed.types : [],
     plainType: PLAIN_TYPE_FILTER_ORDER.includes(parsed.plainType as TypeFilterKey) ? (parsed.plainType as TypeFilterKey) : null,
     biomes: buildSubFilterDefaults(BIOME_ORDER, parsed.biomes as Partial<Record<BiomeId, boolean>> | undefined),
+    sizes: buildSubFilterDefaults(SIZE_ORDER as unknown as SizeKey[], parsed.sizes),
     mode: parsed.mode === 'creatures' ? 'creatures' : 'objects',
     fractions: Array.isArray(parsed.fractions) ? parsed.fractions : [],
     tiers: buildSubFilterDefaults(TIER_ORDER, parsed.tiers as Partial<Record<number, boolean>> | undefined),
@@ -280,6 +294,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
   const [typeFilter, setTypeFilter] = useState<Set<TypeFilterKey>>(() => new Set(initialFilter.types))
   const [plainTypeFilter, setPlainTypeFilter] = useState<TypeFilterKey | null>(initialFilter.plainType)
   const [biomeFilter, setBiomeFilter] = useState<Record<BiomeId, boolean>>(initialFilter.biomes)
+  const [sizeFilter, setSizeFilter] = useState<Record<SizeKey, boolean>>(initialFilter.sizes)
   const [mode, setMode] = useState<BrowseMode>(initialFilter.mode)
   const [fractionFilter, setFractionFilter] = useState<Set<string>>(() => new Set(initialFilter.fractions))
   const [tierFilter, setTierFilter] = useState<Record<number, boolean>>(initialFilter.tiers)
@@ -297,7 +312,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
 
   const persist = (next: Partial<StoredFilter>) => {
     saveStoredFilter({
-      types: [...typeFilter], plainType: plainTypeFilter, biomes: biomeFilter, mode, fractions: [...fractionFilter],
+      types: [...typeFilter], plainType: plainTypeFilter, biomes: biomeFilter, sizes: sizeFilter, mode, fractions: [...fractionFilter],
       tiers: tierFilter, decorationSub: decorationSubFilter, interactableSub: interactableSubFilter,
       showCampaign, showCustom, showNoTemplate,
       ...next,
@@ -339,6 +354,18 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
     const next = Object.fromEntries(BIOME_ORDER.map((b) => [b, value])) as Record<BiomeId, boolean>
     setBiomeFilter(next)
     persist({ biomes: next })
+  }
+  const toggleSize = (k: SizeKey) => {
+    setSizeFilter((prev) => {
+      const next = { ...prev, [k]: !prev[k] }
+      persist({ sizes: next })
+      return next
+    })
+  }
+  const setAllSizes = (value: boolean) => {
+    const next = Object.fromEntries(SIZE_ORDER.map((k) => [k, value])) as Record<SizeKey, boolean>
+    setSizeFilter(next)
+    persist({ sizes: next })
   }
   const toggleTier = (t: number) => {
     setTierFilter((prev) => {
@@ -406,6 +433,8 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
     persist({ showNoTemplate: v })
   }
 
+  const sizeLabels = useMemo(() => new Map((catalog?.mapObjects ?? []).map((o) => [o.id, objectSizeLabel(o)])), [catalog])
+
   const entries = useMemo(() => {
     const all = catalog?.mapObjects ?? []
     const q = query.trim().toLowerCase()
@@ -433,12 +462,14 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
       if (o.category === 'environments'
         && !decorationSubFilter[resolveDecorationSubcategory(o.id, o.category) as PanelDecorationSubcategory]) return false
       if (o.category === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(o.id)]) return false
+      const size = sizeLabels.get(o.id) ?? '1x1'
+      if (!sizeFilter[(SIZE_ORDER as readonly string[]).includes(size) ? (size as SizeKey) : 'other']) return false
       if (!showCampaign && o.id.includes('campaign')) return false
       if (!showCustom && o.id.includes('custom')) return false
       if (q && !o.name.toLowerCase().includes(q) && !o.id.toLowerCase().includes(q)) return false
       return true
     })
-  }, [catalog, typeFilter, plainTypeFilter, biomeFilter, decorationSubFilter, interactableSubFilter, showCampaign, showCustom, query])
+  }, [catalog, typeFilter, plainTypeFilter, biomeFilter, sizeFilter, sizeLabels, decorationSubFilter, interactableSubFilter, showCampaign, showCustom, query])
 
   const creatureEntries = useMemo(() => {
     const all = catalog?.creatures ?? []
@@ -549,6 +580,37 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                             onCheckedChange={() => toggleBiome(b)}
                           />
                           <Label htmlFor={`obj-browser-biome-${b}`} className="text-xs cursor-pointer">{BIOME_NAMES[b]}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className={pillClass(SIZE_ORDER.some((k) => !sizeFilter[k]), 'px-2 rounded flex items-center gap-0.5')}>
+                      Size
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-40 space-y-2" data-nodrag>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="obj-browser-size-all"
+                        checked={SIZE_ORDER.every((k) => sizeFilter[k])}
+                        onCheckedChange={(v) => setAllSizes(Boolean(v))}
+                      />
+                      <Label htmlFor="obj-browser-size-all" className="text-xs cursor-pointer font-medium">All</Label>
+                    </div>
+                    <div className="border-t border-border pt-2 space-y-2">
+                      {SIZE_ORDER.map((k) => (
+                        <div key={k} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`obj-browser-size-${k}`}
+                            checked={sizeFilter[k]}
+                            onCheckedChange={() => toggleSize(k)}
+                          />
+                          <Label htmlFor={`obj-browser-size-${k}`} className="text-xs cursor-pointer">{SIZE_LABELS[k]}</Label>
                         </div>
                       ))}
                     </div>
@@ -737,7 +799,7 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                 >
                   <HoverZoomIcon sid={o.id} iconId={o.icon} name={o.name} size={24} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{o.name}</p>
+                    <p className="text-sm truncate">{o.name} ({sizeLabels.get(o.id) ?? '1x1'})</p>
                     <p className="text-xs text-muted-foreground truncate font-mono">{o.id}</p>
                   </div>
                 </button>
