@@ -3460,6 +3460,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     applyEdit({ kind: 'rotateObject', entityId: item.id, newRotation: stepRotation(item.rotation ?? 0, delta) }, 'rotate object')
   }
 
+  const setMirrored = (item: PlacedObject, mirrored: boolean) => {
+    const quadrant = (item.rotation ?? 0) % 10
+    applyEdit({ kind: 'rotateObject', entityId: item.id, newRotation: quadrant + (mirrored ? 10 : 0) }, mirrored ? 'mirror object' : 'unmirror object')
+  }
+
   // ── Delete (issue #167 Phase C) ─────────────────────────────────────────
   // Unlike Add/Move/Rotate, a delete still needs a deliberate confirmation
   // step (destructive-action UX guidance from #167's original research) —
@@ -5871,6 +5876,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   onStartMove={canEditEntities ? startMove : undefined}
                   onCancelMove={canEditEntities ? cancelMove : undefined}
                   onStepRotate={canEditEntities ? stepRotate : undefined}
+                  onSetMirrored={canEditEntities ? setMirrored : undefined}
                   deleteTarget={deleteTarget}
                   deleteUsageWarnings={deleteUsageWarnings}
                   onStartDelete={canEditEntities ? startDelete : undefined}

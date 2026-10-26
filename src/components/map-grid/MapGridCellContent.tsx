@@ -157,6 +157,8 @@ export interface MapGridCellContentProps {
   /** Step `item`'s rotation by one quadrant in either direction — applies
    *  immediately (issue #195 follow-up). Docked-only. */
   onStepRotate?: (item: PlacedObject, delta: 1 | -1) => void
+  /** Flip `item` horizontally (rotations[] +10 offset), keeping its quadrant. Docked-only. */
+  onSetMirrored?: (item: PlacedObject, mirrored: boolean) => void
   /** The parent's active delete confirmation, if any (issue #167 Phase C) —
    *  same "compared locally against selected.key" convention as moveTarget. */
   deleteTarget?: { key: string } | null
@@ -239,6 +241,7 @@ export default function MapGridCellContent({
   onStartMove,
   onCancelMove,
   onStepRotate,
+  onSetMirrored,
   deleteTarget = null,
   deleteUsageWarnings = [],
   onStartDelete,
@@ -453,6 +456,18 @@ export default function MapGridCellContent({
                   </Button>
                 )}
               </div>
+            </div>
+          )}
+
+          {selected.type === 0 && selected.rotation !== undefined && (
+            <div className="flex items-center gap-2">
+              <Switch
+                id="mgc-mirrored"
+                checked={selected.rotation >= 10}
+                disabled={!onSetMirrored}
+                onCheckedChange={(on) => onSetMirrored?.(selected, on)}
+              />
+              <Label htmlFor="mgc-mirrored" className="text-xs">Mirrored</Label>
             </div>
           )}
 
