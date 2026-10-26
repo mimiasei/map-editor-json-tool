@@ -61,6 +61,7 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
+import { enclosedBlockedTiles } from '@/lib/map-grid/zone-fill'
 import { waterExtensionAfterLevelPaint } from '@/lib/map-grid/water-extend'
 import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
@@ -1133,7 +1134,9 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return z === 0 || z === startZone
     })
     if (region.length === 0) return
-    applyEdit({ kind: 'paintZone', changes: region.map((n) => ({ node: n, zoneId })) }, 'bucket-fill player area')
+    // A city or mine inside the area is part of it: its blocked tiles are painted too (see zone-fill.ts).
+    const inside = enclosedBlockedTiles(region, (n) => blockedTileSet.has(n), (n) => (customAreasPainting[n] ?? 0) === 0 || customAreasPainting[n] === startZone, sizeX, sizeZ)
+    applyEdit({ kind: 'paintZone', changes: [...region, ...inside].map((n) => ({ node: n, zoneId })) }, 'bucket-fill player area')
   }, [customAreasPainting, sizeX, sizeZ, blockedTileSet, applyEdit])
 
   // Interactable brush settings + pool — declared here (rather than
