@@ -18,9 +18,11 @@ interface Props {
   fx?: boolean
   /** Placed mirrored (rotations[] >= 10): flipped left-right around the anchor tile's centre. */
   mirrored?: boolean
+  /** Tiles to move a mirrored image right: the footprint is anchored at its left tile, so the flip alone would send the body to the left of it. */
+  mirrorShiftTiles?: number
 }
 
-export function RenderedObject({ render, name, cell, shiftX, shiftY, fx, mirrored }: Props) {
+export function RenderedObject({ render, name, cell, shiftX, shiftY, fx, mirrored, mirrorShiftTiles = 0 }: Props) {
   const box = renderBoxFromAnchorTile(render, cell)
   return (
     <>
@@ -29,7 +31,7 @@ export function RenderedObject({ render, name, cell, shiftX, shiftY, fx, mirrore
         alt={name}
         draggable={false}
         className="absolute max-w-none pointer-events-none select-none"
-        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, ...(mirrored ? { transform: 'scaleX(-1)', transformOrigin: `${cell / 2 - box.left}px 50%` } : undefined), ...(fx ? FX_IMAGE_STYLE : undefined) }}
+        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, ...(mirrored ? { transform: `translateX(${mirrorShiftTiles * cell}px) scaleX(-1)`, transformOrigin: `${cell / 2 - box.left}px 50%` } : undefined), ...(fx ? FX_IMAGE_STYLE : undefined) }}
       />
       {fx && (
         <Sparkles
