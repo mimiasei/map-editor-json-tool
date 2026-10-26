@@ -2485,6 +2485,11 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // As in the game, the upward-facing surfaces of the rock carry the ground texture of the tile's biome: each piece is baked once per biome
   // with the texture painted through its top-surface mask.
   const [cliffCanvasEl, setCliffCanvasEl] = useState<HTMLCanvasElement | null>(null)
+  // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
+  // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
+  // the swatch is then the only thing marking the object.
+  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= iconLodPx
+  // Zoomed out far enough that objects are not drawn, the fine detail (cliff edges, road/river textures and edge shading) is not either.
   const cliffSprites = useCliffSprites()
   useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
@@ -2492,7 +2497,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     cliffCanvasEl.width = sizeX * scale
     cliffCanvasEl.height = sizeZ * scale
     const ctx = cliffCanvasEl.getContext('2d')
-    if (!ctx || !settings.showCliffs || !renderIndex || cliffSprites.sprites.size === 0) return
+    if (!ctx || !settings.showCliffs || !iconsVisibleForSwatch || !renderIndex || cliffSprites.sprites.size === 0) return
     let levels = levelsMap
     if (paintLevelStaged.size > 0) {
       levels = levelsMap.slice()
@@ -2660,11 +2665,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
       ctx.restore()
     }
-  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
-  // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
-  // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
-  // the swatch is then the only thing marking the object.
-  const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= iconLodPx
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, iconsVisibleForSwatch, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
@@ -2757,9 +2758,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
     // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
-    const textured = settings.lineFeatureTextures && lineTextures.size > 0
-    const strokedRoads = settings.lineFeatureTextures && roadStrokes !== null
-    const strokedRivers = settings.lineFeatureTextures && riverSprites.size > 0 && renderIndex !== null
+    const texturesOn = settings.lineFeatureTextures && iconsVisibleForSwatch
+    const textured = texturesOn && lineTextures.size > 0
+    const strokedRoads = texturesOn && roadStrokes !== null
+    const strokedRivers = texturesOn && riverSprites.size > 0 && renderIndex !== null
     const SUBPX = textured || strokedRoads || strokedRivers ? layerPxPerTile({ ...quality.lines, pxPerTile: strokedRoads || strokedRivers ? quality.lines.pxPerTile : Math.min(32, quality.lines.pxPerTile) }, sizeX, sizeZ, 12) : 12
     const BAND = textured || strokedRoads || strokedRivers ? SUBPX * 0.3 : 3.5
     const OFFSET = Math.floor((SUBPX - BAND) / 2)
@@ -2844,7 +2846,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       // so it works uniformly for both road colors and the river color
       // without a per-color darken table.
       // The switch is hidden while textured roads and rivers are on, so shading is off then whatever its saved value.
-      if (!settings.lineFeatureShading || settings.lineFeatureTextures || dirs.length === 0) return
+      if (!settings.lineFeatureShading || !iconsVisibleForSwatch || texturesOn || dirs.length === 0) return
       const hasH = dirs.includes('E') || dirs.includes('W')
       const hasV = dirs.includes('N') || dirs.includes('S')
       if (hasH && !hasV) {
@@ -2922,7 +2924,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawRiver(node)
     }
-  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, iconsVisibleForSwatch, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
