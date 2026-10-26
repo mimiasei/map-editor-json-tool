@@ -43,6 +43,14 @@ export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance
           ))}
         </tbody>
       </table>
+      {balance.problems.length > 0 && (
+        <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2 space-y-1">
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Not compared</p>
+          <ul className="text-xs list-disc pl-4 space-y-0.5">
+            {balance.problems.map((text) => <li key={text}>{text}</li>)}
+          </ul>
+        </div>
+      )}
       {balance.reasons.length > 0 && (
         <ul className="text-xs text-muted-foreground list-disc pl-4">
           {balance.reasons.map((reason) => <li key={reason}>{reason}</li>)}

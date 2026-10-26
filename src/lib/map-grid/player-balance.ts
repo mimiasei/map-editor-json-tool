@@ -47,6 +47,9 @@ export interface PlayerBalance {
   verdict: 'Excellent' | 'Good' | 'Uneven' | 'Unfair'
   /** Plain-language reasons points were lost (empty when nothing notable). */
   reasons: string[]
+  /** Players or areas the comparison could not use (a start outside every Player Area, two starts in one area, an area with no start). They are
+   *  left out of the table, so the score does not cover them. */
+  problems: string[]
   /** What to change to even the players out, biggest gap first. Suggestions from the same numbers as the score, not game rules. */
   recommendations: string[]
 }
@@ -83,6 +86,20 @@ export function computePlayerBalance(context: MapContext, catalog: GameCatalog |
   }
   if (players.length < 2) return null
   const zoneIds = new Set(players.map((p) => p.zoneId))
+
+  // Starts the table leaves out: say so instead of scoring a smaller game in silence.
+  const problems: string[] = []
+  const label = (s: PlacedObject) => `Player ${s.spawnerInfo?.owner ?? '?'} (${s.x}, ${s.z})`
+  for (const s of startsByZone.get(0) ?? []) problems.push(`${label(s)} is not inside any Player Area, so it is not compared. Paint an area over its start tile.`)
+  for (const [zoneId, starts] of startsByZone) {
+    if (zoneId !== 0 && starts.length > 1) {
+      problems.push(`${starts.map(label).join(' and ')} share Player Area ${zoneId}, so only one of them is compared. Give each start its own area.`)
+    }
+  }
+  const startZones = new Set(startsByZone.keys())
+  for (const id of new Set(customAreasPainting)) {
+    if (id !== 0 && !startZones.has(id)) problems.push(`Player Area ${id} has no city or hero start inside it.`)
+  }
 
   const land = new Map<number, number>()
   const elevated = new Map<number, number>()
@@ -153,7 +170,7 @@ export function computePlayerBalance(context: MapContext, catalog: GameCatalog |
   const recommendations = buildRecommendations(rows, medians)
 
   const verdict = score >= 90 ? 'Excellent' : score >= 78 ? 'Good' : score >= 60 ? 'Uneven' : 'Unfair'
-  return { rows, score, verdict, reasons, recommendations }
+  return { rows, score, verdict, reasons, problems, recommendations }
 }
 
 const MAX_RECOMMENDATIONS = 6
