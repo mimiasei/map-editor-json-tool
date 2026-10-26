@@ -54,7 +54,7 @@ import type { BiomeId } from '@/lib/map-grid/terrain-colors'
 import type { CatalogMapObject } from '@/lib/catalog/types'
 import { zoneDistanceMatrix, type ZoneGraph } from './zone-graph'
 import { buildBuiltInLayout, ROLE_TREASURE_SCALE, type BuiltInLayout, type LayoutArchetype, type MirrorInfo } from './zone-archetypes'
-import { footprintForRotation, isLeftNode, mirrorAnchorNode, mirrorChanges, mirrorNode, mirrorNodeSet, symmetrizeOwnership } from './zone-mirror'
+import { footprintForRotation, isLeftNode, mirrorChanges, mirrorNode, mirrorNodeSet, symmetrizeOwnership } from './zone-mirror'
 import { logInfo } from '@/lib/logger'
 import { importGameTemplateTopology, deriveWaterOverrides, type ZoneLayoutOverrides, type ZoneContentValueOverrides } from './rmg-template-import'
 import { blendZoneBordersWFC } from './terrain-wfc'
@@ -393,10 +393,7 @@ export function generateTerrain(
 
   if (mirror) {
     for (const zone of graph.zones) {
-      if (mirror.side.get(zone.id) === 'right') {
-        const partnerAnchor = zoneAnchorNode.get(mirror.partner.get(zone.id) as number) as number
-        zoneAnchorNode.set(zone.id, zone.kind === 'player' && includeSpawners ? mirrorAnchorNode(spawnerTemplate, partnerAnchor, sizeX) : mirrorNode(partnerAnchor, sizeX))
-      }
+      if (mirror.side.get(zone.id) === 'right') zoneAnchorNode.set(zone.id, mirrorNode(zoneAnchorNode.get(mirror.partner.get(zone.id) as number) as number, sizeX))
     }
   }
 
