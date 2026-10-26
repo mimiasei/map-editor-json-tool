@@ -9,7 +9,7 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 
 // Tweak the whole toolbar here. Full class names, so Tailwind can see them. The svg rule beats the per-icon h-3.5 w-3.5
 // set at each call site.
-const ICON_SIZE = '[&_svg]:h-4 [&_svg]:w-4'
+const ICON_SIZE = '[&_svg]:h-[15px] [&_svg]:w-[15px]'
 const BUTTON_PADDING_X = 'px-2.5'
 
 interface Props extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'title' | 'children'> {
