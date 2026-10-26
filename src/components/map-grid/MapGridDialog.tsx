@@ -5415,6 +5415,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     ? entry.pick.primary.rotation
                     : undefined
                   const rotationDegrees = rotation !== undefined ? (rotation % 10) * 90 : 0
+                  // The image is drawn flipped for a mirrored object and for a rotatable one turned 180° (its art isn't turned in 3D, so a flip is the
+                  // visible cue); both together cancel.
+                  const flipImage = entry.pick.primary.type === 0
+                    && ((entry.pick.primary.rotation ?? 0) >= 10) !== (rotation !== undefined && rotation % 10 === 2)
                   return (
                     <div
                       key={entry.key}
@@ -5443,10 +5447,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           name={name}
                           cell={BASE_CELL_PX}
                           fx={isFxSid(entry.pick.primary.sid, catalog)}
-                          mirrored={entry.pick.primary.type === 0 && (entry.pick.primary.rotation ?? 0) >= 10}
+                          mirrored={flipImage}
                           mirrorCentreTiles={(() => {
                             const p = entry.pick.primary
-                            if (p.type !== 0 || (p.rotation ?? 0) < 10) return 0
+                            if (!flipImage) return 0
                             // Flip about the centre of the block tiles; the anchor (select) tile is pivotX columns in from the left edge.
                             const t = catalog?.mapObjects.find((o) => o.id === p.sid)
                             return t?.nodes?.length ? mirrorSpan(t) / 2 - (t.pivotX ?? 0) : 0
