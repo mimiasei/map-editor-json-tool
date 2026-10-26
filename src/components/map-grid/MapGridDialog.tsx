@@ -143,6 +143,7 @@ import {
   Crown,
   UserRound,
   Sparkles,
+  FilterReset,
 } from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
@@ -5194,10 +5195,10 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             </button>
             <button
               onClick={resetAllFilters}
-              className="h-6 px-2 text-xs rounded shrink-0 border border-transparent bg-transparent text-muted-foreground hover:text-foreground transition-colors"
-              title="Turn every filter pill back on and clear Entity SIDs only"
+              className="h-6 px-1.5 rounded shrink-0 border border-transparent bg-transparent text-muted-foreground hover:text-foreground transition-colors flex items-center"
+              title="Reset all filters (every pill on, Entity SIDs only off)"
             >
-              Reset all
+              <FilterReset className="h-3.5 w-3.5" />
             </button>
           </div>
           )}

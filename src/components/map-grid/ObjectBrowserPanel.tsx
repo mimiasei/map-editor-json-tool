@@ -23,7 +23,7 @@
 
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Settings, X, ChevronDown } from '@/components/ui/icons'
+import { Search, Settings, FilterReset, X, ChevronDown } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -416,6 +416,24 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
     setInteractableSubFilter(next)
     persist({ interactableSub: next })
   }
+  // Every filter pill and dropdown back to "everything" (the cog's show-campaign/custom switches are settings, not filters).
+  const resetAllFilters = () => {
+    const allOn = <K extends string | number>(order: readonly K[]) => Object.fromEntries(order.map((k) => [k, true])) as Record<K, boolean>
+    const biomes = allOn(BIOME_ORDER)
+    const sizes = allOn(SIZE_ORDER)
+    const tiers = allOn(TIER_ORDER)
+    const decorationSub = allOn(PANEL_DECORATION_SUBCATEGORY_ORDER)
+    const interactableSub = allOn(INTERACTABLE_SUBCATEGORY_ORDER)
+    setTypeFilter(new Set())
+    setPlainTypeFilter(null)
+    setBiomeFilter(biomes)
+    setSizeFilter(sizes)
+    setTierFilter(tiers)
+    setFractionFilter(new Set())
+    setDecorationSubFilter(decorationSub)
+    setInteractableSubFilter(interactableSub)
+    persist({ types: [], plainType: null, biomes, sizes, tiers, fractions: [], decorationSub, interactableSub })
+  }
   const setModeAndPersist = (m: BrowseMode) => {
     setMode(m)
     persist({ mode: m })
@@ -505,6 +523,9 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
           </button>
         </div>
         <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-6 w-6" title="Reset all filters" onClick={resetAllFilters}>
+            <FilterReset className="h-3.5 w-3.5" />
+          </Button>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="h-6 w-6" title="Browser settings">
