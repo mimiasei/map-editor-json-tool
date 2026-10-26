@@ -61,7 +61,7 @@ import {
 import type { PlacedObject, MapEntity, ObjectActions } from '@/types/map-context'
 import { terrainLabel, BIOME_NAMES, BIOME_BASE_COLORS, WATER_TYPE_NAMES, ROAD_TYPE_NAMES, ROAD_BASE_COLORS, RIVER_BASE_COLOR, type BiomeId } from '@/lib/map-grid/terrain-colors'
 import { paintTerrainCanvas } from '@/lib/map-grid/terrain-canvas'
-import { useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
+import { fadeWaterShore, useWaterSurface, waterSurfacePattern, WATER_SURFACE_COLOR } from '@/lib/map-grid/water-surface'
 import { useLineTextures, type LineTextureKey } from '@/lib/map-grid/line-textures'
 import { buildCliffPieces, buildRampSlopes, CAMERA_COS, CLIFF_TOP_SHIFT, RAMP_HEIGHT, RAMP_PROFILE } from '@/lib/map-grid/cliff-autotile'
 import { useCliffSprites } from '@/lib/map-grid/cliff-sprites'
@@ -2761,6 +2761,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillStyle = pattern
       ctx.fill(path)
     }
+    fadeWaterShore(ctx, (node) => !!waterMap[node], sizeX, sizeZ, scale)
   }, [waterCanvasEl, waterSurface, waterMap, sizeX, sizeZ, settings.waterSurface, iconsVisibleForSwatch, quality.cliffs])
   const [lineFeatureCanvasEl, setLineFeatureCanvasEl] = useState<HTMLCanvasElement | null>(null)
   // Tiles whose top object hides a road/river under it (a flat swatch, not a picture). The line canvas is expensive to redraw, so this keeps

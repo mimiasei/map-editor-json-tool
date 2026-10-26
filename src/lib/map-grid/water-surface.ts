@@ -10,7 +10,7 @@ import { loadLayer } from './terrain-textures'
 export const WATER_SURFACE_REPEAT_TILES = 8
 
 /** The tint the water plane gets over the terrain (a flat teal like GME's), and how much of the ground and cliff walls still shows through. */
-export const WATER_SURFACE_COLOR = 'rgba(22, 128, 132, 0.8)'
+export const WATER_SURFACE_COLOR = 'rgba(22, 128, 132, 0.72)'
 
 // Light from the upper right, as in GME's screenshot: a ripple facing it brightens, the one facing away darkens.
 const LIGHT_X = 0.6
@@ -91,4 +91,50 @@ export function waterSurfacePattern(ctx: CanvasRenderingContext2D, surface: HTML
   const pattern = ctx.createPattern(surface, 'repeat')
   pattern?.setTransform(new DOMMatrix().scale((pxPerTile * WATER_SURFACE_REPEAT_TILES) / surface.width))
   return pattern
+}
+
+/** How far the plane's own shore fade reaches into a water tile, as a share of the tile. */
+const SHORE_REACH_TILES = 0.6
+const SHORE_STEPS = 8
+/** Share of the plane that is erased right at the shore (1 = fully see-through there). */
+const SHORE_EDGE_ERASE = 0.95
+
+/**
+ * Fades the plane out toward land: along every water tile edge that meets land, nested strips erase the plane, most at the shore and
+ * nothing at SHORE_REACH_TILES in, so the water thins out instead of ending in a hard line and the cliff pieces on the shore show.
+ * Map borders are not shores.
+ */
+export function fadeWaterShore(ctx: CanvasRenderingContext2D, isWater: (node: number) => boolean, sizeX: number, sizeZ: number, pxPerTile: number): void {
+  const strips = Array.from({ length: SHORE_STEPS }, () => new Path2D())
+  const reach = SHORE_REACH_TILES * pxPerTile
+  for (let z = 0; z < sizeZ; z++) {
+    for (let x = 0; x < sizeX; x++) {
+      if (!isWater(z * sizeX + x)) continue
+      const left = x * pxPerTile
+      const top = (sizeZ - 1 - z) * pxPerTile
+      for (const [dx, dz] of [[-1, 0], [1, 0], [0, 1], [0, -1]] as const) {
+        const nx = x + dx
+        const nz = z + dz
+        if (nx < 0 || nz < 0 || nx >= sizeX || nz >= sizeZ || isWater(nz * sizeX + nx)) continue
+        for (let step = 0; step < SHORE_STEPS; step++) {
+          const w = (reach * (SHORE_STEPS - step)) / SHORE_STEPS
+          if (dx === -1) strips[step].rect(left, top, w, pxPerTile)
+          else if (dx === 1) strips[step].rect(left + pxPerTile - w, top, w, pxPerTile)
+          else if (dz === 1) strips[step].rect(left, top, pxPerTile, w)
+          else strips[step].rect(left, top + pxPerTile - w, pxPerTile, w)
+        }
+      }
+    }
+  }
+  // Strip 0 is the widest: alone it sets the opacity left at the far end, each narrower one adds what is still missing.
+  ctx.save()
+  ctx.globalCompositeOperation = 'destination-out'
+  let passed = 1
+  strips.forEach((path, step) => {
+    const left = 1 - (SHORE_EDGE_ERASE * (step + 1)) / SHORE_STEPS
+    ctx.globalAlpha = 1 - left / passed
+    passed = left
+    ctx.fill(path)
+  })
+  ctx.restore()
 }
