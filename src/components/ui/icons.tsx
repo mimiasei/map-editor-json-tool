@@ -27,7 +27,12 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
   CircleIcon,
+  ArrowDown01Icon,
+  ArrowUp01Icon,
+  Cancel01Icon,
   Configuration01Icon,
+  Edit01Icon,
+  Select01Icon,
   FilterResetIcon,
   ClipboardCopyIcon,
   ClipboardPasteIcon,
@@ -232,6 +237,11 @@ export const Save = make(SaveIcon, 'Save')
 export const ScrollText = make(ScrollTextIcon, 'ScrollText')
 export const Configuration = make(Configuration01Icon, 'Configuration')
 export const FilterReset = make(FilterResetIcon, 'FilterReset')
+export const Cancel = make(Cancel01Icon, 'Cancel')
+export const StepUp = make(ArrowUp01Icon, 'StepUp')
+export const StepDown = make(ArrowDown01Icon, 'StepDown')
+export const Freehand = make(Edit01Icon, 'Freehand')
+export const RectSelect = make(Select01Icon, 'RectSelect')
 export const Search = make(SearchIcon, 'Search')
 export const Settings = make(SettingsIcon, 'Settings')
 export const Settings2 = make(Settings02Icon, 'Settings2')

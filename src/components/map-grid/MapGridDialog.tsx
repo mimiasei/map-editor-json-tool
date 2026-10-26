@@ -119,7 +119,6 @@ import {
     ChevronDown,
     Ban,
     Plus,
-    Minus,
     ArrowUp,
     ArrowDown,
     ArrowLeft,
@@ -147,6 +146,11 @@ import {
   UserRound,
   Sparkles,
   FilterReset,
+  Cancel,
+  StepUp,
+  StepDown,
+  Freehand,
+  RectSelect,
 } from '@/components/ui/icons'
 import { sampleResource } from '@/lib/map-grid/resource-pool'
 
@@ -4388,8 +4392,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {paintStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintStaged.size} staged</p>
                   )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting}>
-                    {paintStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopPainting} title="Stop (Esc)">
+                    {paintStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
               ) : (
@@ -4520,8 +4524,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Landmark className="h-3.5 w-3.5" />
                     Drawing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopInteractablePainting}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopInteractablePainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4545,8 +4549,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Swords className="h-3.5 w-3.5" />
                     Drawing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopSquadPainting}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopSquadPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4562,7 +4566,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Button variant="secondary" size="sm" className="h-6 text-xs gap-1" disabled>
                         <Gem className="h-3.5 w-3.5" /> Drawing…
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopResourcePainting}>Stop (Esc)</Button>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopResourcePainting} title="Stop (Esc)"><Cancel className="h-3.5 w-3.5" /></Button>
                 </div>
               ) : (
                 <ToolButton icon={<Gem className="h-3.5 w-3.5" />} label="Resource" title="Resource — drag to scatter resource pickups"
@@ -4608,8 +4612,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {paintLevelStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintLevelStaged.size} staged</p>
                   )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting}>
-                    {paintLevelStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopLevelPainting} title="Stop (Esc)">
+                    {paintLevelStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
               ) : (
@@ -4635,8 +4639,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <TrendingUpDown className="h-3.5 w-3.5" />
                     Drawing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRampPainting}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRampPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4673,8 +4677,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       ))}
                     </PopoverContent>
                   </Popover>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopWaterPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4697,8 +4701,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Waves className="h-3.5 w-3.5" />
                     Drawing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRiverPainting} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -4737,8 +4741,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {paintRoadStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintRoadStaged.size} staged</p>
                   )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRoadPainting}>
-                    {paintRoadStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopRoadPainting} title="Stop (Esc)">
+                    {paintRoadStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
               ) : (
@@ -4781,8 +4785,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           Bucket
                         </button>
                       </div>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopObstaclePainting}>
-                        Stop (Esc)
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopObstaclePainting} title="Stop (Esc)">
+                        <Cancel className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ) : (
@@ -4827,8 +4831,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           Bucket
                         </button>
                       </div>
-                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopTreePainting}>
-                        Stop (Esc)
+                      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopTreePainting} title="Stop (Esc)">
+                        <Cancel className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ) : (
@@ -4934,8 +4938,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   {paintZoneStaged.size > 0 && (
                     <p className="text-xs text-amber-600">{paintZoneStaged.size} staged</p>
                   )}
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopZonePainting}>
-                    {paintZoneStaged.size > 0 ? 'Cancel' : 'Stop (Esc)'}
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopZonePainting} title="Stop (Esc)">
+                    {paintZoneStaged.size > 0 ? 'Cancel' : <Cancel className="h-3.5 w-3.5" />}
                   </Button>
                 </div>
               ) : (
@@ -4954,8 +4958,8 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                     <Eraser className="h-3.5 w-3.5" />
                     Erasing…
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopEraser}>
-                    Stop (Esc)
+                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={stopEraser} title="Stop (Esc)">
+                    <Cancel className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
@@ -5040,18 +5044,18 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Mode:</span>
                   <div className="flex items-center rounded border border-border overflow-hidden">
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'freehand' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
                       title="Drag to paint tile by tile"
                       onClick={() => setInteractionMode('freehand')}
                     >
-                      Freehand
+                      <Freehand className="h-3.5 w-3.5" />
                     </button>
                     <button
-                      className={`h-6 px-2 text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
+                      className={`h-6 px-2 flex items-center text-xs transition-colors ${interactionMode === 'rectangle' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent'}`}
                       title="Drag a rectangle — Shift=square, Alt=from center"
                       onClick={() => setInteractionMode('rectangle')}
                     >
-                      Rectangle
+                      <RectSelect className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </>
@@ -5067,27 +5071,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
               {interactionMode === 'freehand' && !terrainBucketMode && !levelBucketMode && !obstacleBucketMode && !treeBucketMode && !zoneBucketMode && !objectsBucketMode && (paintBiome !== null || levelBrush !== null || obstacleBrushActive || treesActive || eraserActive || paintZone !== null || (placingSid !== null && !isSingleTileSid(placingSid)) || interactableActive || squadActive || resourceActive) && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0">Size:</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Smaller brush"
-                    disabled={brushRadius <= 1}
-                    onClick={() => setBrushRadius((r) => Math.max(1, r - 1))}
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </Button>
                   <span className="text-xs tabular-nums w-5 text-center">{brushRadius}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Bigger brush"
-                    disabled={brushRadius >= 15}
-                    onClick={() => setBrushRadius((r) => Math.min(15, r + 1))}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex flex-col">
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="Bigger brush" disabled={brushRadius >= 15} onClick={() => setBrushRadius((r) => Math.min(15, r + 1))}>
+                      <StepUp className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="Smaller brush" disabled={brushRadius <= 1} onClick={() => setBrushRadius((r) => Math.max(1, r - 1))}>
+                      <StepDown className="h-3 w-3" />
+                    </Button>
+                  </div>
                   {/* Disperse — thins the same circular brush.ts area Size
                       just sized, rather than painting it solid: 0% (default)
                       is unchanged full-coverage behavior, 100% leaves only a
@@ -5096,27 +5088,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                       the exact same brush area every one of these tools
                       already gets from Size. */}
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-500 shrink-0 ml-1">Disperse:</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="Less disperse"
-                    disabled={brushDisperse <= 0}
-                    onClick={() => setBrushDisperse((d) => Math.max(0, Math.round((d - 0.1) * 10) / 10))}
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </Button>
                   <span className="text-xs tabular-nums w-9 text-center">{Math.round(brushDisperse * 100)}%</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    title="More disperse"
-                    disabled={brushDisperse >= 1}
-                    onClick={() => setBrushDisperse((d) => Math.min(1, Math.round((d + 0.1) * 10) / 10))}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex flex-col">
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="More disperse" disabled={brushDisperse >= 1} onClick={() => setBrushDisperse((d) => Math.min(1, Math.round((d + 0.1) * 10) / 10))}>
+                      <StepUp className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-3 w-5" title="Less disperse" disabled={brushDisperse <= 0} onClick={() => setBrushDisperse((d) => Math.max(0, Math.round((d - 0.1) * 10) / 10))}>
+                      <StepDown className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               )}
               {/* issue #195 follow-up: every tool here now applies straight
