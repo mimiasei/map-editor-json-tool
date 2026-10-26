@@ -5422,6 +5422,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
                           name={name}
                           cell={BASE_CELL_PX}
                           fx={isFxSid(entry.pick.primary.sid, catalog)}
+                          mirrored={entry.pick.primary.type === 0 && (entry.pick.primary.rotation ?? 0) >= 10}
                           // Relative to this box: the anchor tile's corner minus the box corner.
                           shiftX={entry.pick.primary.x * BASE_CELL_PX - entry.left}
                           // A faction city standing in for a city spawner sits one tile too high with the spawner's anchor: one tile lower (user-verified).

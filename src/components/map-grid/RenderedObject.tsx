@@ -16,9 +16,11 @@ interface Props {
   shiftY: number
   /** A visual effect (fog, light, flies): drawn half see-through with a sparkle on its anchor tile, so it reads as an effect, not an object. */
   fx?: boolean
+  /** Placed mirrored (rotations[] >= 10): flipped left-right around the anchor tile's centre. */
+  mirrored?: boolean
 }
 
-export function RenderedObject({ render, name, cell, shiftX, shiftY, fx }: Props) {
+export function RenderedObject({ render, name, cell, shiftX, shiftY, fx, mirrored }: Props) {
   const box = renderBoxFromAnchorTile(render, cell)
   return (
     <>
@@ -27,7 +29,7 @@ export function RenderedObject({ render, name, cell, shiftX, shiftY, fx }: Props
         alt={name}
         draggable={false}
         className="absolute max-w-none pointer-events-none select-none"
-        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, ...(fx ? FX_IMAGE_STYLE : undefined) }}
+        style={{ left: shiftX + box.left, top: shiftY + box.top, width: box.width, height: box.height, ...(mirrored ? { transform: 'scaleX(-1)', transformOrigin: `${cell / 2 - box.left}px 50%` } : undefined), ...(fx ? FX_IMAGE_STYLE : undefined) }}
       />
       {fx && (
         <Sparkles
