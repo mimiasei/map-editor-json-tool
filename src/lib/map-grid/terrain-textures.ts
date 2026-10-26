@@ -71,7 +71,16 @@ function fadeStrips(
 ): void {
   const reach = reachTiles * scale
   // Opacities per nested strip so that the opacities stack up to the edge value at the border and fall to nothing inside.
-  const stepAlpha = 1 - Math.pow(1 - total, 1 / BIOME_FADE_STEPS)
+  // Strip 0 is the widest and reaches deepest, so the band farthest from the border is covered by it alone: its alpha is the
+  // target there (total / steps), and each narrower strip adds what is still missing, so the opacity falls evenly to the strip's
+  // end instead of stopping at a visible step. P is the see-through share left after strips 0..s.
+  const stepAlpha: number[] = []
+  let passed = 1
+  for (let step = 0; step < BIOME_FADE_STEPS; step++) {
+    const left = 1 - (total * (step + 1)) / BIOME_FADE_STEPS
+    stepAlpha.push(1 - left / passed)
+    passed = left
+  }
   const paths = new Map<TextureKey, Path2D[]>()
   const pathFor = (key: TextureKey, step: number): Path2D => {
     let list = paths.get(key)
@@ -102,10 +111,12 @@ function fadeStrips(
     }
   }
   ctx.save()
-  ctx.globalAlpha = stepAlpha
   for (const [key, list] of paths) {
     ctx.fillStyle = patterns.get(key)!
-    for (const path of list) ctx.fill(path)
+    list.forEach((path, step) => {
+      ctx.globalAlpha = stepAlpha[step]
+      ctx.fill(path)
+    })
   }
   ctx.restore()
 }
