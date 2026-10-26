@@ -4,6 +4,7 @@
 // handler without re-deriving anything.
 
 import type { PlacedObject } from '@/types/map-context'
+import { findMapObject } from '@/lib/catalog/map-object-lookup'
 import type { CatalogMapObject, GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles, type FootprintCell } from '@/lib/map-grid/footprint'
 import { orderStack } from '@/lib/map-grid/stack-order'
@@ -51,7 +52,7 @@ const CATEGORY_TO_GROUP: Record<CatalogMapObject['category'], GridGroup> = {
 export function groupOf(placed: PlacedObject, catalog: GameCatalog | null): GridGroup | undefined {
   if (placed.type === 1) return 'zones' // markers[] — trigger zones
   if (placed.type === 2) return 'units' // squads[] — always a unit placement
-  const category = catalog?.mapObjects.find((o) => o.id === placed.sid)?.category
+  const category = findMapObject(catalog, placed.sid)?.category
   // Unresolved (no catalog match — Core.zip not loaded, or a sid missing from
   // even the bundled fallback) defaults to decorations: the safest "can't
   // identify this" bucket, since that's already the catch-all for anything
@@ -70,7 +71,7 @@ export function groupOf(placed: PlacedObject, catalog: GameCatalog | null): Grid
  */
 export function resolveFootprintCells(obj: PlacedObject, catalog: GameCatalog | null): FootprintCell[] {
   if (obj.type !== 0) return [{ x: obj.x, z: obj.z, value: 1 }]
-  const template = catalog?.mapObjects.find((o) => o.id === obj.sid)
+  const template = findMapObject(catalog, obj.sid)
   return computeFootprintTiles(template, obj.x, obj.z, obj.rotation)
 }
 

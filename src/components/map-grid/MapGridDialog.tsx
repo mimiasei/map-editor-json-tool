@@ -12,6 +12,7 @@
 // never drift out of alignment.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { findMapObject } from '@/lib/catalog/map-object-lookup'
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { PanelImperativeHandle } from 'react-resizable-panels'
@@ -537,7 +538,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     if (!group || !filter[group]) return false
     if (group === 'interactables' && !interactableSubFilter[resolveInteractableSubcategory(item.sid)]) return false
     if (group === 'decorations') {
-      const category = catalog?.mapObjects.find((o) => o.id === item.sid)?.category
+      const category = findMapObject(catalog, item.sid)?.category
       if (!decorationSubFilter[resolveDecorationSubcategory(item.sid, category)]) return false
     }
     return true

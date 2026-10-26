@@ -27,6 +27,7 @@
 //    isn't redundant with the elevation check).
 
 import type { MapContext } from '@/types/map-context'
+import { findMapObject } from '@/lib/catalog/map-object-lookup'
 import type { GameCatalog } from '@/lib/catalog/types'
 import { computeFootprintTiles } from '@/lib/map-grid/footprint'
 
@@ -95,7 +96,7 @@ type EntranceContext = Pick<MapContext, 'sizeX' | 'sizeZ' | 'placedObjects'>
 export function objectBlockedCells(sid: string, x: number, z: number, catalog: GameCatalog | null, entranceCells?: boolean, rotation?: number): { x: number; z: number }[] {
   if (NON_BLOCKING_SPAWNER_SIDS.has(sid)) return []
   const valueToFind = entranceCells ? 2 : 1
-  const template = catalog?.mapObjects.find((o) => o.id === sid)
+  const template = findMapObject(catalog, sid)
   return computeFootprintTiles(template, x, z, rotation).filter((cell) => cell.value === valueToFind)
 }
 
