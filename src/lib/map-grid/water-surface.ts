@@ -94,10 +94,10 @@ export function waterSurfacePattern(ctx: CanvasRenderingContext2D, surface: HTML
 }
 
 /** How far the plane's own shore fade reaches into a water tile, as a share of the tile. */
-const SHORE_REACH_TILES = 0.6
-const SHORE_STEPS = 8
+const SHORE_REACH_TILES = 0.8
+const SHORE_STEPS = 64
 /** Share of the plane that is erased right at the shore (1 = fully see-through there). */
-const SHORE_EDGE_ERASE = 0.95
+const SHORE_EDGE_ERASE = 4.0
 
 /**
  * Fades the plane out toward land: along every water tile edge that meets land, nested strips erase the plane, most at the shore and
