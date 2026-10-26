@@ -5193,13 +5193,15 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
             >
               Entity SIDs only
             </button>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
               onClick={resetAllFilters}
-              className="h-6 px-1.5 rounded shrink-0 border border-transparent bg-transparent text-muted-foreground hover:text-foreground transition-colors flex items-center"
               title="Reset all filters (every pill on, Entity SIDs only off)"
             >
               <FilterReset className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </div>
           )}
         </div>
