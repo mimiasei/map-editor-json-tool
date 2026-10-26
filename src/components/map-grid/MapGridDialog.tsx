@@ -777,7 +777,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // 0 = fully mixed across all biomes, 1 = only the biome painted on — same
   // meaning/inversion as treeBiomePurity below.
   const [obstacleBiomePurity, setObstacleBiomePurity] = useState(0.9)
-  const [obstacleAllowHighContrast, setObstacleAllowHighContrast] = useState(true)
+  const [obstacleAllowHighContrast, setObstacleAllowHighContrast] = useState(false)
 
   // ── Trees brush — a dedicated copy of the Obstacle brush restricted to
   // tree_/pinetree_ entries only (buildTreePools, fuzzy-obstacle.ts), same
@@ -789,7 +789,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // inverted before being passed as sampleFuzzyObstacles's crossBiomeChance
   // (0 there means "always own biome", the opposite direction).
   const [treeBiomePurity, setTreeBiomePurity] = useState(0.9)
-  const [treeAllowHighContrast, setTreeAllowHighContrast] = useState(true)
+  const [treeAllowHighContrast, setTreeAllowHighContrast] = useState(false)
 
   const [paintStaged, setPaintStaged] = useState<Map<number, BiomeId>>(new Map())
   const paintingRef = useRef(false)
@@ -1148,7 +1148,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // biome-unlabeled (a curated editor judgment call, not confirmed data).
   const [interactableActive, setInteractableActive] = useState(false)
   const [interactableBiomePurity, setInteractableBiomePurity] = useState(0.9)
-  const [interactableAllowHighContrast, setInteractableAllowHighContrast] = useState(true)
+  const [interactableAllowHighContrast, setInteractableAllowHighContrast] = useState(false)
   const interactablePools = useMemo(
     () => (catalog ? buildInteractablePools(catalog.mapObjects) : null),
     [catalog],
