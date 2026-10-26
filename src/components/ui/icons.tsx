@@ -28,6 +28,7 @@ import {
   ChevronUpIcon,
   CircleIcon,
   ArrowDown01Icon,
+  BalanceScaleIcon,
   ArrowUp01Icon,
   Cancel01Icon,
   Configuration01Icon,
@@ -240,6 +241,7 @@ export const ScrollText = make(ScrollTextIcon, 'ScrollText')
 export const Configuration = make(Configuration01Icon, 'Configuration')
 export const FilterReset = make(FilterResetIcon, 'FilterReset')
 export const Cancel = make(Cancel01Icon, 'Cancel')
+export const BalanceScale = make(BalanceScaleIcon, 'BalanceScale')
 export const LinkPortal = make(Link01Icon, 'LinkPortal')
 export const UnlinkPortal = make(Unlink01Icon, 'UnlinkPortal')
 export const StepUp = make(ArrowUp01Icon, 'StepUp')

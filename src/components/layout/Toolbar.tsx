@@ -78,6 +78,7 @@ import {
   UploadCloud,
   FileInput,
   Dices,
+  BalanceScale,
 } from '@/components/ui/icons'
 import { useState, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
@@ -86,6 +87,8 @@ import ImportH3mDialog from '@/components/common/ImportH3mDialog'
 import ThemeEditorDialog from '@/components/common/ThemeEditorDialog'
 import PublishDialog from '@/components/common/PublishDialog'
 import AboutDialog from '@/components/common/AboutDialog'
+import PlayerBalancePanel from '@/components/common/PlayerBalancePanel'
+import { computePlayerBalance, type PlayerBalance } from '@/lib/map-grid/player-balance'
 import { ImageIcon } from '@/components/ui/icons'
 
 import { useMapGridStore } from '@/store/useMapGridStore'
@@ -170,6 +173,12 @@ export default function Toolbar({
   const mapIsDirty = useMapDocumentStore((s) => s.mapIsDirty)
 
   const [validateOpen,        setValidateOpen]        = useState(false)
+  // Same on-demand rule as the placement check: scored when the dialog opens, from the loaded map. The score is the one the random map
+  // generator itself uses to pick and warn (computePlayerBalance).
+  const [fairnessOpen,        setFairnessOpen]        = useState(false)
+  // A boolean selector, so map edits don't re-render the toolbar.
+  const hasMap = useMapContextStore((s) => !!s.context)
+  const [fairness, setFairness] = useState<PlayerBalance | null>(null)
   const [scenarioSectionOpen, setScenarioSectionOpen] = useState(true)
   const [placementSectionOpen, setPlacementSectionOpen] = useState(true)
   // On-demand only (per issue: no continuous/auto-validation while editing)
@@ -565,6 +574,12 @@ export default function Toolbar({
   // like `validation` above (a full reachability flood-fill/BFS isn't cheap
   // on a large map, and continuously re-validating while the user is mid-edit
   // would be noisy besides) — only recomputed right before the dialog opens.
+  const handleOpenFairness = () => {
+    const context = useMapContextStore.getState().context
+    setFairness(context ? computePlayerBalance(context, catalog) : null)
+    setFairnessOpen(true)
+  }
+
   const handleOpenValidate = () => {
     const context = useMapContextStore.getState().context
     setMapPlacementCheck(
@@ -722,6 +737,18 @@ export default function Toolbar({
             </TooltipTrigger>
             <TooltipContent>Validate scenario</TooltipContent>
           </Tooltip>
+
+          {hasMap && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleOpenFairness} className="gap-1.5">
+                  <BalanceScale className="h-4 w-4" />
+                  Fairness
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Check how even the map is between players</TooltipContent>
+            </Tooltip>
+          )}
 
           {isTauri() && (
             <Tooltip>
@@ -1082,6 +1109,19 @@ export default function Toolbar({
           </Tooltip>
         </div>
       </header>
+
+      {/* Fairness dialog */}
+      <Dialog open={fairnessOpen} onOpenChange={setFairnessOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Map fairness</DialogTitle>
+          </DialogHeader>
+          <PlayerBalancePanel balance={fairness} />
+          <p className="text-xs text-muted-foreground">
+            The same score the random map generator uses. It compares each player's own area (land, mines, hills, sites), not the neutral zones between them.
+          </p>
+        </DialogContent>
+      </Dialog>
 
       {/* Validate dialog */}
       <Dialog open={validateOpen} onOpenChange={setValidateOpen}>

@@ -48,6 +48,16 @@ export default function PlayerBalancePanel({ balance }: { balance: PlayerBalance
           {balance.reasons.map((reason) => <li key={reason}>{reason}</li>)}
         </ul>
       )}
+      {balance.recommendations.length > 0 ? (
+        <div className="space-y-1">
+          <p className="text-xs font-semibold">Recommendations</p>
+          <ul className="text-xs list-disc pl-4 space-y-0.5">
+            {balance.recommendations.map((text) => <li key={text}>{text}</li>)}
+          </ul>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">Nothing stands out: no player is more than 10% off the group on land, mines, sites or hills.</p>
+      )}
       <p className="text-[11px] text-muted-foreground">
         Compares each player&apos;s own zone only — highlighted cells are over 10% off the group median. Guard strength and the neutral zones around each player are not compared.
       </p>
