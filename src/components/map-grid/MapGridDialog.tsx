@@ -97,7 +97,6 @@ import { useViewBridgeStore } from '@/store/useViewBridgeStore'
 import type { SubjectKey } from '@/lib/trigger-subjects'
 import type { MapSaveEdit } from '@/lib/map-save'
 import { stepRotation } from '@/lib/map-write'
-import { timed, timedEffect } from '@/lib/perf-log'
 import { randomDecorRotation } from '@/lib/h3-import/scenery-clusters'
 import { logError } from '@/lib/logger'
 import UndockButton from '@/components/panels/UndockButton'
@@ -510,7 +509,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // immediately, so this reads the committed list directly — no staged/
   // pending merge layer needed anywhere anymore.
   const tileIndex = useMemo(
-    () => timed('tileIndex', () => buildTileIndex(placedObjects, catalog, sizeX, sizeZ)),
+    () => buildTileIndex(placedObjects, catalog, sizeX, sizeZ),
     [placedObjects, catalog, sizeX, sizeZ],
   )
 
@@ -518,14 +517,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // rendering fix) — resolved once here and reused both for the multi-tile
   // icon bounding boxes below and (via resolveFootprintCells, the same
   // function buildTileIndex uses) so both agree on the exact same shape.
-  const footprintCellsByKey = useMemo(() => timed('footprintCellsByKey', () => {
+  const footprintCellsByKey = useMemo(() => {
     const map = new Map<string, FootprintCell[]>()
     for (const obj of placedObjects) {
       if (obj.type !== 0) continue
       map.set(obj.key, resolveFootprintCells(obj, catalog))
     }
     return map
-  }), [placedObjects, catalog])
+  }, [placedObjects, catalog])
 
   // The user's own arrangement of a tile's stack (info column), see stack-order.ts.
   const manualStacks = useStackOrderStore((s) => s.byNode)
@@ -544,7 +543,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     return true
   }, [catalog, filter, interactableSubFilter, decorationSubFilter])
 
-  const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => timed('picks (primaryByNode etc.)', () => {
+  const { primaryByNode, underlayByNode, stackByNode, pickByKey } = useMemo(() => {
     const map = new Map<number, { primary: PlacedObject; group: GridGroup; count: number }>()
     /** Every drawn object of a tile, top of the stack first. */
     const stacks = new Map<number, PrimaryPick[]>()
@@ -572,7 +571,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
     return { primaryByNode: map, underlayByNode: underlay, stackByNode: stacks, pickByKey: byKey }
-  }), [tileIndex, catalog, isShown, manualStacks, entitySidsOnly, settings.iconImagesEnabled, renderIndex])
+  }, [tileIndex, catalog, isShown, manualStacks, entitySidsOnly, settings.iconImagesEnabled, renderIndex])
 
   // Blocked-tile ("passability") overlay — object footprints + elevation
   // walls + water (src/lib/map-grid/passability.ts). Independent of
@@ -580,22 +579,22 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // since blocking isn't about what's *shown*, it's about what's real on the
   // map regardless of the current view filters.
   const blockedTileSet = useMemo(
-    () => timed('blockedTileSet', () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap }, catalog)),
+    () => buildBlockedTileSet({ sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap }, catalog),
     [sizeX, sizeZ, placedObjects, levelsMap, climbsMap, waterMap, catalog],
   )
 
   const entranceTileSet = useMemo(
-    () => timed('entranceTileSet', () => buildEntranceTileSet({ sizeX, sizeZ, placedObjects }, catalog)),
+    () => buildEntranceTileSet({ sizeX, sizeZ, placedObjects }, catalog),
     [sizeX, sizeZ, placedObjects, catalog],
   )
 
   // Player Areas — every distinct zone id currently painted, for the zone
   // picker popover's swatch list (see ToolButton block below).
-  const existingZoneIds = useMemo(() => timed('existingZoneIds', () => {
+  const existingZoneIds = useMemo(() => {
     const ids = new Set<number>()
     for (const v of customAreasPainting) if (v !== 0) ids.add(v)
     return [...ids].sort((a, b) => a - b)
-  }), [customAreasPainting])
+  }, [customAreasPainting])
 
   // Elevation tint (src/lib/map-grid/elevation-shading.ts) — a flat darker/
   // lighter fill over every level -1 / level 1 tile, independent of the
@@ -615,12 +614,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // reference it without a temporal-dead-zone error, same reasoning as
   // roadBrush's own early declaration above.
   const [paintRampStaged, setPaintRampStaged] = useState<Set<number>>(new Set())
-  const rampDirectionMap = useMemo(() => timed('rampDirectionMap', () => {
+  const rampDirectionMap = useMemo(() => {
     if (paintRampStaged.size === 0) return buildRampDirectionMap(sizeX, sizeZ, levelsMap, climbsMap)
     const merged = climbsMap.slice()
     for (const node of paintRampStaged) merged[node] = 1
     return buildRampDirectionMap(sizeX, sizeZ, levelsMap, merged)
-  }), [sizeX, sizeZ, levelsMap, climbsMap, paintRampStaged])
+  }, [sizeX, sizeZ, levelsMap, climbsMap, paintRampStaged])
 
   // ── Pan/zoom transform ──────────────────────────────────────────────────────
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 })
@@ -823,12 +822,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // what applying it will produce. blockedTileSet/rampDirectionMap
   // (declared above) deliberately stay committed-only — see
   // paintLevelTiles' climbsMap note in map-write.ts.
-  const elevationTintMap = useMemo(() => timed('elevationTintMap', () => {
+  const elevationTintMap = useMemo(() => {
     if (paintLevelStaged.size === 0) return buildElevationTintMap(levelsMap)
     const merged = levelsMap.slice()
     for (const [node, level] of paintLevelStaged) merged[node] = level
     return buildElevationTintMap(merged)
-  }), [levelsMap, paintLevelStaged])
+  }, [levelsMap, paintLevelStaged])
 
   // ── Fuzzy obstacle brush (issue #193 Phase 5) — a freehand drag (or a
   // Rectangle-mode selection, reusing the same drag machinery declared
@@ -2487,7 +2486,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // with the texture painted through its top-surface mask.
   const [cliffCanvasEl, setCliffCanvasEl] = useState<HTMLCanvasElement | null>(null)
   const cliffSprites = useCliffSprites()
-  useEffect(() => timedEffect('effect@2488', () => {
+  useEffect(() => {
     if (!cliffCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const scale = textureScale(sizeX, sizeZ, quality.cliffs)
     cliffCanvasEl.width = sizeX * scale
@@ -2661,12 +2660,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       else ctx.drawImage(p.img, p.x, p.y, p.w, p.h)
       ctx.restore()
     }
-  }), [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
+  }, [cliffCanvasEl, cliffSprites, renderIndex, biomeTextures, tilesMap, waterMap, settings.showCliffs, levelsMap, climbsMap, paintLevelStaged, paintRampStaged, sizeX, sizeZ, quality.cliffs])
   // Objects drawn as a bundled image (transparent webp) get no group-color swatch while their icon
   // is visible, so the terrain and neighbours show through. Zoomed out the icon layer is off, and
   // the swatch is then the only thing marking the object.
   const iconsVisibleForSwatch = BASE_CELL_PX * transform.scale >= iconLodPx
-  useEffect(() => timedEffect('effect cliffs', () => {
+  useEffect(() => {
     if (!canvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = canvasEl
     canvas.width = sizeX
@@ -2714,7 +2713,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
         ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
       }
     }
-  }), [
+  }, [
     canvasEl, primaryByNode, underlayByNode, tilesMap, waterMap, sizeX, sizeZ, settings.terrainOpacity, textureStrength,
     settings.showElevationShading, elevationTintMap, paintStaged, iconsVisibleForSwatch, settings.iconImagesEnabled, renderIndex,
   ])
@@ -2754,7 +2753,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   const lineTextures = useLineTextures()
   const roadStrokes = useRoadStrokes()
   const riverSprites = useRiverSprites()
-  useEffect(() => timedEffect('effect lineFeature', () => {
+  useEffect(() => {
     if (!lineFeatureCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = lineFeatureCanvasEl
     // Textured: a finer canvas (within the draw quality's limits) and a slightly wider band, so the texture reads; flat colours keep the coarse one.
@@ -2923,7 +2922,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     for (const node of riverStaged) {
       if (!riverNodes.has(node)) drawRiver(node)
     }
-  }), [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
+  }, [lineFeatureCanvasEl, sizeX, sizeZ, roadsMap, paintRoadStaged, riverNodes, riverStaged, coveredLineNodes, settings.lineFeatureShading, settings.lineFeatureTextures, lineTextures, roadStrokes, riverSprites, renderIndex, quality.lines])
 
   // ── Blocked-tile overlay canvas — a SEPARATE, top-stacked element (not one
   // more pass on canvasEl above) so the red tint paints over every tile
@@ -2935,7 +2934,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // over icons too. Same 1-unit-per-tile pixelated technique, same cheap
   // cost class as every other canvas layer here.
   const [blockedCanvasEl, setBlockedCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => timedEffect('effect@2936', () => {
+  useEffect(() => {
     if (!blockedCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = blockedCanvasEl
     canvas.width = sizeX
@@ -2956,7 +2955,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const z = Math.floor(node / sizeX)
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
-  }), [blockedCanvasEl, sizeX, sizeZ, settings.showBlockedTiles, blockedTileSet, entranceTileSet])
+  }, [blockedCanvasEl, sizeX, sizeZ, settings.showBlockedTiles, blockedTileSet, entranceTileSet])
 
   // ── Player Areas overlay canvas — a translucent fill per zone id
   // (zone-colors.ts), skipping unpainted (0) tiles entirely. Stacked right
@@ -2965,7 +2964,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // top of a zone fill, matching every other overlay's own "what layers
   // over what" convention here.
   const [zoneCanvasEl, setZoneCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => timedEffect('effect blocked canvas', () => {
+  useEffect(() => {
     if (!zoneCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = zoneCanvasEl
     canvas.width = sizeX
@@ -2984,7 +2983,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       ctx.fillRect(x, sizeZ - 1 - z, 1, 1)
     }
     ctx.globalAlpha = 1
-  }), [zoneCanvasEl, sizeX, sizeZ, settings.showPlayerAreas, customAreasPainting, paintZoneStaged])
+  }, [zoneCanvasEl, sizeX, sizeZ, settings.showPlayerAreas, customAreasPainting, paintZoneStaged])
 
   // ── Terrain-paint "pending" indicator canvas (issue #167 Phase D, redone
   // for issue #195 Phase 1) — the base canvasEl pass above now already
@@ -2998,7 +2997,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // display size (set in the JSX) stays identical to every other layer, so
   // it still lines up pixel-for-pixel on screen.
   const [paintCanvasEl, setPaintCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => timedEffect('effect@2999', () => {
+  useEffect(() => {
     if (!paintCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = paintCanvasEl
     const SUBPX = 8
@@ -3010,7 +3009,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
     // No outline is drawn: the thick black border read as a distracting
     // artifact while dragging, and the base canvas already shows the staged
     // tile in its final colour (same reasoning as road/water below).
-  }), [paintCanvasEl, sizeX, sizeZ, paintStaged])
+  }, [paintCanvasEl, sizeX, sizeZ, paintStaged])
 
   // ── Object-paint "pending" indicator canvas — same outline technique and
   // rationale as the terrain-paint indicator above (issue #195 Phase 1): the
@@ -3018,7 +3017,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // `stagedObjectPaintIcons` below, so this canvas only needs to mark which
   // tiles are unsaved, not draw a flat placeholder tint over them.
   const [paintObjectCanvasEl, setPaintObjectCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => timedEffect('effect@3019', () => {
+  useEffect(() => {
     if (!paintObjectCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = paintObjectCanvasEl
     const SUBPX = 8
@@ -3036,14 +3035,14 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const screenRow = sizeZ - 1 - z
       ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
-  }), [paintObjectCanvasEl, sizeX, sizeZ, paintObjectStaged])
+  }, [paintObjectCanvasEl, sizeX, sizeZ, paintObjectStaged])
 
   // ── Level/Water "pending" indicator canvases (issue #193 Phase 2) — same
   // outline technique as the two above: the real color already renders via
   // the base canvasEl pass (elevationTintMap/terrainFillColor merges above),
   // so these only mark which tiles are unsaved.
   const [paintLevelCanvasEl, setPaintLevelCanvasEl] = useState<HTMLCanvasElement | null>(null)
-  useEffect(() => timedEffect('effect@3044', () => {
+  useEffect(() => {
     if (!paintLevelCanvasEl || sizeX <= 0 || sizeZ <= 0) return
     const canvas = paintLevelCanvasEl
     const SUBPX = 8
@@ -3061,7 +3060,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       const screenRow = sizeZ - 1 - z
       ctx.strokeRect(x * SUBPX + 1, screenRow * SUBPX + 1, SUBPX - 2, SUBPX - 2)
     }
-  }), [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
+  }, [paintLevelCanvasEl, sizeX, sizeZ, paintLevelStaged])
 
   // Road has no in-progress-stroke outline canvas (user-requested removal —
   // it read as a distracting thick square border around every tile while
@@ -3104,7 +3103,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   )
 
   // Every drawn single-tile object, not only the top of each stack: objects placed on top of each other all show, in stack order.
-  const visibleCells = useMemo(() => timed('visibleCells', () => {
+  const visibleCells = useMemo(() => {
     if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
     const cells: { x: number; z: number; node: number; pick: { primary: PlacedObject; group: GridGroup; count: number } }[] = []
     // visibleRange.zMin/zMax are screen rows (top-down pixel space); convert
@@ -3127,7 +3126,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
     return cells
-  }), [showIcons, visibleRange, sizeX, sizeZ, stackByNode, footprintCellsByKey])
+  }, [showIcons, visibleRange, sizeX, sizeZ, stackByNode, footprintCellsByKey])
 
   // Multi-tile footprint icons (issue #167) — discovered by iterating placed
   // objects directly rather than the node grid, so a large object's bounding
@@ -3138,7 +3137,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // anchor tile render here, so one 1x1 object sitting exactly on another
   // object's anchor still takes priority the same way primaryByNode already
   // decides everywhere else.
-  const multiTileIcons = useMemo(() => timed('multiTileIcons', () => {
+  const multiTileIcons = useMemo(() => {
     if (!showIcons || sizeX <= 0 || sizeZ <= 0) return []
     const icons: {
       key: string
@@ -3162,7 +3161,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       icons.push({ key: obj.key, ...bounds, screenRowMin, screenRowMax, pick })
     }
     return icons
-  }), [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, pickByKey, visibleRange])
+  }, [showIcons, sizeX, sizeZ, placedObjects, footprintCellsByKey, pickByKey, visibleRange])
 
   // Combined, position-sorted render list — plain 1x1 icons and multi-tile
   // bounding boxes together, painted in top-left → bottom-right order
@@ -3171,7 +3170,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
   // placed in the real game. Two separate `.map()` passes (multi-tile always
   // fully on top of single-tile, regardless of actual screen position) was
   // the bug this replaces.
-  const sortedIconEntries = useMemo(() => timed('sortedIconEntries', () => {
+  const sortedIconEntries = useMemo(() => {
     const entries: {
       key: string
       left: number; top: number; width: number; height: number
@@ -3222,12 +3221,12 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       return !!a && !!b && !manualStacks[node] && isDefaultDepthOrder(a, b, catalog, sessionFromId)
     }
     return layerOrder(entries, keysByNode, byDepth)
-  }), [visibleCells, multiTileIcons, footprintCellsByKey, stackByNode, sizeX, sizeZ, placedObjects, manualStacks, catalog, sessionFromId])
+  }, [visibleCells, multiTileIcons, footprintCellsByKey, stackByNode, sizeX, sizeZ, placedObjects, manualStacks, catalog, sessionFromId])
 
   // Ramp/slope direction arrows — windowed to the viewport the same way
   // visibleCells is, since ramp tiles (unlike the flood-fill tint/overlay
   // canvases) render as small DOM icons, not a canvas fill.
-  const visibleRampArrows = useMemo(() => timed('visibleRampArrows', () => {
+  const visibleRampArrows = useMemo(() => {
     if (!showIcons || !settings.showElevationShading || sizeX <= 0 || sizeZ <= 0) return []
     const arrows: { node: number; x: number; z: number; direction: RampDirection }[] = []
     for (let screenRow = visibleRange.zMin; screenRow <= visibleRange.zMax; screenRow++) {
@@ -3239,7 +3238,7 @@ export default function MapGridDialog({ open, onOpenChange, onUndock, undocked }
       }
     }
     return arrows
-  }), [showIcons, settings.showElevationShading, visibleRange, sizeX, sizeZ, rampDirectionMap])
+  }, [showIcons, settings.showElevationShading, visibleRange, sizeX, sizeZ, rampDirectionMap])
 
   // ── Hover info panel + click-to-edit ────────────────────────────────────────
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
