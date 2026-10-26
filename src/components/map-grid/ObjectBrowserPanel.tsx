@@ -23,7 +23,7 @@
 
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Settings, FilterReset, X, ChevronDown } from '@/components/ui/icons'
+import { Search, Settings, FilterReset, Configuration, X, ChevronDown } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -526,6 +526,16 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
           <Button variant="ghost" size="icon" className="h-6 w-6" title="Reset all filters" onClick={resetAllFilters}>
             <FilterReset className="h-3.5 w-3.5" />
           </Button>
+          <Button
+            variant={showCustom ? 'secondary' : 'ghost'}
+            size="icon"
+            className="h-6 w-6"
+            title={showCustom ? 'Custom objects (custom_...) included: click to hide' : 'Include custom objects (custom_...)'}
+            aria-pressed={showCustom}
+            onClick={() => setShowCustomAndPersist(!showCustom)}
+          >
+            <Configuration className="h-3.5 w-3.5" />
+          </Button>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="h-6 w-6" title="Browser settings">
@@ -541,16 +551,6 @@ export default function ObjectBrowserPanel({ catalog, placingSid, onPick, placin
                   id="obj-browser-show-campaign"
                   checked={showCampaign}
                   onCheckedChange={setShowCampaignAndPersist}
-                />
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="obj-browser-show-custom" className="text-xs cursor-pointer">
-                  Show custom objects
-                </Label>
-                <Switch
-                  id="obj-browser-show-custom"
-                  checked={showCustom}
-                  onCheckedChange={setShowCustomAndPersist}
                 />
               </div>
               <div className="flex items-center justify-between gap-2">

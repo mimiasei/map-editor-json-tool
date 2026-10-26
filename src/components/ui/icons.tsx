@@ -27,6 +27,7 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
   CircleIcon,
+  Configuration01Icon,
   FilterResetIcon,
   ClipboardCopyIcon,
   ClipboardPasteIcon,
@@ -229,6 +230,7 @@ export const Repeat = make(RepeatIcon, 'Repeat')
 export const Repeat2 = make(RepeatIcon, 'Repeat2')
 export const Save = make(SaveIcon, 'Save')
 export const ScrollText = make(ScrollTextIcon, 'ScrollText')
+export const Configuration = make(Configuration01Icon, 'Configuration')
 export const FilterReset = make(FilterResetIcon, 'FilterReset')
 export const Search = make(SearchIcon, 'Search')
 export const Settings = make(SettingsIcon, 'Settings')
